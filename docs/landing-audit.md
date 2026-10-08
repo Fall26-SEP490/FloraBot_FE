@@ -23,7 +23,7 @@ it is not full WCAG certification, mentor approval or completion of E7.
 | Implementation integrity |   3/4 | Source detector has no findings; product-specific Vietnamese content and flower assets remain. Older direction documentation still needs an explicitly scoped refresh.                                                           |
 
 The token-only update changes packages/ui/src/tokens.css and
-apps/landing/src/styles/landing.css. A replacement roundtrip verified that the
+apps/web/src/marketing/landing.css. A replacement roundtrip verified that the
 landing rules recover their exact original values; white canvas and inverse
 tokens resolve to the original white. Layout, copy and behavior are unchanged.
 Token roles are documented in packages/ui/README.md, including the distinction

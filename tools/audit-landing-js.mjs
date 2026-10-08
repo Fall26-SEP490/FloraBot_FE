@@ -3,12 +3,12 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { chromium } from '@playwright/test';
 
-const url = process.env.LANDING_AUDIT_URL || 'http://127.0.0.1:4321/';
+const url = process.env.LANDING_AUDIT_URL || 'http://127.0.0.1:3010/';
 const target = new URL(url);
 if (!['127.0.0.1', 'localhost'].includes(target.hostname)) {
   throw new Error('Use a local production preview for this audit.');
 }
-const builtHtml = await readFile('apps/landing/dist/index.html');
+const builtHtml = await readFile('apps/web/.next/server/app/index.html');
 const report = {
   measuredAt: new Date().toISOString(),
   url,

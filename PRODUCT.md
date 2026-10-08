@@ -8,7 +8,7 @@ web
 
 ## Stack
 
-Astro landing; React 19, TypeScript, Vite portal and kiosk; shared Tailwind and shadcn/ui components. The supplied architecture brief fixes this stack; separate FE and BE repositories follow the user's explicit instruction.
+Next.js App Router with React 19 and TypeScript for the public website and account/dashboard surfaces. Kiosk is a separate Vite application. The latest user request supersedes the original Astro brief and requires five repositories: FE, BE, Kios, AI and Mobile.
 
 ## Users
 

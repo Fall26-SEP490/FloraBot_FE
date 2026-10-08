@@ -1,6 +1,6 @@
 # FloraBot FE
 
-Independent pnpm workspace for the Astro landing, shared UI and generated API contracts. The portal and kiosk applications are still being implemented; see the workspace REQUIREMENTS.md.
+Independent pnpm workspace for the Next.js website, member accounts, operations/shop dashboards, shared UI and generated API contracts. Kiosk is maintained in the separate FloraBot_Kios repository.
 
 ## Run
 
@@ -9,17 +9,13 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Landing: http://localhost:4321. API requests during development proxy to http://localhost:5080. Start BE separately. Set SITE_URL to the real deployment domain before release; the default florabot.example is deliberately non-production.
+Web: http://127.0.0.1:3010. API requests proxy to http://127.0.0.1:8088 by default; override API_PROXY_TARGET when running BE elsewhere. Customer/shop login is /dang-nhap; Admin/Staff login is /admin/login.
+
+Admin /admin and shop /seller open an overview with links to dedicated Next routes. Each business page loads its own data. Desktop navigation uses a sidebar and mobile navigation uses an expandable menu. Staff assignments are at /staff. All APIs enforce authorization independently of client navigation.
 
 ## Kiosk
 
-`pnpm dev:kiosk` runs the kiosk at http://127.0.0.1:5174 with its development API proxy to port 5080. Staff enter the kiosk UUID and provisioned device key on first use; the key is kept only in that tab's sessionStorage, never bundled into JavaScript. Use this on a managed kiosk browser, not a shared public website. Closing the tab requires setup again.
-
-The current guest flow lists available bouquets from `/catalog/items`, creates a checkout, displays a QR code opening the payOS page, and polls order/receipt state. The QR opens payOS with a phone camera; it is not a raw bank-app VietQR payload. Checkout creation is never automatically retried. Ending a visit or ten minutes of inactivity clears the cart/receipt; the server independently expires holds. A one-minute inactivity warning precedes the reset.
-
-`pnpm test:kiosk` builds and tests the production PWA. Its service worker caches static shell assets only, with no API caching or background purchase sync. Offline purchase actions are disabled. Production hosting must route `/api` to BE on the same origin. Loyalty/AI and receipt dispute screens are not yet implemented in this app. Tests use mocked HTTP; real kiosk hardware and gateway verification remain required.
-
-Customers may optionally request a three-minute SMS code and authenticate before checkout. The access token stays in React memory only; checkout uses that bearer token instead of the device key. The session ends at its server-provided expiry (capped at ten minutes), on 401, explicit end-of-visit, or idle reset. There is no customer refresh. Backend SMS delivery requires HTTPS `SMS_WEBHOOK_URL` and `SMS_API_TOKEN`; unavailable SMS does not block guest purchases. Tests use a fake SMS transport and never send an actual message.
+Run and test the kiosk from the separate `Kios` checkout using its README. FE no longer provides `dev:kiosk` or `test:kiosk` scripts. The local composed stack serves the kiosk under `/kiosk` and this website at `/`.
 
 ## Check
 
@@ -72,7 +68,7 @@ dependencies installed, start BE's PostgreSQL and Valkey containers, then run `p
 from FE. This command recreates **only florabot_browser_tests**, seeds it and applies runtime
 migrations. Do not use that database for data you need to keep.
 
-The suite starts isolated servers on ports 4331 (landing), 5183 (portal), 5082 (YARP) and 5081 (API), and
+The suite starts isolated servers on ports 5183 (Next.js web), 5082 (YARP) and 5081 (API), and
 stops them afterward. These ports must be free; existing application servers are never reused.
 It exercises registration, CLI provisioning, admin login/approval, seller login/route guards,
 tenant denial and subscription creation through actual browser HTTP, PostgreSQL and Valkey.

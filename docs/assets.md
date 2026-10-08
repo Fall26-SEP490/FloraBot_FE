@@ -24,14 +24,14 @@ collection instead of repeating only the original three images.
 
 ## Image-led landing (2026-10-08)
 
-Landing font faces are defined in `apps/landing/src/styles/fonts.css`. Be Vietnam
+Landing font faces are defined in `apps/web/src/marketing/fonts.css`. Be Vietnam
 Pro 400/600/800 now combines the installed Latin/Vietnamese subsets into one file
 per weight, preserving their complete 325-codepoint union, glyph outlines, advance
 widths and vertical metrics. Nunito 800 retains its Fontsource subsets. Headline
 800 and body 400 merged WOFF2 files are preloaded. Other apps retain their loading.
 
 Merged WOFF2/WOFF assets and the copied SIL OFL license are under
-`apps/landing/src/assets/fonts`. Regenerate with `python tools/merge-landing-fonts.py`
+`apps/web/src/marketing/assets/fonts`. Regenerate with `python tools/merge-landing-fonts.py`
 using Python plus `fonttools[woff]` (verified with FontTools 4.63.0) and installed
 workspace dependencies. The generator checks glyph/metric fidelity before saving.
 These are committed build inputs; ordinary pnpm/Docker builds do not need Python.
@@ -48,7 +48,7 @@ service. No authentication credentials are stored in project sources.
 All assets are conceptual illustrations, not manufactured hardware, current
 inventory, customer photographs or proof of operating locations.
 
-Files under `apps/landing/public/images/generated`:
+Files under `apps/web/public/images/generated`:
 
 - `florabot-hero.png`: 1536x1024 original, green flower locker with oversized tulips, daisies and a coral ribbon. `florabot-hero.webp`: 1200x800 optimized landing hero. The visible caption was removed at the user's request; alternative text still describes the illustration.
 - `florabot-pattern.png`: 1254x1254 botanical print on warm ivory. `florabot-pattern.webp`: 700x700 repeat used in hero texture, graphic divider, pricing and registration.

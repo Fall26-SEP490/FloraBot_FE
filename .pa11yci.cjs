@@ -5,5 +5,5 @@ module.exports = {
     viewport: { width: 390, height: 844 },
     timeout: 30000,
   },
-  urls: ['http://127.0.0.1:4321/', 'http://127.0.0.1:4321/chinh-sach-rieng-tu/'],
+  urls: ['http://127.0.0.1:3010/', 'http://127.0.0.1:3010/chinh-sach-rieng-tu/'],
 };

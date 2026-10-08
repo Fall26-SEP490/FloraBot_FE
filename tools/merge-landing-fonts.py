@@ -9,8 +9,8 @@ from fontTools.ttLib import TTFont
 
 
 root = Path(__file__).resolve().parents[1]
-package = root / "apps/landing/node_modules/@fontsource/be-vietnam-pro"
-output = root / "apps/landing/src/assets/fonts"
+package = root / "apps/web/node_modules/@fontsource/be-vietnam-pro"
+output = root / "apps/web/src/marketing/assets/fonts"
 output.mkdir(parents=True, exist_ok=True)
 
 for weight in (400, 600, 800):

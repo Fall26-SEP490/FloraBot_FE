@@ -92,7 +92,7 @@ scene.render.resolution_x=1000; scene.render.resolution_y=1100; scene.render.res
 scene.render.film_transparent=True
 scene.view_settings.view_transform='AgX'
 scene.render.image_settings.file_format='PNG'
-scene.render.filepath=os.path.abspath(os.path.join(os.path.dirname(__file__),'../apps/landing/public/images/kiosk-model.png'))
+scene.render.filepath=os.path.abspath(os.path.join(os.path.dirname(__file__),'../apps/web/public/images/kiosk-model.png'))
 os.makedirs(os.path.dirname(scene.render.filepath),exist_ok=True)
 scene.render.image_settings.color_mode='RGBA'
 scene.render.image_settings.color_depth='8'

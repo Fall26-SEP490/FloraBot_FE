@@ -22,12 +22,11 @@ jobs:
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:a11y
       - run: pnpm test:portal
-      - run: pnpm exec playwright test --config playwright.kiosk.config.ts
       - name: Start landing preview for accessibility and performance gates
         run: |
-          pnpm --filter @florabot/landing preview --port 4321 > /tmp/florabot-preview.log 2>&1 &
+          pnpm --filter @florabot/web start > /tmp/florabot-preview.log 2>&1 &
           for attempt in {1..30}; do
-            if curl --fail --silent http://127.0.0.1:4321/ > /dev/null; then exit 0; fi
+            if curl --fail --silent http://127.0.0.1:3010/ > /dev/null; then exit 0; fi
             sleep 1
           done
           cat /tmp/florabot-preview.log

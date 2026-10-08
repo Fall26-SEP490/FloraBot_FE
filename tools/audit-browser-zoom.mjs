@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { chromium } from '@playwright/test';
 
-const origin = 'http://127.0.0.1:4321';
+const origin = 'http://127.0.0.1:3010';
 const temporary = await mkdtemp(join(tmpdir(), 'florabot-browser-zoom-'));
 assert.equal(dirname(resolve(temporary)), resolve(tmpdir()), 'Unexpected temporary directory');
 assert(basename(temporary).startsWith('florabot-browser-zoom-'));
@@ -50,7 +50,7 @@ try {
   const protocol = await context.newCDPSession(page);
   for (const [route, file, name] of [
     ['/', 'index.html', 'landing'],
-    ['/chinh-sach-rieng-tu', 'chinh-sach-rieng-tu/index.html', 'privacy'],
+    ['/chinh-sach-rieng-tu', 'chinh-sach-rieng-tu.html', 'privacy'],
   ]) {
     const response = await page.goto(origin + route);
     assert(response?.ok(), 'Production preview unavailable');
@@ -58,7 +58,7 @@ try {
     const htmlHash = hash(await response.body());
     assert.equal(
       htmlHash,
-      hash(await readFile(join('apps/landing/dist', file))),
+      hash(await readFile(join('apps/web/.next/server/app', file))),
       'Preview must serve the current build',
     );
     const tabId = await worker.evaluate(async (url) => {
