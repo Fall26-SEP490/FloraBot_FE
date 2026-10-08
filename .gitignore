@@ -11,3 +11,5 @@ artifacts/
 tmp/
 .impeccable/review/
 .impeccable/detector.json
+.next/
+*.tsbuildinfo

@@ -1,6 +1,5 @@
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
-import astro from 'eslint-plugin-astro';
 import a11y from 'eslint-plugin-jsx-a11y';
 import hooks from 'eslint-plugin-react-hooks';
 import prettier from 'eslint-config-prettier';
@@ -10,6 +9,7 @@ export default tseslint.config(
       '**/node_modules/**',
       '**/dist/**',
       '**/.astro/**',
+      '**/.next/**',
       '**/generated/**',
       '**/playwright-report/**',
       '**/test-results/**',
@@ -17,13 +17,6 @@ export default tseslint.config(
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
-  ...astro.configs.recommended,
-  {
-    files: ['**/*.astro'],
-    processor: 'astro/client-side-ts',
-    languageOptions: { parserOptions: { parser: tseslint.parser } },
-  },
-  { files: ['**/*.astro/*.ts'], languageOptions: { parser: tseslint.parser } },
   {
     files: ['**/*.{ts,tsx}'],
     plugins: { 'jsx-a11y': a11y, 'react-hooks': hooks },

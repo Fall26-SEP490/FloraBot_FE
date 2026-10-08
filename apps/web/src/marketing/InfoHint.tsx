@@ -1,0 +1,24 @@
+import type { ReactNode } from 'react';
+export default function InfoHint({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <details className="info-hint">
+      <summary>
+        <svg
+          aria-hidden="true"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+        >
+          <circle cx="12" cy="12" r="9"></circle>
+          <path d="M12 11v6"></path>
+          <circle cx="12" cy="7.5" r=".8" fill="currentColor" stroke="none"></circle>
+        </svg>
+        <span>{label}</span>
+      </summary>
+      <div className="info-content">{children}</div>
+    </details>
+  );
+}

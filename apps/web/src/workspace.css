@@ -1,0 +1,229 @@
+.dashboard-shell {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  min-height: calc(100dvh - 90px);
+  background: #fffdf7;
+}
+.workspace-sidebar {
+  background: #edf2e7;
+  padding: 1.5rem 1rem;
+  border-right: 1px solid #c6d9c7;
+}
+.workspace-sidebar nav {
+  position: sticky;
+  top: 1rem;
+}
+.workspace-sidebar a {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0.65rem 1rem;
+  margin-bottom: 0.25rem;
+  border-radius: 8px;
+  color: #183e2b;
+  text-decoration: none;
+  font-weight: 600;
+}
+.workspace-sidebar a:hover {
+  background: #dce8d1;
+}
+.workspace-sidebar a[aria-current='page'] {
+  background: #183e2b;
+  color: white;
+}
+.workspace-personal-links {
+  border-top: 1px solid #b0c3b0;
+  margin-top: 1rem;
+  padding-top: 1rem;
+}
+.workspace-menu-toggle {
+  display: none;
+}
+.dashboard-content {
+  width: 100%;
+  min-width: 0;
+  max-width: 1400px;
+  padding: 2rem 3rem 4rem;
+}
+.dashboard-content h1 {
+  font-size: 2rem;
+  line-height: 1.3;
+  margin-bottom: 1rem;
+}
+.dashboard-content h2 {
+  font-size: 1.5rem;
+}
+.dashboard-content > section {
+  margin-top: 1.5rem;
+}
+.dashboard-content .account-details {
+  margin-top: 1rem;
+  font-size: 0.95rem;
+}
+.dashboard-content .account-details div {
+  padding-block: 0.75rem;
+}
+.workspace-overview {
+  margin-top: 2.5rem;
+}
+.workspace-profile {
+  margin-block: 1rem 2rem;
+}
+.staff-task-details,
+.staff-evidence {
+  margin-block: 1rem;
+}
+.staff-reassignment,
+.staff-resolution {
+  margin-block: 1rem;
+}
+#staff-tasks textarea {
+  display: block;
+  width: 100%;
+  min-height: 120px;
+  padding: 0.75rem;
+  background: white;
+  color: #183e2b;
+  border: 1px solid #64735f;
+  border-radius: 8px;
+  font: inherit;
+  resize: vertical;
+}
+.staff-reassignment summary,
+.staff-resolution summary {
+  min-height: 44px;
+  padding-block: 0.6rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+.staff-task-details summary,
+.staff-evidence summary {
+  min-height: 44px;
+  padding-block: 0.6rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+.staff-task-details h4 {
+  margin-top: 1.5rem;
+}
+.staff-evidence li {
+  padding-block: 0.5rem;
+}
+.staff-evidence a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.staff-evidence .evidence-upload {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+.staff-resolution label:has(input[type='checkbox']) {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-height: 44px;
+  padding-block: 0.5rem;
+  cursor: pointer;
+}
+.staff-resolution input[type='checkbox'] {
+  width: 24px;
+  height: 24px;
+  min-height: 24px;
+  flex: 0 0 24px;
+  margin: 0;
+  padding: 0;
+  accent-color: #214e34;
+}
+.staff-task-history {
+  padding-left: 1.5rem;
+}
+.staff-task-history li {
+  padding-block: 1rem;
+  border-bottom: 1px solid #c6d9c7;
+}
+.staff-task-history time {
+  color: #495f4e;
+  font-size: 0.95rem;
+}
+.staff-history-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+.workspace-profile summary {
+  min-height: 44px;
+  padding-block: 0.7rem;
+  cursor: pointer;
+  color: #495f4e;
+}
+.workspace-overview > p {
+  max-width: 65ch;
+  margin-block: 0.75rem 1.5rem;
+}
+.workspace-overview ul {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 2.5rem;
+}
+.workspace-overview li {
+  padding-block: 1.1rem;
+  border-top: 1px solid #c6d9c7;
+}
+.workspace-overview li a {
+  display: inline-flex;
+  gap: 1rem;
+  align-items: center;
+  min-height: 44px;
+  color: #183e2b;
+  font-weight: 600;
+  text-underline-offset: 0.2em;
+}
+.workspace-overview li p {
+  color: #495f4e;
+  margin-top: 0.2rem;
+  font-size: 0.95rem;
+}
+@media (max-width: 900px) {
+  .dashboard-shell {
+    grid-template-columns: 1fr;
+  }
+  .workspace-sidebar {
+    border-right: 0;
+    border-bottom: 1px solid #c6d9c7;
+    padding: 0.75rem 1rem;
+  }
+  .workspace-menu-toggle {
+    display: block;
+    min-height: 48px;
+    width: 100%;
+    background: transparent;
+    color: #183e2b;
+    border: 1px solid #64735f;
+    border-radius: 8px;
+    padding: 0.75rem;
+    text-align: left;
+    font: inherit;
+    font-weight: 600;
+  }
+  .workspace-sidebar nav {
+    display: none;
+    position: static;
+    padding-top: 0.75rem;
+  }
+  .workspace-sidebar nav.is-expanded {
+    display: block;
+  }
+  .dashboard-content {
+    padding: 1.5rem 1rem 3rem;
+  }
+  .workspace-overview ul {
+    grid-template-columns: 1fr;
+  }
+}
