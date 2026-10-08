@@ -1,0 +1,56 @@
+{
+  "name": "florabot-fe",
+  "private": true,
+  "packageManager": "pnpm@11.10.0",
+  "scripts": {
+    "dev": "pnpm --filter @florabot/landing dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "eslint . --max-warnings=0",
+    "format": "prettier --write .",
+    "test": "vitest run",
+    "test:a11y": "playwright test",
+    "audit:landing-js": "node tools/audit-landing-js.mjs",
+    "audit:browser-zoom": "node tools/audit-browser-zoom.mjs",
+    "prepare": "husky",
+    "contracts": "openapi-typescript packages/contracts/openapi.json -o packages/contracts/src/generated/api.d.ts",
+    "dev:portal": "pnpm --filter @florabot/portal dev",
+    "dev:kiosk": "pnpm --filter @florabot/kiosk dev",
+    "test:kiosk": "pnpm --filter @florabot/kiosk build && playwright test --config playwright.kiosk.config.ts",
+    "test:portal": "playwright test --config playwright.portal.config.ts",
+    "test:stack": "playwright test --config playwright.stack.config.ts",
+    "test:integration": "pwsh -NoProfile -File ../BE/scripts/initialize-db.ps1 -BrowserTests && playwright test --config playwright.integration.config.ts"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
+    "@commitlint/cli": "^20.0.0",
+    "@commitlint/config-conventional": "^20.0.0",
+    "@eslint/js": "^9.39.0",
+    "@lhci/cli": "^0.15.1",
+    "@playwright/test": "^1.56.0",
+    "eslint": "^9.39.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-astro": "^1.3.1",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.6",
+    "openapi-typescript": "^7.10.1",
+    "pa11y-ci": "^5.0.0",
+    "prettier": "^3.6.2",
+    "prettier-plugin-astro": "^0.14.1",
+    "prettier-plugin-tailwindcss": "^0.7.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.0",
+    "vitest": "^3.2.4"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,astro,js,mjs}": [
+      "eslint --fix --no-warn-ignored --max-warnings=0",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml,css}": [
+      "prettier --write"
+    ]
+  }
+}
