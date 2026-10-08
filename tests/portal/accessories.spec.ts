@@ -14,12 +14,12 @@ test.beforeEach(async ({ page }) => {
       },
     }),
   );
-  await page.route('**/products', (route) => route.fulfill({ json: [] }));
-  await page.route('**/subscriptions', (route) =>
+  await page.route('**/api/**/products', (route) => route.fulfill({ json: [] }));
+  await page.route('**/api/**/subscriptions', (route) =>
     route.fulfill({ json: { package: null, subscriptions: [] } }),
   );
-  await page.route('**/slots', (route) => route.fulfill({ json: [] }));
-  await page.route('**/wallet', (route) =>
+  await page.route('**/api/**/slots', (route) => route.fulfill({ json: [] }));
+  await page.route('**/api/**/wallet', (route) =>
     route.fulfill({
       json: {
         balance: null,
@@ -63,7 +63,7 @@ for (const width of [390, 1440]) {
       item.stockQuantity += 7;
       return writes === 1 ? route.fulfill({ json: { result: null } }) : route.abort();
     });
-    await page.goto('/seller');
+    await page.goto('/seller/accessories');
     const section = page.locator('.seller-accessories');
     await expect(section.getByRole('heading', { level: 2 })).toBeVisible();
     expect(reads).toBe(0);
@@ -111,10 +111,10 @@ for (const width of [390, 1440]) {
 
 test('Accessory inventory handles empty state and retry after failure', async ({ page }) => {
   let reads = 0;
-  await page.route('**/accessories', (route) =>
+  await page.route('**/api/**/accessories', (route) =>
     ++reads === 1 ? route.fulfill({ status: 503, json: {} }) : route.fulfill({ json: [] }),
   );
-  await page.goto('/seller');
+  await page.goto('/seller/accessories');
   const section = page.locator('.seller-accessories');
   await section.getByRole('button', { name: 'Xem tồn phụ kiện' }).click();
   await expect(section.getByRole('alert')).toContainText('Chưa tải được tồn mới nhất');

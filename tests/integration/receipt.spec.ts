@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
+import { uploadEvidence, evidencePng } from './evidence';
 
 function sql(input: string) {
   const result = spawnSync(
@@ -56,7 +57,9 @@ test('Public receipt stores a refund account through gateway/API without exposin
   await page.getByLabel('Số tài khoản ngân hàng', { exact: true }).fill('001234567890');
   await page.getByRole('button', { name: 'Kiểm tra tài khoản', exact: true }).click();
   await page.getByRole('button', { name: 'Xác nhận gửi tài khoản' }).click();
-  await expect(page.getByRole('status')).toContainText('Đã gửi tài khoản nhận hoàn');
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Đã gửi tài khoản nhận hoàn' }),
+  ).toBeVisible();
   await page.getByRole('button', { name: 'Xem biên nhận', exact: true }).click();
   await expect(
     page.getByText('Đã nhận thông tin tài khoản hoàn tiền. Khoản hoàn đang chờ được xử lý.'),
@@ -113,22 +116,24 @@ test('Public receipt stores a refund account through gateway/API without exposin
     },
   );
   expect(provisioned.status).toBe(0);
-  await page.goto('/login');
+  await page.goto('/admin/login');
   await page.getByLabel('Email', { exact: true }).fill(payerEmail);
   await page.getByLabel('Mật khẩu', { exact: true }).fill(payerPassword);
   await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
+  await expect(page).toHaveURL(/\/admin$/);
+  await page.goto('/admin/refunds');
   const refunds = page.locator('.admin-refunds');
   await refunds.getByText(`Đơn BROWSER-${order} · 350.000 đ`, { exact: true }).click();
   await refunds.getByRole('button', { name: 'Xem tài khoản nhận hoàn', exact: true }).click();
   await expect(refunds.getByText('001234567890', { exact: true })).toBeVisible();
   await refunds.getByRole('button', { name: 'Ghi nhận đã chi hoàn', exact: true }).click();
-  await refunds
-    .getByLabel('Liên kết chứng từ hoàn tiền')
-    .fill('https://example.invalid/synthetic-refund-proof.pdf');
+  await uploadEvidence(refunds);
   await refunds.getByRole('checkbox').check();
   await refunds.getByRole('button', { name: 'Kiểm tra chứng từ hoàn' }).click();
   await refunds.getByRole('button', { name: 'Xác nhận khoản hoàn' }).click();
-  await expect(refunds.getByRole('status')).toHaveText('Đã ghi nhận chi hoàn và cập nhật sổ cái.');
+  await expect(
+    refunds.getByRole('status').filter({ hasText: 'Đã ghi nhận chi hoàn và cập nhật sổ cái.' }),
+  ).toBeVisible();
   expect(
     sql(
       `SELECT count(*) FROM payment.payments WHERE order_id='${order}' AND kind='REFUND' AND status='SUCCEEDED' AND paid_by='${payer}' AND approved_by <> paid_by;`,
@@ -174,14 +179,20 @@ test('Public complaint creates exactly one dispute and evidence record through t
   await page.getByRole('button', { name: 'Xem biên nhận', exact: true }).click();
   await page.getByRole('button', { name: 'Gửi phản ánh về hoa' }).click();
   await page.getByLabel('Vấn đề với bó hoa').fill('Hoa bị dập khi nhận tại tủ.');
-  await page
-    .getByLabel('Đường dẫn ảnh minh chứng')
-    .fill('https://example.invalid/browser-complaint.jpg');
+  await uploadEvidence(page.locator('main'));
   await page.getByRole('button', { name: 'Kiểm tra phản ánh', exact: true }).click();
+  const submitted = page.waitForRequest((request) =>
+    request.url().endsWith('/api/receipts/flows/open_dispute'),
+  );
   await page.getByRole('button', { name: 'Xác nhận gửi phản ánh' }).click();
-  await expect(page.getByRole('status')).toHaveText('Đã ghi nhận phản ánh cho đơn này.');
+  const photoReference = (await submitted).postDataJSON().p_photo;
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Đã ghi nhận phản ánh cho đơn này.' }),
+  ).toBeVisible();
   await page.getByRole('button', { name: 'Xem biên nhận', exact: true }).click();
-  await expect(page.getByRole('status')).toHaveText('Đã ghi nhận phản ánh cho đơn này.');
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Đã ghi nhận phản ánh cho đơn này.' }),
+  ).toBeVisible();
   await expect(page.getByRole('button', { name: 'Gửi phản ánh về hoa' })).toHaveCount(0);
   expect(
     sql(
@@ -190,7 +201,7 @@ test('Public complaint creates exactly one dispute and evidence record through t
   ).toBe('1');
   expect(
     sql(
-      `SELECT count(*) FROM notify.attachments a JOIN ordering.disputes d ON a.owner_id=d.id WHERE d.order_id='${order}' AND a.owner_type='dispute' AND a.file_url='https://example.invalid/browser-complaint.jpg';`,
+      `SELECT count(*) FROM notify.attachments a JOIN ordering.disputes d ON a.owner_id=d.id WHERE d.order_id='${order}' AND a.owner_type='dispute' AND a.file_url LIKE 'https://res.cloudinary.com/browser-fixture/image/authenticated/%' AND a.size_bytes=${evidencePng.length};`,
     ),
   ).toBe('1');
   const repeated = await page.request.post('/api/receipts/flows/open_dispute', {
@@ -198,7 +209,7 @@ test('Public complaint creates exactly one dispute and evidence record through t
       p_order: order,
       p_tracking: token,
       p_reason: 'Thử gửi phản ánh lần hai.',
-      p_photo: 'https://example.invalid/browser-complaint.jpg',
+      p_photo: photoReference,
     },
   });
   expect(repeated.status()).toBe(409);
@@ -239,10 +250,12 @@ test('Public complaint creates exactly one dispute and evidence record through t
     },
   );
   expect(provisioned.status).toBe(0);
-  await page.goto('/login');
+  await page.goto('/admin/login');
   await page.getByLabel('Email', { exact: true }).fill(email);
   await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
+  await expect(page).toHaveURL(/\/admin$/);
+  await page.goto('/admin/complaints');
   const section = page.locator('.admin-complaints');
   await section.getByText(`Đơn BROWSER-${order}`, { exact: true }).click();
   await section.getByLabel('Số tiền đề nghị hoàn (đồng)').fill('100000');
@@ -270,6 +283,7 @@ test('Public complaint creates exactly one dispute and evidence record through t
   const ledgerBefore = sql(
     'SELECT count(*) || chr(124) || coalesce(sum(amount),0) FROM payment.ledger_entries;',
   );
+  await page.goto('/admin/reconciliation');
   const reconciliation = page.locator('.admin-reconciliation');
   await reconciliation.getByLabel('Ngày đối soát (giờ Việt Nam)').fill('2003-03-02');
   await reconciliation.getByRole('button', { name: 'Xem báo cáo ngày' }).click();

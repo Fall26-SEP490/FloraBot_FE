@@ -9,6 +9,7 @@ for (const width of [390, 820, 1440])
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/');
     const header = page.locator('.site-header');
+    await expect(header).toHaveClass(/navigation-ready/);
     const menu = page.getByRole('button', { name: 'Menu' });
     if (await menu.isVisible()) await menu.click();
     await page

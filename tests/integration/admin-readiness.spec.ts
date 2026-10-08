@@ -72,21 +72,27 @@ test('Admin signs in, loads all workspaces and approves a shop through real API 
       reads.set(url.pathname, response.status());
   });
   await page.goto('/admin');
-  await expect(page).toHaveURL(/\/login$/);
+  await expect(page).toHaveURL(/\/admin\/login$/);
   await page.getByLabel('Email', { exact: true }).fill(email);
   await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
   await expect(page).toHaveURL(/\/admin$/);
-  for (const selector of [
-    '.admin-sellers',
-    '.admin-slots',
-    '.admin-incidents',
-    '.admin-complaints',
-    '.admin-refunds',
-    '.admin-withdrawals',
-    '.admin-reconciliation',
-  ])
+  for (const [section, selector] of [
+    ['shops', '.admin-sellers'],
+    ['slots', '.admin-slots'],
+    ['incidents', '.admin-incidents'],
+    ['complaints', '.admin-complaints'],
+    ['refunds', '.admin-refunds'],
+    ['withdrawals', '.admin-withdrawals'],
+    ['reconciliation', '.admin-reconciliation'],
+  ]) {
+    await page.goto(`/admin/${section}`);
     await expect(page.locator(selector).locator('h2')).toBeVisible();
+    if (section !== 'reconciliation') {
+      const endpoint = section === 'shops' ? 'sellers' : section;
+      await expect.poll(() => reads.get(`/api/admin/${endpoint}`)).toBe(200);
+    }
+  }
   for (const endpoint of ['sellers', 'slots', 'incidents', 'complaints', 'refunds', 'withdrawals'])
     await expect.poll(() => reads.get(`/api/admin/${endpoint}`)).toBe(200);
   const shopName = `Admin readiness ${id}`;
@@ -100,7 +106,7 @@ test('Admin signs in, loads all workspaces and approves a shop through real API 
     },
   });
   expect(registered.status()).toBe(201);
-  await page.reload();
+  await page.goto('/admin/shops');
   const shops = page.locator('.admin-sellers');
   await shops.getByLabel('Tìm tên shop hoặc số điện thoại').fill(shopName);
   const shop = shops.locator('li').filter({ hasText: shopName });
@@ -112,7 +118,7 @@ test('Admin signs in, loads all workspaces and approves a shop through real API 
   await expect(shops.getByRole('status')).toContainText(`Đã duyệt ${shopName}`);
   expect(errors).toEqual([]);
   await page.getByRole('button', { name: 'Đăng xuất', exact: true }).click();
-  await expect(page).toHaveURL(/\/login$/);
+  await expect(page).toHaveURL(/\/admin\/login$/);
   await page.goto('/admin');
-  await expect(page).toHaveURL(/\/login$/);
+  await expect(page).toHaveURL(/\/admin\/login$/);
 });

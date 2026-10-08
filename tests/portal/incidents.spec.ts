@@ -81,7 +81,7 @@ for (const width of [390, 1440]) {
       resolved = true;
       return route.fulfill({ json: { result: null } });
     });
-    await page.goto('/admin');
+    await page.goto('/admin/incidents');
     const section = page.locator('.admin-incidents');
     await section.locator('summary').click();
     await expect(section.getByRole('link', { name: 'Mở ảnh minh chứng 1' })).toHaveAttribute(
@@ -152,7 +152,7 @@ test('Queue pagination, read failure and lost resolution response', async ({ pag
     resolved = true;
     return route.abort();
   });
-  await page.goto('/admin');
+  await page.goto('/admin/incidents');
   const section = page.locator('.admin-incidents');
   await expect(section.getByRole('alert')).toContainText('Chưa tải được sự cố');
   fail = false;
@@ -195,7 +195,7 @@ test('Background refresh during pointer activation does not discard an incident 
       json: { detail: 'Đã có thay đổi trên máy chủ. Cập nhật hồ sơ.' },
     });
   });
-  await page.goto('/admin');
+  await page.goto('/admin/incidents');
   const section = page.locator('.admin-incidents');
   await section.locator('summary').click();
   await section.getByLabel('Kết quả kiểm tra và xử lý').fill('Đã kiểm tra thực tế.');

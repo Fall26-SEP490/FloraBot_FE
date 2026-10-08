@@ -16,12 +16,12 @@ test.beforeEach(async ({ page }) => {
       },
     }),
   );
-  await page.route('**/products', (route) => route.fulfill({ json: [] }));
-  await page.route('**/slots', (route) => route.fulfill({ json: [] }));
-  await page.route('**/subscriptions', (route) =>
+  await page.route('**/api/**/products', (route) => route.fulfill({ json: [] }));
+  await page.route('**/api/**/slots', (route) => route.fulfill({ json: [] }));
+  await page.route('**/api/**/subscriptions', (route) =>
     route.fulfill({ json: { package: null, subscriptions: [] } }),
   );
-  await page.route('**/wallet', (route) =>
+  await page.route('**/api/**/wallet', (route) =>
     route.fulfill({
       json: {
         balance: null,
@@ -59,7 +59,7 @@ for (const width of [390, 1440]) {
       bank = { status: 'READY', bankName: 'Test Bank', holder: 'TEST SHOP', accountSuffix: '6789' };
       return route.fulfill({ json: { result: null } });
     });
-    await page.goto('/seller');
+    await page.goto('/seller/wallet');
     await page.locator('.bank-details summary').click();
     const section = page.locator('.bank-details');
     await section
@@ -125,7 +125,7 @@ test('Bank read and write failures preserve recovery without claiming success', 
         }),
   );
   await page.route('**/flows/set_seller_bank', (route) => route.abort('connectionreset'));
-  await page.goto('/seller');
+  await page.goto('/seller/wallet');
   await page.locator('.bank-details summary').click();
   await expect(page.locator('.bank-details')).toContainText('Chưa tải được thông tin tài khoản');
   failedRead = false;

@@ -13,7 +13,7 @@ test.beforeEach(async ({ page }) => {
   );
 });
 test.beforeEach(async ({ page }) => {
-  await page.route('**/wallet', (route) =>
+  await page.route('**/api/**/wallet', (route) =>
     route.fulfill({
       json: {
         balance: null,
@@ -26,12 +26,12 @@ test.beforeEach(async ({ page }) => {
       },
     }),
   );
-  await page.route('**/slots', (route) => route.fulfill({ json: [] }));
+  await page.route('**/api/**/slots', (route) => route.fulfill({ json: [] }));
   await page.route('**/admin/sellers?*', (route) => route.fulfill({ json: [] }));
   await page.route('**/api/packages', (route) => route.fulfill({ json: [] }));
   await page.route('**/api/admin/slots', (route) => route.fulfill({ json: [] }));
-  await page.route('**/products', (route) => route.fulfill({ json: [] }));
-  await page.route('**/subscriptions', (route) =>
+  await page.route('**/api/**/products', (route) => route.fulfill({ json: [] }));
+  await page.route('**/api/**/subscriptions', (route) =>
     route.fulfill({ json: { package: null, subscriptions: [] } }),
   );
 });
@@ -63,10 +63,10 @@ test('Anonymous guard, login validation, seller banner and logout', async ({ pag
     await route.fulfill(signedIn ? { json: seller } : { status: 401 });
   });
   await page.goto('/seller');
-  await expect(page).toHaveURL(/\/login$/);
+  await expect(page).toHaveURL(/\/dang-nhap$/);
   await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
   await expect(page.getByLabel('Email', { exact: true })).toBeFocused();
-  await expect(page.getByText('Nhập địa chỉ email hợp lệ.')).toBeVisible();
+  await expect(page.getByText('Nhập email.', { exact: true })).toBeVisible();
   await page.getByLabel('Email', { exact: true }).fill('shop@example.com');
   await page.getByLabel('Mật khẩu', { exact: true }).fill('test-password');
   await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
@@ -76,9 +76,9 @@ test('Anonymous guard, login validation, seller banner and logout', async ({ pag
   await expect(page).toHaveURL(/\/seller$/);
   await expect(page.getByRole('heading', { name: 'Chào Tiệm Hoa Nhỏ,' })).toBeVisible();
   await page.getByRole('button', { name: 'Đăng xuất' }).click();
-  await expect(page).toHaveURL(/\/login$/);
+  await expect(page).toHaveURL(/\/dang-nhap$/);
   await page.goto('/seller');
-  await expect(page).toHaveURL(/\/login$/);
+  await expect(page).toHaveURL(/\/dang-nhap$/);
 });
 
 test('Admin redirected to its own workspace', async ({ page }) => {
@@ -91,6 +91,48 @@ test('Admin redirected to its own workspace', async ({ page }) => {
   await expect(page.getByLabel('Trạng thái gói')).toHaveCount(0);
 });
 
+test('Staff uses operations login and never enters administrator workspace', async ({ page }) => {
+  let signedIn = false;
+  const privilegedRequests: string[] = [];
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname.startsWith('/api/admin/'))
+      privilegedRequests.push(request.url());
+  });
+  await page.route('**/api/auth/**', async (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (path === '/api/auth/admin/login') {
+      expect(route.request().postDataJSON()).toEqual({
+        email: 'staff@example.com',
+        password: 'test-password',
+      });
+      signedIn = true;
+    }
+    if (path === '/api/auth/logout') {
+      signedIn = false;
+      await route.fulfill({ status: 204 });
+      return;
+    }
+    await route.fulfill(
+      signedIn
+        ? { json: { ...seller, name: 'Nhân viên', role: 'STAFF', sellerId: null } }
+        : { status: 401 },
+    );
+  });
+  await page.goto('/staff');
+  await expect(page).toHaveURL(/\/admin\/login$/);
+  await page.getByLabel('Email', { exact: true }).fill('staff@example.com');
+  await page.getByLabel('Mật khẩu', { exact: true }).fill('test-password');
+  await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
+  await expect(page).toHaveURL(/\/staff$/);
+  await expect(page.getByRole('heading', { name: 'Chào Nhân viên' })).toBeVisible();
+  await page.goto('/admin');
+  await expect(page).toHaveURL(/\/staff$/);
+  await expect(page.getByRole('heading', { name: 'Chào Nhân viên' })).toBeVisible();
+  expect(privilegedRequests).toEqual([]);
+  await page.getByRole('button', { name: 'Đăng xuất', exact: true }).click();
+  await expect(page).toHaveURL(/\/admin\/login$/);
+});
+
 test('Refresh is attempted and invalid sessions return to login', async ({ page }) => {
   let refreshes = 0;
   await page.route('**/api/auth/me', (route) => route.fulfill({ status: 401 }));
@@ -99,7 +141,7 @@ test('Refresh is attempted and invalid sessions return to login', async ({ page 
     return route.fulfill({ status: 401 });
   });
   await page.goto('/seller');
-  await expect(page).toHaveURL(/\/login$/);
+  await expect(page).toHaveURL(/\/dang-nhap$/);
   expect(refreshes).toBe(1);
 });
 
@@ -107,6 +149,8 @@ for (const width of [390, 1440]) {
   test(`Portal accessible login and seller workspace ${width}`, async ({ page }) => {
     await page.setViewportSize({ width, height: 950 });
     await page.goto('/login');
+    await expect(page.getByRole('link', { name: 'Bỏ qua tới nội dung' })).toBeAttached();
+    await expect(page.getByLabel('Email', { exact: true })).toBeVisible();
     await page.keyboard.press('Tab');
     await expect(page.getByRole('link', { name: 'Bỏ qua tới nội dung' })).toBeFocused();
     expect(

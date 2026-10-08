@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 test.beforeEach(async ({ page }) => {
-  await page.route('**/wallet', (route) =>
+  await page.route('**/api/**/wallet', (route) =>
     route.fulfill({
       json: {
         balance: null,
@@ -14,8 +14,8 @@ test.beforeEach(async ({ page }) => {
       },
     }),
   );
-  await page.route('**/slots', (route) => route.fulfill({ json: [] }));
-  await page.route('**/subscriptions', (route) =>
+  await page.route('**/api/**/slots', (route) => route.fulfill({ json: [] }));
+  await page.route('**/api/**/subscriptions', (route) =>
     route.fulfill({ json: { package: null, subscriptions: [] } }),
   );
 });
@@ -47,7 +47,7 @@ test('Product search, validation, price and status commands, accessible editor',
       },
     }),
   );
-  await page.route('**/products', (route) =>
+  await page.route('**/api/**/products', (route) =>
     route.fulfill({ json: [{ ...product, price, status }] }),
   );
   await page.route('**/flows/update_product_price', (route) => {
@@ -60,7 +60,7 @@ test('Product search, validation, price and status commands, accessible editor',
     status = 'INACTIVE';
     return route.fulfill({ json: { result: null } });
   });
-  await page.goto('/seller');
+  await page.goto('/seller/products');
   await page.getByLabel('Tìm tên sản phẩm').fill('không tìm thấy');
   await expect(page.getByText('Không có sản phẩm phù hợp.', { exact: false })).toBeVisible();
   await page.getByLabel('Tìm tên sản phẩm').clear();
@@ -99,8 +99,8 @@ test('Expired shop can read products but editor is disabled', async ({ page }) =
       },
     }),
   );
-  await page.route('**/products', (route) => route.fulfill({ json: [product] }));
-  await page.goto('/seller');
+  await page.route('**/api/**/products', (route) => route.fulfill({ json: [product] }));
+  await page.goto('/seller/products');
   await page.locator('.product-list summary').click();
   await expect(page.getByLabel('Giá bán (đồng)')).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Lưu trạng thái' })).toBeDisabled();

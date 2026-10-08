@@ -69,7 +69,7 @@ for (const width of [390, 1440]) {
       status = 'REJECTED';
       return route.fulfill({ json: { result: null } });
     });
-    await page.goto('/admin');
+    await page.goto('/admin/withdrawals');
     const section = page.locator('.admin-withdrawals');
     await section.locator('summary').click();
     await section.getByRole('button', { name: 'Duyệt yêu cầu', exact: true }).click();
@@ -141,7 +141,7 @@ test('Distinct payer explicitly reveals snapshot, clears it, and records proof w
     paid = true;
     return route.abort();
   });
-  await page.goto('/admin');
+  await page.goto('/admin/withdrawals');
   const section = page.locator('.admin-withdrawals');
   await section.locator('summary').click();
   await expect(section.getByRole('button', { name: 'Ghi nhận đã chuyển khoản' })).toBeDisabled();
@@ -206,7 +206,7 @@ test('Background refresh during pointer activation preserves explicit bank revea
       json: { bankName: 'Test Bank', holder: 'TEST HOLDER', account: '000012345678' },
     });
   });
-  await page.goto('/admin');
+  await page.goto('/admin/withdrawals');
   const section = page.locator('.admin-withdrawals');
   await section.locator('summary').click();
   const reveal = section.getByRole('button', { name: 'Xem tài khoản để chi' });

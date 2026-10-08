@@ -11,7 +11,7 @@ const product = {
   status: 'ACTIVE',
   shelfLifeHours: 48,
 };
-const bytes = readFileSync('apps/landing/public/images/flowers-pink.jpg');
+const bytes = readFileSync('apps/web/public/images/flowers-pink.jpg');
 test.beforeEach(async ({ page }) => {
   await page.route('**/api/auth/me', (route) =>
     route.fulfill({
@@ -25,12 +25,12 @@ test.beforeEach(async ({ page }) => {
       },
     }),
   );
-  await page.route('**/products', (route) => route.fulfill({ json: [product] }));
-  await page.route('**/slots', (route) => route.fulfill({ json: [] }));
-  await page.route('**/subscriptions', (route) =>
+  await page.route('**/api/**/products', (route) => route.fulfill({ json: [product] }));
+  await page.route('**/api/**/slots', (route) => route.fulfill({ json: [] }));
+  await page.route('**/api/**/subscriptions', (route) =>
     route.fulfill({ json: { package: null, subscriptions: [] } }),
   );
-  await page.route('**/wallet', (route) =>
+  await page.route('**/api/**/wallet', (route) =>
     route.fulfill({
       json: {
         balance: null,
@@ -79,7 +79,7 @@ for (const width of [390, 1440]) {
       });
       return uploads === 1 ? route.fulfill({ json: photos[0] }) : route.abort();
     });
-    await page.goto('/seller');
+    await page.goto('/seller/products');
     await page.locator('.product-list summary').click();
     const section = page.locator('.product-photos');
     expect(reads).toBe(0);
@@ -157,7 +157,7 @@ test('Expired shop reads gallery pages, retries failed reads and rejects unsafe 
       },
     });
   });
-  await page.goto('/seller');
+  await page.goto('/seller/products');
   await page.locator('.product-list summary').click();
   const section = page.locator('.product-photos');
   await expect(section.getByLabel(`Chọn ảnh cho ${product.name}`)).toBeDisabled();

@@ -34,9 +34,9 @@ test.beforeEach(async ({ page }) => {
       },
     }),
   );
-  await page.route('**/products', (route) => route.fulfill({ json: [] }));
-  await page.route('**/slots', (route) => route.fulfill({ json: [] }));
-  await page.route('**/subscriptions', (route) =>
+  await page.route('**/api/**/products', (route) => route.fulfill({ json: [] }));
+  await page.route('**/api/**/slots', (route) => route.fulfill({ json: [] }));
+  await page.route('**/api/**/subscriptions', (route) =>
     route.fulfill({ json: { package: null, subscriptions: [] } }),
   );
 });
@@ -48,7 +48,7 @@ for (const width of [390, 1440]) {
     await page.setViewportSize({ width, height: 950 });
     const wallet = initial();
     let sends = 0;
-    await page.route('**/wallet', (route) => route.fulfill({ json: wallet }));
+    await page.route('**/api/**/wallet', (route) => route.fulfill({ json: wallet }));
     await page.route('**/flows/request_withdrawal', async (route) => {
       sends++;
       expect(route.request().postDataJSON()).toEqual({ p_amount: 100000 });
@@ -64,7 +64,7 @@ for (const width of [390, 1440]) {
       ];
       await route.fulfill({ json: { result: wallet.withdrawals[0]!.id } });
     });
-    await page.goto('/seller');
+    await page.goto('/seller/wallet');
     const section = page.locator('#wallet');
     const input = page.getByLabel('Số tiền muốn rút (đồng)');
     await input.fill('10.000');
@@ -108,12 +108,12 @@ for (const width of [390, 1440]) {
 test('Lost withdrawal response blocks repeat after refresh and reload', async ({ page }) => {
   const wallet = initial();
   let sends = 0;
-  await page.route('**/wallet', (route) => route.fulfill({ json: wallet }));
+  await page.route('**/api/**/wallet', (route) => route.fulfill({ json: wallet }));
   await page.route('**/flows/request_withdrawal', (route) => {
     sends++;
     return route.abort('connectionreset');
   });
-  await page.goto('/seller');
+  await page.goto('/seller/wallet');
   await page.getByLabel('Số tiền muốn rút (đồng)').fill('100000');
   await page.getByRole('button', { name: 'Kiểm tra yêu cầu rút' }).click();
   await page.getByRole('button', { name: 'Xác nhận yêu cầu rút' }).click();
@@ -134,12 +134,12 @@ test('Empty wallet, missing bank and read failure offer honest recovery', async 
   wallet.entries = [];
   wallet.bankConfigured = false;
   let broken = true;
-  await page.route('**/wallet', (route) =>
+  await page.route('**/api/**/wallet', (route) =>
     broken
       ? route.fulfill({ status: 503, json: { detail: 'Chưa tải được ví.' } })
       : route.fulfill({ json: wallet }),
   );
-  await page.goto('/seller');
+  await page.goto('/seller/wallet');
   await expect(page.locator('#wallet')).toContainText('Chưa tải được ví');
   broken = false;
   await page.getByRole('button', { name: 'Cập nhật ví' }).click();

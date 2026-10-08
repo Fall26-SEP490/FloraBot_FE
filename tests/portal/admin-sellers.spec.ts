@@ -48,7 +48,7 @@ test('Admin can retry failed seller and package reads', async ({ page }) => {
   await page.route('**/api/packages', (route) =>
     route.fulfill(packagesReady ? { json: [] } : { status: 503 }),
   );
-  await page.goto('/admin');
+  await page.goto('/admin/shops');
   await expect(page.getByRole('button', { name: 'Tải lại hồ sơ' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Tải lại gói thuê' })).toBeVisible();
   listReady = true;
@@ -104,7 +104,7 @@ for (const width of [390, 1440]) {
       shop.packageId = packageId;
       return route.fulfill({ status: 204 });
     });
-    await page.goto('/admin');
+    await page.goto('/admin/shops');
     await page.getByLabel('Tìm tên shop hoặc số điện thoại').fill('không tìm thấy');
     await expect(page.getByText('Không có hồ sơ phù hợp với bộ lọc hiện tại.')).toBeVisible();
     await page.getByLabel('Tìm tên shop hoặc số điện thoại').fill('0901234567');

@@ -7,7 +7,9 @@ for (const width of [390, 820, 1440]) {
     await page.goto('/');
     await page.evaluate(() => document.fonts.ready);
     await expect(page.locator('h1')).toHaveCount(1);
-    await expect(page.getByRole('heading', { name: 'Bán hoa tại tủ tự phục vụ.' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Một bó hoa, thật nhiều thương.' }),
+    ).toBeVisible();
     await page.getByRole('button', { name: 'Mở bản đồ' }).scrollIntoViewIfNeeded();
     await page.getByRole('button', { name: 'Mở bản đồ' }).click();
     await expect(page.locator('.leaflet-container')).toBeVisible();
@@ -94,9 +96,9 @@ test('Expanded flower collection loads twelve distinct photographs on desktop an
       loaded.push(await photo.evaluate((element) => (element as HTMLImageElement).currentSrc));
     }
     expect(new Set(loaded).size).toBe(12);
-    expect(loaded.every((source) => source.includes('/_astro/') && source.endsWith('.avif'))).toBe(
-      true,
-    );
+    expect(
+      loaded.every((source) => source.includes('/_next/static/') && source.endsWith('.avif')),
+    ).toBe(true);
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true);
@@ -124,7 +126,9 @@ for (const width of [390, 1440]) {
     );
     await page.screenshot({ path: '.impeccable/review/privacy-' + width + '.png', fullPage: true });
     await page.getByRole('link', { name: 'Trở về trang chủ' }).click();
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Bán hoa tại tủ tự phục vụ.');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+      'Một bó hoa, thật nhiều thương.',
+    );
   });
 }
 
@@ -229,10 +233,9 @@ test('Mobile prices stay intact and offline map has a usable address fallback', 
   await page.setViewportSize({ width: 320, height: 900 });
   await page.goto('/');
   await page.evaluate(() => document.fonts.ready);
-  await expect(page.getByRole('link', { name: 'Xem gói thuê', exact: true })).toHaveAttribute(
-    'href',
-    '#goi-thue',
-  );
+  await expect(
+    page.getByRole('link', { name: 'Bạn là shop hoa? Khám phá gói thuê tủ', exact: true }),
+  ).toHaveAttribute('href', '#goi-thue');
   await expect(page.locator('.price-options article')).toHaveCount(2);
   await expect(page.locator('.plan-price strong').first()).toHaveText('400.000');
   await expect(page.locator('.plan-price strong').last()).toHaveText('1.500.000');

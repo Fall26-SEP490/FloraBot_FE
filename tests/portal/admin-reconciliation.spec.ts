@@ -62,7 +62,7 @@ for (const width of [390, 1440])
         },
       });
     });
-    await page.goto('/admin');
+    await page.goto('/admin/reconciliation');
     const section = page.locator('.admin-reconciliation');
     await section.getByRole('button', { name: 'Xem báo cáo ngày' }).click();
     await expect(section.getByLabel('Ngày đối soát (giờ Việt Nam)')).toBeFocused();
@@ -125,7 +125,7 @@ test('Empty statements, amount bounds and failed requests never retry automatica
     expect(route.request().postDataJSON()).toEqual({ p_date: '2026-10-07', p_statement: [] });
     return route.abort();
   });
-  await page.goto('/admin');
+  await page.goto('/admin/reconciliation');
   const section = page.locator('.admin-reconciliation');
   await section.getByLabel('Ngày đối soát (giờ Việt Nam)').fill('2026-10-07');
   for (const amount of [0, -1, 1.5, 9007199254740992]) {
@@ -153,7 +153,7 @@ test('Cleared or hidden reports cannot reappear from a late response', async ({ 
     await held;
     await route.fulfill({ json: daily });
   });
-  await page.goto('/admin');
+  await page.goto('/admin/reconciliation');
   const section = page.locator('.admin-reconciliation');
   await section.getByLabel('Ngày đối soát (giờ Việt Nam)').fill('2026-10-07');
   await section.getByLabel('Nội dung sao kê JSON').fill('[{"txn":"private","amount":100}]');
@@ -196,7 +196,7 @@ test('Differences paginate and a fresh empty result is not confused with an erro
       },
     }),
   );
-  await page.goto('/admin');
+  await page.goto('/admin/reconciliation');
   const section = page.locator('.admin-reconciliation');
   await section.getByLabel('Ngày đối soát (giờ Việt Nam)').fill('2026-10-07');
   await section.getByLabel('Nội dung sao kê JSON').fill('[]');

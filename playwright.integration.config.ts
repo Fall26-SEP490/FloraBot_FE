@@ -11,8 +11,7 @@ export default defineConfig({
   use: { baseURL: 'http://127.0.0.1:5183', trace: 'off', screenshot: 'off', video: 'off' },
   webServer: [
     {
-      command:
-        'dotnet run --project ../BE/src/FloraBot.Api --no-launch-profile --urls http://127.0.0.1:5081',
+      command: 'dotnet run --project ../BE/tests/FloraBot.BrowserHost --no-launch-profile',
       url: 'http://127.0.0.1:5081/health',
       reuseExistingServer: false,
       timeout: 90_000,
@@ -23,7 +22,7 @@ export default defineConfig({
         VALKEY_URL: 'localhost:56379',
         JOBS_ENABLED: 'false',
         JWT_SIGNING_KEY: signingKey,
-        ALLOWED_ORIGINS: 'http://127.0.0.1:4331,http://127.0.0.1:5183',
+        ALLOWED_ORIGINS: 'http://127.0.0.1:5183',
         PAYOS_CLIENT_ID: '',
         PAYOS_API_KEY: '',
         PAYOS_CHECKSUM_KEY: '',
@@ -43,22 +42,18 @@ export default defineConfig({
       },
     },
     {
-      command: 'pnpm --filter @florabot/portal exec vite --host 127.0.0.1 --port 5183 --strictPort',
+      command:
+        'pnpm --filter @florabot/web exec next dev --webpack --hostname 127.0.0.1 --port 5183',
       url: 'http://127.0.0.1:5183',
       reuseExistingServer: false,
       env: { API_PROXY_TARGET: 'http://127.0.0.1:5082' },
     },
     {
-      command: 'pnpm --filter @florabot/kiosk exec vite --host 127.0.0.1 --port 5184 --strictPort',
+      command:
+        'pnpm --dir ../Kios --filter @florabot/kiosk exec vite --host 127.0.0.1 --port 5184 --strictPort',
       url: 'http://127.0.0.1:5184',
       reuseExistingServer: false,
       env: { API_PROXY_TARGET: 'http://127.0.0.1:5082' },
-    },
-    {
-      command: 'pnpm --filter @florabot/landing exec astro dev --host 127.0.0.1 --port 4331',
-      url: 'http://127.0.0.1:4331',
-      reuseExistingServer: false,
-      env: { API_PROXY_TARGET: 'http://127.0.0.1:5082', PUBLIC_API_URL: '/api' },
     },
   ],
 });

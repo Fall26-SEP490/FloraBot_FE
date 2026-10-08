@@ -5,6 +5,7 @@ import { randomBytes, randomUUID } from 'node:crypto';
 test('Member registers, edits profile, sees own orders and cannot enter staff workspaces', async ({
   page,
 }) => {
+  test.setTimeout(150_000);
   const email = `member-${randomUUID()}@example.invalid`;
   const password = randomBytes(24).toString('base64url');
   const errors: string[] = [];
@@ -47,7 +48,17 @@ test('Member registers, edits profile, sees own orders and cannot enter staff wo
   await expect(page).toHaveURL(/\/dang-nhap$/);
   await page.getByLabel('Email', { exact: true }).fill(email);
   await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
+  const loginResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith('/api/auth/login') && response.request().method() === 'POST',
+  );
   await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
+  if ((await loginResponse).status() === 429) {
+    // The shared real server keeps its production limit across test cases.
+    await expect(page.locator('main').getByRole('alert')).toContainText('Bạn thao tác hơi nhanh');
+    await page.waitForTimeout(60_000);
+    await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
+  }
   await expect(page).toHaveURL(/\/tai-khoan$/);
   expect(errors).toEqual([]);
 });

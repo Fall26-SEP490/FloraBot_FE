@@ -76,12 +76,12 @@ for (const width of [390, 1440]) {
 test('Receipt validates input, handles denial and clears an in-flight lookup', async ({ page }) => {
   await page.goto('/receipt');
   await page.getByRole('button', { name: 'Xem biên nhận', exact: true }).click();
-  await expect(page.getByRole('alert')).toContainText('Kiểm tra ID biên nhận');
+  await expect(page.getByRole('main').getByRole('alert')).toContainText('Kiểm tra ID biên nhận');
   await page.getByLabel('ID biên nhận', { exact: true }).fill(id);
   await page.getByLabel('Mã tra cứu', { exact: true }).fill(token);
   await page.route('**/api/receipts/lookup', (route) => route.fulfill({ status: 404 }));
   await page.getByRole('button', { name: 'Xem biên nhận', exact: true }).click();
-  await expect(page.getByRole('alert')).toContainText('Không tìm thấy biên nhận');
+  await expect(page.getByRole('main').getByRole('alert')).toContainText('Không tìm thấy biên nhận');
   await page.unroute('**/api/receipts/lookup');
   let release: (() => void) | undefined;
   const gate = new Promise<void>((resolve) => {

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 test.beforeEach(async ({ page }) => {
-  await page.route('**/wallet', (route) =>
+  await page.route('**/api/**/wallet', (route) =>
     route.fulfill({
       json: {
         balance: null,
@@ -14,7 +14,7 @@ test.beforeEach(async ({ page }) => {
       },
     }),
   );
-  await page.route('**/slots', (route) => route.fulfill({ json: [] }));
+  await page.route('**/api/**/slots', (route) => route.fulfill({ json: [] }));
 });
 const sellerId = '20000000-0000-0000-0000-000000000001';
 const subscription = {
@@ -47,8 +47,8 @@ test('Background refresh during pointer activation preserves subscription regist
       },
     }),
   );
-  await page.route('**/products', (route) => route.fulfill({ json: [] }));
-  await page.route('**/subscriptions', async (route) => {
+  await page.route('**/api/**/products', (route) => route.fulfill({ json: [] }));
+  await page.route('**/api/**/subscriptions', async (route) => {
     reads++;
     if (reads > 1) await gate;
     await route.fulfill({
@@ -62,7 +62,7 @@ test('Background refresh during pointer activation preserves subscription regist
     writes++;
     return route.fulfill({ json: { result: subscription.id } });
   });
-  await page.goto('/seller');
+  await page.goto('/seller/subscriptions');
   const button = page.getByRole('button', { name: 'Đăng ký kỳ thuê', exact: true });
   await button.hover();
   await page.mouse.down();
@@ -94,8 +94,8 @@ for (const width of [390, 1440]) {
         },
       }),
     );
-    await page.route('**/products', (route) => route.fulfill({ json: [] }));
-    await page.route('**/subscriptions', (route) =>
+    await page.route('**/api/**/products', (route) => route.fulfill({ json: [] }));
+    await page.route('**/api/**/subscriptions', (route) =>
       route.fulfill({
         json: {
           package: { name: 'Cơ bản', monthlyFee: 400000, maxSlots: 3, status: 'ACTIVE' },
@@ -126,7 +126,7 @@ for (const width of [390, 1440]) {
             },
           });
     });
-    await page.goto('/seller');
+    await page.goto('/seller/subscriptions');
     await expect(page.getByLabel('Trạng thái gói')).toContainText('1/10/2026');
     await page.getByRole('link', { name: 'Gia hạn gói thuê' }).click();
     await expect(page.locator('#subscriptions')).toBeFocused();
@@ -136,7 +136,9 @@ for (const width of [390, 1440]) {
     await expect(page.getByText('Chờ thanh toán', { exact: false }).last()).toBeVisible();
     await expect(page.getByLabel('Số tháng đăng ký')).toHaveCount(0);
     await page.getByRole('button', { name: 'Tạo liên kết thanh toán' }).click();
-    await expect(page.getByRole('alert')).toContainText('Cổng thanh toán đang bận');
+    await expect(page.getByRole('main').getByRole('alert')).toContainText(
+      'Cổng thanh toán đang bận',
+    );
     await page.getByRole('button', { name: 'Tạo liên kết thanh toán' }).click();
     const link = page.getByRole('link', { name: 'Tiếp tục trên payOS' });
     await expect(link).toHaveAttribute(

@@ -70,7 +70,7 @@ for (const width of [390, 1440]) {
       slot.currentSellerId = seller.id;
       return route.fulfill({ json: '50000000-0000-0000-0000-000000000099' });
     });
-    await page.goto('/admin');
+    await page.goto('/admin/slots');
     const section = page.locator('.admin-slots');
     await expect(section.getByRole('alert')).toContainText('Chưa tải được ô tủ');
     ready = true;

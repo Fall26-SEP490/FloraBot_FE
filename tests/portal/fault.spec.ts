@@ -33,7 +33,7 @@ async function setup(page: Page) {
       },
     }),
   );
-  await page.route('**/wallet', (route) =>
+  await page.route('**/api/**/wallet', (route) =>
     route.fulfill({
       json: {
         balance: null,
@@ -46,13 +46,13 @@ async function setup(page: Page) {
       },
     }),
   );
-  await page.route('**/products', (route) => route.fulfill({ json: [] }));
-  await page.route('**/subscriptions', (route) =>
+  await page.route('**/api/**/products', (route) => route.fulfill({ json: [] }));
+  await page.route('**/api/**/subscriptions', (route) =>
     route.fulfill({ json: { package: null, subscriptions: [] } }),
   );
 }
 async function open(page: Page) {
-  await page.goto('/seller');
+  await page.goto('/seller/stock');
   await page.locator('.seller-stock summary').click();
   await page.getByRole('button', { name: 'Báo sự cố ô A01' }).click();
 }
@@ -73,7 +73,7 @@ for (const width of [390, 1440]) {
     await setup(page);
     let status = 'RENTED_EMPTY';
     let attempts = 0;
-    await page.route('**/slots', (route) => route.fulfill({ json: [{ ...slot, status }] }));
+    await page.route('**/api/**/slots', (route) => route.fulfill({ json: [{ ...slot, status }] }));
     await page.route('**/flows/report_device_fault', (route) => {
       expect(route.request().postDataJSON()).toEqual({
         p_kiosk: slot.kioskId,
@@ -134,7 +134,7 @@ test('Unknown outcome survives reload and blocks another report until explicit r
   page,
 }) => {
   await setup(page);
-  await page.route('**/slots', (route) => route.fulfill({ json: [slot] }));
+  await page.route('**/api/**/slots', (route) => route.fulfill({ json: [slot] }));
   let attempts = 0;
   await page.route('**/flows/report_device_fault', (route) => {
     attempts++;
@@ -161,7 +161,7 @@ test('Private upload failure preserves the report and can be retried before subm
   page,
 }) => {
   await setup(page);
-  await page.route('**/slots', (route) => route.fulfill({ json: [slot] }));
+  await page.route('**/api/**/slots', (route) => route.fulfill({ json: [slot] }));
   let uploads = 0;
   await page.route('**/evidence/report_device_fault', (route) => {
     uploads++;
@@ -193,7 +193,7 @@ test('Pending flowers require private evidence and confirmation before return', 
 }) => {
   await page.setViewportSize({ width: 390, height: 950 });
   await setup(page);
-  await page.route('**/slots', (route) =>
+  await page.route('**/api/**/slots', (route) =>
     route.fulfill({ json: [{ ...slot, status: 'PENDING_REMOVAL', bouquetId: 'bouquet-id' }] }),
   );
   await page.route('**/evidence/return_to_seller', (route) =>
@@ -210,7 +210,7 @@ test('Pending flowers require private evidence and confirmation before return', 
     });
     return route.fulfill({ json: { result: null } });
   });
-  await page.goto('/seller');
+  await page.goto('/seller/stock');
   await page.locator('.seller-stock summary').click();
   await page.getByLabel('Lý do nhận lại hoa').fill('Nhận lại hoa hết hạn');
   await page

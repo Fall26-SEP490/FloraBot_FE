@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { randomBytes, randomInt, randomUUID } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
+import { uploadEvidence } from './evidence';
 
 const backend = resolve('../BE');
 const database =
@@ -52,29 +53,30 @@ test('Real registration, admin approval, provisioning and seller subscription', 
   provision('10000000-0000-0000-0000-000000000001', 'admin@florabot.vn', password);
   const phone = `09${randomInt(10_000_000, 100_000_000)}`;
   const shopName = `Tiệm hoa trình duyệt ${randomInt(1000, 9999)}`;
-  await page.goto('http://127.0.0.1:4331/#dang-ky');
+  await page.goto('http://127.0.0.1:5183/#dang-ky');
   await page.getByLabel('Tên shop', { exact: true }).fill(shopName);
   await page.getByLabel('Số điện thoại', { exact: true }).fill(phone);
   await page.locator('#area').fill('Thủ Đức');
   const registration = page.waitForResponse(
     (response) => response.url().endsWith('/api/sellers') && response.request().method() === 'POST',
   );
-  await page.getByRole('button', { name: 'Gửi đăng ký thuê gói' }).click();
+  await page.getByRole('button', { name: 'Đăng ký tư vấn' }).click();
   const response = await registration;
   expect(response.status()).toBe(201);
   const seller = (await response.json()) as { id: string; status: string };
   expect(seller.status).toBe('PENDING');
   await expect(page.getByRole('status').filter({ hasText: 'Đã nhận đăng ký' })).toBeVisible();
 
-  await page.goto('/login');
+  await page.goto('/admin/login');
   await page.getByLabel('Email', { exact: true }).fill('admin@florabot.vn');
   await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
   const loginResponse = page.waitForResponse((response) =>
-    response.url().endsWith('/api/auth/login'),
+    response.url().endsWith('/api/auth/admin/login'),
   );
   await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
   expect((await loginResponse).status()).toBe(200);
   await expect(page).toHaveURL(/\/admin$/);
+  await page.goto('/admin/shops');
   await expect.poll(() => hubConnected).toBe(true);
   const liveShopName = `Hoa cập nhật trực tiếp ${randomInt(1000, 9999)}`;
   const liveRegistration = await page.request.post('/api/sellers', {
@@ -117,7 +119,7 @@ test('Real registration, admin approval, provisioning and seller subscription', 
   expect((await refreshResponse).status()).toBe(200);
   await expect(page).toHaveURL(/\/admin$/);
   await page.getByRole('button', { name: 'Đăng xuất' }).click();
-  await expect(page).toHaveURL(/\/login$/);
+  await expect(page).toHaveURL(/\/admin\/login$/);
 
   // Operator-only account lookup uses the fixture's validated UUID, never a public setup endpoint.
   expect(seller.id).toMatch(/^[0-9a-f-]{36}$/);
@@ -143,6 +145,7 @@ test('Real registration, admin approval, provisioning and seller subscription', 
   expect(userId).toMatch(/^[0-9a-f-]{36}$/);
   const email = `browser-${userId}@example.invalid`;
   provision(userId, email, password);
+  await page.goto('/dang-nhap');
   await page.getByLabel('Email', { exact: true }).fill(email);
   await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
   const sellerLogin = page.waitForResponse((response) =>
@@ -157,6 +160,7 @@ test('Real registration, admin approval, provisioning and seller subscription', 
   await expect(page).toHaveURL(/\/seller$/);
   const foreign = await page.request.get('/api/sellers/20000000-0000-0000-0000-000000000001/slots');
   expect(foreign.status()).toBe(404);
+  await page.goto('/seller/wallet');
   const wallet = page.locator('#wallet');
   await expect(wallet).toContainText('Shop chưa có đầy đủ thông tin tài khoản nhận tiền');
   expect(
@@ -219,6 +223,7 @@ test('Real registration, admin approval, provisioning and seller subscription', 
   await expect(wallet.getByRole('status')).toContainText('Đã gửi yêu cầu');
   await expect(wallet.getByText('Chờ duyệt', { exact: true })).toBeVisible();
   await expect(wallet.locator('.wallet-balances')).toContainText('200.000');
+  await page.goto('/seller/subscriptions');
   const subscription = page.locator('.subscriptions');
   await subscription.getByRole('button', { name: /Đăng ký/ }).click();
   await expect(subscription).toContainText('Chờ thanh toán');
@@ -255,6 +260,7 @@ test('Real registration, admin approval, provisioning and seller subscription', 
     },
   );
   expect(faultFixture.status).toBe(0);
+  await page.goto('/seller/stock');
   const stock = page.locator('.seller-stock');
   await stock.getByRole('button', { name: 'Làm mới ô và sản phẩm' }).click();
   await stock.locator('summary').filter({ hasText: 'BROWSER-FAULT' }).click();
@@ -262,9 +268,7 @@ test('Real registration, admin approval, provisioning and seller subscription', 
   await stock
     .getByLabel('Tình trạng cần kiểm tra')
     .fill('Khóa không phản hồi trong bài kiểm tra trình duyệt.');
-  await stock
-    .getByLabel('Đường dẫn ảnh minh chứng')
-    .fill('https://example.invalid/browser-fault.jpg');
+  await uploadEvidence(stock);
   await stock.getByRole('button', { name: 'Kiểm tra báo cáo' }).click();
   const report = page.waitForResponse((response) =>
     response.url().endsWith('/flows/report_device_fault'),
@@ -313,10 +317,12 @@ test('Real registration, admin approval, provisioning and seller subscription', 
   expect(foreignFault.status()).toBe(404);
   expect((await page.request.get(`/api/admin/incidents/${reportId}`)).status()).toBe(403);
   await page.getByRole('button', { name: 'Đăng xuất' }).click();
+  await page.goto('/admin/login');
   await page.getByLabel('Email', { exact: true }).fill('admin@florabot.vn');
   await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
   await expect(page).toHaveURL(/\/admin$/);
+  await page.goto('/admin/incidents');
   const incidents = page.locator('.admin-incidents');
   const incident = incidents
     .locator('li')
@@ -327,7 +333,7 @@ test('Real registration, admin approval, provisioning and seller subscription', 
   ).toBeVisible();
   await expect(incident.getByRole('link', { name: 'Mở ảnh minh chứng 1' })).toHaveAttribute(
     'href',
-    'https://example.invalid/browser-fault.jpg',
+    /\/api\/admin\/evidence\/[0-9a-f-]{36}$/,
   );
   await incident
     .getByLabel('Kết quả kiểm tra và xử lý')
@@ -349,6 +355,7 @@ test('Real registration, admin approval, provisioning and seller subscription', 
     'RESOLVED_FIXED',
   );
 
+  await page.goto('/admin/withdrawals');
   const payouts = page.locator('.admin-withdrawals');
   await payouts.locator('summary').filter({ hasText: shopName }).click();
   await payouts.getByRole('button', { name: 'Duyệt yêu cầu', exact: true }).click();
@@ -391,29 +398,30 @@ test('Real registration, admin approval, provisioning and seller subscription', 
   await page.getByRole('button', { name: 'Đăng xuất' }).click();
   await page.getByLabel('Email', { exact: true }).fill(payerEmail);
   await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
-  const payerLogin = page.waitForResponse((response) => response.url().endsWith('/api/auth/login'));
+  const payerLogin = page.waitForResponse((response) =>
+    response.url().endsWith('/api/auth/admin/login'),
+  );
   await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
   const payerResponse = await payerLogin;
   if (payerResponse.status() === 429) {
     // Real scenarios share the loopback auth budget. Honor the server window without weakening it.
-    await expect(page.getByRole('alert')).toContainText('Bạn thao tác hơi nhanh');
+    await expect(page.locator('main').getByRole('alert')).toContainText('Bạn thao tác hơi nhanh');
     await page.waitForTimeout(60_000);
     const retryLogin = page.waitForResponse((response) =>
-      response.url().endsWith('/api/auth/login'),
+      response.url().endsWith('/api/auth/admin/login'),
     );
     await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
     expect((await retryLogin).status()).toBe(200);
   } else expect(payerResponse.status()).toBe(200);
   await expect(page).toHaveURL(/\/admin$/);
+  await page.goto('/admin/withdrawals');
   await payouts.getByLabel('Trạng thái yêu cầu rút tiền').selectOption('APPROVED');
   await payouts.locator('summary').filter({ hasText: shopName }).click();
   await payouts.getByRole('button', { name: 'Xem tài khoản để chi' }).click();
   await expect(payouts.getByText('00012345678', { exact: true })).toBeVisible();
   await payouts.getByRole('button', { name: 'Ghi nhận đã chuyển khoản' }).click();
   // This records only a synthetic transfer in the disposable ledger; no bank/provider is called.
-  await payouts
-    .getByLabel('Đường dẫn chứng từ chuyển khoản')
-    .fill('https://example.invalid/browser-transfer.pdf');
+  await uploadEvidence(payouts);
   await payouts.getByRole('checkbox').check();
   await payouts.getByRole('button', { name: 'Kiểm tra thao tác' }).click();
   const payout = page.waitForResponse((response) =>
@@ -421,7 +429,9 @@ test('Real registration, admin approval, provisioning and seller subscription', 
   );
   await payouts.getByRole('button', { name: 'Xác nhận thao tác' }).click();
   expect((await payout).status()).toBe(200);
-  await expect(payouts.getByRole('status')).toContainText('Đã ghi nhận chuyển tiền');
+  await expect(
+    payouts.getByRole('status').filter({ hasText: 'Đã ghi nhận chuyển tiền' }),
+  ).toBeVisible();
   await payouts.getByLabel('Trạng thái yêu cầu rút tiền').selectOption('PAID');
   await payouts.locator('summary').filter({ hasText: shopName }).click();
   await expect(payouts.getByText('00012345678', { exact: true })).toHaveCount(0);

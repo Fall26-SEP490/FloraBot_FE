@@ -69,7 +69,7 @@ for (const width of [390, 1440])
       closed = true;
       return route.fulfill({ json: { result: null } });
     });
-    await page.goto('/admin');
+    await page.goto('/admin/complaints');
     const section = page.locator('.admin-complaints');
     await section.locator('summary').click();
     await expect(section.getByRole('link', { name: 'Xem ảnh phản ánh 1' })).toHaveAttribute(
@@ -137,7 +137,7 @@ test('Uncertain decision requires explicit detail reload and shows persisted out
     attempts++;
     return route.abort();
   });
-  await page.goto('/admin');
+  await page.goto('/admin/complaints');
   const section = page.locator('.admin-complaints');
   await section.locator('summary').click();
   await section.getByLabel('Số tiền đề nghị hoàn (đồng)').fill('100000');

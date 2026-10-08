@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 test.beforeEach(async ({ page }) => {
-  await page.route('**/wallet', (route) =>
+  await page.route('**/api/**/wallet', (route) =>
     route.fulfill({
       json: {
         balance: null,
@@ -60,11 +60,11 @@ for (const width of [390, 1440]) {
         },
       }),
     );
-    await page.route('**/products', (route) => route.fulfill({ json: [product] }));
-    await page.route('**/subscriptions', (route) =>
+    await page.route('**/api/**/products', (route) => route.fulfill({ json: [product] }));
+    await page.route('**/api/**/subscriptions', (route) =>
       route.fulfill({ json: { package: null, subscriptions: [] } }),
     );
-    await page.route('**/slots', (route) => route.fulfill({ json: slots }));
+    await page.route('**/api/**/slots', (route) => route.fulfill({ json: slots }));
     await page.route('**/flows/stock_bouquet', (route) => {
       const body = route.request().postDataJSON() as {
         p_batch: string;
@@ -94,7 +94,7 @@ for (const width of [390, 1440]) {
       // Simulate a committed write whose response is lost: the subsequent read is authoritative.
       return attempts === 3 ? route.abort() : route.fulfill({ json: { result: 'bouquet-id' } });
     });
-    await page.goto('/seller');
+    await page.goto('/seller/stock');
     const section = page.locator('.seller-stock');
     await section.getByRole('button', { name: 'Ghi nhận bó hoa vào ô' }).click();
     await expect(section.getByLabel('Ô trống của shop')).toBeFocused();
@@ -154,12 +154,12 @@ test('Expired seller can inspect slots but cannot stock', async ({ page }) => {
       },
     }),
   );
-  await page.route('**/products', (route) => route.fulfill({ json: [] }));
-  await page.route('**/slots', (route) => route.fulfill({ json: [] }));
-  await page.route('**/subscriptions', (route) =>
+  await page.route('**/api/**/products', (route) => route.fulfill({ json: [] }));
+  await page.route('**/api/**/slots', (route) => route.fulfill({ json: [] }));
+  await page.route('**/api/**/subscriptions', (route) =>
     route.fulfill({ json: { package: null, subscriptions: [] } }),
   );
-  await page.goto('/seller');
+  await page.goto('/seller/stock');
   await expect(
     page
       .locator('.seller-stock')

@@ -57,13 +57,11 @@ for (const width of [390, 1440])
     await page.getByLabel('Vấn đề với bó hoa').fill('Hoa bị dập khi nhận tại tủ.');
     await page.getByRole('button', { name: 'Kiểm tra phản ánh', exact: true }).click();
     await expect(page.locator('#complaint-photo-error')).toContainText('Tải ảnh minh chứng');
-    await page
-      .getByLabel('Ảnh minh chứng', { exact: true })
-      .setInputFiles({
-        name: 'evidence.png',
-        mimeType: 'image/png',
-        buffer: Buffer.from('fixture'),
-      });
+    await page.getByLabel('Ảnh minh chứng', { exact: true }).setInputFiles({
+      name: 'evidence.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from('fixture'),
+    });
     await page.getByRole('button', { name: 'Tải ảnh minh chứng', exact: true }).click();
     await expect(page.getByText(/Đã lưu ảnh evidence.png/)).toBeVisible();
     expect(
@@ -86,7 +84,9 @@ for (const width of [390, 1440])
     );
     await page.screenshot({ path: `.impeccable/review/complaint-${width}.png`, fullPage: true });
     await page.getByRole('button', { name: 'Xác nhận gửi phản ánh' }).click();
-    await expect(page.getByRole('status')).toHaveText('Đã ghi nhận phản ánh cho đơn này.');
+    await expect(
+      page.getByRole('status').filter({ hasText: 'Đã ghi nhận phản ánh cho đơn này.' }),
+    ).toHaveText('Đã ghi nhận phản ánh cho đơn này.');
     await expect(page.getByRole('button', { name: 'Gửi phản ánh về hoa' })).toHaveCount(0);
     expect(attempts).toBe(1);
   });
@@ -118,7 +118,9 @@ test('Lost complaint response blocks another submission until receipt is checked
     }),
   );
   await page.getByRole('button', { name: 'Xem biên nhận', exact: true }).click();
-  await expect(page.getByRole('status')).toHaveText('Đã ghi nhận phản ánh cho đơn này.');
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Đã ghi nhận phản ánh cho đơn này.' }),
+  ).toHaveText('Đã ghi nhận phản ánh cho đơn này.');
   expect(attempts).toBe(1);
 });
 

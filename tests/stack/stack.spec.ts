@@ -12,7 +12,7 @@ test('Public receipt route is served through Caddy and rejects an unknown capabi
   const rejected = await response;
   expect(rejected.status()).toBe(404);
   expect(rejected.headers()['cache-control']).toBe('no-store');
-  await expect(page.getByRole('alert')).toContainText('Không tìm thấy biên nhận');
+  await expect(page.getByRole('main').getByRole('alert')).toContainText('Không tìm thấy biên nhận');
 });
 
 test('advisor fallback is available through the actual gateway and database', async ({
@@ -54,13 +54,17 @@ test('Caddy serves landing, portal and authenticated API routes on one origin', 
   await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
   await expect(page.locator('#hero-title')).toBeVisible();
   await page.getByRole('link', { name: 'Cổng quản lý shop' }).click();
-  await expect(page).toHaveURL('/login');
+  await expect(page).toHaveURL('/dang-nhap');
   await expect(page.getByLabel('Email', { exact: true })).toBeVisible();
-  await expect(page.locator('script[type="module"]')).toHaveAttribute('src', /^\/portal\/assets\//);
-  await page.getByRole('link', { name: 'Đăng ký thông tin shop' }).click();
-  await expect(page).toHaveURL('/#dang-ky');
+  expect(await page.locator('script[src^="/_next/static/"]').count()).toBeGreaterThan(0);
+  await page.getByRole('link', { name: 'Đăng ký thành viên', exact: true }).click();
+  await expect(page).toHaveURL('/dang-ky');
+  await page.goto('/login');
+  await expect(page).toHaveURL('/dang-nhap');
+  await page.getByRole('link', { name: 'Đăng nhập dành cho nhân viên FloraBot' }).click();
+  await expect(page).toHaveURL('/admin/login');
   await page.goto('/admin');
-  await expect(page).toHaveURL('/login');
+  await expect(page).toHaveURL('/admin/login');
   const packages = await request.get('/api/packages');
   expect(packages.status()).toBe(200);
   expect(Array.isArray(await packages.json())).toBe(true);

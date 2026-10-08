@@ -67,7 +67,7 @@ for (const width of [390, 1440])
       paid = true;
       return route.fulfill({ json: { result: null } });
     });
-    await page.goto('/admin');
+    await page.goto('/admin/refunds');
     const section = page.locator('.admin-refunds');
     await section.locator('summary').click();
     await expect(
@@ -85,13 +85,11 @@ for (const width of [390, 1440])
     await expect(section.getByLabel('Ảnh minh chứng')).toBeFocused();
     await section.getByRole('button', { name: 'Kiểm tra chứng từ hoàn' }).click();
     await expect(section.getByText('Vui lòng tải ảnh chứng từ trước khi xác nhận.')).toBeVisible();
-    await section
-      .getByLabel('Ảnh minh chứng')
-      .setInputFiles({
-        name: 'proof.png',
-        mimeType: 'image/png',
-        buffer: Buffer.from('test image'),
-      });
+    await section.getByLabel('Ảnh minh chứng').setInputFiles({
+      name: 'proof.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from('test image'),
+    });
     await section.getByRole('button', { name: 'Tải ảnh minh chứng', exact: true }).click();
     await expect(section.getByText(/Đã lưu ảnh proof.png/)).toBeVisible();
     await section.screenshot({ path: `.impeccable/review/financial-upload-${width}.png` });
@@ -157,7 +155,7 @@ test('Automatic refund approval does not allow the approver to pay', async ({ pa
     approved = true;
     return route.fulfill({ json: { result: null } });
   });
-  await page.goto('/admin');
+  await page.goto('/admin/refunds');
   const section = page.locator('.admin-refunds');
   await section.locator('summary').click();
   await section.getByRole('button', { name: 'Duyệt khoản hoàn', exact: true }).click();
@@ -205,7 +203,7 @@ test('Lost payout response blocks repeat until explicit reload discovers payment
     attempts++;
     return route.abort();
   });
-  await page.goto('/admin');
+  await page.goto('/admin/refunds');
   const section = page.locator('.admin-refunds');
   await section.locator('summary').click();
   await section.getByRole('button', { name: 'Xem tài khoản nhận hoàn', exact: true }).click();
@@ -249,7 +247,7 @@ test('A bank response arriving after the tab is hidden is discarded', async ({ p
     await held;
     await route.fulfill({ json: bank });
   });
-  await page.goto('/admin');
+  await page.goto('/admin/refunds');
   const section = page.locator('.admin-refunds');
   await section.locator('summary').click();
   await section.getByRole('button', { name: 'Xem tài khoản nhận hoàn', exact: true }).click();
@@ -303,7 +301,7 @@ test('Failed private proof upload cannot record a payout and retries explicitly'
     payouts++;
     return route.fulfill({ json: { result: null } });
   });
-  await page.goto('/admin');
+  await page.goto('/admin/refunds');
   const section = page.locator('.admin-refunds');
   await section.locator('summary').click();
   await section.getByRole('button', { name: 'Xem tài khoản nhận hoàn', exact: true }).click();
@@ -356,7 +354,7 @@ test('Completed refund exposes only the authorized proof reader', async ({ page 
       },
     }),
   );
-  await page.goto('/admin');
+  await page.goto('/admin/refunds');
   const section = page.locator('.admin-refunds');
   await section.locator('summary').click();
   await expect(section.getByRole('link', { name: /Xem chứng từ 1/ })).toHaveAttribute(

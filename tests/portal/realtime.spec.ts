@@ -42,7 +42,7 @@ test('Realtime refresh preserves filters and focus, reconnects, and stops on log
       }
     });
   });
-  await page.goto('/admin');
+  await page.goto('/admin/shops');
   await expect.poll(() => sockets.length).toBeGreaterThan(0);
   await expect(page.getByText(name, { exact: true })).toBeVisible();
   const search = page.getByLabel('Tìm tên shop hoặc số điện thoại');
@@ -66,8 +66,8 @@ test('Realtime refresh preserves filters and focus, reconnects, and stops on log
 });
 
 test('Unavailable realtime retains periodic API refresh', async ({ page }) => {
+  test.setTimeout(45_000);
   let name = 'Hoa trước cập nhật';
-  await page.clock.install();
   await page.route('**/hub/**', (route) => route.fulfill({ status: 503 }));
   await page.route('**/api/auth/me', (route) =>
     route.fulfill({ json: { id: 'admin', name: 'Quản trị', role: 'ADMIN' } }),
@@ -79,9 +79,9 @@ test('Unavailable realtime retains periodic API refresh', async ({ page }) => {
       json: [{ id: 'shop', shopName: name, phone: '0901234567', status: 'PENDING' }],
     }),
   );
-  await page.goto('/admin');
+  await page.goto('/admin/shops');
   await expect(page.getByText(name, { exact: true })).toBeVisible();
   name = 'Hoa sau cập nhật định kỳ';
-  await page.clock.fastForward(30_100);
-  await expect(page.getByText(name, { exact: true })).toBeVisible();
+  // Keep hydration and React Query notifications on real timers while verifying fallback polling.
+  await expect(page.getByText(name, { exact: true })).toBeVisible({ timeout: 35_000 });
 });
