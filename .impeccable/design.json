@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "tokens": {
+    "color": {
+      "canvas": "oklch(1 0 0)",
+      "ink": "oklch(0.20 0 0)",
+      "brand": "oklch(0.87 0.17 91)",
+      "muted": "oklch(0.38 0 0)",
+      "line": "oklch(0.48 0 0)",
+      "error": "oklch(0.43 0.17 28)"
+    },
+    "font": { "display": "Barlow Condensed", "body": "Be Vietnam Pro" },
+    "radius": "12px",
+    "baseFontSize": "18px"
+  },
+  "direction": "docs/landing-direction.md"
+}
