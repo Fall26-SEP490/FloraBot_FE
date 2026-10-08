@@ -1,0 +1,134 @@
+---
+import '../styles/fonts.css';
+import '@florabot/ui/tokens.css';
+import '../styles/landing.css';
+import headingFont from '../assets/fonts/be-vietnam-pro-latin-vietnamese-800.woff2?url';
+import bodyFont from '../assets/fonts/be-vietnam-pro-latin-vietnamese-400.woff2?url';
+type Props = { title?: string; description?: string };
+const {
+  title = 'FloraBot — Đặt hoa theo ý bạn, nhận tại tủ',
+  description = 'Đặt mẫu hoa riêng hoặc chọn bó có sẵn, theo dõi đơn và nhận tại tủ FloraBot. Shop hoa có thể thuê ô tủ theo tháng.',
+} = Astro.props;
+const portal = (import.meta.env.PUBLIC_PORTAL_URL || 'http://localhost:8088')
+  .replace(/\/login$/, '')
+  .replace(/\/$/, '');
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const currentPath = Astro.url.pathname.replace(/\/$/, '') || '/';
+const navigation = [
+  { href: '/', label: 'Trang chủ' },
+  { href: '/ve-florabot', label: 'Về chúng tôi' },
+  { href: `${portal}/dat-hoa`, label: 'Sản phẩm hoa' },
+  { href: '/huong-dan-dat-hoa', label: 'Cách đặt & nhận hoa' },
+  { href: '/#vi-tri', label: 'Vị trí tủ' },
+  { href: '/lien-he', label: 'Liên hệ' },
+];
+---
+
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    {
+      [headingFont, bodyFont].map((href) => (
+        <link rel="preload" href={href} as="font" type="font/woff2" crossorigin="anonymous" />
+      ))
+    }
+    <meta name="description" content={description} /><meta name="theme-color" content="#2f6b3d" />
+    <title>{title}</title><link rel="canonical" href={canonical} /><link
+      rel="icon"
+      href="/favicon.svg"
+      type="image/svg+xml"
+    />
+    <meta property="og:type" content="website" /><meta property="og:title" content={title} /><meta
+      property="og:description"
+      content={description}
+    /><meta property="og:locale" content="vi_VN" /><meta
+      property="og:url"
+      content={canonical}
+    /><meta property="og:image" content={new URL('/images/kiosk-model.png', Astro.site)} />
+    <slot name="head" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Bỏ qua tới nội dung</a>
+    <header class="site-header">
+      <a href="/" class="wordmark" aria-label="FloraBot — trang chủ"
+        >FloraBot<span class="brand-dot" aria-hidden="true"></span></a
+      ><button
+        class="navigation-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="main-navigation"
+        hidden
+        >Menu <svg
+          aria-hidden="true"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"></path></svg
+        ></button
+      ><nav id="main-navigation" aria-label="Điều hướng chính">
+        {
+          navigation.map((item) => (
+            <a href={item.href} aria-current={item.href === currentPath ? 'page' : undefined}>
+              {item.label}
+            </a>
+          ))
+        }
+      </nav><div class="header-account">
+        <a class="shop-entry" href="/#goi-thue">Dành cho shop</a><a
+          href={`${portal}/dang-nhap`}
+          class="header-cta">Đăng nhập</a>
+      </div>
+    </header>
+    <slot />
+    <script>
+      const header = document.querySelector<HTMLElement>('.site-header');
+      if (header) {
+        const toggle = header.querySelector<HTMLButtonElement>('.navigation-toggle');
+        if (toggle) {
+          toggle.hidden = false;
+          header.classList.add('navigation-ready');
+          const close = () => toggle.setAttribute('aria-expanded', 'false');
+          toggle.addEventListener('click', () =>
+            toggle.setAttribute(
+              'aria-expanded',
+              String(toggle.getAttribute('aria-expanded') !== 'true'),
+            ),
+          );
+          header.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
+              close();
+              toggle.focus();
+            }
+          });
+          header.querySelectorAll('nav a').forEach((link) => link.addEventListener('click', close));
+        }
+        const measure = () =>
+          document.documentElement.style.setProperty(
+            '--header-height',
+            `${header.getBoundingClientRect().height}px`,
+          );
+        new ResizeObserver(measure).observe(header);
+        measure();
+      }
+    </script>
+    <footer class="site-footer">
+      <div>
+        <a class="wordmark" href="/">FloraBot<span class="brand-dot" aria-hidden="true"></span></a
+        ><p>Chọn hoa theo ý bạn. Nhận tại tủ theo lịch hẹn.</p><a href="/ve-florabot"
+          >Tìm hiểu về FloraBot</a>
+      </div><div>
+        <a href={`${portal}/dat-hoa`}>Sản phẩm hoa</a><a href="/huong-dan-dat-hoa"
+          >Hướng dẫn đặt & nhận hoa</a
+        ><a href="/lien-he">Liên hệ & hỗ trợ</a><a href="/chinh-sach-rieng-tu"
+          >Chính sách riêng tư</a
+        ><a href="/#dang-ky">Tư vấn dành cho shop</a><a href={`${portal}/login`}
+          >Cổng quản lý shop</a>
+      </div><div class="footer-note">
+        <span class="context-label">FloraBot · Hoa và những dịp gửi thương</span>
+      </div>
+    </footer>
+  </body>
+</html>
