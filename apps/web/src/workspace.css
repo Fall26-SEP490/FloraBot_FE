@@ -639,3 +639,92 @@
   gap: 0.75rem;
   margin-top: 1rem;
 }
+.workspace-account-shell {
+  min-height: 100dvh;
+  background: #f3f7f0;
+}
+.workspace-account-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.workspace-account-content {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+.workspace-account-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid #c9d9c8;
+  margin-top: 1.5rem;
+}
+.workspace-account-card h2 {
+  font-size: 1.15rem;
+  margin-bottom: 1rem;
+  color: #183e2b;
+}
+.workspace-account-card .account-details {
+  margin-top: 0;
+}
+.workspace-unavailable-notice,
+.workspace-denied-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 16px 20px;
+  border-radius: 12px;
+  margin-top: 1.5rem;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+.workspace-unavailable-notice {
+  background: #fdf8e6;
+  border: 1px solid #e2cb69;
+  color: #574505;
+}
+.workspace-unavailable-notice svg {
+  flex-shrink: 0;
+  color: #7a6108;
+  margin-top: 2px;
+}
+.workspace-denied-notice {
+  background: #fcf1f1;
+  border: 1px solid #e7b5b5;
+  color: #731c1c;
+}
+.workspace-denied-notice svg {
+  flex-shrink: 0;
+  color: #9c2727;
+  margin-top: 2px;
+}
+.workspace-account-actions {
+  margin-top: 2rem;
+  display: flex;
+  gap: 1rem;
+}
+.workspace-auth-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+.workspace-auth-choices a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0.75rem 1.5rem;
+  text-decoration: none;
+  font-weight: 600;
+  border-radius: 12px;
+}
+@media (max-width: 640px) {
+  .workspace-account-content {
+    padding: 20px 16px 48px;
+  }
+  .workspace-account-card {
+    padding: 16px;
+  }
+}

@@ -1,0 +1,266 @@
+import { useEffect } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import { Button, Flower2, LogOut, CircleAlert } from '@florabot/ui';
+import { ApiError, queryClient, request, sessionQuery } from './api';
+import { accountPath } from './MemberAuth';
+
+export const ROLE_LABELS: Record<string, string> = {
+  ADMIN: 'Quản trị viên',
+  STAFF: 'Nhân viên FloraBot',
+  SELLER: 'Chủ shop',
+  CUSTOMER: 'Khách hàng',
+  OPERATIONS_MANAGER: 'Quản lý vận hành',
+  TECHNICIAN: 'Kỹ thuật viên',
+  SELLER_STAFF: 'Nhân viên shop',
+};
+
+export const getRoleLabel = (role: string): string => ROLE_LABELS[role] ?? role;
+
+export const isDedicatedWorkspaceRole = (role: string): boolean =>
+  role === 'OPERATIONS_MANAGER' || role === 'TECHNICIAN' || role === 'SELLER_STAFF';
+
+export const isExistingFullPortalRole = (role: string): boolean =>
+  role === 'ADMIN' || role === 'STAFF' || role === 'SELLER' || role === 'CUSTOMER';
+
+export const isPlatformOperatorRole = (role: string): boolean =>
+  role === 'OPERATIONS_MANAGER' || role === 'TECHNICIAN' || role === 'ADMIN' || role === 'STAFF';
+
+export default function WorkspaceAccount() {
+  const { t } = useTranslation();
+  const router = useRouter();
+  const session = useQuery(sessionQuery);
+
+  const logout = useMutation({
+    mutationFn: () => request('/auth/logout', {}),
+    onSuccess: async () => {
+      const isOperator = session.data && isPlatformOperatorRole(session.data.role);
+      queryClient.clear();
+      router.push(isOperator ? '/admin/login' : '/dang-nhap');
+    },
+  });
+
+  const shouldRedirect = session.data && isExistingFullPortalRole(session.data.role);
+
+  useEffect(() => {
+    if (shouldRedirect && session.data) {
+      router.replace(accountPath(session.data.role));
+    }
+  }, [shouldRedirect, session.data, router]);
+
+  if (session.isPending || shouldRedirect) {
+    return (
+      <main id="main">
+        <p role="status">
+          {shouldRedirect
+            ? 'Đang chuyển hướng tới khu vực của bạn…'
+            : 'Đang tải thông tin tài khoản…'}
+        </p>
+      </main>
+    );
+  }
+
+  const isUnauthorized = session.error instanceof ApiError && session.error.status === 401;
+
+  if (session.isError) {
+    if (!isUnauthorized) {
+      return (
+        <div className="workspace-account-shell">
+          <header className="dashboard-header workspace-account-header">
+            <Link className="dashboard-brand" href="/">
+              <Flower2 size={28} aria-hidden="true" />
+              FloraBot<span aria-hidden="true">.</span>
+            </Link>
+            <span className="dashboard-role">Không gian làm việc</span>
+          </header>
+          <main id="main" className="workspace dashboard-content workspace-account-content">
+            <div className="dashboard-page-heading">
+              <div>
+                <h1>Chưa tải được phiên làm việc</h1>
+                <p>Không kết nối được với máy chủ FloraBot hoặc dịch vụ đang bận.</p>
+              </div>
+              <span className="dashboard-context">Lỗi kết nối</span>
+            </div>
+            <div className="workspace-unavailable-notice" role="alert">
+              <CircleAlert size={20} aria-hidden="true" />
+              <p>
+                {session.error instanceof ApiError
+                  ? session.error.message
+                  : 'Kiểm tra kết nối rồi thử lại.'}
+              </p>
+            </div>
+            <div className="workspace-account-actions">
+              <Button onClick={() => void session.refetch()}>Thử lại</Button>
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    return (
+      <div className="workspace-account-shell">
+        <header className="dashboard-header workspace-account-header">
+          <Link className="dashboard-brand" href="/">
+            <Flower2 size={28} aria-hidden="true" />
+            FloraBot<span aria-hidden="true">.</span>
+          </Link>
+          <span className="dashboard-role">Không gian làm việc</span>
+        </header>
+        <main id="main" className="workspace dashboard-content workspace-account-content">
+          <div className="dashboard-page-heading">
+            <div>
+              <h1>Không gian làm việc FloraBot</h1>
+              <p>Vui lòng đăng nhập để truy cập tài khoản và phiên làm việc của bạn.</p>
+            </div>
+            <span className="dashboard-context">Đăng nhập</span>
+          </div>
+          <div className="workspace-auth-choices">
+            <Link href="/dang-nhap" className="button button-primary">
+              Đăng nhập tài khoản shop & thành viên
+            </Link>
+            <Link href="/admin/login" className="button button-outline">
+              Đăng nhập vận hành
+            </Link>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (!session.data) {
+    return (
+      <div className="workspace-account-shell">
+        <header className="dashboard-header workspace-account-header">
+          <Link className="dashboard-brand" href="/">
+            <Flower2 size={28} aria-hidden="true" />
+            FloraBot<span aria-hidden="true">.</span>
+          </Link>
+          <span className="dashboard-role">Không gian làm việc</span>
+        </header>
+        <main id="main" className="workspace dashboard-content workspace-account-content">
+          <div className="dashboard-page-heading">
+            <div>
+              <h1>Không gian làm việc FloraBot</h1>
+              <p>Vui lòng đăng nhập để truy cập tài khoản và phiên làm việc của bạn.</p>
+            </div>
+            <span className="dashboard-context">Đăng nhập</span>
+          </div>
+          <div className="workspace-auth-choices">
+            <Link href="/dang-nhap" className="button button-primary">
+              Đăng nhập tài khoản shop & thành viên
+            </Link>
+            <Link href="/admin/login" className="button button-outline">
+              Đăng nhập vận hành
+            </Link>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  const role = session.data.role;
+  const isDedicated = isDedicatedWorkspaceRole(role);
+  const roleLabel = getRoleLabel(role);
+  const avatarLetter = session.data.name.trim().slice(0, 1).toLocaleUpperCase('vi-VN');
+
+  return (
+    <div className="workspace-account-shell">
+      <header className="dashboard-header workspace-account-header">
+        <Link className="dashboard-brand" href="/">
+          <Flower2 size={28} aria-hidden="true" />
+          FloraBot<span aria-hidden="true">.</span>
+        </Link>
+        <span className="dashboard-role">{isDedicated ? roleLabel : 'Phân quyền tài khoản'}</span>
+        <div className="dashboard-user">
+          <span className="dashboard-avatar" aria-hidden="true">
+            {avatarLetter}
+          </span>
+          <span>{session.data.name}</span>
+          <Button
+            variant="outline"
+            className="dashboard-logout button"
+            disabled={logout.isPending}
+            onClick={() => logout.mutate()}
+          >
+            <LogOut size={16} aria-hidden="true" /> Đăng xuất
+          </Button>
+        </div>
+      </header>
+
+      <main id="main" className="workspace dashboard-content workspace-account-content">
+        <div className="dashboard-page-heading">
+          <div>
+            <h1>{isDedicated ? `Chào ${session.data.name}` : 'Quyền truy cập chưa được cấp'}</h1>
+            <p>
+              {isDedicated
+                ? 'Thông tin tài khoản và phiên làm việc hiện tại của bạn.'
+                : 'Tài khoản của bạn chưa được phân quyền trong hệ thống.'}
+            </p>
+          </div>
+          <span className="dashboard-context">{isDedicated ? roleLabel : role}</span>
+        </div>
+
+        <section aria-labelledby="workspace-profile-heading" className="workspace-account-card">
+          <h2 id="workspace-profile-heading">Thông tin tài khoản</h2>
+          <dl className="account-details">
+            <div>
+              <dt>Tài khoản</dt>
+              <dd>{session.data.name}</dd>
+            </div>
+            <div>
+              <dt>Vai trò</dt>
+              <dd>{roleLabel}</dd>
+            </div>
+            {session.data.sellerId && (
+              <div>
+                <dt>Mã shop</dt>
+                <dd>{session.data.sellerId}</dd>
+              </div>
+            )}
+            {session.data.sellerStatus && (
+              <div>
+                <dt>Trạng thái shop</dt>
+                <dd>
+                  {t(`status.${session.data.sellerStatus}`, {
+                    defaultValue: session.data.sellerStatus,
+                  })}
+                </dd>
+              </div>
+            )}
+          </dl>
+        </section>
+
+        {isDedicated ? (
+          <div className="workspace-unavailable-notice" role="status">
+            <CircleAlert size={20} aria-hidden="true" />
+            <p>
+              Các tính năng tác nghiệp cho vai trò này hiện chưa khả dụng trên tài khoản của bạn.
+            </p>
+          </div>
+        ) : (
+          <div className="workspace-denied-notice" role="alert">
+            <CircleAlert size={20} aria-hidden="true" />
+            <p>
+              Tài khoản chưa được kích hoạt phân quyền hợp lệ trong hệ thống. Vui lòng liên hệ quản
+              trị viên để được cấp quyền.
+            </p>
+          </div>
+        )}
+
+        <div className="workspace-account-actions">
+          <Button variant="outline" disabled={logout.isPending} onClick={() => logout.mutate()}>
+            Đăng xuất
+          </Button>
+        </div>
+
+        {logout.isError && (
+          <p role="alert" className="error">
+            Chưa đăng xuất được. Bạn thử lại nhé.
+          </p>
+        )}
+      </main>
+    </div>
+  );
+}

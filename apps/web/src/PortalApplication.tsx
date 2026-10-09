@@ -29,6 +29,7 @@ import GuestHistory from './GuestHistory';
 import MemberAuth, { accountPath } from './MemberAuth';
 import AuthShell from './AuthShell';
 import MemberAccount from './MemberAccount';
+import WorkspaceAccount from './WorkspaceAccount';
 import StaffTasks from './StaffTasks';
 import FlowerShop from './FlowerShop';
 import WebRequests from './WebRequests';
@@ -458,7 +459,8 @@ export type PortalScreen =
   | 'shop'
   | 'seller'
   | 'admin'
-  | 'staff';
+  | 'staff'
+  | 'workspace';
 
 function Guard({ requiredRole, children }: { requiredRole: string; children: React.ReactNode }) {
   const router = useRouter();
@@ -537,6 +539,8 @@ function Screen({ screen, section }: { screen: PortalScreen; section?: string })
           <StaffWorkspace />
         </Guard>
       );
+    case 'workspace':
+      return <WorkspaceAccount />;
   }
 }
 
