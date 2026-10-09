@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { QueryClientProvider, useMutation, useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -10,7 +10,8 @@ import { Button } from '@florabot/ui';
 import { ApiError, queryClient, request, sessionQuery, type Session } from './api';
 import './i18n';
 import Products from './Products';
-import WorkspaceNavigation, { WorkspaceOverview } from './WorkspaceNavigation';
+import WorkspaceNavigation, { WorkspaceHeader } from './WorkspaceNavigation';
+import DashboardOverview from './DashboardOverview';
 import { workspaceSections } from './workspaceSections';
 import Subscriptions from './Subscriptions';
 import AdminSellers from './AdminSellers';
@@ -26,6 +27,7 @@ import Wallet from './Wallet';
 import Receipt from './Receipt';
 import GuestHistory from './GuestHistory';
 import MemberAuth, { accountPath } from './MemberAuth';
+import AuthShell from './AuthShell';
 import MemberAccount from './MemberAccount';
 import StaffTasks from './StaffTasks';
 import FlowerShop from './FlowerShop';
@@ -41,14 +43,16 @@ import '@fontsource/be-vietnam-pro/latin-600.css';
 import '@florabot/ui/tokens.css';
 import './portal.css';
 import './workspace.css';
+import './auth.css';
 
-const landingUrl = '/';
 const loginSchema = z.object({
   email: z.email('Nhập địa chỉ email hợp lệ.'),
   password: z.string().min(1, 'Nhập mật khẩu của bạn.').max(128, 'Mật khẩu tối đa 128 ký tự.'),
 });
 
 function Login() {
+  const [show, setShow] = useState(false);
+  const feedback = useRef<HTMLParagraphElement>(null);
   const { t } = useTranslation();
   const router = useRouter();
   const form = useForm<z.infer<typeof loginSchema>>({ resolver: zodResolver(loginSchema) });
@@ -61,68 +65,94 @@ function Login() {
       router.push(accountPath(session.role));
     },
   });
+  useEffect(() => {
+    if (login.error) feedback.current?.focus();
+  }, [login.error]);
   return (
-    <main id="main" className="login-layout">
-      <section className="login-story">
-        <a className="portal-brand" href={landingUrl}>
-          FloraBot
-        </a>
-        <h1>Điều hành FloraBot.</h1>
-        <p>
-          Theo dõi tủ hoa và xử lý công việc.
-          <br />
-          Cùng giữ trải nghiệm nhận hoa trọn vẹn.
+    <AuthShell mode="staff">
+      <h1 id="auth-title">Đăng nhập vận hành</h1>
+      <p className="auth-intro">
+        Dành cho quản trị viên và nhân viên. Dùng tài khoản do FloraBot cấp để tiếp tục công việc.
+      </p>
+      {login.error && (
+        <p ref={feedback} tabIndex={-1} role="alert" className="auth-message auth-message-error">
+          {login.error instanceof ApiError
+            ? login.error.message
+            : 'Không kết nối được máy chủ. Thông tin vẫn được giữ, bạn thử lại nhé.'}
         </p>
-        <p className="quiet">Dành cho quản trị viên và nhân viên được cấp quyền.</p>
-      </section>
-      <section className="login-form" aria-label="Đăng nhập">
-        <h2>Đăng nhập vận hành</h2>
-        <p>Dùng tài khoản quản trị viên hoặc nhân viên do FloraBot cấp.</p>
-        <form noValidate onSubmit={form.handleSubmit((values) => login.mutate(values))}>
+      )}
+      <form
+        className="auth-form"
+        noValidate
+        aria-busy={login.isPending}
+        onSubmit={form.handleSubmit((values) => {
+          if (!login.isPending) login.mutate(values);
+        })}
+      >
+        <p className="auth-required">Vui lòng điền đầy đủ email và mật khẩu.</p>
+        <div className="auth-field">
           <label htmlFor="email">{t('email')}</label>
           <input
             id="email"
             type="email"
+            inputMode="email"
             autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
+            required
             {...form.register('email')}
             aria-invalid={!!form.formState.errors.email}
             aria-describedby={form.formState.errors.email ? 'email-error' : undefined}
           />
           {form.formState.errors.email && (
-            <p id="email-error" className="error">
+            <p id="email-error" className="auth-field-error">
               {form.formState.errors.email.message}
             </p>
           )}
+        </div>
+        <div className="auth-field">
           <label htmlFor="password">{t('password')}</label>
-          <input
-            id="password"
-            type="password"
-            autoComplete="current-password"
-            {...form.register('password')}
-            aria-invalid={!!form.formState.errors.password}
-            aria-describedby={form.formState.errors.password ? 'password-error' : undefined}
-          />
+          <div className="auth-password">
+            <input
+              id="password"
+              type={show ? 'text' : 'password'}
+              autoComplete="current-password"
+              required
+              {...form.register('password')}
+              aria-invalid={!!form.formState.errors.password}
+              aria-describedby={form.formState.errors.password ? 'password-error' : undefined}
+            />
+            <button
+              type="button"
+              aria-label={show ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+              aria-pressed={show}
+              onClick={() => setShow(!show)}
+            >
+              {show ? 'Ẩn' : 'Hiện'}
+            </button>
+          </div>
           {form.formState.errors.password && (
-            <p id="password-error" className="error">
+            <p id="password-error" className="auth-field-error">
               {form.formState.errors.password.message}
             </p>
           )}
-          <p role="alert" className="error">
-            {login.error
-              ? login.error instanceof ApiError
-                ? login.error.message
-                : 'Không kết nối được máy chủ. Thông tin vẫn được giữ, bạn thử lại nhé.'
-              : ''}
-          </p>
-          <Button type="submit" disabled={login.isPending}>
-            {t(login.isPending ? 'loggingIn' : 'login')}
-          </Button>
-        </form>
-        <p className="quiet">
-          Bạn mua hoa hoặc quản lý shop? <Link href="/dang-nhap">Đăng nhập tài khoản</Link>.
+        </div>
+        <Button className="auth-submit" type="submit" disabled={login.isPending}>
+          {t(login.isPending ? 'loggingIn' : 'login')}
+        </Button>
+        <span className="auth-sr-status" role="status">
+          {login.isPending ? 'Đang kiểm tra tài khoản. Vui lòng chờ.' : ''}
+        </span>
+      </form>
+      <p className="auth-hint auth-staff-help">
+        Quên mật khẩu? Liên hệ quản trị viên cấp tài khoản để được hỗ trợ.
+      </p>
+      <div className="auth-alternative">
+        <p>
+          Bạn mua hoa hoặc quản lý shop? <Link href="/dang-nhap">Đăng nhập tài khoản</Link>
         </p>
-      </section>
-    </main>
+      </div>
+    </AuthShell>
   );
 }
 
@@ -216,22 +246,51 @@ function StaffWorkspace() {
     );
   return (
     <>
-      <header className="portal-header">
-        <Link className="portal-brand" href="/staff">
-          FloraBot
-        </Link>
-        <span>Khu vực nhân viên</span>
-        <Button variant="outline" onClick={() => logout.mutate()} disabled={logout.isPending}>
-          {logout.isPending ? 'Đang đăng xuất…' : 'Đăng xuất'}
-        </Button>
-      </header>
-      <main id="main" className="workspace">
-        <h1>Chào {session.data.name}</h1>
-        <p>Tài khoản nhân viên FloraBot</p>
-        <p>Quyền xử lý sự cố và giao hoa được giới hạn theo công việc được phân công.</p>
-        <StaffTasks staffId={session.data.id} />
-        {logout.isError && <p role="alert">Chưa đăng xuất được. Bạn thử lại nhé.</p>}
-      </main>
+      <WorkspaceHeader
+        workspaceRole="STAFF"
+        name={session.data.name}
+        busy={logout.isPending}
+        onLogout={() => logout.mutate()}
+      />
+      <div className="dashboard-shell">
+        <WorkspaceNavigation workspaceRole="STAFF" section="tasks" />
+        <main id="main" className="workspace dashboard-content">
+          <div className="dashboard-page-heading">
+            <div>
+              <h1>Chào {session.data.name}</h1>
+              <p>Nhận việc, cập nhật tiến độ và gửi báo cáo tại một nơi.</p>
+            </div>
+            <span className="dashboard-context">Nhân viên FloraBot</span>
+          </div>
+          <StaffTasks staffId={session.data.id} />
+          <section
+            id="staff-guide"
+            className="dashboard-staff-guide"
+            tabIndex={-1}
+            aria-labelledby="staff-guide-title"
+          >
+            <h2 id="staff-guide-title">Từ nhận việc đến hoàn thành</h2>
+            <ol>
+              <li>
+                <strong>Kiểm tra yêu cầu</strong>
+                <p>Xem đúng tủ, địa chỉ và nội dung được phân công.</p>
+              </li>
+              <li>
+                <strong>Ghi nhận thực hiện</strong>
+                <p>Bắt đầu công việc, cập nhật kết quả và ảnh minh chứng.</p>
+              </li>
+              <li>
+                <strong>Gửi báo cáo</strong>
+                <p>Theo dõi kết quả duyệt hoặc yêu cầu kiểm tra lại.</p>
+              </li>
+            </ol>
+            <p className="dashboard-data-note">
+              Bạn chỉ thao tác trong phạm vi công việc được giao.
+            </p>
+          </section>
+          {logout.isError && <p role="alert">Chưa đăng xuất được. Bạn thử lại nhé.</p>}
+        </main>
+      </div>
     </>
   );
 }
@@ -281,32 +340,39 @@ function Workspace({
     );
   return (
     <>
-      <header className="portal-header">
-        <Link className="portal-brand" href={role === 'ADMIN' ? '/admin' : '/seller'}>
-          FloraBot
-        </Link>
-        <span>{role === 'ADMIN' ? 'Quản trị vận hành' : 'Góc quản lý shop'}</span>
-        <Button variant="outline" onClick={() => logout.mutate()} disabled={logout.isPending}>
-          {t('logout')}
-        </Button>
-      </header>
+      <WorkspaceHeader
+        workspaceRole={role}
+        name={session.data.name}
+        busy={logout.isPending}
+        onLogout={() => logout.mutate()}
+      />
       <div className="dashboard-shell">
-        <WorkspaceNavigation key={section} role={role} section={section} />
+        <WorkspaceNavigation key={section} workspaceRole={role} section={section} />
         <main id="main" className="workspace dashboard-content">
           <PortalUpdates />
           {role === 'SELLER' && <SubscriptionBanner session={session.data} />}
-          <h1>
-            {section === 'overview'
-              ? t('welcome', { name: session.data.name })
-              : workspaceSections[role].find(([key]) => key === section)?.[1]}
-          </h1>
+          <div className="dashboard-page-heading">
+            <div>
+              <h1>
+                {section === 'overview'
+                  ? t('welcome', { name: session.data.name })
+                  : workspaceSections[role].find(([key]) => key === section)?.[1]}
+              </h1>
+              <p>
+                {section === 'overview'
+                  ? role === 'ADMIN'
+                    ? 'Tình hình vận hành và các việc cần bạn xử lý.'
+                    : 'Đơn hàng, danh mục hoa và tài chính của shop.'
+                  : workspaceSections[role].find(([key]) => key === section)?.[2]}
+              </p>
+            </div>
+            <span className="dashboard-context">
+              {section === 'overview' ? 'Tổng quan' : 'Không gian làm việc'}
+            </span>
+          </div>
           {section === 'overview' && (
             <>
-              <p>
-                {role === 'ADMIN'
-                  ? 'Bạn đang đăng nhập với quyền quản trị hệ thống.'
-                  : 'Thông tin tài khoản và gói thuê của shop được cập nhật từ hệ thống.'}
-              </p>
+              <DashboardOverview session={session.data} />
               <details className="workspace-profile">
                 <summary>Thông tin tài khoản và quyền truy cập</summary>
                 <dl className="account-details">
@@ -342,7 +408,6 @@ function Workspace({
                   )}
                 </dl>
               </details>
-              <WorkspaceOverview role={role} />
             </>
           )}
           {section === 'orders' && (

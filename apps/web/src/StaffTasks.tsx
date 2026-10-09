@@ -74,12 +74,13 @@ function TaskItem({ task, admin, staffId }: { task: Task; admin: boolean; staffI
   }
   return (
     <article className="member-empty" aria-labelledby={`task-${task.id}`}>
-      <h3 id={`task-${task.id}`}>
-        {task.kind === 'INCIDENT' ? 'Kiểm tra sự cố' : 'Giao hoa'} · {task.kioskName}
-      </h3>
-      <p>
-        <strong>{labels[task.status] || task.status}</strong> · {task.assigneeName}
-      </p>
+      <div className="staff-task-heading">
+        <h3 id={`task-${task.id}`}>
+          {task.kind === 'INCIDENT' ? 'Kiểm tra sự cố' : 'Giao hoa'} · {task.kioskName}
+        </h3>
+        <span className="staff-task-label">{labels[task.status] || task.status}</span>
+      </div>
+      <p>Người thực hiện: {task.assigneeName}</p>
       <p>
         {task.address}
         {task.shopName ? ` · ${task.shopName}` : ''}
@@ -186,32 +187,36 @@ export default function StaffTasks({
           ? 'Duyệt báo cáo hoặc yêu cầu kiểm tra lại. Việc đóng sự cố và duyệt tiền được xử lý riêng.'
           : 'Bắt đầu công việc, ghi nhận kết quả và gửi báo cáo để quản trị viên duyệt.'}
       </p>
-      <label htmlFor="task-status">Lọc trạng thái</label>
-      <select
-        id="task-status"
-        value={status}
-        onChange={(event) => {
-          setStatus(event.target.value);
-          setPage(1);
-        }}
-      >
-        <option value="">Tất cả trạng thái</option>
-        {Object.entries(labels).map(([value, text]) => (
-          <option key={value} value={value}>
-            {text}
-          </option>
-        ))}
-      </select>
-      <Button
-        variant="outline"
-        disabled={tasks.isFetching}
-        onClick={async () => {
-          const result = await tasks.refetch();
-          if (!result.isError) setReload((value) => value + 1);
-        }}
-      >
-        Tải lại công việc
-      </Button>
+      <div className="staff-task-toolbar">
+        <div>
+          <label htmlFor="task-status">Lọc trạng thái</label>
+          <select
+            id="task-status"
+            value={status}
+            onChange={(event) => {
+              setStatus(event.target.value);
+              setPage(1);
+            }}
+          >
+            <option value="">Tất cả trạng thái</option>
+            {Object.entries(labels).map(([value, text]) => (
+              <option key={value} value={value}>
+                {text}
+              </option>
+            ))}
+          </select>
+        </div>
+        <Button
+          variant="outline"
+          disabled={tasks.isFetching}
+          onClick={async () => {
+            const result = await tasks.refetch();
+            if (!result.isError) setReload((value) => value + 1);
+          }}
+        >
+          Tải lại công việc
+        </Button>
+      </div>
       {tasks.isPending ? (
         <p role="status">Đang tải công việc…</p>
       ) : tasks.isError ? (

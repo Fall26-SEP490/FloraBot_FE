@@ -1,5 +1,45 @@
 # FloraBot design system
 
+## Operations dashboards
+
+Admin, seller and staff share a white account header, forest-green grouped sidebar
+and pale green work canvas. Desktop navigation stays available while scrolling;
+at 900px and below it becomes an explicit disclosure with Escape focus recovery.
+Active routes have a contrasting surface and aria-current. Business forms use the
+same readable headings, persistent labels and controls of at least 44px.
+
+Admin overview prioritizes open incidents, submitted staff reports and recent
+flower requests. Seller overview shows active products, withdrawable/pending funds
+and recent requests. Staff opens directly on assigned work, with a status filter
+and a short workflow guide. Account metadata is secondary to actionable work.
+Each overview feed loads and retries independently. Summaries use scoped API data,
+identify first-page limits and never infer global totals from a partial page.
+Missing balances are shown as unavailable, not zero. No decorative charts, motion,
+new assets or new dependencies were introduced for these operational surfaces.
+
+Verification and limits: docs/dashboard-accessibility.md.
+
+## Authentication surfaces
+
+The October 9 authentication revision uses one shared shell for member login,
+registration, password recovery/reset and operations login. A white form sits on
+a pale green canvas; a forest-green botanical panel and an existing bouquet photo
+provide the desktop visual identity. At 800px and below the decorative panel is
+hidden, so the form is the first task content. Public and staff authentication
+retain their separate API realms.
+
+Login/registration links form an active-page navigation row. Labels are persistent;
+password rules precede submission; errors are linked to individual fields; server
+feedback receives focus. Inputs and primary actions have at least 52px height,
+secondary controls at least 44px. Error states include text as well as color.
+Password visibility affects both password fields during registration/reset.
+Recovery confirmation preserves account privacy and offers a way to correct email.
+Recovery tokens remain in memory after removal from the address bar. There is no
+decorative motion in these forms. Existing flower assets retain their provenance
+in docs/assets.md; this revision adds no generated imagery or third-party services.
+
+## Established website direction
+
 Latest user-approved direction: a botanical storefront with forest green, warm ivory and leaf-yellow highlights. Be Vietnam Pro headings and body, Nunito wordmark, real flower photographs and an illustrated green conceptual cabinet. Screenprint floral graphics, coral accents and repeating botanical patterns give the landing its visual identity.
 
 | Token  | Value               | Use                                            |

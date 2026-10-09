@@ -8,7 +8,7 @@ for (const role of ['ADMIN', 'SELLER'] as const)
       const base = role === 'ADMIN' ? '/admin' : '/seller';
       const section = role === 'ADMIN' ? 'shops' : 'products';
       const title = role === 'ADMIN' ? 'Shop hoa' : 'Mẫu hoa';
-      let businessReads = 0;
+      const businessReads: string[] = [];
       await page.route('**/api/**', (route) => {
         if (route.request().url().endsWith('/auth/me'))
           return route.fulfill({
@@ -21,13 +21,38 @@ for (const role of ['ADMIN', 'SELLER'] as const)
               packageExpiresAt: '2030-01-01',
             },
           });
-        businessReads++;
-        return route.fulfill({ json: [] });
+        const path = new URL(route.request().url()).pathname;
+        businessReads.push(path);
+        if (path.endsWith('/wallet'))
+          return route.fulfill({
+            json: {
+              balance: { availableBalance: 450000, pendingBalance: 150000 },
+              bankConfigured: true,
+              entries: [],
+              withdrawals: [],
+            },
+          });
+        if (path.endsWith('/products'))
+          return route.fulfill({
+            json: [{ id: 'flower', name: 'Hoa hồng', status: 'ACTIVE', price: 250000 }],
+          });
+        return route.fulfill({
+          json:
+            path.endsWith('/shops') || path.endsWith('/sellers')
+              ? []
+              : { items: [], hasMore: false, page: 1 },
+        });
       });
       await page.route('**/hub/**', (route) => route.fulfill({ status: 503 }));
       await page.goto(base);
       await expect(page.getByRole('heading', { level: 1 })).toHaveText('Chào Thảo,');
-      expect(businessReads).toBe(0);
+      await expect(page.getByRole('heading', { name: 'Yêu cầu đặt hoa gần đây' })).toBeVisible();
+      await expect.poll(() => businessReads.length).toBeGreaterThanOrEqual(3);
+      expect(
+        businessReads.every((path) =>
+          path.startsWith(role === 'ADMIN' ? '/api/admin/' : '/api/sellers/shop/'),
+        ),
+      ).toBe(true);
       const nav = page.getByRole('navigation', { name: 'Điều hướng quản lý' });
       if (width < 900) {
         await expect(nav).toBeHidden();

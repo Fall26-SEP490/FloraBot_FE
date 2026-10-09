@@ -66,5 +66,10 @@ test('Landing leads to real customer pages and protects the account area', async
   await expect(page).toHaveURL('/quen-mat-khau');
   await expect(page.getByRole('button', { name: 'Gửi liên kết khôi phục' })).toBeVisible();
   await page.goto('/dat-lai-mat-khau');
-  await expect(page.getByRole('button', { name: 'Lưu mật khẩu mới' })).toBeDisabled();
+  await expect(page.getByRole('main').getByRole('alert')).toContainText('Liên kết chưa đầy đủ');
+  await expect(page.getByRole('button', { name: 'Lưu mật khẩu mới' })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Yêu cầu liên kết mới' })).toHaveAttribute(
+    'href',
+    '/quen-mat-khau',
+  );
 });

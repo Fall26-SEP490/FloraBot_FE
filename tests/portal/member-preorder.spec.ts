@@ -67,9 +67,7 @@ for (const width of [390, 1440])
   test(`Member registration is accessible and responsive ${width}`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/dang-ky');
-    await expect(
-      page.getByRole('heading', { name: 'Một tài khoản, nhiều dịp gửi thương.' }),
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Tạo tài khoản FloraBot' })).toBeVisible();
     expect(
       (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze())
         .violations,
