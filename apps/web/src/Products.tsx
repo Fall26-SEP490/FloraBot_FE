@@ -8,8 +8,9 @@ import { money } from '@florabot/contracts';
 import type { components } from '../../../packages/contracts/src/generated/api';
 import { ApiError, queryClient, request, type Session } from './api';
 import ProductPhotos from './ProductPhotos';
+import { ProductCreateForm, ProductMetadataEditor, type ProductItem } from './ProductCatalogForm';
 
-type Product = components['schemas']['ProductResponse'];
+type Product = ProductItem;
 const priceSchema = z.object({
   price: z
     .number('Nhập giá bán bằng số.')
@@ -41,6 +42,7 @@ function ProductEditor({
     defaultValues: { price: Number(product.price) },
   });
   const [status, setStatus] = useState(product.status);
+  const [showMetadataEditor, setShowMetadataEditor] = useState(false);
   const base = `/sellers/${sellerId}/flows/`;
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['products', sellerId] });
   const price = useMutation({
@@ -63,7 +65,34 @@ function ProductEditor({
   return (
     <div className="product-editor">
       <p>{product.description || 'Shop chưa thêm mô tả cho sản phẩm này.'}</p>
-      <p className="quiet">Hạn bán theo sản phẩm: {product.shelfLifeHours} giờ.</p>
+      {product.inventoryKind === 'ARTIFICIAL' ? (
+        <p className="quiet product-artificial-notice">
+          Bó hoa giả cao cấp — không áp dụng thời hạn tươi.
+        </p>
+      ) : product.inventoryKind === 'LEGACY_FRESH' || product.shelfLifeHours ? (
+        <p className="quiet product-legacy-notice">
+          Dữ liệu hoa tươi cũ (chuyển tiếp) — Hạn bán theo sản phẩm: {product.shelfLifeHours} giờ.
+        </p>
+      ) : null}
+      {product.lengthCm && product.widthCm && product.heightCm ? (
+        <p className="quiet product-dimensions">
+          Kích thước: {product.lengthCm} × {product.widthCm} × {product.heightCm} cm (Dài × Rộng ×
+          Cao)
+        </p>
+      ) : null}
+      {product.tags && product.tags.length > 0 ? (
+        <div className="product-tags" aria-label="Từ khóa">
+          {product.tags.map((tag) => (
+            <span key={tag} className="product-tag-chip">
+              #{tag}
+            </span>
+          ))}
+        </div>
+      ) : null}
+      <p className="quiet price-snapshot-note">
+        Lưu ý: Thay đổi giá áp dụng cho các lần nạp hoa tiếp theo, không thay đổi giá của bó hoa
+        đang bán trong tủ hoặc đơn đặt trước đã tạo.
+      </p>
       <form
         noValidate
         onSubmit={form.handleSubmit((values) => price.mutate(values.price))}
@@ -130,6 +159,23 @@ function ProductEditor({
           </p>
         )}
       </form>
+      <div className="product-edit-toggle">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setShowMetadataEditor(!showMetadataEditor)}
+          disabled={!canEdit}
+          aria-expanded={showMetadataEditor}
+          aria-controls={`edit-section-${product.id}`}
+        >
+          {showMetadataEditor ? 'Đóng chỉnh sửa chi tiết' : 'Chỉnh sửa thông tin & kích thước'}
+        </Button>
+      </div>
+      {showMetadataEditor && (
+        <div id={`edit-section-${product.id}`} className="product-edit-section">
+          <ProductMetadataEditor product={product} sellerId={sellerId} canEdit={canEdit} />
+        </div>
+      )}
       <ProductPhotos
         sellerId={sellerId}
         productId={product.id}
@@ -143,6 +189,7 @@ function ProductEditor({
 export default function Products({ session }: { session: Session }) {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('ALL');
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const sellerId = session.sellerId;
   const query = useQuery({
     queryKey: ['products', sellerId],
@@ -165,6 +212,27 @@ export default function Products({ session }: { session: Session }) {
         <p className="quiet">
           Shop cần có gói đang hoạt động để chỉnh sửa sản phẩm. Bạn vẫn có thể xem danh sách.
         </p>
+      )}
+      <div className="product-actions-bar">
+        <Button
+          type="button"
+          onClick={() => setShowCreateForm(!showCreateForm)}
+          disabled={!canEdit}
+          aria-expanded={showCreateForm}
+          aria-controls="product-create-section"
+        >
+          <Plus size={18} aria-hidden="true" />
+          {showCreateForm ? 'Đóng biểu mẫu thêm hoa' : 'Thêm bó hoa giả mới'}
+        </Button>
+      </div>
+      {showCreateForm && (
+        <div id="product-create-section" className="product-create-container">
+          <ProductCreateForm
+            sellerId={sellerId}
+            canEdit={canEdit}
+            onCancel={() => setShowCreateForm(false)}
+          />
+        </div>
       )}
       <div className="product-filters">
         <div>
@@ -217,6 +285,12 @@ export default function Products({ session }: { session: Session }) {
               <summary>
                 <span>
                   <strong>{product.name}</strong>
+                  {product.inventoryKind === 'ARTIFICIAL' && (
+                    <span className="product-kind-badge">Hoa giả</span>
+                  )}
+                  {product.inventoryKind === 'LEGACY_FRESH' && (
+                    <span className="product-kind-badge legacy">Dữ liệu cũ chưa chuyển đổi</span>
+                  )}
                   <span className="product-status">
                     {statusNames[product.status] || product.status}
                   </span>

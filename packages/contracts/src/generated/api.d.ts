@@ -1132,7 +1132,68 @@ export interface paths {
             };
         };
         put?: never;
-        post?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sellerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateProductRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProductIdResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -3021,6 +3082,84 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sellers/{sellerId}/products/{productId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sellerId: string;
+                    productId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateProductRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProductIdResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/evidence/{purpose}/{resourceId}": {
         parameters: {
             query?: never;
@@ -4570,6 +4709,21 @@ export interface components {
             p_refund: string;
             p_proof_url: string;
         };
+        CreateProductRequest: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            description: null | string;
+            /** Format: int64 */
+            price: number | string;
+            tags: string[];
+            /** Format: double */
+            lengthCm: number | string;
+            /** Format: double */
+            widthCm: number | string;
+            /** Format: double */
+            heightCm: number | string;
+        };
         CreateRefundRequest: {
             /** Format: uuid */
             p_order: string;
@@ -4811,6 +4965,10 @@ export interface components {
             detail?: null | string;
             instance?: null | string;
         };
+        ProductIdResponse: {
+            /** Format: uuid */
+            id: string;
+        };
         ProductPhotoPage: {
             items: components["schemas"]["ProductPhotoResponse"][];
             hasMore: boolean;
@@ -4834,7 +4992,14 @@ export interface components {
             tags: string[];
             status: string;
             /** Format: int32 */
-            shelfLifeHours: number | string;
+            shelfLifeHours: null | number | string;
+            inventoryKind?: null | string;
+            /** Format: double */
+            lengthCm?: null | number | string;
+            /** Format: double */
+            widthCm?: null | number | string;
+            /** Format: double */
+            heightCm?: null | number | string;
         };
         ReassignStaffTask: {
             /** Format: int32 */
@@ -5264,6 +5429,19 @@ export interface components {
             p_product: string;
             /** Format: int64 */
             p_price: number | string;
+        };
+        UpdateProductRequest: {
+            name: string;
+            description: null | string;
+            /** Format: int64 */
+            price: number | string;
+            tags: string[];
+            /** Format: double */
+            lengthCm: number | string;
+            /** Format: double */
+            widthCm: number | string;
+            /** Format: double */
+            heightCm: number | string;
         };
         WalletBalanceResponse: {
             /** Format: uuid */
