@@ -388,9 +388,9 @@ test.describe('FloraBot Role Workflows Integration', () => {
     await expect(techIncidentCard.locator('.staff-task-label')).toHaveText('Chờ duyệt báo cáo');
 
     // Negative Stock Guard: Technician has zero stock/shop permissions
-    expect((await page.request.get(`/api/sellers/${fixture.sellerId}/slots`)).status()).toBe(404);
+    expect((await page.request.get(`/api/sellers/${fixture.sellerId}/slots`)).status()).toBe(403);
     expect((await page.request.get(`/api/sellers/${fixture.sellerId}/products`)).status()).toBe(
-      404,
+      403,
     );
 
     // Negative Finance Guard: Technician cannot access financial queues
@@ -600,7 +600,7 @@ test.describe('FloraBot Role Workflows Integration', () => {
     });
 
     // Negative Stock/Tenant Guard: Foreign seller staff cannot access another shop's slots or tasks
-    expect((await page.request.get(`/api/sellers/${fixture.sellerId}/slots`)).status()).toBe(404);
+    expect((await page.request.get(`/api/sellers/${fixture.sellerId}/slots`)).status()).toBe(403);
     expect((await page.request.get(`/api/sellers/${fixture.sellerId}/staff-tasks`)).status()).toBe(
       404,
     );
