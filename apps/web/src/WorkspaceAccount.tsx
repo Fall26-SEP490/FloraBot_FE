@@ -9,12 +9,12 @@ import { accountPath } from './MemberAuth';
 
 export const ROLE_LABELS: Record<string, string> = {
   ADMIN: 'Quản trị viên',
-  STAFF: 'Nhân viên FloraBot',
-  SELLER: 'Chủ shop',
-  CUSTOMER: 'Khách hàng',
   OPERATIONS_MANAGER: 'Quản lý vận hành',
   TECHNICIAN: 'Kỹ thuật viên',
+  SELLER: 'Chủ shop',
   SELLER_STAFF: 'Nhân viên shop',
+  CUSTOMER: 'Khách hàng',
+  STAFF: 'Nhân viên FloraBot (cũ)',
 };
 
 export const getRoleLabel = (role: string): string => ROLE_LABELS[role] ?? role;
@@ -23,7 +23,12 @@ export const isDedicatedWorkspaceRole = (role: string): boolean =>
   role === 'OPERATIONS_MANAGER' || role === 'TECHNICIAN' || role === 'SELLER_STAFF';
 
 export const isExistingFullPortalRole = (role: string): boolean =>
-  role === 'ADMIN' || role === 'STAFF' || role === 'SELLER' || role === 'CUSTOMER';
+  role === 'ADMIN' ||
+  role === 'OPERATIONS_MANAGER' ||
+  role === 'TECHNICIAN' ||
+  role === 'SELLER' ||
+  role === 'SELLER_STAFF' ||
+  role === 'CUSTOMER';
 
 export const isPlatformOperatorRole = (role: string): boolean =>
   role === 'OPERATIONS_MANAGER' || role === 'TECHNICIAN' || role === 'ADMIN' || role === 'STAFF';
@@ -161,7 +166,7 @@ export default function WorkspaceAccount() {
   }
 
   const role = session.data.role;
-  const isDedicated = isDedicatedWorkspaceRole(role);
+  const isRetiredStaff = role === 'STAFF';
   const roleLabel = getRoleLabel(role);
   const avatarLetter = session.data.name.trim().slice(0, 1).toLocaleUpperCase('vi-VN');
 
@@ -172,7 +177,7 @@ export default function WorkspaceAccount() {
           <Flower2 size={28} aria-hidden="true" />
           FloraBot<span aria-hidden="true">.</span>
         </Link>
-        <span className="dashboard-role">{isDedicated ? roleLabel : 'Phân quyền tài khoản'}</span>
+        <span className="dashboard-role">{roleLabel}</span>
         <div className="dashboard-user">
           <span className="dashboard-avatar" aria-hidden="true">
             {avatarLetter}
@@ -192,14 +197,18 @@ export default function WorkspaceAccount() {
       <main id="main" className="workspace dashboard-content workspace-account-content">
         <div className="dashboard-page-heading">
           <div>
-            <h1>{isDedicated ? `Chào ${session.data.name}` : 'Quyền truy cập chưa được cấp'}</h1>
+            <h1>
+              {isRetiredStaff
+                ? 'Tài khoản nhân viên cũ đã ngừng hoạt động'
+                : 'Quyền truy cập chưa được cấp'}
+            </h1>
             <p>
-              {isDedicated
-                ? 'Thông tin tài khoản và phiên làm việc hiện tại của bạn.'
+              {isRetiredStaff
+                ? 'Vai trò nhân viên trước đây đã được thay thế. Vui lòng liên hệ quản trị viên để được cấp vai trò mới hoặc đăng xuất.'
                 : 'Tài khoản của bạn chưa được phân quyền trong hệ thống.'}
             </p>
           </div>
-          <span className="dashboard-context">{isDedicated ? roleLabel : role}</span>
+          <span className="dashboard-context">{role}</span>
         </div>
 
         <section aria-labelledby="workspace-profile-heading" className="workspace-account-card">
@@ -232,11 +241,13 @@ export default function WorkspaceAccount() {
           </dl>
         </section>
 
-        {isDedicated ? (
-          <div className="workspace-unavailable-notice" role="status">
+        {isRetiredStaff ? (
+          <div className="workspace-denied-notice" role="alert">
             <CircleAlert size={20} aria-hidden="true" />
             <p>
-              Các tính năng tác nghiệp cho vai trò này hiện chưa khả dụng trên tài khoản của bạn.
+              Tài khoản nhân viên FloraBot trước đây đã ngừng hoạt động. Hệ thống hiện phân chia
+              thành hai vai trò mới: Kỹ thuật viên (xử lý sự cố tủ) và Nhân viên shop (giao hoa và
+              nạp ô tủ). Vui lòng liên hệ quản trị viên để được cấp vai trò phù hợp hoặc đăng xuất.
             </p>
           </div>
         ) : (

@@ -4,6 +4,8 @@ import { useForm } from 'react-hook-form';
 import { Button } from '@florabot/ui';
 import { ApiError, queryClient, request } from './api';
 
+import type { ActiveTaskRole } from './StaffTasks';
+
 type Payload = { id: string; productId: string; slotId: string; qrCode: string };
 type Options = {
   products: { id: string; name: string }[];
@@ -24,25 +26,33 @@ function restore(key: string): Payload | null {
     return null;
   }
 }
+export type StaffStockProps = {
+  taskId: string;
+  actorId: string;
+  sellerId?: string | null;
+  role?: ActiveTaskRole;
+  active: boolean;
+  apiBase?: string;
+};
+
 export default function StaffStock({
   taskId,
   actorId,
+  sellerId,
   active,
-}: {
-  taskId: string;
-  actorId: string;
-  active: boolean;
-}) {
-  const key = `florabot-staff-stock:${actorId}:${taskId}`;
+  apiBase = '/staff/tasks',
+}: StaffStockProps) {
+  const scopeKey = sellerId ? `seller:${sellerId}` : apiBase;
+  const key = `florabot-staff-stock:${actorId}:${scopeKey}:${taskId}`;
   const [attempt, setAttempt] = useState<Payload | null>(() => restore(key));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [open, setOpen] = useState(false);
   const form = useForm<Fields>();
-  const path = `/staff/tasks/${taskId}/stock`;
+  const path = `${apiBase}/${taskId}/stock`;
   const options = useQuery({
-    queryKey: ['staff-stock', taskId],
+    queryKey: ['staff-stock', taskId, actorId, scopeKey],
     queryFn: () => request<Options>(path),
     enabled: open,
   });
@@ -176,7 +186,7 @@ export default function StaffStock({
       ) : (
         <p>
           {active
-            ? 'Không còn ô trống hoặc sản phẩm hợp lệ. Kiểm tra với quản trị viên trước khi nạp.'
+            ? 'Không còn ô trống hoặc sản phẩm hợp lệ. Kiểm tra với chủ shop trước khi nạp.'
             : 'Chỉ có thể nạp hoa khi công việc đang thực hiện. Bạn vẫn có thể xem các bó đã ghi nhận bên dưới.'}
         </p>
       )}

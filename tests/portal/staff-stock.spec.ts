@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 for (const width of [390, 1440])
-  test(`Staff records only scoped inventory and recovers uncertain stock ${width}`, async ({
+  test(`Seller staff records only scoped inventory and recovers uncertain stock ${width}`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 950 });
@@ -11,7 +11,7 @@ for (const width of [390, 1440])
     const actions: { id: string; qrCode: string; createdAt: string }[] = [];
     await page.route('**/api/auth/me', (route) =>
       route.fulfill({
-        json: { id: 'staff-1', name: 'Nhân viên Hoa', role: 'STAFF', sellerId: null },
+        json: { id: 'staff-1', name: 'Nhân viên Hoa', role: 'SELLER_STAFF', sellerId: 'shop-1' },
       }),
     );
     await page.route('**/api/staff/tasks?*', (route) =>
@@ -86,4 +86,13 @@ for (const width of [390, 1440])
     await expect(page.getByText('Đã ghi nhận bó hoa vào ô tủ.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Ghi nhận đã nạp hoa' })).toHaveCount(0);
     expect(writes).toBe(2);
+
+    // Verify wrong-kind action absent: technician never renders stock
+    await page.route('**/api/auth/me', (route) =>
+      route.fulfill({
+        json: { id: 'tech-1', name: 'Trần Kỹ Thuật', role: 'TECHNICIAN', sellerId: null },
+      }),
+    );
+    await page.goto('/technician');
+    await expect(page.getByText('Nạp hoa và xem kết quả')).toHaveCount(0);
   });

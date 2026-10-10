@@ -4,6 +4,8 @@ import { useForm } from 'react-hook-form';
 import { Button } from '@florabot/ui';
 import { ApiError, queryClient, request } from './api';
 
+import type { ActiveTaskRole } from './StaffTasks';
+
 type Scope = {
   sellerId: string;
   shopName: string;
@@ -28,6 +30,19 @@ type Payload = {
 };
 type Fields = { assigneeId: string; target: string; instructions: string };
 
+export type AdminTaskAssignmentProps = {
+  actorId?: string;
+  adminId?: string;
+  apiBase?: string;
+  actorRole?: ActiveTaskRole;
+  role?: ActiveTaskRole;
+  allowedKinds?: ('INCIDENT' | 'DELIVERY')[];
+  directoryEndpoint?: string;
+  incidentsEndpoint?: string;
+  deliveryScopesEndpoint?: string;
+  sellerId?: string | null;
+};
+
 function restore(key: string): Payload | null {
   try {
     const value = JSON.parse(sessionStorage.getItem(key) || 'null') as Payload | null;
@@ -44,28 +59,45 @@ function restore(key: string): Payload | null {
   }
 }
 
-export default function AdminTaskAssignment({ adminId }: { adminId: string }) {
-  const key = `florabot-task-assignment:${adminId}`;
+export default function AdminTaskAssignment({
+  actorId: explicitActorId,
+  adminId,
+  apiBase = '/admin/staff-tasks',
+  actorRole,
+  role,
+  allowedKinds = ['INCIDENT', 'DELIVERY'],
+  directoryEndpoint = '/admin/staff',
+  incidentsEndpoint = '/admin/incidents',
+  deliveryScopesEndpoint = '/admin/staff-delivery-scopes',
+  sellerId,
+}: AdminTaskAssignmentProps) {
+  const actorId = explicitActorId || adminId || 'actor';
+  const effectiveRole = actorRole ?? role;
+  const scopeKey = sellerId ? `seller:${sellerId}` : apiBase;
+  const key = `florabot-task-assignment:${effectiveRole ?? 'none'}:${actorId}:${scopeKey}`;
   const [attempt, setAttempt] = useState<Payload | null>(() => restore(key));
-  const [kind, setKind] = useState('INCIDENT');
+  const defaultKind = allowedKinds.includes('INCIDENT') ? 'INCIDENT' : 'DELIVERY';
+  const [kind, setKind] = useState(defaultKind);
   const [page, setPage] = useState(1);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const form = useForm<Fields>();
   const staff = useQuery({
-    queryKey: ['staff-directory'],
-    queryFn: () => request<{ id: string; name: string }[]>('/admin/staff'),
+    queryKey: ['staff-directory', actorId, directoryEndpoint, scopeKey],
+    queryFn: () => request<{ id: string; name: string }[]>(directoryEndpoint),
   });
   const scopes = useQuery({
-    queryKey: ['staff-delivery-scopes'],
-    queryFn: () => request<Scope[]>('/admin/staff-delivery-scopes'),
+    queryKey: ['staff-delivery-scopes', actorId, deliveryScopesEndpoint, scopeKey],
+    queryFn: () => request<Scope[]>(deliveryScopesEndpoint),
     enabled: kind === 'DELIVERY' && !attempt,
   });
   const incidents = useQuery({
-    queryKey: ['assignment-incidents', page],
+    queryKey: ['assignment-incidents', actorId, incidentsEndpoint, scopeKey, page],
     queryFn: () =>
-      request<{ items: Incident[]; hasMore: boolean }>(`/admin/incidents?status=OPEN&page=${page}`),
+      request<{ items: Incident[]; hasMore: boolean }>(
+        `${incidentsEndpoint}?status=OPEN&page=${page}`,
+      ),
     enabled: kind === 'INCIDENT' && !attempt,
   });
   const targetQuery = kind === 'INCIDENT' ? incidents : scopes;
@@ -79,7 +111,7 @@ export default function AdminTaskAssignment({ adminId }: { adminId: string }) {
       sessionStorage.setItem(key, JSON.stringify(payload));
       saved = true;
       setAttempt(payload);
-      await request('/admin/staff-tasks', payload);
+      await request(apiBase, payload);
       sessionStorage.removeItem(key);
       setAttempt(null);
       form.reset();
@@ -138,14 +170,16 @@ export default function AdminTaskAssignment({ adminId }: { adminId: string }) {
           <select
             id="assignment-kind"
             value={kind}
-            disabled={busy}
+            disabled={busy || allowedKinds.length <= 1}
             onChange={(event) => {
               setKind(event.target.value);
               form.resetField('target');
             }}
           >
-            <option value="INCIDENT">Kiểm tra sự cố</option>
-            <option value="DELIVERY">Giao hoa cho shop</option>
+            {allowedKinds.includes('INCIDENT') && <option value="INCIDENT">Kiểm tra sự cố</option>}
+            {allowedKinds.includes('DELIVERY') && (
+              <option value="DELIVERY">Giao hoa cho shop</option>
+            )}
           </select>
           {staff.isPending || targetQuery.isPending ? (
             <p role="status">Đang tải thông tin phân công…</p>
@@ -161,7 +195,7 @@ export default function AdminTaskAssignment({ adminId }: { adminId: string }) {
                 Tải lại thông tin phân công
               </Button>
             </>
-          ) : staff.data.length === 0 ? (
+          ) : !Array.isArray(staff.data) || staff.data.length === 0 ? (
             <p>Chưa có tài khoản nhân viên đang hoạt động để phân công.</p>
           ) : (
             <form noValidate onSubmit={form.handleSubmit(submit)}>

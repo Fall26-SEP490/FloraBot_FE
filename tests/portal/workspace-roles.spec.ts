@@ -78,11 +78,12 @@ test.describe('FloraBot Identity Foundation - Workspace and Roles', () => {
     await expect(retryButton).toBeVisible();
     await retryButton.click();
 
+    await expect(page).toHaveURL(/\/operations$/);
     await expect(page.getByRole('heading', { name: 'Chào Nguyễn Quản Lý' })).toBeVisible();
     await expect(page.getByText('Quản lý vận hành').first()).toBeVisible();
   });
 
-  test('Platform login routes OPERATIONS_MANAGER to /workspace and supports logout', async ({
+  test('Platform login routes OPERATIONS_MANAGER to /operations and supports logout', async ({
     page,
   }) => {
     let signedIn = false;
@@ -109,25 +110,33 @@ test.describe('FloraBot Identity Foundation - Workspace and Roles', () => {
       await route.fallback();
     });
 
+    await page.route('**/api/operations/**', (route) => {
+      const p = new URL(route.request().url()).pathname;
+      if (p.endsWith('/staff')) return route.fulfill({ json: [] });
+      return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
+    });
+
     await page.goto('/admin/login');
     await page.getByLabel('Email', { exact: true }).fill('ops@example.com');
     await page.getByLabel('Mật khẩu', { exact: true }).fill('test-password');
     await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
 
-    await expect(page).toHaveURL(/\/workspace$/);
+    await expect(page).toHaveURL(/\/operations$/);
     await expect(page.getByRole('heading', { name: 'Chào Nguyễn Quản Lý' })).toBeVisible();
     await expect(page.getByText('Quản lý vận hành').first()).toBeVisible();
-    await expect(
-      page.getByText(
-        'Các tính năng tác nghiệp cho vai trò này hiện chưa khả dụng trên tài khoản của bạn.',
-      ),
-    ).toBeVisible();
+
+    // Verify manager has NO financial navigation
+    const nav = page.getByRole('navigation', { name: 'Điều hướng quản lý' });
+    await expect(nav.getByRole('link', { name: 'Ví' })).toHaveCount(0);
+    await expect(nav.getByRole('link', { name: 'Hoàn tiền' })).toHaveCount(0);
+    await expect(nav.getByRole('link', { name: 'Rút tiền' })).toHaveCount(0);
+    await expect(nav.getByRole('link', { name: 'Đối soát' })).toHaveCount(0);
 
     await page.getByRole('button', { name: 'Đăng xuất' }).first().click();
     await expect(page).toHaveURL(/\/admin\/login$/);
   });
 
-  test('Platform login routes TECHNICIAN to /workspace with no legacy staff tasks', async ({
+  test('Platform login routes TECHNICIAN to /technician with no legacy staff tasks', async ({
     page,
   }) => {
     let signedIn = false;
@@ -150,18 +159,26 @@ test.describe('FloraBot Identity Foundation - Workspace and Roles', () => {
       await route.fallback();
     });
 
+    await page.route('**/api/staff/**', (route) =>
+      route.fulfill({ json: { items: [], page: 1, hasMore: false } }),
+    );
+
     await page.goto('/admin/login');
     await page.getByLabel('Email', { exact: true }).fill('tech@example.com');
     await page.getByLabel('Mật khẩu', { exact: true }).fill('test-password');
     await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
 
-    await expect(page).toHaveURL(/\/workspace$/);
+    await expect(page).toHaveURL(/\/technician$/);
     await expect(page.getByRole('heading', { name: 'Chào Trần Kỹ Thuật' })).toBeVisible();
     await expect(page.getByText('Kỹ thuật viên').first()).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Từ nhận việc đến hoàn thành' })).toHaveCount(0);
+    // Technician never has stock forms or legacy staff guide
+    await expect(page.getByText('Nạp hoa và xem kết quả')).toHaveCount(0);
+
+    await page.getByRole('button', { name: 'Đăng xuất' }).first().click();
+    await expect(page).toHaveURL(/\/admin\/login$/);
   });
 
-  test('Store login routes SELLER_STAFF to /workspace with seller status and logout to store login', async ({
+  test('Store login routes SELLER_STAFF to /staff with seller status and logout to store login', async ({
     page,
   }) => {
     let signedIn = false;
@@ -184,21 +201,26 @@ test.describe('FloraBot Identity Foundation - Workspace and Roles', () => {
       await route.fallback();
     });
 
+    await page.route('**/api/staff/**', (route) =>
+      route.fulfill({ json: { items: [], page: 1, hasMore: false } }),
+    );
+
     await page.goto('/dang-nhap');
     await page.getByLabel('Email', { exact: true }).fill('staff@shop.example');
     await page.getByLabel('Mật khẩu', { exact: true }).fill('test-password');
     await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
 
-    await expect(page).toHaveURL(/\/workspace$/);
+    await expect(page).toHaveURL(/\/staff$/);
     await expect(page.getByRole('heading', { name: 'Chào Lê Nhân Viên Shop' })).toBeVisible();
     await expect(page.getByText('Nhân viên shop').first()).toBeVisible();
-    await expect(page.getByText('20000000-0000-0000-0000-000000000001')).toBeVisible();
+    // Seller staff never has technical incident resolution
+    await expect(page.getByText('Ghi nhận đã sửa sự cố')).toHaveCount(0);
 
     await page.getByRole('button', { name: 'Đăng xuất' }).first().click();
     await expect(page).toHaveURL(/\/dang-nhap$/);
   });
 
-  test('Blocked owner, admin, staff and customer routes redirect to /workspace with ZERO finance calls', async ({
+  test('Blocked owner, admin, staff and customer routes redirect to correct portal with ZERO finance calls', async ({
     page,
   }) => {
     const forbiddenRequests: string[] = [];
@@ -218,28 +240,82 @@ test.describe('FloraBot Identity Foundation - Workspace and Roles', () => {
     });
 
     await page.route('**/api/auth/me', (route) => route.fulfill({ json: sellerStaffSession }));
+    await page.route('**/api/staff/**', (route) =>
+      route.fulfill({ json: { items: [], page: 1, hasMore: false } }),
+    );
 
-    // Test direct owner route
+    // Test direct owner route redirected to /staff
     await page.goto('/seller');
-    await expect(page).toHaveURL(/\/workspace$/);
+    await expect(page).toHaveURL(/\/staff$/);
 
-    // Test direct owner wallet
+    // Test direct owner wallet redirected to /staff
     await page.goto('/seller/wallet');
-    await expect(page).toHaveURL(/\/workspace$/);
+    await expect(page).toHaveURL(/\/staff$/);
 
-    // Test direct admin route
+    // Test direct admin route redirected to /staff
+    await page.goto('/admin');
+    await expect(page).toHaveURL(/\/staff$/);
+
+    // Test direct operations route redirected to /staff
+    await page.goto('/operations');
+    await expect(page).toHaveURL(/\/staff$/);
+
+    // Test direct technician route redirected to /staff
+    await page.goto('/technician');
+    await expect(page).toHaveURL(/\/staff$/);
+
+    // Test direct member route redirected to /staff
+    await page.goto('/tai-khoan');
+    await expect(page).toHaveURL(/\/staff$/);
+
+    expect(forbiddenRequests).toEqual([]);
+  });
+
+  test('Retired STAFF must not enter workspace and avoids redirect loops', async ({ page }) => {
+    let loggedOut = false;
+    await page.route('**/api/auth/**', (route) => {
+      const path = new URL(route.request().url()).pathname;
+      if (path === '/api/auth/logout') {
+        loggedOut = true;
+        return route.fulfill({ status: 204 });
+      }
+      if (path === '/api/auth/me') {
+        return route.fulfill(
+          loggedOut
+            ? { status: 401 }
+            : { json: { ...managerSession, role: 'STAFF', name: 'Nguyễn Cựu Nhân Viên' } },
+        );
+      }
+      return route.fallback();
+    });
+
+    // Visiting /workspace directly does not redirect; renders retired state
+    await page.goto('/workspace');
+    await expect(page).toHaveURL(/\/workspace$/);
+    await expect(
+      page.getByRole('heading', { name: 'Tài khoản nhân viên cũ đã ngừng hoạt động' }),
+    ).toBeVisible();
+    await expect(
+      page.getByText('Tài khoản nhân viên FloraBot trước đây đã ngừng hoạt động.'),
+    ).toBeVisible();
+
+    const logoutBtn = page.getByRole('button', { name: 'Đăng xuất' }).first();
+    await expect(logoutBtn).toBeVisible();
+
+    // Visiting /staff redirects to /workspace without loop
+    await page.goto('/staff');
+    await expect(page).toHaveURL(/\/workspace$/);
+    await expect(
+      page.getByRole('heading', { name: 'Tài khoản nhân viên cũ đã ngừng hoạt động' }),
+    ).toBeVisible();
+
+    // Visiting /admin redirects to /workspace without loop
     await page.goto('/admin');
     await expect(page).toHaveURL(/\/workspace$/);
 
-    // Test direct staff route
-    await page.goto('/staff');
-    await expect(page).toHaveURL(/\/workspace$/);
-
-    // Test direct member route
-    await page.goto('/tai-khoan');
-    await expect(page).toHaveURL(/\/workspace$/);
-
-    expect(forbiddenRequests).toEqual([]);
+    // Clicking logout safely logs out to platform login
+    await logoutBtn.click();
+    await expect(page).toHaveURL(/\/admin\/login$/);
   });
 
   test('Unknown role renders default-deny view without redirect loop', async ({ page }) => {
@@ -261,7 +337,7 @@ test.describe('FloraBot Identity Foundation - Workspace and Roles', () => {
     await expect(page.getByRole('heading', { name: 'Quyền truy cập chưa được cấp' })).toBeVisible();
   });
 
-  test('Existing full portal roles visiting /workspace redirect to their respective portals', async ({
+  test('Active authenticated roles visiting /workspace redirect to their respective portals', async ({
     page,
   }) => {
     // Admin
@@ -271,12 +347,19 @@ test.describe('FloraBot Identity Foundation - Workspace and Roles', () => {
     await page.goto('/workspace');
     await expect(page).toHaveURL(/\/admin$/);
 
-    // Staff
+    // Operations Manager
     await page.route('**/api/auth/me', (route) =>
-      route.fulfill({ json: { ...managerSession, role: 'STAFF' } }),
+      route.fulfill({ json: { ...managerSession, role: 'OPERATIONS_MANAGER' } }),
     );
     await page.goto('/workspace');
-    await expect(page).toHaveURL(/\/staff$/);
+    await expect(page).toHaveURL(/\/operations$/);
+
+    // Technician
+    await page.route('**/api/auth/me', (route) =>
+      route.fulfill({ json: { ...technicianSession, role: 'TECHNICIAN' } }),
+    );
+    await page.goto('/workspace');
+    await expect(page).toHaveURL(/\/technician$/);
 
     // Seller
     await page.route('**/api/auth/me', (route) =>
@@ -287,6 +370,15 @@ test.describe('FloraBot Identity Foundation - Workspace and Roles', () => {
     await page.goto('/workspace');
     await expect(page).toHaveURL(/\/seller$/);
 
+    // Seller Staff
+    await page.route('**/api/auth/me', (route) =>
+      route.fulfill({
+        json: { ...sellerStaffSession, role: 'SELLER_STAFF' },
+      }),
+    );
+    await page.goto('/workspace');
+    await expect(page).toHaveURL(/\/staff$/);
+
     // Customer
     await page.route('**/api/auth/me', (route) =>
       route.fulfill({ json: { ...managerSession, role: 'CUSTOMER' } }),
@@ -295,14 +387,145 @@ test.describe('FloraBot Identity Foundation - Workspace and Roles', () => {
     await expect(page).toHaveURL(/\/tai-khoan$/);
   });
 
+  test('Role and scope switches do not replay or reveal old tasks or persisted retry keys', async ({
+    page,
+  }) => {
+    // 1. Seed sessionStorage with legacy un-scoped retry keys and old tenant keys
+    await page.addInitScript(() => {
+      sessionStorage.setItem(
+        'florabot-task-assignment:mgr-1',
+        JSON.stringify({
+          id: 'old-task-id',
+          assigneeId: 'old-staff',
+          kind: 'INCIDENT',
+          kioskId: 'kiosk-old',
+          sellerId: null,
+          incidentId: 'inc-old',
+          instructions: 'Chỉ thị cũ từ phiên trước',
+        }),
+      );
+      sessionStorage.setItem(
+        'florabot-task-assignment:SELLER:seller-1:seller:shop-1',
+        JSON.stringify({
+          id: 'shop1-task-id',
+          assigneeId: 'staff-shop1',
+          kind: 'DELIVERY',
+          kioskId: 'kiosk-1',
+          sellerId: 'shop-1',
+          incidentId: null,
+          instructions: 'Giao hoa cho shop 1',
+        }),
+      );
+    });
+
+    // 2. Visit Operations Manager: old un-scoped key is ignored
+    await page.route('**/api/auth/me', (route) => route.fulfill({ json: managerSession }));
+    await page.route('**/api/operations/**', (route) => {
+      const p = new URL(route.request().url()).pathname;
+      if (p.endsWith('/staff'))
+        return route.fulfill({ json: [{ id: 'tech-1', name: 'Kỹ thuật viên' }] });
+      if (p.endsWith('/incidents'))
+        return route.fulfill({
+          json: {
+            items: [{ id: 'inc-1', kioskId: 'kiosk-1', reason: 'Kẹt cửa', location: null }],
+            page: 1,
+            hasMore: false,
+          },
+        });
+      return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
+    });
+
+    await page.goto('/operations');
+    await expect(page.getByRole('heading', { name: 'Chào Nguyễn Quản Lý' })).toBeVisible();
+    await page.getByText('Phân công công việc mới', { exact: true }).click();
+    // Verify old un-scoped retry attempt was NOT restored:
+    await expect(page.getByText('Chỉ thị cũ từ phiên trước')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Kiểm tra lại yêu cầu' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Giao công việc' })).toBeVisible();
+
+    // 3. Switch scope to Seller Shop 2: does NOT reveal or replay Shop 1's pending assignment
+    const shop2Session = {
+      id: 'seller-owner-2',
+      name: 'Chủ Shop 2',
+      role: 'SELLER',
+      sellerId: 'shop-2',
+      sellerStatus: 'ACTIVE',
+      packageExpiresAt: '2030-01-01',
+    };
+    await page.route('**/api/auth/me', (route) => route.fulfill({ json: shop2Session }));
+    await page.route('**/api/sellers/shop-2/**', (route) => {
+      const p = new URL(route.request().url()).pathname;
+      if (p.endsWith('/staff'))
+        return route.fulfill({ json: [{ id: 'staff-2', name: 'Nhân viên 2' }] });
+      if (p.endsWith('/staff-delivery-scopes'))
+        return route.fulfill({
+          json: [
+            {
+              sellerId: 'shop-2',
+              shopName: 'Shop 2',
+              kioskId: 'k2',
+              kioskName: 'Tủ 2',
+              address: 'ĐC 2',
+            },
+          ],
+        });
+      return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
+    });
+
+    await page.goto('/seller/tasks');
+    await expect(page.getByRole('heading', { name: 'Phân công giao hoa' })).toBeVisible();
+    await page.getByText('Phân công công việc mới', { exact: true }).click();
+    // Shop 1's persisted assignment is NOT replayed in Shop 2
+    await expect(page.getByText('Giao hoa cho shop 1')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Kiểm tra lại yêu cầu' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Giao công việc' })).toBeVisible();
+
+    // 4. Missing / absent role fails closed:
+    await page.route('**/api/auth/me', (route) =>
+      route.fulfill({ json: { id: 'no-role-user', name: 'Không Có Quyền', role: '' } }),
+    );
+    await page.goto('/workspace');
+    await expect(page.getByRole('heading', { name: 'Quyền truy cập chưa được cấp' })).toBeVisible();
+  });
+
   for (const width of [390, 1440]) {
-    test(`Workspace accessible responsive view at ${width}px`, async ({ page }) => {
+    test(`Operations accessible responsive view at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 950 });
       await page.route('**/api/auth/me', (route) => route.fulfill({ json: managerSession }));
-      await page.goto('/workspace');
+      await page.route('**/api/operations/**', (route) => {
+        const p = new URL(route.request().url()).pathname;
+        if (p.endsWith('/staff')) return route.fulfill({ json: [] });
+        return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
+      });
+      await page.goto('/operations');
 
       await expect(page.getByRole('link', { name: 'Bỏ qua tới nội dung' })).toBeAttached();
       await expect(page.getByRole('heading', { name: 'Chào Nguyễn Quản Lý' })).toBeVisible();
+
+      expect(
+        (
+          await new AxeBuilder({ page })
+            .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
+            .analyze()
+        ).violations,
+      ).toEqual([]);
+
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+        true,
+      );
+    });
+
+    test(`Retired STAFF workspace accessible responsive view at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 950 });
+      await page.route('**/api/auth/me', (route) =>
+        route.fulfill({ json: { ...managerSession, role: 'STAFF' } }),
+      );
+      await page.goto('/workspace');
+
+      await expect(page.getByRole('link', { name: 'Bỏ qua tới nội dung' })).toBeAttached();
+      await expect(
+        page.getByRole('heading', { name: 'Tài khoản nhân viên cũ đã ngừng hoạt động' }),
+      ).toBeVisible();
 
       expect(
         (

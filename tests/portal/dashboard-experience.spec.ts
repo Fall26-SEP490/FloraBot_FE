@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-for (const role of ['ADMIN', 'SELLER', 'STAFF'] as const) {
+for (const role of ['ADMIN', 'SELLER', 'SELLER_STAFF'] as const) {
   for (const width of [390, 1440]) {
     test(`${role} dashboard has scoped data and accessible navigation ${width}`, async ({
       page,
@@ -17,7 +17,7 @@ for (const role of ['ADMIN', 'SELLER', 'STAFF'] as const) {
               id: 'person',
               name: 'Ngọc Anh',
               role,
-              sellerId: role === 'SELLER' ? 'my-shop' : null,
+              sellerId: role === 'SELLER' || role === 'SELLER_STAFF' ? 'my-shop' : null,
               sellerStatus: 'ACTIVE',
               packageExpiresAt: '2030-01-01',
             },
@@ -101,7 +101,7 @@ for (const role of ['ADMIN', 'SELLER', 'STAFF'] as const) {
       if (role === 'ADMIN')
         await expect(page.getByText('Cửa ô A02 chưa đóng sau lượt nhận hoa')).toBeVisible();
       if (role === 'SELLER') await expect(page.getByText(/1\.250\.000/)).toBeVisible();
-      if (role === 'STAFF')
+      if (role === 'SELLER_STAFF')
         await expect(
           page.getByRole('heading', { name: 'Giao hoa · Tủ Đại học FPT' }),
         ).toBeVisible();

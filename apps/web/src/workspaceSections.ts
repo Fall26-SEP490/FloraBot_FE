@@ -15,9 +15,28 @@ export const workspaceSections = {
     ['products', 'Mẫu hoa', 'Quản lý mẫu, ảnh, giá bán và thời gian bảo quản.'],
     ['stock', 'Hoa tại tủ', 'Nạp hoa, kiểm tra tồn kho và báo sự cố.'],
     ['accessories', 'Phụ kiện', 'Quản lý phụ kiện đi kèm khi khách mua hoa.'],
+    ['tasks', 'Giao việc nhân viên', 'Phân công giao hoa và theo dõi tiến độ nhân viên shop.'],
     ['subscriptions', 'Gói thuê', 'Đăng ký, thanh toán và gia hạn ô tủ.'],
     ['wallet', 'Ví & tài khoản nhận tiền', 'Theo dõi số dư, khoản chi và yêu cầu rút tiền.'],
   ],
 } as const;
 export type WorkspaceRole = keyof typeof workspaceSections;
-export const workspaceBase = (role: WorkspaceRole) => (role === 'ADMIN' ? '/admin' : '/seller');
+export const workspaceBase = (role: string) => {
+  switch (role) {
+    case 'ADMIN':
+      return '/admin';
+    case 'OPERATIONS_MANAGER':
+      return '/operations';
+    case 'TECHNICIAN':
+      return '/technician';
+    case 'SELLER':
+      return '/seller';
+    case 'SELLER_STAFF':
+      return '/staff';
+    case 'CUSTOMER':
+      return '/tai-khoan';
+    case 'STAFF':
+    default:
+      return '/workspace';
+  }
+};

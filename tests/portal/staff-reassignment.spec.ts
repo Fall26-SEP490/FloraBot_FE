@@ -2,12 +2,16 @@ import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 for (const width of [390, 1440])
-  test(`Admin validates handoff and recovers lost response ${width}`, async ({ page }) => {
+  test(`Operations Manager validates handoff and recovers lost response ${width}`, async ({
+    page,
+  }) => {
     await page.setViewportSize({ width, height: 1000 });
     await page.route('**/api/auth/me', (route) =>
-      route.fulfill({ json: { id: 'admin', name: 'Quản trị viên', role: 'ADMIN' } }),
+      route.fulfill({
+        json: { id: 'manager', name: 'Nguyễn Quản Lý', role: 'OPERATIONS_MANAGER', sellerId: null },
+      }),
     );
-    await page.route('**/api/admin/staff', (route) =>
+    await page.route('**/api/operations/staff', (route) =>
       route.fulfill({
         json: [
           { id: 'old', name: 'Hoa' },
@@ -18,7 +22,7 @@ for (const width of [390, 1440])
     let version = 1;
     let assigneeId = 'old';
     let writes = 0;
-    await page.route('**/api/admin/staff-tasks?*', (route) =>
+    await page.route('**/api/operations/staff-tasks?*', (route) =>
       route.fulfill({
         json: {
           page: 1,
@@ -26,22 +30,22 @@ for (const width of [390, 1440])
           items: [
             {
               id: 'handoff',
-              kind: 'DELIVERY',
+              kind: 'INCIDENT',
               version,
               status: 'ASSIGNED',
               assigneeId,
               assigneeName: assigneeId === 'old' ? 'Hoa' : 'Linh',
               kioskName: 'Tủ FPT',
               address: 'Thủ Đức',
-              shopName: 'Shop Lan',
-              instructions: 'Bổ sung hoa theo lịch của shop',
+              shopName: null,
+              instructions: 'Kiểm tra lỗi kẹt cửa tủ',
               report: null,
             },
           ],
         },
       }),
     );
-    await page.route('**/api/admin/staff-tasks/handoff/reassign', (route) => {
+    await page.route('**/api/operations/staff-tasks/handoff/reassign', (route) => {
       writes++;
       expect(route.request().postDataJSON()).toEqual({
         version: 1,
@@ -52,7 +56,7 @@ for (const width of [390, 1440])
       assigneeId = 'new';
       return route.abort();
     });
-    await page.goto('/admin/tasks');
+    await page.goto('/operations');
     let panel = page.locator('.staff-reassignment');
     await panel.locator('summary').click();
     await panel.getByRole('button', { name: 'Xác nhận bàn giao' }).click();

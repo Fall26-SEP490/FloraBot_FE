@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import { request } from './api';
 
+import type { ActiveTaskRole } from './StaffTasks';
+
 type Detail = {
   kioskStatus: string;
   lastHeartbeatAt: string | null;
@@ -57,21 +59,33 @@ const actions: Record<string, string> = {
 };
 const date = (value: string) => new Date(value).toLocaleString('vi-VN');
 
+export type StaffTaskDetailsProps = {
+  taskId: string;
+  version: number;
+  admin?: boolean;
+  apiBase?: string;
+  actorId?: string;
+  sellerId?: string | null;
+  role?: ActiveTaskRole;
+  readOnly?: boolean;
+};
+
 export default function StaffTaskDetails({
   taskId,
   version,
-  admin,
-}: {
-  taskId: string;
-  version: number;
-  admin: boolean;
-}) {
+  admin = false,
+  apiBase: explicitApiBase,
+  actorId,
+  sellerId,
+  role,
+}: StaffTaskDetailsProps) {
+  const apiBase = explicitApiBase ?? (admin ? '/admin/staff-tasks' : '/staff/tasks');
+  const scopeKey = sellerId ? `seller:${sellerId}` : apiBase;
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(1);
   const details = useQuery({
-    queryKey: ['staff-detail', taskId, version, page, admin],
-    queryFn: () =>
-      request<Detail>(`${admin ? '/admin/staff-tasks' : '/staff/tasks'}/${taskId}?page=${page}`),
+    queryKey: ['staff-detail', taskId, actorId ?? 'none', scopeKey, version, page],
+    queryFn: () => request<Detail>(`${apiBase}/${taskId}?page=${page}`),
     enabled: open,
   });
   return (
@@ -127,8 +141,9 @@ export default function StaffTaskDetails({
                 <p>Kết quả xử lý: {details.data.incident.decision}</p>
               )}
               <p>
-                Gửi báo cáo công việc để quản trị viên xem xét. Báo cáo không tự hoàn tiền hoặc mở
-                cửa tủ.
+                {role === 'TECHNICIAN' || role === 'OPERATIONS_MANAGER'
+                  ? 'Gửi báo cáo công việc để Quản lý vận hành xem xét. Báo cáo không tự hoàn tiền hoặc mở cửa tủ.'
+                  : 'Gửi báo cáo công việc để chủ shop theo dõi. Báo cáo không tự cập nhật tồn kho mở bán.'}
               </p>
             </section>
           )}

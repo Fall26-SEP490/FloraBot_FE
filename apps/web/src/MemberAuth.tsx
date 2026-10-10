@@ -19,16 +19,17 @@ export const accountPath = (role: string) => {
   switch (role) {
     case 'ADMIN':
       return '/admin';
-    case 'STAFF':
-      return '/staff';
+    case 'OPERATIONS_MANAGER':
+      return '/operations';
+    case 'TECHNICIAN':
+      return '/technician';
     case 'SELLER':
       return '/seller';
+    case 'SELLER_STAFF':
+      return '/staff';
     case 'CUSTOMER':
       return '/tai-khoan';
-    case 'OPERATIONS_MANAGER':
-    case 'TECHNICIAN':
-    case 'SELLER_STAFF':
-      return '/workspace';
+    case 'STAFF':
     default:
       return '/workspace';
   }
