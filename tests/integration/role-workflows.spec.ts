@@ -236,8 +236,19 @@ test.describe('FloraBot Role Workflows Integration', () => {
     expect((await acceptReq).status()).toBe(200);
 
     // Assert order state is AWAITING_PAYMENT (Chờ thanh toán). Stop before provider payment.
-    await expect(custRow1.locator('summary')).toContainText('Chờ thanh toán');
-    await expect(custRow1.getByRole('button', { name: 'Tạo liên kết thanh toán' })).toBeVisible();
+    // Acceptance replaces the displayed request reference with the new order code.
+    const refreshed = await page.request.get('/api/member/preorders');
+    expect(refreshed.status()).toBe(200);
+    const orders = (await refreshed.json()) as {
+      items: { id: string; orderCode: string | null }[];
+    };
+    const acceptedOrder = orders.items.find((item) => item.id === preorder1Id);
+    expect(acceptedOrder?.orderCode).toBeTruthy();
+    const pendingRow = page
+      .locator('.member-orders li')
+      .filter({ hasText: acceptedOrder!.orderCode! });
+    await expect(pendingRow.locator('summary')).toContainText('Chờ thanh toán');
+    await expect(pendingRow.getByRole('button', { name: 'Tạo liên kết thanh toán' })).toBeVisible();
 
     // Verify DB consistency in florabot_browser_tests
     const order1DbState = sql(
@@ -303,10 +314,17 @@ test.describe('FloraBot Role Workflows Integration', () => {
     await expect(incidentCardOnOps.locator('.staff-task-label')).toHaveText('Chờ bắt đầu');
 
     // Negative Finance Guard: Operations Manager has zero access to shop wallets or admin payouts
-    expect((await page.request.get(`/api/sellers/${fixture.sellerId}/wallet`)).status()).toBe(403);
+    // SameSeller deliberately conceals foreign shop resources with 404.
+    expect((await page.request.get(`/api/sellers/${fixture.sellerId}/wallet`)).status()).toBe(404);
     expect((await page.request.get('/api/admin/withdrawals')).status()).toBe(403);
     expect((await page.request.get('/api/admin/refunds')).status()).toBe(403);
-    expect((await page.request.get('/api/admin/reconciliation')).status()).toBe(403);
+    expect(
+      (
+        await page.request.post('/api/admin/flows/reconcile_daily', {
+          data: { p_date: '2003-03-02' },
+        })
+      ).status(),
+    ).toBe(403);
 
     // Negative Stock/Delivery Guard: Operations Manager cannot assign DELIVERY tasks
     const invalidDeliveryPost = await page.request.post('/api/operations/staff-tasks', {
@@ -370,9 +388,9 @@ test.describe('FloraBot Role Workflows Integration', () => {
     await expect(techIncidentCard.locator('.staff-task-label')).toHaveText('Chờ duyệt báo cáo');
 
     // Negative Stock Guard: Technician has zero stock/shop permissions
-    expect((await page.request.get(`/api/sellers/${fixture.sellerId}/slots`)).status()).toBe(403);
+    expect((await page.request.get(`/api/sellers/${fixture.sellerId}/slots`)).status()).toBe(404);
     expect((await page.request.get(`/api/sellers/${fixture.sellerId}/products`)).status()).toBe(
-      403,
+      404,
     );
 
     // Negative Finance Guard: Technician cannot access financial queues
@@ -424,6 +442,11 @@ test.describe('FloraBot Role Workflows Integration', () => {
     });
 
     await page.goto('/seller/tasks');
+    for (const resource of ['wallet', 'slots', 'products', 'staff-tasks']) {
+      expect(
+        (await page.request.get(`/api/sellers/${fixture.sellerId}/${resource}`)).status(),
+      ).toBe(200);
+    }
     await page.getByText('Phân công công việc mới', { exact: true }).click();
     // Verify wrong-kind action is absent: Shop Owner cannot assign INCIDENT
     await expect(page.locator('#assignment-kind option[value="INCIDENT"]')).toHaveCount(0);
@@ -512,7 +535,7 @@ test.describe('FloraBot Role Workflows Integration', () => {
     expect([403, 404]).toContain(foreignIncidentAttempt.status());
 
     // Negative Finance Guard: Seller staff cannot view shop wallet or admin withdrawals
-    expect((await page.request.get(`/api/sellers/${fixture.sellerId}/wallet`)).status()).toBe(403);
+    expect((await page.request.get(`/api/sellers/${fixture.sellerId}/wallet`)).status()).toBe(404);
     expect((await page.request.get('/api/admin/withdrawals')).status()).toBe(403);
 
     await page.getByRole('button', { name: 'Đăng xuất' }).first().click();
@@ -557,7 +580,13 @@ test.describe('FloraBot Role Workflows Integration', () => {
     // Negative Finance Guard: Seller cannot access Platform Admin financial APIs
     expect((await page.request.get('/api/admin/withdrawals')).status()).toBe(403);
     expect((await page.request.get('/api/admin/refunds')).status()).toBe(403);
-    expect((await page.request.get('/api/admin/reconciliation')).status()).toBe(403);
+    expect(
+      (
+        await page.request.post('/api/admin/flows/reconcile_daily', {
+          data: { p_date: '2003-03-02' },
+        })
+      ).status(),
+    ).toBe(403);
 
     await page.getByRole('button', { name: 'Đăng xuất' }).first().click();
 
@@ -571,9 +600,9 @@ test.describe('FloraBot Role Workflows Integration', () => {
     });
 
     // Negative Stock/Tenant Guard: Foreign seller staff cannot access another shop's slots or tasks
-    expect((await page.request.get(`/api/sellers/${fixture.sellerId}/slots`)).status()).toBe(403);
+    expect((await page.request.get(`/api/sellers/${fixture.sellerId}/slots`)).status()).toBe(404);
     expect((await page.request.get(`/api/sellers/${fixture.sellerId}/staff-tasks`)).status()).toBe(
-      403,
+      404,
     );
 
     await page.getByRole('button', { name: 'Đăng xuất' }).first().click();
