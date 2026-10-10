@@ -41,6 +41,7 @@ function Approval({
       noValidate
       onSubmit={form.handleSubmit((values) => approve.mutate(values))}
     >
+      <h4>Phê duyệt gói thuê cho shop</h4>
       <label htmlFor={`package-${seller.id}`}>Gói thuê cho {seller.shopName}</label>
       <select
         id={`package-${seller.id}`}
@@ -104,6 +105,7 @@ export default function AdminSellers() {
           <input
             id="shop-search"
             type="search"
+            placeholder="Nhập tên shop hoặc số điện thoại…"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
@@ -130,7 +132,7 @@ export default function AdminSellers() {
       </p>
       {sellers.isPending && <p role="status">Đang tải hồ sơ shop…</p>}
       {sellers.isError && (
-        <div>
+        <div className="admin-sellers-error">
           <p role="alert" className="error">
             {sellers.error.message}
           </p>
@@ -138,7 +140,7 @@ export default function AdminSellers() {
         </div>
       )}
       {packages.isError && (
-        <div>
+        <div className="admin-sellers-error">
           <p role="alert" className="error">
             Chưa tải được các gói thuê. Bạn cần tải lại trước khi duyệt.
           </p>
@@ -152,7 +154,9 @@ export default function AdminSellers() {
             <details>
               <summary>
                 <strong>{seller.shopName}</strong>
-                <span>{t(`status.${seller.status}`, { defaultValue: seller.status })}</span>
+                <span className={`status-pill status-${seller.status}`}>
+                  {t(`status.${seller.status}`, { defaultValue: seller.status })}
+                </span>
               </summary>
               <div className="shop-profile">
                 <dl>

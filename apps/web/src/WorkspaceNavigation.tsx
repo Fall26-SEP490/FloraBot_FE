@@ -73,10 +73,10 @@ export function WorkspaceHeader({
           : role === 'OPERATIONS_MANAGER'
             ? 'Quản lý vận hành'
             : role === 'SELLER'
-              ? 'Góc quản lý shop'
+              ? 'Chủ shop'
               : role === 'TECHNICIAN'
                 ? 'Kỹ thuật viên'
-                : 'Khu vực nhân viên shop'}
+                : 'Nhân viên shop'}
       </span>
       <div className="dashboard-user">
         <span className="dashboard-avatar" aria-hidden="true">

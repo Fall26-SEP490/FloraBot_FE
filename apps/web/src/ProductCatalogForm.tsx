@@ -208,6 +208,7 @@ export function ProductCreateForm({
           id="create-product-name"
           type="text"
           maxLength={120}
+          placeholder="Nhập tên mẫu hoa (tối đa 120 ký tự)"
           disabled={!canEdit || submitting}
           {...form.register('name')}
           aria-invalid={!!form.formState.errors.name}
@@ -226,6 +227,7 @@ export function ProductCreateForm({
           id="create-product-description"
           rows={3}
           maxLength={2000}
+          placeholder="Mô tả phong cách, chất liệu bó hoa giả cao cấp…"
           disabled={!canEdit || submitting}
           {...form.register('description')}
           aria-invalid={!!form.formState.errors.description}
@@ -248,6 +250,7 @@ export function ProductCreateForm({
           min="1"
           step="1"
           inputMode="numeric"
+          placeholder="Nhập giá bán bằng số nguyên"
           disabled={!canEdit || submitting}
           {...form.register('price', { valueAsNumber: true })}
           aria-invalid={!!form.formState.errors.price}
@@ -262,6 +265,9 @@ export function ProductCreateForm({
 
       <fieldset className="dimensions-fieldset">
         <legend>Kích thước bó hoa bao gồm bao bì (Dài × Rộng × Cao tính bằng cm)</legend>
+        <p className="quiet dimensions-guide">
+          Kích thước đo thực tế của bó hoa đã bao gồm bao bì ngoài (tính bằng cm).
+        </p>
         <div className="dimensions-grid">
           <div className="form-field">
             <label htmlFor="create-product-length">Dài (cm)</label>
@@ -271,6 +277,7 @@ export function ProductCreateForm({
               min="0.01"
               max="1000"
               step="0.01"
+              placeholder="Dài cm"
               disabled={!canEdit || submitting}
               {...form.register('lengthCm', { valueAsNumber: true })}
               aria-invalid={!!form.formState.errors.lengthCm}
@@ -293,6 +300,7 @@ export function ProductCreateForm({
               min="0.01"
               max="1000"
               step="0.01"
+              placeholder="Rộng cm"
               disabled={!canEdit || submitting}
               {...form.register('widthCm', { valueAsNumber: true })}
               aria-invalid={!!form.formState.errors.widthCm}
@@ -315,6 +323,7 @@ export function ProductCreateForm({
               min="0.01"
               max="1000"
               step="0.01"
+              placeholder="Cao cm"
               disabled={!canEdit || submitting}
               {...form.register('heightCm', { valueAsNumber: true })}
               aria-invalid={!!form.formState.errors.heightCm}
@@ -447,6 +456,7 @@ export function ProductMetadataEditor({
           id={`${idPrefix}-name`}
           type="text"
           maxLength={120}
+          placeholder="Nhập tên mẫu hoa (tối đa 120 ký tự)"
           disabled={!canEdit || submitting}
           {...form.register('name')}
           aria-invalid={!!form.formState.errors.name}
@@ -465,6 +475,7 @@ export function ProductMetadataEditor({
           id={`${idPrefix}-description`}
           rows={3}
           maxLength={2000}
+          placeholder="Mô tả phong cách, chất liệu bó hoa giả cao cấp…"
           disabled={!canEdit || submitting}
           {...form.register('description')}
           aria-invalid={!!form.formState.errors.description}
@@ -487,6 +498,7 @@ export function ProductMetadataEditor({
           min="1"
           step="1"
           inputMode="numeric"
+          placeholder="Nhập giá bán bằng số nguyên"
           disabled={!canEdit || submitting}
           {...form.register('price', { valueAsNumber: true })}
           aria-invalid={!!form.formState.errors.price}
@@ -500,7 +512,10 @@ export function ProductMetadataEditor({
       </div>
 
       <fieldset className="dimensions-fieldset">
-        <legend>Kích thước ô tủ phù hợp (Dài × Rộng × Cao tính bằng cm)</legend>
+        <legend>Kích thước bó hoa bao gồm bao bì (Dài × Rộng × Cao tính bằng cm)</legend>
+        <p className="quiet dimensions-guide">
+          Kích thước đo thực tế của bó hoa đã bao gồm bao bì ngoài (tính bằng cm).
+        </p>
         <div className="dimensions-grid">
           <div className="form-field">
             <label htmlFor={`${idPrefix}-length`}>Dài (cm)</label>
@@ -510,6 +525,7 @@ export function ProductMetadataEditor({
               min="0.01"
               max="1000"
               step="0.01"
+              placeholder="Dài cm"
               disabled={!canEdit || submitting}
               {...form.register('lengthCm', { valueAsNumber: true })}
               aria-invalid={!!form.formState.errors.lengthCm}
@@ -532,6 +548,7 @@ export function ProductMetadataEditor({
               min="0.01"
               max="1000"
               step="0.01"
+              placeholder="Rộng cm"
               disabled={!canEdit || submitting}
               {...form.register('widthCm', { valueAsNumber: true })}
               aria-invalid={!!form.formState.errors.widthCm}
@@ -554,6 +571,7 @@ export function ProductMetadataEditor({
               min="0.01"
               max="1000"
               step="0.01"
+              placeholder="Cao cm"
               disabled={!canEdit || submitting}
               {...form.register('heightCm', { valueAsNumber: true })}
               aria-invalid={!!form.formState.errors.heightCm}

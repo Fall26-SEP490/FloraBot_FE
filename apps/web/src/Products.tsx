@@ -93,72 +93,76 @@ function ProductEditor({
         Lưu ý: Thay đổi giá áp dụng cho các lần nạp hoa tiếp theo, không thay đổi giá của bó hoa
         đang bán trong tủ hoặc đơn đặt trước đã tạo.
       </p>
-      <form
-        noValidate
-        onSubmit={form.handleSubmit((values) => price.mutate(values.price))}
-        aria-label={`Đổi giá ${product.name}`}
-      >
-        <label htmlFor={inputId}>Giá bán (đồng)</label>
-        <div className="field-action">
-          <input
-            id={inputId}
-            type="number"
-            min="1"
-            step="1"
-            inputMode="numeric"
-            {...form.register('price', { valueAsNumber: true })}
-            disabled={!canEdit || price.isPending}
-            aria-invalid={!!form.formState.errors.price}
-            aria-describedby={form.formState.errors.price ? `${inputId}-error` : undefined}
-          />
-          <Button type="submit" disabled={!canEdit || price.isPending}>
-            {price.isPending ? 'Đang lưu…' : 'Lưu giá'}
-          </Button>
-        </div>
-        {form.formState.errors.price && (
-          <p className="error" id={`${inputId}-error`}>
-            {form.formState.errors.price.message}
-          </p>
-        )}
-        <p role="status">{price.isSuccess ? 'Đã lưu giá bán.' : ''}</p>
-        {price.error && (
-          <p role="alert" className="error">
-            {errorText(price.error)}
-          </p>
-        )}
-      </form>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          availability.mutate();
-        }}
-        aria-label={`Trạng thái ${product.name}`}
-      >
-        <label htmlFor={`status-${product.id}`}>Trạng thái sản phẩm</label>
-        <div className="field-action">
-          <select
-            id={`status-${product.id}`}
-            value={status}
-            onChange={(event) => setStatus(event.target.value)}
-            disabled={!canEdit || availability.isPending}
-          >
-            {Object.entries(statusNames).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-          <Button type="submit" variant="outline" disabled={!canEdit || availability.isPending}>
-            {availability.isPending ? 'Đang lưu…' : 'Lưu trạng thái'}
-          </Button>
-        </div>
-        <p role="status">{availability.isSuccess ? 'Đã lưu trạng thái sản phẩm.' : ''}</p>
-        {availability.error && (
-          <p role="alert" className="error">
-            {errorText(availability.error)}
-          </p>
-        )}
-      </form>
+      <div className="product-quick-actions">
+        <form
+          noValidate
+          onSubmit={form.handleSubmit((values) => price.mutate(values.price))}
+          aria-label={`Đổi giá ${product.name}`}
+          className="product-inline-form"
+        >
+          <label htmlFor={inputId}>Giá bán (đồng)</label>
+          <div className="field-action">
+            <input
+              id={inputId}
+              type="number"
+              min="1"
+              step="1"
+              inputMode="numeric"
+              {...form.register('price', { valueAsNumber: true })}
+              disabled={!canEdit || price.isPending}
+              aria-invalid={!!form.formState.errors.price}
+              aria-describedby={form.formState.errors.price ? `${inputId}-error` : undefined}
+            />
+            <Button type="submit" disabled={!canEdit || price.isPending}>
+              {price.isPending ? 'Đang lưu…' : 'Lưu giá'}
+            </Button>
+          </div>
+          {form.formState.errors.price && (
+            <p className="error" id={`${inputId}-error`}>
+              {form.formState.errors.price.message}
+            </p>
+          )}
+          <p role="status">{price.isSuccess ? 'Đã lưu giá bán.' : ''}</p>
+          {price.error && (
+            <p role="alert" className="error">
+              {errorText(price.error)}
+            </p>
+          )}
+        </form>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            availability.mutate();
+          }}
+          aria-label={`Trạng thái ${product.name}`}
+          className="product-inline-form"
+        >
+          <label htmlFor={`status-${product.id}`}>Trạng thái sản phẩm</label>
+          <div className="field-action">
+            <select
+              id={`status-${product.id}`}
+              value={status}
+              onChange={(event) => setStatus(event.target.value)}
+              disabled={!canEdit || availability.isPending}
+            >
+              {Object.entries(statusNames).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+            <Button type="submit" variant="outline" disabled={!canEdit || availability.isPending}>
+              {availability.isPending ? 'Đang lưu…' : 'Lưu trạng thái'}
+            </Button>
+          </div>
+          <p role="status">{availability.isSuccess ? 'Đã lưu trạng thái sản phẩm.' : ''}</p>
+          {availability.error && (
+            <p role="alert" className="error">
+              {errorText(availability.error)}
+            </p>
+          )}
+        </form>
+      </div>
       <div className="product-edit-toggle">
         <Button
           type="button"

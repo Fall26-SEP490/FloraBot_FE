@@ -164,10 +164,10 @@ export default function SellerAccessories({ session }: { session: Session }) {
   if (!session.sellerId) return null;
   return (
     <section className="seller-accessories" aria-labelledby="accessories-title">
-      <h2 id="accessories-title">Thêm phụ kiện, trọn món quà</h2>
+      <h2 id="accessories-title">Phụ kiện chỉ dành cho đơn đặt trước</h2>
       <p>
-        Xem phụ kiện ở từng tủ và ghi nhận số lượng vừa bổ sung. Thao tác này chỉ cộng tồn, không tự
-        bật bán phụ kiện hay mở cửa tủ.
+        Phụ kiện chỉ áp dụng cho đơn đặt trước. Xem tồn phụ kiện ở từng tủ và ghi nhận số lượng vừa
+        bổ sung. Thao tác này chỉ cộng tồn, không tự bật bán phụ kiện hay mở cửa tủ.
       </p>
       <Button
         variant="outline"
