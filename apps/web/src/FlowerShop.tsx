@@ -149,7 +149,7 @@ function RequestForm({ item }: { item: Item }) {
         ) : (
           <p>
             Bó có sẵn được giữ trong thời gian thanh toán. Sau khi thanh toán, đến tủ nhận trong
-            thời hạn ghi trên đơn (tối đa 2 giờ, tùy độ tươi của hoa).
+            thời hạn ghi trên đơn.
           </p>
         )}
         <p>
