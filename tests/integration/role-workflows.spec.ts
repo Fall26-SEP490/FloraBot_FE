@@ -225,7 +225,7 @@ test.describe('FloraBot Role Workflows Integration', () => {
 
     // Verify DB consistency in florabot_browser_tests
     const order1DbState = sql(
-      `SELECT state || '|' || COALESCE(order_status, 'NONE') FROM ordering.web_requests WHERE id='${preorder1Id}';`,
+      `SELECT w.state || '|' || COALESCE(o.status, 'NONE') FROM ordering.web_requests w LEFT JOIN ordering.orders o ON o.id = w.order_id WHERE w.id='${preorder1Id}';`,
     );
     expect(order1DbState).toBe('ORDERED|AWAITING_PAYMENT');
 
