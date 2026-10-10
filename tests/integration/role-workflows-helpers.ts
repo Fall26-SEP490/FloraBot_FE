@@ -217,6 +217,9 @@ export function createPreorderFixture(): PreorderFixture {
     INSERT INTO kiosk_ops.slots(id, kiosk_id, slot_code, relay_channel, status, current_seller_id)
     VALUES ('${slotId}', '${kioskId}', 'C01', 1, 'RENTED_EMPTY', '${sellerId}');
 
+    INSERT INTO kiosk_ops.slot_assignments(slot_id, seller_id, assigned_by, status)
+    VALUES ('${slotId}', '${sellerId}', (SELECT id FROM identity.users WHERE role='ADMIN' ORDER BY id LIMIT 1), 'ACTIVE');
+
     INSERT INTO catalog.flower_products(id, seller_id, name, description, price, shelf_life_hours, length_cm, width_cm, height_cm, status, inventory_kind)
     VALUES ('${productId}', '${sellerId}', '${flowerName}', 'Bó hoa lụa nghệ thuật cao cấp theo yêu cầu', 450000, 72, 25.0, 20.0, 45.0, 'ACTIVE', 'ARTIFICIAL');
     COMMIT;
@@ -324,6 +327,9 @@ export function createRoleTaskFixture(): RoleTaskFixture {
 
     INSERT INTO kiosk_ops.slots(id, kiosk_id, slot_code, relay_channel, status, current_seller_id)
     VALUES ('${slotId}', '${kioskId}', 'B01', 2, 'RENTED_EMPTY', '${sellerId}');
+
+    INSERT INTO kiosk_ops.slot_assignments(slot_id, seller_id, assigned_by, status)
+    VALUES ('${slotId}', '${sellerId}', (SELECT id FROM identity.users WHERE role='ADMIN' ORDER BY id LIMIT 1), 'ACTIVE');
 
     INSERT INTO ordering.disputes(id, kiosk_id, slot_id, kind, status, reported_by, reason)
     VALUES ('${incidentId}', '${kioskId}', '${slotId}', 'DEVICE_FAULT', 'OPEN', '${managerId}', 'Khóa ô B01 kẹt cơ khí, cần kỹ thuật viên kiểm tra.');

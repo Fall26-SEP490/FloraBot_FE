@@ -35,8 +35,20 @@ test.describe('FloraBot Role Workflows Integration', () => {
       .toISOString()
       .slice(0, 16);
 
+    // Fast prerequisite check: ensure artificial flower product is sellable and indexed in catalog
+    const encodedFlowerName = encodeURIComponent(fixture.flowerName);
+    const catalogCheck = await page.request.get(`/api/shop/catalog?search=${encodedFlowerName}`);
+    expect(catalogCheck.status()).toBe(200);
+    const catalogPayload = (await catalogCheck.json()) as { items: { productId: string }[] };
+    expect(
+      catalogPayload.items.some((item) => item.productId === fixture.productId),
+      'Fixture artificial flower must be sellable in catalog',
+    ).toBe(true);
+
     // 3. Customer places Order 1 (CUSTOM kind) by UI for quoting
     await page.goto('/dat-hoa');
+    await page.getByLabel('Tìm mẫu hoa, shop hoặc tủ nhận').fill(fixture.flowerName);
+    await page.getByRole('button', { name: 'Tìm hoa', exact: true }).click();
     const catalogItem1 = page.locator('.flower-catalog li').filter({ hasText: fixture.flowerName });
     await catalogItem1.getByRole('button', { name: 'Chọn mẫu và cách nhận' }).click();
 
@@ -59,6 +71,8 @@ test.describe('FloraBot Role Workflows Integration', () => {
 
     // 4. Customer places Order 2 (CUSTOM kind) to verify seller refusal/rejection consistency
     await page.goto('/dat-hoa');
+    await page.getByLabel('Tìm mẫu hoa, shop hoặc tủ nhận').fill(fixture.flowerName);
+    await page.getByRole('button', { name: 'Tìm hoa', exact: true }).click();
     const catalogItem2 = page.locator('.flower-catalog li').filter({ hasText: fixture.flowerName });
     await catalogItem2.getByRole('button', { name: 'Chọn mẫu và cách nhận' }).click();
 
@@ -81,6 +95,8 @@ test.describe('FloraBot Role Workflows Integration', () => {
 
     // 5. Customer places Order 3 (CUSTOM kind) to verify customer self-cancellation
     await page.goto('/dat-hoa');
+    await page.getByLabel('Tìm mẫu hoa, shop hoặc tủ nhận').fill(fixture.flowerName);
+    await page.getByRole('button', { name: 'Tìm hoa', exact: true }).click();
     const catalogItem3 = page.locator('.flower-catalog li').filter({ hasText: fixture.flowerName });
     await catalogItem3.getByRole('button', { name: 'Chọn mẫu và cách nhận' }).click();
 
