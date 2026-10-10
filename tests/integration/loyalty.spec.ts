@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { createHash, randomBytes, randomInt, randomUUID } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { resolve } from 'node:path';
+import { getBackendRoot } from './helpers';
 
 function sql(input: string) {
   const result = spawnSync(
@@ -20,7 +20,7 @@ function sql(input: string) {
       'ON_ERROR_STOP=1',
       '-tAq',
     ],
-    { cwd: resolve('../BE'), input, encoding: 'utf8', windowsHide: true },
+    { cwd: getBackendRoot(), input, encoding: 'utf8', windowsHide: true },
   );
   expect(result.status, 'Disposable database fixture/check succeeds').toBe(0);
   return result.stdout.trim();

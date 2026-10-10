@@ -5,7 +5,7 @@ import { randomBytes, randomUUID } from 'node:crypto';
 test('Member registers, edits profile, sees own orders and cannot enter staff workspaces', async ({
   page,
 }) => {
-  test.setTimeout(150_000);
+  test.setTimeout(180_000);
   const email = `member-${randomUUID()}@example.invalid`;
   const password = randomBytes(24).toString('base64url');
   const errors: string[] = [];
@@ -19,7 +19,24 @@ test('Member registers, edits profile, sees own orders and cannot enter staff wo
   await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
   await page.getByLabel('Nhập lại mật khẩu', { exact: true }).fill(password);
   await page.getByRole('checkbox').check();
+  const registerPromise = page.waitForResponse(
+    (response) =>
+      response.url().endsWith('/api/auth/register') && response.request().method() === 'POST',
+  );
   await page.getByRole('button', { name: 'Tạo tài khoản', exact: true }).click();
+  const registerResponse = await registerPromise;
+  if (registerResponse.status() === 429) {
+    await expect(page.locator('main').getByRole('alert')).toContainText('Bạn thao tác hơi nhanh');
+    await page.waitForTimeout(60_000);
+    const retryRegister = page.waitForResponse(
+      (response) =>
+        response.url().endsWith('/api/auth/register') && response.request().method() === 'POST',
+    );
+    await page.getByRole('button', { name: 'Tạo tài khoản', exact: true }).click();
+    expect((await retryRegister).status()).toBeLessThan(400);
+  } else {
+    expect(registerResponse.status()).toBeLessThan(400);
+  }
   await expect(page).toHaveURL(/\/tai-khoan$/);
   await expect(page.getByRole('heading', { name: 'Đơn đặt hoa của bạn' })).toBeVisible();
   await expect(page.getByText(email, { exact: true })).toBeVisible();
@@ -53,11 +70,19 @@ test('Member registers, edits profile, sees own orders and cannot enter staff wo
       response.url().endsWith('/api/auth/login') && response.request().method() === 'POST',
   );
   await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
-  if ((await loginResponse).status() === 429) {
+  const loginResult = await loginResponse;
+  if (loginResult.status() === 429) {
     // The shared real server keeps its production limit across test cases.
     await expect(page.locator('main').getByRole('alert')).toContainText('Bạn thao tác hơi nhanh');
     await page.waitForTimeout(60_000);
+    const retryLogin = page.waitForResponse(
+      (response) =>
+        response.url().endsWith('/api/auth/login') && response.request().method() === 'POST',
+    );
     await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
+    expect((await retryLogin).status()).toBe(200);
+  } else {
+    expect(loginResult.status()).toBe(200);
   }
   await expect(page).toHaveURL(/\/tai-khoan$/);
   expect(errors).toEqual([]);

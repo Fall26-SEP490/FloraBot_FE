@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { resolve } from 'node:path';
 import { uploadEvidence, evidencePng } from './evidence';
+import { getBackendRoot, loginAdminWithPacing } from './helpers';
 
 function sql(input: string) {
   const result = spawnSync(
@@ -22,7 +22,7 @@ function sql(input: string) {
       '-tAq',
     ],
     {
-      cwd: resolve('../BE'),
+      cwd: getBackendRoot(),
       input,
       encoding: 'utf8',
       windowsHide: true,
@@ -37,6 +37,7 @@ function sql(input: string) {
 test('Public receipt stores a refund account through gateway/API without exposing it in reads or audit', async ({
   page,
 }) => {
+  test.setTimeout(180_000);
   const order = randomUUID();
   const checkout = randomUUID();
   // Synthetic completed charge is a fixture, not a provider payment or bank transfer.
@@ -103,7 +104,7 @@ test('Public receipt stores a refund account through gateway/API without exposin
       payerEmail,
     ],
     {
-      cwd: resolve('../BE'),
+      cwd: getBackendRoot(),
       input: payerPassword + '\n',
       encoding: 'utf8',
       windowsHide: true,
@@ -117,10 +118,7 @@ test('Public receipt stores a refund account through gateway/API without exposin
   );
   expect(provisioned.status).toBe(0);
   await page.goto('/admin/login');
-  await page.getByLabel('Email', { exact: true }).fill(payerEmail);
-  await page.getByLabel('Mật khẩu', { exact: true }).fill(payerPassword);
-  await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
-  await expect(page).toHaveURL(/\/admin$/);
+  await loginAdminWithPacing(page, payerEmail, payerPassword);
   await page.goto('/admin/refunds');
   const refunds = page.locator('.admin-refunds');
   await refunds.getByText(`Đơn BROWSER-${order} · 350.000 đ`, { exact: true }).click();
@@ -159,6 +157,7 @@ test('Public receipt stores a refund account through gateway/API without exposin
 test('Public complaint creates exactly one dispute and evidence record through the real API', async ({
   page,
 }) => {
+  test.setTimeout(180_000);
   const order = randomUUID();
   // Completed order is an isolated fixture; this case exercises after-sale handling, not payment.
   const token = sql(`
@@ -237,7 +236,7 @@ test('Public complaint creates exactly one dispute and evidence record through t
       email,
     ],
     {
-      cwd: resolve('../BE'),
+      cwd: getBackendRoot(),
       input: password + '\n',
       encoding: 'utf8',
       windowsHide: true,
@@ -251,10 +250,7 @@ test('Public complaint creates exactly one dispute and evidence record through t
   );
   expect(provisioned.status).toBe(0);
   await page.goto('/admin/login');
-  await page.getByLabel('Email', { exact: true }).fill(email);
-  await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
-  await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
-  await expect(page).toHaveURL(/\/admin$/);
+  await loginAdminWithPacing(page, email, password);
   await page.goto('/admin/complaints');
   const section = page.locator('.admin-complaints');
   await section.getByText(`Đơn BROWSER-${order}`, { exact: true }).click();
