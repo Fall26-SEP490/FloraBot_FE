@@ -273,7 +273,9 @@ test.describe('FloraBot Role Workflows Integration', () => {
     const assignIncidentRes = await assignIncidentReq;
     expect(assignIncidentRes.status()).toBe(200);
     const incidentTask = (await assignIncidentRes.json()) as { id: string; version: number };
-    expect(incidentTask.version).toBe(1);
+    expect(sql(`SELECT version FROM kiosk_ops.staff_tasks WHERE id='${incidentTask.id}';`)).toBe(
+      '1',
+    );
 
     await expect(
       page.getByText('Đã phân công. Nhân viên sẽ thấy công việc trong tài khoản.'),
@@ -428,7 +430,9 @@ test.describe('FloraBot Role Workflows Integration', () => {
     const assignDeliveryRes = await assignDeliveryReq;
     expect(assignDeliveryRes.status()).toBe(200);
     const deliveryTask = (await assignDeliveryRes.json()) as { id: string; version: number };
-    expect(deliveryTask.version).toBe(1);
+    expect(sql(`SELECT version FROM kiosk_ops.staff_tasks WHERE id='${deliveryTask.id}';`)).toBe(
+      '1',
+    );
 
     await expect(
       page.getByText('Đã phân công. Nhân viên sẽ thấy công việc trong tài khoản.'),
