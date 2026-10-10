@@ -9,6 +9,7 @@ const reuseExistingServer =
 
 export default defineConfig({
   testDir: './tests/browser',
+  outputDir: './test-results/public',
   fullyParallel: false,
   use: { baseURL, trace: 'retain-on-failure' },
   webServer: {
