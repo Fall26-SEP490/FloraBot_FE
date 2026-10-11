@@ -1,10 +1,10 @@
 import { expect, test } from '@playwright/test';
 import { randomBytes, randomInt, randomUUID } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { resolve } from 'node:path';
 import { uploadEvidence } from './evidence';
+import { getBackendRoot, loginAdminWithPacing, loginSellerWithPacing } from './helpers';
 
-const backend = resolve('../BE');
+const backend = getBackendRoot();
 const database =
   'Host=localhost;Port=55436;Database=florabot_browser_tests;Username=florabot;Password=local-florabot-only';
 
@@ -38,7 +38,7 @@ test('Real registration, admin approval, provisioning and seller subscription', 
   page,
   context,
 }) => {
-  test.setTimeout(150_000);
+  test.setTimeout(300_000);
   let hubConnected = false;
   let refreshMessages = 0;
   page.on('websocket', (socket) => {
@@ -68,14 +68,7 @@ test('Real registration, admin approval, provisioning and seller subscription', 
   await expect(page.getByRole('status').filter({ hasText: 'Đã nhận đăng ký' })).toBeVisible();
 
   await page.goto('/admin/login');
-  await page.getByLabel('Email', { exact: true }).fill('admin@florabot.vn');
-  await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
-  const loginResponse = page.waitForResponse((response) =>
-    response.url().endsWith('/api/auth/admin/login'),
-  );
-  await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
-  expect((await loginResponse).status()).toBe(200);
-  await expect(page).toHaveURL(/\/admin$/);
+  await loginAdminWithPacing(page, 'admin@florabot.vn', password);
   await page.goto('/admin/shops');
   await expect.poll(() => hubConnected).toBe(true);
   const liveShopName = `Hoa cập nhật trực tiếp ${randomInt(1000, 9999)}`;
@@ -146,14 +139,7 @@ test('Real registration, admin approval, provisioning and seller subscription', 
   const email = `browser-${userId}@example.invalid`;
   provision(userId, email, password);
   await page.goto('/dang-nhap');
-  await page.getByLabel('Email', { exact: true }).fill(email);
-  await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
-  const sellerLogin = page.waitForResponse((response) =>
-    response.url().endsWith('/api/auth/login'),
-  );
-  await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
-  expect((await sellerLogin).status()).toBe(200);
-  await expect(page).toHaveURL(/\/seller$/);
+  await loginSellerWithPacing(page, email, password);
   await expect(page.getByLabel('Trạng thái gói')).toContainText('Shop đã được duyệt');
   await expect(page.getByRole('button', { name: 'Ghi nhận bó hoa vào ô' })).toHaveCount(0);
   await page.goto('/admin');
@@ -318,10 +304,7 @@ test('Real registration, admin approval, provisioning and seller subscription', 
   expect((await page.request.get(`/api/admin/incidents/${reportId}`)).status()).toBe(403);
   await page.getByRole('button', { name: 'Đăng xuất' }).click();
   await page.goto('/admin/login');
-  await page.getByLabel('Email', { exact: true }).fill('admin@florabot.vn');
-  await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
-  await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
-  await expect(page).toHaveURL(/\/admin$/);
+  await loginAdminWithPacing(page, 'admin@florabot.vn', password);
   await page.goto('/admin/incidents');
   const incidents = page.locator('.admin-incidents');
   const incident = incidents
@@ -396,24 +379,8 @@ test('Real registration, admin approval, provisioning and seller subscription', 
   expect(payerSetup.status).toBe(0);
   provision(payerId, payerEmail, password);
   await page.getByRole('button', { name: 'Đăng xuất' }).click();
-  await page.getByLabel('Email', { exact: true }).fill(payerEmail);
-  await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
-  const payerLogin = page.waitForResponse((response) =>
-    response.url().endsWith('/api/auth/admin/login'),
-  );
-  await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
-  const payerResponse = await payerLogin;
-  if (payerResponse.status() === 429) {
-    // Real scenarios share the loopback auth budget. Honor the server window without weakening it.
-    await expect(page.locator('main').getByRole('alert')).toContainText('Bạn thao tác hơi nhanh');
-    await page.waitForTimeout(60_000);
-    const retryLogin = page.waitForResponse((response) =>
-      response.url().endsWith('/api/auth/admin/login'),
-    );
-    await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
-    expect((await retryLogin).status()).toBe(200);
-  } else expect(payerResponse.status()).toBe(200);
-  await expect(page).toHaveURL(/\/admin$/);
+  await page.goto('/admin/login');
+  await loginAdminWithPacing(page, payerEmail, password);
   await page.goto('/admin/withdrawals');
   await payouts.getByLabel('Trạng thái yêu cầu rút tiền').selectOption('APPROVED');
   await payouts.locator('summary').filter({ hasText: shopName }).click();

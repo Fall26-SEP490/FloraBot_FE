@@ -81,7 +81,9 @@ function FeedPanel({
                 <strong>{row.title}</strong>
                 <p>{row.detail}</p>
               </div>
-              <span className="dashboard-status">{row.state}</span>
+              <span className="dashboard-status" data-state={row.state}>
+                {row.state}
+              </span>
             </li>
           ))}
         </ul>
@@ -153,11 +155,21 @@ function AdminOverview({ session }: { session: Session }) {
     <div className="dashboard-overview">
       <div className="dashboard-focus">
         <div>
-          <h2>Ưu tiên xử lý trong ca làm việc</h2>
-          <p>Kiểm tra sự cố đang mở, sau đó xem báo cáo nhân viên gửi về.</p>
+          <h2>Ưu tiên giám sát hệ thống</h2>
+          <p>Theo dõi sự cố đang mở và báo cáo xử lý của nhân viên trên toàn hệ thống.</p>
+          <div className="dashboard-focus-chips" aria-label="Tóm tắt công việc trang 1">
+            <span className="dashboard-focus-chip">
+              Sự cố đang mở: <strong>{incidents.data ? incidents.data.rows.length : '—'}</strong>{' '}
+              <small>(giới hạn trang 1)</small>
+            </span>
+            <span className="dashboard-focus-chip">
+              Báo cáo đã gửi: <strong>{reports.data ? reports.data.rows.length : '—'}</strong>{' '}
+              <small>(giới hạn trang 1)</small>
+            </span>
+          </div>
         </div>
         <Link className="button button-primary" href="/admin/tasks">
-          Phân công công việc <ArrowRight size={18} aria-hidden="true" />
+          Theo dõi công việc <ArrowRight size={18} aria-hidden="true" />
         </Link>
       </div>
       <div className="dashboard-overview-grid">
@@ -173,7 +185,7 @@ function AdminOverview({ session }: { session: Session }) {
           query={reports}
           href="/admin/tasks"
           action="Xem báo cáo"
-          empty="Nhân viên chưa có báo cáo đang chờ duyệt. Bạn có thể theo dõi tiến độ trong mục phân công."
+          empty="Nhân viên chưa có báo cáo đang chờ duyệt. Bạn có thể theo dõi tiến độ trong mục theo dõi công việc."
         />
       </div>
       <OrderFeed session={session} />
@@ -213,6 +225,27 @@ function SellerOverview({ session }: { session: Session }) {
         <div>
           <h2>Một góc nhìn cho ngày bán hoa</h2>
           <p>Kiểm tra yêu cầu mới, chăm chút mẫu hoa và theo dõi tiền bán.</p>
+          <div className="dashboard-focus-chips" aria-label="Tóm tắt cửa hàng">
+            <span className="dashboard-focus-chip">
+              Mẫu đang bán:{' '}
+              <strong>
+                {products.data
+                  ? products.data.filter((item) => item.status === 'ACTIVE').length
+                  : '—'}
+              </strong>{' '}
+              <small>/ {products.data ? products.data.length : '—'} mẫu</small>
+            </span>
+            <span className="dashboard-focus-chip">
+              Trạng thái shop:{' '}
+              <strong>
+                {session.sellerStatus === 'ACTIVE'
+                  ? 'Đang hoạt động'
+                  : session.sellerStatus === 'PAST_DUE'
+                    ? 'Quá hạn'
+                    : 'Chờ kích hoạt'}
+              </strong>
+            </span>
+          </div>
         </div>
         <Link className="button button-primary" href="/seller/products">
           Quản lý mẫu hoa <ArrowRight size={18} aria-hidden="true" />

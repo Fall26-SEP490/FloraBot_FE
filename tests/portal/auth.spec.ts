@@ -91,7 +91,9 @@ test('Admin redirected to its own workspace', async ({ page }) => {
   await expect(page.getByLabel('Trạng thái gói')).toHaveCount(0);
 });
 
-test('Staff uses operations login and never enters administrator workspace', async ({ page }) => {
+test('Technician uses operations login and never enters administrator workspace', async ({
+  page,
+}) => {
   let signedIn = false;
   const privilegedRequests: string[] = [];
   page.on('request', (request) => {
@@ -102,7 +104,7 @@ test('Staff uses operations login and never enters administrator workspace', asy
     const path = new URL(route.request().url()).pathname;
     if (path === '/api/auth/admin/login') {
       expect(route.request().postDataJSON()).toEqual({
-        email: 'staff@example.com',
+        email: 'tech@example.com',
         password: 'test-password',
       });
       signedIn = true;
@@ -114,20 +116,23 @@ test('Staff uses operations login and never enters administrator workspace', asy
     }
     await route.fulfill(
       signedIn
-        ? { json: { ...seller, name: 'Nhân viên', role: 'STAFF', sellerId: null } }
+        ? { json: { ...seller, name: 'Kỹ thuật viên', role: 'TECHNICIAN', sellerId: null } }
         : { status: 401 },
     );
   });
-  await page.goto('/staff');
+  await page.route('**/api/staff/**', (route) =>
+    route.fulfill({ json: { items: [], page: 1, hasMore: false } }),
+  );
+  await page.goto('/technician');
   await expect(page).toHaveURL(/\/admin\/login$/);
-  await page.getByLabel('Email', { exact: true }).fill('staff@example.com');
+  await page.getByLabel('Email', { exact: true }).fill('tech@example.com');
   await page.getByLabel('Mật khẩu', { exact: true }).fill('test-password');
   await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
-  await expect(page).toHaveURL(/\/staff$/);
-  await expect(page.getByRole('heading', { name: 'Chào Nhân viên' })).toBeVisible();
+  await expect(page).toHaveURL(/\/technician$/);
+  await expect(page.getByRole('heading', { name: 'Chào Kỹ thuật viên' })).toBeVisible();
   await page.goto('/admin');
-  await expect(page).toHaveURL(/\/staff$/);
-  await expect(page.getByRole('heading', { name: 'Chào Nhân viên' })).toBeVisible();
+  await expect(page).toHaveURL(/\/technician$/);
+  await expect(page.getByRole('heading', { name: 'Chào Kỹ thuật viên' })).toBeVisible();
   expect(privilegedRequests).toEqual([]);
   await page.getByRole('button', { name: 'Đăng xuất', exact: true }).click();
   await expect(page).toHaveURL(/\/admin\/login$/);

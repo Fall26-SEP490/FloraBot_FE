@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { Flower2, Menu, X } from '@florabot/ui';
 import { queryClient, request, sessionQuery } from './api';
+import { workspaceBase } from './workspaceSections';
 
 const navigation = [
   ['/', 'Trang chủ'],
@@ -49,11 +50,9 @@ function SiteHeader() {
     refetchOnWindowFocus: false,
   });
   const home =
-    session.data?.role === 'ADMIN'
-      ? '/admin'
-      : session.data?.role === 'STAFF'
-        ? '/staff'
-        : '/tai-khoan';
+    session.data?.role === 'SELLER'
+      ? '/tai-khoan'
+      : workspaceBase(session.data?.role ?? 'CUSTOMER');
 
   useEffect(() => {
     const element = header.current;
@@ -206,7 +205,9 @@ const SiteFooter = memo(function SiteFooter() {
 
 function Frame({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const workspace = /^\/(admin|seller|staff)(\/|$)/.test(pathname) && pathname !== '/admin/login';
+  const workspace =
+    /^\/(admin|seller|staff|operations|technician|workspace)(\/|$)/.test(pathname) &&
+    pathname !== '/admin/login';
   return (
     <div className={workspace ? 'site-frame site-frame-workspace' : 'site-frame'}>
       <a className="skip-link" href="#main">

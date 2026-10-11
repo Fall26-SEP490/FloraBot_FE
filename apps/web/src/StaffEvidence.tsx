@@ -4,6 +4,8 @@ import { Button } from '@florabot/ui';
 import { ApiError, queryClient, request } from './api';
 import EvidenceUpload from './EvidenceUpload';
 
+import type { ActiveTaskRole } from './StaffTasks';
+
 type Attempt = { id: string; version: number; reference: string };
 type EvidencePage = { items: { id: string; createdAt: string }[]; page: number; hasMore: boolean };
 function restore(key: string): Attempt | null {
@@ -21,22 +23,37 @@ function restore(key: string): Attempt | null {
   }
 }
 
+export type StaffEvidenceProps = {
+  taskId: string;
+  version: number;
+  admin?: boolean;
+  actorId?: string;
+  sellerId?: string | null;
+  role?: ActiveTaskRole;
+  active: boolean;
+  apiBase?: string;
+  mode?: 'worker' | 'manager' | 'oversight';
+};
+
 export default function StaffEvidence({
   taskId,
   version,
-  admin,
+  admin = false,
   actorId,
+  sellerId,
   active,
-}: {
-  taskId: string;
-  version: number;
-  admin: boolean;
-  actorId?: string;
-  active: boolean;
-}) {
-  const key = `florabot-staff-evidence:${actorId}:${taskId}`;
-  const path = `${admin ? '/admin/staff-tasks' : '/staff/tasks'}/${taskId}/evidence`;
-  const [attempt, setAttempt] = useState<Attempt | null>(() => (admin ? null : restore(key)));
+  apiBase: explicitApiBase,
+  mode,
+}: StaffEvidenceProps) {
+  const isWorker = mode !== undefined ? mode === 'worker' : !admin;
+  const path = explicitApiBase
+    ? `${explicitApiBase}/${taskId}/evidence`
+    : `${admin ? '/admin/staff-tasks' : '/staff/tasks'}/${taskId}/evidence`;
+  const scopeKey = sellerId
+    ? `seller:${sellerId}`
+    : (explicitApiBase ?? (admin ? '/admin/staff-tasks' : '/staff/tasks'));
+  const key = `florabot-staff-evidence:${actorId ?? 'none'}:${scopeKey}:${taskId}`;
+  const [attempt, setAttempt] = useState<Attempt | null>(() => (!isWorker ? null : restore(key)));
   const [reference, setReference] = useState('');
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(1);
@@ -45,7 +62,7 @@ export default function StaffEvidence({
   const [notice, setNotice] = useState('');
   const [uploadKey, setUploadKey] = useState(0);
   const evidence = useQuery({
-    queryKey: ['staff-evidence', taskId, version, admin, page],
+    queryKey: ['staff-evidence', taskId, actorId ?? 'none', scopeKey, version, page],
     queryFn: () => request<EvidencePage>(`${path}?page=${page}`),
     enabled: open,
   });
@@ -158,7 +175,7 @@ export default function StaffEvidence({
           </div>
         </>
       )}
-      {!admin &&
+      {isWorker &&
         actorId &&
         (attempt ? (
           <>

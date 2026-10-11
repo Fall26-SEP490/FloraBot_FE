@@ -29,6 +29,7 @@ import GuestHistory from './GuestHistory';
 import MemberAuth, { accountPath } from './MemberAuth';
 import AuthShell from './AuthShell';
 import MemberAccount from './MemberAccount';
+import WorkspaceAccount from './WorkspaceAccount';
 import StaffTasks from './StaffTasks';
 import FlowerShop from './FlowerShop';
 import WebRequests from './WebRequests';
@@ -203,13 +204,13 @@ function StaffWorkspace() {
     mutationFn: () => request('/auth/logout', {}),
     onSuccess: async () => {
       queryClient.clear();
-      router.push('/admin/login');
+      router.push('/dang-nhap');
     },
   });
   if (session.isPending)
     return (
       <main id="main">
-        <p role="status">Đang tải tài khoản nhân viên…</p>
+        <p role="status">Đang tải tài khoản nhân viên shop…</p>
       </main>
     );
   if (session.isError)
@@ -218,10 +219,10 @@ function StaffWorkspace() {
         <h1>Không tải được phiên làm việc</h1>
         <p role="alert">Kiểm tra kết nối hoặc đăng nhập lại để tiếp tục.</p>
         <Button onClick={() => void session.refetch()}>Thử lại</Button>{' '}
-        <Link href="/admin/login">Về đăng nhập vận hành</Link>
+        <Link href="/dang-nhap">Về đăng nhập tài khoản</Link>
       </main>
     );
-  if (session.data.role !== 'STAFF')
+  if (session.data.role !== 'SELLER_STAFF')
     return (
       <main id="main" className="workspace">
         <h1>Phiên làm việc đã thay đổi</h1>
@@ -231,22 +232,29 @@ function StaffWorkspace() {
   return (
     <>
       <WorkspaceHeader
-        workspaceRole="STAFF"
+        workspaceRole="SELLER_STAFF"
         name={session.data.name}
         busy={logout.isPending}
         onLogout={() => logout.mutate()}
       />
       <div className="dashboard-shell">
-        <WorkspaceNavigation workspaceRole="STAFF" section="tasks" />
+        <WorkspaceNavigation workspaceRole="SELLER_STAFF" section="tasks" />
         <main id="main" className="workspace dashboard-content">
           <div className="dashboard-page-heading">
             <div>
               <h1>Chào {session.data.name}</h1>
-              <p>Nhận việc, cập nhật tiến độ và gửi báo cáo tại một nơi.</p>
+              <p>Nhận việc, nạp hoa vào ô tủ và gửi báo cáo cho shop.</p>
             </div>
-            <span className="dashboard-context">Nhân viên FloraBot</span>
+            <span className="dashboard-context">Nhân viên shop</span>
           </div>
-          <StaffTasks staffId={session.data.id} />
+          <StaffTasks
+            actorRole="SELLER_STAFF"
+            mode="worker"
+            actorId={session.data.id}
+            sellerId={session.data.sellerId}
+            apiBase="/staff/tasks"
+            allowedKinds={['DELIVERY']}
+          />
           <section
             id="staff-guide"
             className="dashboard-staff-guide"
@@ -260,16 +268,199 @@ function StaffWorkspace() {
                 <p>Xem đúng tủ, địa chỉ và nội dung được phân công.</p>
               </li>
               <li>
-                <strong>Ghi nhận thực hiện</strong>
-                <p>Bắt đầu công việc, cập nhật kết quả và ảnh minh chứng.</p>
+                <strong>Nạp hoa vào ô</strong>
+                <p>Bắt đầu công việc, chọn ô trống, quét mã QR và xác nhận.</p>
               </li>
               <li>
                 <strong>Gửi báo cáo</strong>
-                <p>Theo dõi kết quả duyệt hoặc yêu cầu kiểm tra lại.</p>
+                <p>Cập nhật kết quả nạp hoa để chủ shop theo dõi.</p>
               </li>
             </ol>
             <p className="dashboard-data-note">
-              Bạn chỉ thao tác trong phạm vi công việc được giao.
+              Bạn chỉ thao tác trong phạm vi công việc được giao của shop phụ trách.
+            </p>
+          </section>
+          {logout.isError && <p role="alert">Chưa đăng xuất được. Bạn thử lại nhé.</p>}
+        </main>
+      </div>
+    </>
+  );
+}
+
+function TechnicianWorkspace() {
+  const router = useRouter();
+  const session = useQuery({ ...sessionQuery, refetchInterval: 60_000 });
+  const logout = useMutation({
+    mutationFn: () => request('/auth/logout', {}),
+    onSuccess: async () => {
+      queryClient.clear();
+      router.push('/admin/login');
+    },
+  });
+  if (session.isPending)
+    return (
+      <main id="main">
+        <p role="status">Đang tải tài khoản kỹ thuật viên…</p>
+      </main>
+    );
+  if (session.isError)
+    return (
+      <main id="main" className="workspace">
+        <h1>Không tải được phiên làm việc</h1>
+        <p role="alert">Kiểm tra kết nối hoặc đăng nhập lại để tiếp tục.</p>
+        <Button onClick={() => void session.refetch()}>Thử lại</Button>{' '}
+        <Link href="/admin/login">Về đăng nhập vận hành</Link>
+      </main>
+    );
+  if (session.data.role !== 'TECHNICIAN')
+    return (
+      <main id="main" className="workspace">
+        <h1>Phiên làm việc đã thay đổi</h1>
+        <Link href={accountPath(session.data.role)}>Về khu vực của bạn</Link>
+      </main>
+    );
+  return (
+    <>
+      <WorkspaceHeader
+        workspaceRole="TECHNICIAN"
+        name={session.data.name}
+        busy={logout.isPending}
+        onLogout={() => logout.mutate()}
+      />
+      <div className="dashboard-shell">
+        <WorkspaceNavigation workspaceRole="TECHNICIAN" section="tasks" />
+        <main id="main" className="workspace dashboard-content">
+          <div className="dashboard-page-heading">
+            <div>
+              <h1>Chào {session.data.name}</h1>
+              <p>Nhận việc kiểm tra sự cố, cập nhật tiến độ và gửi báo cáo tại tủ.</p>
+            </div>
+            <span className="dashboard-context">Kỹ thuật viên</span>
+          </div>
+          <StaffTasks
+            actorRole="TECHNICIAN"
+            mode="worker"
+            actorId={session.data.id}
+            apiBase="/staff/tasks"
+            allowedKinds={['INCIDENT']}
+          />
+          <section
+            id="technician-guide"
+            className="dashboard-staff-guide"
+            tabIndex={-1}
+            aria-labelledby="technician-guide-title"
+          >
+            <h2 id="technician-guide-title">Từ nhận việc đến hoàn thành sự cố</h2>
+            <ol>
+              <li>
+                <strong>Kiểm tra sự cố</strong>
+                <p>Xem thông tin tủ, lý do và hướng dẫn xử lý.</p>
+              </li>
+              <li>
+                <strong>Khắc phục và ghi nhận</strong>
+                <p>Bắt đầu công việc, sửa chữa thực tế và tải ảnh minh chứng.</p>
+              </li>
+              <li>
+                <strong>Đóng sự cố và gửi báo cáo</strong>
+                <p>Xác nhận đã kiểm tra thực tế để gửi người quản lý duyệt.</p>
+              </li>
+            </ol>
+            <p className="dashboard-data-note">
+              Kỹ thuật viên chỉ phụ trách sự cố kỹ thuật; không thực hiện nạp hoa cho shop.
+            </p>
+          </section>
+          {logout.isError && <p role="alert">Chưa đăng xuất được. Bạn thử lại nhé.</p>}
+        </main>
+      </div>
+    </>
+  );
+}
+
+function OperationsWorkspace() {
+  const router = useRouter();
+  const session = useQuery({ ...sessionQuery, refetchInterval: 60_000 });
+  const logout = useMutation({
+    mutationFn: () => request('/auth/logout', {}),
+    onSuccess: async () => {
+      queryClient.clear();
+      router.push('/admin/login');
+    },
+  });
+  if (session.isPending)
+    return (
+      <main id="main">
+        <p role="status">Đang tải tài khoản quản lý vận hành…</p>
+      </main>
+    );
+  if (session.isError)
+    return (
+      <main id="main" className="workspace">
+        <h1>Không tải được phiên làm việc</h1>
+        <p role="alert">Kiểm tra kết nối hoặc đăng nhập lại để tiếp tục.</p>
+        <Button onClick={() => void session.refetch()}>Thử lại</Button>{' '}
+        <Link href="/admin/login">Về đăng nhập vận hành</Link>
+      </main>
+    );
+  if (session.data.role !== 'OPERATIONS_MANAGER')
+    return (
+      <main id="main" className="workspace">
+        <h1>Phiên làm việc đã thay đổi</h1>
+        <Link href={accountPath(session.data.role)}>Về khu vực của bạn</Link>
+      </main>
+    );
+  return (
+    <>
+      <WorkspaceHeader
+        workspaceRole="OPERATIONS_MANAGER"
+        name={session.data.name}
+        busy={logout.isPending}
+        onLogout={() => logout.mutate()}
+      />
+      <div className="dashboard-shell">
+        <WorkspaceNavigation workspaceRole="OPERATIONS_MANAGER" section="tasks" />
+        <main id="main" className="workspace dashboard-content">
+          <div className="dashboard-page-heading">
+            <div>
+              <h1>Chào {session.data.name}</h1>
+              <p>Phân công sự cố cho kỹ thuật viên và kiểm tra kết quả khắc phục lỗi tủ.</p>
+            </div>
+            <span className="dashboard-context">Quản lý vận hành</span>
+          </div>
+          <StaffTasks
+            actorRole="OPERATIONS_MANAGER"
+            mode="manager"
+            actorId={session.data.id}
+            apiBase="/operations/staff-tasks"
+            directoryEndpoint="/operations/staff"
+            incidentsEndpoint="/operations/incidents"
+            allowedKinds={['INCIDENT']}
+            canAssign
+            canReassign
+          />
+          <section
+            id="operations-guide"
+            className="dashboard-staff-guide"
+            tabIndex={-1}
+            aria-labelledby="operations-guide-title"
+          >
+            <h2 id="operations-guide-title">Hướng dẫn điều phối vận hành</h2>
+            <ol>
+              <li>
+                <strong>Kiểm tra sự cố mở</strong>
+                <p>Theo dõi các cảnh báo và sự cố tủ trong phạm vi phụ trách.</p>
+              </li>
+              <li>
+                <strong>Phân công kỹ thuật viên</strong>
+                <p>Giao công việc kiểm tra sự cố cho kỹ thuật viên phù hợp.</p>
+              </li>
+              <li>
+                <strong>Duyệt kết quả xử lý</strong>
+                <p>Kiểm tra báo cáo và ảnh minh chứng trước khi xác nhận hoàn thành.</p>
+              </li>
+            </ol>
+            <p className="dashboard-data-note">
+              Tài khoản quản lý được phân quyền theo cụm tủ phụ trách; không có quyền tài chính hay
+              quản trị viên.
             </p>
           </section>
           {logout.isError && <p role="alert">Chưa đăng xuất được. Bạn thử lại nhé.</p>}
@@ -409,9 +600,31 @@ function Workspace({
             <SellerAccessories session={session.data} />
           )}
           {role === 'SELLER' && section === 'wallet' && <Wallet session={session.data} />}
+          {role === 'SELLER' && section === 'tasks' && session.data.sellerId && (
+            <StaffTasks
+              actorRole="SELLER"
+              mode="manager"
+              actorId={session.data.id}
+              sellerId={session.data.sellerId}
+              apiBase={`/sellers/${session.data.sellerId}/staff-tasks`}
+              directoryEndpoint={`/sellers/${session.data.sellerId}/staff`}
+              deliveryScopesEndpoint={`/sellers/${session.data.sellerId}/staff-delivery-scopes`}
+              allowedKinds={['DELIVERY']}
+              canAssign
+              canReassign
+            />
+          )}
           {role === 'ADMIN' && section === 'shops' && <AdminSellers />}
           {role === 'ADMIN' && section === 'tasks' && (
-            <StaffTasks admin adminId={session.data.id} />
+            <StaffTasks
+              actorRole="ADMIN"
+              mode="oversight"
+              actorId={session.data.id}
+              apiBase="/admin/staff-tasks"
+              readOnly
+              canAssign={false}
+              canReassign={false}
+            />
           )}
           {role === 'ADMIN' && section === 'slots' && <AdminSlots />}
           {role === 'ADMIN' && section === 'incidents' && <AdminIncidents />}
@@ -442,7 +655,10 @@ export type PortalScreen =
   | 'shop'
   | 'seller'
   | 'admin'
-  | 'staff';
+  | 'staff'
+  | 'technician'
+  | 'operations'
+  | 'workspace';
 
 function Guard({ requiredRole, children }: { requiredRole: string; children: React.ReactNode }) {
   const router = useRouter();
@@ -451,11 +667,15 @@ function Guard({ requiredRole, children }: { requiredRole: string; children: Rea
     session.data &&
     (session.data.role === requiredRole ||
       (requiredRole === 'CUSTOMER' && session.data.role === 'SELLER'));
+  const isPlatformRole =
+    requiredRole === 'ADMIN' ||
+    requiredRole === 'OPERATIONS_MANAGER' ||
+    requiredRole === 'TECHNICIAN';
   const target =
     session.data && !allowed
       ? accountPath(session.data.role)
       : session.error instanceof ApiError && session.error.status === 401
-        ? requiredRole === 'ADMIN' || requiredRole === 'STAFF'
+        ? isPlatformRole
           ? '/admin/login'
           : '/dang-nhap'
         : null;
@@ -517,10 +737,24 @@ function Screen({ screen, section }: { screen: PortalScreen; section?: string })
       );
     case 'staff':
       return (
-        <Guard requiredRole="STAFF">
+        <Guard requiredRole="SELLER_STAFF">
           <StaffWorkspace />
         </Guard>
       );
+    case 'technician':
+      return (
+        <Guard requiredRole="TECHNICIAN">
+          <TechnicianWorkspace />
+        </Guard>
+      );
+    case 'operations':
+      return (
+        <Guard requiredRole="OPERATIONS_MANAGER">
+          <OperationsWorkspace />
+        </Guard>
+      );
+    case 'workspace':
+      return <WorkspaceAccount />;
   }
 }
 

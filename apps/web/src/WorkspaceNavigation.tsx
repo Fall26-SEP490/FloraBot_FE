@@ -18,10 +18,10 @@ import {
   LogOut,
   Button,
 } from '@florabot/ui';
-import { workspaceBase, workspaceSections, type WorkspaceRole } from './workspaceSections';
+import { workspaceBase, workspaceSections } from './workspaceSections';
 import { SiteBrand } from './SiteFrame';
 
-type Role = WorkspaceRole | 'STAFF';
+type Role = 'ADMIN' | 'SELLER' | 'OPERATIONS_MANAGER' | 'TECHNICIAN' | 'SELLER_STAFF';
 const icons = {
   overview: LayoutDashboard,
   orders: ClipboardList,
@@ -46,7 +46,7 @@ const groups = {
     ['Giao dịch', ['complaints', 'refunds', 'withdrawals', 'reconciliation']],
   ],
   SELLER: [
-    ['Bán hoa', ['orders', 'products', 'stock', 'accessories']],
+    ['Bán hoa', ['orders', 'products', 'stock', 'accessories', 'tasks']],
     ['Cửa hàng', ['subscriptions', 'wallet']],
   ],
 } as const;
@@ -64,16 +64,17 @@ export function WorkspaceHeader({
 }) {
   return (
     <header className="dashboard-header">
-      <SiteBrand
-        className="dashboard-brand"
-        href={role === 'STAFF' ? '/staff' : workspaceBase(role)}
-      />
+      <SiteBrand className="dashboard-brand" href={workspaceBase(role)} />
       <span className="dashboard-role">
         {role === 'ADMIN'
           ? 'Quản trị vận hành'
-          : role === 'SELLER'
-            ? 'Góc quản lý shop'
-            : 'Khu vực nhân viên'}
+          : role === 'OPERATIONS_MANAGER'
+            ? 'Quản lý vận hành'
+            : role === 'SELLER'
+              ? 'Chủ shop'
+              : role === 'TECHNICIAN'
+                ? 'Kỹ thuật viên'
+                : 'Nhân viên shop'}
       </span>
       <div className="dashboard-user">
         <span className="dashboard-avatar" aria-hidden="true">
@@ -98,7 +99,7 @@ export default function WorkspaceNavigation({
 }) {
   const [expanded, setExpanded] = useState(false);
   const toggle = useRef<HTMLButtonElement>(null);
-  const base = role === 'STAFF' ? '/staff' : workspaceBase(role);
+  const base = workspaceBase(role);
   const handleEscape = (event: React.KeyboardEvent) => {
     if (event.key === 'Escape' && expanded) {
       setExpanded(false);
@@ -123,16 +124,53 @@ export default function WorkspaceNavigation({
         className={expanded ? 'is-expanded' : ''}
         aria-label="Điều hướng quản lý"
       >
-        {role === 'STAFF' ? (
+        {role === 'TECHNICIAN' ? (
+          <>
+            <Link onKeyDown={handleEscape} href="/technician" aria-current="page">
+              <ClipboardList size={19} aria-hidden="true" />
+              Công việc kỹ thuật
+            </Link>
+            <Link onKeyDown={handleEscape} href="#technician-guide">
+              <ListChecks size={19} aria-hidden="true" />
+              Hướng dẫn xử lý sự cố
+            </Link>
+          </>
+        ) : role === 'SELLER_STAFF' ? (
           <>
             <Link onKeyDown={handleEscape} href="/staff" aria-current="page">
               <ClipboardList size={19} aria-hidden="true" />
-              Công việc của tôi
+              Công việc giao hoa
             </Link>
             <Link onKeyDown={handleEscape} href="#staff-guide">
               <ListChecks size={19} aria-hidden="true" />
               Hướng dẫn làm việc
             </Link>
+          </>
+        ) : role === 'OPERATIONS_MANAGER' ? (
+          <>
+            <Link
+              onKeyDown={handleEscape}
+              href="/operations"
+              aria-current={section === 'overview' || section === 'tasks' ? 'page' : undefined}
+            >
+              <LayoutDashboard size={19} aria-hidden="true" />
+              Tổng quan vận hành
+            </Link>
+            <div className="workspace-nav-group">
+              <p>Vận hành kỹ thuật</p>
+              <Link
+                onKeyDown={handleEscape}
+                href="/operations#staff-tasks"
+                aria-current={section === 'tasks' ? 'page' : undefined}
+              >
+                <ListChecks size={19} aria-hidden="true" />
+                <span>Công việc kỹ thuật</span>
+              </Link>
+              <Link onKeyDown={handleEscape} href="#operations-guide">
+                <ClipboardList size={19} aria-hidden="true" />
+                <span>Hướng dẫn điều phối</span>
+              </Link>
+            </div>
           </>
         ) : (
           <>
@@ -144,13 +182,15 @@ export default function WorkspaceNavigation({
               <LayoutDashboard size={19} aria-hidden="true" />
               Tổng quan
             </Link>
-            {groups[role].map(([label, keys]) => (
+            {groups[role as 'ADMIN' | 'SELLER']?.map(([label, keys]) => (
               <div className="workspace-nav-group" key={label}>
                 <p>{label}</p>
                 {keys.map((key) => {
-                  const item = workspaceSections[role].find(([id]) => id === key);
+                  const item = workspaceSections[role as 'ADMIN' | 'SELLER']?.find(
+                    ([id]) => id === key,
+                  );
                   if (!item) return null;
-                  const Icon = icons[key];
+                  const Icon = icons[key as keyof typeof icons];
                   return (
                     <Link
                       onKeyDown={handleEscape}

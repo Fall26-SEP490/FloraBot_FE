@@ -14,14 +14,25 @@ type Fields = {
   confirm: string;
   consent: boolean;
 };
-export const accountPath = (role: string) =>
-  role === 'ADMIN'
-    ? '/admin'
-    : role === 'STAFF'
-      ? '/staff'
-      : role === 'SELLER'
-        ? '/seller'
-        : '/tai-khoan';
+export const accountPath = (role: string) => {
+  switch (role) {
+    case 'ADMIN':
+      return '/admin';
+    case 'OPERATIONS_MANAGER':
+      return '/operations';
+    case 'TECHNICIAN':
+      return '/technician';
+    case 'SELLER':
+      return '/seller';
+    case 'SELLER_STAFF':
+      return '/staff';
+    case 'CUSTOMER':
+      return '/tai-khoan';
+    case 'STAFF':
+    default:
+      return '/workspace';
+  }
+};
 export const passwordRule = (value: string) =>
   value.length < 12
     ? 'Dùng ít nhất 12 ký tự cho mật khẩu.'

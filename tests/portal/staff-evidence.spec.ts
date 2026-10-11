@@ -6,7 +6,14 @@ for (const admin of [false, true])
     await page.setViewportSize({ width: admin ? 1440 : 390, height: 1000 });
     const prefix = admin ? '/api/admin/staff-tasks' : '/api/staff/tasks';
     await page.route('**/api/auth/me', (route) =>
-      route.fulfill({ json: { id: 'actor', name: 'Thảo', role: admin ? 'ADMIN' : 'STAFF' } }),
+      route.fulfill({
+        json: {
+          id: 'actor',
+          name: 'Thảo',
+          role: admin ? 'ADMIN' : 'SELLER_STAFF',
+          sellerId: 'shop-1',
+        },
+      }),
     );
     await page.route(`**${prefix}?*`, (route) =>
       route.fulfill({
@@ -90,25 +97,27 @@ for (const admin of [false, true])
       await expect(panel.getByText('Đã gắn ảnh vào công việc.')).toBeVisible();
       expect(posts).toBe(1);
       expect(
-        await page.evaluate(() => sessionStorage.getItem('florabot-staff-evidence:actor:task')),
-      ).toBeNull();
+        await page.evaluate(() =>
+          Object.keys(sessionStorage).filter((k) => k.startsWith('florabot-staff-evidence:')),
+        ),
+      ).toEqual([]);
       await page.route(`**${prefix}/task/evidence`, (route) =>
         route.fulfill({ status: 400, json: { detail: 'Ảnh đã hết hạn.' } }),
       );
-      await panel
-        .getByLabel('Ảnh minh chứng', { exact: true })
-        .setInputFiles({
-          name: 'another.png',
-          mimeType: 'image/png',
-          buffer: Buffer.from('fixture'),
-        });
+      await panel.getByLabel('Ảnh minh chứng', { exact: true }).setInputFiles({
+        name: 'another.png',
+        mimeType: 'image/png',
+        buffer: Buffer.from('fixture'),
+      });
       await panel.getByRole('button', { name: 'Tải ảnh minh chứng', exact: true }).click();
       await panel.getByRole('button', { name: 'Gắn ảnh vào công việc' }).click();
       await expect(panel.getByRole('alert')).toContainText('Ảnh đã hết hạn.');
       await expect(panel.getByRole('button', { name: 'Gắn ảnh vào công việc' })).toBeDisabled();
       expect(
-        await page.evaluate(() => sessionStorage.getItem('florabot-staff-evidence:actor:task')),
-      ).toBeNull();
+        await page.evaluate(() =>
+          Object.keys(sessionStorage).filter((k) => k.startsWith('florabot-staff-evidence:')),
+        ),
+      ).toEqual([]);
     }
     expect(
       (

@@ -1,12 +1,13 @@
 import { expect, test } from '@playwright/test';
 import { randomBytes, randomUUID, randomInt } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { resolve } from 'node:path';
+import { getBackendRoot, loginAdminWithPacing } from './helpers';
 
 test('Admin signs in, loads all workspaces and approves a shop through real API and database', async ({
   page,
 }) => {
-  const backend = resolve('../BE');
+  test.setTimeout(180_000);
+  const backend = getBackendRoot();
   const id = randomUUID();
   const email = `admin-${id}@example.invalid`;
   const password = randomBytes(24).toString('base64url');
@@ -73,10 +74,7 @@ test('Admin signs in, loads all workspaces and approves a shop through real API 
   });
   await page.goto('/admin');
   await expect(page).toHaveURL(/\/admin\/login$/);
-  await page.getByLabel('Email', { exact: true }).fill(email);
-  await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
-  await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
-  await expect(page).toHaveURL(/\/admin$/);
+  await loginAdminWithPacing(page, email, password);
   for (const [section, selector] of [
     ['shops', '.admin-sellers'],
     ['slots', '.admin-slots'],

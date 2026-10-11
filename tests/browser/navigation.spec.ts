@@ -38,6 +38,8 @@ for (const width of [390, 1440])
     await page.setViewportSize({ width, height: 900 });
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/');
+    const header = page.locator('.site-header');
+    await expect(header).toHaveClass(/navigation-ready/);
     const menu = page.getByRole('button', { name: 'Menu' });
     const nav = page.getByRole('navigation', { name: 'Điều hướng chính' });
     if (await menu.isVisible()) {

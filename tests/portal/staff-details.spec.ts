@@ -8,7 +8,14 @@ for (const admin of [false, true])
     await page.setViewportSize({ width: admin ? 1440 : 390, height: 1000 });
     const prefix = admin ? '/api/admin/staff-tasks' : '/api/staff/tasks';
     await page.route('**/api/auth/me', (route) =>
-      route.fulfill({ json: { id: 'actor', name: 'Thảo', role: admin ? 'ADMIN' : 'STAFF' } }),
+      route.fulfill({
+        json: {
+          id: 'actor',
+          name: 'Thảo',
+          role: admin ? 'ADMIN' : 'SELLER_STAFF',
+          sellerId: 'shop-1',
+        },
+      }),
     );
     await page.route(`**${prefix}?*`, (route) =>
       route.fulfill({

@@ -8,8 +8,9 @@ import { money } from '@florabot/contracts';
 import type { components } from '../../../packages/contracts/src/generated/api';
 import { ApiError, queryClient, request, type Session } from './api';
 import ProductPhotos from './ProductPhotos';
+import { ProductCreateForm, ProductMetadataEditor, type ProductItem } from './ProductCatalogForm';
 
-type Product = components['schemas']['ProductResponse'];
+type Product = ProductItem;
 const priceSchema = z.object({
   price: z
     .number('Nhập giá bán bằng số.')
@@ -41,6 +42,7 @@ function ProductEditor({
     defaultValues: { price: Number(product.price) },
   });
   const [status, setStatus] = useState(product.status);
+  const [showMetadataEditor, setShowMetadataEditor] = useState(false);
   const base = `/sellers/${sellerId}/flows/`;
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['products', sellerId] });
   const price = useMutation({
@@ -63,73 +65,121 @@ function ProductEditor({
   return (
     <div className="product-editor">
       <p>{product.description || 'Shop chưa thêm mô tả cho sản phẩm này.'}</p>
-      <p className="quiet">Hạn bán theo sản phẩm: {product.shelfLifeHours} giờ.</p>
-      <form
-        noValidate
-        onSubmit={form.handleSubmit((values) => price.mutate(values.price))}
-        aria-label={`Đổi giá ${product.name}`}
-      >
-        <label htmlFor={inputId}>Giá bán (đồng)</label>
-        <div className="field-action">
-          <input
-            id={inputId}
-            type="number"
-            min="1"
-            step="1"
-            inputMode="numeric"
-            {...form.register('price', { valueAsNumber: true })}
-            disabled={!canEdit || price.isPending}
-            aria-invalid={!!form.formState.errors.price}
-            aria-describedby={form.formState.errors.price ? `${inputId}-error` : undefined}
-          />
-          <Button type="submit" disabled={!canEdit || price.isPending}>
-            {price.isPending ? 'Đang lưu…' : 'Lưu giá'}
-          </Button>
+      {product.inventoryKind === 'ARTIFICIAL' ? (
+        <p className="quiet product-artificial-notice">
+          Bó hoa giả cao cấp — không áp dụng thời hạn tươi.
+        </p>
+      ) : product.inventoryKind === 'LEGACY_FRESH' || product.shelfLifeHours ? (
+        <p className="quiet product-legacy-notice">
+          Dữ liệu hoa tươi cũ (chuyển tiếp) — Hạn bán theo sản phẩm: {product.shelfLifeHours} giờ.
+        </p>
+      ) : null}
+      {product.lengthCm && product.widthCm && product.heightCm ? (
+        <p className="quiet product-dimensions">
+          Kích thước: {product.lengthCm} × {product.widthCm} × {product.heightCm} cm (Dài × Rộng ×
+          Cao)
+        </p>
+      ) : null}
+      {product.tags && product.tags.length > 0 ? (
+        <div className="product-tags" aria-label="Từ khóa">
+          {product.tags.map((tag) => (
+            <span key={tag} className="product-tag-chip">
+              #{tag}
+            </span>
+          ))}
         </div>
-        {form.formState.errors.price && (
-          <p className="error" id={`${inputId}-error`}>
-            {form.formState.errors.price.message}
-          </p>
-        )}
-        <p role="status">{price.isSuccess ? 'Đã lưu giá bán.' : ''}</p>
-        {price.error && (
-          <p role="alert" className="error">
-            {errorText(price.error)}
-          </p>
-        )}
-      </form>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          availability.mutate();
-        }}
-        aria-label={`Trạng thái ${product.name}`}
-      >
-        <label htmlFor={`status-${product.id}`}>Trạng thái sản phẩm</label>
-        <div className="field-action">
-          <select
-            id={`status-${product.id}`}
-            value={status}
-            onChange={(event) => setStatus(event.target.value)}
-            disabled={!canEdit || availability.isPending}
-          >
-            {Object.entries(statusNames).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-          <Button type="submit" variant="outline" disabled={!canEdit || availability.isPending}>
-            {availability.isPending ? 'Đang lưu…' : 'Lưu trạng thái'}
-          </Button>
+      ) : null}
+      <p className="quiet price-snapshot-note">
+        Lưu ý: Thay đổi giá áp dụng cho các lần nạp hoa tiếp theo, không thay đổi giá của bó hoa
+        đang bán trong tủ hoặc đơn đặt trước đã tạo.
+      </p>
+      <div className="product-quick-actions">
+        <form
+          noValidate
+          onSubmit={form.handleSubmit((values) => price.mutate(values.price))}
+          aria-label={`Đổi giá ${product.name}`}
+          className="product-inline-form"
+        >
+          <label htmlFor={inputId}>Giá bán (đồng)</label>
+          <div className="field-action">
+            <input
+              id={inputId}
+              type="number"
+              min="1"
+              step="1"
+              inputMode="numeric"
+              {...form.register('price', { valueAsNumber: true })}
+              disabled={!canEdit || price.isPending}
+              aria-invalid={!!form.formState.errors.price}
+              aria-describedby={form.formState.errors.price ? `${inputId}-error` : undefined}
+            />
+            <Button type="submit" disabled={!canEdit || price.isPending}>
+              {price.isPending ? 'Đang lưu…' : 'Lưu giá'}
+            </Button>
+          </div>
+          {form.formState.errors.price && (
+            <p className="error" id={`${inputId}-error`}>
+              {form.formState.errors.price.message}
+            </p>
+          )}
+          <p role="status">{price.isSuccess ? 'Đã lưu giá bán.' : ''}</p>
+          {price.error && (
+            <p role="alert" className="error">
+              {errorText(price.error)}
+            </p>
+          )}
+        </form>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            availability.mutate();
+          }}
+          aria-label={`Trạng thái ${product.name}`}
+          className="product-inline-form"
+        >
+          <label htmlFor={`status-${product.id}`}>Trạng thái sản phẩm</label>
+          <div className="field-action">
+            <select
+              id={`status-${product.id}`}
+              value={status}
+              onChange={(event) => setStatus(event.target.value)}
+              disabled={!canEdit || availability.isPending}
+            >
+              {Object.entries(statusNames).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+            <Button type="submit" variant="outline" disabled={!canEdit || availability.isPending}>
+              {availability.isPending ? 'Đang lưu…' : 'Lưu trạng thái'}
+            </Button>
+          </div>
+          <p role="status">{availability.isSuccess ? 'Đã lưu trạng thái sản phẩm.' : ''}</p>
+          {availability.error && (
+            <p role="alert" className="error">
+              {errorText(availability.error)}
+            </p>
+          )}
+        </form>
+      </div>
+      <div className="product-edit-toggle">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setShowMetadataEditor(!showMetadataEditor)}
+          disabled={!canEdit}
+          aria-expanded={showMetadataEditor}
+          aria-controls={`edit-section-${product.id}`}
+        >
+          {showMetadataEditor ? 'Đóng chỉnh sửa chi tiết' : 'Chỉnh sửa thông tin & kích thước'}
+        </Button>
+      </div>
+      {showMetadataEditor && (
+        <div id={`edit-section-${product.id}`} className="product-edit-section">
+          <ProductMetadataEditor product={product} sellerId={sellerId} canEdit={canEdit} />
         </div>
-        <p role="status">{availability.isSuccess ? 'Đã lưu trạng thái sản phẩm.' : ''}</p>
-        {availability.error && (
-          <p role="alert" className="error">
-            {errorText(availability.error)}
-          </p>
-        )}
-      </form>
+      )}
       <ProductPhotos
         sellerId={sellerId}
         productId={product.id}
@@ -143,6 +193,7 @@ function ProductEditor({
 export default function Products({ session }: { session: Session }) {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('ALL');
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const sellerId = session.sellerId;
   const query = useQuery({
     queryKey: ['products', sellerId],
@@ -165,6 +216,27 @@ export default function Products({ session }: { session: Session }) {
         <p className="quiet">
           Shop cần có gói đang hoạt động để chỉnh sửa sản phẩm. Bạn vẫn có thể xem danh sách.
         </p>
+      )}
+      <div className="product-actions-bar">
+        <Button
+          type="button"
+          onClick={() => setShowCreateForm(!showCreateForm)}
+          disabled={!canEdit}
+          aria-expanded={showCreateForm}
+          aria-controls="product-create-section"
+        >
+          <Plus size={18} aria-hidden="true" />
+          {showCreateForm ? 'Đóng biểu mẫu thêm hoa' : 'Thêm bó hoa giả mới'}
+        </Button>
+      </div>
+      {showCreateForm && (
+        <div id="product-create-section" className="product-create-container">
+          <ProductCreateForm
+            sellerId={sellerId}
+            canEdit={canEdit}
+            onCancel={() => setShowCreateForm(false)}
+          />
+        </div>
       )}
       <div className="product-filters">
         <div>
@@ -217,6 +289,12 @@ export default function Products({ session }: { session: Session }) {
               <summary>
                 <span>
                   <strong>{product.name}</strong>
+                  {product.inventoryKind === 'ARTIFICIAL' && (
+                    <span className="product-kind-badge">Hoa giả</span>
+                  )}
+                  {product.inventoryKind === 'LEGACY_FRESH' && (
+                    <span className="product-kind-badge legacy">Dữ liệu cũ chưa chuyển đổi</span>
+                  )}
                   <span className="product-status">
                     {statusNames[product.status] || product.status}
                   </span>

@@ -4,44 +4,105 @@ import { useForm } from 'react-hook-form';
 import { Button } from '@florabot/ui';
 import { ApiError, queryClient, request } from './api';
 
+import type { ActiveTaskRole } from './StaffTasks';
+
 type Fields = { assigneeId: string; reason: string; confirm: boolean };
+type ReassignAttempt = { version: number; assigneeId: string; reason: string };
+
+function restore(key: string): ReassignAttempt | null {
+  try {
+    const value = JSON.parse(sessionStorage.getItem(key) || 'null') as ReassignAttempt | null;
+    return value &&
+      Number.isInteger(value.version) &&
+      typeof value.assigneeId === 'string' &&
+      typeof value.reason === 'string'
+      ? value
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+export type StaffReassignmentProps = {
+  taskId: string;
+  version: number;
+  assigneeId: string;
+  assigneeName: string;
+  apiBase?: string;
+  directoryEndpoint?: string;
+  actorId?: string;
+  sellerId?: string | null;
+  role?: ActiveTaskRole;
+};
+
 export default function StaffReassignment({
   taskId,
   version,
   assigneeId,
   assigneeName,
-}: {
-  taskId: string;
-  version: number;
-  assigneeId: string;
-  assigneeName: string;
-}) {
+  apiBase = '/admin/staff-tasks',
+  directoryEndpoint = '/admin/staff',
+  actorId,
+  sellerId,
+  role,
+}: StaffReassignmentProps) {
+  const scopeKey = sellerId ? `seller:${sellerId}` : apiBase;
+  const key = `florabot-staff-reassign:${role ?? 'none'}:${actorId ?? 'none'}:${scopeKey}:${taskId}`;
+  const savedAttempt = restore(key);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [uncertain, setUncertain] = useState(false);
-  const [error, setError] = useState('');
-  const form = useForm<Fields>();
+  const [uncertain, setUncertain] = useState(
+    () => savedAttempt !== null && savedAttempt.version === version,
+  );
+  const [error, setError] = useState(() =>
+    savedAttempt !== null && savedAttempt.version === version
+      ? 'Chưa xác nhận được người phụ trách mới. Chọn Tải lại công việc để kiểm tra trước khi bàn giao tiếp.'
+      : '',
+  );
+  const form = useForm<Fields>({
+    defaultValues:
+      savedAttempt && savedAttempt.version === version
+        ? { assigneeId: savedAttempt.assigneeId, reason: savedAttempt.reason, confirm: true }
+        : undefined,
+  });
   const staff = useQuery({
-    queryKey: ['staff-directory'],
-    queryFn: () => request<{ id: string; name: string }[]>('/admin/staff'),
+    queryKey: ['staff-directory', actorId ?? 'none', directoryEndpoint, scopeKey],
+    queryFn: () => request<{ id: string; name: string }[]>(directoryEndpoint),
     enabled: open,
   });
-  const available = staff.data?.filter((person) => person.id !== assigneeId) || [];
+  const available = (Array.isArray(staff.data) ? staff.data : []).filter(
+    (person) => person.id !== assigneeId,
+  );
   async function submit(values: Fields) {
     if (busy || uncertain) return;
     setBusy(true);
     setError('');
+    let persisted = false;
     try {
-      await request(`/admin/staff-tasks/${taskId}/reassign`, {
+      sessionStorage.setItem(
+        key,
+        JSON.stringify({
+          version,
+          assigneeId: values.assigneeId,
+          reason: values.reason.trim(),
+        }),
+      );
+      persisted = true;
+      await request(`${apiBase}/${taskId}/reassign`, {
         version,
         assigneeId: values.assigneeId,
         reason: values.reason.trim(),
       });
+      sessionStorage.removeItem(key);
       await queryClient.invalidateQueries({ queryKey: ['staff-tasks'] });
       await queryClient.invalidateQueries({ queryKey: ['staff-detail', taskId] });
     } catch (cause) {
+      if (cause instanceof ApiError && [400, 403, 404, 409].includes(cause.status)) {
+        sessionStorage.removeItem(key);
+      }
       const ambiguous = !(cause instanceof ApiError) || cause.status >= 500 || cause.status === 409;
       setUncertain(ambiguous);
+      if (!ambiguous && persisted) sessionStorage.removeItem(key);
       setError(
         ambiguous
           ? 'Chưa xác nhận được người phụ trách mới. Chọn Tải lại công việc để kiểm tra trước khi bàn giao tiếp.'

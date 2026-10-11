@@ -1,6 +1,27 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
+test('Shared account link preserves all role destinations', async ({ page }) => {
+  for (const [role, destination] of [
+    ['ADMIN', '/admin'],
+    ['OPERATIONS_MANAGER', '/operations'],
+    ['TECHNICIAN', '/technician'],
+    ['SELLER_STAFF', '/staff'],
+    ['STAFF', '/workspace'],
+    ['CUSTOMER', '/tai-khoan'],
+    ['SELLER', '/tai-khoan'],
+  ]) {
+    await page.route('**/api/auth/me', (route) =>
+      route.fulfill({ json: { id: role, role, name: 'UAT' } }),
+    );
+    await page.goto('/ve-florabot');
+    await expect(
+      page.getByRole('banner').getByRole('link', { name: 'Tài khoản', exact: true }),
+    ).toHaveAttribute('href', destination);
+    await page.unroute('**/api/auth/me');
+  }
+});
+
 for (const width of [390, 1440]) {
   test(`Public shell persists across navigation and preserves form input ${width}`, async ({
     page,

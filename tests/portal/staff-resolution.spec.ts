@@ -2,10 +2,10 @@ import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 for (const width of [390, 1440])
-  test(`Assigned incident repair validation and recovery ${width}`, async ({ page }) => {
+  test(`Technician incident repair validation and recovery ${width}`, async ({ page }) => {
     await page.setViewportSize({ width, height: 1000 });
     await page.route('**/api/auth/me', (route) =>
-      route.fulfill({ json: { id: 'actor', name: 'Thảo', role: 'STAFF' } }),
+      route.fulfill({ json: { id: 'actor', name: 'Thảo', role: 'TECHNICIAN' } }),
     );
     let completed = false;
     let attempt: unknown;
@@ -40,7 +40,7 @@ for (const width of [390, 1440])
       completed = true;
       return route.fulfill({ json: { id: 'operation', version: 3 } });
     });
-    await page.goto('/staff');
+    await page.goto('/technician');
     const panel = page.locator('.staff-resolution');
     await panel.locator('summary').click();
     await panel.getByRole('button', { name: 'Đóng sự cố và gửi báo cáo' }).click();
@@ -71,6 +71,17 @@ for (const width of [390, 1440])
     ).toBeVisible();
     expect(calls).toBe(2);
     expect(
-      await page.evaluate(() => sessionStorage.getItem('florabot-staff-resolution:actor:task')),
-    ).toBeNull();
+      await page.evaluate(() =>
+        Object.keys(sessionStorage).filter((k) => k.startsWith('florabot-staff-resolution:')),
+      ),
+    ).toEqual([]);
+
+    // Verify wrong-kind action absent: seller staff never renders technical incident resolution
+    await page.route('**/api/auth/me', (route) =>
+      route.fulfill({
+        json: { id: 'seller-staff-1', name: 'Nhân viên', role: 'SELLER_STAFF', sellerId: 'shop-1' },
+      }),
+    );
+    await page.goto('/staff');
+    await expect(page.getByText('Ghi nhận đã sửa sự cố')).toHaveCount(0);
   });

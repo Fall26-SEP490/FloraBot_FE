@@ -1,5 +1,13 @@
 # Shared site shell and rendering - 2026-10-11
 
+## Integration with current main
+
+The shared shell was merged with the seven-role workspaces already published on
+main. Role destinations and contextual workspace headers are preserved for
+operations managers, technicians, seller staff and the retired STAFF role.
+The merged production build and lint passed; all 173 portal tests passed,
+including shared-header destinations for all seven roles.
+
 ## Changes
 
 - `app/layout.tsx` owns `SiteFrame`, the query provider and ordered shared styles.

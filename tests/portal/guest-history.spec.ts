@@ -25,6 +25,7 @@ for (const width of [390, 1440])
   test(`Guest saves completed purchase explicitly and removes local history ${width}`, async ({
     page,
     browser,
+    baseURL,
   }) => {
     await page.setViewportSize({ width, height: 950 });
     let lookups = 0;
@@ -59,9 +60,9 @@ for (const width of [390, 1440])
           .analyze()
       ).violations,
     ).toEqual([]);
-    const isolated = await browser.newContext();
+    const isolated = await browser.newContext({ baseURL });
     const other = await isolated.newPage();
-    await other.goto('http://127.0.0.1:3010/lich-su-mua');
+    await other.goto('/lich-su-mua');
     await expect(other.getByRole('link', { name: 'Xem đơn FB-GUEST-001' })).toHaveCount(0);
     await isolated.close();
     await page.getByRole('link', { name: 'Xem đơn FB-GUEST-001' }).click();

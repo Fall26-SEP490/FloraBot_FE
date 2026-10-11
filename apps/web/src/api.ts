@@ -15,9 +15,15 @@ export const queryClient = new QueryClient({
 });
 let refresh: Promise<boolean> | undefined;
 
-export async function request<T>(path: string, body?: unknown, retry = true): Promise<T> {
+export async function request<T>(
+  path: string,
+  body?: unknown,
+  retry = true,
+  method?: 'GET' | 'POST' | 'PUT',
+): Promise<T> {
+  const resolvedMethod = method ?? (body === undefined ? 'GET' : 'POST');
   const response = await fetch(`/api${path}`, {
-    method: body === undefined ? 'GET' : 'POST',
+    method: resolvedMethod,
     credentials: 'include',
     headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
     body: body === undefined ? undefined : JSON.stringify(body),
@@ -38,7 +44,7 @@ export async function request<T>(path: string, body?: unknown, retry = true): Pr
       .finally(() => {
         refresh = undefined;
       });
-    if (await refresh) return request<T>(path, body, false);
+    if (await refresh) return request<T>(path, body, false, resolvedMethod);
   }
   if (!response.ok) {
     const problem = (await response.json().catch(() => ({}))) as { detail?: string };

@@ -3,6 +3,8 @@ import { useForm } from 'react-hook-form';
 import { Button } from '@florabot/ui';
 import { ApiError, queryClient, request } from './api';
 
+import type { ActiveTaskRole } from './StaffTasks';
+
 type Attempt = { id: string; version: number; report: string };
 function restore(key: string): Attempt | null {
   try {
@@ -17,18 +19,26 @@ function restore(key: string): Attempt | null {
     return null;
   }
 }
+export type StaffIncidentResolutionProps = {
+  taskId: string;
+  actorId: string;
+  sellerId?: string | null;
+  role?: ActiveTaskRole;
+  version: number;
+  active: boolean;
+  apiBase?: string;
+};
+
 export default function StaffIncidentResolution({
   taskId,
   actorId,
+  sellerId,
   version,
   active,
-}: {
-  taskId: string;
-  actorId: string;
-  version: number;
-  active: boolean;
-}) {
-  const key = `florabot-staff-resolution:${actorId}:${taskId}`;
+  apiBase = '/staff/tasks',
+}: StaffIncidentResolutionProps) {
+  const scopeKey = sellerId ? `seller:${sellerId}` : apiBase;
+  const key = `florabot-staff-resolution:${actorId}:${scopeKey}:${taskId}`;
   const [attempt, setAttempt] = useState<Attempt | null>(() => restore(key));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -42,7 +52,7 @@ export default function StaffIncidentResolution({
       sessionStorage.setItem(key, JSON.stringify(payload));
       saved = true;
       setAttempt(payload);
-      await request(`/staff/tasks/${taskId}/resolve-incident`, payload);
+      await request(`${apiBase}/${taskId}/resolve-incident`, payload);
       sessionStorage.removeItem(key);
       setAttempt(null);
       form.reset();
@@ -69,11 +79,11 @@ export default function StaffIncidentResolution({
       <summary>Ghi nhận đã sửa sự cố</summary>
       <p>
         Chỉ xác nhận sau khi kiểm tra tại tủ. Thao tác đóng sự cố, khôi phục trạng thái ô theo dữ
-        liệu và gửi báo cáo chờ quản trị viên duyệt.
+        liệu và gửi báo cáo chờ Quản lý vận hành duyệt.
       </p>
       <p>
-        Khoản hoàn tiền đang chờ phải được quản trị viên xử lý trước. Thao tác này không mở cửa tủ
-        hay chi tiền.
+        Khoản hoàn tiền đang chờ do quản trị viên xử lý riêng. Thao tác này không mở cửa tủ hay chi
+        tiền.
       </p>
       {attempt ? (
         <>
