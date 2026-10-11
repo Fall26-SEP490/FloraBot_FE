@@ -39,7 +39,7 @@ test('Member registers, edits profile, sees own orders and cannot enter staff wo
     .analyze();
   expect(accessibility.violations).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await page.getByRole('link', { name: 'Chọn hoa', exact: true }).click();
+  await page.getByRole('link', { name: 'Sản phẩm hoa', exact: true }).click();
   await expect(
     page.getByRole('heading', { name: 'Chọn hoa cho một dịp thật riêng.' }),
   ).toBeVisible();

@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 const screens = [
-  ['/dang-nhap', 'Chào bạn trở lại.'],
+  ['/dang-nhap', 'Đăng nhập'],
   ['/dang-ky', 'Tạo tài khoản FloraBot'],
   ['/quen-mat-khau', 'Quên mật khẩu?'],
   ['/dat-lai-mat-khau#token=test-reset-token', 'Tạo mật khẩu mới'],

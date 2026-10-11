@@ -61,7 +61,7 @@ test('Caddy serves landing, portal and authenticated API routes on one origin', 
   await expect(page).toHaveURL('/dang-ky');
   await page.goto('/login');
   await expect(page).toHaveURL('/dang-nhap');
-  await page.getByRole('link', { name: 'Đăng nhập dành cho nhân viên FloraBot' }).click();
+  await page.getByRole('link', { name: 'Dành cho Admin & nhân viên' }).click();
   await expect(page).toHaveURL('/admin/login');
   await page.goto('/admin');
   await expect(page).toHaveURL('/admin/login');
