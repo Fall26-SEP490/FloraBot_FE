@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { QueryClientProvider, useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
@@ -32,18 +32,7 @@ import MemberAccount from './MemberAccount';
 import StaffTasks from './StaffTasks';
 import FlowerShop from './FlowerShop';
 import WebRequests from './WebRequests';
-import './member.css';
 import { startPortalUpdates } from './realtime';
-import '@fontsource/nunito/vietnamese-800.css';
-import '@fontsource/nunito/latin-800.css';
-import '@fontsource/be-vietnam-pro/vietnamese-400.css';
-import '@fontsource/be-vietnam-pro/latin-400.css';
-import '@fontsource/be-vietnam-pro/vietnamese-600.css';
-import '@fontsource/be-vietnam-pro/latin-600.css';
-import '@florabot/ui/tokens.css';
-import './portal.css';
-import './workspace.css';
-import './auth.css';
 
 const loginSchema = z.object({
   email: z.email('Nhập địa chỉ email hợp lệ.'),
@@ -71,9 +60,7 @@ function Login() {
   return (
     <AuthShell mode="staff">
       <h1 id="auth-title">Đăng nhập vận hành</h1>
-      <p className="auth-intro">
-        Dành cho quản trị viên và nhân viên. Dùng tài khoản do FloraBot cấp để tiếp tục công việc.
-      </p>
+      <p className="auth-intro">Dành cho Admin và nhân viên.</p>
       {login.error && (
         <p ref={feedback} tabIndex={-1} role="alert" className="auth-message auth-message-error">
           {login.error instanceof ApiError
@@ -89,7 +76,6 @@ function Login() {
           if (!login.isPending) login.mutate(values);
         })}
       >
-        <p className="auth-required">Vui lòng điền đầy đủ email và mật khẩu.</p>
         <div className="auth-field">
           <label htmlFor="email">{t('email')}</label>
           <input
@@ -144,12 +130,10 @@ function Login() {
           {login.isPending ? 'Đang kiểm tra tài khoản. Vui lòng chờ.' : ''}
         </span>
       </form>
-      <p className="auth-hint auth-staff-help">
-        Quên mật khẩu? Liên hệ quản trị viên cấp tài khoản để được hỗ trợ.
-      </p>
+      <p className="auth-hint auth-staff-help">Quên mật khẩu? Liên hệ quản trị viên.</p>
       <div className="auth-alternative">
         <p>
-          Bạn mua hoa hoặc quản lý shop? <Link href="/dang-nhap">Đăng nhập tài khoản</Link>
+          <Link href="/dang-nhap">Đăng nhập tài khoản</Link>
         </p>
       </div>
     </AuthShell>
@@ -549,12 +533,7 @@ export default function PortalApplication({
 }) {
   return (
     <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <a className="skip-link" href="#main">
-          Bỏ qua tới nội dung
-        </a>
-        <Screen screen={screen} section={section} />
-      </QueryClientProvider>
+      <Screen screen={screen} section={section} />
     </React.StrictMode>
   );
 }

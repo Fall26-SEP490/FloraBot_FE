@@ -19,6 +19,7 @@ import {
   Button,
 } from '@florabot/ui';
 import { workspaceBase, workspaceSections, type WorkspaceRole } from './workspaceSections';
+import { SiteBrand } from './SiteFrame';
 
 type Role = WorkspaceRole | 'STAFF';
 const icons = {
@@ -63,10 +64,10 @@ export function WorkspaceHeader({
 }) {
   return (
     <header className="dashboard-header">
-      <Link className="dashboard-brand" href={role === 'STAFF' ? '/staff' : workspaceBase(role)}>
-        <Flower2 size={28} aria-hidden="true" />
-        FloraBot<span aria-hidden="true">.</span>
-      </Link>
+      <SiteBrand
+        className="dashboard-brand"
+        href={role === 'STAFF' ? '/staff' : workspaceBase(role)}
+      />
       <span className="dashboard-role">
         {role === 'ADMIN'
           ? 'Quản trị vận hành'

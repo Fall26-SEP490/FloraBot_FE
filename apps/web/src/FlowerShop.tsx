@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import { ApiError, queryClient, request, sessionQuery } from './api';
-import { MemberHeader } from './MemberAccount';
 
 type Item = {
   productId: string;
@@ -197,7 +196,6 @@ export default function FlowerShop() {
   });
   return (
     <>
-      <MemberHeader />
       <main id="main" className="member-page flower-shop">
         <h1>Chọn hoa cho một dịp thật riêng.</h1>
         <p>

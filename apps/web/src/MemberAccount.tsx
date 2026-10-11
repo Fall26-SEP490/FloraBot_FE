@@ -4,60 +4,13 @@ import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { Button } from '@florabot/ui';
-import { ApiError, queryClient, request, sessionQuery } from './api';
-import { memberHome, passwordRule } from './MemberAuth';
+import { ApiError, queryClient, request } from './api';
+import { passwordRule } from './MemberAuth';
 import type { components } from '../../../packages/contracts/src/generated/api';
 import WebRequests from './WebRequests';
 import MemberShop from './MemberShop';
 
 type Profile = { id: string; fullName: string; email: string | null; loyaltyPoints: number };
-export function MemberHeader() {
-  const router = useRouter();
-  const session = useQuery(sessionQuery);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  async function logout() {
-    setBusy(true);
-    try {
-      await request('/auth/logout', {});
-      queryClient.clear();
-      router.push('/dang-nhap');
-    } catch {
-      setError('Chưa đăng xuất được. Hãy thử lại.');
-    } finally {
-      setBusy(false);
-    }
-  }
-  return (
-    <header className="member-header">
-      <a className="portal-brand" href={memberHome}>
-        FloraBot
-      </a>
-      <nav aria-label="Điều hướng thành viên">
-        <a href={memberHome}>Trang chủ</a>
-        <a href={`${memberHome.replace(/\/$/, '')}/ve-florabot`}>Về chúng tôi</a>
-        <Link href="/dat-hoa">Chọn hoa</Link>
-        <a href={`${memberHome.replace(/\/$/, '')}/huong-dan-dat-hoa`}>Cách đặt & nhận hoa</a>
-        <a href={`${memberHome.replace(/\/$/, '')}/lien-he`}>Liên hệ</a>
-        <Link href="/tai-khoan">Tài khoản & đơn hàng</Link>
-        <Link href="/lich-su-mua">Biên nhận đã lưu</Link>
-        {session.data?.sellerId && <Link href="/seller">Quản lý shop</Link>}
-        {session.data ? (
-          <Button variant="outline" disabled={busy} onClick={() => void logout()}>
-            Đăng xuất
-          </Button>
-        ) : (
-          <Link href="/dang-nhap">Đăng nhập</Link>
-        )}
-      </nav>
-      {error && (
-        <p role="alert" className="error">
-          {error}
-        </p>
-      )}
-    </header>
-  );
-}
 export default function MemberAccount() {
   const router = useRouter();
   const profile = useQuery({
@@ -113,7 +66,6 @@ export default function MemberAccount() {
   };
   return (
     <>
-      <MemberHeader />
       <main id="main" className="member-page">
         <h1>Góc nhỏ của {profile.data?.fullName || 'bạn'}</h1>
         <p>Thông tin thành viên và những dịp bạn gửi trao yêu thương.</p>
