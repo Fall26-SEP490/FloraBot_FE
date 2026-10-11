@@ -38,7 +38,10 @@ export function startPortalUpdates(): () => void {
   const resume = () => {
     void synchronize();
   };
-  const poll = setInterval(resume, 30_000);
+  // Realtime events drive updates while connected; polling is a fallback only.
+  const poll = setInterval(() => {
+    if (connection.state !== HubConnectionState.Connected) resume();
+  }, 30_000);
   window.addEventListener('online', resume);
   document.addEventListener('visibilitychange', resume);
   void connect();

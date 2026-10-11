@@ -45,6 +45,16 @@ test('Realtime refresh preserves filters and focus, reconnects, and stops on log
   await page.goto('/admin/shops');
   await expect.poll(() => sockets.length).toBeGreaterThan(0);
   await expect(page.getByText(name, { exact: true })).toBeVisible();
+  // A healthy connection must not also poll every query every 30 seconds.
+  await page.clock.install();
+  await page.clock.runFor(300);
+  const readsWhileConnected = reads;
+  await page.clock.fastForward(15_000);
+  sockets.at(-1)!.send('{"type":6}\u001e');
+  await page.clock.runFor(50);
+  await page.clock.fastForward(16_000);
+  await page.clock.runFor(250);
+  expect(reads).toBe(readsWhileConnected);
   const search = page.getByLabel('Tìm tên shop hoặc số điện thoại');
   await search.fill('Hoa');
   name = 'Hoa vừa đăng ký';
@@ -60,7 +70,6 @@ test('Realtime refresh preserves filters and focus, reconnects, and stops on log
   await page.getByRole('button', { name: 'Đăng xuất', exact: true }).click();
   await expect(page).toHaveURL(/\/login$/);
   const readsAfterLogout = reads;
-  await page.clock.install();
   await page.clock.fastForward(35_000);
   expect(reads).toBe(readsAfterLogout);
 });

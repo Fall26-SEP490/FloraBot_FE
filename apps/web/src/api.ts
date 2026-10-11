@@ -57,5 +57,5 @@ export async function request<T>(path: string, body?: unknown, retry = true): Pr
 export const sessionQuery = {
   queryKey: ['session'],
   queryFn: () => request<Session>('/auth/me'),
-  staleTime: 0,
+  staleTime: 30_000,
 };
