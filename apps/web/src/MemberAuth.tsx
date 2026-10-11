@@ -14,7 +14,6 @@ type Fields = {
   confirm: string;
   consent: boolean;
 };
-export const memberHome = '/';
 export const accountPath = (role: string) =>
   role === 'ADMIN'
     ? '/admin'
@@ -60,7 +59,7 @@ export default function MemberAuth({ mode }: { mode: Mode }) {
     }
   }, [mode, resetForm]);
   const titles = {
-    login: 'Chào bạn trở lại.',
+    login: 'Đăng nhập',
     register: 'Tạo tài khoản FloraBot',
     forgot: 'Quên mật khẩu?',
     reset: 'Tạo mật khẩu mới',
@@ -117,15 +116,15 @@ export default function MemberAuth({ mode }: { mode: Mode }) {
   return (
     <AuthShell mode={mode}>
       <h1 id="auth-title">{titles[mode]}</h1>
-      <p className="auth-intro">
-        {mode === 'register'
-          ? 'Đặt hoa theo ý bạn. Theo dõi đơn và hẹn nhận tại tủ thuận tiện.'
-          : mode === 'login'
-            ? 'Đăng nhập để tiếp tục chọn hoa và theo dõi đơn của bạn.'
+      {mode !== 'login' && (
+        <p className="auth-intro">
+          {mode === 'register'
+            ? 'Đặt hoa và theo dõi đơn của bạn.'
             : mode === 'forgot'
-              ? 'Nhập email đã đăng ký. Chúng mình sẽ gửi bạn liên kết để tạo mật khẩu mới.'
-              : 'Chọn mật khẩu mới cho tài khoản của bạn. Liên kết chỉ dùng một lần, trong 20 phút.'}
-      </p>
+              ? 'Nhập email để nhận liên kết khôi phục.'
+              : 'Liên kết dùng một lần, có hiệu lực trong 20 phút.'}
+        </p>
+      )}
       <div ref={feedback} tabIndex={-1} className="auth-feedback-focus">
         {error && (
           <p role="alert" className="auth-message auth-message-error">
@@ -157,7 +156,6 @@ export default function MemberAuth({ mode }: { mode: Mode }) {
           aria-busy={busy}
           onSubmit={(event) => void form.handleSubmit(submit)(event)}
         >
-          <p className="auth-required">Vui lòng điền đầy đủ các thông tin bên dưới.</p>
           {mode === 'register' && (
             <div className="auth-field">
               <label htmlFor="member-name">Họ và tên</label>
@@ -355,7 +353,7 @@ export default function MemberAuth({ mode }: { mode: Mode }) {
       </div>
       {mode === 'login' && (
         <p className="auth-staff-link">
-          <Link href="/admin/login">Đăng nhập dành cho nhân viên FloraBot</Link>
+          <Link href="/admin/login">Dành cho Admin & nhân viên</Link>
         </p>
       )}
     </AuthShell>
