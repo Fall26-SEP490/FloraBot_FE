@@ -1,5 +1,25 @@
 # FloraBot design system
 
+## Shared site shell - October 11
+
+The root Next layout now owns the query provider and shared public header/footer.
+Marketing, catalog, account, receipt and authentication pages use the same green
+wordmark, navigation, support links and responsive menu. Operations retain their
+role-specific header/sidebar and reuse the brand and footer. Styles/fonts load in
+one defined order so client navigation does not restyle a previously visited page.
+Navigation uses Next links; the shell DOM and query cache survive route changes.
+The footer is static and memoized; typing in page forms does not update the shell.
+
+Taste direction: soft, approachable green/white, existing bouquet photography,
+clear dark-green controls. Login copy is reduced to its heading, labelled fields,
+recovery link and account alternatives. Introductory paragraphs, duplicate auth
+tabs and image captions are removed. Validation and recovery guidance remain.
+
+Session reads reuse data for 30 seconds. Connected realtime uses events; the
+30-second whole-query poll only runs as a disconnected fallback. Explicit refresh,
+reconnect, visibility recovery and the existing module-specific refreshes remain.
+See docs/site-shell-verification.md for test coverage and limits.
+
 ## Operations dashboards
 
 Admin, seller and staff share a white account header, forest-green grouped sidebar
@@ -28,7 +48,7 @@ provide the desktop visual identity. At 800px and below the decorative panel is
 hidden, so the form is the first task content. Public and staff authentication
 retain their separate API realms.
 
-Login/registration links form an active-page navigation row. Labels are persistent;
+Login/registration alternatives sit below the form. Labels are persistent;
 password rules precede submission; errors are linked to individual fields; server
 feedback receives focus. Inputs and primary actions have at least 52px height,
 secondary controls at least 44px. Error states include text as well as color.
