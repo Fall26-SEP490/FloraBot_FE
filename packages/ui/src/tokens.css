@@ -10,10 +10,38 @@
   --color-action-hover: #346d41;
   --color-on-ink: #fff;
   --color-error: oklch(0.43 0.17 28);
+  --color-workspace-ink: #183e2b;
+  --color-workspace-muted: #476451;
+  --color-workspace-line: #c9d9c8;
+  --color-workspace-divider: #dce6d7;
+  --color-workspace-canvas: #f3f7f0;
+  --color-workspace-surface: #fff;
+  --color-workspace-surface-muted: #fafcfa;
+  --color-workspace-accent: #174b35;
+  --color-workspace-control-line: #64735f;
+  --color-workspace-control-hover: #f0f6ee;
+  --color-status-success-surface: #e8f5e9;
+  --color-status-success-ink: #1b5e20;
+  --color-status-success-line: #a5d6a7;
+  --color-status-warning-surface: #fff8e6;
+  --color-status-warning-ink: #7a5400;
+  --color-status-warning-line: #ffd666;
+  --color-status-info-surface: #e6f7ff;
+  --color-status-info-ink: #0050b3;
+  --color-status-info-line: #91d5ff;
+  --color-status-danger-surface: #fff0ee;
+  --color-status-danger-ink: #842323;
+  --color-status-danger-line: #e5aaaa;
+  --color-status-danger-action: #922b25;
+  --color-status-danger-action-hover: #741f1a;
   --font-body: 'Be Vietnam Pro', sans-serif;
   --font-display: 'Nunito', sans-serif;
 }
 :root {
+  --radius-workspace-panel: 12px;
+  --radius-workspace-control: 8px;
+  --radius-workspace-badge: 6px;
+  --shadow-workspace-panel: 0 1px 3px rgb(24 62 43 / 4%);
   color: var(--color-ink);
   background: var(--color-canvas);
   font-family: var(--font-body);

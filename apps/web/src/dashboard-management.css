@@ -1,11 +1,11 @@
 .management-panel {
-  margin-top: 1.5rem;
-  padding: clamp(1rem, 2.5vw, 1.5rem);
+  margin-top: 1.25rem;
+  padding: 24px;
   overflow: hidden;
-  border: 1px solid #c9d9c8;
-  border-radius: 18px;
-  background: #fff;
-  box-shadow: 0 12px 30px rgb(32 75 46 / 7%);
+  border: 1px solid var(--color-workspace-line);
+  border-radius: var(--radius-workspace-panel);
+  background: var(--color-workspace-surface);
+  box-shadow: var(--shadow-workspace-panel);
 }
 
 .management-heading {
@@ -23,30 +23,29 @@
 
 .management-heading h2 {
   margin-top: 0.2rem;
-  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  color: var(--color-workspace-ink);
+  font-size: 1.1rem;
+  line-height: 1.45;
 }
 
 .management-heading > div > p:last-child {
   margin-top: 0.4rem;
-  color: var(--color-muted);
+  color: var(--color-workspace-muted);
 }
 
 .management-eyebrow {
-  color: #55745a;
-  font-size: 0.78rem;
+  color: var(--color-workspace-muted);
+  font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .management-demo-note {
-  width: fit-content;
-  margin: 1rem 0;
-  padding: 0.45rem 0.75rem;
-  border-radius: 10px;
-  background: #fff8dd;
-  color: #624e04;
-  font-size: 0.82rem;
+  margin: 0.75rem 0 1rem;
+  color: var(--color-workspace-muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
 }
 
 .management-stats {
@@ -62,29 +61,31 @@
   flex-direction: column;
   gap: 0.15rem;
   padding: 0.85rem 1rem;
-  border: 1px solid #d9e5d6;
-  border-radius: 13px;
-  background: #f7fbf5;
+  border: 1px solid var(--color-workspace-line);
+  border-radius: var(--radius-workspace-panel);
+  background: var(--color-workspace-surface);
+  box-shadow: var(--shadow-workspace-panel);
 }
 
 .management-stats span {
   overflow: hidden;
-  color: var(--color-muted);
+  color: var(--color-workspace-muted);
   font-size: 0.82rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .management-stats strong {
-  font-family: var(--font-display);
-  font-size: 1.55rem;
+  color: var(--color-workspace-ink);
+  font-family: var(--font-body);
+  font-size: 1.35rem;
   line-height: 1.15;
 }
 
 .management-table-wrap {
   overflow-x: auto;
-  border: 1px solid #d4e0d2;
-  border-radius: 13px;
+  border: 1px solid var(--color-workspace-line);
+  border-radius: var(--radius-workspace-panel);
 }
 
 .management-table {
@@ -97,14 +98,14 @@
 .management-table th,
 .management-table td {
   padding: 0.8rem 0.9rem;
-  border-bottom: 1px solid #e1e9df;
+  border-bottom: 1px solid var(--color-workspace-divider);
   text-align: left;
   vertical-align: middle;
 }
 
 .management-table th {
-  background: #eff6ec;
-  color: #2c5537;
+  background: var(--color-workspace-surface-muted);
+  color: var(--color-workspace-ink);
   font-size: 0.75rem;
   letter-spacing: 0.025em;
   text-transform: uppercase;
@@ -115,12 +116,12 @@
 }
 
 .management-table tbody tr:hover {
-  background: #fafcf9;
+  background: var(--color-workspace-surface-muted);
 }
 
 .management-table-empty {
   padding: 2rem !important;
-  color: var(--color-muted);
+  color: var(--color-workspace-muted);
   text-align: center !important;
 }
 
@@ -129,9 +130,10 @@
   align-items: center;
   min-height: 28px;
   padding: 0.15rem 0.55rem;
-  border-radius: 999px;
-  background: #e8f5e6;
-  color: #205d31;
+  border: 1px solid var(--color-status-success-line);
+  border-radius: var(--radius-workspace-badge);
+  background: var(--color-status-success-surface);
+  color: var(--color-status-success-ink);
   font-size: 0.72rem;
   font-weight: 700;
   white-space: nowrap;
@@ -140,18 +142,21 @@
 .management-status[data-status='PENDING'],
 .management-status[data-status='DRAFT'],
 .management-status[data-status='ASSIGNED'] {
-  background: #fff3cd;
-  color: #705700;
+  border-color: var(--color-status-warning-line);
+  background: var(--color-status-warning-surface);
+  color: var(--color-status-warning-ink);
 }
 
 .management-status[data-status='INACTIVE'] {
-  background: #f3eeee;
-  color: #6a4141;
+  border-color: var(--color-status-danger-line);
+  background: var(--color-status-danger-surface);
+  color: var(--color-status-danger-ink);
 }
 
 .management-status[data-status='IN_PROGRESS'] {
-  background: #e7f1ff;
-  color: #24598e;
+  border-color: var(--color-status-info-line);
+  background: var(--color-status-info-surface);
+  color: var(--color-status-info-ink);
 }
 
 .management-actions-cell {
@@ -169,7 +174,7 @@
   padding: 0.25rem 0;
   border: 0;
   background: transparent;
-  color: #225f35;
+  color: var(--color-workspace-accent);
   font-weight: 700;
   text-decoration: underline;
   text-underline-offset: 0.2em;
@@ -177,7 +182,7 @@
 }
 
 .management-row-actions .management-row-danger {
-  color: #9c2d28;
+  color: var(--color-status-danger-ink);
 }
 
 .management-pagination {
@@ -191,7 +196,7 @@
 
 .management-pagination p {
   margin: 0;
-  color: var(--color-muted);
+  color: var(--color-workspace-muted);
 }
 
 .management-pagination > div {
@@ -203,12 +208,17 @@
 .management-page-button {
   min-height: 42px;
   padding: 0.35rem 0.7rem;
-  border: 1px solid #78927c;
-  border-radius: 9px;
-  background: white;
-  color: var(--color-ink);
+  border: 1px solid var(--color-workspace-control-line);
+  border-radius: var(--radius-workspace-control);
+  background: var(--color-workspace-surface);
+  color: var(--color-workspace-ink);
   font-weight: 600;
   cursor: pointer;
+}
+
+.management-page-button:hover:not(:disabled) {
+  border-color: var(--color-workspace-ink);
+  background: var(--color-workspace-control-hover);
 }
 
 .management-page-button:disabled {
@@ -249,10 +259,10 @@
   max-height: calc(100vh - 2rem);
   overflow-y: auto;
   padding: clamp(1rem, 3vw, 1.5rem);
-  border: 1px solid #afc3ab;
-  border-radius: 18px;
-  background: white;
-  box-shadow: 0 24px 80px rgb(0 0 0 / 26%);
+  border: 1px solid var(--color-workspace-line);
+  border-radius: var(--radius-workspace-panel);
+  background: var(--color-workspace-surface);
+  box-shadow: 0 12px 36px rgb(24 62 43 / 18%);
 }
 
 .management-modal-header {
@@ -269,7 +279,7 @@
 
 .management-modal-header p {
   margin-top: 0.45rem;
-  color: var(--color-muted);
+  color: var(--color-workspace-muted);
   font-size: 0.88rem;
 }
 
@@ -277,10 +287,10 @@
   flex: 0 0 auto;
   width: 44px;
   height: 44px;
-  border: 1px solid #b8cbb2;
+  border: 1px solid var(--color-workspace-line);
   border-radius: 50%;
-  background: white;
-  color: var(--color-ink);
+  background: var(--color-workspace-surface);
+  color: var(--color-workspace-ink);
   font-size: 1.6rem;
   line-height: 1;
   cursor: pointer;
@@ -305,12 +315,12 @@
 .management-field input,
 .management-field select {
   width: 100%;
-  min-height: 50px;
+  min-height: 48px;
   padding: 0.65rem 0.8rem;
-  border: 1px solid #78927c;
-  border-radius: 10px;
-  background: white;
-  color: #143d25;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-workspace-control);
+  background: var(--color-workspace-surface);
+  color: var(--color-workspace-ink);
 }
 
 .management-field input[readonly] {
@@ -338,13 +348,13 @@
 }
 
 .management-danger-button {
-  border-color: #922b25;
-  background: #922b25;
+  border-color: var(--color-status-danger-action);
+  background: var(--color-status-danger-action);
   color: white;
 }
 
 .management-danger-button:hover {
-  background: #741f1a;
+  background: var(--color-status-danger-action-hover);
 }
 
 .management-details {
@@ -353,13 +363,13 @@
   gap: 0;
   margin: 1.25rem 0 0;
   overflow: hidden;
-  border: 1px solid #d9e4d6;
-  border-radius: 12px;
+  border: 1px solid var(--color-workspace-line);
+  border-radius: var(--radius-workspace-control);
 }
 
 .management-details div {
   padding: 0.8rem 1rem;
-  border-bottom: 1px solid #e3eae1;
+  border-bottom: 1px solid var(--color-workspace-divider);
 }
 
 .management-details div:nth-last-child(-n + 2) {
@@ -367,7 +377,7 @@
 }
 
 .management-details dt {
-  color: var(--color-muted);
+  color: var(--color-workspace-muted);
   font-size: 0.75rem;
 }
 
@@ -434,9 +444,9 @@
 
   .management-table tr {
     overflow: hidden;
-    border: 1px solid #d4e0d2;
-    border-radius: 12px;
-    background: white;
+    border: 1px solid var(--color-workspace-line);
+    border-radius: var(--radius-workspace-panel);
+    background: var(--color-workspace-surface);
   }
 
   .management-table td {
@@ -449,7 +459,7 @@
 
   .management-table td::before {
     content: attr(data-label);
-    color: var(--color-muted);
+    color: var(--color-workspace-muted);
     font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -476,7 +486,7 @@
   }
 
   .management-details div:nth-last-child(2) {
-    border-bottom: 1px solid #e3eae1;
+    border-bottom: 1px solid var(--color-workspace-divider);
   }
 
   .management-modal-actions {
