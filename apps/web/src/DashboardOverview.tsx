@@ -5,6 +5,7 @@ import { Button, ArrowRight, Check, CircleAlert } from '@florabot/ui';
 import type { components } from '../../../packages/contracts/src/generated/api';
 import { request, type Session } from './api';
 import { statusName, type WebOrder } from './WebRequests';
+import DashboardManagement from './dashboard/DashboardManagement';
 
 type Row = { id: string; title: string; detail: string; state: string };
 type Feed = { rows: Row[]; more: boolean };
@@ -172,6 +173,7 @@ function AdminOverview({ session }: { session: Session }) {
           Theo dõi công việc <ArrowRight size={18} aria-hidden="true" />
         </Link>
       </div>
+      <DashboardManagement dashboardRole="ADMIN" />
       <div className="dashboard-overview-grid">
         <FeedPanel
           title="Sự cố cần xử lý"
@@ -251,6 +253,7 @@ function SellerOverview({ session }: { session: Session }) {
           Quản lý mẫu hoa <ArrowRight size={18} aria-hidden="true" />
         </Link>
       </div>
+      <DashboardManagement dashboardRole="SELLER" />
       <section className="dashboard-business" aria-label="Tình hình cửa hàng">
         <div>
           <h2>Mẫu đang bán</h2>

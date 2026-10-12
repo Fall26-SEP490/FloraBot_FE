@@ -12,6 +12,7 @@ import './i18n';
 import Products from './Products';
 import WorkspaceNavigation, { WorkspaceHeader } from './WorkspaceNavigation';
 import DashboardOverview from './DashboardOverview';
+import DashboardManagement from './dashboard/DashboardManagement';
 import { workspaceSections } from './workspaceSections';
 import Subscriptions from './Subscriptions';
 import AdminSellers from './AdminSellers';
@@ -247,6 +248,7 @@ function StaffWorkspace() {
             </div>
             <span className="dashboard-context">Nhân viên shop</span>
           </div>
+          <DashboardManagement dashboardRole="SELLER_STAFF" />
           <StaffTasks
             actorRole="SELLER_STAFF"
             mode="worker"

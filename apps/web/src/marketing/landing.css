@@ -1031,25 +1031,7 @@ select[aria-invalid='true'] {
     grid-template-columns: minmax(0, 1fr);
   }
 }
-@media (max-width: 700px) {
-  .site-header {
-    padding: 0.8rem 5% 0.2rem;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-  .wordmark {
-    font-size: 1.8rem;
-  }
-  .header-cta {
-    font-size: 0.8rem;
-  }
-  .site-header nav {
-    order: 3;
-    flex-basis: 100%;
-    justify-content: space-between;
-    gap: 0.5rem;
-    font-size: 0.8rem;
-  }
+@media (max-width: 760px) {
   .hero {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -1068,6 +1050,26 @@ select[aria-invalid='true'] {
   .hero-garden {
     min-height: 360px;
     margin: 0;
+  }
+}
+@media (max-width: 700px) {
+  .site-header {
+    padding: 0.8rem 5% 0.2rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .wordmark {
+    font-size: 1.8rem;
+  }
+  .header-cta {
+    font-size: 0.8rem;
+  }
+  .site-header nav {
+    order: 3;
+    flex-basis: 100%;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.8rem;
   }
   .section {
     padding: 2.8rem 5%;
