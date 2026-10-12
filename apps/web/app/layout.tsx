@@ -6,6 +6,7 @@ import '../src/marketing/fonts.css';
 import '../src/portal.css';
 import '../src/member.css';
 import '../src/workspace.css';
+import '../src/dashboard-management.css';
 import '../src/auth.css';
 import '../src/marketing/landing.css';
 import '../src/marketing/gallery.css';
