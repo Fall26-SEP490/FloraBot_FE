@@ -13,29 +13,51 @@ html {
 .site-header.florabot-header {
   position: sticky;
   top: 0;
-  z-index: 40;
+  z-index: 50;
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
-  padding: 14px max(24px, calc((100% - 1400px) / 2));
-  background: #fff;
-  color: #183e2b;
-  border-bottom: 1px solid #d5e1d0;
-  font: 400 14px/1.5 var(--font-body);
+  flex-wrap: nowrap;
+  gap: 24px;
+  padding: 10px max(28px, calc((100% - 1380px) / 2));
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  color: #173824;
+  border-bottom: 1px solid rgba(213, 225, 208, 0.75);
+  box-shadow: 0 4px 20px -2px rgba(24, 62, 43, 0.05);
+  font: 500 14px/1.5 var(--font-body);
+  transition: all 0.25s ease;
 }
 .site-brand {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   min-height: 44px;
   flex-shrink: 0;
-  font: 800 30px/1.2 var(--font-display);
-  color: #174b35;
+  font: 800 25px/1.2 var(--font-display);
+  letter-spacing: -0.02em;
+  color: #144229;
   text-decoration: none;
+  transition:
+    transform 0.2s ease,
+    color 0.2s ease;
+}
+.site-brand:hover {
+  color: #0d2f1d;
+  transform: translateY(-1px);
+}
+.site-brand svg {
+  color: #1b5e20;
+  filter: drop-shadow(0 2px 4px rgba(27, 94, 32, 0.2));
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.site-brand:hover svg {
+  transform: rotate(15deg) scale(1.08);
 }
 .site-brand > span {
-  margin-left: -6px;
+  color: #e55353;
+  margin-left: -5px;
+  font-weight: 900;
 }
 .florabot-header.site-header nav {
   display: flex;
@@ -45,50 +67,116 @@ html {
   gap: 6px;
   order: initial;
   font: inherit;
+  background: #ffffff;
+  padding: 5px 8px;
+  border-radius: 9999px;
+  border: 1px solid #e2ece0;
+  box-shadow: 0 2px 10px rgba(15, 45, 30, 0.05);
 }
 .florabot-header.site-header nav a {
-  padding: 10px;
-  border-radius: 8px;
-  min-height: 44px;
-  color: #36563e;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 16px;
+  border-radius: 9999px;
+  min-height: 36px;
+  color: #1f2937;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.florabot-header.site-header nav a:hover,
+.florabot-header.site-header nav a:hover {
+  background: #f0fdf4;
+  color: #166534;
+  box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08);
+  transform: translateY(-1px);
+}
 .florabot-header.site-header nav a[aria-current='page'] {
-  background: #eaf3e2;
-  color: #174b35;
+  background: #174b35;
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 3px 10px rgba(23, 75, 53, 0.25);
+  transform: none;
 }
 .site-account {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  flex-shrink: 0;
 }
 .florabot-header.site-header .site-account-link {
-  padding: 10px 16px;
-  min-height: 44px;
-  border-radius: 8px;
-  background: #174b35;
-  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  min-height: 40px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #174b35 0%, #1e5a3b 100%);
+  color: #ffffff;
+  font-size: 13.5px;
   font-weight: 600;
+  letter-spacing: -0.01em;
   text-decoration: none;
+  box-shadow: 0 3px 10px rgba(23, 75, 53, 0.22);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.site-logout,
-.site-menu {
-  min-height: 44px;
-  padding: 8px 10px;
-  border: 1px solid #718874;
-  border-radius: 8px;
-  background: white;
-  color: #183e2b;
+.florabot-header.site-header .site-account-link:hover {
+  background: linear-gradient(135deg, #133f2b 0%, #174b35 100%);
+  box-shadow: 0 4px 14px rgba(23, 75, 53, 0.32);
+  transform: translateY(-1px);
+}
+.site-logout {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid #c9d9c8;
+  border-radius: 9999px;
+  background: #ffffff;
+  color: #55725c;
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+.site-logout:hover {
+  background: #fbf2f2;
+  border-color: #e5aaaa;
+  color: #922b25;
+  box-shadow: 0 2px 6px rgba(146, 43, 37, 0.08);
+}
+.site-logout:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 .site-menu {
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid #c9d9c8;
+  border-radius: 9999px;
+  background: #ffffff;
+  color: #174b35;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
   display: none;
   align-items: center;
   gap: 6px;
+  transition: all 0.2s ease;
+}
+.site-menu:hover {
+  background: #f0f7ec;
+  border-color: #174b35;
 }
 .site-header-error {
   flex-basis: 100%;
+  margin: 4px 0 0;
+  font-size: 12.5px;
   color: #922f31;
 }
 .site-footer.florabot-footer {
@@ -131,8 +219,9 @@ html {
 }
 @media (max-width: 1250px) {
   .florabot-header.site-header {
-    padding: 12px 20px;
+    padding: 10px 18px;
     gap: 12px;
+    flex-wrap: wrap;
   }
   .site-menu {
     display: inline-flex;
@@ -142,10 +231,18 @@ html {
     display: none;
     order: 4;
     flex-basis: 100%;
+    border-radius: 16px;
+    padding: 12px;
+    gap: 6px;
     grid-template-columns: 1fr 1fr;
-    justify-content: start;
+    justify-content: stretch;
     max-height: 55dvh;
     overflow-y: auto;
+    background: #f4f8f1;
+  }
+  .florabot-header.site-header nav a {
+    justify-content: flex-start;
+    padding: 10px 14px;
   }
   .florabot-header.site-header nav.is-open {
     display: grid;
@@ -153,30 +250,34 @@ html {
 }
 @media (max-width: 600px) {
   .florabot-header.site-header {
-    padding: 10px 16px;
+    padding: 8px 14px;
     gap: 8px;
   }
   .site-brand {
-    font-size: 25px;
-    gap: 4px;
+    font-size: 22px;
+    gap: 6px;
   }
   .site-brand svg {
     width: 22px;
+    height: 22px;
   }
   .florabot-header.site-header .site-account-link {
-    padding: 10px;
+    padding: 7px 12px;
+    font-size: 13px;
+    min-height: 36px;
   }
   .site-menu {
-    padding: 8px;
-  }
-  .site-menu svg {
-    display: none;
-  }
-  .site-account {
-    flex-wrap: wrap;
+    padding: 6px 10px;
+    min-height: 36px;
+    font-size: 13px;
   }
   .site-logout {
-    font-size: 13px;
+    font-size: 12px;
+    padding: 6px 10px;
+    min-height: 36px;
+  }
+  .florabot-header.site-header nav {
+    grid-template-columns: 1fr;
   }
   .site-footer.florabot-footer {
     grid-template-columns: 1fr;

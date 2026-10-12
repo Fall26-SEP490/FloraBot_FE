@@ -20,20 +20,32 @@
 }
 .member-page {
   max-width: 1120px;
-  margin: auto;
-  padding: 2rem clamp(1rem, 4vw, 3rem) 5rem;
+  margin: 2.5rem auto 4rem;
+  padding: clamp(2.5rem, 6vw, 4.5rem) clamp(1.5rem, 5vw, 4rem);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 24px;
+  border: 1px solid rgba(225, 233, 223, 0.85);
+  box-shadow: 0 12px 40px -8px rgba(24, 62, 43, 0.07);
 }
 .member-page h1 {
   max-width: 20ch;
   font-size: clamp(2rem, 5vw, 3.8rem);
-  line-height: 1.14;
+  line-height: 1.15;
+  color: #113421;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 .member-page > p {
   max-width: 65ch;
+  color: #27382b;
+  font-size: 1.05rem;
+  line-height: 1.75;
 }
 .member-page section {
   padding-block: 2rem;
-  border-top: 1px solid #d5e5d5;
+  border-top: 1px solid #e1ebe0;
   margin-top: 2rem;
   scroll-margin-top: 9rem;
 }
@@ -51,7 +63,7 @@
   padding: 0;
 }
 .member-orders > li {
-  border-bottom: 1px solid #d5e5d5;
+  border-bottom: 1px solid #e1ebe0;
   padding: 1.2rem 0;
   overflow-wrap: anywhere;
 }
@@ -61,14 +73,25 @@
 }
 .member-orders summary span {
   display: block;
-  color: #346341;
+  color: #235232;
   margin-top: 0.5rem;
 }
 .member-empty {
-  background: #eef6eb;
-  padding: 2rem;
-  border-radius: 12px;
+  background: #ffffff;
+  padding: 2.5rem;
+  border-radius: 16px;
+  border: 1px solid #e0eae0;
+  box-shadow: 0 4px 16px rgba(24, 62, 43, 0.05);
   margin-block: 2rem;
+}
+.member-empty h2 {
+  color: #143e27;
+  font-weight: 800;
+  margin-bottom: 0.75rem;
+}
+.member-empty p {
+  color: #3b5040;
+  line-height: 1.7;
 }
 .member-auth {
   min-height: 100vh;
