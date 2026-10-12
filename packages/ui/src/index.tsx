@@ -49,4 +49,6 @@ export {
   Banknote,
   ListChecks,
   Users,
+  User,
+  LogIn,
 } from 'lucide-react';

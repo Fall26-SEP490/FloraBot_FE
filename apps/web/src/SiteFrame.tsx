@@ -4,7 +4,7 @@ import { memo, useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { QueryClientProvider, useQuery } from '@tanstack/react-query';
-import { Flower2, Menu, X } from '@florabot/ui';
+import { Flower2, LogIn, LogOut, Menu, User, X } from '@florabot/ui';
 import { queryClient, request, sessionQuery } from './api';
 import { workspaceBase } from './workspaceSections';
 
@@ -150,7 +150,17 @@ function SiteHeader() {
           href={session.data ? home : '/dang-nhap'}
           prefetch={false}
         >
-          {session.data ? 'Tài khoản' : 'Đăng nhập'}
+          {session.data ? (
+            <>
+              <User size={16} aria-hidden="true" />
+              <span>Tài khoản</span>
+            </>
+          ) : (
+            <>
+              <LogIn size={16} aria-hidden="true" />
+              <span>Đăng nhập</span>
+            </>
+          )}
         </Link>
         {session.data && (
           <button
@@ -158,8 +168,10 @@ function SiteHeader() {
             type="button"
             disabled={busy}
             onClick={() => void logout()}
+            title="Đăng xuất khỏi hệ thống"
           >
-            {busy ? 'Đang thoát…' : 'Đăng xuất'}
+            <LogOut size={15} aria-hidden="true" />
+            <span>{busy ? 'Đang thoát…' : 'Đăng xuất'}</span>
           </button>
         )}
       </div>
