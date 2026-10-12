@@ -221,7 +221,6 @@ export default function MemberAuth({ mode }: { mode: Mode }) {
                 <label htmlFor="member-password">
                   {mode === 'reset' ? 'Mật khẩu mới' : 'Mật khẩu'}
                 </label>
-                {mode === 'login' && <Link href="/quen-mat-khau">Quên mật khẩu?</Link>}
               </div>
               <div className="auth-password">
                 <input
@@ -252,6 +251,11 @@ export default function MemberAuth({ mode }: { mode: Mode }) {
                   {show ? 'Ẩn' : 'Hiện'}
                 </button>
               </div>
+              {mode === 'login' && (
+                <div className="auth-forgot-link">
+                  <Link href="/quen-mat-khau">Quên mật khẩu?</Link>
+                </div>
+              )}
               {mode !== 'login' && (
                 <p id="member-password-hint" className="auth-hint">
                   Dùng ít nhất 12 ký tự. Bạn có thể dùng chữ, số và ký hiệu.

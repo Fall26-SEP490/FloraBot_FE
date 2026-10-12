@@ -64,40 +64,42 @@ html {
   align-items: center;
   justify-content: center;
   flex: 1;
-  gap: 4px;
+  gap: 6px;
   order: initial;
   font: inherit;
-  background: rgba(240, 247, 237, 0.55);
-  padding: 4px 6px;
+  background: #ffffff;
+  padding: 5px 8px;
   border-radius: 9999px;
-  border: 1px solid rgba(213, 225, 208, 0.65);
+  border: 1px solid #e2ece0;
+  box-shadow: 0 2px 10px rgba(15, 45, 30, 0.05);
 }
 .florabot-header.site-header nav a {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 7px 14px;
+  padding: 7px 16px;
   border-radius: 9999px;
   min-height: 36px;
-  color: #3b5a44;
-  font-size: 13.5px;
-  font-weight: 500;
+  color: #1f2937;
+  font-size: 14px;
+  font-weight: 600;
   letter-spacing: -0.01em;
   text-decoration: none;
   white-space: nowrap;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .florabot-header.site-header nav a:hover {
-  background: rgba(255, 255, 255, 0.85);
-  color: #133f25;
-  box-shadow: 0 2px 6px rgba(24, 62, 43, 0.06);
+  background: #f0fdf4;
+  color: #166534;
+  box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08);
   transform: translateY(-1px);
 }
 .florabot-header.site-header nav a[aria-current='page'] {
   background: #174b35;
   color: #ffffff;
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(23, 75, 53, 0.25);
+  box-shadow: 0 3px 10px rgba(23, 75, 53, 0.25);
   transform: none;
 }
 .site-account {

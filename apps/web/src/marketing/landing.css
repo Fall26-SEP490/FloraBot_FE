@@ -510,10 +510,20 @@ h3 {
 .plan-featured .button:hover {
   background: #f2f7d2;
 }
-.location-layout {
+.locations {
+  background: transparent;
+}
+.locations .location-layout {
   display: grid;
   grid-template-columns: 0.85fr 1.15fr;
   gap: 3rem;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 24px;
+  border: 1px solid rgba(225, 233, 223, 0.85);
+  box-shadow: 0 12px 40px -8px rgba(24, 62, 43, 0.07);
+  padding: clamp(2rem, 4vw, 3.5rem);
 }
 .location-list {
   list-style: none;
@@ -521,36 +531,48 @@ h3 {
   padding: 0;
 }
 .location-list li {
-  border-top: 1px solid var(--color-divider);
-  padding: 1.2rem 0;
+  border-top: 1px solid #e1ebe0;
+  padding: 1.25rem 0;
+}
+.location-list li:first-child {
+  border-top: none;
+  padding-top: 0;
 }
 .location-list h3 {
-  font-size: 1.2rem;
-  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #143e27;
+  margin: 0 0 0.35rem;
 }
 .location-list p {
-  margin: 0.5rem 0;
-  font-size: 0.9rem;
+  margin: 0;
+  font-size: 0.95rem;
+  color: #3b5040;
+  line-height: 1.6;
 }
 .map-placeholder {
   min-height: 310px;
-  background:
-    linear-gradient(90deg, #edf2d9ed, #edf2d9b0),
-    url('/images/floral-pink-online.webp') right 65% / cover;
-  border-radius: 8px;
-  padding: 2rem;
+  background: linear-gradient(135deg, #f0f7ec 0%, #e8f3e3 100%);
+  border: 1px solid #d5e5d1;
+  border-radius: 16px;
+  padding: 2.5rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
-  gap: 1rem;
+  gap: 1.25rem;
+  box-shadow: inset 0 2px 6px rgba(24, 62, 43, 0.03);
 }
 .map-placeholder h3 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #123823;
+  letter-spacing: -0.015em;
 }
 .map-placeholder p {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  color: #3b5040;
 }
 .kiosk-map {
   height: 370px;
@@ -1335,28 +1357,47 @@ select[aria-invalid='true'] {
 }
 .content-page {
   max-width: 1120px;
-  margin: auto;
-  padding: clamp(2rem, 6vw, 5rem) 5%;
+  margin: 2.5rem auto 4rem;
+  padding: clamp(2.5rem, 6vw, 5rem) clamp(2rem, 5vw, 4.5rem);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 24px;
+  border: 1px solid rgba(225, 233, 223, 0.85);
+  box-shadow: 0 12px 40px -8px rgba(24, 62, 43, 0.07);
 }
 .content-page h1 {
   font-size: clamp(2.2rem, 5vw, 4rem);
-  line-height: 1.12;
+  line-height: 1.15;
   max-width: 20ch;
   margin-bottom: 1.5rem;
+  color: #113421;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 .content-page p {
   max-width: 68ch;
   margin-block: 1rem;
+  color: #27382b;
+  font-size: 1.05rem;
+  line-height: 1.75;
 }
 .content-page section {
   padding-block: 2.5rem;
-  border-bottom: 1px solid var(--color-divider);
+  border-bottom: 1px solid #e1ebe0;
 }
 .content-page h2 {
   margin-bottom: 1.2rem;
+  color: #143e27;
+  font-size: 1.85rem;
+  font-weight: 800;
+  letter-spacing: -0.015em;
 }
 .content-page h3 {
   margin-top: 1.5rem;
+  color: #1a4d32;
+  font-size: 1.3rem;
+  font-weight: 700;
 }
 .content-intro {
   display: grid;
