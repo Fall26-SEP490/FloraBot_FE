@@ -9,6 +9,7 @@ import { passwordRule } from './MemberAuth';
 import type { components } from '../../../packages/contracts/src/generated/api';
 import WebRequests from './WebRequests';
 import MemberShop from './MemberShop';
+import MemberGoogleLink from './MemberGoogleLink';
 
 type Profile = { id: string; fullName: string; email: string | null; loyaltyPoints: number };
 export default function MemberAccount() {
@@ -123,6 +124,7 @@ export default function MemberAccount() {
                   Lưu thông tin
                 </Button>
               </form>
+              <MemberGoogleLink email={profile.data.email} />
             </>
           )}
         </section>

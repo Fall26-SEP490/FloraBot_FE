@@ -2,6 +2,20 @@ import { QueryClient } from '@tanstack/react-query';
 import type { components } from '../../../packages/contracts/src/generated/api';
 
 export type Session = components['schemas']['SessionResponse'];
+
+export interface AuthConfig {
+  googleClientId: string | null;
+  googleEnabled: boolean;
+  registrationEmailEnabled: boolean;
+}
+
+export interface RegisterPendingResponse {
+  challengeId: string;
+  expiresInSeconds: number;
+  resendAfterSeconds: number;
+  message?: string;
+}
+
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -29,11 +43,18 @@ export async function request<T>(
     body: body === undefined ? undefined : JSON.stringify(body),
     signal: AbortSignal.timeout(15_000),
   });
-  if (
-    response.status === 401 &&
-    retry &&
-    !['/auth/login', '/auth/admin/login', '/auth/logout'].includes(path)
-  ) {
+  const anonymousAuthPaths = [
+    '/auth/login',
+    '/auth/admin/login',
+    '/auth/logout',
+    '/auth/google',
+    '/auth/register',
+    '/auth/register/verify',
+    '/auth/config',
+    '/auth/forgot-password',
+    '/auth/reset-password',
+  ];
+  if (response.status === 401 && retry && !anonymousAuthPaths.includes(path)) {
     // A rotating refresh token must be consumed once even when several queries expire together.
     refresh ??= fetch('/api/auth/refresh', {
       method: 'POST',
@@ -48,11 +69,15 @@ export async function request<T>(
   }
   if (!response.ok) {
     const problem = (await response.json().catch(() => ({}))) as { detail?: string };
+    const default401 =
+      path === '/auth/google'
+        ? 'Tài khoản Google không hợp lệ hoặc phiên ủy quyền bị từ chối. Vui lòng thử lại.'
+        : 'Email hoặc mật khẩu chưa đúng, hoặc phiên đã hết hạn.';
     throw new ApiError(
       response.status,
       problem.detail ||
         (response.status === 401
-          ? 'Email hoặc mật khẩu chưa đúng, hoặc phiên đã hết hạn.'
+          ? default401
           : response.status === 429
             ? 'Bạn thao tác hơi nhanh. Hãy thử lại sau một phút.'
             : 'Chưa xử lý được yêu cầu. Bạn thử lại nhé.'),

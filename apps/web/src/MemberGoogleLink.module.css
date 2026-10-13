@@ -1,0 +1,104 @@
+.card {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: #ffffff;
+  border: 1px solid #e1ebe0;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(24, 62, 43, 0.04);
+  max-width: 680px;
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 1rem;
+  }
+}
+
+.title {
+  color: #143e27;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 0.75rem 0;
+}
+
+.instruction {
+  color: #27382b;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0 0 0.5rem 0;
+}
+
+.emailHighlight {
+  color: #143e27;
+  font-weight: 700;
+  word-break: break-all;
+}
+
+.benefitNote {
+  color: #556b5a;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0 0 1.25rem 0;
+}
+
+.buttonWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.buttonContainer {
+  min-height: 44px;
+  max-width: 320px;
+  width: 100%;
+}
+
+.buttonContainer[aria-busy='true'] {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.statusMessage {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #235232;
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin: 0.75rem 0 0 0;
+}
+
+.successMessage {
+  padding: 0.875rem 1rem;
+  background: #eef6eb;
+  border: 1px solid #c2dec0;
+  border-radius: 12px;
+  color: #143e27;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 1rem 0 0 0;
+}
+
+.errorMessage {
+  padding: 0.875rem 1rem;
+  background: #fdf2f2;
+  border: 1px solid #f8b4b4;
+  border-radius: 12px;
+  color: #9b1c1c;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 1rem 0 0 0;
+}
+
+.infoNote {
+  color: #556b5a;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.retryButton {
+  margin-top: 0.5rem;
+}
