@@ -98,19 +98,62 @@ export default function MemberAuth({ mode }: { mode: Mode }) {
     forgot: 'Quên mật khẩu?',
     reset: 'Tạo mật khẩu mới',
   };
+  useEffect(() => {
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (!clientId) return;
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      window.google?.accounts?.id?.initialize({
+        client_id: clientId,
+        callback: (response: { credential: string }) => {
+          void handleGoogleLogin(response.credential);
+        },
+      });
+    };
+    document.head.appendChild(script);
+    return () => {
+      if (document.head.contains(script)) {
+        document.head.removeChild(script);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function handleGoogleLogin(idToken?: string) {
     if (submitting.current) return;
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (!idToken && clientId && window.google?.accounts?.id) {
+      window.google.accounts.id.prompt();
+      return;
+    }
+
     submitting.current = true;
     setBusy(true);
     setError('');
     setNotice('');
     try {
-      const emailValue = form.getValues('email')?.trim();
-      const nameValue = form.getValues('fullName')?.trim();
-      const mockEmail =
-        emailValue && emailValue.includes('@') ? emailValue : 'khachhang.demo@gmail.com';
-      const mockName = nameValue || 'Khách Hàng Google';
-      const tokenToUse = idToken || `mock-google-token:${mockEmail}:${mockName}`;
+      let tokenToUse = idToken;
+      if (!tokenToUse) {
+        let emailValue = form.getValues('email')?.trim();
+        const nameValue = form.getValues('fullName')?.trim();
+        if (!emailValue) {
+          const userPromptEmail = window.prompt(
+            'Nhập địa chỉ email của bạn để đăng nhập/đăng ký qua Google:',
+            'your-email@gmail.com',
+          );
+          if (!userPromptEmail) {
+            submitting.current = false;
+            setBusy(false);
+            return;
+          }
+          emailValue = userPromptEmail.trim();
+        }
+        const displayName = nameValue || emailValue.split('@')[0];
+        tokenToUse = `mock-google-token:${emailValue}:${displayName}`;
+      }
 
       const session = await request<Session>('/auth/google', { idToken: tokenToUse });
       form.reset();
