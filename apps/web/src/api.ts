@@ -33,7 +33,7 @@ export async function request<T>(
   path: string,
   body?: unknown,
   retry = true,
-  method?: 'GET' | 'POST' | 'PUT',
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
 ): Promise<T> {
   const resolvedMethod = method ?? (body === undefined ? 'GET' : 'POST');
   const response = await fetch(`/api${path}`, {
@@ -68,7 +68,11 @@ export async function request<T>(
     if (await refresh) return request<T>(path, body, false, resolvedMethod);
   }
   if (!response.ok) {
-    const problem = (await response.json().catch(() => ({}))) as { detail?: string };
+    const problem = (await response.json().catch(() => ({}))) as {
+      detail?: string;
+      error?: string;
+      message?: string;
+    };
     const default401 =
       path === '/auth/google'
         ? 'Tài khoản Google không hợp lệ hoặc phiên ủy quyền bị từ chối. Vui lòng thử lại.'
@@ -80,6 +84,8 @@ export async function request<T>(
     throw new ApiError(
       response.status,
       problem.detail ||
+        problem.error ||
+        problem.message ||
         (response.status === 401
           ? default401
           : response.status === 403

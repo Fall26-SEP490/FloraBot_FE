@@ -24,6 +24,9 @@ import { SiteBrand } from './SiteFrame';
 type Role = 'ADMIN' | 'SELLER' | 'OPERATIONS_MANAGER' | 'TECHNICIAN' | 'SELLER_STAFF';
 const icons = {
   overview: LayoutDashboard,
+  managers: Users,
+  technicians: Users,
+  staff: Users,
   orders: ClipboardList,
   incidents: CircleAlert,
   tasks: ListChecks,
@@ -41,13 +44,13 @@ const icons = {
 };
 const groups = {
   ADMIN: [
-    ['Vận hành', ['orders', 'incidents', 'tasks']],
+    ['Vận hành', ['managers', 'orders', 'incidents', 'tasks']],
     ['Mạng lưới', ['shops', 'slots']],
     ['Giao dịch', ['complaints', 'refunds', 'withdrawals', 'reconciliation']],
   ],
   SELLER: [
     ['Bán hoa', ['orders', 'products', 'stock', 'accessories', 'tasks']],
-    ['Cửa hàng', ['subscriptions', 'wallet']],
+    ['Cửa hàng', ['staff', 'subscriptions', 'wallet']],
   ],
 } as const;
 
@@ -151,7 +154,7 @@ export default function WorkspaceNavigation({
             <Link
               onKeyDown={handleEscape}
               href="/operations"
-              aria-current={section === 'overview' || section === 'tasks' ? 'page' : undefined}
+              aria-current={section === 'overview' ? 'page' : undefined}
             >
               <LayoutDashboard size={19} aria-hidden="true" />
               Tổng quan vận hành
@@ -165,6 +168,14 @@ export default function WorkspaceNavigation({
               >
                 <ListChecks size={19} aria-hidden="true" />
                 <span>Công việc kỹ thuật</span>
+              </Link>
+              <Link
+                onKeyDown={handleEscape}
+                href="/operations/technicians"
+                aria-current={section === 'technicians' ? 'page' : undefined}
+              >
+                <Users size={19} aria-hidden="true" />
+                <span>Kỹ thuật viên</span>
               </Link>
               <Link onKeyDown={handleEscape} href="#operations-guide">
                 <ClipboardList size={19} aria-hidden="true" />

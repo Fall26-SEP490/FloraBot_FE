@@ -114,6 +114,7 @@ export function ConfirmDialog({
   confirmLabel,
   onConfirm,
   onCancel,
+  pending = false,
 }: {
   open: boolean;
   title: string;
@@ -121,15 +122,33 @@ export function ConfirmDialog({
   confirmLabel: string;
   onConfirm: () => void;
   onCancel: () => void;
+  pending?: boolean;
 }) {
   return (
-    <Modal open={open} title={title} description={description} onClose={onCancel}>
-      <div className="management-modal-actions">
-        <button type="button" className="button button-outline" data-autofocus onClick={onCancel}>
+    <Modal
+      open={open}
+      title={title}
+      description={description}
+      onClose={onCancel}
+      closeDisabled={pending}
+    >
+      <div className="management-modal-actions" aria-busy={pending}>
+        <button
+          type="button"
+          className="button button-outline"
+          data-autofocus
+          onClick={onCancel}
+          disabled={pending}
+        >
           Hủy
         </button>
-        <button type="button" className="button management-danger-button" onClick={onConfirm}>
-          {confirmLabel}
+        <button
+          type="button"
+          className="button management-danger-button"
+          onClick={onConfirm}
+          disabled={pending}
+        >
+          {pending ? 'Đang cập nhật…' : confirmLabel}
         </button>
       </div>
     </Modal>

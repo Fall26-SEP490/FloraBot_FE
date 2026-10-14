@@ -53,4 +53,8 @@ export {
   LogIn,
   Eye,
   EyeOff,
+  Lock,
+  Unlock,
+  RotateCcw,
+  RefreshCw,
 } from 'lucide-react';

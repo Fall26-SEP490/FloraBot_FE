@@ -34,6 +34,7 @@ import WorkspaceAccount from './WorkspaceAccount';
 import StaffTasks from './StaffTasks';
 import FlowerShop from './FlowerShop';
 import WebRequests from './WebRequests';
+import AccountManagement from './AccountManagement';
 import { startPortalUpdates } from './realtime';
 
 const loginSchema = z.object({
@@ -387,7 +388,7 @@ function TechnicianWorkspace() {
   );
 }
 
-function OperationsWorkspace() {
+function OperationsWorkspace({ section = 'overview' }: { section?: string }) {
   const router = useRouter();
   const session = useQuery({ ...sessionQuery, refetchInterval: 60_000 });
   const logout = useMutation({
@@ -428,52 +429,75 @@ function OperationsWorkspace() {
         onLogout={() => logout.mutate()}
       />
       <div className="dashboard-shell">
-        <WorkspaceNavigation workspaceRole="OPERATIONS_MANAGER" section="tasks" />
+        <WorkspaceNavigation workspaceRole="OPERATIONS_MANAGER" section={section} />
         <main id="main" className="workspace dashboard-content">
           <div className="dashboard-page-heading">
             <div>
-              <h1>Chào {session.data.name}</h1>
-              <p>Phân công sự cố cho kỹ thuật viên và kiểm tra kết quả khắc phục lỗi tủ.</p>
+              <h1>
+                {section === 'technicians' ? 'Quản lý Kỹ thuật viên' : `Chào ${session.data.name}`}
+              </h1>
+              <p>
+                {section === 'technicians'
+                  ? 'Tạo tài khoản và quản lý trạng thái kỹ thuật viên phụ trách xử lý sự cố tủ hoa.'
+                  : 'Phân công sự cố cho kỹ thuật viên và kiểm tra kết quả khắc phục lỗi tủ.'}
+              </p>
             </div>
-            <span className="dashboard-context">Quản lý vận hành</span>
+            <span className="dashboard-context">
+              {section === 'technicians' ? 'Kỹ thuật viên' : 'Quản lý vận hành'}
+            </span>
           </div>
-          <StaffTasks
-            actorRole="OPERATIONS_MANAGER"
-            mode="manager"
-            actorId={session.data.id}
-            apiBase="/operations/staff-tasks"
-            directoryEndpoint="/operations/staff"
-            incidentsEndpoint="/operations/incidents"
-            allowedKinds={['INCIDENT']}
-            canAssign
-            canReassign
-          />
-          <section
-            id="operations-guide"
-            className="dashboard-staff-guide"
-            tabIndex={-1}
-            aria-labelledby="operations-guide-title"
-          >
-            <h2 id="operations-guide-title">Hướng dẫn điều phối vận hành</h2>
-            <ol>
-              <li>
-                <strong>Kiểm tra sự cố mở</strong>
-                <p>Theo dõi các cảnh báo và sự cố tủ trong phạm vi phụ trách.</p>
-              </li>
-              <li>
-                <strong>Phân công kỹ thuật viên</strong>
-                <p>Giao công việc kiểm tra sự cố cho kỹ thuật viên phù hợp.</p>
-              </li>
-              <li>
-                <strong>Duyệt kết quả xử lý</strong>
-                <p>Kiểm tra báo cáo và ảnh minh chứng trước khi xác nhận hoàn thành.</p>
-              </li>
-            </ol>
-            <p className="dashboard-data-note">
-              Tài khoản quản lý được phân quyền theo cụm tủ phụ trách; không có quyền tài chính hay
-              quản trị viên.
-            </p>
-          </section>
+          {section === 'technicians' ? (
+            <AccountManagement
+              actorRole="OPERATIONS_MANAGER"
+              targetRole="TECHNICIAN"
+              title="Quản lý Kỹ thuật viên"
+              eyebrow="Vận hành kỹ thuật"
+              description="Tạo tài khoản và quản lý trạng thái kỹ thuật viên phụ trách xử lý sự cố tủ hoa."
+              createLabel="Thêm Kỹ thuật viên"
+              itemName="kỹ thuật viên"
+              apiBase="/operations/technicians"
+            />
+          ) : (
+            <>
+              <StaffTasks
+                actorRole="OPERATIONS_MANAGER"
+                mode="manager"
+                actorId={session.data.id}
+                apiBase="/operations/staff-tasks"
+                directoryEndpoint="/operations/staff"
+                incidentsEndpoint="/operations/incidents"
+                allowedKinds={['INCIDENT']}
+                canAssign
+                canReassign
+              />
+              <section
+                id="operations-guide"
+                className="dashboard-staff-guide"
+                tabIndex={-1}
+                aria-labelledby="operations-guide-title"
+              >
+                <h2 id="operations-guide-title">Hướng dẫn điều phối vận hành</h2>
+                <ol>
+                  <li>
+                    <strong>Kiểm tra sự cố mở</strong>
+                    <p>Theo dõi các cảnh báo và sự cố tủ trong phạm vi phụ trách.</p>
+                  </li>
+                  <li>
+                    <strong>Phân công kỹ thuật viên</strong>
+                    <p>Giao công việc kiểm tra sự cố cho kỹ thuật viên phù hợp.</p>
+                  </li>
+                  <li>
+                    <strong>Duyệt kết quả xử lý</strong>
+                    <p>Kiểm tra báo cáo và ảnh minh chứng trước khi xác nhận hoàn thành.</p>
+                  </li>
+                </ol>
+                <p className="dashboard-data-note">
+                  Tài khoản quản lý được phân quyền theo cụm tủ phụ trách; không có quyền tài chính
+                  hay quản trị viên.
+                </p>
+              </section>
+            </>
+          )}
           {logout.isError && <p role="alert">Chưa đăng xuất được. Bạn thử lại nhé.</p>}
         </main>
       </div>
@@ -625,6 +649,32 @@ function Workspace({
               canReassign
             />
           )}
+          {role === 'SELLER' && section === 'staff' && (
+            <AccountManagement
+              actorRole="SELLER"
+              targetRole="SELLER_STAFF"
+              title="Quản lý Nhân viên shop"
+              eyebrow="Vận hành shop"
+              description="Tạo tài khoản và quản lý trạng thái hoạt động của nhân viên shop."
+              createLabel="Thêm nhân viên shop"
+              itemName="nhân viên shop"
+              apiBase={`/sellers/${session.data.sellerId}/staff`}
+              listEndpoint={`/sellers/${session.data.sellerId}/staff/accounts`}
+              sellerId={session.data.sellerId}
+            />
+          )}
+          {role === 'ADMIN' && section === 'managers' && (
+            <AccountManagement
+              actorRole="ADMIN"
+              targetRole="OPERATIONS_MANAGER"
+              title="Đội ngũ quản lý vận hành"
+              eyebrow="Quản trị hệ thống"
+              description="Tạo tài khoản và quản lý trạng thái hoạt động của Quản lý vận hành."
+              createLabel="Thêm Quản lý vận hành"
+              itemName="Quản lý vận hành"
+              apiBase="/admin/managers"
+            />
+          )}
           {role === 'ADMIN' && section === 'shops' && <AdminSellers />}
           {role === 'ADMIN' && section === 'tasks' && (
             <StaffTasks
@@ -761,7 +811,7 @@ function Screen({ screen, section }: { screen: PortalScreen; section?: string })
     case 'operations':
       return (
         <Guard requiredRole="OPERATIONS_MANAGER">
-          <OperationsWorkspace />
+          <OperationsWorkspace section={section} />
         </Guard>
       );
     case 'workspace':
