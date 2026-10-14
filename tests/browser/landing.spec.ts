@@ -15,9 +15,8 @@ for (const width of [390, 820, 1440]) {
     await expect(page.locator('.leaflet-container')).toBeVisible();
     await expect(page.getByText('Quần đảo Hoàng Sa (Việt Nam)', { exact: true })).toBeVisible();
     await expect(page.getByText('Quần đảo Trường Sa (Việt Nam)', { exact: true })).toBeVisible();
-    await expect
-      .poll(() => page.locator('.leaflet-tile-loaded').count(), { timeout: 15000 })
-      .toBeGreaterThan(0);
+    // The map UI must render without making CI depend on the public tile service.
+    await expect(page.locator('.leaflet-tile-pane')).toBeAttached();
     await page.locator('#dang-ky').scrollIntoViewIfNeeded();
     await expect(page.locator('#shop-name')).toBeVisible();
     const results = await new AxeBuilder({ page })

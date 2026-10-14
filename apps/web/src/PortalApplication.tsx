@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button } from '@florabot/ui';
+import { Button, Eye, EyeOff } from '@florabot/ui';
 import { ApiError, queryClient, request, sessionQuery, type Session } from './api';
 import './i18n';
 import Products from './Products';
@@ -46,7 +46,11 @@ function Login() {
   const feedback = useRef<HTMLParagraphElement>(null);
   const { t } = useTranslation();
   const router = useRouter();
-  const form = useForm<z.infer<typeof loginSchema>>({ resolver: zodResolver(loginSchema) });
+  const form = useForm<z.infer<typeof loginSchema>>({
+    resolver: zodResolver(loginSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
+  });
   const login = useMutation({
     mutationFn: (values: z.infer<typeof loginSchema>) =>
       request<Session>('/auth/admin/login', values),
@@ -112,11 +116,16 @@ function Login() {
             />
             <button
               type="button"
+              className="auth-password-toggle"
               aria-label={show ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
               aria-pressed={show}
               onClick={() => setShow(!show)}
             >
-              {show ? 'Ẩn' : 'Hiện'}
+              {show ? (
+                <EyeOff size={20} aria-hidden="true" />
+              ) : (
+                <Eye size={20} aria-hidden="true" />
+              )}
             </button>
           </div>
           {form.formState.errors.password && (

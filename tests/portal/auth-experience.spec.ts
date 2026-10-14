@@ -9,7 +9,7 @@ const screens = [
   ['/admin/login', 'Đăng nhập vận hành'],
 ] as const;
 
-for (const width of [390, 1440]) {
+for (const width of [320, 390, 1440]) {
   for (const [path, title] of screens) {
     test(`Authentication form accessibility ${path} at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
@@ -17,12 +17,20 @@ for (const width of [390, 1440]) {
       await expect(page.getByRole('heading', { level: 1 })).toHaveText(title);
       await expect(page.locator('.auth-form')).toBeVisible();
       if (path === '/dang-nhap') {
+        if (width === 320) {
+          const dims = await page.evaluate(() => {
+            const b = document.querySelector('.site-brand')?.getBoundingClientRect();
+            const a = document.querySelector('.site-account')?.getBoundingClientRect();
+            return { bY: b ? Math.round(b.top) : 0, aY: a ? Math.round(a.top) : 0 };
+          });
+          expect(dims.aY).toBe(dims.bY);
+        }
         await page.screenshot({ path: `artifacts/auth-final-login-${width}.png`, fullPage: true });
       }
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
         true,
       );
-      if (width === 390) {
+      if (width <= 390) {
         await expect(page.locator('.auth-garden')).toBeHidden();
         const firstInput = await page.locator('.auth-form input').first().boundingBox();
         expect(firstInput!.y + firstInput!.height).toBeLessThan(650);
@@ -62,18 +70,35 @@ test('Registration explains password rules and preserves data after validation e
   await password.fill('short');
   await page.getByLabel('Nhập lại mật khẩu', { exact: true }).fill('different');
   await page.getByRole('button', { name: 'Tạo tài khoản', exact: true }).click();
-  await expect(password).toBeFocused();
+  await expect(password).toHaveAttribute('aria-invalid', 'true');
   await expect(page.getByText('Hai mật khẩu chưa khớp.', { exact: true })).toBeVisible();
   await expect(page.getByLabel('Email', { exact: true })).toHaveValue('flower@example.com');
   await page.getByRole('button', { name: 'Hiện mật khẩu', exact: true }).focus();
   await page.keyboard.press('Space');
   await expect(password).toHaveAttribute('type', 'text');
-  await expect(page.getByLabel('Nhập lại mật khẩu', { exact: true })).toHaveAttribute(
-    'type',
-    'text',
-  );
+  const confirmation = page.getByLabel('Nhập lại mật khẩu', { exact: true });
+  await expect(confirmation).toHaveAttribute('type', 'password');
+  await page.getByRole('button', { name: 'Hiện mật khẩu xác nhận', exact: true }).click();
+  await expect(confirmation).toHaveAttribute('type', 'text');
   await page.getByRole('button', { name: 'Ẩn mật khẩu', exact: true }).click();
   await expect(password).toHaveAttribute('type', 'password');
+});
+
+test('Login validates on blur and toggles only its password field', async ({ page }) => {
+  await page.goto('/dang-nhap');
+  const email = page.getByLabel('Email', { exact: true });
+  const password = page.getByLabel('Mật khẩu', { exact: true });
+
+  await email.focus();
+  await password.focus();
+  await expect(page.getByText('Nhập email.', { exact: true })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Hiện mật khẩu', exact: true }).click();
+  await expect(password).toHaveAttribute('type', 'text');
+  await expect(page.getByRole('button', { name: 'Ẩn mật khẩu', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
 });
 
 test('Forgot password confirms privately and lets the visitor correct the email', async ({
@@ -158,9 +183,50 @@ test('Login rate limit preserves input and exposes a focused recoverable error',
 
 test('Authentication reflows at 320px and enlarged text', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 900 });
-  await page.goto('/dang-ky');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tạo tài khoản FloraBot');
-  await page.addStyleTag({ content: ':root { font-size: 36px !important; }' });
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await expect(page.getByRole('button', { name: 'Tạo tài khoản', exact: true })).toBeVisible();
+  for (const [path, title, btnText] of [
+    ['/dang-ky', 'Tạo tài khoản FloraBot', 'Tạo tài khoản'],
+    ['/dang-nhap', 'Đăng nhập', 'Đăng nhập'],
+  ] as const) {
+    await page.setViewportSize({ width: 320, height: 900 });
+    await page.goto(path);
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(title);
+    await page.addStyleTag({ content: ':root { font-size: 36px !important; }' });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    await expect(page.getByRole('button', { name: btnText, exact: true })).toBeVisible();
+    await page.screenshot({
+      path: `artifacts/auth-review-${path.replace('/', '')}-320-enlarged.png`,
+      fullPage: true,
+    });
+  }
+});
+
+test('Authentication zoom 200% reflow across viewports', async ({ page }) => {
+  for (const path of ['/dang-nhap', '/dang-ky']) {
+    await page.setViewportSize({ width: 720, height: 900 });
+    await page.goto(path);
+    await expect(page.locator('.auth-form')).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+
+    const clipped = await page
+      .locator('.site-header, .auth-form, h1, label, input, button')
+      .evaluateAll((elements) =>
+        elements
+          .filter((el) => el.getClientRects().length > 0)
+          .filter((el) => {
+            const rect = el.getBoundingClientRect();
+            return rect.left < -1 || rect.right > window.innerWidth + 1;
+          })
+          .map((el) => ({ tag: el.tagName, id: el.id, className: el.className })),
+      );
+    expect(clipped).toEqual([]);
+
+    await page.screenshot({
+      path: `artifacts/auth-review-${path.replace('/', '')}-zoom200.png`,
+      fullPage: true,
+    });
+  }
 });

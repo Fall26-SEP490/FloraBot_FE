@@ -588,13 +588,18 @@ h3 {
   min-width: 44px;
   min-height: 44px;
   line-height: 44px;
+  scroll-margin-block: calc(var(--header-height, 64px) + 16px);
 }
-.map-panel .leaflet-container .leaflet-control-attribution {
-  padding: 4px 8px;
-  background: var(--color-canvas);
-  color: var(--color-ink);
+.map-attribution {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: 4px 0 0;
+  color: var(--color-muted);
+  font-size: 0.8rem;
 }
-.leaflet-container .leaflet-control-attribution a {
+.map-attribution a {
   display: inline-flex;
   align-items: center;
   min-width: 44px;

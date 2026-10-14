@@ -63,6 +63,7 @@ function SiteHeader() {
         `${element.getBoundingClientRect().height}px`,
       );
     const observer = new ResizeObserver(measure);
+    let focusFrame: number | undefined;
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && toggle.current?.getAttribute('aria-expanded') === 'true') {
         setOpenedPath(null);
@@ -77,13 +78,17 @@ function SiteHeader() {
         !target.matches(':focus-visible')
       )
         return;
-      const bounds = target.getBoundingClientRect();
-      if (bounds.top < element.getBoundingClientRect().bottom || bounds.bottom > innerHeight) {
-        target.scrollIntoView({
-          block: target.id === 'main' ? 'start' : 'center',
-          behavior: 'instant',
-        });
-      }
+      if (focusFrame !== undefined) cancelAnimationFrame(focusFrame);
+      focusFrame = requestAnimationFrame(() => {
+        if (!target.isConnected) return;
+        const bounds = target.getBoundingClientRect();
+        if (bounds.top < element.getBoundingClientRect().bottom || bounds.bottom > innerHeight) {
+          target.scrollIntoView({
+            block: target.id === 'main' ? 'start' : 'center',
+            behavior: 'instant',
+          });
+        }
+      });
     };
     observer.observe(element);
     element.addEventListener('keydown', closeOnEscape);
@@ -91,6 +96,7 @@ function SiteHeader() {
     measure();
     return () => {
       observer.disconnect();
+      if (focusFrame !== undefined) cancelAnimationFrame(focusFrame);
       element.removeEventListener('keydown', closeOnEscape);
       document.removeEventListener('focusin', revealFocus);
       document.documentElement.style.removeProperty('--header-height');

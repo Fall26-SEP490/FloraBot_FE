@@ -18,6 +18,7 @@ export default function KioskMap() {
       .then(({ map: createMap, tileLayer, circleMarker }) => {
         if (cancelled || !container.current) return;
         map = createMap(container.current, {
+          attributionControl: false,
           scrollWheelZoom: false,
           zoomAnimation: false,
           fadeAnimation: false,
@@ -28,9 +29,7 @@ export default function KioskMap() {
           ],
           maxBoundsViscosity: 1,
         }).setView([15.5, 109], 5);
-        map.attributionControl.setPosition('topright');
         tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
           maxZoom: 18,
           minZoom: 4,
         })
@@ -87,12 +86,19 @@ export default function KioskMap() {
         </div>
       )}
       {enabled && (
-        <div
-          ref={container}
-          className="kiosk-map"
-          role="region"
-          aria-label="Bản đồ hai vị trí kiosk minh họa, Hoàng Sa và Trường Sa của Việt Nam"
-        />
+        <>
+          <div
+            ref={container}
+            className="kiosk-map"
+            role="region"
+            aria-label="Bản đồ hai vị trí kiosk minh họa, Hoàng Sa và Trường Sa của Việt Nam"
+          />
+          <p className="map-attribution">
+            Dữ liệu bản đồ © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>
+            <span>·</span>
+            <a href="https://leafletjs.com">Leaflet</a>
+          </p>
+        </>
       )}
       {loading && <p role="status">Đang tải bản đồ…</p>}
       {error && (

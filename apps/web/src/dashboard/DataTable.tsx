@@ -63,18 +63,20 @@ export function TablePagination({
   pageSize,
   totalItems,
   onPageChange,
+  ariaLabel = 'Phân trang danh sách',
 }: {
   page: number;
   pageSize: number;
   totalItems: number;
   onPageChange: (page: number) => void;
+  ariaLabel?: string;
 }) {
   const safePage = clampPage(page, totalItems, pageSize);
   const pages = totalPages(totalItems, pageSize);
   const range = pageRange(safePage, totalItems, pageSize);
 
   return (
-    <nav className="management-pagination" aria-label="Phân trang bảng">
+    <nav className="management-pagination" aria-label={ariaLabel}>
       <p aria-live="polite">
         {totalItems === 0
           ? 'Không có dữ liệu'
