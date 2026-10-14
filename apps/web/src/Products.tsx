@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,8 +9,12 @@ import type { components } from '../../../packages/contracts/src/generated/api';
 import { ApiError, queryClient, request, type Session } from './api';
 import ProductPhotos from './ProductPhotos';
 import { ProductCreateForm, ProductMetadataEditor, type ProductItem } from './ProductCatalogForm';
+import { TablePagination } from './dashboard/DataTable';
+import { Modal } from './dashboard/Modal';
+import { clampPage, paginate } from './dashboard/pagination';
 
 type Product = ProductItem;
+const PAGE_SIZE = 8;
 const priceSchema = z.object({
   price: z
     .number('Nhập giá bán bằng số.')
@@ -176,9 +180,16 @@ function ProductEditor({
         </Button>
       </div>
       {showMetadataEditor && (
-        <div id={`edit-section-${product.id}`} className="product-edit-section">
-          <ProductMetadataEditor product={product} sellerId={sellerId} canEdit={canEdit} />
-        </div>
+        <Modal
+          open
+          title={`Chỉnh sửa ${product.name}`}
+          description="Cập nhật thông tin và kích thước của mẫu hoa."
+          onClose={() => setShowMetadataEditor(false)}
+        >
+          <div id={`edit-section-${product.id}`} className="product-edit-section">
+            <ProductMetadataEditor product={product} sellerId={sellerId} canEdit={canEdit} />
+          </div>
+        </Modal>
       )}
       <ProductPhotos
         sellerId={sellerId}
@@ -193,7 +204,15 @@ function ProductEditor({
 export default function Products({ session }: { session: Session }) {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('ALL');
+  const [page, setPage] = useState(1);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [createNotice, setCreateNotice] = useState('');
+  const createNoticeRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    if (!createNotice) return;
+    createNoticeRef.current?.focus();
+  }, [createNotice]);
   const sellerId = session.sellerId;
   const query = useQuery({
     queryKey: ['products', sellerId],
@@ -208,6 +227,8 @@ export default function Products({ session }: { session: Session }) {
       product.name.toLocaleLowerCase('vi').includes(search.trim().toLocaleLowerCase('vi')) &&
       (filter === 'ALL' || filter === product.status),
   );
+  const safePage = clampPage(page, products?.length ?? 0, PAGE_SIZE);
+  const pageItems = paginate(products ?? [], safePage, PAGE_SIZE);
   return (
     <section className="products" aria-labelledby="products-title">
       <h2 id="products-title">Những bó hoa của shop</h2>
@@ -220,7 +241,10 @@ export default function Products({ session }: { session: Session }) {
       <div className="product-actions-bar">
         <Button
           type="button"
-          onClick={() => setShowCreateForm(!showCreateForm)}
+          onClick={() => {
+            setCreateNotice('');
+            setShowCreateForm(!showCreateForm);
+          }}
           disabled={!canEdit}
           aria-expanded={showCreateForm}
           aria-controls="product-create-section"
@@ -230,14 +254,28 @@ export default function Products({ session }: { session: Session }) {
         </Button>
       </div>
       {showCreateForm && (
-        <div id="product-create-section" className="product-create-container">
-          <ProductCreateForm
-            sellerId={sellerId}
-            canEdit={canEdit}
-            onCancel={() => setShowCreateForm(false)}
-          />
-        </div>
+        <Modal
+          open
+          title="Thêm bó hoa giả mới"
+          description="Nhập thông tin mẫu hoa trước khi đưa vào danh mục của shop."
+          onClose={() => setShowCreateForm(false)}
+        >
+          <div id="product-create-section" className="product-create-container">
+            <ProductCreateForm
+              sellerId={sellerId}
+              canEdit={canEdit}
+              onSuccess={() => {
+                setShowCreateForm(false);
+                setCreateNotice('Đã tạo mẫu hoa giả mới ở trạng thái Bản nháp.');
+              }}
+              onCancel={() => setShowCreateForm(false)}
+            />
+          </div>
+        </Modal>
       )}
+      <p ref={createNoticeRef} role="status" tabIndex={-1}>
+        {createNotice}
+      </p>
       <div className="product-filters">
         <div>
           <label htmlFor="product-search">Tìm tên sản phẩm</label>
@@ -245,7 +283,10 @@ export default function Products({ session }: { session: Session }) {
             id="product-search"
             type="search"
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setPage(1);
+            }}
           />
         </div>
         <div>
@@ -253,7 +294,10 @@ export default function Products({ session }: { session: Session }) {
           <select
             id="product-filter"
             value={filter}
-            onChange={(event) => setFilter(event.target.value)}
+            onChange={(event) => {
+              setFilter(event.target.value);
+              setPage(1);
+            }}
           >
             <option value="ALL">Tất cả trạng thái</option>
             {Object.entries(statusNames).map(([value, label]) => (
@@ -283,7 +327,7 @@ export default function Products({ session }: { session: Session }) {
         </p>
       )}
       <ul className="product-list">
-        {products?.map((product) => (
+        {pageItems.map((product) => (
           <li key={product.id}>
             <details>
               <summary>
@@ -308,6 +352,15 @@ export default function Products({ session }: { session: Session }) {
           </li>
         ))}
       </ul>
+      {(products?.length ?? 0) > 0 && (
+        <TablePagination
+          page={safePage}
+          pageSize={PAGE_SIZE}
+          totalItems={products?.length ?? 0}
+          onPageChange={setPage}
+          ariaLabel="Phân trang danh sách sản phẩm"
+        />
+      )}
     </section>
   );
 }

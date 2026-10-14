@@ -1,3 +1,9 @@
+/* Disable native Edge password reveal and clear buttons site-wide */
+input[type='password']::-ms-reveal,
+input[type='password']::-ms-clear {
+  display: none;
+}
+
 html {
   scroll-padding-top: calc(var(--header-height, 0px) + 20px);
 }
@@ -63,7 +69,8 @@ html {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 1;
+  flex: 0 1 auto;
+  margin: 0 auto;
   gap: 6px;
   order: initial;
   font: inherit;
@@ -217,7 +224,7 @@ html {
   outline-offset: 3px;
   box-shadow: 0 0 0 3px white;
 }
-@media (max-width: 1250px) {
+@media (max-width: 1380px) {
   .florabot-header.site-header {
     padding: 10px 18px;
     gap: 12px;
@@ -264,17 +271,17 @@ html {
   .florabot-header.site-header .site-account-link {
     padding: 7px 12px;
     font-size: 13px;
-    min-height: 36px;
+    min-height: 44px;
   }
   .site-menu {
     padding: 6px 10px;
-    min-height: 36px;
+    min-height: 44px;
     font-size: 13px;
   }
   .site-logout {
     font-size: 12px;
     padding: 6px 10px;
-    min-height: 36px;
+    min-height: 44px;
   }
   .florabot-header.site-header nav {
     grid-template-columns: 1fr;
@@ -285,5 +292,41 @@ html {
   }
   .florabot-footer nav {
     gap: 0 16px;
+  }
+}
+@media (max-width: 360px) {
+  .florabot-header.site-header {
+    padding: 8px 8px;
+    gap: 4px;
+  }
+  .site-brand {
+    font-size: 18px;
+    gap: 4px;
+  }
+  .site-brand svg {
+    width: 18px;
+    height: 18px;
+  }
+  .florabot-header.site-header .site-account-link {
+    padding: 6px 8px;
+    font-size: 11.5px;
+    gap: 4px;
+  }
+  .florabot-header.site-header .site-account-link svg {
+    width: 16px;
+    height: 16px;
+  }
+  .site-menu {
+    padding: 6px 8px;
+    font-size: 11.5px;
+    gap: 4px;
+  }
+  .site-menu svg {
+    width: 18px;
+    height: 18px;
+  }
+  .site-logout {
+    padding: 6px 8px;
+    font-size: 11.5px;
   }
 }

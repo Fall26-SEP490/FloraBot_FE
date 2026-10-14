@@ -1,6 +1,20 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
+declare global {
+  interface Window {
+    google?: {
+      accounts?: {
+        id?: {
+          initialize: (config: { callback: (resp: { credential: string }) => void }) => void;
+          renderButton: (container: HTMLElement) => void;
+        };
+      };
+    };
+    __gsiCb?: (resp: { credential: string }) => void;
+  }
+}
+
 test.describe('Real Auth Provider & Email OTP Flow (Mocked Network in Tests Only)', () => {
   test.beforeEach(async ({ page }) => {
     // Provide baseline session/mock handlers
@@ -129,7 +143,7 @@ test.describe('Real Auth Provider & Email OTP Flow (Mocked Network in Tests Only
     await expect(gisBtn).toBeVisible();
     await gisBtn.click();
 
-    expect(googleTokenReceived).toBe('real-google-credential-token-999');
+    await expect.poll(() => googleTokenReceived).toBe('real-google-credential-token-999');
     await expect(page).toHaveURL(/\/tai-khoan$/);
   });
 

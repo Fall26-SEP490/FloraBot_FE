@@ -73,14 +73,20 @@ export async function request<T>(
       path === '/auth/google'
         ? 'Tài khoản Google không hợp lệ hoặc phiên ủy quyền bị từ chối. Vui lòng thử lại.'
         : 'Email hoặc mật khẩu chưa đúng, hoặc phiên đã hết hạn.';
+    const default403 =
+      path === '/auth/google'
+        ? 'Đăng nhập Google chưa được cho phép cho địa chỉ trang hiện tại. Hãy dùng email hoặc liên hệ hỗ trợ.'
+        : 'Yêu cầu bị từ chối. Hãy tải lại trang; nếu lỗi còn tiếp diễn, liên hệ hỗ trợ.';
     throw new ApiError(
       response.status,
       problem.detail ||
         (response.status === 401
           ? default401
-          : response.status === 429
-            ? 'Bạn thao tác hơi nhanh. Hãy thử lại sau một phút.'
-            : 'Chưa xử lý được yêu cầu. Bạn thử lại nhé.'),
+          : response.status === 403
+            ? default403
+            : response.status === 429
+              ? 'Bạn thao tác hơi nhanh. Hãy thử lại sau một phút.'
+              : 'Chưa xử lý được yêu cầu. Bạn thử lại nhé.'),
     );
   }
   return response.status === 204 ? (undefined as T) : (response.json() as Promise<T>);

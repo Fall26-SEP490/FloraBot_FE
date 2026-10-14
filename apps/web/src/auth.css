@@ -139,23 +139,24 @@
 }
 .auth-field-heading {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
 }
-.auth-forgot-link {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 0.45rem;
+.auth-field-heading > label {
+  margin-bottom: 0;
 }
-.auth-forgot-link a {
+.auth-forgot-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   font-size: 0.825rem;
   font-weight: 600;
   color: #1f6b47;
   text-decoration: none;
   transition: color 0.15s ease;
 }
-.auth-forgot-link a:hover {
+.auth-forgot-link:hover {
   color: #113f28;
   text-decoration: underline;
 }
@@ -190,27 +191,47 @@
   position: relative;
 }
 .auth-password input {
-  padding-right: 4.6rem;
+  padding-right: 3.25rem;
 }
+/* Disable native Edge password reveal and clear buttons */
+.auth-password input::-ms-reveal,
+.auth-password input::-ms-clear {
+  display: none;
+}
+.auth-password-toggle,
 .auth-password button {
   position: absolute;
-  right: 6px;
+  right: 4px;
   top: 50%;
   transform: translateY(-50%);
-  min-width: 50px;
-  min-height: 36px;
-  border: 1px solid #d5e2d2;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: #557560;
   border-radius: 8px;
-  color: #164b35;
-  background: #f1f7ed;
-  font-size: 0.8rem;
-  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
+.auth-password-toggle:hover,
 .auth-password button:hover {
-  background: #e3efde;
-  border-color: #164b35;
+  color: #164b35;
+  background: rgba(23, 75, 53, 0.08);
+}
+.auth-password-toggle:focus-visible,
+.auth-password button:focus-visible {
+  outline: 2px solid #164b35;
+  outline-offset: -1px;
+}
+.auth-password-toggle:active,
+.auth-password button:active {
+  background: rgba(23, 75, 53, 0.14);
 }
 .auth-field .auth-hint {
   margin-top: 0.4rem;
@@ -304,13 +325,13 @@
   justify-content: center;
   gap: 0.75rem;
   width: 100%;
-  min-height: 48px;
-  padding: 0.625rem 1.25rem;
+  min-height: 50px;
+  padding: 0.75rem 1.25rem;
   background: #ffffff;
-  border: 1.5px solid #d3e2d1;
+  border: 1.5px solid #d5e2d2;
   border-radius: 12px;
-  color: #1f382b;
-  font-size: 0.9375rem;
+  color: #173d2c;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
@@ -318,12 +339,11 @@
 }
 .auth-google-btn:hover:not(:disabled) {
   background: #f7faf7;
-  border-color: #b7ceb4;
+  border-color: #174b35;
   box-shadow: 0 4px 12px rgba(23, 75, 53, 0.08);
-  transform: translateY(-1px);
 }
 .auth-google-btn:active:not(:disabled) {
-  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(23, 75, 53, 0.04);
 }
 .auth-google-btn:disabled {
   opacity: 0.65;
@@ -585,15 +605,62 @@
   color: var(--auth-sage);
 }
 
-.auth-google-rendered-wrapper {
-  display: flex;
-  justify-content: center;
+.auth-google-custom-container {
+  position: relative;
   width: 100%;
-  min-height: 44px;
+  border-radius: 12px;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.auth-google-rendered-wrapper > div {
+.auth-google-custom-container:hover {
+  transform: translateY(-1px);
+}
+
+.auth-google-custom-container:hover .auth-google-btn {
+  background: #f7faf7;
+  border-color: #174b35;
+  box-shadow: 0 4px 14px rgba(23, 75, 53, 0.12);
+}
+
+.auth-google-custom-container:active {
+  transform: translateY(0);
+}
+
+.auth-google-custom-container:active .auth-google-btn {
+  box-shadow: 0 2px 6px rgba(23, 75, 53, 0.06);
+}
+
+.auth-google-custom-container:focus-within .auth-google-btn {
+  border-color: #174b35;
+  box-shadow: 0 0 0 3px rgba(23, 75, 53, 0.15);
+}
+
+.auth-google-rendered-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  opacity: 0.0001;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-google-rendered-wrapper > div,
+.auth-google-rendered-wrapper iframe,
+.auth-google-rendered-wrapper button {
   width: 100% !important;
+  height: 100% !important;
+  min-height: 50px !important;
+  cursor: pointer !important;
+  transform: scale(1.15);
+  transform-origin: center;
 }
 
 .auth-google-status {

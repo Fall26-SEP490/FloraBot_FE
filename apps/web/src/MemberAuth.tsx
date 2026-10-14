@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
-import { Button, ArrowRight, Check } from '@florabot/ui';
+import { Button, ArrowRight, Check, Eye, EyeOff } from '@florabot/ui';
 import AuthShell from './AuthShell';
 import {
   ApiError,
@@ -34,6 +34,9 @@ interface PendingRegistration {
 }
 
 type GisStatus = 'loading' | 'ready' | 'unavailable' | 'error' | 'slow_load_error';
+
+let initializedGoogleClientId: string | null = null;
+let activeGoogleCredentialHandler: ((response: GoogleCredentialResponse) => void) | null = null;
 
 export const accountPath = (role: string) => {
   switch (role) {
@@ -92,14 +95,15 @@ function GoogleIcon() {
 
 export default function MemberAuth({ mode }: { mode: Mode }) {
   const router = useRouter();
-  const form = useForm<Fields>();
+  const form = useForm<Fields>({ mode: 'onBlur', reValidateMode: 'onChange' });
   const [busy, setBusy] = useState(false);
   const submitting = useRef(false);
   const mountedRef = useRef(true);
   const feedback = useRef<HTMLDivElement>(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  const [show, setShow] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [token, setToken] = useState(
     () => new URLSearchParams(location.hash.slice(1)).get('token') || '',
   );
@@ -110,8 +114,6 @@ export default function MemberAuth({ mode }: { mode: Mode }) {
   const [configLoading, setConfigLoading] = useState(() => mode === 'login' || mode === 'register');
   const [gisStatus, setGisStatus] = useState<GisStatus>('loading');
   const googleBtnContainerRef = useRef<HTMLDivElement>(null);
-  const gisInitializedRef = useRef(false);
-  const gisRenderedRef = useRef(false);
 
   // OTP Pending Challenge state
   const [pendingChallenge, setPendingChallenge] = useState<PendingRegistration | null>(null);
@@ -209,12 +211,12 @@ export default function MemberAuth({ mode }: { mode: Mode }) {
     if (googleBtnContainerRef.current) {
       const rect = googleBtnContainerRef.current.getBoundingClientRect();
       if (rect.width > 0) {
-        return Math.max(200, Math.min(320, Math.floor(rect.width)));
+        return Math.max(200, Math.min(400, Math.floor(rect.width)));
       }
     }
     if (typeof window !== 'undefined') {
-      const available = window.innerWidth <= 380 ? window.innerWidth - 64 : 320;
-      return Math.max(200, Math.min(320, available));
+      const available = window.innerWidth <= 480 ? window.innerWidth - 64 : 400;
+      return Math.max(200, Math.min(400, available));
     }
     return 240;
   }, []);
@@ -266,22 +268,31 @@ export default function MemberAuth({ mode }: { mode: Mode }) {
     }
 
     const clientId = authConfig.googleClientId;
+    const credentialHandler = (response: GoogleCredentialResponse) => {
+      if (!mountedRef.current) return;
+      if (response?.credential) {
+        void handleGoogleCredential(response.credential);
+      }
+    };
+    activeGoogleCredentialHandler = credentialHandler;
+    const releaseCredentialHandler = () => {
+      if (activeGoogleCredentialHandler === credentialHandler) {
+        activeGoogleCredentialHandler = null;
+      }
+    };
 
     const tryInitAndRender = (): boolean => {
       if (!effectActive || !mountedRef.current) return false;
       if (!window.google?.accounts?.id) return false;
       try {
-        if (!gisInitializedRef.current) {
+        if (initializedGoogleClientId !== clientId) {
           window.google.accounts.id.initialize({
             client_id: clientId,
             callback: (response: GoogleCredentialResponse) => {
-              if (!mountedRef.current) return;
-              if (response?.credential) {
-                void handleGoogleCredential(response.credential);
-              }
+              activeGoogleCredentialHandler?.(response);
             },
           });
-          gisInitializedRef.current = true;
+          initializedGoogleClientId = clientId;
         }
 
         if (googleBtnContainerRef.current) {
@@ -296,7 +307,6 @@ export default function MemberAuth({ mode }: { mode: Mode }) {
             width: targetWidth,
             locale: 'vi',
           });
-          gisRenderedRef.current = true;
           if (effectActive && mountedRef.current) {
             setGisStatus('ready');
           }
@@ -314,6 +324,7 @@ export default function MemberAuth({ mode }: { mode: Mode }) {
       tryInitAndRender();
       return () => {
         effectActive = false;
+        releaseCredentialHandler();
       };
     }
 
@@ -361,6 +372,7 @@ export default function MemberAuth({ mode }: { mode: Mode }) {
 
     return () => {
       effectActive = false;
+      releaseCredentialHandler();
       if (timeoutId) clearTimeout(timeoutId);
       if (retryTimer) clearTimeout(retryTimer);
       if (existingScript) {
@@ -764,11 +776,16 @@ export default function MemberAuth({ mode }: { mode: Mode }) {
                 <label htmlFor="member-password">
                   {mode === 'reset' ? 'Mật khẩu mới' : 'Mật khẩu'}
                 </label>
+                {mode === 'login' && (
+                  <Link className="auth-forgot-link" href="/quen-mat-khau">
+                    Quên mật khẩu?
+                  </Link>
+                )}
               </div>
               <div className="auth-password">
                 <input
                   id="member-password"
-                  type={show ? 'text' : 'password'}
+                  type={showPassword ? 'text' : 'password'}
                   autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
                   required
                   {...form.register('password', {
@@ -787,18 +804,18 @@ export default function MemberAuth({ mode }: { mode: Mode }) {
                 />
                 <button
                   type="button"
-                  aria-label={show ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                  aria-pressed={show}
-                  onClick={() => setShow((value) => !value)}
+                  className="auth-password-toggle"
+                  aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                  aria-pressed={showPassword}
+                  onClick={() => setShowPassword((value) => !value)}
                 >
-                  {show ? 'Ẩn' : 'Hiện'}
+                  {showPassword ? (
+                    <EyeOff size={20} aria-hidden="true" />
+                  ) : (
+                    <Eye size={20} aria-hidden="true" />
+                  )}
                 </button>
               </div>
-              {mode === 'login' && (
-                <div className="auth-forgot-link">
-                  <Link href="/quen-mat-khau">Quên mật khẩu?</Link>
-                </div>
-              )}
               {mode !== 'login' && (
                 <p id="member-password-hint" className="auth-hint">
                   Dùng ít nhất 12 ký tự. Bạn có thể dùng chữ, số và ký hiệu.
@@ -814,19 +831,34 @@ export default function MemberAuth({ mode }: { mode: Mode }) {
           {(mode === 'register' || mode === 'reset') && (
             <div className="auth-field">
               <label htmlFor="member-confirm">Nhập lại mật khẩu</label>
-              <input
-                id="member-confirm"
-                type={show ? 'text' : 'password'}
-                autoComplete="new-password"
-                required
-                {...form.register('confirm', {
-                  required: 'Nhập lại mật khẩu.',
-                  validate: (value) =>
-                    value === form.getValues('password') || 'Hai mật khẩu chưa khớp.',
-                })}
-                aria-invalid={!!errors.confirm}
-                aria-describedby={errors.confirm ? 'member-confirm-error' : undefined}
-              />
+              <div className="auth-password">
+                <input
+                  id="member-confirm"
+                  type={showConfirm ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  required
+                  {...form.register('confirm', {
+                    required: 'Nhập lại mật khẩu.',
+                    validate: (value) =>
+                      value === form.getValues('password') || 'Hai mật khẩu chưa khớp.',
+                  })}
+                  aria-invalid={!!errors.confirm}
+                  aria-describedby={errors.confirm ? 'member-confirm-error' : undefined}
+                />
+                <button
+                  type="button"
+                  className="auth-password-toggle"
+                  aria-label={showConfirm ? 'Ẩn mật khẩu xác nhận' : 'Hiện mật khẩu xác nhận'}
+                  aria-pressed={showConfirm}
+                  onClick={() => setShowConfirm((value) => !value)}
+                >
+                  {showConfirm ? (
+                    <EyeOff size={20} aria-hidden="true" />
+                  ) : (
+                    <Eye size={20} aria-hidden="true" />
+                  )}
+                </button>
+              </div>
               {errors.confirm && (
                 <p id="member-confirm-error" className="auth-field-error">
                   {errors.confirm.message}
@@ -941,11 +973,19 @@ export default function MemberAuth({ mode }: { mode: Mode }) {
               </div>
             )}
             <div
-              ref={googleBtnContainerRef}
-              className="auth-google-rendered-wrapper"
-              data-testid="google-button-container"
-              style={{ display: gisStatus === 'ready' ? 'flex' : 'none' }}
-            />
+              className="auth-google-custom-container"
+              style={{ display: gisStatus === 'ready' ? 'block' : 'none' }}
+            >
+              <button type="button" className="auth-google-btn" tabIndex={-1} aria-hidden="true">
+                <GoogleIcon />
+                <span>{mode === 'register' ? 'Đăng ký bằng Google' : 'Đăng nhập bằng Google'}</span>
+              </button>
+              <div
+                ref={googleBtnContainerRef}
+                className="auth-google-rendered-wrapper"
+                data-testid="google-button-container"
+              />
+            </div>
           </div>
         )}
 

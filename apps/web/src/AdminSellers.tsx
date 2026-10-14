@@ -7,12 +7,15 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@florabot/ui';
 import type { components } from '../../../packages/contracts/src/generated/api';
 import { queryClient, request } from './api';
+import { TablePagination } from './dashboard/DataTable';
+import { clampPage, paginate } from './dashboard/pagination';
 
 type Seller = components['schemas']['AdminSellerResponse'];
 type Package = components['schemas']['PackageResponse'];
 const schema = z.object({ packageId: z.string().min(1, 'Chọn gói thuê đã thống nhất với shop.') });
 const money = (value: number | string) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(value));
+const PAGE_SIZE = 10;
 
 function Approval({
   seller,
@@ -80,6 +83,7 @@ export default function AdminSellers() {
   const { t } = useTranslation();
   const [status, setStatus] = useState('PENDING');
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
   const [approved, setApproved] = useState('');
   const confirmation = useRef<HTMLParagraphElement>(null);
   const sellers = useQuery({
@@ -95,6 +99,8 @@ export default function AdminSellers() {
       .toLocaleLowerCase('vi')
       .includes(search.trim().toLocaleLowerCase('vi')),
   );
+  const safePage = clampPage(page, visible?.length ?? 0, PAGE_SIZE);
+  const pageItems = paginate(visible ?? [], safePage, PAGE_SIZE);
   return (
     <section className="admin-sellers" aria-labelledby="admin-sellers-title">
       <h2 id="admin-sellers-title">Hồ sơ các shop hoa</h2>
@@ -107,7 +113,10 @@ export default function AdminSellers() {
             type="search"
             placeholder="Nhập tên shop hoặc số điện thoại…"
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setPage(1);
+            }}
           />
         </div>
         <div>
@@ -115,7 +124,10 @@ export default function AdminSellers() {
           <select
             id="shop-status"
             value={status}
-            onChange={(event) => setStatus(event.target.value)}
+            onChange={(event) => {
+              setStatus(event.target.value);
+              setPage(1);
+            }}
           >
             <option value="">Tất cả trạng thái</option>
             {['PENDING', 'APPROVED', 'ACTIVE', 'PAST_DUE', 'SUSPENDED', 'CLOSED'].map((value) => (
@@ -126,7 +138,9 @@ export default function AdminSellers() {
           </select>
         </div>
       </div>
-      <p className="quiet">Hiển thị tối đa 100 hồ sơ mới nhất của trạng thái đã chọn.</p>
+      <p className="quiet">
+        Hiển thị tối đa 100 hồ sơ mới nhất, chia thành từng trang để dễ theo dõi.
+      </p>
       <p ref={confirmation} role="status" tabIndex={-1}>
         {approved ? `Đã duyệt ${approved}. Shop cần thanh toán gói để bắt đầu mở bán.` : ''}
       </p>
@@ -149,7 +163,7 @@ export default function AdminSellers() {
       )}
       {visible?.length === 0 && <p>Không có hồ sơ phù hợp với bộ lọc hiện tại.</p>}
       <ul className="admin-shop-list">
-        {visible?.map((seller) => (
+        {pageItems.map((seller) => (
           <li key={seller.id}>
             <details>
               <summary>
@@ -196,6 +210,15 @@ export default function AdminSellers() {
           </li>
         ))}
       </ul>
+      {(visible?.length ?? 0) > 0 && (
+        <TablePagination
+          page={safePage}
+          pageSize={PAGE_SIZE}
+          totalItems={visible?.length ?? 0}
+          onPageChange={setPage}
+          ariaLabel="Phân trang hồ sơ shop hoa"
+        />
+      )}
     </section>
   );
 }

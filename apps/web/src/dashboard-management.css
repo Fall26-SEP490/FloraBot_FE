@@ -92,7 +92,7 @@
   width: 100%;
   min-width: 760px;
   border-collapse: collapse;
-  font-size: 0.84rem;
+  font-size: 0.9rem;
 }
 
 .management-table th,
@@ -106,7 +106,7 @@
 .management-table th {
   background: var(--color-workspace-surface-muted);
   color: var(--color-workspace-ink);
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   letter-spacing: 0.025em;
   text-transform: uppercase;
 }
@@ -460,7 +460,7 @@
   .management-table td::before {
     content: attr(data-label);
     color: var(--color-workspace-muted);
-    font-size: 0.72rem;
+    font-size: 0.8rem;
     font-weight: 700;
     text-transform: uppercase;
   }

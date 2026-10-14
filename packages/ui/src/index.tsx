@@ -51,4 +51,6 @@ export {
   Users,
   User,
   LogIn,
+  Eye,
+  EyeOff,
 } from 'lucide-react';

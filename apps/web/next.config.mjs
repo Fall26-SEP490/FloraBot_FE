@@ -1,4 +1,4 @@
-const apiOrigin = process.env.API_PROXY_TARGET || 'http://127.0.0.1:8088';
+const apiOrigin = process.env.API_PROXY_TARGET || 'http://127.0.0.1:5080';
 
 export default {
   transpilePackages: ['@florabot/ui', '@florabot/contracts'],

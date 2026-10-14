@@ -218,7 +218,9 @@ test('Create artificial flower: validation, duplicate tags rejection, 409 duplic
 
   // Second submit -> success 201 with the same client id (stable across retry)
   await createForm.getByRole('button', { name: 'Tạo mẫu hoa' }).click();
-  await expect(createForm.getByText('Đã tạo mẫu hoa giả mới ở trạng thái Bản nháp.')).toBeVisible();
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Đã tạo mẫu hoa giả mới ở trạng thái Bản nháp.' }),
+  ).toBeFocused();
   expect(lastCapturedPayload?.id).toBe(initialGeneratedId);
   expect(lastCapturedPayload?.name).toBe('Bó cẩm tú cầu giả');
   expect(lastCapturedPayload?.price).toBe(280000);

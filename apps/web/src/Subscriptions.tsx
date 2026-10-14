@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -66,13 +66,17 @@ export default function Subscriptions({ session }: { session: Session }) {
         throw new Error('Invalid payment URL');
       return { ...result, subscriptionId: id };
     },
-    onSuccess: () => requestAnimationFrame(() => linkRef.current?.focus()),
   });
   const allowed = ['APPROVED', 'ACTIVE', 'PAST_DUE'].includes(session.sellerStatus || '');
   const hasPending = overview.data?.subscriptions.some((row) => row.status === 'PENDING_PAYMENT');
   const selectedPending = overview.data?.subscriptions.some(
     (row) => row.id === payment.data?.subscriptionId && row.status === 'PENDING_PAYMENT',
   );
+  useEffect(() => {
+    if (!payment.data || !selectedPending) return;
+    const frame = requestAnimationFrame(() => linkRef.current?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, [payment.data, selectedPending]);
   return (
     <section
       id="subscriptions"

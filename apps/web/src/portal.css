@@ -1,15 +1,9 @@
-body {
-  min-width: 320px;
-}
 .skip-link:focus {
   position: relative;
   display: table;
   top: auto;
   left: auto;
   margin: 0.5rem;
-}
-main {
-  padding: 2rem 5%;
 }
 .portal-brand {
   font: 800 2rem var(--font-display);
@@ -28,7 +22,7 @@ main {
   flex-direction: column;
   justify-content: center;
 }
-h1 {
+:where(.workspace, .member-page, .receipt-page) h1 {
   font-size: clamp(2.2rem, 4vw, 3.5rem);
   font-weight: 800;
   line-height: 1.15;
@@ -55,17 +49,17 @@ h1 {
 .login-form form .button {
   margin-top: 1.2rem;
 }
-h2 {
+:where(.workspace, .member-page, .receipt-page) h2 {
   font-size: 1.8rem;
   line-height: 1.2;
   font-weight: 800;
 }
-label {
+:where(.workspace, .member-page, .receipt-page) label {
   display: block;
   margin: 1.2rem 0 0.4rem;
   font-weight: 600;
 }
-input {
+:where(.workspace, .member-page, .receipt-page) input {
   width: 100%;
   min-height: 52px;
   border: 1px solid var(--color-line);
@@ -184,10 +178,10 @@ input {
   border-bottom: 1px solid #c6d9c7;
   gap: 1rem;
 }
-dt {
+:where(.workspace, .member-page, .receipt-page) dt {
   color: var(--color-muted);
 }
-dd {
+:where(.workspace, .member-page, .receipt-page) dd {
   margin: 0;
   overflow-wrap: anywhere;
 }
@@ -852,7 +846,7 @@ dd {
   color: #183e2b;
   margin-bottom: 0.35rem;
 }
-select {
+:where(.workspace, .member-page, .receipt-page) select {
   min-height: 52px;
   width: 100%;
   border: 1px solid var(--color-line);
