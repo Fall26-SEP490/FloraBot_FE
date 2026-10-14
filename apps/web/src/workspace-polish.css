@@ -1,0 +1,718 @@
+/* Scoped stylesheet for FloraBot role workspaces and account surfaces only.
+   Strictly scoped under .workspace-portal-root to avoid any global or public marketing regression. */
+
+.workspace-portal-root {
+  width: 100%;
+  max-width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  box-sizing: border-box;
+  overflow-x: clip;
+  background-color: #f3f7f0;
+  color: #183e2b;
+}
+
+.workspace-portal-root *,
+.workspace-portal-root *::before,
+.workspace-portal-root *::after {
+  box-sizing: border-box;
+}
+
+/* Header Refinement & Long Name Truncation */
+.workspace-portal-root .dashboard-header {
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 12px 24px;
+  background: #ffffff;
+  border-bottom: 1px solid #c9d9c8;
+  box-shadow: 0 1px 3px rgba(24, 62, 43, 0.05);
+}
+
+.workspace-portal-root .dashboard-brand {
+  min-width: 190px;
+  flex-shrink: 0;
+  color: #183e2b;
+}
+
+.workspace-portal-root .dashboard-role {
+  flex-shrink: 0;
+  background: #eef5ea;
+  border: 1px solid #c9d9c8;
+  color: #174b35;
+  font-weight: 600;
+  font-size: 0.8rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+}
+
+.workspace-portal-root .dashboard-user {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-left: auto;
+  max-width: 280px;
+  min-height: 44px;
+  padding: 0.3rem 0.75rem;
+  border-radius: 8px;
+  background: #f8faf6;
+  border: 1px solid #e1ebe0;
+  color: #183e2b;
+  text-decoration: none;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.workspace-portal-root .dashboard-user:hover {
+  background: #eef5ea;
+  border-color: #c9d9c8;
+}
+
+.workspace-portal-root .dashboard-user:focus-visible {
+  outline: 2px solid #183e2b;
+  outline-offset: 2px;
+}
+
+.workspace-portal-root .dashboard-user span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspace-portal-root .dashboard-logout {
+  flex-shrink: 0;
+  min-height: 44px;
+}
+
+/* Viewport ~934px and tablet header wrapping */
+@media (max-width: 1024px) {
+  .workspace-portal-root .dashboard-header {
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
+    padding: 10px 16px;
+  }
+
+  .workspace-portal-root .dashboard-user {
+    max-width: 220px;
+  }
+}
+
+@media (max-width: 768px) {
+  .workspace-portal-root .dashboard-header {
+    padding: 10px 14px;
+  }
+
+  .workspace-portal-root .dashboard-brand {
+    min-width: 0;
+  }
+
+  .workspace-portal-root .dashboard-user {
+    max-width: 170px;
+    font-size: 0.8rem;
+  }
+}
+
+/* Layout Grid & Main Content Shell */
+.workspace-portal-root .dashboard-shell {
+  display: grid;
+  grid-template-columns: 244px minmax(0, 1fr);
+  width: 100%;
+  max-width: 100%;
+  min-height: calc(100dvh - 72px);
+  background: #f3f7f0;
+}
+
+.workspace-portal-root .dashboard-content {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 28px 32px 56px;
+  overflow-x: clip;
+}
+
+@media (max-width: 1100px) {
+  .workspace-portal-root .dashboard-content {
+    padding: 24px 20px 48px;
+  }
+}
+
+@media (max-width: 900px) {
+  .workspace-portal-root .dashboard-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .workspace-portal-root .dashboard-content {
+    padding: 20px 16px 40px;
+  }
+}
+
+/* Sidebar & Navigation */
+.workspace-portal-root .workspace-sidebar {
+  background: #174b35;
+  color: #ffffff;
+  padding: 20px 14px;
+  min-width: 0;
+}
+
+.workspace-portal-root .workspace-sidebar nav {
+  position: sticky;
+  top: 14px;
+  max-height: calc(100dvh - 28px);
+  overflow-y: auto;
+  padding: 4px;
+  scrollbar-color: #d3e5ca #174b35;
+}
+
+.workspace-portal-root .workspace-sidebar a {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 44px;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1.4;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.workspace-portal-root .workspace-sidebar a:hover {
+  background: #286447;
+}
+
+.workspace-portal-root .workspace-sidebar a[aria-current='page'] {
+  background: #dbedbe;
+  color: #173e2b;
+  font-weight: 700;
+}
+
+.workspace-portal-root .workspace-sidebar a:focus-visible {
+  outline: 2px solid #e0efc7;
+  outline-offset: 2px;
+}
+
+/* Mobile Sidebar Toggle */
+@media (max-width: 900px) {
+  .workspace-portal-root .workspace-menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 44px;
+    padding: 0.6rem 0.85rem;
+    border: 1px solid #a6c4ae;
+    border-radius: 8px;
+    background: #174b35;
+    color: #ffffff;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .workspace-portal-root .workspace-menu-toggle:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 2px;
+  }
+}
+
+/* General Panels & Card Refinements */
+.workspace-portal-root .dashboard-panel,
+.workspace-portal-root .dashboard-focus,
+.workspace-portal-root .dashboard-business,
+.workspace-portal-root .management-panel,
+.workspace-portal-root .workspace-account-card,
+.workspace-portal-root .profile-section {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Truthful Personnel Summary Cards on Overview */
+.workspace-portal-root .personnel-summary-card {
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  padding: 24px;
+  background: #ffffff;
+  border: 1px solid #c9d9c8;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(24, 62, 43, 0.04);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.workspace-portal-root .personnel-summary-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.workspace-portal-root .personnel-summary-header h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #183e2b;
+  margin: 0.2rem 0 0.35rem;
+}
+
+.workspace-portal-root .personnel-summary-header p {
+  color: #476451;
+  font-size: 0.86rem;
+  margin: 0;
+}
+
+.workspace-portal-root .personnel-summary-eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #315841;
+  margin: 0;
+}
+
+.workspace-portal-root .personnel-summary-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+  margin: 1.25rem 0;
+}
+
+.workspace-portal-root .personnel-summary-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.85rem 1rem;
+  background: #f8faf6;
+  border: 1px solid #e1ebe0;
+  border-radius: 8px;
+}
+
+.workspace-portal-root .personnel-summary-stat span {
+  font-size: 0.8rem;
+  color: #476451;
+}
+
+.workspace-portal-root .personnel-summary-stat strong {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #183e2b;
+}
+
+.workspace-portal-root .personnel-summary-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid #eef2ec;
+}
+
+.workspace-portal-root .personnel-summary-actions a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #174b35;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.workspace-portal-root .personnel-summary-actions a:hover {
+  color: #2e6844;
+}
+
+.workspace-portal-root .personnel-summary-actions a:focus-visible {
+  outline: 2px solid #183e2b;
+  outline-offset: 2px;
+}
+
+/* Scroll Region for Genuinely Wide Tables: Prevents Page-Level Overflow */
+.workspace-portal-root .management-table-wrap,
+.workspace-portal-root .workspace-table-scroll {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
+  border: 1px solid #c9d9c8;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.workspace-portal-root .management-table-wrap:focus-visible,
+.workspace-portal-root .workspace-table-scroll:focus-visible {
+  outline: 2px solid #183e2b;
+  outline-offset: 2px;
+}
+
+@media (min-width: 721px) {
+  .workspace-portal-root .management-table {
+    width: 100%;
+    min-width: 640px;
+    border-collapse: collapse;
+  }
+}
+
+@media (max-width: 720px) {
+  .workspace-portal-root .management-table {
+    min-width: 0;
+    width: 100%;
+  }
+  .workspace-portal-root .management-table-wrap {
+    overflow: visible;
+  }
+}
+
+/* Explicit Read-Only Preview Badge for Unbacked Backend Previews */
+.workspace-portal-root .preview-readonly-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: #fdf8e6;
+  border: 1px solid #e2cb69;
+  color: #574505;
+}
+
+.workspace-portal-root .preview-readonly-note {
+  margin: 0.5rem 0 1rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: 6px;
+  background: #fcf9ee;
+  border-left: 3px solid #d4b13a;
+  color: #4a3e0f;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+/* Accessible Interactive Controls & Form Elements in Workspaces */
+.workspace-portal-root button:not([disabled]),
+.workspace-portal-root a,
+.workspace-portal-root summary {
+  touch-action: manipulation;
+}
+
+.workspace-portal-root .button {
+  min-height: 44px;
+}
+
+.workspace-portal-root :is(input:not([type='checkbox']):not([type='radio']), select, textarea) {
+  min-height: 48px;
+  font-size: 0.95rem;
+}
+
+.workspace-portal-root :is(input, select, textarea, button, a):focus-visible {
+  outline: 2px solid #183e2b;
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Customer / Member Account Surface (.member-page)
+   ========================================================================== */
+
+.workspace-portal-root .member-page {
+  max-width: 1120px;
+  width: 100%;
+  margin: 1.5rem auto 3.5rem;
+  padding: clamp(1.25rem, 3.5vw, 2.5rem);
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #c9d9c8;
+  box-shadow: 0 4px 20px rgba(24, 62, 43, 0.05);
+}
+
+/* Compact h1: max ~36px desktop / ~26-28px mobile, eliminating 51.2px compute at 1024px */
+.workspace-portal-root .member-page h1 {
+  font-size: clamp(1.4rem, 2.2vw, 2rem);
+  line-height: 1.25;
+  color: #113421;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.5rem;
+  max-width: 28ch;
+}
+
+.workspace-portal-root .member-page > p {
+  color: #476451;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0 0 1.25rem;
+  max-width: 65ch;
+}
+
+/* Anchor Chips & Navigation */
+.workspace-portal-root .member-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0 1.25rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid #e1ebe0;
+}
+
+.workspace-portal-root .member-tabs a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0.35rem 0.95rem;
+  border-radius: 999px;
+  background: #f0f5ee;
+  border: 1px solid #c9d9c8;
+  color: #174b35;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.workspace-portal-root .member-tabs a:hover {
+  background: #dbedbe;
+  border-color: #a8c99e;
+  color: #113421;
+}
+
+.workspace-portal-root .member-tabs a:focus-visible {
+  outline: 2px solid #183e2b;
+  outline-offset: 2px;
+}
+
+/* Card Sections: Controlled vertical gaps & clean borders */
+.workspace-portal-root .member-page section {
+  margin-top: 1.5rem;
+  padding: 1.5rem 1.75rem;
+  background: #fafcfa;
+  border: 1px solid #dce6d7;
+  border-radius: 12px;
+  scroll-margin-top: 2rem;
+}
+
+.workspace-portal-root .member-page section h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #183e2b;
+  margin: 0 0 0.85rem;
+  line-height: 1.35;
+}
+
+.workspace-portal-root .member-page section p {
+  color: #476451;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+/* Summary Grid in Member Profile Section */
+.workspace-portal-root .member-page .bank-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.workspace-portal-root .member-page .bank-summary div {
+  padding: 0.85rem 1rem;
+  background: #ffffff;
+  border: 1px solid #d8e5d5;
+  border-radius: 8px;
+}
+
+.workspace-portal-root .member-page .bank-summary dt {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #556c5e;
+  margin-bottom: 0.25rem;
+}
+
+.workspace-portal-root .member-page .bank-summary dd {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #143e27;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Order List Refinements */
+.workspace-portal-root .member-orders {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.workspace-portal-root .member-orders > li {
+  background: #ffffff;
+  border: 1px solid #dce6d7;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+}
+
+.workspace-portal-root .member-orders h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #183e2b;
+  margin: 0 0 0.35rem;
+}
+
+/* Pagination: Proper spacing and gap, not stuck together */
+.workspace-portal-root .member-page .stock-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e1ebe0;
+}
+
+.workspace-portal-root .member-page .stock-actions .button,
+.workspace-portal-root .member-page .stock-actions button {
+  min-height: 40px;
+  padding: 0.4rem 1rem;
+}
+
+.workspace-portal-root .member-page .stock-actions span {
+  padding: 0 0.5rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #3b5040;
+}
+
+/* Visually Secondary Shop Registration */
+.workspace-portal-root .member-page #member-shop {
+  background: #f4f8f2;
+  border: 1px dashed #a4c29f;
+  border-radius: 12px;
+  margin-top: 2rem;
+}
+
+/* Responsive adjustments for Member Account */
+@media (max-width: 768px) {
+  .workspace-portal-root .member-page {
+    margin: 1rem auto 2.5rem;
+    padding: 1.25rem 1rem;
+  }
+
+  .workspace-portal-root .member-page section {
+    padding: 1.25rem 1rem;
+  }
+}
+
+/* ==========================================================================
+   Personal Profile Surface (.profile-page)
+   ========================================================================== */
+
+.workspace-portal-root .profile-page {
+  max-width: 1080px;
+  width: 100%;
+  margin: 1.5rem auto 3.5rem;
+  padding: clamp(1.25rem, 3.5vw, 2.5rem);
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #c9d9c8;
+  box-shadow: 0 4px 20px rgba(24, 62, 43, 0.05);
+}
+
+.workspace-portal-root .profile-header-titles h1 {
+  font-size: clamp(1.4rem, 2.2vw, 2rem);
+  line-height: 1.25;
+  color: #113421;
+  font-weight: 800;
+  margin: 0;
+}
+
+.workspace-portal-root .profile-header-titles p {
+  color: #476451;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  margin-top: 0.35rem;
+}
+
+/* Quick Nav Anchors in Profile */
+.workspace-portal-root .profile-quick-nav {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Profile Sections: Consistent card styling */
+.workspace-portal-root .profile-section {
+  margin-top: 1.25rem;
+  padding: 1.5rem 1.75rem;
+  background: #fafcfa;
+  border: 1px solid #dce6d7;
+  border-radius: 12px;
+}
+
+.workspace-portal-root .profile-section-heading {
+  margin-bottom: 1rem;
+}
+
+.workspace-portal-root .profile-section-heading h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #183e2b;
+  margin: 0 0 0.35rem;
+}
+
+.workspace-portal-root .profile-section-heading p {
+  color: #476451;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.workspace-portal-root .profile-summary-grid {
+  background: #ffffff;
+  border: 1px solid #d8e5d5;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.workspace-portal-root .profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.workspace-portal-root .profile-actions .button,
+.workspace-portal-root .profile-actions button,
+.workspace-portal-root .profile-actions a {
+  min-height: 42px;
+}
+
+@media (max-width: 768px) {
+  .workspace-portal-root .profile-page {
+    margin: 1rem auto 2.5rem;
+    padding: 1.25rem 1rem;
+  }
+
+  .workspace-portal-root .profile-section {
+    padding: 1.25rem 1rem;
+  }
+}

@@ -45,10 +45,10 @@ const configs: Record<ManagementRole, RoleConfig> = {
     nameLabel: 'Họ và tên',
     referenceLabel: 'Email',
     ownerLabel: 'Vai trò',
-    createLabel: 'Thêm tài khoản',
-    canCreate: true,
-    canDisable: true,
-    detailsEditable: true,
+    createLabel: '',
+    canCreate: false,
+    canDisable: false,
+    detailsEditable: false,
     inactiveStatus: 'INACTIVE',
     statuses: [
       { value: 'ACTIVE', label: 'Đang hoạt động' },
@@ -108,10 +108,10 @@ const configs: Record<ManagementRole, RoleConfig> = {
     nameLabel: 'Tên mẫu hoa',
     referenceLabel: 'Mã SKU',
     ownerLabel: 'Người phụ trách',
-    createLabel: 'Thêm mẫu hoa',
-    canCreate: true,
-    canDisable: true,
-    detailsEditable: true,
+    createLabel: '',
+    canCreate: false,
+    canDisable: false,
+    detailsEditable: false,
     inactiveStatus: 'INACTIVE',
     statuses: [
       { value: 'ACTIVE', label: 'Đang bán' },
@@ -442,10 +442,12 @@ export default function DashboardManagement({ dashboardRole }: { dashboardRole: 
               Xem
               <span className="sr-only"> {record.name}</span>
             </button>
-            <button type="button" onClick={() => setEditor({ mode: 'edit', record })}>
-              Sửa
-              <span className="sr-only"> {record.name}</span>
-            </button>
+            {config.detailsEditable && (
+              <button type="button" onClick={() => setEditor({ mode: 'edit', record })}>
+                Sửa
+                <span className="sr-only"> {record.name}</span>
+              </button>
+            )}
             {config.canDisable && record.status !== config.inactiveStatus && (
               <button
                 type="button"
@@ -494,7 +496,10 @@ export default function DashboardManagement({ dashboardRole }: { dashboardRole: 
     <section className="management-panel" aria-labelledby={`management-${dashboardRole}-title`}>
       <div className="management-heading">
         <div>
-          <p className="management-eyebrow">{config.eyebrow}</p>
+          <span className="preview-readonly-badge">Dữ liệu minh họa (Chỉ xem)</span>
+          <p className="management-eyebrow" style={{ marginTop: '0.45rem' }}>
+            {config.eyebrow}
+          </p>
           <h2 id={`management-${dashboardRole}-title`}>{config.title}</h2>
           <p>{config.description}</p>
         </div>
@@ -507,7 +512,8 @@ export default function DashboardManagement({ dashboardRole }: { dashboardRole: 
       </div>
 
       <p className="management-demo-note" role="note">
-        Dữ liệu minh họa cục bộ — các thay đổi sẽ được đặt lại khi tải lại trang.
+        Dữ liệu minh họa — bảng mẫu ở chế độ chỉ xem (read-only preview), không hỗ trợ thao tác thêm
+        hoặc chỉnh sửa.
       </p>
 
       <div

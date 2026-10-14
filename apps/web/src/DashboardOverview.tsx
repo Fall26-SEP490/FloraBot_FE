@@ -5,7 +5,6 @@ import { Button, ArrowRight, Check, CircleAlert } from '@florabot/ui';
 import type { components } from '../../../packages/contracts/src/generated/api';
 import { request, type Session } from './api';
 import { statusName, type WebOrder } from './WebRequests';
-import DashboardManagement from './dashboard/DashboardManagement';
 
 type Row = { id: string; title: string; detail: string; state: string };
 type Feed = { rows: Row[]; more: boolean };
@@ -129,6 +128,196 @@ function OrderFeed({ session }: { session: Session }) {
     />
   );
 }
+type PersonnelItem = {
+  id: string;
+  email: string;
+  fullName: string;
+  phone: string | null;
+  status: 'ACTIVE' | 'LOCKED' | 'DISABLED';
+  role: string;
+  createdAt: string;
+};
+
+function AdminPersonnelSummary({ session }: { session: Session }) {
+  const query = useQuery({
+    queryKey: ['dashboard-admin-managers', session.id],
+    queryFn: () => request<PersonnelItem[]>('/admin/managers'),
+    refetchInterval: 60_000,
+  });
+
+  const items = Array.isArray(query.data)
+    ? query.data
+    : Array.isArray((query.data as unknown as { items?: PersonnelItem[] })?.items)
+      ? ((query.data as unknown as { items: PersonnelItem[] }).items ?? [])
+      : [];
+  const activeCount = items.filter((m) => m.status === 'ACTIVE').length;
+  const lockedCount = items.filter((m) => m.status === 'LOCKED').length;
+  const disabledCount = items.filter((m) => m.status === 'DISABLED').length;
+  const totalCount = items.length;
+
+  return (
+    <section className="personnel-summary-card" aria-labelledby="admin-managers-summary-title">
+      <div className="personnel-summary-header">
+        <div>
+          <p className="personnel-summary-eyebrow">Quản trị nhân sự</p>
+          <h2 id="admin-managers-summary-title">Đội ngũ Quản lý vận hành</h2>
+          <p>
+            Nhân sự điều phối kỹ thuật viên, theo dõi sự cố và vận hành các điểm tủ hoa trên toàn hệ
+            thống.
+          </p>
+        </div>
+        <Link className="button button-primary" href="/admin/managers">
+          Quản lý tài khoản <ArrowRight size={17} aria-hidden="true" />
+        </Link>
+      </div>
+
+      {query.isPending ? (
+        <p role="status" className="dashboard-placeholder">
+          Đang tải thông tin đội ngũ quản lý vận hành…
+        </p>
+      ) : query.isError ? (
+        <div className="dashboard-empty">
+          <CircleAlert size={28} aria-hidden="true" />
+          <p role="alert">
+            Chưa tải được danh sách Quản lý vận hành. Dữ liệu lỗi không được tính là danh sách
+            trống.
+          </p>
+          <Button
+            variant="outline"
+            disabled={query.isFetching}
+            onClick={() => void query.refetch()}
+          >
+            Thử lại danh sách quản lý
+          </Button>
+        </div>
+      ) : (
+        <>
+          <div className="personnel-summary-stats" aria-label="Thống kê nhân sự quản lý vận hành">
+            <article className="personnel-summary-stat">
+              <span>Tổng số tài khoản</span>
+              <strong>{totalCount}</strong>
+            </article>
+            <article className="personnel-summary-stat">
+              <span>Đang hoạt động</span>
+              <strong style={{ color: 'var(--color-status-success-ink, #1b5e20)' }}>
+                {activeCount}
+              </strong>
+            </article>
+            <article className="personnel-summary-stat">
+              <span>Tạm khóa / Vô hiệu hóa</span>
+              <strong
+                style={{
+                  color:
+                    lockedCount + disabledCount > 0
+                      ? 'var(--color-status-danger-ink, #a8071a)'
+                      : undefined,
+                }}
+              >
+                {lockedCount + disabledCount}
+              </strong>
+            </article>
+          </div>
+          <div className="personnel-summary-actions">
+            <Link href="/admin/managers">
+              Mở danh sách quản lý vận hành <ArrowRight size={16} aria-hidden="true" />
+            </Link>
+            <span className="dashboard-data-note">Dữ liệu thực từ hệ thống quản lý tài khoản</span>
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
+function SellerPersonnelSummary({ session }: { session: Session }) {
+  const sellerId = session.sellerId;
+  const query = useQuery({
+    queryKey: ['dashboard-seller-staff', session.id, sellerId],
+    queryFn: () => request<PersonnelItem[]>(`/sellers/${sellerId}/staff/accounts`),
+    enabled: !!sellerId,
+    refetchInterval: 60_000,
+  });
+
+  const items = Array.isArray(query.data)
+    ? query.data
+    : Array.isArray((query.data as unknown as { items?: PersonnelItem[] })?.items)
+      ? ((query.data as unknown as { items: PersonnelItem[] }).items ?? [])
+      : [];
+  const activeCount = items.filter((s) => s.status === 'ACTIVE').length;
+  const lockedCount = items.filter((s) => s.status === 'LOCKED').length;
+  const disabledCount = items.filter((s) => s.status === 'DISABLED').length;
+  const totalCount = items.length;
+
+  return (
+    <section className="personnel-summary-card" aria-labelledby="seller-staff-summary-title">
+      <div className="personnel-summary-header">
+        <div>
+          <p className="personnel-summary-eyebrow">Vận hành shop</p>
+          <h2 id="seller-staff-summary-title">Đội ngũ Nhân viên shop</h2>
+          <p>Nhân sự thực hiện công việc giao hoa, kiểm tra tem bó hoa và nạp ô tủ cho shop.</p>
+        </div>
+        <Link className="button button-primary" href="/seller/staff">
+          Quản lý nhân viên <ArrowRight size={17} aria-hidden="true" />
+        </Link>
+      </div>
+
+      {query.isPending ? (
+        <p role="status" className="dashboard-placeholder">
+          Đang tải danh sách nhân viên shop…
+        </p>
+      ) : query.isError ? (
+        <div className="dashboard-empty">
+          <CircleAlert size={28} aria-hidden="true" />
+          <p role="alert">
+            Chưa tải được danh sách nhân viên shop. Dữ liệu lỗi không được tính là danh sách trống.
+          </p>
+          <Button
+            variant="outline"
+            disabled={query.isFetching}
+            onClick={() => void query.refetch()}
+          >
+            Thử lại danh sách nhân viên
+          </Button>
+        </div>
+      ) : (
+        <>
+          <div className="personnel-summary-stats" aria-label="Thống kê nhân sự nhân viên shop">
+            <article className="personnel-summary-stat">
+              <span>Tổng số nhân viên</span>
+              <strong>{totalCount}</strong>
+            </article>
+            <article className="personnel-summary-stat">
+              <span>Đang làm việc</span>
+              <strong style={{ color: 'var(--color-status-success-ink, #1b5e20)' }}>
+                {activeCount}
+              </strong>
+            </article>
+            <article className="personnel-summary-stat">
+              <span>Tạm khóa / Vô hiệu hóa</span>
+              <strong
+                style={{
+                  color:
+                    lockedCount + disabledCount > 0
+                      ? 'var(--color-status-danger-ink, #a8071a)'
+                      : undefined,
+                }}
+              >
+                {lockedCount + disabledCount}
+              </strong>
+            </article>
+          </div>
+          <div className="personnel-summary-actions">
+            <Link href="/seller/staff">
+              Mở danh sách nhân viên shop <ArrowRight size={16} aria-hidden="true" />
+            </Link>
+            <span className="dashboard-data-note">Dữ liệu thực từ hệ thống quản lý shop</span>
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
 function AdminOverview({ session }: { session: Session }) {
   const incidents = useQuery({
     queryKey: ['dashboard-incidents', session.id],
@@ -173,7 +362,7 @@ function AdminOverview({ session }: { session: Session }) {
           Theo dõi công việc <ArrowRight size={18} aria-hidden="true" />
         </Link>
       </div>
-      <DashboardManagement dashboardRole="ADMIN" />
+      <AdminPersonnelSummary session={session} />
       <div className="dashboard-overview-grid">
         <FeedPanel
           title="Sự cố cần xử lý"
@@ -253,7 +442,7 @@ function SellerOverview({ session }: { session: Session }) {
           Quản lý mẫu hoa <ArrowRight size={18} aria-hidden="true" />
         </Link>
       </div>
-      <DashboardManagement dashboardRole="SELLER" />
+      <SellerPersonnelSummary session={session} />
       <section className="dashboard-business" aria-label="Tình hình cửa hàng">
         <div>
           <h2>Mẫu đang bán</h2>

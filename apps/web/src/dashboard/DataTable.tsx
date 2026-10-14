@@ -22,7 +22,11 @@ export function DataTable<T>({
   emptyMessage: string;
 }) {
   return (
-    <div className="management-table-wrap">
+    <div
+      className="management-table-wrap workspace-table-scroll"
+      role="region"
+      aria-label={`Bảng dữ liệu ${caption}`}
+    >
       <table className="management-table">
         <caption className="sr-only">{caption}</caption>
         <thead>

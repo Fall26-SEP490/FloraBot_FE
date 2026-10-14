@@ -70,9 +70,9 @@ export default function MemberAccount() {
         <h1>Góc nhỏ của {profile.data?.fullName || 'bạn'}</h1>
         <p>Thông tin thành viên và những dịp bạn gửi trao yêu thương.</p>
         <nav className="member-tabs" aria-label="Trong tài khoản">
+          <a href="#member-profile">Hồ sơ cá nhân</a>
           <a href="#web-orders">Đơn đặt trước</a>
           <a href="#member-orders">Lịch sử mua</a>
-          <a href="#member-profile">Hồ sơ</a>
           <a href="#member-security">Bảo mật</a>
           <a href="#member-shop">Shop của bạn</a>
         </nav>
@@ -80,8 +80,6 @@ export default function MemberAccount() {
         <p role="alert" className="error">
           {error}
         </p>
-        <WebRequests mode="member" />
-        <MemberShop />
         <section id="member-profile">
           <h2>Thông tin của bạn</h2>
           {profile.isPending ? (
@@ -116,6 +114,7 @@ export default function MemberAccount() {
             </>
           )}
         </section>
+        <WebRequests mode="member" />
         <section id="member-orders">
           <h2>Lịch sử mua hoa</h2>
           {history.isPending ? (
@@ -212,6 +211,7 @@ export default function MemberAccount() {
             </Button>
           </form>
         </section>
+        <MemberShop />
       </main>
     </>
   );

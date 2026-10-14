@@ -108,6 +108,7 @@ export default function WorkspaceNavigation({
   const [expanded, setExpanded] = useState(false);
   const toggle = useRef<HTMLButtonElement>(null);
   const base = workspaceBase(role);
+  const closeMenu = () => setExpanded(false);
   const handleEscape = (event: React.KeyboardEvent) => {
     if (event.key === 'Escape' && expanded) {
       setExpanded(false);
@@ -134,22 +135,27 @@ export default function WorkspaceNavigation({
       >
         {role === 'TECHNICIAN' ? (
           <>
-            <Link onKeyDown={handleEscape} href="/technician" aria-current="page">
+            <Link
+              onKeyDown={handleEscape}
+              onClick={closeMenu}
+              href="/technician"
+              aria-current="page"
+            >
               <ClipboardList size={19} aria-hidden="true" />
               Công việc kỹ thuật
             </Link>
-            <Link onKeyDown={handleEscape} href="#technician-guide">
+            <Link onKeyDown={handleEscape} onClick={closeMenu} href="#technician-guide">
               <ListChecks size={19} aria-hidden="true" />
               Hướng dẫn xử lý sự cố
             </Link>
           </>
         ) : role === 'SELLER_STAFF' ? (
           <>
-            <Link onKeyDown={handleEscape} href="/staff" aria-current="page">
+            <Link onKeyDown={handleEscape} onClick={closeMenu} href="/staff" aria-current="page">
               <ClipboardList size={19} aria-hidden="true" />
               Công việc giao hoa
             </Link>
-            <Link onKeyDown={handleEscape} href="#staff-guide">
+            <Link onKeyDown={handleEscape} onClick={closeMenu} href="#staff-guide">
               <ListChecks size={19} aria-hidden="true" />
               Hướng dẫn làm việc
             </Link>
@@ -158,6 +164,7 @@ export default function WorkspaceNavigation({
           <>
             <Link
               onKeyDown={handleEscape}
+              onClick={closeMenu}
               href="/operations"
               aria-current={section === 'overview' ? 'page' : undefined}
             >
@@ -168,6 +175,7 @@ export default function WorkspaceNavigation({
               <p>Vận hành kỹ thuật</p>
               <Link
                 onKeyDown={handleEscape}
+                onClick={closeMenu}
                 href="/operations#staff-tasks"
                 aria-current={section === 'tasks' ? 'page' : undefined}
               >
@@ -176,13 +184,14 @@ export default function WorkspaceNavigation({
               </Link>
               <Link
                 onKeyDown={handleEscape}
+                onClick={closeMenu}
                 href="/operations/technicians"
                 aria-current={section === 'technicians' ? 'page' : undefined}
               >
                 <Users size={19} aria-hidden="true" />
                 <span>Kỹ thuật viên</span>
               </Link>
-              <Link onKeyDown={handleEscape} href="#operations-guide">
+              <Link onKeyDown={handleEscape} onClick={closeMenu} href="#operations-guide">
                 <ClipboardList size={19} aria-hidden="true" />
                 <span>Hướng dẫn điều phối</span>
               </Link>
@@ -192,6 +201,7 @@ export default function WorkspaceNavigation({
           <>
             <Link
               onKeyDown={handleEscape}
+              onClick={closeMenu}
               href={base}
               aria-current={section === 'overview' ? 'page' : undefined}
             >
@@ -210,6 +220,7 @@ export default function WorkspaceNavigation({
                   return (
                     <Link
                       onKeyDown={handleEscape}
+                      onClick={closeMenu}
                       key={key}
                       href={`${base}/${key}`}
                       aria-current={section === key ? 'page' : undefined}
@@ -225,16 +236,16 @@ export default function WorkspaceNavigation({
         )}
         <div className="workspace-personal-links">
           {role === 'SELLER' && (
-            <Link onKeyDown={handleEscape} href="/tai-khoan">
+            <Link onKeyDown={handleEscape} onClick={closeMenu} href="/tai-khoan">
               <Users size={19} aria-hidden="true" />
               Tài khoản & mua hoa
             </Link>
           )}
-          <Link onKeyDown={handleEscape} href="/ho-so">
+          <Link onKeyDown={handleEscape} onClick={closeMenu} href="/ho-so">
             <Users size={19} aria-hidden="true" />
             Hồ sơ cá nhân
           </Link>
-          <Link onKeyDown={handleEscape} href="/">
+          <Link onKeyDown={handleEscape} onClick={closeMenu} href="/">
             <ArrowRight size={19} aria-hidden="true" />
             Về trang chủ
           </Link>

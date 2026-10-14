@@ -9,10 +9,10 @@ import { z } from 'zod';
 import { Button, Eye, EyeOff } from '@florabot/ui';
 import { ApiError, queryClient, request, sessionQuery, type Session } from './api';
 import './i18n';
+import './workspace-polish.css';
 import Products from './Products';
 import WorkspaceNavigation, { WorkspaceHeader } from './WorkspaceNavigation';
 import DashboardOverview from './DashboardOverview';
-import DashboardManagement from './dashboard/DashboardManagement';
 import { workspaceSections } from './workspaceSections';
 import Subscriptions from './Subscriptions';
 import AdminSellers from './AdminSellers';
@@ -259,7 +259,6 @@ function StaffWorkspace() {
             </div>
             <span className="dashboard-context">Nhân viên shop</span>
           </div>
-          <DashboardManagement dashboardRole="SELLER_STAFF" />
           <StaffTasks
             actorRole="SELLER_STAFF"
             mode="worker"
@@ -780,46 +779,66 @@ function Screen({ screen, section }: { screen: PortalScreen; section?: string })
       return <MemberAuth mode="reset" />;
     case 'member':
       return (
-        <Guard requiredRole="CUSTOMER">
-          <MemberAccount />
-        </Guard>
+        <div className="workspace-portal-root">
+          <Guard requiredRole="CUSTOMER">
+            <MemberAccount />
+          </Guard>
+        </div>
       );
     case 'profile':
-      return <PersonalProfile />;
+      return (
+        <div className="workspace-portal-root">
+          <PersonalProfile />
+        </div>
+      );
     case 'shop':
       return <FlowerShop />;
     case 'seller':
       return (
-        <Guard requiredRole="SELLER">
-          <Workspace portalRole="SELLER" section={section} />
-        </Guard>
+        <div className="workspace-portal-root">
+          <Guard requiredRole="SELLER">
+            <Workspace portalRole="SELLER" section={section} />
+          </Guard>
+        </div>
       );
     case 'admin':
       return (
-        <Guard requiredRole="ADMIN">
-          <Workspace portalRole="ADMIN" section={section} />
-        </Guard>
+        <div className="workspace-portal-root">
+          <Guard requiredRole="ADMIN">
+            <Workspace portalRole="ADMIN" section={section} />
+          </Guard>
+        </div>
       );
     case 'staff':
       return (
-        <Guard requiredRole="SELLER_STAFF">
-          <StaffWorkspace />
-        </Guard>
+        <div className="workspace-portal-root">
+          <Guard requiredRole="SELLER_STAFF">
+            <StaffWorkspace />
+          </Guard>
+        </div>
       );
     case 'technician':
       return (
-        <Guard requiredRole="TECHNICIAN">
-          <TechnicianWorkspace />
-        </Guard>
+        <div className="workspace-portal-root">
+          <Guard requiredRole="TECHNICIAN">
+            <TechnicianWorkspace />
+          </Guard>
+        </div>
       );
     case 'operations':
       return (
-        <Guard requiredRole="OPERATIONS_MANAGER">
-          <OperationsWorkspace section={section} />
-        </Guard>
+        <div className="workspace-portal-root">
+          <Guard requiredRole="OPERATIONS_MANAGER">
+            <OperationsWorkspace section={section} />
+          </Guard>
+        </div>
       );
     case 'workspace':
-      return <WorkspaceAccount />;
+      return (
+        <div className="workspace-portal-root">
+          <WorkspaceAccount />
+        </div>
+      );
   }
 }
 
@@ -830,6 +849,21 @@ export default function PortalApplication({
   screen: PortalScreen;
   section?: string;
 }) {
+  React.useLayoutEffect(() => {
+    const workspace = [
+      'admin',
+      'seller',
+      'operations',
+      'technician',
+      'staff',
+      'member',
+      'profile',
+      'workspace',
+    ].includes(screen);
+    if (workspace && !window.location.hash) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    }
+  }, [screen, section]);
   return (
     <React.StrictMode>
       <Screen screen={screen} section={section} />

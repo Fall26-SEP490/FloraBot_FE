@@ -643,6 +643,14 @@ function PersonalProfileContent() {
           <span className="profile-badge profile-badge-neutral">{roleLabel}</span>
         </header>
 
+        {/* Quick navigation anchor chips */}
+        <nav aria-label="Mục hồ sơ" className="profile-quick-nav member-tabs">
+          <a href="#identity-heading">Tài khoản</a>
+          <a href="#basic-info-heading">Thông tin cá nhân</a>
+          <a href="#contact-email-heading">Email liên hệ</a>
+          <a href="#personal-bank-heading">Tài khoản ngân hàng</a>
+        </nav>
+
         {/* Section 1: Read-only Login Identity & Role */}
         <section aria-labelledby="identity-heading" className="profile-section">
           <div className="profile-section-heading">
