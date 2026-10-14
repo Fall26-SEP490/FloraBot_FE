@@ -24,7 +24,6 @@ export default function MemberAccount() {
     queryFn: () =>
       request<components['schemas']['CustomerHistoryPage']>(`/member/history?page=${page}`),
   });
-  const form = useForm<{ fullName: string }>();
   const passwords = useForm<{ currentPassword: string; newPassword: string; confirm: string }>();
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
@@ -96,6 +95,10 @@ export default function MemberAccount() {
             <>
               <dl className="bank-summary">
                 <div>
+                  <dt>Họ và tên</dt>
+                  <dd>{profile.data.fullName}</dd>
+                </div>
+                <div>
                   <dt>Email đăng nhập</dt>
                   <dd>{profile.data.email}</dd>
                 </div>
@@ -104,26 +107,11 @@ export default function MemberAccount() {
                   <dd>{profile.data.loyaltyPoints.toLocaleString('vi-VN')} điểm</dd>
                 </div>
               </dl>
-              <form onSubmit={form.handleSubmit((values) => save(values))} noValidate>
-                <label htmlFor="profile-name">Họ và tên</label>
-                <input
-                  id="profile-name"
-                  autoComplete="name"
-                  defaultValue={profile.data.fullName}
-                  maxLength={100}
-                  {...form.register('fullName', {
-                    validate: (value) => value.trim().length >= 2 || 'Họ tên cần ít nhất 2 ký tự.',
-                  })}
-                  aria-describedby="profile-name-error"
-                  aria-invalid={!!form.formState.errors.fullName}
-                />
-                <p id="profile-name-error" className="error">
-                  {form.formState.errors.fullName?.message}
-                </p>
-                <Button type="submit" disabled={busy}>
-                  Lưu thông tin
-                </Button>
-              </form>
+              <div style={{ marginBlock: '1.25rem' }}>
+                <Link href="/ho-so" className="button button-outline">
+                  Xem và cập nhật hồ sơ cá nhân
+                </Link>
+              </div>
               <MemberGoogleLink email={profile.data.email} />
             </>
           )}

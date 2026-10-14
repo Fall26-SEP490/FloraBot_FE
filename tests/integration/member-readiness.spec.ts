@@ -40,11 +40,15 @@ test('Member registers, edits profile, sees own orders and cannot enter staff wo
   await expect(page).toHaveURL(/\/tai-khoan$/);
   await expect(page.getByRole('heading', { name: 'Đơn đặt hoa của bạn' })).toBeVisible();
   await expect(page.getByText(email, { exact: true })).toBeVisible();
-  await page.getByLabel('Họ và tên', { exact: true }).fill('Tên đã cập nhật');
-  await page.getByRole('button', { name: 'Lưu thông tin' }).click();
+  await page.getByRole('link', { name: 'Xem và cập nhật hồ sơ cá nhân' }).click();
+  await expect(page).toHaveURL(/\/ho-so$/);
+  await page.getByLabel('Họ và tên *', { exact: true }).fill('Tên đã cập nhật');
+  await page.getByRole('button', { name: 'Lưu thông tin cá nhân' }).click();
   await expect(
-    page.getByRole('status').filter({ hasText: 'Đã cập nhật tên của bạn.' }),
+    page.getByRole('status').filter({ hasText: 'Đã lưu thay đổi hồ sơ cá nhân.' }),
   ).toBeVisible();
+  await page.goto('/tai-khoan');
+  await expect(page).toHaveURL(/\/tai-khoan$/);
   for (const path of ['/admin', '/seller']) {
     await page.goto(path);
     await expect(page).toHaveURL(/\/tai-khoan$/);

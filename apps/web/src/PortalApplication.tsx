@@ -35,6 +35,7 @@ import StaffTasks from './StaffTasks';
 import FlowerShop from './FlowerShop';
 import WebRequests from './WebRequests';
 import AccountManagement from './AccountManagement';
+import PersonalProfile from './PersonalProfile';
 import { startPortalUpdates } from './realtime';
 
 const loginSchema = z.object({
@@ -713,6 +714,7 @@ export type PortalScreen =
   | 'forgot'
   | 'reset'
   | 'member'
+  | 'profile'
   | 'shop'
   | 'seller'
   | 'admin'
@@ -782,6 +784,8 @@ function Screen({ screen, section }: { screen: PortalScreen; section?: string })
           <MemberAccount />
         </Guard>
       );
+    case 'profile':
+      return <PersonalProfile />;
     case 'shop':
       return <FlowerShop />;
     case 'seller':

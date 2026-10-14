@@ -144,6 +144,16 @@ function SiteHeader() {
             {label}
           </Link>
         ))}
+        {session.data && (
+          <Link
+            href="/ho-so"
+            prefetch={false}
+            aria-current={pathname === '/ho-so' ? 'page' : undefined}
+            onClick={() => setOpenedPath(null)}
+          >
+            Hồ sơ cá nhân
+          </Link>
+        )}
         {session.data?.sellerId && (
           <Link href="/seller" prefetch={false} onClick={() => setOpenedPath(null)}>
             Quản lý shop

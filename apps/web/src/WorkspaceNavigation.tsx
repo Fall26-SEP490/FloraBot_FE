@@ -79,12 +79,17 @@ export function WorkspaceHeader({
                 ? 'Kỹ thuật viên'
                 : 'Nhân viên shop'}
       </span>
-      <div className="dashboard-user">
+      <Link
+        href="/ho-so"
+        className="dashboard-user"
+        title="Xem và chỉnh sửa hồ sơ cá nhân"
+        aria-label={`Hồ sơ cá nhân của ${name}`}
+      >
         <span className="dashboard-avatar" aria-hidden="true">
           {name.trim().slice(0, 1).toLocaleUpperCase('vi-VN')}
         </span>
         <span>{name}</span>
-      </div>
+      </Link>
       <Button className="dashboard-logout" variant="outline" onClick={onLogout} disabled={busy}>
         <LogOut size={18} aria-hidden="true" />
         {busy ? 'Đang đăng xuất…' : 'Đăng xuất'}
@@ -225,6 +230,10 @@ export default function WorkspaceNavigation({
               Tài khoản & mua hoa
             </Link>
           )}
+          <Link onKeyDown={handleEscape} href="/ho-so">
+            <Users size={19} aria-hidden="true" />
+            Hồ sơ cá nhân
+          </Link>
           <Link onKeyDown={handleEscape} href="/">
             <ArrowRight size={19} aria-hidden="true" />
             Về trang chủ
