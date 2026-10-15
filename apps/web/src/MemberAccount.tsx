@@ -73,6 +73,7 @@ export default function MemberAccount() {
           <a href="#member-profile">Hồ sơ cá nhân</a>
           <a href="#web-orders">Đơn đặt trước</a>
           <a href="#member-orders">Lịch sử mua</a>
+          <a href="#member-kiosks">Điểm đặt kiosk</a>
           <a href="#member-security">Bảo mật</a>
           <a href="#member-shop">Shop của bạn</a>
         </nav>
@@ -168,6 +169,15 @@ export default function MemberAccount() {
               </nav>
             </>
           )}
+        </section>
+        <section id="member-kiosks">
+          <h2>Điểm đặt tủ kiosk</h2>
+          <p>Tìm tủ kiosk gần bạn nhất để nhận hoa tiện lợi và theo đúng lịch hẹn.</p>
+          <div style={{ marginBlock: '1rem' }}>
+            <Link href="/tim-kiosk" className="button button-outline">
+              Tìm kiosk gần bạn
+            </Link>
+          </div>
         </section>
         <section id="member-security">
           <h2>Đổi mật khẩu</h2>

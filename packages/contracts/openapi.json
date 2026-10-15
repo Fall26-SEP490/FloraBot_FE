@@ -6,7 +6,7 @@
   },
   "servers": [
     {
-      "url": "http://localhost/"
+      "url": "http://localhost:8088/"
     }
   ],
   "paths": {
@@ -2355,7 +2355,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/AnonymousTypeOfGuidAndstringAndstringAndstringAndstringAndstring"
+                    "$ref": "#/components/schemas/AnonymousTypeOfGuidAndstringAndstringAndstringAndstringAndstringAnddoubleAnddoubleAndboolean"
                   }
                 }
               }
@@ -4623,6 +4623,213 @@
                   "items": {
                     "$ref": "#/components/schemas/SellerAccessoryResponse"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/kiosk-locations": {
+      "get": {
+        "tags": [
+          "KioskOps"
+        ],
+        "summary": "Danh sách điểm kiosk hoàn chỉnh cho khách hàng tra cứu và chỉ đường",
+        "parameters": [
+          {
+            "name": "latitude",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+              "type": [
+                "number",
+                "string"
+              ],
+              "format": "double"
+            }
+          },
+          {
+            "name": "longitude",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+              "type": [
+                "number",
+                "string"
+              ],
+              "format": "double"
+            }
+          },
+          {
+            "name": "radiusKm",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+              "type": [
+                "number",
+                "string"
+              ],
+              "format": "double"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/KioskLocationItem"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sellers/{sellerId}/kiosks": {
+      "get": {
+        "tags": [
+          "KioskOps"
+        ],
+        "summary": "Danh sách kiosk thuộc quyền của Seller và trạng thái vị trí",
+        "parameters": [
+          {
+            "name": "sellerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SellerKioskDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sellers/{sellerId}/kiosks/{kioskId}/location": {
+      "put": {
+        "tags": [
+          "KioskOps"
+        ],
+        "summary": "Cập nhật địa chỉ và tọa độ ghim bản đồ cho kiosk do shop quản lý toàn quyền",
+        "parameters": [
+          {
+            "name": "sellerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "kioskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateKioskLocationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SellerKioskDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -7703,14 +7910,17 @@
         },
         "additionalProperties": false
       },
-      "AnonymousTypeOfGuidAndstringAndstringAndstringAndstringAndstring": {
+      "AnonymousTypeOfGuidAndstringAndstringAndstringAndstringAndstringAnddoubleAnddoubleAndboolean": {
         "required": [
           "id",
           "code",
           "name",
           "address",
           "region",
-          "status"
+          "status",
+          "latitude",
+          "longitude",
+          "locationComplete"
         ],
         "type": "object",
         "properties": {
@@ -7747,6 +7957,27 @@
               "null",
               "string"
             ]
+          },
+          "latitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "longitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "locationComplete": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -8946,8 +9177,110 @@
         },
         "additionalProperties": false
       },
+      "KioskCoordinates": {
+        "required": [
+          "latitude",
+          "longitude"
+        ],
+        "type": "object",
+        "properties": {
+          "latitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "longitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
       "KioskHeartbeatRequest": {
         "type": "object",
+        "additionalProperties": false
+      },
+      "KioskLocationItem": {
+        "required": [
+          "id",
+          "code",
+          "name",
+          "address",
+          "region",
+          "status",
+          "latitude",
+          "longitude",
+          "coordinates",
+          "locationComplete",
+          "distanceKm",
+          "directionsUrl"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "region": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "latitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "longitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "coordinates": {
+            "$ref": "#/components/schemas/KioskCoordinates"
+          },
+          "locationComplete": {
+            "type": "boolean"
+          },
+          "distanceKm": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "directionsUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
         "additionalProperties": false
       },
       "LoginRequest": {
@@ -10166,6 +10499,78 @@
         },
         "additionalProperties": false
       },
+      "SellerKioskDto": {
+        "required": [
+          "id",
+          "code",
+          "name",
+          "address",
+          "region",
+          "status",
+          "latitude",
+          "longitude",
+          "coordinates",
+          "locationComplete",
+          "canEditLocation"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "region": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "latitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "longitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "coordinates": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/KioskCoordinates"
+              }
+            ]
+          },
+          "locationComplete": {
+            "type": "boolean"
+          },
+          "canEditLocation": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
       "SellerPackageResponse": {
         "required": [
           "name",
@@ -11215,6 +11620,41 @@
         "properties": {
           "status": {
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateKioskLocationRequest": {
+        "required": [
+          "address",
+          "latitude",
+          "longitude"
+        ],
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "latitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "longitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
           }
         },
         "additionalProperties": false

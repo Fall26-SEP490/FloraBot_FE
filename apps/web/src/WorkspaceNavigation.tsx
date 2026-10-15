@@ -12,6 +12,7 @@ import {
   ListChecks,
   Users,
   Flower2,
+  MapPin,
   ArrowRight,
   Menu,
   X,
@@ -39,6 +40,7 @@ const icons = {
   products: Flower2,
   stock: Boxes,
   accessories: Package,
+  kiosks: MapPin,
   subscriptions: Store,
   wallet: Wallet,
 };
@@ -50,7 +52,7 @@ const groups = {
   ],
   SELLER: [
     ['Bán hoa', ['orders', 'products', 'stock', 'accessories', 'tasks']],
-    ['Cửa hàng', ['staff', 'subscriptions', 'wallet']],
+    ['Cửa hàng', ['staff', 'kiosks', 'subscriptions', 'wallet']],
   ],
 } as const;
 

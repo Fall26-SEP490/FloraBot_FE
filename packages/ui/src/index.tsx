@@ -32,6 +32,7 @@ export {
   ArrowUpRight,
   ArrowRight,
   MapPin,
+  Navigation,
   Menu,
   X,
   Check,

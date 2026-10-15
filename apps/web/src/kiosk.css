@@ -1,0 +1,922 @@
+/* Scoped Kiosk styles: Seller route /seller/kiosks & Customer route /tim-kiosk */
+
+/* Seller Kiosks Workspace View */
+.seller-kiosks-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .seller-kiosks-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .seller-kiosks-subtitle {
+  color: var(--color-workspace-muted, #476451);
+  font-size: 0.95rem;
+  margin-top: 0.35rem;
+  max-width: 680px;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-reload-btn {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .spin {
+  animation: kiosk-location-spin 1s linear infinite;
+}
+
+@keyframes kiosk-location-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Banners & Notices */
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-required-banner {
+  background: var(--color-status-warning-surface, #fff8e6);
+  border: 1px solid var(--color-status-warning-line, #ffd666);
+  color: var(--color-status-warning-ink, #7a5400);
+  border-radius: var(--radius-workspace-panel, 12px);
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--shadow-workspace-panel, 0 1px 3px rgba(24, 62, 43, 0.04));
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-banner-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-banner-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-required-banner h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0 0 0.35rem 0;
+  color: inherit;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-required-banner p {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-role-warning {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--color-status-info-surface, #e6f7ff);
+  border: 1px solid var(--color-status-info-line, #91d5ff);
+  color: var(--color-status-info-ink, #0050b3);
+  border-radius: var(--radius-workspace-control, 8px);
+  padding: 0.85rem 1.15rem;
+  font-size: 0.9rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-permission-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: #f4f6f4;
+  border: 1px solid #d0dcd0;
+  color: #3b5643;
+  border-radius: 6px;
+  padding: 0.65rem 0.95rem;
+  font-size: 0.88rem;
+  margin-bottom: 1rem;
+}
+
+/* Loading, Error, and Empty States */
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-loading-state,
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-loading-state {
+  padding: 2.5rem;
+  text-align: center;
+  color: var(--color-workspace-muted, #476451);
+  background: #fff;
+  border-radius: var(--radius-workspace-panel, 12px);
+  border: 1px solid var(--color-workspace-line, #c9d9c8);
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-error-state,
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-error-state {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--color-status-danger-surface, #fff0ee);
+  border: 1px solid var(--color-status-danger-line, #e5aaaa);
+  color: var(--color-status-danger-ink, #842323);
+  border-radius: var(--radius-workspace-panel, 12px);
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-error-state p,
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-error-state p {
+  margin: 0 0 0.75rem 0;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-empty-state,
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  background: #fff;
+  border: 1px dashed var(--color-workspace-line, #c9d9c8);
+  border-radius: var(--radius-workspace-panel, 12px);
+  color: var(--color-workspace-muted, #476451);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-empty-state h2,
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-empty-state h3 {
+  margin: 0;
+  color: var(--color-workspace-ink, #183e2b);
+  font-size: 1.25rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-empty-state p,
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-empty-state p {
+  margin: 0;
+  max-width: 480px;
+  font-size: 0.95rem;
+}
+
+/* Kiosk Cards */
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-card {
+  background: var(--color-workspace-surface, #fff);
+  border: 1px solid var(--color-workspace-line, #c9d9c8);
+  border-radius: var(--radius-workspace-panel, 12px);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-workspace-panel, 0 1px 3px rgba(24, 62, 43, 0.04));
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-card-incomplete {
+  border-left: 5px solid #d97706;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-card-header {
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--color-workspace-divider, #dce6d7);
+  padding-bottom: 0.85rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-code {
+  font-family: monospace;
+  font-weight: 700;
+  font-size: 0.82rem;
+  background: #eef5ea;
+  border: 1px solid #c9d9c8;
+  color: #174b35;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-status-badge,
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-status-badge {
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .badge-active,
+:where(.seller-kiosks-page, .customer-kiosk-page) .status-active,
+:where(.seller-kiosks-page, .customer-kiosk-page) .status-online {
+  background: var(--color-status-success-surface, #e8f5e9);
+  color: var(--color-status-success-ink, #1b5e20);
+  border: 1px solid var(--color-status-success-line, #a5d6a7);
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .badge-maintenance,
+:where(.seller-kiosks-page, .customer-kiosk-page) .status-maintenance {
+  background: var(--color-status-warning-surface, #fff8e6);
+  color: var(--color-status-warning-ink, #7a5400);
+  border: 1px solid var(--color-status-warning-line, #ffd666);
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .badge-offline,
+:where(.seller-kiosks-page, .customer-kiosk-page) .status-offline {
+  background: var(--color-status-danger-surface, #fff0ee);
+  color: var(--color-status-danger-ink, #842323);
+  border: 1px solid var(--color-status-danger-line, #e5aaaa);
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-location-badge {
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .badge-complete {
+  background: #f0f7e9;
+  color: #2e6844;
+  border: 1px solid #c9d9c8;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .badge-incomplete {
+  background: #fff8e6;
+  color: #7a5400;
+  border: 1px solid #ffd666;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-workspace-ink, #183e2b);
+  margin: 0.2rem 0 0 0;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-region {
+  font-size: 0.85rem;
+  color: var(--color-workspace-muted, #476451);
+  margin: 0.25rem 0 0 0;
+}
+
+/* Feedback messages */
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-feedback-success {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--color-status-success-surface, #e8f5e9);
+  color: var(--color-status-success-ink, #1b5e20);
+  border: 1px solid var(--color-status-success-line, #a5d6a7);
+  border-radius: 6px;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-feedback-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--color-status-danger-surface, #fff0ee);
+  color: var(--color-status-danger-ink, #842323);
+  border: 1px solid var(--color-status-danger-line, #e5aaaa);
+  border-radius: 6px;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+/* Form Layout */
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  :where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-field label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-workspace-ink, #183e2b);
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-required {
+  color: var(--color-error, #922b25);
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-input,
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-filter-input,
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-filter-select {
+  min-height: 44px;
+  padding: 0.55rem 0.85rem;
+  border-radius: var(--radius-workspace-control, 8px);
+  border: 1px solid var(--color-workspace-control-line, #64735f);
+  background: #fff;
+  color: var(--color-workspace-ink, #183e2b);
+  font-size: 0.95rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-input:focus-visible,
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-filter-input:focus-visible,
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-filter-select:focus-visible {
+  outline: 2px solid var(--color-workspace-accent, #174b35);
+  outline-offset: 1px;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-input:disabled {
+  background: #f6faf4;
+  color: #728675;
+  border-color: #d8e2d6;
+  cursor: not-allowed;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-coords-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+@media (max-width: 480px) {
+  :where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-coords-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-geo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-btn-location {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.88rem;
+  padding: 0.45rem 0.85rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-geo-status {
+  font-size: 0.82rem;
+  color: var(--color-workspace-muted, #476451);
+  margin: 0;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-preview-link-wrap {
+  margin-top: 0.25rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-external-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: #174b35;
+  font-weight: 600;
+  font-size: 0.88rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-disclaimer {
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: #647d6b;
+  border-left: 2px solid #b8cbbe;
+  padding-left: 0.65rem;
+  margin: 0.5rem 0 0 0;
+}
+
+/* Map Containers */
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-map-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-picker-map {
+  width: 100%;
+  height: 280px;
+  border-radius: var(--radius-workspace-control, 8px);
+  border: 1px solid var(--color-workspace-line, #c9d9c8);
+  background: #eaf0e8;
+  overflow: hidden;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-map-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--color-workspace-muted, #476451);
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-map-attribution,
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-map-attribution {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #6a8270;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-map-attribution a,
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-map-attribution a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-map-hint {
+  font-style: italic;
+  font-size: 0.78rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-map-tile-warning {
+  font-size: 0.8rem;
+  color: #842323;
+  margin: 0.25rem 0 0 0;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--color-workspace-divider, #dce6d7);
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-btn-submit,
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-btn-reset {
+  min-height: 44px;
+  padding: 0.55rem 1.25rem;
+}
+
+/* ========================================================= */
+/* Customer Locator Page /tim-kiosk                          */
+/* ========================================================= */
+.customer-kiosk-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-kiosk-header {
+  border-bottom: 1px solid #dce6d7;
+  padding-bottom: 1.25rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-kiosk-header-content h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #183e2b;
+  margin: 0 0 0.5rem 0;
+  font-family: var(--font-display, inherit);
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-kiosk-lead {
+  font-size: 1.05rem;
+  color: #476451;
+  margin: 0;
+  max-width: 720px;
+  line-height: 1.6;
+}
+
+/* Customer Search Card */
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-kiosk-search-card {
+  background: #f8faf6;
+  border: 1px solid #c9d9c8;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-geo-top-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-btn-geolocate {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  font-weight: 600;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-btn-clear {
+  min-height: 44px;
+  padding: 0.6rem 1rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-geo-message {
+  font-size: 0.9rem;
+  color: #1b5e20;
+  background: #e8f5e9;
+  border: 1px solid #a5d6a7;
+  padding: 0.5rem 0.85rem;
+  border-radius: 6px;
+  margin: 0;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-geo-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #842323;
+  background: #fff0ee;
+  border: 1px solid #e5aaaa;
+  padding: 0.5rem 0.85rem;
+  border-radius: 6px;
+  margin: 0;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) auto;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+@media (max-width: 768px) {
+  :where(.seller-kiosks-page, .customer-kiosk-page) .customer-filter-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-input-group label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #183e2b;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-filter-select:disabled {
+  background: #f6faf4;
+  color: #728675;
+  border-color: #d8e2d6;
+  cursor: not-allowed;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-input-hint {
+  font-size: 0.78rem;
+  color: #385540;
+  margin-top: 0.2rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-filter-action {
+  display: flex;
+  align-items: flex-end;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-btn-apply {
+  min-height: 44px;
+  padding: 0.55rem 1.25rem;
+  width: 100%;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-search-context {
+  font-size: 0.85rem;
+  color: #476451;
+  font-style: italic;
+  margin: 0;
+}
+
+/* Layout: Map + Results */
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-kiosk-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (max-width: 950px) {
+  :where(.seller-kiosks-page, .customer-kiosk-page) .customer-kiosk-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Customer Map */
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-kiosk-map-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  position: sticky;
+  top: 90px;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-kiosk-map {
+  width: 100%;
+  height: 460px;
+  border-radius: 12px;
+  border: 1px solid #c9d9c8;
+  background: #eaf0e8;
+  overflow: hidden;
+}
+
+@media (max-width: 950px) {
+  :where(.seller-kiosks-page, .customer-kiosk-page) .customer-kiosk-map {
+    height: 320px;
+  }
+  :where(.seller-kiosks-page, .customer-kiosk-page) .customer-kiosk-map-container {
+    position: static;
+  }
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.82rem;
+  color: #3b5643;
+  padding: 0.25rem 0;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .dot-active {
+  background: #ffcf24;
+  border: 2px solid #174b35;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .dot-maintenance {
+  background: #ffd591;
+  border: 2px solid #b25e00;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .dot-offline {
+  background: #e5aaaa;
+  border: 2px solid #842323;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .dot-user {
+  background: #91d5ff;
+  border: 2px solid #0050b3;
+}
+
+/* Results section */
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-kiosk-results-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-results-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-results-heading-row h2 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #183e2b;
+  margin: 0;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-reload-btn {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.85rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-kiosk-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-kiosk-item {
+  background: #fff;
+  border: 1px solid #c9d9c8;
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+  cursor: pointer;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-kiosk-item:hover {
+  border-color: #174b35;
+  box-shadow: 0 2px 6px rgba(24, 62, 43, 0.08);
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-kiosk-item.is-selected {
+  border-color: #174b35;
+  border-width: 2px;
+  background: #fbfdfa;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-item-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-item-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-kiosk-code {
+  font-family: monospace;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #174b35;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-kiosk-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #183e2b;
+  margin: 0;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.92rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-item-address {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  color: #264330;
+  margin: 0;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-icon-pin {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: #174b35;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-item-region {
+  color: #476451;
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-item-distance {
+  color: #183e2b;
+  margin: 0.25rem 0 0 0;
+  font-size: 0.95rem;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .distance-note {
+  font-size: 0.78rem;
+  color: #55725f;
+  font-weight: normal;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-maintenance-notice {
+  font-size: 0.85rem;
+  color: #7a5400;
+  background: #fff8e6;
+  border-radius: 6px;
+  padding: 0.4rem 0.65rem;
+  margin: 0.25rem 0 0 0;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-offline-notice {
+  font-size: 0.85rem;
+  color: #842323;
+  background: #fff0ee;
+  border-radius: 6px;
+  padding: 0.4rem 0.65rem;
+  margin: 0.25rem 0 0 0;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.35rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid #e5ede3;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-btn-directions {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: #174b35;
+  color: #fff;
+  padding: 0.45rem 0.95rem;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-btn-directions:hover {
+  background: #246448;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-btn-shop {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.45rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid #64735f;
+  color: #183e2b;
+  background: #fff;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-btn-shop:hover {
+  background: #f0f6ee;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .customer-no-coords-note {
+  font-size: 0.85rem;
+  color: #728675;
+  font-style: italic;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

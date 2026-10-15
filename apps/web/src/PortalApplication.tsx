@@ -24,6 +24,7 @@ import AdminReconciliation from './AdminReconciliation';
 import AdminWithdrawals from './AdminWithdrawals';
 import SellerStock from './SellerStock';
 import SellerAccessories from './SellerAccessories';
+import SellerKiosks from './SellerKiosks';
 import Wallet from './Wallet';
 import Receipt from './Receipt';
 import GuestHistory from './GuestHistory';
@@ -627,6 +628,7 @@ function Workspace({
             />
           )}
           {role === 'SELLER' && section === 'products' && <Products session={session.data} />}
+          {role === 'SELLER' && section === 'kiosks' && <SellerKiosks session={session.data} />}
           {role === 'SELLER' && section === 'subscriptions' && (
             <Subscriptions session={session.data} />
           )}

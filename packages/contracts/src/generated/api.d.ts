@@ -2629,7 +2629,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["AnonymousTypeOfGuidAndstringAndstringAndstringAndstringAndstring"][];
+                        "application/json": components["schemas"]["AnonymousTypeOfGuidAndstringAndstringAndstringAndstringAndstringAnddoubleAnddoubleAndboolean"][];
                     };
                 };
             };
@@ -5025,6 +5025,173 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/kiosk-locations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Danh sách điểm kiosk hoàn chỉnh cho khách hàng tra cứu và chỉ đường */
+        get: {
+            parameters: {
+                query?: {
+                    latitude?: number | string;
+                    longitude?: number | string;
+                    radiusKm?: number | string;
+                    limit?: number | string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["KioskLocationItem"][];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sellers/{sellerId}/kiosks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Danh sách kiosk thuộc quyền của Seller và trạng thái vị trí */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sellerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SellerKioskDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sellers/{sellerId}/kiosks/{kioskId}/location": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Cập nhật địa chỉ và tọa độ ghim bản đồ cho kiosk do shop quản lý toàn quyền */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sellerId: string;
+                    kioskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateKioskLocationRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SellerKioskDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sellers/{sellerId}/products/{productId}/photos": {
         parameters: {
             query?: never;
@@ -6678,7 +6845,7 @@ export interface components {
             /** Format: int64 */
             p_budget: number | string;
         };
-        AnonymousTypeOfGuidAndstringAndstringAndstringAndstringAndstring: {
+        AnonymousTypeOfGuidAndstringAndstringAndstringAndstringAndstringAnddoubleAnddoubleAndboolean: {
             /** Format: uuid */
             id: string;
             code: null | string;
@@ -6686,6 +6853,11 @@ export interface components {
             address: null | string;
             region: null | string;
             status: null | string;
+            /** Format: double */
+            latitude: null | number | string;
+            /** Format: double */
+            longitude: null | number | string;
+            locationComplete: boolean;
         };
         ApproveRefundRequest: {
             /** Format: uuid */
@@ -6987,7 +7159,31 @@ export interface components {
             p_points?: null | number | string;
             p_ecard?: null | string;
         };
+        KioskCoordinates: {
+            /** Format: double */
+            latitude: number | string;
+            /** Format: double */
+            longitude: number | string;
+        };
         KioskHeartbeatRequest: Record<string, never>;
+        KioskLocationItem: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            address: string;
+            region: string;
+            status: string;
+            /** Format: double */
+            latitude: number | string;
+            /** Format: double */
+            longitude: number | string;
+            coordinates: components["schemas"]["KioskCoordinates"];
+            locationComplete: boolean;
+            /** Format: double */
+            distanceKm: null | number | string;
+            directionsUrl: null | string;
+        };
         LoginRequest: {
             email: string;
             password: string;
@@ -7293,6 +7489,22 @@ export interface components {
             holder: null | string;
             accountSuffix: null | string;
         };
+        SellerKioskDto: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            address: string;
+            region: string;
+            status: string;
+            /** Format: double */
+            latitude: null | number | string;
+            /** Format: double */
+            longitude: null | number | string;
+            coordinates: null | components["schemas"]["KioskCoordinates"];
+            locationComplete: boolean;
+            canEditLocation: boolean;
+        };
         SellerPackageResponse: {
             name: string;
             /** Format: int64 */
@@ -7566,6 +7778,13 @@ export interface components {
         };
         UpdateAccountStatusRequest: {
             status: string;
+        };
+        UpdateKioskLocationRequest: {
+            address: null | string;
+            /** Format: double */
+            latitude: null | number | string;
+            /** Format: double */
+            longitude: null | number | string;
         };
         UpdateProductPriceRequest: {
             /** Format: uuid */
