@@ -1,0 +1,1282 @@
+/* Scoped stylesheet for Annual Kiosk Onboarding and Management Workspaces
+   Strictly scoped under specific container classes to prevent global or public marketing regression. */
+
+@keyframes kiosk-spin-anim {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+:where(
+    .kiosk-onboarding-container,
+    .operations-installations-view,
+    .technician-installations-view,
+    .admin-kiosk-refunds-view
+  )
+  .kiosk-spin,
+:where(
+    .kiosk-onboarding-container,
+    .operations-installations-view,
+    .technician-installations-view,
+    .admin-kiosk-refunds-view
+  )
+  .spin {
+  animation: kiosk-spin-anim 1s linear infinite;
+}
+
+/* ==========================================================================
+   1. CUSTOMER KIOSK ONBOARDING (/thue-kiosk)
+   ========================================================================== */
+.kiosk-onboarding-container {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 4rem;
+  box-sizing: border-box;
+  font-family: inherit;
+  color: #183e2b;
+}
+
+.kiosk-onboarding-header {
+  margin-bottom: 2rem;
+}
+
+.kiosk-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+  color: #476451;
+}
+
+.kiosk-breadcrumb a {
+  color: #174b35;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.kiosk-onboarding-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.25;
+  color: #183e2b;
+}
+
+.kiosk-onboarding-lead {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #3b5a45;
+  margin: 0;
+  max-width: 800px;
+}
+
+/* Packages Grid */
+.kiosk-packages-section {
+  margin-bottom: 2.5rem;
+}
+
+.section-title-wrap {
+  margin-bottom: 1.25rem;
+}
+
+.section-title-wrap h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem 0;
+  color: #183e2b;
+}
+
+.section-title-wrap p {
+  font-size: 0.95rem;
+  color: #476451;
+  margin: 0;
+}
+
+.kiosk-packages-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.kiosk-package-card {
+  border: 2px solid #c9d9c8;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  outline: none;
+  min-height: 240px;
+}
+
+.kiosk-package-card:hover,
+.kiosk-package-card:focus-visible {
+  border-color: #174b35;
+  box-shadow: 0 4px 12px rgba(24, 62, 43, 0.08);
+}
+
+.kiosk-package-card.is-selected {
+  border-color: #174b35;
+  background: #f7faf5;
+  box-shadow: 0 0 0 1px #174b35;
+}
+
+.package-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.package-tier-badge {
+  background: #eef5ea;
+  color: #174b35;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid #c9d9c8;
+}
+
+.package-price {
+  text-align: right;
+}
+
+.package-price .price-number {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #183e2b;
+}
+
+.package-price .price-unit {
+  display: block;
+  font-size: 0.8rem;
+  color: #55725e;
+}
+
+.package-slots-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.75rem 0;
+  border-top: 1px dashed #dbe5da;
+  border-bottom: 1px dashed #dbe5da;
+  margin: 0.75rem 0;
+}
+
+.slot-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #2e4d39;
+}
+
+.slot-total {
+  font-size: 0.85rem;
+  color: #174b35;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+.package-desc {
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #4b6754;
+  margin: 0.5rem 0 1rem 0;
+}
+
+.package-select-action {
+  margin-top: auto;
+}
+
+.select-indicator {
+  display: block;
+  text-align: center;
+  padding: 0.6rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: 1px solid #c9d9c8;
+  color: #174b35;
+  background: #ffffff;
+  min-height: 44px;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+.select-indicator.is-active {
+  background: #174b35;
+  color: #ffffff;
+  border-color: #174b35;
+}
+
+/* Status Pill */
+.kiosk-status-pill {
+  display: inline-block;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: #eef5ea;
+  color: #174b35;
+  border: 1px solid #c9d9c8;
+}
+
+.kiosk-status-pill[data-status='AWAITING_PAYMENT'] {
+  background: #fff8e6;
+  color: #8c5d00;
+  border-color: #ffe08a;
+}
+
+.kiosk-status-pill[data-status='PAID_REVIEW'],
+.kiosk-status-pill[data-status='UNDER_REVIEW'] {
+  background: #e6f4ff;
+  color: #0050b3;
+  border-color: #91caff;
+}
+
+.kiosk-status-pill[data-status='CONFIRMED'],
+.kiosk-status-pill[data-status='SCHEDULED'],
+.kiosk-status-pill[data-status='INSTALLING'],
+.kiosk-status-pill[data-status='AWAITING_HANDOVER'] {
+  background: #f0f5ff;
+  color: #1d39c4;
+  border-color: #adc6ff;
+}
+
+.kiosk-status-pill[data-status='ACTIVE'] {
+  background: #f6ffed;
+  color: #237804;
+  border-color: #b7eb8f;
+}
+
+.kiosk-status-pill[data-status='CANCELLED'],
+.kiosk-status-pill[data-status='REJECTED'] {
+  background: #fff1f0;
+  color: #cf1322;
+  border-color: #ffa39e;
+}
+
+.kiosk-status-pill[data-status='REFUND_PENDING'],
+.kiosk-status-pill[data-status='REFUNDED'] {
+  background: #fff7e6;
+  color: #d46b08;
+  border-color: #ffd591;
+}
+
+/* Progress Timeline */
+.kiosk-timeline {
+  margin: 1.5rem 0 2rem 0;
+  width: 100%;
+}
+
+.timeline-steps {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  overflow-x: auto;
+  gap: 0.5rem;
+}
+
+.timeline-step {
+  flex: 1;
+  min-width: 140px;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem 0.5rem;
+  background: #ffffff;
+  border: 1px solid #dbe5da;
+  border-radius: 8px;
+  position: relative;
+}
+
+.timeline-step.is-current {
+  border-color: #174b35;
+  background: #f5f9f3;
+  box-shadow: 0 0 0 1px #174b35;
+}
+
+.timeline-step.is-done {
+  border-color: #b7eb8f;
+  background: #f6ffed;
+}
+
+.step-marker {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #eef5ea;
+  color: #174b35;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.timeline-step.is-current .step-marker {
+  background: #174b35;
+  color: #ffffff;
+}
+
+.timeline-step.is-done .step-marker {
+  background: #52c41a;
+  color: #ffffff;
+}
+
+.step-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.step-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #183e2b;
+}
+
+.step-sub {
+  font-size: 0.75rem;
+  color: #55725e;
+}
+
+/* Status Panel */
+.kiosk-application-status-panel {
+  background: #ffffff;
+  border: 1px solid #c9d9c8;
+  border-radius: 12px;
+  padding: 1.75rem;
+  margin-bottom: 2.5rem;
+  box-shadow: 0 2px 8px rgba(24, 62, 43, 0.04);
+}
+
+.status-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.status-panel-header h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0.5rem 0 0.25rem 0;
+  color: #183e2b;
+}
+
+.status-meta {
+  font-size: 0.9rem;
+  color: #55725e;
+  margin: 0;
+}
+
+.status-action-box {
+  background: #f8faf6;
+  border: 1px solid #dbe5da;
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin: 1.25rem 0;
+}
+
+.status-action-box h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  color: #183e2b;
+}
+
+.status-action-box p {
+  font-size: 0.92rem;
+  line-height: 1.5;
+  margin: 0 0 0.75rem 0;
+  color: #3b5a45;
+}
+
+.payment-ready-box {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.payment-ready-box p {
+  margin: 0 0 0.5rem 0;
+  font-weight: 600;
+  color: #166534;
+}
+
+.action-buttons-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1rem 0 0.5rem 0;
+}
+
+.active-success-banner {
+  background: #f6ffed;
+  border-color: #b7eb8f;
+}
+
+.active-success-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  color: #237804;
+}
+
+.active-success-header h3 {
+  color: #237804;
+  margin-top: 0;
+}
+
+.status-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  margin: 1rem 0;
+}
+
+.notice-info {
+  background: #f0f7ff;
+  border: 1px solid #bae0ff;
+  color: #003a8c;
+}
+
+.notice-success {
+  background: #f6ffed;
+  border: 1px solid #b7eb8f;
+  color: #237804;
+}
+
+/* Forms */
+.kiosk-application-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.kiosk-form-group {
+  border: 1px solid #dbe5da;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 0;
+}
+
+.kiosk-form-group legend {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #183e2b;
+  padding: 0 0.5rem;
+}
+
+.kiosk-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1.15rem;
+}
+
+.kiosk-form-field:last-child {
+  margin-bottom: 0;
+}
+
+.kiosk-form-field label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #183e2b;
+}
+
+.required-star {
+  color: #e03131;
+}
+
+.kiosk-form-field input,
+.kiosk-form-field textarea,
+.kiosk-form-field select {
+  font-family: inherit;
+  font-size: 0.95rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid #c9d9c8;
+  border-radius: 8px;
+  color: #183e2b;
+  background: #ffffff;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+.kiosk-form-field input:focus,
+.kiosk-form-field textarea:focus,
+.kiosk-form-field select:focus {
+  outline: none;
+  border-color: #174b35;
+  box-shadow: 0 0 0 2px rgba(23, 75, 53, 0.15);
+}
+
+.form-fields-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.kiosk-field-hint {
+  font-size: 0.8rem;
+  color: #55725e;
+}
+
+.kiosk-group-note {
+  font-size: 0.88rem;
+  color: #4b6754;
+  margin: 0 0 1rem 0;
+}
+
+.kiosk-field-error {
+  color: #cf1322;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0.25rem 0 0 0;
+}
+
+.kiosk-field-error-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.85rem 1rem;
+  background: #fff1f0;
+  border: 1px solid #ffa39e;
+  border-radius: 8px;
+  color: #cf1322;
+  font-size: 0.9rem;
+  margin: 1rem 0;
+}
+
+/* Map Picker Block */
+.kiosk-map-picker-block {
+  margin-top: 1rem;
+  border: 1px solid #dbe5da;
+  border-radius: 10px;
+  padding: 1rem;
+  background: #fbfdfa;
+}
+
+.map-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.map-picker-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  display: block;
+  color: #183e2b;
+}
+
+.kiosk-onboarding-container .kiosk-picker-embed {
+  min-height: 280px;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #c9d9c8;
+}
+
+.kiosk-onboarding-container .kiosk-picker-map {
+  height: 280px;
+  width: 100%;
+}
+
+.kiosk-onboarding-container .kiosk-map-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  padding: 0.6rem;
+  font-size: 0.75rem;
+}
+
+.kiosk-onboarding-container .kiosk-map-attribution {
+  margin: 0;
+}
+
+.manual-coords-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.kiosk-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.kiosk-form-actions button,
+.kiosk-form-actions a {
+  min-height: 44px;
+}
+
+/* Summary Details */
+.kiosk-app-summary-details {
+  border-top: 1px solid #e1ebe0;
+  padding-top: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.kiosk-app-summary-details summary {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #174b35;
+  cursor: pointer;
+  padding: 0.4rem 0;
+}
+
+.kiosk-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  padding: 1rem 0;
+  font-size: 0.88rem;
+}
+
+/* Modal Backdrop */
+.kiosk-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.kiosk-modal-card {
+  background: #ffffff;
+  border-radius: 12px;
+  max-width: 540px;
+  width: 100%;
+  padding: 1.5rem;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.kiosk-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.kiosk-modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #183e2b;
+}
+
+.kiosk-modal-close {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #55725e;
+  padding: 0.4rem;
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kiosk-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+/* ==========================================================================
+   2. OPERATIONS MANAGER WORKSPACE (/operations/installations)
+   ========================================================================== */
+.operations-installations-view {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.queue-filter-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  background: #ffffff;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #dbe5da;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.filter-group select {
+  font-family: inherit;
+  font-size: 0.9rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #c9d9c8;
+  min-height: 40px;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  background: #ffffff;
+  border: 1px solid #dbe5da;
+  border-radius: 8px;
+}
+
+.kiosk-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.kiosk-data-table th,
+.kiosk-data-table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid #eef2ed;
+}
+
+.kiosk-data-table th {
+  background: #f7faf5;
+  font-weight: 700;
+  color: #174b35;
+}
+
+.kiosk-data-table tr.is-selected-row {
+  background: #f0f7ed;
+}
+
+.table-sub-text {
+  font-size: 0.8rem;
+  color: #55725e;
+}
+
+.address-truncate {
+  max-width: 240px;
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.table-pagination-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #eef2ed;
+}
+
+.operations-detail-panel {
+  background: #ffffff;
+  border: 1px solid #c9d9c8;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+  box-shadow: 0 4px 12px rgba(24, 62, 43, 0.05);
+}
+
+.detail-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid #eef2ed;
+  padding-bottom: 1rem;
+}
+
+.detail-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.detail-info-grid dt {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #55725e;
+  margin-bottom: 0.25rem;
+}
+
+.detail-info-grid dd {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #183e2b;
+}
+
+.operations-action-card {
+  background: #f9fbf8;
+  border: 1px solid #dbe5da;
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin-top: 1.25rem;
+}
+
+.operations-action-card h3 {
+  font-size: 1.1rem;
+  margin: 0 0 0.5rem 0;
+  color: #183e2b;
+}
+
+.operations-action-card p {
+  font-size: 0.9rem;
+  color: #3b5a45;
+  margin: 0 0 1rem 0;
+}
+
+.field-label-with-action {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.link-inline-btn {
+  background: none;
+  border: none;
+  color: #174b35;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.evidence-thumbnails-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin: 0.75rem 0 1rem 0;
+}
+
+.evidence-thumb-card {
+  border: 1px solid #c9d9c8;
+  border-radius: 8px;
+  padding: 0.75rem;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.thumb-label {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #183e2b;
+}
+
+.thumb-ref {
+  font-size: 0.75rem;
+  color: #55725e;
+  word-break: break-all;
+}
+
+.rework-sub-section {
+  border-top: 1px dashed #dbe5da;
+  padding-top: 1rem;
+  margin-top: 1.25rem;
+}
+
+.rework-sub-section h4 {
+  font-size: 0.95rem;
+  margin: 0 0 0.5rem 0;
+  color: #cf1322;
+}
+
+.kiosk-platform-failure-details {
+  margin-top: 1.5rem;
+  border-top: 1px solid #eef2ed;
+  padding-top: 1rem;
+}
+
+.kiosk-platform-failure-details summary {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #8c5d00;
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   3. TECHNICIAN WORKSPACE (/technician/installations)
+   ========================================================================== */
+.technician-installations-view {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.technician-workspace-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+@media (min-width: 900px) {
+  .technician-workspace-layout {
+    grid-template-columns: 360px 1fr;
+  }
+}
+
+.tech-jobs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.tech-job-card {
+  background: #ffffff;
+  border: 1px solid #dbe5da;
+  border-radius: 10px;
+  padding: 1.15rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.tech-job-card:hover,
+.tech-job-card:focus-visible {
+  border-color: #174b35;
+  box-shadow: 0 2px 8px rgba(24, 62, 43, 0.08);
+}
+
+.tech-job-card.is-selected {
+  border-color: #174b35;
+  background: #f7faf5;
+  box-shadow: 0 0 0 1px #174b35;
+}
+
+.job-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.job-card-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: #183e2b;
+}
+
+.job-address-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: #4b6754;
+  margin: 0 0 0.65rem 0;
+}
+
+.job-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+  color: #55725e;
+}
+
+.job-rework-tag {
+  background: #fff1f0;
+  border: 1px solid #ffa39e;
+  color: #cf1322;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+  margin-top: 0.65rem;
+}
+
+.tech-job-detail-card {
+  background: #ffffff;
+  border: 1px solid #c9d9c8;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(24, 62, 43, 0.04);
+}
+
+.job-detail-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid #eef2ed;
+  padding-bottom: 1rem;
+}
+
+.job-code-subtitle {
+  font-size: 0.9rem;
+  color: #55725e;
+  margin: 0.25rem 0 0 0;
+}
+
+.directions-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+}
+
+.tech-contact-box {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  background: #f9fbf8;
+  border: 1px solid #e1ebe0;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.tech-contact-box strong {
+  display: block;
+  font-size: 0.8rem;
+  color: #55725e;
+  margin-bottom: 0.2rem;
+}
+
+.tech-contact-box p {
+  margin: 0;
+  color: #183e2b;
+}
+
+.tech-action-step {
+  border-top: 1px solid #eef2ed;
+  padding-top: 1.25rem;
+}
+
+.tech-action-step h3 {
+  font-size: 1.15rem;
+  margin: 0 0 0.5rem 0;
+  color: #183e2b;
+}
+
+.evidence-upload-block {
+  background: #fdfefe;
+  border: 1px solid #dbe5da;
+  border-radius: 8px;
+  padding: 1.15rem;
+  margin: 1rem 0;
+}
+
+.file-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin: 0.75rem 0;
+}
+
+.evidence-pills-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0 0;
+}
+
+.evidence-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #eef5ea;
+  border: 1px solid #b7eb8f;
+  color: #174b35;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+}
+
+.report-submit-block {
+  margin-top: 1.25rem;
+}
+
+/* ==========================================================================
+   4. ADMIN KIOSK REFUNDS (/admin/kiosk-refunds)
+   ========================================================================== */
+.admin-kiosk-refunds-view {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.refund-amount-text {
+  color: #cf1322;
+  font-size: 1rem;
+}
+
+.refund-reason-cell {
+  max-width: 200px;
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.refund-actions-split {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.refund-step-card {
+  background: #fbfdfa;
+  border: 1px solid #dbe5da;
+  border-radius: 10px;
+  padding: 1.25rem;
+}
+
+.refund-step-card h3 {
+  font-size: 1.05rem;
+  margin: 0 0 0.5rem 0;
+  color: #183e2b;
+}
+
+.confirm-payout-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-top: 0.75rem;
+}
+
+.kiosk-empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  background: #ffffff;
+  border: 1px solid #dbe5da;
+  border-radius: 12px;
+  color: #476451;
+}
+
+.kiosk-empty-state h3 {
+  font-size: 1.2rem;
+  margin: 0.75rem 0 0.25rem 0;
+  color: #183e2b;
+}
+
+.kiosk-empty-state p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.evidence-actual-img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #dbe5da;
+}
+
+.evidence-fallback-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 120px;
+  background: #f0f4ee;
+  border-radius: 6px;
+  color: #55725e;
+  gap: 0.35rem;
+}
+
+.revealed-bank-box {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 0.85rem;
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.bank-number-revealed {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #166534;
+  font-family: monospace;
+}
+
+.masked-bank-box {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.kiosk-provision-panel {
+  background: #f8faf6;
+  border: 1px solid #dbe5da;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.provision-field-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.65rem;
+  font-size: 0.95rem;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 600px) {
+  .manual-coords-row {
+    grid-template-columns: 1fr;
+  }
+
+  .timeline-steps {
+    flex-direction: column;
+  }
+
+  .timeline-step {
+    min-width: 100%;
+  }
+}

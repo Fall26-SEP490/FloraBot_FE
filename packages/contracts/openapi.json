@@ -1794,6 +1794,68 @@
         }
       }
     },
+    "/api/chats/{chatId}/read": {
+      "post": {
+        "tags": [
+          "Customer Seller Chat"
+        ],
+        "summary": "Đánh dấu các tin nhắn nhận được là đã đọc",
+        "description": "Gọi sau khi lịch sử cuộc trò chuyện đã hiển thị. Thao tác lặp lại an toàn; người gửi nhận sự kiện ChatMessagesRead qua SignalR.",
+        "parameters": [
+          {
+            "name": "chatId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerSellerChatReadResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/chats/{chatId}/images": {
       "post": {
         "tags": [
@@ -5615,6 +5677,1248 @@
         }
       }
     },
+    "/api/kiosk-packages": {
+      "get": {
+        "tags": [
+          "Identity"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/KioskPackageResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/member/kiosk-applications": {
+      "post": {
+        "tags": [
+          "KioskOnboarding"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateKioskApplicationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KioskApplicationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/member/kiosk-applications/current": {
+      "get": {
+        "tags": [
+          "KioskOnboarding"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KioskApplicationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/member/kiosk-applications/{id}/payment-link": {
+      "post": {
+        "tags": [
+          "KioskOnboarding"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentLinkResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/member/kiosk-applications/{id}/cancel": {
+      "post": {
+        "tags": [
+          "KioskOnboarding"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/CancelKioskApplicationRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KioskApplicationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/member/kiosk-applications/{id}/reconcile": {
+      "post": {
+        "tags": [
+          "KioskOnboarding"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KioskApplicationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/operations/kiosk-applications": {
+      "get": {
+        "tags": [
+          "KioskOnboarding"
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KioskApplicationPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/operations/kiosk-applications/{id}": {
+      "get": {
+        "tags": [
+          "KioskOnboarding"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KioskApplicationDetailResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/operations/kiosk-applications/{id}/confirm": {
+      "post": {
+        "tags": [
+          "KioskOnboarding"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmKioskApplicationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KioskApplicationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/operations/kiosk-applications/{id}/schedule": {
+      "post": {
+        "tags": [
+          "KioskOnboarding"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleKioskApplicationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KioskApplicationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/operations/kiosk-applications/{id}/rework": {
+      "post": {
+        "tags": [
+          "KioskOnboarding"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReworkKioskApplicationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KioskApplicationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/operations/kiosk-applications/{id}/handover": {
+      "post": {
+        "tags": [
+          "KioskOnboarding"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KioskApplicationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/operations/kiosk-applications/{id}/reject": {
+      "post": {
+        "tags": [
+          "KioskOnboarding"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectKioskApplicationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KioskApplicationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/operations/kiosk-applications/{id}/platform-failure": {
+      "post": {
+        "tags": [
+          "KioskOnboarding"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlatformFailureRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KioskApplicationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/operations/eligible-kiosks": {
+      "get": {
+        "tags": [
+          "KioskOnboarding"
+        ],
+        "parameters": [
+          {
+            "name": "packageId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EligibleKioskResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/operations/kiosks/enroll": {
+      "post": {
+        "tags": [
+          "KioskOnboarding"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnrollKioskRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnrollKioskResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/operations/kiosks/{id}/provision-key": {
+      "post": {
+        "tags": [
+          "KioskOnboarding"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProvisionKioskKeyResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/kiosk-installations": {
+      "get": {
+        "tags": [
+          "KioskOnboarding"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TechnicianInstallationSummary"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/kiosk-installations/{id}": {
+      "get": {
+        "tags": [
+          "KioskOnboarding"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TechnicianInstallationDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/kiosk-installations/{id}/start": {
+      "post": {
+        "tags": [
+          "KioskOnboarding"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TechnicianInstallationDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/kiosk-installations/{id}/evidence/upload": {
+      "post": {
+        "tags": [
+          "FloraBot.Api"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "image/png": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "image/jpeg": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "image/webp": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvidenceUploadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload Too Large",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported Media Type",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/kiosk-installations/{id}/evidence": {
+      "post": {
+        "tags": [
+          "KioskOnboarding"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttachKioskEvidenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffEvidenceItem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "KioskOnboarding"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StaffEvidenceItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/kiosk-installations/{id}/evidence/{attachmentId}": {
+      "get": {
+        "tags": [
+          "KioskOnboarding"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "attachmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/operations/kiosk-applications/{id}/evidence/{attachmentId}": {
+      "get": {
+        "tags": [
+          "KioskOnboarding"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "attachmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/staff/kiosk-installations/{id}/submit": {
+      "post": {
+        "tags": [
+          "KioskOnboarding"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitInstallationReportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TechnicianInstallationDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/kiosk-applications/refunds": {
+      "get": {
+        "tags": [
+          "KioskOnboarding"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AdminKioskRefundSummary"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/kiosk-applications/{id}/refund/bank-details": {
+      "post": {
+        "tags": [
+          "KioskOnboarding"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KioskRefundBankResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/kiosk-applications/{id}/refund/evidence/upload": {
+      "post": {
+        "tags": [
+          "FloraBot.Api"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "image/png": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "image/jpeg": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "image/webp": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvidenceUploadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload Too Large",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported Media Type",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/kiosk-applications/{id}/refund/proof/{attachmentId}": {
+      "get": {
+        "tags": [
+          "KioskOnboarding"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "attachmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/kiosk-applications/{id}/refund/approve": {
+      "post": {
+        "tags": [
+          "KioskOnboarding"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/kiosk-applications/{id}/refund/confirm": {
+      "post": {
+        "tags": [
+          "KioskOnboarding"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmKioskRefundRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/payments/webhook": {
       "post": {
         "tags": [
@@ -7448,6 +8752,68 @@
         },
         "additionalProperties": false
       },
+      "AdminKioskRefundSummary": {
+        "required": [
+          "id",
+          "shopName",
+          "amount",
+          "bankName",
+          "bankHolder",
+          "bankAccountSuffix",
+          "refundReason",
+          "status",
+          "refundApprovedBy",
+          "createdAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "shopName": {
+            "type": "string"
+          },
+          "amount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "bankName": {
+            "type": "string"
+          },
+          "bankHolder": {
+            "type": "string"
+          },
+          "bankAccountSuffix": {
+            "type": "string"
+          },
+          "refundReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": "string"
+          },
+          "refundApprovedBy": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
       "AdminRefundDetail": {
         "required": [
           "refund",
@@ -8097,6 +9463,23 @@
         },
         "additionalProperties": false
       },
+      "AttachKioskEvidenceRequest": {
+        "required": [
+          "id",
+          "reference"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reference": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "AttachRequest": {
         "required": [
           "p_service",
@@ -8145,6 +9528,21 @@
           },
           "registrationEmailEnabled": {
             "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CancelKioskApplicationRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         },
         "additionalProperties": false
@@ -8239,6 +9637,34 @@
         },
         "additionalProperties": false
       },
+      "ConfirmKioskApplicationRequest": {
+        "required": [
+          "note"
+        ],
+        "type": "object",
+        "properties": {
+          "note": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ConfirmKioskRefundRequest": {
+        "required": [
+          "reference",
+          "evidenceReference"
+        ],
+        "type": "object",
+        "properties": {
+          "reference": {
+            "type": "string"
+          },
+          "evidenceReference": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "ConfirmRefundRequest": {
         "required": [
           "p_refund",
@@ -8312,6 +9738,67 @@
               "null",
               "string"
             ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateKioskApplicationRequest": {
+        "required": [
+          "packageId",
+          "shopName",
+          "phone",
+          "contactEmail",
+          "installationAddress",
+          "latitude",
+          "longitude",
+          "bankName",
+          "bankHolder",
+          "bankAccountNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "packageId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "shopName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "contactEmail": {
+            "type": "string"
+          },
+          "installationAddress": {
+            "type": "string"
+          },
+          "latitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "longitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "bankName": {
+            "type": "string"
+          },
+          "bankHolder": {
+            "type": "string"
+          },
+          "bankAccountNumber": {
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -8554,7 +10041,8 @@
           "lastMessageAt",
           "lastMessage",
           "lastMessageHasImage",
-          "productContext"
+          "productContext",
+          "unreadCount"
         ],
         "type": "object",
         "properties": {
@@ -8590,6 +10078,14 @@
               "null",
               "string"
             ]
+          },
+          "unreadCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
           }
         },
         "additionalProperties": false
@@ -8601,7 +10097,8 @@
           "isMine",
           "content",
           "createdAt",
-          "imageUrl"
+          "imageUrl",
+          "readAt"
         ],
         "type": "object",
         "properties": {
@@ -8630,6 +10127,13 @@
               "null",
               "string"
             ]
+          },
+          "readAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         },
         "additionalProperties": false
@@ -8707,6 +10211,61 @@
           },
           "hasMore": {
             "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CustomerSellerChatReadResult": {
+        "required": [
+          "chatId",
+          "messagesMarkedRead",
+          "unreadCount",
+          "readThroughMessageId",
+          "readThroughCreatedAt",
+          "readAt"
+        ],
+        "type": "object",
+        "properties": {
+          "chatId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "messagesMarkedRead": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "unreadCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "readThroughMessageId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "readThroughCreatedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "readAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         },
         "additionalProperties": false
@@ -8806,6 +10365,157 @@
             "format": "uuid"
           },
           "p_event": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "EligibleKioskResponse": {
+        "required": [
+          "id",
+          "code",
+          "name",
+          "walkInSlots",
+          "preorderSlots",
+          "totalSlots",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "walkInSlots": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "preorderSlots": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalSlots": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "EnrollKioskRequest": {
+        "required": [
+          "code",
+          "name",
+          "hardwareId",
+          "mqttClientId",
+          "region",
+          "walkInSlots",
+          "preorderSlots"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "hardwareId": {
+            "type": "string"
+          },
+          "mqttClientId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "region": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "walkInSlots": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "preorderSlots": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "EnrollKioskResponse": {
+        "required": [
+          "id",
+          "code",
+          "name",
+          "walkInSlots",
+          "preorderSlots",
+          "status",
+          "apiKey"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "walkInSlots": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "preorderSlots": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "status": {
+            "type": "string"
+          },
+          "apiKey": {
             "type": "string"
           }
         },
@@ -9071,7 +10781,7 @@
         },
         "additionalProperties": false
       },
-      "JsonElement": { },
+      "JsonElement": {},
       "KioskAccessoryResponse": {
         "required": [
           "id",
@@ -9107,6 +10817,293 @@
           },
           "shopName": {
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "KioskApplicationDetailResponse": {
+        "required": [
+          "application",
+          "evidencePhotos"
+        ],
+        "type": "object",
+        "properties": {
+          "application": {
+            "$ref": "#/components/schemas/KioskApplicationResponse"
+          },
+          "evidencePhotos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IncidentPhoto"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "KioskApplicationPage": {
+        "required": [
+          "items",
+          "page",
+          "hasMore"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/KioskApplicationResponse"
+            }
+          },
+          "page": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "hasMore": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "KioskApplicationResponse": {
+        "required": [
+          "id",
+          "customerId",
+          "packageId",
+          "packageName",
+          "annualFee",
+          "walkInSlots",
+          "preorderSlots",
+          "totalSlots",
+          "shopName",
+          "phone",
+          "contactEmail",
+          "installationAddress",
+          "latitude",
+          "longitude",
+          "bankName",
+          "bankHolder",
+          "bankAccountSuffix",
+          "status",
+          "createdAt",
+          "updatedAt",
+          "paymentId",
+          "paymentStatus",
+          "reviewNote",
+          "confirmedAt",
+          "assignedTechnicianId",
+          "assignedTechnicianName",
+          "assignedKioskId",
+          "assignedKioskCode",
+          "scheduledDate",
+          "timeWindow",
+          "technicianReport",
+          "reworkReason",
+          "handoverAt",
+          "handoverBy",
+          "sellerId",
+          "canVoluntaryCancel"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "customerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "packageId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "packageName": {
+            "type": "string"
+          },
+          "annualFee": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "walkInSlots": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "preorderSlots": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalSlots": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "shopName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "contactEmail": {
+            "type": "string"
+          },
+          "installationAddress": {
+            "type": "string"
+          },
+          "latitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "longitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "bankName": {
+            "type": "string"
+          },
+          "bankHolder": {
+            "type": "string"
+          },
+          "bankAccountSuffix": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "paymentId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "paymentStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reviewNote": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "confirmedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "assignedTechnicianId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "assignedTechnicianName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "assignedKioskId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "assignedKioskCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "scheduledDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "timeWindow": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "technicianReport": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reworkReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "handoverAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "handoverBy": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "sellerId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "canVoluntaryCancel": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -9158,7 +11155,7 @@
               "format": "uuid"
             }
           },
-          "p_accessories": { },
+          "p_accessories": {},
           "p_points": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
@@ -9279,6 +11276,96 @@
               "null",
               "string"
             ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "KioskPackageResponse": {
+        "required": [
+          "id",
+          "name",
+          "annualFee",
+          "walkInSlots",
+          "preorderSlots",
+          "totalSlots",
+          "termMonths",
+          "status",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "annualFee": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "walkInSlots": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "preorderSlots": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalSlots": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "termMonths": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "status": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "KioskRefundBankResponse": {
+        "required": [
+          "bankName",
+          "holder",
+          "accountNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "bankName": {
+            "type": "string"
+          },
+          "holder": {
+            "type": "string"
+          },
+          "accountNumber": {
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -9661,6 +11748,18 @@
         },
         "additionalProperties": false
       },
+      "PlatformFailureRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "ProblemDetails": {
         "type": "object",
         "properties": {
@@ -9849,6 +11948,23 @@
               "string"
             ],
             "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProvisionKioskKeyResponse": {
+        "required": [
+          "kioskId",
+          "apiKey"
+        ],
+        "type": "object",
+        "properties": {
+          "kioskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "apiKey": {
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -10196,6 +12312,18 @@
         },
         "additionalProperties": false
       },
+      "RejectKioskApplicationRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "RejectWithdrawalRequest": {
         "required": [
           "p_w",
@@ -10402,6 +12530,45 @@
         "properties": {
           "accountNumber": {
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReworkKioskApplicationRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ScheduleKioskApplicationRequest": {
+        "required": [
+          "technicianId",
+          "scheduledDate",
+          "timeWindow",
+          "kioskId"
+        ],
+        "type": "object",
+        "properties": {
+          "technicianId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "scheduledDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "timeWindow": {
+            "type": "string"
+          },
+          "kioskId": {
+            "type": "string",
+            "format": "uuid"
           }
         },
         "additionalProperties": false
@@ -11468,6 +13635,18 @@
         },
         "additionalProperties": false
       },
+      "SubmitInstallationReportRequest": {
+        "required": [
+          "report"
+        ],
+        "type": "object",
+        "properties": {
+          "report": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "SubmitRefundInfoRequest": {
         "required": [
           "p_order",
@@ -11583,6 +13762,188 @@
           },
           "status": {
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "TechnicianInstallationDetail": {
+        "required": [
+          "id",
+          "shopName",
+          "phone",
+          "contactEmail",
+          "installationAddress",
+          "latitude",
+          "longitude",
+          "kioskId",
+          "kioskCode",
+          "scheduledDate",
+          "timeWindow",
+          "status",
+          "technicianReport",
+          "reworkReason",
+          "evidence"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "shopName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "contactEmail": {
+            "type": "string"
+          },
+          "installationAddress": {
+            "type": "string"
+          },
+          "latitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "longitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "kioskId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "kioskCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "scheduledDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "timeWindow": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": "string"
+          },
+          "technicianReport": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reworkReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StaffEvidenceItem"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "TechnicianInstallationSummary": {
+        "required": [
+          "id",
+          "shopName",
+          "phone",
+          "contactEmail",
+          "installationAddress",
+          "latitude",
+          "longitude",
+          "kioskCode",
+          "scheduledDate",
+          "timeWindow",
+          "status",
+          "reworkReason"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "shopName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "contactEmail": {
+            "type": "string"
+          },
+          "installationAddress": {
+            "type": "string"
+          },
+          "latitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "longitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "kioskCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "scheduledDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "timeWindow": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": "string"
+          },
+          "reworkReason": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         },
         "additionalProperties": false
@@ -12534,6 +14895,9 @@
     },
     {
       "name": "KioskOps"
+    },
+    {
+      "name": "KioskOnboarding"
     },
     {
       "name": "Payment"

@@ -12,6 +12,11 @@ export const workspaceSections = {
     ['slots', 'Ô tủ', 'Phân bổ ô cho shop và kiểm tra tình trạng từng ô.'],
     ['complaints', 'Phản ánh', 'Xem bằng chứng và xử lý phản ánh của khách.'],
     ['refunds', 'Hoàn tiền', 'Kiểm tra khoản hoàn và xác nhận chi trả.'],
+    [
+      'kiosk-refunds',
+      'Hoàn tiền thuê kiosk',
+      'Kiểm tra và xử lý hoàn tiền đơn đăng ký thuê kiosk hàng năm.',
+    ],
     ['withdrawals', 'Rút tiền', 'Duyệt yêu cầu và ghi nhận khoản đã chi cho shop.'],
     ['reconciliation', 'Đối soát', 'Kiểm tra giao dịch và kết quả đối soát.'],
   ],
@@ -35,6 +40,11 @@ export const workspaceSections = {
     ['wallet', 'Ví & tài khoản nhận tiền', 'Theo dõi số dư, khoản chi và yêu cầu rút tiền.'],
   ],
   OPERATIONS_MANAGER: [
+    [
+      'installations',
+      'Hồ sơ thuê & Lắp đặt',
+      'Tiếp nhận hồ sơ thuê kiosk, xác nhận liên hệ, phân công kỹ thuật và nghiệm thu bàn giao.',
+    ],
     ['technicians', 'Kỹ thuật viên', 'Tạo tài khoản và quản lý trạng thái Kỹ thuật viên.'],
   ],
 } as const;

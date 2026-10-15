@@ -37,6 +37,10 @@ import FlowerShop from './FlowerShop';
 import WebRequests from './WebRequests';
 import AccountManagement from './AccountManagement';
 import PersonalProfile from './PersonalProfile';
+import CustomerKioskOnboarding from './CustomerKioskOnboarding';
+import OperationsInstallations from './OperationsInstallations';
+import TechnicianInstallations from './TechnicianInstallations';
+import AdminKioskRefunds from './AdminKioskRefunds';
 import { startPortalUpdates } from './realtime';
 
 const loginSchema = z.object({
@@ -300,7 +304,7 @@ function StaffWorkspace() {
   );
 }
 
-function TechnicianWorkspace() {
+function TechnicianWorkspace({ section = 'tasks' }: { section?: string }) {
   const router = useRouter();
   const session = useQuery({ ...sessionQuery, refetchInterval: 60_000 });
   const logout = useMutation({
@@ -341,47 +345,56 @@ function TechnicianWorkspace() {
         onLogout={() => logout.mutate()}
       />
       <div className="dashboard-shell">
-        <WorkspaceNavigation workspaceRole="TECHNICIAN" section="tasks" />
+        <WorkspaceNavigation workspaceRole="TECHNICIAN" section={section} />
         <main id="main" className="workspace dashboard-content">
-          <div className="dashboard-page-heading">
-            <div>
-              <h1>Chào {session.data.name}</h1>
-              <p>Nhận việc kiểm tra sự cố, cập nhật tiến độ và gửi báo cáo tại tủ.</p>
-            </div>
-            <span className="dashboard-context">Kỹ thuật viên</span>
-          </div>
-          <StaffTasks
-            actorRole="TECHNICIAN"
-            mode="worker"
-            actorId={session.data.id}
-            apiBase="/staff/tasks"
-            allowedKinds={['INCIDENT']}
-          />
-          <section
-            id="technician-guide"
-            className="dashboard-staff-guide"
-            tabIndex={-1}
-            aria-labelledby="technician-guide-title"
-          >
-            <h2 id="technician-guide-title">Từ nhận việc đến hoàn thành sự cố</h2>
-            <ol>
-              <li>
-                <strong>Kiểm tra sự cố</strong>
-                <p>Xem thông tin tủ, lý do và hướng dẫn xử lý.</p>
-              </li>
-              <li>
-                <strong>Khắc phục và ghi nhận</strong>
-                <p>Bắt đầu công việc, sửa chữa thực tế và tải ảnh minh chứng.</p>
-              </li>
-              <li>
-                <strong>Đóng sự cố và gửi báo cáo</strong>
-                <p>Xác nhận đã kiểm tra thực tế để gửi người quản lý duyệt.</p>
-              </li>
-            </ol>
-            <p className="dashboard-data-note">
-              Kỹ thuật viên chỉ phụ trách sự cố kỹ thuật; không thực hiện nạp hoa cho shop.
-            </p>
-          </section>
+          {section === 'installations' ? (
+            <TechnicianInstallations
+              key={`${session.data.id}:${session.data.role}`}
+              session={session.data}
+            />
+          ) : (
+            <>
+              <div className="dashboard-page-heading">
+                <div>
+                  <h1>Chào {session.data.name}</h1>
+                  <p>Nhận việc kiểm tra sự cố, cập nhật tiến độ và gửi báo cáo tại tủ.</p>
+                </div>
+                <span className="dashboard-context">Kỹ thuật viên</span>
+              </div>
+              <StaffTasks
+                actorRole="TECHNICIAN"
+                mode="worker"
+                actorId={session.data.id}
+                apiBase="/staff/tasks"
+                allowedKinds={['INCIDENT']}
+              />
+              <section
+                id="technician-guide"
+                className="dashboard-staff-guide"
+                tabIndex={-1}
+                aria-labelledby="technician-guide-title"
+              >
+                <h2 id="technician-guide-title">Từ nhận việc đến hoàn thành sự cố</h2>
+                <ol>
+                  <li>
+                    <strong>Kiểm tra sự cố</strong>
+                    <p>Xem thông tin tủ, lý do và hướng dẫn xử lý.</p>
+                  </li>
+                  <li>
+                    <strong>Khắc phục và ghi nhận</strong>
+                    <p>Bắt đầu công việc, sửa chữa thực tế và tải ảnh minh chứng.</p>
+                  </li>
+                  <li>
+                    <strong>Đóng sự cố và gửi báo cáo</strong>
+                    <p>Xác nhận đã kiểm tra thực tế để gửi người quản lý duyệt.</p>
+                  </li>
+                </ol>
+                <p className="dashboard-data-note">
+                  Kỹ thuật viên chỉ phụ trách sự cố kỹ thuật; không thực hiện nạp hoa cho shop.
+                </p>
+              </section>
+            </>
+          )}
           {logout.isError && <p role="alert">Chưa đăng xuất được. Bạn thử lại nhé.</p>}
         </main>
       </div>
@@ -414,7 +427,7 @@ function OperationsWorkspace({ section = 'overview' }: { section?: string }) {
         <Link href="/admin/login">Về đăng nhập vận hành</Link>
       </main>
     );
-  if (session.data.role !== 'OPERATIONS_MANAGER')
+  if (session.data.role !== 'OPERATIONS_MANAGER' && session.data.role !== 'ADMIN')
     return (
       <main id="main" className="workspace">
         <h1>Phiên làm việc đã thay đổi</h1>
@@ -424,13 +437,16 @@ function OperationsWorkspace({ section = 'overview' }: { section?: string }) {
   return (
     <>
       <WorkspaceHeader
-        workspaceRole="OPERATIONS_MANAGER"
+        workspaceRole={session.data.role === 'ADMIN' ? 'ADMIN' : 'OPERATIONS_MANAGER'}
         name={session.data.name}
         busy={logout.isPending}
         onLogout={() => logout.mutate()}
       />
       <div className="dashboard-shell">
-        <WorkspaceNavigation workspaceRole="OPERATIONS_MANAGER" section={section} />
+        <WorkspaceNavigation
+          workspaceRole={session.data.role === 'ADMIN' ? 'ADMIN' : 'OPERATIONS_MANAGER'}
+          section={section}
+        />
         <main id="main" className="workspace dashboard-content">
           <div className="dashboard-page-heading">
             <div>
@@ -447,7 +463,12 @@ function OperationsWorkspace({ section = 'overview' }: { section?: string }) {
               {section === 'technicians' ? 'Kỹ thuật viên' : 'Quản lý vận hành'}
             </span>
           </div>
-          {section === 'technicians' ? (
+          {section === 'installations' ? (
+            <OperationsInstallations
+              key={`${session.data.id}:${session.data.role}`}
+              session={session.data}
+            />
+          ) : section === 'technicians' ? (
             <AccountManagement
               actorRole="OPERATIONS_MANAGER"
               targetRole="TECHNICIAN"
@@ -693,6 +714,12 @@ function Workspace({
           {role === 'ADMIN' && section === 'incidents' && <AdminIncidents />}
           {role === 'ADMIN' && section === 'complaints' && <AdminComplaints />}
           {role === 'ADMIN' && section === 'refunds' && <AdminRefunds />}
+          {role === 'ADMIN' && section === 'kiosk-refunds' && (
+            <AdminKioskRefunds
+              key={`${session.data.id}:${session.data.role}`}
+              session={session.data}
+            />
+          )}
           {role === 'ADMIN' && section === 'withdrawals' && <AdminWithdrawals />}
           {role === 'ADMIN' && section === 'reconciliation' && <AdminReconciliation />}
           {logout.isError && (
@@ -721,8 +748,10 @@ export type PortalScreen =
   | 'admin'
   | 'staff'
   | 'technician'
+  | 'technician-installations'
   | 'operations'
-  | 'workspace';
+  | 'workspace'
+  | 'thue-kiosk';
 
 function Guard({ requiredRole, children }: { requiredRole: string; children: React.ReactNode }) {
   const router = useRouter();
@@ -730,7 +759,8 @@ function Guard({ requiredRole, children }: { requiredRole: string; children: Rea
   const allowed =
     session.data &&
     (session.data.role === requiredRole ||
-      (requiredRole === 'CUSTOMER' && session.data.role === 'SELLER'));
+      (requiredRole === 'CUSTOMER' && session.data.role === 'SELLER') ||
+      (requiredRole === 'OPERATIONS_MANAGER' && session.data.role === 'ADMIN'));
   const isPlatformRole =
     requiredRole === 'ADMIN' ||
     requiredRole === 'OPERATIONS_MANAGER' ||
@@ -827,6 +857,14 @@ function Screen({ screen, section }: { screen: PortalScreen; section?: string })
           </Guard>
         </div>
       );
+    case 'technician-installations':
+      return (
+        <div className="workspace-portal-root">
+          <Guard requiredRole="TECHNICIAN">
+            <TechnicianWorkspace section="installations" />
+          </Guard>
+        </div>
+      );
     case 'operations':
       return (
         <div className="workspace-portal-root">
@@ -839,6 +877,14 @@ function Screen({ screen, section }: { screen: PortalScreen; section?: string })
       return (
         <div className="workspace-portal-root">
           <WorkspaceAccount />
+        </div>
+      );
+    case 'thue-kiosk':
+      return (
+        <div className="workspace-portal-root">
+          <Guard requiredRole="CUSTOMER">
+            <CustomerKioskOnboarding />
+          </Guard>
         </div>
       );
   }
@@ -857,10 +903,12 @@ export default function PortalApplication({
       'seller',
       'operations',
       'technician',
+      'technician-installations',
       'staff',
       'member',
       'profile',
       'workspace',
+      'thue-kiosk',
     ].includes(screen);
     if (workspace && !window.location.hash) {
       window.scrollTo({ top: 0, left: 0, behavior: 'instant' });

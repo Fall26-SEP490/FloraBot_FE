@@ -35,6 +35,8 @@ const icons = {
   slots: Boxes,
   complaints: CircleAlert,
   refunds: Banknote,
+  'kiosk-refunds': Banknote,
+  installations: Boxes,
   withdrawals: Wallet,
   reconciliation: ListChecks,
   products: Flower2,
@@ -48,7 +50,7 @@ const groups = {
   ADMIN: [
     ['Vận hành', ['managers', 'orders', 'incidents', 'tasks']],
     ['Mạng lưới', ['shops', 'slots']],
-    ['Giao dịch', ['complaints', 'refunds', 'withdrawals', 'reconciliation']],
+    ['Giao dịch', ['complaints', 'refunds', 'kiosk-refunds', 'withdrawals', 'reconciliation']],
   ],
   SELLER: [
     ['Bán hoa', ['orders', 'products', 'stock', 'accessories', 'tasks']],
@@ -141,10 +143,19 @@ export default function WorkspaceNavigation({
               onKeyDown={handleEscape}
               onClick={closeMenu}
               href="/technician"
-              aria-current="page"
+              aria-current={section !== 'installations' ? 'page' : undefined}
             >
               <ClipboardList size={19} aria-hidden="true" />
               Công việc kỹ thuật
+            </Link>
+            <Link
+              onKeyDown={handleEscape}
+              onClick={closeMenu}
+              href="/technician/installations"
+              aria-current={section === 'installations' ? 'page' : undefined}
+            >
+              <Boxes size={19} aria-hidden="true" />
+              Lắp đặt Kiosk
             </Link>
             <Link onKeyDown={handleEscape} onClick={closeMenu} href="#technician-guide">
               <ListChecks size={19} aria-hidden="true" />
@@ -175,6 +186,15 @@ export default function WorkspaceNavigation({
             </Link>
             <div className="workspace-nav-group">
               <p>Vận hành kỹ thuật</p>
+              <Link
+                onKeyDown={handleEscape}
+                onClick={closeMenu}
+                href="/operations/installations"
+                aria-current={section === 'installations' ? 'page' : undefined}
+              >
+                <Boxes size={19} aria-hidden="true" />
+                <span>Hồ sơ thuê & Lắp đặt</span>
+              </Link>
               <Link
                 onKeyDown={handleEscape}
                 onClick={closeMenu}
