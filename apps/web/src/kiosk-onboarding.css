@@ -1192,6 +1192,10 @@
   color: #476451;
 }
 
+.kiosk-empty-state > svg {
+  margin-inline: auto;
+}
+
 .kiosk-empty-state h3 {
   font-size: 1.2rem;
   margin: 0.75rem 0 0.25rem 0;

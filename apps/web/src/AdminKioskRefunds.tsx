@@ -421,8 +421,8 @@ export default function AdminKioskRefunds({ session }: AdminKioskRefundsProps) {
           <strong>Quy tắc nghiệp vụ hoàn tiền:</strong>
           <ul style={{ margin: '0.35rem 0 0 1.25rem', padding: 0 }}>
             <li>
-              <strong>Bảo mật thông tin tài khoản:</strong> Số tài khoản được che định dạng{' '}
-              <code>****{'{suffix}'}</code> để bảo vệ dữ liệu khách hàng.
+              <strong>Bảo mật thông tin tài khoản:</strong> Số tài khoản được che, chỉ hiện phần
+              đuôi để bảo vệ dữ liệu khách hàng.
             </li>
             <li>
               <strong>Quy trình đối soát hai bước:</strong> Người phê duyệt hoàn tiền và người xác
