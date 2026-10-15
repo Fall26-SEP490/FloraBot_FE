@@ -16,13 +16,14 @@ for (const width of [390, 820, 1440])
       .getByRole('navigation', { name: 'Điều hướng chính' })
       .getByRole('link', { name: 'Vị trí tủ', exact: true })
       .click();
-    await expect(page).toHaveURL(/#vi-tri$/);
+    await expect(page).toHaveURL(/\/tim-kiosk$/);
     await expect
       .poll(() => header.evaluate((element) => Math.round(element.getBoundingClientRect().top)))
       .toBe(0);
     const bounds = await page.evaluate(() => ({
       header: document.querySelector('.site-header')!.getBoundingClientRect().bottom,
-      target: document.querySelector('#locations-title')!.getBoundingClientRect().top,
+      target: (document.querySelector('h1') ||
+        document.querySelector('#locations-title'))!.getBoundingClientRect().top,
     }));
     expect(bounds.target).toBeGreaterThanOrEqual(bounds.header);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
@@ -50,17 +51,19 @@ for (const width of [390, 1440])
       await expect(nav).toBeHidden();
       await menu.click();
     }
-    for (const name of [
-      'Trang chủ',
-      'Về chúng tôi',
-      'Sản phẩm hoa',
-      'Cách đặt & nhận hoa',
-      'Vị trí tủ',
-      'Liên hệ',
-    ])
+    for (const name of ['Trang chủ', 'Sản phẩm hoa', 'Cách đặt & nhận hoa', 'Vị trí tủ'])
       await expect(nav.getByRole('link', { name, exact: true })).toBeVisible();
+
+    await expect(nav.getByRole('link', { name: 'Về chúng tôi', exact: true })).toHaveCount(0);
+    await expect(nav.getByRole('link', { name: 'Liên hệ', exact: true })).toHaveCount(0);
+    await expect(nav.getByRole('link', { name: 'Hồ sơ cá nhân', exact: true })).toHaveCount(0);
+
+    const footer = page.locator('.site-footer');
+    await expect(footer.getByRole('link', { name: 'Về FloraBot' })).toBeVisible();
+    await expect(footer.getByRole('link', { name: 'Liên hệ & hỗ trợ' })).toBeVisible();
+
     await page.screenshot({ path: `.impeccable/review/customer-navigation-${width}.png` });
-    await nav.getByRole('link', { name: 'Về chúng tôi' }).click();
+    await footer.getByRole('link', { name: 'Về FloraBot' }).click();
     await expect(page).toHaveURL(/\/ve-florabot$/);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
       'Hoa cho những điều bạn muốn nói.',

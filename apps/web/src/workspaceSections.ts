@@ -22,6 +22,7 @@ export const workspaceSections = {
   ],
   SELLER: [
     ['orders', 'Đơn đặt trước', 'Báo giá, chuẩn bị hoa và theo dõi lịch nhận.'],
+    ['chats', 'Tin nhắn', 'Trao đổi và giải đáp thắc mắc với khách hàng.'],
     [
       'products',
       'Mẫu hoa',

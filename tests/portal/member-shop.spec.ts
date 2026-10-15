@@ -41,7 +41,7 @@ test('Opening a shop validates, preserves input after failure and keeps member a
     return route.fulfill({ json: [] });
   });
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/tai-khoan');
+  await page.goto('/tai-khoan#member-shop');
   await page.getByRole('button', { name: 'Đăng ký mở shop', exact: true }).click();
   await expect(page.getByLabel('Tên shop', { exact: true })).toBeFocused();
   expect(attempts).toBe(0);
@@ -61,7 +61,7 @@ test('Opening a shop validates, preserves input after failure and keeps member a
   await expect(page.getByLabel('Tên shop', { exact: true })).toHaveValue('Hoa của Lan');
   await page.getByRole('button', { name: 'Đăng ký mở shop', exact: true }).click();
   await expect(page).toHaveURL(/\/seller$/);
-  await page.goto('/tai-khoan');
+  await page.goto('/tai-khoan#member-shop');
   await expect(page.getByRole('link', { name: 'Vào shop của bạn' })).toBeVisible();
   await expect(page.getByText('12.000 điểm')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Đăng ký mở shop', exact: true })).toHaveCount(0);

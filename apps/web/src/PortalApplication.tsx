@@ -38,6 +38,7 @@ import WebRequests from './WebRequests';
 import AccountManagement from './AccountManagement';
 import PersonalProfile from './PersonalProfile';
 import CustomerKioskOnboarding from './CustomerKioskOnboarding';
+import { SellerChatSection } from './chat/SellerChatSection';
 import OperationsInstallations from './OperationsInstallations';
 import TechnicianInstallations from './TechnicianInstallations';
 import AdminKioskRefunds from './AdminKioskRefunds';
@@ -648,6 +649,7 @@ function Workspace({
               sellerId={session.data.sellerId || undefined}
             />
           )}
+          {role === 'SELLER' && section === 'chats' && <SellerChatSection session={session.data} />}
           {role === 'SELLER' && section === 'products' && <Products session={session.data} />}
           {role === 'SELLER' && section === 'kiosks' && <SellerKiosks session={session.data} />}
           {role === 'SELLER' && section === 'subscriptions' && (

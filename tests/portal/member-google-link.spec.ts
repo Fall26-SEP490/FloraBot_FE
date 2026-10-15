@@ -44,7 +44,7 @@ test.describe('Member Google Account Linking', () => {
       return route.fulfill({ json: [] });
     });
 
-    await page.goto('/tai-khoan');
+    await page.goto('/tai-khoan#member-profile');
     const linkSection = page.locator('#member-google-link');
     await expect(linkSection).toBeVisible();
     await expect(
@@ -100,7 +100,7 @@ test.describe('Member Google Account Linking', () => {
       return route.fulfill({ json: [] });
     });
 
-    await page.goto('/tai-khoan');
+    await page.goto('/tai-khoan#member-profile');
     const linkSection = page.locator('#member-google-link');
     await expect(linkSection.getByRole('alert')).toContainText(
       'Không thể tải dịch vụ Google Identity',
@@ -173,7 +173,7 @@ test.describe('Member Google Account Linking', () => {
       return route.fulfill({ json: [] });
     });
 
-    await page.goto('/tai-khoan');
+    await page.goto('/tai-khoan#member-profile');
     const linkSection = page.locator('#member-google-link');
     await expect(linkSection).toBeVisible();
 
@@ -252,7 +252,7 @@ test.describe('Member Google Account Linking', () => {
       return route.fulfill({ json: [] });
     });
 
-    await page.goto('/tai-khoan');
+    await page.goto('/tai-khoan#member-profile');
 
     // While config is pending, container is not rendered
     const loadingMessage = page.getByText('Đang tải cấu hình liên kết Google…');
@@ -338,7 +338,7 @@ test.describe('Member Google Account Linking', () => {
       return route.fulfill({ json: [] });
     });
 
-    await page.goto('/tai-khoan');
+    await page.goto('/tai-khoan#member-profile');
     const gisButton = page.locator('[data-testid="mock-gis-button"]');
     await expect(gisButton).toBeVisible();
 
@@ -401,7 +401,7 @@ test.describe('Member Google Account Linking', () => {
       return route.fulfill({ json: [] });
     });
 
-    await page.goto('/tai-khoan');
+    await page.goto('/tai-khoan#member-profile');
     const gisButton = page.locator('[data-testid="mock-gis-button"]');
     await expect(gisButton).toBeVisible();
 
@@ -460,7 +460,7 @@ test.describe('Member Google Account Linking', () => {
       return route.fulfill({ json: [] });
     });
 
-    await page.goto('/tai-khoan');
+    await page.goto('/tai-khoan#member-profile');
     const linkSection = page.locator('#member-google-link');
     await expect(linkSection).toBeVisible();
     await expect(linkSection).toContainText('seller@example.com');

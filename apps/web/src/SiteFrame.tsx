@@ -10,11 +10,9 @@ import { workspaceBase } from './workspaceSections';
 
 const navigation = [
   ['/', 'Trang chủ'],
-  ['/ve-florabot', 'Về chúng tôi'],
   ['/dat-hoa', 'Sản phẩm hoa'],
   ['/huong-dan-dat-hoa', 'Cách đặt & nhận hoa'],
-  ['/#vi-tri', 'Vị trí tủ'],
-  ['/lien-he', 'Liên hệ'],
+  ['/tim-kiosk', 'Vị trí tủ'],
 ] as const;
 
 export function SiteBrand({ className = 'site-brand', href = '/' }) {
@@ -144,16 +142,6 @@ function SiteHeader() {
             {label}
           </Link>
         ))}
-        {session.data && (
-          <Link
-            href="/ho-so"
-            prefetch={false}
-            aria-current={pathname === '/ho-so' ? 'page' : undefined}
-            onClick={() => setOpenedPath(null)}
-          >
-            Hồ sơ cá nhân
-          </Link>
-        )}
         {session.data?.sellerId && (
           <Link href="/seller" prefetch={false} onClick={() => setOpenedPath(null)}>
             Quản lý shop
@@ -203,30 +191,63 @@ function SiteHeader() {
 const SiteFooter = memo(function SiteFooter() {
   return (
     <footer className="site-footer florabot-footer">
-      <div>
-        <SiteBrand />
-        <p>Chọn hoa theo ý bạn. Nhận tại tủ theo lịch hẹn.</p>
+      <div className="footer-container">
+        <div className="footer-col footer-col-brand">
+          <SiteBrand />
+          <p className="footer-brand-desc">
+            Nền tảng kết nối shop hoa địa phương và hệ thống tủ kiosk thông minh tự phục vụ. Nhận
+            hoa tươi theo lịch hẹn tiện lợi và nhanh chóng.
+          </p>
+        </div>
+        <div className="footer-col">
+          <h3 className="footer-heading">Khám phá</h3>
+          <nav aria-label="Khám phá FloraBot">
+            <Link href="/ve-florabot" prefetch={false}>
+              Về FloraBot
+            </Link>
+            <Link href="/dat-hoa" prefetch={false}>
+              Sản phẩm hoa
+            </Link>
+            <Link href="/tim-kiosk" prefetch={false}>
+              Vị trí tủ
+            </Link>
+          </nav>
+        </div>
+        <div className="footer-col">
+          <h3 className="footer-heading">Hỗ trợ</h3>
+          <nav aria-label="Hỗ trợ khách hàng">
+            <Link href="/huong-dan-dat-hoa" prefetch={false}>
+              Cách đặt & nhận hoa
+            </Link>
+            <Link href="/lien-he" prefetch={false}>
+              Liên hệ & hỗ trợ
+            </Link>
+            <Link href="/chinh-sach-rieng-tu" prefetch={false}>
+              Chính sách riêng tư
+            </Link>
+            <Link href="/lich-su-mua" prefetch={false}>
+              Biên nhận đã lưu
+            </Link>
+          </nav>
+        </div>
+        <div className="footer-col">
+          <h3 className="footer-heading">Dành cho shop</h3>
+          <nav aria-label="Dành cho đối tác shop">
+            <Link href="/tai-khoan" prefetch={false}>
+              Tài khoản của bạn
+            </Link>
+            <Link href="/thue-kiosk" prefetch={false}>
+              Thuê tủ kiosk
+            </Link>
+            <Link href="/seller" prefetch={false}>
+              Kênh người bán
+            </Link>
+          </nav>
+        </div>
       </div>
-      <nav aria-label="Thông tin FloraBot">
-        <Link href="/ve-florabot" prefetch={false}>
-          Về FloraBot
-        </Link>
-        <Link href="/huong-dan-dat-hoa" prefetch={false}>
-          Hướng dẫn đặt & nhận hoa
-        </Link>
-        <Link href="/lien-he" prefetch={false}>
-          Liên hệ & hỗ trợ
-        </Link>
-        <Link href="/chinh-sach-rieng-tu" prefetch={false}>
-          Chính sách riêng tư
-        </Link>
-        <Link href="/lich-su-mua" prefetch={false}>
-          Biên nhận đã lưu
-        </Link>
-        <Link href="/#goi-thue" prefetch={false}>
-          Dành cho shop
-        </Link>
-      </nav>
+      <div className="footer-bottom">
+        <p>© 2026 FloraBot. Tươi mới từng khoảnh khắc.</p>
+      </div>
     </footer>
   );
 });

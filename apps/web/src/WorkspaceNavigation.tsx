@@ -18,9 +18,13 @@ import {
   X,
   LogOut,
   Button,
+  MessageSquare,
 } from '@florabot/ui';
+import { useQuery } from '@tanstack/react-query';
 import { workspaceBase, workspaceSections } from './workspaceSections';
 import { SiteBrand } from './SiteFrame';
+import { sessionQuery } from './api';
+import { getSellerChats } from './chat/api';
 
 type Role = 'ADMIN' | 'SELLER' | 'OPERATIONS_MANAGER' | 'TECHNICIAN' | 'SELLER_STAFF';
 const icons = {
@@ -29,6 +33,7 @@ const icons = {
   technicians: Users,
   staff: Users,
   orders: ClipboardList,
+  chats: MessageSquare,
   incidents: CircleAlert,
   tasks: ListChecks,
   shops: Store,
@@ -53,7 +58,7 @@ const groups = {
     ['Giao dịch', ['complaints', 'refunds', 'kiosk-refunds', 'withdrawals', 'reconciliation']],
   ],
   SELLER: [
-    ['Bán hoa', ['orders', 'products', 'stock', 'accessories', 'tasks']],
+    ['Bán hoa', ['orders', 'chats', 'products', 'stock', 'accessories', 'tasks']],
     ['Cửa hàng', ['staff', 'kiosks', 'subscriptions', 'wallet']],
   ],
 } as const;
@@ -109,6 +114,18 @@ export default function WorkspaceNavigation({
   workspaceRole: Role;
   section: string;
 }) {
+  const session = useQuery(sessionQuery);
+  const sellerId = role === 'SELLER' ? session.data?.sellerId : null;
+  const sellerChats = useQuery({
+    queryKey: ['seller-chats', sellerId, 1],
+    queryFn: () => getSellerChats(sellerId!, 1),
+    enabled: Boolean(sellerId && sellerId !== '00000000-0000-0000-0000-000000000000'),
+    staleTime: 30_000,
+  });
+
+  const unreadChatsCount =
+    sellerChats.data?.items?.reduce((sum, item) => sum + (Number(item.unreadCount) || 0), 0) || 0;
+
   const [expanded, setExpanded] = useState(false);
   const toggle = useRef<HTMLButtonElement>(null);
   const base = workspaceBase(role);
@@ -249,6 +266,14 @@ export default function WorkspaceNavigation({
                     >
                       <Icon size={19} aria-hidden="true" />
                       <span>{item[1]}</span>
+                      {key === 'chats' && unreadChatsCount > 0 && (
+                        <span
+                          className="workspace-badge"
+                          aria-label={`${unreadChatsCount} tin nhắn chưa đọc`}
+                        >
+                          {unreadChatsCount > 99 ? '99+' : unreadChatsCount}
+                        </span>
+                      )}
                     </Link>
                   );
                 })}
