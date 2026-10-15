@@ -1,8 +1,13 @@
 FROM node:24-bookworm-slim AS build
 WORKDIR /workspace
 RUN npm install --global pnpm@11.10.0
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/web/package.json ./apps/web/
+COPY packages/config/package.json ./packages/config/
+COPY packages/contracts/package.json ./packages/contracts/
+COPY packages/ui/package.json ./packages/ui/
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store pnpm install --frozen-lockfile
 COPY . .
-RUN pnpm install --frozen-lockfile
 ENV API_PROXY_TARGET=http://gateway:8080
 RUN pnpm --filter @florabot/web build
 

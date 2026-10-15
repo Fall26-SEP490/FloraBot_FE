@@ -381,6 +381,77 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
     await page.locator('.kiosk-reload-btn').click();
     await expect(page.locator('.kiosk-error-state')).toContainText('Máy chủ gặp lỗi');
   });
+
+  test('Kiosk picker map sets strict-origin-when-cross-origin referrerPolicy on tile images', async ({
+    page,
+  }) => {
+    await page.route('**/api/auth/me', (route) =>
+      route.fulfill({
+        json: {
+          id: 'user-seller',
+          name: 'Chủ shop',
+          role: 'SELLER',
+          sellerId,
+          sellerStatus: 'ACTIVE',
+        },
+      }),
+    );
+
+    await page.route(`**/api/sellers/${sellerId}/kiosks`, (route) =>
+      route.fulfill({ json: sampleSellerKiosks }),
+    );
+
+    await page.goto('/seller/kiosks');
+
+    // Meaningful assertion that map tile images enforce strict-origin-when-cross-origin referrerPolicy
+    const tile = page.locator('.kiosk-picker-map img.leaflet-tile').first();
+    await expect(tile).toBeVisible();
+    await expect(tile).toHaveAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+  });
+
+  test('Kiosk picker map shows fallback warning on tileerror and protects manual inputs', async ({
+    page,
+  }) => {
+    // Simulate OSM 403 / tile loading error
+    await page.route('https://tile.openstreetmap.org/**', (route) =>
+      route.fulfill({
+        status: 403,
+        contentType: 'text/plain',
+        body: '403 Forbidden: OSM policy',
+      }),
+    );
+
+    await page.route('**/api/auth/me', (route) =>
+      route.fulfill({
+        json: {
+          id: 'user-seller',
+          name: 'Chủ shop',
+          role: 'SELLER',
+          sellerId,
+          sellerStatus: 'ACTIVE',
+        },
+      }),
+    );
+
+    await page.route(`**/api/sellers/${sellerId}/kiosks`, (route) =>
+      route.fulfill({ json: sampleSellerKiosks }),
+    );
+
+    await page.goto('/seller/kiosks');
+
+    const card = page.locator('.kiosk-card').filter({ hasText: 'Kiosk Landmark 81' });
+    const tileWarning = card.locator('.kiosk-map-tile-warning');
+    await expect(tileWarning).toBeVisible();
+    await expect(tileWarning).toContainText(
+      'Bản đồ chưa tải được đầy đủ ô hình ảnh. Bạn vẫn có thể nhập địa chỉ và tọa độ bằng tay.',
+    );
+
+    // Manual fallback remains interactive even when tiles fail
+    await expect(card.locator('input[name="address"]')).toBeEnabled();
+    await expect(card.locator('input[name="latitude"]')).toBeEnabled();
+    await expect(card.locator('input[name="longitude"]')).toBeEnabled();
+    await expect(card.locator('button[type="submit"]')).toBeEnabled();
+  });
 });
 
 test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
@@ -579,5 +650,54 @@ test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
         .analyze();
       expect(axe.violations).toEqual([]);
     }
+  });
+
+  test('Customer kiosk map sets strict-origin-when-cross-origin referrerPolicy on tile images', async ({
+    page,
+  }) => {
+    await page.route('**/api/kiosk-locations*', (route) =>
+      route.fulfill({ json: sampleCustomerLocations }),
+    );
+
+    await page.goto('/tim-kiosk');
+
+    // Meaningful assertion that map tile images enforce strict-origin-when-cross-origin referrerPolicy
+    const tile = page.locator('.customer-kiosk-map img.leaflet-tile').first();
+    await expect(tile).toBeVisible();
+    await expect(tile).toHaveAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+  });
+
+  test('Customer kiosk map shows tile error warning on failure and protects manual kiosk list and directions', async ({
+    page,
+  }) => {
+    // Simulate OSM 403 policy response
+    await page.route('https://tile.openstreetmap.org/**', (route) =>
+      route.fulfill({
+        status: 403,
+        contentType: 'text/plain',
+        body: '403 Forbidden: OSM policy',
+      }),
+    );
+
+    await page.route('**/api/kiosk-locations*', (route) =>
+      route.fulfill({ json: sampleCustomerLocations }),
+    );
+
+    await page.goto('/tim-kiosk');
+
+    const warning = page.locator('.customer-kiosk-map-container .kiosk-map-tile-warning');
+    await expect(warning).toBeVisible();
+    await expect(warning).toContainText(
+      'Bản đồ chưa tải được đầy đủ hình ảnh. Bạn vẫn có thể xem danh sách địa chỉ và bấm chỉ đường bên dưới.',
+    );
+
+    // Kiosk cards and directions button remain accessible as manual fallback
+    await expect(page.locator('.customer-kiosk-item')).toHaveCount(sampleCustomerLocations.length);
+    const dirLink = page
+      .locator('.customer-kiosk-item')
+      .filter({ hasText: 'Kiosk Landmark 81' })
+      .locator('.customer-btn-directions');
+    await expect(dirLink).toBeVisible();
+    await expect(dirLink).toHaveAttribute('href', /google\.com\/maps\/dir/);
   });
 });

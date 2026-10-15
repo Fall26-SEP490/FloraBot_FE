@@ -67,6 +67,8 @@ export default function CustomerKioskMap({
 
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
           maxZoom: 19,
+          // OSM requires a valid Referer; override the site's privacy header for public map tiles only.
+          referrerPolicy: 'strict-origin-when-cross-origin',
           minZoom: 4,
         })
           .addTo(map)
