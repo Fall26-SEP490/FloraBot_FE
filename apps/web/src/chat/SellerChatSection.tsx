@@ -33,10 +33,12 @@ export function SellerChatSection({ session }: { session: Session }) {
   const items = chatsQuery.data?.items || [];
   const hasMore = chatsQuery.data?.hasMore || false;
 
-  // Derive activeChat from items and selectedChatId
+  // Derive activeChat from items and selectedChatId: never pick items[0] if selectedChatId is set
   const activeChat =
     (selectedChatId ? items.find((item) => item.id === selectedChatId) : null) ||
-    (typeof window !== 'undefined' && window.innerWidth >= 768 ? items[0] || null : null);
+    (!selectedChatId && typeof window !== 'undefined' && window.innerWidth >= 768
+      ? items[0] || null
+      : null);
 
   const activeChatId = activeChat?.id || selectedChatId;
 

@@ -25,6 +25,81 @@ import { getCustomerChats } from './chat/api';
 
 type Profile = { id: string; fullName: string; email: string | null; loyaltyPoints: number };
 
+function MemberBasicProfileForm({ defaultFullName }: { defaultFullName?: string }) {
+  const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState('');
+  const [error, setError] = useState('');
+
+  const form = useForm<{ fullName: string }>({
+    mode: 'onBlur',
+    reValidateMode: 'onBlur',
+    defaultValues: { fullName: defaultFullName || '' },
+  });
+
+  useEffect(() => {
+    if (defaultFullName && !form.formState.isDirty) {
+      form.reset({ fullName: defaultFullName });
+    }
+  }, [defaultFullName, form]);
+
+  async function handleSave(data: { fullName: string }) {
+    if (saving) return;
+    setSaving(true);
+    setError('');
+    setNotice('');
+    try {
+      await request('/member/profile', { fullName: data.fullName.trim() });
+      await queryClient.invalidateQueries({ queryKey: ['member-profile'] });
+      setNotice('Đã lưu thay đổi hồ sơ cá nhân.');
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Chưa cập nhật được thông tin.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <form noValidate onSubmit={form.handleSubmit(handleSave)} style={{ marginBottom: '1.75rem' }}>
+      <h3 style={{ fontSize: '1.1rem', color: '#113421', marginBottom: '0.75rem' }}>
+        Thông tin cá nhân
+      </h3>
+      {notice && (
+        <p role="status" className="notice-success" style={{ color: '#185a32', fontWeight: 600 }}>
+          {notice}
+        </p>
+      )}
+      {error && (
+        <p role="alert" className="error">
+          {error}
+        </p>
+      )}
+      <div style={{ marginBottom: '1rem', maxWidth: '480px' }}>
+        <label htmlFor="member-fullname">Họ và tên *</label>
+        <input
+          id="member-fullname"
+          type="text"
+          {...form.register('fullName', {
+            required: 'Vui lòng nhập họ và tên.',
+            minLength: { value: 2, message: 'Họ và tên cần từ 2 đến 100 ký tự.' },
+            maxLength: { value: 100, message: 'Họ và tên tối đa 100 ký tự.' },
+            validate: (val) => val.trim().length >= 2 || 'Họ và tên cần từ 2 đến 100 ký tự.',
+          })}
+          aria-invalid={!!form.formState.errors.fullName}
+          aria-describedby={form.formState.errors.fullName ? 'member-fullname-error' : undefined}
+        />
+        {form.formState.errors.fullName && (
+          <p id="member-fullname-error" className="error" role="alert">
+            {form.formState.errors.fullName.message}
+          </p>
+        )}
+      </div>
+      <Button type="submit" disabled={saving}>
+        {saving ? 'Đang lưu…' : 'Lưu thông tin cá nhân'}
+      </Button>
+    </form>
+  );
+}
+
 type TabKey =
   'overview' | 'profile' | 'chats' | 'orders' | 'history' | 'kiosks' | 'security' | 'shop';
 
@@ -199,9 +274,14 @@ export default function MemberAccount() {
             </div>
           </div>
           <div className="account-hero-action">
-            <Link href="/ho-so" className="button button-outline" style={{ fontSize: '0.85rem' }}>
-              Xem và cập nhật hồ sơ cá nhân
-            </Link>
+            <button
+              type="button"
+              className="button button-outline"
+              style={{ fontSize: '0.85rem' }}
+              onClick={() => switchTab('profile')}
+            >
+              Chỉnh sửa hồ sơ
+            </button>
           </div>
         </header>
 
@@ -379,7 +459,25 @@ export default function MemberAccount() {
                 <Button onClick={() => void profile.refetch()}>Tải lại hồ sơ</Button>
               </>
             ) : (
-              <MemberGoogleLink email={profile.data.email} />
+              <>
+                <MemberBasicProfileForm defaultFullName={profile.data.fullName} />
+                <MemberGoogleLink email={profile.data.email} />
+                <div
+                  style={{
+                    marginTop: '1.5rem',
+                    paddingTop: '1rem',
+                    borderTop: '1px solid #e1ebe0',
+                  }}
+                >
+                  <Link
+                    href="/ho-so"
+                    className="button button-outline"
+                    style={{ fontSize: '0.85rem' }}
+                  >
+                    Xem và cập nhật hồ sơ cá nhân
+                  </Link>
+                </div>
+              </>
             )}
           </section>
         )}

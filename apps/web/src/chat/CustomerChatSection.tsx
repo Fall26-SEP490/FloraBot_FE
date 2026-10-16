@@ -29,10 +29,74 @@ export function CustomerChatSection({ initialChatId }: { initialChatId?: string 
   const items = chatsQuery.data?.items || [];
   const hasMore = chatsQuery.data?.hasMore || false;
 
-  // Derive activeChat from items and selectedChatId
+  // Read opened chat metadata if passed via sessionStorage or URL search params
+  const [cachedOpenedChat] = useState<CustomerSellerChatItem | null>(() => {
+    if (!initialChatId || typeof window === 'undefined') return null;
+    try {
+      const raw = sessionStorage.getItem('florabot_opened_chat');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed.id === initialChatId) {
+          return {
+            id: parsed.id,
+            otherPartyName: parsed.otherPartyName || 'Shop hoa',
+            createdAt: parsed.createdAt || new Date().toISOString(),
+            lastMessageAt: null,
+            lastMessage: null,
+            lastMessageHasImage: false,
+            productContext: parsed.productContext || null,
+            unreadCount: 0,
+          };
+        }
+      }
+    } catch {
+      // ignore parsing error
+    }
+    const params = new URLSearchParams(window.location.search);
+    const shopName = params.get('shopName');
+    const productName = params.get('productName');
+    if (shopName) {
+      return {
+        id: initialChatId,
+        otherPartyName: shopName,
+        createdAt: new Date().toISOString(),
+        lastMessageAt: null,
+        lastMessage: null,
+        lastMessageHasImage: false,
+        productContext: productName || null,
+        unreadCount: 0,
+      };
+    }
+    return null;
+  });
+
+  // Prepend newly opened conversation if it's not present on current page
+  const chatInItems = selectedChatId ? items.find((item) => item.id === selectedChatId) : null;
+  const missingChatStub: CustomerSellerChatItem | null =
+    selectedChatId && !chatInItems
+      ? cachedOpenedChat?.id === selectedChatId
+        ? cachedOpenedChat
+        : {
+            id: selectedChatId,
+            otherPartyName: 'Shop hoa',
+            createdAt: new Date().toISOString(),
+            lastMessageAt: null,
+            lastMessage: null,
+            lastMessageHasImage: false,
+            productContext: null,
+            unreadCount: 0,
+          }
+      : null;
+
+  const displayedItems = missingChatStub ? [missingChatStub, ...items] : items;
+
+  // Derive activeChat: strictly respect selectedChatId; never pick items[0] if selectedChatId is set
   const activeChat =
-    (selectedChatId ? items.find((item) => item.id === selectedChatId) : null) ||
-    (typeof window !== 'undefined' && window.innerWidth >= 768 ? items[0] || null : null);
+    chatInItems ||
+    missingChatStub ||
+    (!selectedChatId && typeof window !== 'undefined' && window.innerWidth >= 768
+      ? items[0] || null
+      : null);
 
   const activeChatId = activeChat?.id || selectedChatId;
 
@@ -80,7 +144,7 @@ export function CustomerChatSection({ initialChatId }: { initialChatId?: string 
         </div>
 
         <ChatList
-          items={items}
+          items={displayedItems}
           activeChatId={activeChatId}
           onSelectChat={handleSelectChat}
           page={page}

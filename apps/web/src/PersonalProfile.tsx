@@ -70,8 +70,8 @@ function PersonalProfileContent() {
   const [basicError, setBasicError] = useState('');
 
   const basicForm = useForm<BasicFormValues>({
-    mode: 'onSubmit',
-    reValidateMode: 'onSubmit',
+    mode: 'onBlur',
+    reValidateMode: 'onBlur',
     defaultValues: {
       fullName: '',
       phone: '',

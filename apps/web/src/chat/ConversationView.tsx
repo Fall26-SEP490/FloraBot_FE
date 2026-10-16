@@ -103,10 +103,17 @@ export function ConversationView({
     return list;
   }, [olderPages, baseMessages, realtimeMessages, readReceipts]);
 
-  // Initial scroll to bottom once messages load
+  // Initial scroll to bottom once messages load for a conversation
+  const hasScrolledInitialRef = useRef(false);
+
+  useEffect(() => {
+    hasScrolledInitialRef.current = false;
+  }, [chatId]);
+
   const hasLoadedInitial = Boolean(initialQuery.data && !initialQuery.isPending);
   useLayoutEffect(() => {
-    if (hasLoadedInitial && allMessages.length > 0) {
+    if (hasLoadedInitial && allMessages.length > 0 && !hasScrolledInitialRef.current) {
+      hasScrolledInitialRef.current = true;
       scrollToBottom(false);
     }
   }, [hasLoadedInitial, allMessages.length, scrollToBottom]);

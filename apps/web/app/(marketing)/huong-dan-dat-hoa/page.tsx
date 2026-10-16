@@ -205,10 +205,7 @@ export default function HuongDanDatHoaPage() {
         </section>
 
         {/* Action CTAs */}
-        <div
-          className="content-actions"
-          style={{ paddingTop: '1.5rem', borderTop: '1px solid #e1ebe0' }}
-        >
+        <div className="content-actions guide-actions-bar">
           <Link className="button button-primary" href="/dat-hoa">
             Chọn hoa của bạn
           </Link>

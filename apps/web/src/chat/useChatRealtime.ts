@@ -63,6 +63,10 @@ export function useChatRealtime({
       }
     });
 
+    let retryTimeoutId: ReturnType<typeof setTimeout> | null = null;
+    let retryDelay = 1000;
+    const maxRetryDelay = 30000;
+
     const connect = async () => {
       if (disposed || connection.state !== HubConnectionState.Disconnected) return;
       try {
@@ -70,10 +74,17 @@ export function useChatRealtime({
         if (disposed) {
           await connection.stop();
         } else {
+          retryDelay = 1000;
           onReconnectRef.current?.();
         }
       } catch {
-        // Fallback polling or manual refresh handles offline or startup race conditions
+        if (!disposed) {
+          const nextDelay = retryDelay;
+          retryDelay = Math.min(retryDelay * 1.5, maxRetryDelay);
+          retryTimeoutId = setTimeout(() => {
+            void connect();
+          }, nextDelay);
+        }
       }
     };
 
@@ -103,6 +114,7 @@ export function useChatRealtime({
 
     return () => {
       disposed = true;
+      if (retryTimeoutId) clearTimeout(retryTimeoutId);
       connectionRef.current = null;
       window.removeEventListener('online', handleOnline);
       document.removeEventListener('visibilitychange', handleVisibilityChange);

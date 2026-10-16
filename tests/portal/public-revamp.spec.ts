@@ -371,4 +371,55 @@ test.describe('Guide Page (/huong-dan-dat-hoa) and Contact (/lien-he) Overhaul',
       expect(axe.violations).toEqual([]);
     }
   });
+
+  test('True 200% zoom and reflow audit on catalog, account, guide, and contact pages', async ({
+    page,
+  }) => {
+    await page.route('**/api/auth/me', (route) =>
+      route.fulfill({
+        json: {
+          id: '10000000-0000-0000-0000-000000000001',
+          name: 'Nguyễn Văn An',
+          email: 'customer@example.com',
+          role: 'CUSTOMER',
+        },
+      }),
+    );
+    await page.route('**/api/member/profile', (route) =>
+      route.fulfill({
+        json: {
+          id: '10000000-0000-0000-0000-000000000001',
+          fullName: 'Nguyễn Văn An',
+          email: 'customer@example.com',
+          loyaltyPoints: 10,
+        },
+      }),
+    );
+    await page.route('**/api/member/history?*', (route) =>
+      route.fulfill({ json: { items: [], page: 1, hasMore: false } }),
+    );
+    await page.route('**/api/member/preorders?*', (route) =>
+      route.fulfill({ json: { items: [], page: 1, hasMore: false } }),
+    );
+    await page.route('**/api/member/chats?*', (route) =>
+      route.fulfill({ json: { items: [], page: 1, hasMore: false } }),
+    );
+    await page.route('**/hub/**', (route) => route.fulfill({ status: 503 }));
+
+    const routes = ['/dat-hoa?demo=true', '/huong-dan-dat-hoa', '/lien-he', '/tai-khoan'];
+
+    for (const route of routes) {
+      for (const width of [1280, 768, 390]) {
+        await page.setViewportSize({ width, height: 900 });
+        await page.goto(route);
+        await page.evaluate(() => document.fonts.ready);
+        // Apply 200% font resize (:root 32px)
+        await page.addStyleTag({ content: ':root { font-size: 32px !important; }' });
+        const hasOverflow = await page.evaluate(
+          () => document.documentElement.scrollWidth > window.innerWidth,
+        );
+        expect(hasOverflow).toBe(false);
+      }
+    }
+  });
 });

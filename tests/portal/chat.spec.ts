@@ -530,9 +530,19 @@ test('Accessibility and responsive 200% zoom check', async ({ page }) => {
   const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
   expect(axe.violations).toEqual([]);
 
+  // Check true 200% zoom reflow (:root font-size 32px equivalent to 200% text zoom)
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/tai-khoan#member-chats');
+  await page.evaluate(() => document.fonts.ready);
+  await page.addStyleTag({ content: ':root { font-size: 32px !important; }' });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true,
+  );
+  await expect(page.getByRole('heading', { name: mockChat.otherPartyName })).toBeVisible();
+
   // Check mobile responsiveness (390px)
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/tai-khoan#member-chats');
+  await page.goto(`/tai-khoan?chat=${mockChat.id}#member-chats`);
   // On mobile with active conversation, conversation view is displayed
   await expect(page.getByRole('heading', { name: mockChat.otherPartyName })).toBeVisible();
 

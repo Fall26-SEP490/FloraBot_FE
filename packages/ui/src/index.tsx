@@ -68,4 +68,10 @@ export {
   ArrowLeft,
   HelpCircle,
   ShieldCheck,
+  Search,
+  SlidersHorizontal,
+  Filter,
+  LayoutGrid,
+  List,
+  ChevronDown,
 } from 'lucide-react';

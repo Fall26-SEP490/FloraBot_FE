@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button, RefreshCw, X } from '@florabot/ui';
 
 export function ChatImage({ src, alt }: { src: string; alt?: string }) {
@@ -6,7 +6,53 @@ export function ChatImage({ src, alt }: { src: string; alt?: string }) {
   const [retryKey, setRetryKey] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
 
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const closeBtnRef = useRef<HTMLButtonElement | null>(null);
+  const modalRef = useRef<HTMLDivElement | null>(null);
+
   const imageSrc = retryKey > 0 ? `${src}?r=${retryKey}` : src;
+
+  const handleOpenModal = () => {
+    setModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    triggerRef.current?.focus();
+  };
+
+  useEffect(() => {
+    if (!modalOpen) return;
+
+    // Focus close button on mount
+    closeBtnRef.current?.focus();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        handleCloseModal();
+        return;
+      }
+      if (e.key === 'Tab' && modalRef.current) {
+        const focusable = modalRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [modalOpen]);
 
   return (
     <div className="chat-image-wrapper">
@@ -35,9 +81,10 @@ export function ChatImage({ src, alt }: { src: string; alt?: string }) {
         </div>
       ) : (
         <button
+          ref={triggerRef}
           type="button"
           className="chat-image-button"
-          onClick={() => setModalOpen(true)}
+          onClick={handleOpenModal}
           aria-label="Xem ảnh phóng to"
         >
           <img
@@ -54,6 +101,7 @@ export function ChatImage({ src, alt }: { src: string; alt?: string }) {
 
       {modalOpen && (
         <div
+          ref={modalRef}
           className="chat-image-modal"
           role="dialog"
           aria-modal="true"
@@ -62,14 +110,15 @@ export function ChatImage({ src, alt }: { src: string; alt?: string }) {
           <button
             type="button"
             className="chat-image-modal-backdrop"
-            onClick={() => setModalOpen(false)}
+            onClick={handleCloseModal}
             aria-label="Đóng ảnh phóng to"
           />
           <div className="chat-image-modal-content">
             <button
+              ref={closeBtnRef}
               type="button"
               className="chat-image-modal-close"
-              onClick={() => setModalOpen(false)}
+              onClick={handleCloseModal}
               aria-label="Đóng ảnh phóng to"
             >
               <X size={20} aria-hidden="true" />
