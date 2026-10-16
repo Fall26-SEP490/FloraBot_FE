@@ -19,6 +19,7 @@ export const workspaceSections = {
     ],
     ['withdrawals', 'Rút tiền', 'Duyệt yêu cầu và ghi nhận khoản đã chi cho shop.'],
     ['reconciliation', 'Đối soát', 'Kiểm tra giao dịch và kết quả đối soát.'],
+    ['reports', 'Báo cáo vận hành', 'Đọc hàng đợi, giá trị đơn và doanh thu phí thuê từ API.'],
   ],
   SELLER: [
     ['orders', 'Đơn đặt trước', 'Báo giá, chuẩn bị hoa và theo dõi lịch nhận.'],

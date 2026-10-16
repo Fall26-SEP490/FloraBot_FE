@@ -1,5 +1,7 @@
 # FloraBot FE
 
+Current API audit and UI mapping: [Backend API and frontend](docs/backend-api-and-frontend.md), including the 213 method/path combinations exported from the running BE. The order workspace now provides backend-state progress and explicit recovery for ambiguous writes; `/admin/reports` reads actual operational reports. `/kiosk/?preview=1` opens the separate kiosk UI preview through the local proxy when the kiosk service is running on port 5174. It does not require IoT and does not create orders, payments or unlock commands.
+
 Independent pnpm workspace for the Next.js website, member accounts, operations/shop dashboards, shared UI and generated API contracts. Kiosk is maintained in the separate FloraBot_Kios repository.
 
 ## Run

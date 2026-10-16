@@ -1,4 +1,5 @@
 const apiOrigin = process.env.API_PROXY_TARGET || 'http://127.0.0.1:5080';
+const kioskOrigin = process.env.KIOSK_PROXY_TARGET || 'http://127.0.0.1:5174';
 
 export default {
   transpilePackages: ['@florabot/ui', '@florabot/contracts'],
@@ -22,10 +23,14 @@ export default {
     ];
   },
   async rewrites() {
-    return ['/api/:path*', '/hub/:path*', '/openapi/:path*'].map((source) => ({
-      source,
-      destination: `${apiOrigin}${source}`,
-    }));
+    return [
+      { source: '/kiosk', destination: `${kioskOrigin}/kiosk/index.html` },
+      { source: '/kiosk/:path*', destination: `${kioskOrigin}/kiosk/:path*` },
+      ...['/api/:path*', '/hub/:path*', '/openapi/:path*'].map((source) => ({
+        source,
+        destination: `${apiOrigin}${source}`,
+      })),
+    ];
   },
   webpack(config) {
     config.module.rules.push({ test: /\.(webp|avif|png|jpg|svg)$/i, type: 'asset/resource' });
