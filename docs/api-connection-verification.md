@@ -7,7 +7,7 @@
 - Kết quả ghi không rõ được khóa bằng marker theo đơn trong sessionStorage, kể cả sau reload. Chỉ lần đọc thành công do người dùng yêu cầu mới mở lại thao tác; đây là guard UI, không thay thế idempotency/transition của BE.
 - Mọi sản phẩm catalog mẫu đều chỉ xem; không tạo đơn hoặc chat bằng UUID minh họa. Mất phản hồi lúc tạo yêu cầu giữ cùng request ID/payload để gửi lại an toàn theo hợp đồng BE.
 - `/admin/reports` đọc 4 API báo cáo thật. Giới hạn backend 100 dòng được thông báo, phân trang UI 20 dòng; không suy ra tổng hệ thống từ dữ liệu bị giới hạn.
-- Repo `FloraBot_Kios` có UI preview mới: giỏ/message, màn thanh toán, nhập mã và mô hình ô tủ. Sample là mặc định khi chưa có device; `?preview=1` bỏ qua cả device session đã lưu. Chỉ GET công khai khi người dùng chọn nguồn API.
+- Repo `FloraBot_Kios` có UI preview mới: giỏ/message, màn thanh toán, nhập mã và mô hình ô tủ. `?preview=1` bỏ qua cả device session đã lưu. Chỉ GET công khai khi người dùng chọn nguồn API. Sau khi tích hợp main mới, màn thiết lập tablet là mặc định khi chưa có device; preview danh mục vẫn mở trực tiếp từ link trên FE.
 - FE proxy `/kiosk/*` sang kiosk cổng 5174. Root `/kiosk` được ánh xạ riêng vào index.html để tránh Next.js bỏ dấu slash cuối rồi làm Vite trả 404.
 
 ## Kết quả kiểm tra
@@ -48,3 +48,11 @@ Thay đổi nằm trên nhánh `codex/api-connected-kiosk-preview` của FE và 
 - Bộ đếm dịp tặng dùng cùng điều kiện với kết quả (metadata/tag/mô tả); khoảng giá trên 600.000đ không chứa lại mốc 600.000đ. Chi tiết hoa khóa cuộn nền khi mở và khôi phục khi đóng.
 - Kiểm tra lại: build, lint, TypeScript, 52 unit test và 19 browser test đều pass. Có 8 case bố cục/bộ lọc/chi tiết mới, gồm Axe và đo hình học, cộng 11 case luồng đặt hoa/member đã có.
 - Ảnh local: `artifacts/catalog-live-{1440,390}.png`; browser fixture: `artifacts/catalog-after-{320,390,820,1440}.png`. Runtime thật trả HTTP 200 cho trang hoa và GET catalog, không tạo đơn.
+
+## Đồng bộ main trước khi push
+
+- FE tích hợp `origin/main` tại `519ac58`; main không có commit mới tại thời điểm fetch.
+- Kios tích hợp `origin/main` tại `8a58961`, giữ giao diện tablet, ảnh minh họa và hướng dẫn/lỗi kết nối mới của nhóm. Conflict trong `main.tsx` đã được giải quyết để giữ cả preview tablet và preview danh mục.
+- Khi chưa có thiết bị: mở màn thiết lập tablet. “Xem giao diện mẫu” mở preview tablet; “Xem mẫu và danh mục website” hoặc `?preview=1` mở preview danh mục đã nối từ FE.
+- Sau tích hợp: kiosk lint, TypeScript, build và 48/48 browser test đạt, gồm kiểm tra chuyển từ setup sang preview danh mục rồi quay lại mà không gọi API thiết bị.
+- Commit theo quy ước Conventional Commits hiện có, không thêm co-author; chỉ push nhánh phụ, không push main. Xóa nhánh sau khi PR được merge vào main.
