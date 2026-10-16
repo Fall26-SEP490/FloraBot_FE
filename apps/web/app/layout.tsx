@@ -14,6 +14,7 @@ import '../src/marketing/gallery.css';
 import '../src/site.css';
 import '../src/chat/chat.css';
 import '../src/flower-shop.css';
+import '../src/api-workflows.css';
 
 export const metadata: Metadata = {
   title: 'FloraBot - Đặt hoa và quản lý cửa hàng',

@@ -3,6 +3,14 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import { ApiError, queryClient, request } from './api';
 import type { components } from '../../../packages/contracts/src/generated/api';
+import {
+  matchesOrderFilter,
+  needsOrderAction,
+  orderClosed,
+  orderNextStep,
+  orderStage,
+  type OrderFilter,
+} from './orderWorkflow';
 
 export type WebOrder = {
   id: string;
@@ -62,10 +70,12 @@ function OrderActions({
   row,
   base,
   mode,
+  onReload,
 }: {
   row: WebOrder;
   base: string;
   mode: 'member' | 'seller' | 'admin';
+  onReload: () => Promise<void>;
 }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -74,6 +84,15 @@ function OrderActions({
   }, []);
   const [action, setAction] = useState<'quote' | 'fulfill' | 'cancel' | 'accept' | null>(null);
   const [busy, setBusy] = useState(false);
+  const uncertaintyKey = `florabot-web-order-uncertain:${base}:${row.id}`;
+  const [uncertain, setUncertain] = useState(() => {
+    try {
+      return typeof window !== 'undefined' && sessionStorage.getItem(uncertaintyKey) === '1';
+    } catch {
+      return false;
+    }
+  });
+  const [checking, setChecking] = useState(false);
   const sending = useRef(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -100,7 +119,7 @@ function OrderActions({
     enabled: action === 'fulfill',
   });
   async function send(kind: string, body: unknown) {
-    if (sending.current) return;
+    if (sending.current || uncertain) return;
     sending.current = true;
     setBusy(true);
     setError('');
@@ -109,7 +128,12 @@ function OrderActions({
       const result = await request<{ checkoutUrl?: string }>(`${base}/${row.id}/${kind}`, body);
       if (kind === 'payment-link') {
         const url = new URL(result.checkoutUrl || '');
-        if (url.protocol !== 'https:' || url.username || url.password)
+        if (
+          url.protocol !== 'https:' ||
+          url.hostname !== 'pay.payos.vn' ||
+          url.username ||
+          url.password
+        )
           throw new Error('Liên kết thanh toán không hợp lệ.');
         setLink(url.href);
       } else {
@@ -118,6 +142,14 @@ function OrderActions({
         setNotice('Đã cập nhật yêu cầu.');
       }
     } catch (cause) {
+      if (!(cause instanceof ApiError) || cause.status >= 500 || cause.status === 408) {
+        setUncertain(true);
+        try {
+          sessionStorage.setItem(uncertaintyKey, '1');
+        } catch {
+          /* Keep the in-memory lock. */
+        }
+      }
       setError(
         cause instanceof ApiError
           ? cause.message
@@ -134,6 +166,26 @@ function OrderActions({
     : row.orderStatus === 'AWAITING_PAYMENT' || (mode !== 'member' && row.orderStatus === 'PAID');
   return (
     <div className="web-order-actions">
+      <div className="order-next-step" role="note">
+        <strong>Bước tiếp theo</strong>
+        <p>{orderNextStep(row, mode)}</p>
+      </div>
+      {!orderClosed(row) && !['DISPUTED', 'DISPENSE_FAILED'].includes(row.orderStatus ?? '') && (
+        <ol className="order-progress" aria-label="Tiến độ đơn đặt hoa">
+          {['Yêu cầu', 'Báo giá & thanh toán', 'Chuẩn bị', 'Sẵn sàng nhận', 'Hoàn tất'].map(
+            (label, index) => (
+              <li
+                key={label}
+                data-complete={index < orderStage(row)}
+                aria-current={index === orderStage(row) ? 'step' : undefined}
+              >
+                <span aria-hidden="true">{index + 1}</span>
+                {label}
+              </li>
+            ),
+          )}
+        </ol>
+      )}
       <p>
         <strong>{row.productName}</strong> · {row.shopName}
       </p>
@@ -175,7 +227,9 @@ function OrderActions({
         {mode === 'member' && row.state === 'QUOTED' && !row.orderId && (
           <Button
             disabled={
-              busy || (!!row.quoteExpiresAt && new Date(row.quoteExpiresAt).getTime() <= now)
+              busy ||
+              uncertain ||
+              (!!row.quoteExpiresAt && new Date(row.quoteExpiresAt).getTime() <= now)
             }
             onClick={() => {
               setReviewedQuote({
@@ -192,7 +246,9 @@ function OrderActions({
         )}
         {mode === 'member' && row.orderStatus === 'AWAITING_PAYMENT' && (
           <Button
-            disabled={busy || (!!row.payBefore && new Date(row.payBefore).getTime() <= now)}
+            disabled={
+              busy || uncertain || (!!row.payBefore && new Date(row.payBefore).getTime() <= now)
+            }
             onClick={() => void send('payment-link', {})}
           >
             Tạo liên kết thanh toán
@@ -200,7 +256,7 @@ function OrderActions({
         )}
         {mode === 'seller' && ['REQUESTED', 'QUOTED'].includes(row.state) && (
           <Button
-            disabled={busy}
+            disabled={busy || uncertain}
             onClick={() => {
               setAction('quote');
               setConfirm(false);
@@ -211,7 +267,7 @@ function OrderActions({
         )}
         {mode === 'seller' && row.kind === 'CUSTOM' && row.orderStatus === 'PAID' && !row.ready && (
           <Button
-            disabled={busy}
+            disabled={busy || uncertain}
             onClick={() => {
               setAction('fulfill');
               setConfirm(false);
@@ -223,7 +279,7 @@ function OrderActions({
         {canCancel && (
           <Button
             variant="outline"
-            disabled={busy}
+            disabled={busy || uncertain}
             onClick={() => {
               setAction('cancel');
               setConfirm(false);
@@ -264,129 +320,171 @@ function OrderActions({
             if (action === 'cancel') void send('cancel', { reason: note });
           }}
         >
-          <h3>
-            {action === 'accept'
-              ? 'Xác nhận mẫu, giá và lịch nhận'
-              : action === 'quote'
-                ? 'Phản hồi yêu cầu đặt hoa'
-                : action === 'fulfill'
-                  ? 'Xác nhận hoa đã nằm đúng ô'
-                  : 'Kiểm tra trước khi hủy'}
-          </h3>
-          {action === 'accept' && reviewedQuote && (
-            <p>
-              Bạn đồng ý giá {money(reviewedQuote.price || 0)}, nhận từ{' '}
-              {when(reviewedQuote.pickupAt)}. Nội dung: {reviewedQuote.note}. Bước tiếp theo là
-              thanh toán; hoa chỉ được chuẩn bị sau khi thanh toán được xác nhận.
-            </p>
-          )}
-          {action === 'quote' && (
-            <>
-              <label className="payout-checkbox">
-                <input
-                  type="checkbox"
-                  checked={reject}
-                  onChange={(event) => setReject(event.target.checked)}
-                />
-                Shop chưa thể nhận đơn này
-              </label>
-              {!reject && (
-                <>
-                  <label htmlFor={`quote-price-${row.id}`}>Giá trọn gói (đồng)</label>
-                  <input
-                    id={`quote-price-${row.id}`}
-                    type="number"
-                    min="1000"
-                    max="100000000"
-                    step="1000"
-                    required
-                    value={price}
-                    onChange={(event) => setPrice(event.target.value)}
-                  />
-                  <label htmlFor={`quote-pickup-${row.id}`}>Giờ bắt đầu nhận</label>
-                  <input
-                    id={`quote-pickup-${row.id}`}
-                    type="datetime-local"
-                    required
-                    value={pickup}
-                    onChange={(event) => setPickup(event.target.value)}
-                  />
-                </>
-              )}
-            </>
-          )}
-          {(action === 'quote' || action === 'cancel') && (
-            <>
-              <label htmlFor={`order-note-${row.id}`}>
-                {action === 'cancel' ? 'Lý do hủy' : 'Mô tả mẫu hoa, điều kiện hoặc lý do từ chối'}
-              </label>
-              <textarea
-                id={`order-note-${row.id}`}
-                minLength={5}
-                maxLength={1000}
-                required
-                value={note}
-                onChange={(event) => setNote(event.target.value)}
-              />
-            </>
-          )}
-          {action === 'fulfill' && (
-            <>
+          <fieldset className="order-action-fields" disabled={busy || uncertain}>
+            <h3>
+              {action === 'accept'
+                ? 'Xác nhận mẫu, giá và lịch nhận'
+                : action === 'quote'
+                  ? 'Phản hồi yêu cầu đặt hoa'
+                  : action === 'fulfill'
+                    ? 'Xác nhận hoa đã nằm đúng ô'
+                    : 'Kiểm tra trước khi hủy'}
+            </h3>
+            {action === 'accept' && reviewedQuote && (
               <p>
-                Chỉ xác nhận sau khi đã nạp bó hoa theo yêu cầu. Thao tác này giữ ô riêng cho khách,
-                chưa mở cửa nhận hoa.
+                Bạn đồng ý giá {money(reviewedQuote.price || 0)}, nhận từ{' '}
+                {when(reviewedQuote.pickupAt)}. Nội dung: {reviewedQuote.note}. Bước tiếp theo là
+                thanh toán; hoa chỉ được chuẩn bị sau khi thanh toán được xác nhận.
               </p>
-              <label htmlFor={`order-slot-${row.id}`}>Ô trống tại tủ nhận</label>
-              <select
-                id={`order-slot-${row.id}`}
-                required
-                value={slot}
-                onChange={(event) => setSlot(event.target.value)}
-              >
-                <option value="">Chọn ô đã nạp</option>
-                {slots.data
-                  ?.filter((item) => item.kioskId === row.kioskId && item.status === 'RENTED_EMPTY')
-                  .map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.slotCode}
-                    </option>
-                  ))}
-              </select>
-              {slots.isError && <p role="alert">Chưa tải được ô. Đóng biểu mẫu rồi mở lại.</p>}
-              <label htmlFor={`order-qr-${row.id}`}>Mã QR của bó hoa</label>
+            )}
+            {action === 'quote' && (
+              <>
+                <label className="payout-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={reject}
+                    onChange={(event) => setReject(event.target.checked)}
+                  />
+                  Shop chưa thể nhận đơn này
+                </label>
+                {!reject && (
+                  <>
+                    <label htmlFor={`quote-price-${row.id}`}>Giá trọn gói (đồng)</label>
+                    <input
+                      id={`quote-price-${row.id}`}
+                      type="number"
+                      min="1000"
+                      max="100000000"
+                      step="1000"
+                      required
+                      value={price}
+                      onChange={(event) => setPrice(event.target.value)}
+                    />
+                    <label htmlFor={`quote-pickup-${row.id}`}>Giờ bắt đầu nhận</label>
+                    <input
+                      id={`quote-pickup-${row.id}`}
+                      type="datetime-local"
+                      required
+                      value={pickup}
+                      onChange={(event) => setPickup(event.target.value)}
+                    />
+                  </>
+                )}
+              </>
+            )}
+            {(action === 'quote' || action === 'cancel') && (
+              <>
+                <label htmlFor={`order-note-${row.id}`}>
+                  {action === 'cancel'
+                    ? 'Lý do hủy'
+                    : 'Mô tả mẫu hoa, điều kiện hoặc lý do từ chối'}
+                </label>
+                <textarea
+                  id={`order-note-${row.id}`}
+                  minLength={5}
+                  maxLength={1000}
+                  required
+                  value={note}
+                  onChange={(event) => setNote(event.target.value)}
+                />
+              </>
+            )}
+            {action === 'fulfill' && (
+              <>
+                <p>
+                  Chỉ xác nhận sau khi đã nạp bó hoa theo yêu cầu. Thao tác này giữ ô riêng cho
+                  khách, chưa mở cửa nhận hoa.
+                </p>
+                <label htmlFor={`order-slot-${row.id}`}>Ô trống tại tủ nhận</label>
+                <select
+                  id={`order-slot-${row.id}`}
+                  required
+                  value={slot}
+                  onChange={(event) => setSlot(event.target.value)}
+                >
+                  <option value="">Chọn ô đã nạp</option>
+                  {slots.data
+                    ?.filter(
+                      (item) => item.kioskId === row.kioskId && item.status === 'RENTED_EMPTY',
+                    )
+                    .map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.slotCode}
+                      </option>
+                    ))}
+                </select>
+                {slots.isError && <p role="alert">Chưa tải được ô. Đóng biểu mẫu rồi mở lại.</p>}
+                <label htmlFor={`order-qr-${row.id}`}>Mã QR của bó hoa</label>
+                <input
+                  id={`order-qr-${row.id}`}
+                  required
+                  maxLength={120}
+                  value={qr}
+                  onChange={(event) => setQr(event.target.value)}
+                />
+              </>
+            )}
+            {action === 'cancel' && row.orderStatus === 'PAID' && (
+              <p>
+                Đơn đã thanh toán sẽ tạo yêu cầu hoàn tiền để ADMIN xử lý; đây không phải hoàn tiền
+                ngân hàng tự động.
+              </p>
+            )}
+            <label className="payout-checkbox">
               <input
-                id={`order-qr-${row.id}`}
-                required
-                maxLength={120}
-                value={qr}
-                onChange={(event) => setQr(event.target.value)}
+                type="checkbox"
+                checked={confirm}
+                onChange={(event) => setConfirm(event.target.checked)}
+                disabled={busy}
               />
-            </>
-          )}
-          {action === 'cancel' && row.orderStatus === 'PAID' && (
-            <p>
-              Đơn đã thanh toán sẽ tạo yêu cầu hoàn tiền để ADMIN xử lý; đây không phải hoàn tiền
-              ngân hàng tự động.
-            </p>
-          )}
-          <label className="payout-checkbox">
-            <input
-              type="checkbox"
-              checked={confirm}
-              onChange={(event) => setConfirm(event.target.checked)}
-              disabled={busy}
-            />
-            Tôi đã đối chiếu và xác nhận thông tin trên.
-          </label>
-          <div className="stock-actions">
-            <Button type="submit" disabled={busy}>
-              {busy ? 'Đang gửi…' : 'Xác nhận gửi'}
-            </Button>
-            <Button variant="outline" disabled={busy} onClick={() => setAction(null)}>
-              Quay lại hồ sơ
-            </Button>
-          </div>
+              Tôi đã đối chiếu và xác nhận thông tin trên.
+            </label>
+            <div className="stock-actions">
+              <Button type="submit" disabled={busy}>
+                {busy ? 'Đang gửi…' : 'Xác nhận gửi'}
+              </Button>
+              <Button variant="outline" disabled={busy} onClick={() => setAction(null)}>
+                Quay lại hồ sơ
+              </Button>
+            </div>
+          </fieldset>
         </form>
+      )}
+      {uncertain && (
+        <div className="order-uncertain" role="alert">
+          <p>
+            Chưa xác nhận được kết quả lần gửi trước. Các thao tác đang khóa để tránh gửi trùng; tải
+            lại hồ sơ và đối chiếu trạng thái trước khi tiếp tục.
+          </p>
+          <Button
+            variant="outline"
+            disabled={checking || busy}
+            onClick={async () => {
+              setChecking(true);
+              try {
+                await onReload();
+                try {
+                  sessionStorage.removeItem(uncertaintyKey);
+                } catch {
+                  /* This tab can continue after review. */
+                }
+                setUncertain(false);
+                setAction(null);
+                setLink(null);
+                setError('');
+                setNotice(
+                  'Đã tải lại hồ sơ từ máy chủ. Hãy đối chiếu trạng thái trước khi tạo thao tác mới.',
+                );
+              } catch {
+                setError('Chưa đọc được trạng thái mới. Các thao tác vẫn được khóa.');
+              } finally {
+                setChecking(false);
+              }
+            }}
+          >
+            {checking ? 'Đang kiểm tra…' : 'Kiểm tra kết quả từ máy chủ'}
+          </Button>
+        </div>
       )}
       <p role="alert" className="error">
         {error}
@@ -404,6 +502,7 @@ export default function WebRequests({
   sellerId?: string;
 }) {
   const [page, setPage] = useState(1);
+  const [filter, setFilter] = useState<OrderFilter>('all');
   const base =
     mode === 'member'
       ? '/member/preorders'
@@ -414,7 +513,10 @@ export default function WebRequests({
     queryKey: ['web-orders', base, page],
     queryFn: () => request<Page>(`${base}?page=${page}`),
     refetchInterval: 30_000,
+    enabled: mode !== 'seller' || Boolean(sellerId),
   });
+  const items = query.data?.items ?? [];
+  const filtered = items.filter((row) => matchesOrderFilter(row, filter, mode));
   return (
     <section id="web-orders" className="web-orders" aria-labelledby="web-orders-title">
       <h2 id="web-orders-title">
@@ -425,6 +527,41 @@ export default function WebRequests({
           ? 'Theo dõi báo giá, thanh toán và thời điểm hoa sẵn sàng tại tủ.'
           : 'Đơn mẫu riêng cần báo giá, xác nhận thanh toán rồi nạp đúng bó hoa vào ô của shop.'}
       </p>
+      <div className="order-summary-strip" aria-label="Tóm tắt trang đơn đang xem">
+        <div>
+          <strong>{items.length}</strong>
+          <span>Yêu cầu trong trang</span>
+        </div>
+        <div>
+          <strong>{items.filter((row) => needsOrderAction(row, mode)).length}</strong>
+          <span>Cần theo dõi</span>
+        </div>
+        <div>
+          <strong>{items.filter((row) => row.orderStatus === 'PAID' && !row.ready).length}</strong>
+          <span>Đang chuẩn bị</span>
+        </div>
+        <div>
+          <strong>{items.filter((row) => row.ready && row.orderStatus === 'PAID').length}</strong>
+          <span>Sẵn sàng tại tủ</span>
+        </div>
+      </div>
+      <p className="quiet">
+        Số lượng và bộ lọc áp dụng cho trang hiện tại, không phải tổng toàn bộ đơn hàng.
+      </p>
+      <div className="order-filter-bar">
+        <label htmlFor={`order-filter-${mode}`}>Lọc yêu cầu trong trang</label>
+        <select
+          id={`order-filter-${mode}`}
+          value={filter}
+          onChange={(event) => setFilter(event.target.value as OrderFilter)}
+        >
+          <option value="all">Tất cả yêu cầu</option>
+          <option value="attention">Cần theo dõi</option>
+          <option value="preparing">Đang chuẩn bị</option>
+          <option value="ready">Sẵn sàng tại tủ</option>
+          <option value="closed">Đã kết thúc</option>
+        </select>
+      </div>
       <Button variant="outline" disabled={query.isFetching} onClick={() => void query.refetch()}>
         Cập nhật đơn đặt trước
       </Button>
@@ -434,9 +571,15 @@ export default function WebRequests({
         <p role="alert">Chưa tải được yêu cầu. Hãy chọn cập nhật để thử lại.</p>
       ) : (
         <>
-          {!query.data.items.length && <p>Chưa có yêu cầu ở trang này.</p>}
+          {!filtered.length && (
+            <p role="status">
+              {items.length
+                ? 'Không có yêu cầu phù hợp bộ lọc trong trang này.'
+                : 'Chưa có yêu cầu ở trang này.'}
+            </p>
+          )}
           <ul className="member-orders">
-            {query.data.items.map((row) => (
+            {filtered.map((row) => (
               <li key={row.id}>
                 <details>
                   <summary>
@@ -446,7 +589,16 @@ export default function WebRequests({
                     </strong>
                     <span>{statusName(row)}</span>
                   </summary>
-                  <OrderActions row={row} base={base} mode={mode} />
+                  <OrderActions
+                    row={row}
+                    base={base}
+                    mode={mode}
+                    onReload={async () => {
+                      const fresh = await query.refetch();
+                      if (fresh.isError || !fresh.data?.items.some((item) => item.id === row.id))
+                        throw new Error('Order could not be reloaded.');
+                    }}
+                  />
                 </details>
               </li>
             ))}

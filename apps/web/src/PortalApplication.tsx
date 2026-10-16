@@ -42,6 +42,7 @@ import { SellerChatSection } from './chat/SellerChatSection';
 import OperationsInstallations from './OperationsInstallations';
 import TechnicianInstallations from './TechnicianInstallations';
 import AdminKioskRefunds from './AdminKioskRefunds';
+import AdminReports from './AdminReports';
 import { startPortalUpdates } from './realtime';
 
 const loginSchema = z.object({
@@ -724,6 +725,7 @@ function Workspace({
           )}
           {role === 'ADMIN' && section === 'withdrawals' && <AdminWithdrawals />}
           {role === 'ADMIN' && section === 'reconciliation' && <AdminReconciliation />}
+          {role === 'ADMIN' && section === 'reports' && <AdminReports session={session.data} />}
           {logout.isError && (
             <p role="alert" className="error">
               Chưa đăng xuất được. Bạn thử lại nhé.

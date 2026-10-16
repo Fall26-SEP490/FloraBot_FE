@@ -196,7 +196,7 @@ const SiteFooter = memo(function SiteFooter() {
           <SiteBrand />
           <p className="footer-brand-desc">
             Nền tảng kết nối shop hoa địa phương và hệ thống tủ kiosk thông minh tự phục vụ. Nhận
-            hoa tươi theo lịch hẹn tiện lợi và nhanh chóng.
+            hoa giả theo lịch hẹn, theo dõi đơn và trao đổi trực tiếp với shop.
           </p>
         </div>
         <div className="footer-col">
@@ -211,6 +211,7 @@ const SiteFooter = memo(function SiteFooter() {
             <Link href="/tim-kiosk" prefetch={false}>
               Vị trí tủ
             </Link>
+            <a href="/kiosk/?preview=1">Xem thử màn hình kiosk</a>
           </nav>
         </div>
         <div className="footer-col">

@@ -44,6 +44,7 @@ const icons = {
   installations: Boxes,
   withdrawals: Wallet,
   reconciliation: ListChecks,
+  reports: LayoutDashboard,
   products: Flower2,
   stock: Boxes,
   accessories: Package,
@@ -55,7 +56,10 @@ const groups = {
   ADMIN: [
     ['Vận hành', ['managers', 'orders', 'incidents', 'tasks']],
     ['Mạng lưới', ['shops', 'slots']],
-    ['Giao dịch', ['complaints', 'refunds', 'kiosk-refunds', 'withdrawals', 'reconciliation']],
+    [
+      'Giao dịch',
+      ['complaints', 'refunds', 'kiosk-refunds', 'withdrawals', 'reconciliation', 'reports'],
+    ],
   ],
   SELLER: [
     ['Bán hoa', ['orders', 'chats', 'products', 'stock', 'accessories', 'tasks']],
