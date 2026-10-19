@@ -19,6 +19,28 @@ test.beforeEach(async ({ page }) => {
   await page.route('**/api/**/subscriptions', (route) =>
     route.fulfill({ json: { package: null, subscriptions: [] } }),
   );
+  await page.route('**/api/sellers/*/chats?page=*', (route) =>
+    route.fulfill({ json: { items: [], page: 1, pageSize: 20, total: 0 } }),
+  );
+  await page.route('**/api/sellers/*/kiosks', (route) =>
+    route.fulfill({
+      json: [
+        {
+          id: '40000000-0000-0000-0000-000000000001',
+          code: 'FPT-01',
+          name: 'Đại học FPT',
+          address: 'Thủ Đức',
+          region: 'TP.HCM',
+          status: 'ONLINE',
+          latitude: null,
+          longitude: null,
+          coordinates: null,
+          locationComplete: true,
+          canEditLocation: true,
+        },
+      ],
+    }),
+  );
 });
 
 const sellerId = '20000000-0000-0000-0000-000000000001';
@@ -63,7 +85,7 @@ test('Product search, validation, price and status commands, accessible editor',
     return route.fulfill({ json: { result: null } });
   });
   await page.route('**/flows/set_product_status', (route) => {
-    expect(route.request().postDataJSON()).toEqual({ p_product: product.id, p_status: 'INACTIVE' });
+    expect(route.request().postDataJSON()).toEqual({ productId: product.id, status: 'INACTIVE' });
     status = 'INACTIVE';
     return route.fulfill({ json: { result: null } });
   });
@@ -114,13 +136,15 @@ test('Expired shop can read products but creation and editor are disabled', asyn
   await expect(page.getByRole('button', { name: 'Lưu trạng thái' })).toBeDisabled();
 });
 
-test('Create artificial flower: validation, duplicate tags rejection, 409 duplicate ID, 201 creation', async ({
+test('Create artificial flower for an owned kiosk: validation, conflict handling and 201 creation', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 950 });
   const productsList = [{ ...product }];
   let createAttemptCount = 0;
   let lastCapturedPayload: Record<string, unknown> | null = null;
+  const createdProductId = '30000000-0000-0000-0000-000000000088';
+  const kioskId = '40000000-0000-0000-0000-000000000001';
 
   await page.route('**/api/auth/me', (route) =>
     route.fulfill({
@@ -134,7 +158,7 @@ test('Create artificial flower: validation, duplicate tags rejection, 409 duplic
       },
     }),
   );
-  await page.route('**/api/sellers/*/products', async (route) => {
+  await page.route('**/api/me/products', async (route) => {
     if (route.request().method() === 'GET') {
       return route.fulfill({ json: productsList });
     }
@@ -142,15 +166,15 @@ test('Create artificial flower: validation, duplicate tags rejection, 409 duplic
       createAttemptCount++;
       const payload = route.request().postDataJSON() as Record<string, unknown>;
       lastCapturedPayload = payload;
-      // First attempt triggers 409 conflict to verify error handling and client ID retention
+      // First attempt triggers a conflict to verify server error handling without losing form data.
       if (createAttemptCount === 1) {
         return route.fulfill({
           status: 409,
-          json: { detail: 'Mã sản phẩm đã tồn tại trong hệ thống.' },
+          json: { detail: 'Dữ liệu kiosk vừa thay đổi. Vui lòng thử lại.' },
         });
       }
       const newProduct = {
-        id: payload.id as string,
+        id: createdProductId,
         name: payload.name as string,
         description: payload.description as string,
         price: payload.price as number,
@@ -162,7 +186,7 @@ test('Create artificial flower: validation, duplicate tags rejection, 409 duplic
         heightCm: payload.heightCm as number,
       };
       productsList.push(newProduct);
-      return route.fulfill({ status: 201, json: { id: payload.id } });
+      return route.fulfill({ status: 201, json: { id: createdProductId } });
     }
     return route.continue();
   });
@@ -212,16 +236,17 @@ test('Create artificial flower: validation, duplicate tags rejection, 409 duplic
 
   // First submit -> 409 conflict from server
   await createForm.getByRole('button', { name: 'Tạo mẫu hoa' }).click();
-  await expect(createForm.getByRole('alert')).toHaveText('Mã sản phẩm đã tồn tại trong hệ thống.');
-  const initialGeneratedId = lastCapturedPayload?.id;
-  expect(initialGeneratedId).toBeTruthy();
+  await expect(createForm.getByRole('alert')).toHaveText(
+    'Dữ liệu kiosk vừa thay đổi. Vui lòng thử lại.',
+  );
 
-  // Second submit -> success 201 with the same client id (stable across retry)
+  // Second submit -> success 201. The backend generates the product id.
   await createForm.getByRole('button', { name: 'Tạo mẫu hoa' }).click();
   await expect(
     page.getByRole('status').filter({ hasText: 'Đã tạo mẫu hoa giả mới ở trạng thái Bản nháp.' }),
   ).toBeFocused();
-  expect(lastCapturedPayload?.id).toBe(initialGeneratedId);
+  expect(lastCapturedPayload?.kioskId).toBe(kioskId);
+  expect(lastCapturedPayload).not.toHaveProperty('id');
   expect(lastCapturedPayload?.name).toBe('Bó cẩm tú cầu giả');
   expect(lastCapturedPayload?.price).toBe(280000);
   expect(lastCapturedPayload?.tags).toEqual(['hoa lụa', 'decor']);
@@ -287,9 +312,7 @@ test('Edit artificial flower metadata via PUT: payload validation, semantic snap
       },
     }),
   );
-  await page.route('**/api/sellers/*/products', (route) =>
-    route.fulfill({ json: [artificialProduct] }),
-  );
+  await page.route('**/api/me/products', (route) => route.fulfill({ json: [artificialProduct] }));
   await page.route('**/api/sellers/*/products/*', async (route) => {
     if (route.request().method() === 'PUT') {
       putAttemptCount++;
@@ -417,7 +440,7 @@ test('Expired session transparently refreshes token then completes PUT metadata 
     refreshCount++;
     return route.fulfill({ status: 200, json: { result: true } });
   });
-  await page.route('**/api/sellers/*/products', (route) =>
+  await page.route('**/api/me/products', (route) =>
     route.fulfill({
       json: [
         {

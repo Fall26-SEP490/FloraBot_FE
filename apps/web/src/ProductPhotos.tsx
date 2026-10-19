@@ -42,16 +42,22 @@ export default function ProductPhotos({
   productName: string;
   canEdit: boolean;
 }) {
-  const base = `/sellers/${sellerId}/products/${productId}/photos`;
+  const base = `/me/products/${productId}/photos`;
   const [loaded, setLoaded] = useState(false);
   const [page, setPage] = useState(1);
   const [file, setFile] = useState<File>();
   const [preview, setPreview] = useState('');
   const [pending, setPending] = useState(false);
   const [uncertain, setUncertain] = useState(false);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [cameraReady, setCameraReady] = useState(false);
+  const [cameraStarting, setCameraStarting] = useState(false);
+  const [cameraError, setCameraError] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const input = useRef<HTMLInputElement>(null);
+  const video = useRef<HTMLVideoElement>(null);
+  const cameraStream = useRef<MediaStream | null>(null);
   const notice = useRef<HTMLParagraphElement>(null);
   const objectUrl = useRef('');
   const sending = useRef(false);
@@ -63,9 +69,90 @@ export default function ProductPhotos({
   useEffect(
     () => () => {
       if (objectUrl.current) URL.revokeObjectURL(objectUrl.current);
+      cameraStream.current?.getTracks().forEach((track) => track.stop());
     },
     [],
   );
+  useEffect(() => {
+    if (!cameraOpen || !video.current || !cameraStream.current) return;
+    video.current.srcObject = cameraStream.current;
+    void video.current.play().catch(() => {
+      setCameraError('Camera chưa phát được hình ảnh. Hãy đóng camera rồi thử lại.');
+    });
+  }, [cameraOpen]);
+
+  function stopCamera() {
+    cameraStream.current?.getTracks().forEach((track) => track.stop());
+    cameraStream.current = null;
+    if (video.current) video.current.srcObject = null;
+    setCameraOpen(false);
+    setCameraReady(false);
+    setCameraStarting(false);
+  }
+
+  async function startCamera() {
+    if (!canEdit || pending || uncertain || cameraStarting) return;
+    setCameraError('');
+    setCameraStarting(true);
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCameraError('Trình duyệt này không hỗ trợ chụp ảnh trực tiếp. Hãy chọn ảnh từ thiết bị.');
+      setCameraStarting(false);
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: { facingMode: { ideal: 'environment' } },
+      });
+      cameraStream.current?.getTracks().forEach((track) => track.stop());
+      cameraStream.current = stream;
+      setCameraOpen(true);
+    } catch (cause) {
+      const denied = cause instanceof DOMException && cause.name === 'NotAllowedError';
+      setCameraError(
+        denied
+          ? 'Bạn chưa cho phép sử dụng camera. Hãy cấp quyền camera cho trang rồi thử lại.'
+          : 'Không mở được camera. Hãy kiểm tra camera hoặc chọn ảnh từ thiết bị.',
+      );
+    } finally {
+      setCameraStarting(false);
+    }
+  }
+
+  async function capturePhoto() {
+    const source = video.current;
+    if (!source || !cameraReady || source.videoWidth < 1 || source.videoHeight < 1) return;
+    setCameraError('');
+    const maximumEdge = 1920;
+    const scale = Math.min(1, maximumEdge / Math.max(source.videoWidth, source.videoHeight));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(source.videoWidth * scale));
+    canvas.height = Math.max(1, Math.round(source.videoHeight * scale));
+    const context = canvas.getContext('2d');
+    if (!context) {
+      setCameraError('Không xử lý được ảnh từ camera. Hãy chọn ảnh từ thiết bị.');
+      return;
+    }
+    try {
+      context.drawImage(source, 0, 0, canvas.width, canvas.height);
+    } catch {
+      setCameraError('Camera chưa sẵn sàng để chụp. Hãy đợi hình ảnh hiển thị rồi thử lại.');
+      return;
+    }
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, 'image/jpeg', 0.88),
+    );
+    if (!blob) {
+      setCameraError('Không tạo được ảnh chụp. Hãy thử lại hoặc chọn ảnh từ thiết bị.');
+      return;
+    }
+    const captured = new File([blob], `hoa-${new Date().toISOString().replace(/[:.]/g, '-')}.jpg`, {
+      type: 'image/jpeg',
+    });
+    stopCamera();
+    select(captured);
+    setMessage('Đã chụp ảnh. Hãy kiểm tra ảnh xem trước trước khi tải lên.');
+  }
   function select(value?: File) {
     if (objectUrl.current) URL.revokeObjectURL(objectUrl.current);
     objectUrl.current = '';
@@ -191,18 +278,66 @@ export default function ProductPhotos({
           void upload();
         }}
       >
-        <label htmlFor={`photo-file-${productId}`}>Chọn ảnh cho {productName}</label>
-        <input
-          id={`photo-file-${productId}`}
-          ref={input}
-          type="file"
-          accept="image/png,image/jpeg,image/webp"
-          disabled={!canEdit || pending || uncertain}
-          aria-describedby={`photo-help-${productId} photo-notice-${productId}`}
-          onChange={(event) => select(event.target.files?.[0])}
-        />
+        <label htmlFor={`photo-file-${productId}`}>Ảnh cho {productName}</label>
+        <div className="product-photo-source-actions">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={!canEdit || pending || uncertain || cameraStarting || cameraOpen}
+            onClick={() => void startCamera()}
+          >
+            {cameraStarting ? 'Đang mở camera…' : 'Chụp ảnh bằng camera'}
+          </Button>
+          <span aria-hidden="true">hoặc</span>
+          <label
+            className={`button button-outline product-photo-file-button${
+              !canEdit || pending || uncertain ? 'is-disabled' : ''
+            }`}
+          >
+            Chọn ảnh từ thiết bị
+            <input
+              id={`photo-file-${productId}`}
+              ref={input}
+              className="product-photo-file-input"
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              disabled={!canEdit || pending || uncertain}
+              aria-label={`Chọn ảnh cho ${productName}`}
+              aria-describedby={`photo-help-${productId} photo-notice-${productId}`}
+              onChange={(event) => {
+                stopCamera();
+                select(event.target.files?.[0]);
+              }}
+            />
+          </label>
+        </div>
+        {cameraOpen && (
+          <div className="product-camera" aria-label={`Camera chụp ảnh cho ${productName}`}>
+            <video
+              ref={video}
+              muted
+              playsInline
+              autoPlay
+              aria-label={`Hình ảnh trực tiếp từ camera cho ${productName}`}
+              onLoadedMetadata={() => setCameraReady(true)}
+            />
+            <div className="product-photo-source-actions">
+              <Button type="button" disabled={!cameraReady} onClick={() => void capturePhoto()}>
+                Chụp ảnh
+              </Button>
+              <Button type="button" variant="outline" onClick={stopCamera}>
+                Đóng camera
+              </Button>
+            </div>
+          </div>
+        )}
+        {cameraError && (
+          <p role="alert" className="error">
+            {cameraError}
+          </p>
+        )}
         <p id={`photo-help-${productId}`} className="quiet">
-          PNG, JPEG hoặc WebP · Tối đa 5 MB mỗi ảnh.
+          Chụp trực tiếp hoặc chọn PNG, JPEG, WebP từ thiết bị · Tối đa 5 MB mỗi ảnh.
         </p>
         {preview && (
           <figure className="product-photo-preview">

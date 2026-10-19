@@ -6,135 +6,186 @@ import { z } from 'zod';
 import { Button } from '@florabot/ui';
 import type { components } from '../../../packages/contracts/src/generated/api';
 import { queryClient, request } from './api';
+import { ConfirmDialog } from './dashboard/Modal';
 
-type Slot = components['schemas']['AdminSlotResponse'];
+type Kiosk = components['schemas']['AdminKioskResponse'];
 type Seller = components['schemas']['AdminSellerResponse'];
-const statuses: Record<string, string> = {
-  FREE: 'Chưa cho thuê',
-  RENTED_EMPTY: 'Đã thuê, chưa nạp hoa',
-  STOCKED: 'Đã nạp hoa',
-  HELD: 'Khách đang thanh toán',
-  PENDING_REMOVAL: 'Chờ lấy hoa hết hạn',
-  PENDING_RELEASE: 'Chờ lấy hoa về để trả ô',
-  FAULT: 'Có sự cố',
-  LOCKED: 'Đang khóa',
-};
+
 const kioskStatuses: Record<string, string> = {
   ONLINE: 'Trực tuyến',
   OFFLINE: 'Mất kết nối',
   MAINTENANCE: 'Bảo trì',
   DISABLED: 'Ngừng hoạt động',
 };
-const schema = z.object({ sellerId: z.string().min(1, 'Chọn shop sẽ thuê ô này.') });
+
+const guidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const schema = z.object({
+  sellerId: z.string().regex(guidPattern, 'Chọn shop sẽ quản lý kiosk này.'),
+});
 
 function Assignment({
-  slot,
+  kiosk,
   sellers,
   onAssigned,
 }: {
-  slot: Slot;
+  kiosk: Kiosk;
   sellers: Seller[];
   onAssigned: (message: string) => void;
 }) {
+  const [pendingValues, setPendingValues] = useState<z.infer<typeof schema> | null>(null);
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
-    defaultValues: { sellerId: '' },
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
+    defaultValues: { sellerId: kiosk.sellerId ?? '' },
   });
+  const selectedSeller = sellers.find((seller) => seller.id === pendingValues?.sellerId);
   const assign = useMutation({
     mutationFn: (values: z.infer<typeof schema>) =>
-      request('/admin/flows/assign_slot', {
-        p_slot: slot.id,
+      request('/admin/flows/assign_kiosk', {
+        p_kiosk: kiosk.id,
         p_seller: values.sellerId,
-      } satisfies components['schemas']['AssignSlotRequest']),
+      } satisfies components['schemas']['AssignKioskRequest']),
     onSuccess: async (_result, values) => {
+      const seller = sellers.find((item) => item.id === values.sellerId);
+      setPendingValues(null);
       onAssigned(
-        `Đã gán ô ${slot.slotCode} tại ${slot.kioskName} cho ${sellers.find((seller) => seller.id === values.sellerId)?.shopName || 'shop đã chọn'}. Shop có thể nạp hoa vào ô này.`,
+        `Đã gán toàn bộ kiosk ${kiosk.name} cho ${seller?.shopName || 'shop đã chọn'}. Shop có thể quản lý ${kiosk.slotCount} ô của kiosk này.`,
       );
-      await queryClient.invalidateQueries({ queryKey: ['admin-slots'] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['admin-kiosks'] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-slots'] }),
+      ]);
     },
+    onError: () => setPendingValues(null),
   });
+
+  const canAssign = kiosk.status !== 'DISABLED' && kiosk.status !== 'MAINTENANCE';
+
   return (
-    <form
-      className="approval-form"
-      noValidate
-      onSubmit={form.handleSubmit((values) => assign.mutate(values))}
-    >
-      <label htmlFor={`slot-seller-${slot.id}`}>Shop thuê ô {slot.slotCode}</label>
-      <select
-        id={`slot-seller-${slot.id}`}
-        {...form.register('sellerId')}
-        disabled={assign.isPending}
-        aria-invalid={!!form.formState.errors.sellerId}
-        aria-describedby={`slot-error-${slot.id} slot-help-${slot.id}`}
+    <>
+      <form
+        className="approval-form"
+        noValidate
+        onSubmit={form.handleSubmit((values) => setPendingValues(values))}
       >
-        <option value="">Chọn shop</option>
-        {sellers.map((seller) => (
-          <option key={seller.id} value={seller.id}>
-            {seller.shopName} · {seller.phone}
-          </option>
-        ))}
-      </select>
-      <p id={`slot-error-${slot.id}`} className="error">
-        {form.formState.errors.sellerId?.message}
-      </p>
-      <p id={`slot-help-${slot.id}`} className="quiet">
-        Hệ thống kiểm tra hiệu lực gói, số ô còn được thuê và trạng thái ô trước khi gán.
-      </p>
-      <Button type="submit" disabled={!sellers.length || assign.isPending}>
-        {assign.isPending ? 'Đang gán ô…' : 'Gán ô cho shop'}
-      </Button>
-      {assign.isError && (
-        <p className="error" role="alert">
-          {assign.error.message}
+        <label htmlFor={`kiosk-seller-${kiosk.id}`}>Shop quản lý toàn bộ kiosk</label>
+        <select
+          id={`kiosk-seller-${kiosk.id}`}
+          {...form.register('sellerId')}
+          disabled={assign.isPending || !canAssign}
+          aria-invalid={!!form.formState.errors.sellerId}
+          aria-describedby={`kiosk-error-${kiosk.id} kiosk-help-${kiosk.id}`}
+        >
+          <option value="">Chọn shop</option>
+          {sellers.map((seller) => (
+            <option key={seller.id} value={seller.id}>
+              {seller.shopName} · {seller.phone}
+            </option>
+          ))}
+        </select>
+        {form.formState.errors.sellerId && (
+          <p id={`kiosk-error-${kiosk.id}`} className="error">
+            {form.formState.errors.sellerId.message}
+          </p>
+        )}
+        <p id={`kiosk-help-${kiosk.id}`} className="quiet">
+          Thao tác áp dụng cho toàn bộ {kiosk.slotCount} ô. Hệ thống chỉ cho phép chuyển shop khi
+          các ô không có hoa, không bị giữ và không bị khóa.
         </p>
-      )}
-    </form>
+        {!canAssign && (
+          <p className="quiet">Kiosk đang bảo trì hoặc ngừng hoạt động nên chưa thể phân bổ.</p>
+        )}
+        <Button type="submit" disabled={!sellers.length || assign.isPending || !canAssign}>
+          {kiosk.sellerId ? 'Chuyển kiosk sang shop khác' : 'Gán kiosk cho shop'}
+        </Button>
+        {assign.isError && (
+          <p className="error" role="alert">
+            {assign.error.message}
+          </p>
+        )}
+      </form>
+      <ConfirmDialog
+        open={pendingValues !== null}
+        title={kiosk.sellerId ? 'Xác nhận chuyển kiosk' : 'Xác nhận gán kiosk'}
+        description={`Toàn bộ ${kiosk.slotCount} ô của ${kiosk.name} sẽ thuộc quyền quản lý của ${selectedSeller?.shopName || 'shop đã chọn'}. Hệ thống sẽ từ chối nếu kiosk còn hoa hoặc đang có giao dịch.`}
+        confirmLabel={kiosk.sellerId ? 'Chuyển kiosk' : 'Gán toàn bộ kiosk'}
+        pending={assign.isPending}
+        onCancel={() => {
+          if (!assign.isPending) setPendingValues(null);
+        }}
+        onConfirm={() => {
+          if (pendingValues) assign.mutate(pendingValues);
+        }}
+      />
+    </>
   );
 }
 
 export default function AdminSlots() {
   const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('FREE');
+  const [status, setStatus] = useState('');
+  const [ownership, setOwnership] = useState('UNASSIGNED');
   const [confirmation, setConfirmation] = useState('');
   const notice = useRef<HTMLParagraphElement>(null);
-  const slots = useQuery({
-    queryKey: ['admin-slots'],
-    queryFn: () => request<Slot[]>('/admin/slots'),
+  const kiosks = useQuery({
+    queryKey: ['admin-kiosks'],
+    queryFn: () => request<Kiosk[]>('/admin/kiosks'),
   });
   const sellers = useQuery({
     queryKey: ['admin-sellers', 'ACTIVE'],
     queryFn: () => request<Seller[]>('/admin/sellers?status=ACTIVE'),
   });
-  const visible = slots.data?.filter(
-    (slot) =>
-      (!status || slot.status === status) &&
-      `${slot.kioskCode} ${slot.kioskName} ${slot.kioskAddress} ${slot.slotCode}`
+  const normalizedSearch = search.trim().toLocaleLowerCase('vi');
+  const visible = kiosks.data?.filter(
+    (kiosk) =>
+      (!status || kiosk.status === status) &&
+      (ownership === 'ALL' ||
+        (ownership === 'ASSIGNED' ? kiosk.sellerId !== null : kiosk.sellerId === null)) &&
+      `${kiosk.code} ${kiosk.name} ${kiosk.sellerName ?? ''}`
         .toLocaleLowerCase('vi')
-        .includes(search.trim().toLocaleLowerCase('vi')),
+        .includes(normalizedSearch),
   );
+
   return (
     <section className="admin-slots" aria-labelledby="admin-slots-title">
-      <h2 id="admin-slots-title">Sắp chỗ cho những bó hoa</h2>
-      <p>Chọn đúng kiosk và ô tủ đã trao đổi với shop, rồi gán ô để shop chuẩn bị nạp hoa.</p>
+      <h2 id="admin-slots-title">Phân bổ kiosk cho shop</h2>
+      <p>
+        Mỗi kiosk chỉ thuộc một shop. Khi gán thành công, shop được quản lý toàn bộ các ô trong
+        kiosk thay vì nhận từng ô riêng lẻ.
+      </p>
       <div className="product-filters">
         <div>
-          <label htmlFor="slot-search">Tìm kiosk, địa chỉ hoặc mã ô</label>
+          <label htmlFor="kiosk-search">Tìm mã kiosk, tên kiosk hoặc shop</label>
           <input
-            id="slot-search"
+            id="kiosk-search"
             type="search"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
         </div>
         <div>
-          <label htmlFor="slot-status">Lọc trạng thái ô</label>
+          <label htmlFor="kiosk-ownership">Lọc phân bổ</label>
           <select
-            id="slot-status"
+            id="kiosk-ownership"
+            value={ownership}
+            onChange={(event) => setOwnership(event.target.value)}
+          >
+            <option value="UNASSIGNED">Chưa gán shop</option>
+            <option value="ASSIGNED">Đã gán shop</option>
+            <option value="ALL">Tất cả kiosk</option>
+          </select>
+        </div>
+        <div>
+          <label htmlFor="kiosk-status">Lọc trạng thái kiosk</label>
+          <select
+            id="kiosk-status"
             value={status}
             onChange={(event) => setStatus(event.target.value)}
           >
-            <option value="">Tất cả trạng thái ô</option>
-            {Object.entries(statuses).map(([value, name]) => (
+            <option value="">Tất cả trạng thái</option>
+            {Object.entries(kioskStatuses).map(([value, name]) => (
               <option key={value} value={value}>
                 {name}
               </option>
@@ -144,87 +195,71 @@ export default function AdminSlots() {
       </div>
       <Button
         onClick={() => {
-          void slots.refetch();
+          void kiosks.refetch();
           void sellers.refetch();
         }}
-        disabled={slots.isFetching || sellers.isFetching}
+        disabled={kiosks.isFetching || sellers.isFetching}
       >
-        Làm mới danh sách ô
+        Làm mới danh sách kiosk
       </Button>
       <p className="quiet">
-        Danh sách chọn shop gồm tối đa 100 shop đang hoạt động mới nhất. Gói thuê phải còn hiệu lực
-        tại thời điểm gán ô.
+        Chỉ shop đang hoạt động và có gói hợp lệ mới được nhận kiosk. BE sẽ kiểm tra hạn mức số ô
+        trước khi xác nhận.
       </p>
       <p role="status" ref={notice} tabIndex={-1}>
         {confirmation}
       </p>
-      {slots.isPending && <p role="status">Đang tải các ô tủ…</p>}
-      {slots.isError && (
+      {kiosks.isPending && <p role="status">Đang tải danh sách kiosk…</p>}
+      {kiosks.isError && (
         <p className="error" role="alert">
-          Chưa tải được ô tủ. Chọn “Làm mới danh sách ô” để thử lại.
+          Chưa tải được kiosk. Chọn “Làm mới danh sách kiosk” để thử lại.
         </p>
       )}
       {sellers.isError && (
         <p className="error" role="alert">
-          Chưa tải được shop đang hoạt động. Chọn “Làm mới danh sách ô” để thử lại.
+          Chưa tải được shop đang hoạt động. Chọn “Làm mới danh sách kiosk” để thử lại.
         </p>
       )}
-      {visible?.length === 0 && <p>Không có ô phù hợp với bộ lọc hiện tại.</p>}
+      {visible?.length === 0 && <p>Không có kiosk phù hợp với bộ lọc hiện tại.</p>}
       <ul className="admin-shop-list">
-        {visible?.map((slot) => (
-          <li key={slot.id}>
+        {visible?.map((kiosk) => (
+          <li key={kiosk.id}>
             <details>
               <summary>
                 <strong>
-                  {slot.kioskName} · Ô {slot.slotCode}
+                  {kiosk.name} · {kiosk.code}
                 </strong>
-                <span>{statuses[slot.status] || slot.status}</span>
+                <span>{kioskStatuses[kiosk.status] || kiosk.status}</span>
               </summary>
               <div className="shop-profile">
                 <dl>
                   <div>
-                    <dt>Kiosk</dt>
-                    <dd>{slot.kioskCode}</dd>
+                    <dt>Số ô</dt>
+                    <dd>{kiosk.slotCount}</dd>
                   </div>
                   <div>
-                    <dt>Địa chỉ</dt>
-                    <dd>{slot.kioskAddress}</dd>
+                    <dt>Shop đang quản lý</dt>
+                    <dd>{kiosk.sellerName || 'Chưa có'}</dd>
                   </div>
                   <div>
-                    <dt>Kết nối kiosk</dt>
-                    <dd>{kioskStatuses[slot.kioskStatus] || slot.kioskStatus}</dd>
-                  </div>
-                  <div>
-                    <dt>Shop đang thuê</dt>
-                    <dd>
-                      {slot.currentSellerId
-                        ? sellers.data?.find((seller) => seller.id === slot.currentSellerId)
-                            ?.shopName || 'Đã gán cho shop'
-                        : 'Chưa có'}
-                    </dd>
+                    <dt>Trạng thái</dt>
+                    <dd>{kioskStatuses[kiosk.status] || kiosk.status}</dd>
                   </div>
                 </dl>
-                {slot.status === 'FREE' &&
-                  (sellers.isPending ? (
-                    <p role="status">Đang tải shop…</p>
-                  ) : (
-                    sellers.data &&
-                    (sellers.data.length ? (
-                      <Assignment
-                        slot={slot}
-                        sellers={sellers.data}
-                        onAssigned={(message) => {
-                          setConfirmation(message);
-                          notice.current?.focus();
-                        }}
-                      />
-                    ) : (
-                      <p>
-                        Chưa có shop đang hoạt động để gán ô. Shop cần được duyệt và thanh toán gói
-                        trước.
-                      </p>
-                    ))
-                  ))}
+                {sellers.isPending ? (
+                  <p role="status">Đang tải shop…</p>
+                ) : sellers.data?.length ? (
+                  <Assignment
+                    kiosk={kiosk}
+                    sellers={sellers.data}
+                    onAssigned={(message) => {
+                      setConfirmation(message);
+                      notice.current?.focus();
+                    }}
+                  />
+                ) : (
+                  <p>Chưa có shop đang hoạt động và đủ điều kiện nhận kiosk.</p>
+                )}
               </div>
             </details>
           </li>

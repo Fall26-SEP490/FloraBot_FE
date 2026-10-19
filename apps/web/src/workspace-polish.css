@@ -157,8 +157,8 @@
 
 .workspace-portal-root .workspace-sidebar nav {
   position: sticky;
-  top: 14px;
-  max-height: calc(100dvh - 28px);
+  top: 84px;
+  max-height: calc(100dvh - 98px);
   overflow-y: auto;
   padding: 4px;
   scrollbar-color: #d3e5ca #174b35;

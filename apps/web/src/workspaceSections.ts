@@ -9,7 +9,7 @@ export const workspaceSections = {
       'Theo dõi trạng thái sự cố và giao hoa trên toàn hệ thống ở chế độ chỉ đọc.',
     ],
     ['shops', 'Shop hoa', 'Duyệt hồ sơ và theo dõi trạng thái hoạt động.'],
-    ['slots', 'Ô tủ', 'Phân bổ ô cho shop và kiểm tra tình trạng từng ô.'],
+    ['slots', 'Phân bổ kiosk', 'Gán toàn bộ kiosk cho một shop và theo dõi trạng thái phân bổ.'],
     ['complaints', 'Phản ánh', 'Xem bằng chứng và xử lý phản ánh của khách.'],
     ['refunds', 'Hoàn tiền', 'Kiểm tra khoản hoàn và xác nhận chi trả.'],
     [

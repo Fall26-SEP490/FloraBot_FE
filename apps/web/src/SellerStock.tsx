@@ -11,6 +11,8 @@ import ReturnFlowers from './ReturnFlowers';
 
 type Slot = components['schemas']['SellerSlotResponse'];
 type Product = components['schemas']['ProductResponse'];
+type SellerKiosk = components['schemas']['SellerKioskDto'];
+
 const statuses: Record<string, string> = {
   FREE: 'Chưa cho thuê',
   RENTED_EMPTY: 'Sẵn sàng nạp hoa',
@@ -21,104 +23,156 @@ const statuses: Record<string, string> = {
   FAULT: 'Có sự cố',
   LOCKED: 'Đang khóa',
 };
+
+const guidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const schema = z.object({
-  slotId: z.string().min(1, 'Chọn ô trống để nạp hoa.'),
-  productId: z.string().min(1, 'Chọn sản phẩm đang bật bán.'),
-  qr: z
-    .string()
-    .trim()
-    .min(1, 'Nhập mã trên tem của bó hoa.')
-    .max(200, 'Mã bó hoa không quá 200 ký tự.'),
+  slotId: z.string().regex(guidPattern, 'Chọn ô trống để nạp hoa.'),
+  productId: z.string().regex(guidPattern, 'Chọn sản phẩm đang bật bán.'),
 });
+
 const money = (value: number | string) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(value));
 
 export default function SellerStock({ session }: { session: Session }) {
   const sellerId = session.sellerId;
-  const [batch, setBatch] = useState(() => crypto.randomUUID());
-  const [stocked, setStocked] = useState(0);
+  const [selectedKioskChoice, setSelectedKioskChoice] = useState('');
   const [message, setMessage] = useState('');
   const notice = useRef<HTMLParagraphElement>(null);
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
-    defaultValues: { slotId: '', productId: '', qr: '' },
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
+    defaultValues: { slotId: '', productId: '' },
   });
   const selectedProductId = useWatch({ control: form.control, name: 'productId' });
-  const slots = useQuery({
-    queryKey: ['seller-slots', sellerId],
-    queryFn: () => request<Slot[]>(`/sellers/${sellerId}/slots`),
+  const kiosks = useQuery({
+    queryKey: ['seller-kiosks', sellerId],
+    queryFn: () => request<SellerKiosk[]>(`/sellers/${sellerId}/kiosks`),
     enabled: !!sellerId,
+  });
+  const selectedKioskId = kiosks.data?.some((kiosk) => kiosk.id === selectedKioskChoice)
+    ? selectedKioskChoice
+    : (kiosks.data?.[0]?.id ?? '');
+  const slots = useQuery({
+    queryKey: ['seller-kiosk-slots', sellerId, selectedKioskId],
+    queryFn: () => request<Slot[]>(`/me/kiosks/${selectedKioskId}/slots`),
+    enabled: !!sellerId && !!selectedKioskId,
   });
   const products = useQuery({
     queryKey: ['products', sellerId],
-    queryFn: () => request<Product[]>(`/sellers/${sellerId}/products`),
+    queryFn: () => request<Product[]>('/me/products'),
     enabled: !!sellerId,
   });
+
   const stock = useMutation({
     mutationFn: (values: z.infer<typeof schema>) =>
-      request(`/sellers/${sellerId}/flows/stock_bouquet`, {
-        p_batch: batch,
-        p_slot: values.slotId,
-        p_product: values.productId,
-        p_qr: values.qr,
+      request('/me/flows/stock_bouquet', {
+        productId: values.productId,
+        slotId: values.slotId,
       } satisfies components['schemas']['StockBouquetRequest']),
     onSuccess: (_result, values) => {
       const slot = slots.data?.find((item) => item.id === values.slotId);
+      const product = products.data?.find((item) => item.id === values.productId);
       setMessage(
-        `Đã ghi nhận bó ${values.qr} vào ô ${slot?.slotCode || ''} tại ${slot?.kioskName || 'kiosk đã chọn'}.`,
+        `Đã ghi nhận ${product?.name || 'bó hoa'} vào ô ${slot?.slotCode || ''} tại ${slot?.kioskName || 'kiosk đã chọn'}. Mã bó hoa được hệ thống tạo tự động.`,
       );
-      setStocked((count) => count + 1);
-      form.reset({ slotId: '', productId: values.productId, qr: '' });
+      form.reset({ slotId: '', productId: values.productId });
       notice.current?.focus();
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ['seller-slots', sellerId] }),
+    onSettled: () =>
+      queryClient.invalidateQueries({
+        queryKey: ['seller-kiosk-slots', sellerId, selectedKioskId],
+      }),
   });
+
   if (!sellerId) return null;
+
+  const selectedKiosk = kiosks.data?.find((kiosk) => kiosk.id === selectedKioskId);
   const canStock = session.sellerStatus === 'ACTIVE';
   const empty = slots.data?.filter((slot) => slot.status === 'RENTED_EMPTY') || [];
   const available = products.data?.filter((product) => product.status === 'ACTIVE') || [];
   const selectedProduct = available.find((product) => product.id === selectedProductId);
+  const slotsLoading = !!selectedKioskId && (slots.isPending || slots.isFetching);
   const blocked =
     !canStock ||
+    !selectedKioskId ||
     stock.isPending ||
-    slots.isFetching ||
+    slotsLoading ||
     products.isFetching ||
     slots.isError ||
     products.isError ||
     !empty.length ||
     !available.length;
+
   return (
     <section className="seller-stock" aria-labelledby="stock-title">
-      <h2 id="stock-title">Mang hoa mới đến tủ</h2>
+      <h2 id="stock-title">Hoa tại kiosk</h2>
       <p>
-        Đặt bó hoa vào đúng ô đã thuê, kiểm tra tem rồi ghi nhận tại đây. Những bó nạp trong cùng
-        lần đến tủ được gom thành một lô.
+        Chọn kiosk để xem đúng các ô đang quản lý, sau đó chọn ô trống và sản phẩm cần nạp. Mã bó
+        hoa và mã lô được hệ thống tạo tự động.
       </p>
       {!canStock && (
         <p className="quiet">
-          Shop cần có gói đang hoạt động để nạp hoa. Bạn vẫn có thể xem các ô đang thuê.
+          Shop cần có gói đang hoạt động để nạp hoa. Bạn vẫn có thể xem các ô đang quản lý.
         </p>
       )}
-      <Button
-        variant="outline"
-        disabled={slots.isFetching || products.isFetching || stock.isPending}
-        onClick={() => {
-          void slots.refetch();
-          void products.refetch();
-        }}
-      >
-        Làm mới ô và sản phẩm
-      </Button>
-      {(slots.isPending || products.isPending) && <p role="status">Đang tải ô tủ và sản phẩm…</p>}
-      {(slots.isError || products.isError) && (
+
+      <div className="product-filters">
+        <div>
+          <label htmlFor="stock-kiosk">Kiosk của shop</label>
+          <select
+            id="stock-kiosk"
+            value={selectedKioskId}
+            disabled={kiosks.isPending || kiosks.isError || stock.isPending}
+            onChange={(event) => {
+              setSelectedKioskChoice(event.target.value);
+              form.setValue('slotId', '');
+              setMessage('');
+            }}
+          >
+            <option value="">Chọn kiosk</option>
+            {kiosks.data?.map((kiosk) => (
+              <option key={kiosk.id} value={kiosk.id}>
+                {kiosk.name} · {kiosk.code}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="stock-actions">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={
+              kiosks.isFetching || slots.isFetching || products.isFetching || stock.isPending
+            }
+            onClick={() => {
+              void kiosks.refetch();
+              void products.refetch();
+              if (selectedKioskId) void slots.refetch();
+            }}
+          >
+            Làm mới kiosk, ô và sản phẩm
+          </Button>
+        </div>
+      </div>
+
+      {(kiosks.isPending || products.isPending || slotsLoading) && (
+        <p role="status">Đang tải kiosk, ô tủ và sản phẩm…</p>
+      )}
+      {(kiosks.isError || slots.isError || products.isError) && (
         <p role="alert" className="error">
-          Chưa tải đủ ô tủ và sản phẩm. Chọn “Làm mới ô và sản phẩm” để thử lại.
+          Chưa tải đủ dữ liệu quản lý kiosk. Chọn “Làm mới kiosk, ô và sản phẩm” để thử lại.
         </p>
+      )}
+      {!kiosks.isPending && !kiosks.isError && kiosks.data?.length === 0 && (
+        <p>Shop chưa được phân bổ kiosk nào. Vui lòng liên hệ quản trị viên.</p>
       )}
       <p role="status" ref={notice} tabIndex={-1}>
         {message}
       </p>
-      {canStock && (
+
+      {canStock && selectedKioskId && (
         <form
           className="stock-form"
           noValidate
@@ -126,7 +180,9 @@ export default function SellerStock({ session }: { session: Session }) {
         >
           <div className="stock-fields">
             <div>
-              <label htmlFor="stock-slot">Ô trống của shop</label>
+              <label htmlFor="stock-slot">
+                Ô trống tại {selectedKiosk?.name || 'kiosk đã chọn'}
+              </label>
               <select
                 id="stock-slot"
                 {...form.register('slotId')}
@@ -134,16 +190,18 @@ export default function SellerStock({ session }: { session: Session }) {
                 aria-invalid={!!form.formState.errors.slotId}
                 aria-describedby="stock-slot-error"
               >
-                <option value="">Chọn kiosk và ô</option>
+                <option value="">Chọn ô trống</option>
                 {empty.map((slot) => (
                   <option key={slot.id} value={slot.id}>
-                    {slot.kioskName} · {slot.kioskCode} · Ô {slot.slotCode}
+                    Ô {slot.slotCode}
                   </option>
                 ))}
               </select>
-              <p className="error" id="stock-slot-error">
-                {form.formState.errors.slotId?.message}
-              </p>
+              {form.formState.errors.slotId && (
+                <p className="error" id="stock-slot-error">
+                  {form.formState.errors.slotId.message}
+                </p>
+              )}
             </div>
             <div>
               <label htmlFor="stock-product">Sản phẩm nạp vào ô</label>
@@ -161,85 +219,53 @@ export default function SellerStock({ session }: { session: Session }) {
                   </option>
                 ))}
               </select>
-              <p className="error" id="stock-product-error">
-                {form.formState.errors.productId?.message}
-              </p>
+              {form.formState.errors.productId && (
+                <p className="error" id="stock-product-error">
+                  {form.formState.errors.productId.message}
+                </p>
+              )}
               <p className="quiet" id="stock-product-info">
                 {selectedProduct
-                  ? `${selectedProduct.name} · ${money(selectedProduct.price)} · Hạn bán ${selectedProduct.shelfLifeHours} giờ từ lúc nạp.`
-                  : 'Chọn sản phẩm để xem giá và hạn bán.'}
+                  ? `${selectedProduct.name} · ${money(selectedProduct.price)}${selectedProduct.shelfLifeHours ? ` · Hạn bán ${selectedProduct.shelfLifeHours} giờ từ lúc nạp` : ' · Hoa giả không áp dụng hạn tươi'}.`
+                  : 'Chọn sản phẩm để xem giá và thông tin hạn bán.'}
               </p>
             </div>
           </div>
-          <label htmlFor="stock-qr">Mã trên tem bó hoa</label>
-          <input
-            id="stock-qr"
-            {...form.register('qr')}
-            maxLength={200}
-            autoComplete="off"
-            disabled={blocked}
-            aria-invalid={!!form.formState.errors.qr}
-            aria-describedby="stock-qr-error stock-qr-help"
-          />
-          <p className="error" id="stock-qr-error">
-            {form.formState.errors.qr?.message}
-          </p>
-          <p className="quiet" id="stock-qr-help">
-            Mỗi bó có một mã riêng. Giá và hạn bán được ghi nhận từ sản phẩm tại thời điểm nạp.
-          </p>
-          {!slots.isPending && !slots.isError && !empty.length && (
-            <p>Chưa có ô trống để nạp. Liên hệ đội ngũ vận hành nếu shop cần thêm ô.</p>
+          {!slotsLoading && !slots.isError && !empty.length && (
+            <p>Kiosk này chưa có ô trống để nạp hoa.</p>
           )}
           {!products.isPending && !products.isError && !available.length && (
             <p>Bật bán ít nhất một sản phẩm trong danh mục trước khi nạp hoa.</p>
           )}
           <div className="stock-actions">
             <Button type="submit" disabled={blocked}>
-              {stock.isPending ? 'Đang ghi nhận…' : 'Ghi nhận bó hoa vào ô'}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={stock.isPending}
-              onClick={() => {
-                setBatch(crypto.randomUUID());
-                setStocked(0);
-                setMessage('Đã bắt đầu lô nạp mới.');
-                stock.reset();
-              }}
-            >
-              Bắt đầu lô mới
+              {stock.isPending ? 'Đang ghi nhận…' : 'Nạp hoa vào ô'}
             </Button>
           </div>
-          <p className="quiet">Lô hiện tại: đã nhận phản hồi thành công cho {stocked} bó.</p>
           {stock.isError && (
             <div role="alert" className="error">
               <p>{stock.error.message}</p>
-              <p>
-                Kiểm tra danh sách ô đã cập nhật trước khi gửi lại. Nếu mất kết nối, hãy làm mới và
-                đối chiếu mã bó để biết lần gửi trước đã được ghi nhận chưa.
-              </p>
+              <p>Làm mới kiosk để kiểm tra trạng thái ô trước khi thử lại.</p>
             </div>
           )}
         </form>
       )}
-      <h3>Các ô shop đang thuê</h3>
-      {slots.data?.length === 0 && (
-        <p>Shop chưa có ô tủ. Sau khi thanh toán gói, đội ngũ sẽ gán ô đã thống nhất.</p>
+
+      {selectedKioskId && <h3>Các ô tại {selectedKiosk?.name || 'kiosk đã chọn'}</h3>}
+      {selectedKioskId && !slotsLoading && slots.data?.length === 0 && (
+        <p>Kiosk chưa có ô nào để quản lý.</p>
       )}
       <ul className="admin-shop-list">
         {slots.data?.map((slot) => (
           <li key={slot.id}>
             <details>
               <summary>
-                <strong>
-                  {slot.kioskName} · Ô {slot.slotCode}
-                </strong>
+                <strong>Ô {slot.slotCode}</strong>
                 <span>{statuses[slot.status] || slot.status}</span>
               </summary>
               <div className="shop-profile">
                 <p>
-                  {slot.kioskCode} · {slot.kioskAddress}
+                  {slot.kioskName} · {slot.kioskCode} · {slot.kioskAddress}
                 </p>
                 {slot.bouquetId && (
                   <dl>
@@ -252,7 +278,7 @@ export default function SellerStock({ session }: { session: Session }) {
                     </div>
                     <div>
                       <dt>Mã bó hoa</dt>
-                      <dd>{slot.qrCode}</dd>
+                      <dd>{slot.qrCode || 'Hệ thống chưa trả mã'}</dd>
                     </div>
                     <div>
                       <dt>Giá khi nạp</dt>
@@ -269,7 +295,7 @@ export default function SellerStock({ session }: { session: Session }) {
                           ? new Date(slot.sellableUntil).toLocaleString('vi-VN', {
                               timeZone: 'Asia/Ho_Chi_Minh',
                             })
-                          : 'Chưa có thông tin'}
+                          : 'Không áp dụng hạn tươi'}
                       </dd>
                     </div>
                   </dl>

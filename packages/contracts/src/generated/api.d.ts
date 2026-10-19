@@ -2278,6 +2278,583 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sellers/{sellerId}/staff/{staffId}/chat/open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Seller mở hoặc tiếp tục chat riêng với một nhân viên của shop */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sellerId: string;
+                    staffId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SellerStaffChatItem"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/chats/open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Seller_staff mở hoặc tiếp tục chat với shop của mình */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SellerStaffChatItem"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/seller-staff/chats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Danh sách chat nội bộ theo shop hoặc nhân viên đang đăng nhập */
+        get: {
+            parameters: {
+                query?: {
+                    page?: number | string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SellerStaffChatPage"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/seller-staff/chats/{chatId}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Đọc lịch sử chat nội bộ; trang 1 là các tin mới nhất */
+        get: {
+            parameters: {
+                query?: {
+                    page?: number | string;
+                };
+                header?: never;
+                path: {
+                    chatId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SellerStaffChatMessagePage"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Gửi tin nhắn văn bản hoặc ảnh trong chat nội bộ
+         * @description Content tối đa 2000 ký tự. Có thể gửi ảnh bằng ImageReference lấy từ API tải ảnh; tin nhắn phải có nội dung hoặc ảnh.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    chatId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SellerStaffChatMessageInput"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SellerStaffChatMessage"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/seller-staff/chats/{chatId}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Đánh dấu các tin nhắn từ phía còn lại là đã đọc
+         * @description Gọi sau khi lịch sử hiển thị. Thao tác lặp lại an toàn; bên gửi nhận sự kiện ChatMessagesRead qua SignalR.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    chatId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SellerStaffChatReadResult"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/seller-staff/chats/{chatId}/images": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Tải ảnh chat nội bộ lên kho riêng tư
+         * @description Raw body dạng image/png, image/jpeg hoặc image/webp, tối đa 5 MB. Reference dùng một lần và hết hạn sau 30 phút.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    chatId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "image/png": string;
+                    "image/jpeg": string;
+                    "image/webp": string;
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EvidenceUploadResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Payload Too Large */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unsupported Media Type */
+                415: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Service Unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/seller-staff/chats/{chatId}/messages/{messageId}/image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Đọc ảnh riêng tư trong chat nội bộ */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    chatId: string;
+                    messageId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Service Unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/member/preorders/{requestId}/payment-link": {
         parameters: {
             query?: never;
@@ -2577,7 +3154,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/sellers/{sellerId}/products": {
+    "/api/me/products": {
         parameters: {
             query?: never;
             header?: never;
@@ -2588,9 +3165,7 @@ export interface paths {
             parameters: {
                 query?: never;
                 header?: never;
-                path: {
-                    sellerId: string;
-                };
+                path?: never;
                 cookie?: never;
             };
             requestBody?: never;
@@ -2611,9 +3186,7 @@ export interface paths {
             parameters: {
                 query?: never;
                 header?: never;
-                path: {
-                    sellerId: string;
-                };
+                path?: never;
                 cookie?: never;
             };
             requestBody: {
@@ -2710,19 +3283,20 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/sellers/{sellerId}/slots": {
+    "/api/me/kiosks/{kioskId}/slots": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
+        /** Danh sách các ô trong kiosk đang được Seller đăng nhập quản lý */
         get: {
             parameters: {
                 query?: never;
                 header?: never;
                 path: {
-                    sellerId: string;
+                    kioskId: string;
                 };
                 cookie?: never;
             };
@@ -2735,6 +3309,41 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["SellerSlotResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/kiosks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminKioskResponse"][];
                     };
                 };
             };
@@ -5260,7 +5869,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/sellers/{sellerId}/products/{productId}/photos": {
+    "/api/me/products/{productId}/photos": {
         parameters: {
             query?: never;
             header?: never;
@@ -5274,7 +5883,6 @@ export interface paths {
                 };
                 header?: never;
                 path: {
-                    sellerId: string;
                     productId: string;
                 };
                 cookie?: never;
@@ -5298,7 +5906,6 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    sellerId: string;
                     productId: string;
                 };
                 cookie?: never;
@@ -7532,7 +8139,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/sellers/{sellerId}/flows/set_product_status": {
+    "/api/me/flows/set_product_status": {
         parameters: {
             query?: never;
             header?: never;
@@ -7612,7 +8219,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/sellers/{sellerId}/flows/stock_bouquet": {
+    "/api/me/flows/stock_bouquet": {
         parameters: {
             query?: never;
             header?: never;
@@ -7660,7 +8267,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/admin/flows/assign_slot": {
+    "/api/admin/flows/assign_kiosk": {
         parameters: {
             query?: never;
             header?: never;
@@ -7669,7 +8276,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["assign_slot"];
+        post: operations["assign_kiosk"];
         delete?: never;
         options?: never;
         head?: never;
@@ -8167,6 +8774,18 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
         };
+        AdminKioskResponse: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            status: string;
+            /** Format: uuid */
+            sellerId: null | string;
+            sellerName: null | string;
+            /** Format: int32 */
+            slotCount: number | string;
+        };
         AdminRefundDetail: {
             refund: components["schemas"]["AdminRefundResponse"];
             bankStatus: string;
@@ -8309,9 +8928,9 @@ export interface components {
             /** Format: uuid */
             p_w: string;
         };
-        AssignSlotRequest: {
+        AssignKioskRequest: {
             /** Format: uuid */
-            p_slot: string;
+            p_kiosk: string;
             /** Format: uuid */
             p_seller: string;
         };
@@ -8416,7 +9035,7 @@ export interface components {
         };
         CreateProductRequest: {
             /** Format: uuid */
-            id: string;
+            kioskId: string;
             name: string;
             description: null | string;
             /** Format: int64 */
@@ -8593,6 +9212,8 @@ export interface components {
         };
         FlowResult: {
             result: null | components["schemas"]["JsonElement"];
+            /** Format: uuid */
+            batchId?: null | string;
         };
         ForgetCustomerRequest: Record<string, never>;
         GatewayReconciliationResult: {
@@ -8997,7 +9618,7 @@ export interface components {
         ReconcileGatewayRequest: {
             /** Format: date */
             p_date: string;
-            p_statement: null | components["schemas"]["JsonElement"];
+            p_statement?: unknown;
         };
         RefundBankResponse: {
             bankName: string;
@@ -9164,6 +9785,64 @@ export interface components {
             /** Format: date-time */
             sellableUntil: null | string;
         };
+        SellerStaffChatItem: {
+            /** Format: uuid */
+            id: string;
+            otherPartyName: string;
+            otherPartyRole: string;
+            otherPartyActive: boolean;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            lastMessageAt: null | string;
+            lastMessage: null | string;
+            lastMessageHasImage: boolean;
+            /** Format: int64 */
+            unreadCount: number | string;
+        };
+        SellerStaffChatMessage: {
+            /** Format: uuid */
+            id: string;
+            senderName: string;
+            senderRole: string;
+            isMine: boolean;
+            content: null | string;
+            /** Format: date-time */
+            createdAt: string;
+            imageUrl: null | string;
+            /** Format: date-time */
+            readAt: null | string;
+        };
+        SellerStaffChatMessageInput: {
+            content: null | string;
+            imageReference?: null | string;
+        };
+        SellerStaffChatMessagePage: {
+            items: components["schemas"]["SellerStaffChatMessage"][];
+            /** Format: int32 */
+            page: number | string;
+            hasMore: boolean;
+        };
+        SellerStaffChatPage: {
+            items: components["schemas"]["SellerStaffChatItem"][];
+            /** Format: int32 */
+            page: number | string;
+            hasMore: boolean;
+        };
+        SellerStaffChatReadResult: {
+            /** Format: uuid */
+            chatId: string;
+            /** Format: int32 */
+            messagesMarkedRead: number | string;
+            /** Format: int64 */
+            unreadCount: number | string;
+            /** Format: uuid */
+            readThroughMessageId: null | string;
+            /** Format: date-time */
+            readThroughCreatedAt: null | string;
+            /** Format: date-time */
+            readAt: null | string;
+        };
         SessionResponse: {
             /** Format: uuid */
             id: string;
@@ -9187,8 +9866,8 @@ export interface components {
         };
         SetProductStatusRequest: {
             /** Format: uuid */
-            p_product: string;
-            p_status: string;
+            productId: string;
+            status: string;
         };
         SetSellerBankRequest: {
             p_bank: string;
@@ -9364,12 +10043,9 @@ export interface components {
         };
         StockBouquetRequest: {
             /** Format: uuid */
-            p_batch: string;
+            productId: string;
             /** Format: uuid */
-            p_product: string;
-            /** Format: uuid */
-            p_slot: string;
-            p_qr: string;
+            slotId: string;
         };
         SubmitInstallationReportRequest: {
             report: string;
@@ -9843,9 +10519,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                sellerId: string;
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody: {
@@ -9973,9 +10647,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                sellerId: string;
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody: {
@@ -10047,7 +10719,7 @@ export interface operations {
             };
         };
     };
-    assign_slot: {
+    assign_kiosk: {
         parameters: {
             query?: never;
             header?: never;
@@ -10056,7 +10728,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["AssignSlotRequest"];
+                "application/json": components["schemas"]["AssignKioskRequest"];
             };
         };
         responses: {

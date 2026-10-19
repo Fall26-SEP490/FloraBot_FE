@@ -6,7 +6,7 @@
   },
   "servers": [
     {
-      "url": "http://localhost:8088/"
+      "url": "http://127.0.0.1:5080/"
     }
   ],
   "paths": {
@@ -2044,6 +2044,603 @@
         }
       }
     },
+    "/api/sellers/{sellerId}/staff/{staffId}/chat/open": {
+      "post": {
+        "tags": [
+          "Seller Staff Chat"
+        ],
+        "summary": "Seller mở hoặc tiếp tục chat riêng với một nhân viên của shop",
+        "parameters": [
+          {
+            "name": "sellerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "staffId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SellerStaffChatItem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/chats/open": {
+      "post": {
+        "tags": [
+          "Seller Staff Chat"
+        ],
+        "summary": "Seller_staff mở hoặc tiếp tục chat với shop của mình",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SellerStaffChatItem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/seller-staff/chats": {
+      "get": {
+        "tags": [
+          "Seller Staff Chat"
+        ],
+        "summary": "Danh sách chat nội bộ theo shop hoặc nhân viên đang đăng nhập",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SellerStaffChatPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/seller-staff/chats/{chatId}/messages": {
+      "get": {
+        "tags": [
+          "Seller Staff Chat"
+        ],
+        "summary": "Đọc lịch sử chat nội bộ; trang 1 là các tin mới nhất",
+        "parameters": [
+          {
+            "name": "chatId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SellerStaffChatMessagePage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Seller Staff Chat"
+        ],
+        "summary": "Gửi tin nhắn văn bản hoặc ảnh trong chat nội bộ",
+        "description": "Content tối đa 2000 ký tự. Có thể gửi ảnh bằng ImageReference lấy từ API tải ảnh; tin nhắn phải có nội dung hoặc ảnh.",
+        "parameters": [
+          {
+            "name": "chatId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SellerStaffChatMessageInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SellerStaffChatMessage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/seller-staff/chats/{chatId}/read": {
+      "post": {
+        "tags": [
+          "Seller Staff Chat"
+        ],
+        "summary": "Đánh dấu các tin nhắn từ phía còn lại là đã đọc",
+        "description": "Gọi sau khi lịch sử hiển thị. Thao tác lặp lại an toàn; bên gửi nhận sự kiện ChatMessagesRead qua SignalR.",
+        "parameters": [
+          {
+            "name": "chatId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SellerStaffChatReadResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/seller-staff/chats/{chatId}/images": {
+      "post": {
+        "tags": [
+          "Seller Staff Chat"
+        ],
+        "summary": "Tải ảnh chat nội bộ lên kho riêng tư",
+        "description": "Raw body dạng image/png, image/jpeg hoặc image/webp, tối đa 5 MB. Reference dùng một lần và hết hạn sau 30 phút.",
+        "parameters": [
+          {
+            "name": "chatId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "image/png": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "image/jpeg": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "image/webp": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvidenceUploadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload Too Large",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported Media Type",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/seller-staff/chats/{chatId}/messages/{messageId}/image": {
+      "get": {
+        "tags": [
+          "Seller Staff Chat"
+        ],
+        "summary": "Đọc ảnh riêng tư trong chat nội bộ",
+        "parameters": [
+          {
+            "name": "chatId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "messageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/member/preorders/{requestId}/payment-link": {
       "post": {
         "tags": [
@@ -2293,21 +2890,10 @@
         }
       }
     },
-    "/api/sellers/{sellerId}/products": {
+    "/api/me/products": {
       "get": {
         "tags": [
           "FloraBot.Api"
-        ],
-        "parameters": [
-          {
-            "name": "sellerId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
         ],
         "responses": {
           "200": {
@@ -2328,17 +2914,6 @@
       "post": {
         "tags": [
           "Catalog"
-        ],
-        "parameters": [
-          {
-            "name": "sellerId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
         ],
         "requestBody": {
           "content": {
@@ -2426,14 +3001,15 @@
         }
       }
     },
-    "/api/sellers/{sellerId}/slots": {
+    "/api/me/kiosks/{kioskId}/slots": {
       "get": {
         "tags": [
-          "FloraBot.Api"
+          "KioskOps"
         ],
+        "summary": "Danh sách các ô trong kiosk đang được Seller đăng nhập quản lý",
         "parameters": [
           {
-            "name": "sellerId",
+            "name": "kioskId",
             "in": "path",
             "required": true,
             "schema": {
@@ -2451,6 +3027,28 @@
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/SellerSlotResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/kiosks": {
+      "get": {
+        "tags": [
+          "FloraBot.Api"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AdminKioskResponse"
                   }
                 }
               }
@@ -4899,21 +5497,12 @@
         }
       }
     },
-    "/api/sellers/{sellerId}/products/{productId}/photos": {
+    "/api/me/products/{productId}/photos": {
       "get": {
         "tags": [
           "Catalog"
         ],
         "parameters": [
-          {
-            "name": "sellerId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
           {
             "name": "productId",
             "in": "path",
@@ -4954,15 +5543,6 @@
           "Catalog"
         ],
         "parameters": [
-          {
-            "name": "sellerId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
           {
             "name": "productId",
             "in": "path",
@@ -7311,23 +7891,12 @@
         }
       }
     },
-    "/api/sellers/{sellerId}/flows/set_product_status": {
+    "/api/me/flows/set_product_status": {
       "post": {
         "tags": [
           "Catalog"
         ],
         "operationId": "set_product_status",
-        "parameters": [
-          {
-            "name": "sellerId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -7516,23 +8085,12 @@
         }
       }
     },
-    "/api/sellers/{sellerId}/flows/stock_bouquet": {
+    "/api/me/flows/stock_bouquet": {
       "post": {
         "tags": [
           "KioskOps"
         ],
         "operationId": "stock_bouquet",
-        "parameters": [
-          {
-            "name": "sellerId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -7639,17 +8197,17 @@
         }
       }
     },
-    "/api/admin/flows/assign_slot": {
+    "/api/admin/flows/assign_kiosk": {
       "post": {
         "tags": [
           "KioskOps"
         ],
-        "operationId": "assign_slot",
+        "operationId": "assign_kiosk",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AssignSlotRequest"
+                "$ref": "#/components/schemas/AssignKioskRequest"
               }
             }
           },
@@ -8814,6 +9372,55 @@
         },
         "additionalProperties": false
       },
+      "AdminKioskResponse": {
+        "required": [
+          "id",
+          "code",
+          "name",
+          "status",
+          "sellerId",
+          "sellerName",
+          "slotCount"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "sellerId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "sellerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "slotCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
       "AdminRefundDetail": {
         "required": [
           "refund",
@@ -9398,14 +10005,14 @@
         },
         "additionalProperties": false
       },
-      "AssignSlotRequest": {
+      "AssignKioskRequest": {
         "required": [
-          "p_slot",
+          "p_kiosk",
           "p_seller"
         ],
         "type": "object",
         "properties": {
-          "p_slot": {
+          "p_kiosk": {
             "type": "string",
             "format": "uuid"
           },
@@ -9805,7 +10412,7 @@
       },
       "CreateProductRequest": {
         "required": [
-          "id",
+          "kioskId",
           "name",
           "description",
           "price",
@@ -9816,7 +10423,7 @@
         ],
         "type": "object",
         "properties": {
-          "id": {
+          "kioskId": {
             "type": "string",
             "format": "uuid"
           },
@@ -10553,6 +11160,13 @@
                 "$ref": "#/components/schemas/JsonElement"
               }
             ]
+          },
+          "batchId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         },
         "additionalProperties": false
@@ -10781,7 +11395,7 @@
         },
         "additionalProperties": false
       },
-      "JsonElement": {},
+      "JsonElement": { },
       "KioskAccessoryResponse": {
         "required": [
           "id",
@@ -11155,7 +11769,7 @@
               "format": "uuid"
             }
           },
-          "p_accessories": {},
+          "p_accessories": { },
           "p_points": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
@@ -12188,8 +12802,7 @@
       },
       "ReconcileGatewayRequest": {
         "required": [
-          "p_date",
-          "p_statement"
+          "p_date"
         ],
         "type": "object",
         "properties": {
@@ -12197,16 +12810,7 @@
             "type": "string",
             "format": "date"
           },
-          "p_statement": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/JsonElement"
-              }
-            ]
-          }
+          "p_statement": { }
         },
         "additionalProperties": false
       },
@@ -12851,6 +13455,248 @@
         },
         "additionalProperties": false
       },
+      "SellerStaffChatItem": {
+        "required": [
+          "id",
+          "otherPartyName",
+          "otherPartyRole",
+          "otherPartyActive",
+          "createdAt",
+          "lastMessageAt",
+          "lastMessage",
+          "lastMessageHasImage",
+          "unreadCount"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "otherPartyName": {
+            "type": "string"
+          },
+          "otherPartyRole": {
+            "type": "string"
+          },
+          "otherPartyActive": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastMessageAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "lastMessage": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lastMessageHasImage": {
+            "type": "boolean"
+          },
+          "unreadCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SellerStaffChatMessage": {
+        "required": [
+          "id",
+          "senderName",
+          "senderRole",
+          "isMine",
+          "content",
+          "createdAt",
+          "imageUrl",
+          "readAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "senderName": {
+            "type": "string"
+          },
+          "senderRole": {
+            "type": "string"
+          },
+          "isMine": {
+            "type": "boolean"
+          },
+          "content": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "imageUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "readAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SellerStaffChatMessageInput": {
+        "required": [
+          "content"
+        ],
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "imageReference": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "SellerStaffChatMessagePage": {
+        "required": [
+          "items",
+          "page",
+          "hasMore"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SellerStaffChatMessage"
+            }
+          },
+          "page": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "hasMore": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SellerStaffChatPage": {
+        "required": [
+          "items",
+          "page",
+          "hasMore"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SellerStaffChatItem"
+            }
+          },
+          "page": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "hasMore": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SellerStaffChatReadResult": {
+        "required": [
+          "chatId",
+          "messagesMarkedRead",
+          "unreadCount",
+          "readThroughMessageId",
+          "readThroughCreatedAt",
+          "readAt"
+        ],
+        "type": "object",
+        "properties": {
+          "chatId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "messagesMarkedRead": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "unreadCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "readThroughMessageId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "readThroughCreatedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "readAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
       "SessionResponse": {
         "required": [
           "id",
@@ -12935,16 +13781,16 @@
       },
       "SetProductStatusRequest": {
         "required": [
-          "p_product",
-          "p_status"
+          "productId",
+          "status"
         ],
         "type": "object",
         "properties": {
-          "p_product": {
+          "productId": {
             "type": "string",
             "format": "uuid"
           },
-          "p_status": {
+          "status": {
             "type": "string"
           }
         },
@@ -13610,27 +14456,18 @@
       },
       "StockBouquetRequest": {
         "required": [
-          "p_batch",
-          "p_product",
-          "p_slot",
-          "p_qr"
+          "productId",
+          "slotId"
         ],
         "type": "object",
         "properties": {
-          "p_batch": {
+          "productId": {
             "type": "string",
             "format": "uuid"
           },
-          "p_product": {
+          "slotId": {
             "type": "string",
             "format": "uuid"
-          },
-          "p_slot": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "p_qr": {
-            "type": "string"
           }
         },
         "additionalProperties": false
@@ -14876,7 +15713,13 @@
       "name": "Customer Seller Chat"
     },
     {
+      "name": "Seller Staff Chat"
+    },
+    {
       "name": "Catalog"
+    },
+    {
+      "name": "KioskOps"
     },
     {
       "name": "StaffTasks"
@@ -14892,9 +15735,6 @@
     },
     {
       "name": "CustomerHistory"
-    },
-    {
-      "name": "KioskOps"
     },
     {
       "name": "KioskOnboarding"

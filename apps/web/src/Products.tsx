@@ -14,6 +14,7 @@ import { Modal } from './dashboard/Modal';
 import { clampPage, paginate } from './dashboard/pagination';
 
 type Product = ProductItem;
+type SellerKiosk = components['schemas']['SellerKioskDto'];
 const PAGE_SIZE = 8;
 const priceSchema = z.object({
   price: z
@@ -47,11 +48,10 @@ function ProductEditor({
   });
   const [status, setStatus] = useState(product.status);
   const [showMetadataEditor, setShowMetadataEditor] = useState(false);
-  const base = `/sellers/${sellerId}/flows/`;
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['products', sellerId] });
   const price = useMutation({
     mutationFn: (value: number) =>
-      request(base + 'update_product_price', {
+      request(`/sellers/${sellerId}/flows/update_product_price`, {
         p_product: product.id,
         p_price: value,
       } satisfies components['schemas']['UpdateProductPriceRequest']),
@@ -59,9 +59,9 @@ function ProductEditor({
   });
   const availability = useMutation({
     mutationFn: () =>
-      request(base + 'set_product_status', {
-        p_product: product.id,
-        p_status: status,
+      request('/me/flows/set_product_status', {
+        productId: product.id,
+        status,
       } satisfies components['schemas']['SetProductStatusRequest']),
     onSuccess: refresh,
   });
@@ -216,7 +216,12 @@ export default function Products({ session }: { session: Session }) {
   const sellerId = session.sellerId;
   const query = useQuery({
     queryKey: ['products', sellerId],
-    queryFn: () => request<Product[]>(`/sellers/${sellerId}/products`),
+    queryFn: () => request<Product[]>('/me/products'),
+    enabled: !!sellerId,
+  });
+  const kiosks = useQuery({
+    queryKey: ['seller-kiosks', sellerId],
+    queryFn: () => request<SellerKiosk[]>(`/sellers/${sellerId}/kiosks`),
     enabled: !!sellerId,
   });
   if (!sellerId)
@@ -245,7 +250,7 @@ export default function Products({ session }: { session: Session }) {
             setCreateNotice('');
             setShowCreateForm(!showCreateForm);
           }}
-          disabled={!canEdit}
+          disabled={!canEdit || kiosks.isPending || !kiosks.data?.length}
           aria-expanded={showCreateForm}
           aria-controls="product-create-section"
         >
@@ -263,6 +268,7 @@ export default function Products({ session }: { session: Session }) {
           <div id="product-create-section" className="product-create-container">
             <ProductCreateForm
               sellerId={sellerId}
+              kiosks={kiosks.data ?? []}
               canEdit={canEdit}
               onSuccess={() => {
                 setShowCreateForm(false);
@@ -272,6 +278,14 @@ export default function Products({ session }: { session: Session }) {
             />
           </div>
         </Modal>
+      )}
+      {kiosks.isError && (
+        <p className="error" role="alert">
+          Chưa tải được kiosk của shop nên chưa thể tạo sản phẩm mới.
+        </p>
+      )}
+      {!kiosks.isPending && !kiosks.isError && kiosks.data?.length === 0 && (
+        <p className="quiet">Shop cần được phân bổ ít nhất một kiosk trước khi tạo sản phẩm mới.</p>
       )}
       <p ref={createNoticeRef} role="status" tabIndex={-1}>
         {createNotice}

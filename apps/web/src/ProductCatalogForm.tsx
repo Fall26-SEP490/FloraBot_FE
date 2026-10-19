@@ -20,7 +20,7 @@ export interface ProductItem {
 }
 
 export interface CreateProductInput {
-  id: string;
+  kioskId: string;
   name: string;
   description: string;
   price: number;
@@ -108,7 +108,27 @@ export const productMetadataSchema = z
     }
   });
 
+const productCreateSchema = z.intersection(
+  productMetadataSchema,
+  z.object({
+    kioskId: z
+      .string()
+      .regex(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+        'Chọn kiosk thuộc quyền quản lý của shop.',
+      ),
+  }),
+);
+
 export type ProductFormValues = z.infer<typeof productMetadataSchema>;
+type ProductCreateFormValues = z.infer<typeof productCreateSchema>;
+
+export interface ProductKioskOption {
+  id: string;
+  code: string;
+  name: string;
+  status: string;
+}
 
 export const errorText = (error: unknown): string => {
   if (error instanceof ApiError) return error.message;
@@ -116,11 +136,8 @@ export const errorText = (error: unknown): string => {
   return 'Mất kết nối. Thông tin đã nhập vẫn được giữ, hãy thử lại.';
 };
 
-export async function postProduct(
-  sellerId: string,
-  body: CreateProductInput,
-): Promise<{ id: string }> {
-  return request<{ id: string }>(`/sellers/${sellerId}/products`, body);
+export async function postProduct(body: CreateProductInput): Promise<{ id: string }> {
+  return request<{ id: string }>('/me/products', body);
 }
 
 export async function putProduct(
@@ -133,23 +150,27 @@ export async function putProduct(
 
 export function ProductCreateForm({
   sellerId,
+  kiosks,
   canEdit,
   onSuccess,
   onCancel,
 }: {
   sellerId: string;
+  kiosks: ProductKioskOption[];
   canEdit: boolean;
   onSuccess?: () => void;
   onCancel?: () => void;
 }) {
-  const [clientId, setClientId] = useState(() => crypto.randomUUID());
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const form = useForm<ProductFormValues>({
-    resolver: zodResolver(productMetadataSchema),
+  const form = useForm<ProductCreateFormValues>({
+    resolver: zodResolver(productCreateSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
+      kioskId: kiosks.length === 1 ? kiosks[0].id : '',
       name: '',
       description: '',
       price: '' as unknown as number,
@@ -160,14 +181,14 @@ export function ProductCreateForm({
     },
   });
 
-  const onSubmit = async (values: ProductFormValues) => {
+  const onSubmit = async (values: ProductCreateFormValues) => {
     if (submitting) return;
     setSubmitting(true);
     setServerError(null);
     setSuccessMessage(null);
     try {
       const payload: CreateProductInput = {
-        id: clientId,
+        kioskId: values.kioskId,
         name: values.name.trim(),
         description: values.description ? values.description.trim() : '',
         price: values.price,
@@ -176,11 +197,10 @@ export function ProductCreateForm({
         widthCm: values.widthCm,
         heightCm: values.heightCm,
       };
-      await postProduct(sellerId, payload);
+      await postProduct(payload);
       await queryClient.invalidateQueries({ queryKey: ['products', sellerId] });
       setSuccessMessage('Đã tạo mẫu hoa giả mới ở trạng thái Bản nháp.');
       form.reset();
-      setClientId(crypto.randomUUID());
       if (onSuccess) onSuccess();
     } catch (err) {
       setServerError(errorText(err));
@@ -201,6 +221,33 @@ export function ProductCreateForm({
         Bó hoa giả mới sẽ được tạo ở trạng thái <strong>Bản nháp (DRAFT)</strong>. Hoa giả không áp
         dụng thời hạn tươi.
       </p>
+
+      <div className="form-field">
+        <label htmlFor="create-product-kiosk">Kiosk của shop</label>
+        <select
+          id="create-product-kiosk"
+          disabled={!canEdit || submitting || kiosks.length === 0}
+          {...form.register('kioskId')}
+          aria-invalid={!!form.formState.errors.kioskId}
+          aria-describedby="create-product-kiosk-help create-product-kiosk-error"
+        >
+          <option value="">Chọn kiosk</option>
+          {kiosks.map((kiosk) => (
+            <option key={kiosk.id} value={kiosk.id}>
+              {kiosk.name} · {kiosk.code}
+            </option>
+          ))}
+        </select>
+        <p className="quiet" id="create-product-kiosk-help">
+          Kiosk dùng để xác nhận shop có quyền tạo sản phẩm; sản phẩm vẫn thuộc danh mục chung của
+          shop.
+        </p>
+        {form.formState.errors.kioskId && (
+          <p className="error" id="create-product-kiosk-error">
+            {form.formState.errors.kioskId.message}
+          </p>
+        )}
+      </div>
 
       <div className="form-field">
         <label htmlFor="create-product-name">Tên mẫu hoa</label>
@@ -361,7 +408,7 @@ export function ProductCreateForm({
       </div>
 
       <div className="form-actions">
-        <Button type="submit" disabled={!canEdit || submitting}>
+        <Button type="submit" disabled={!canEdit || submitting || kiosks.length === 0}>
           {submitting ? 'Đang tạo mẫu hoa…' : 'Tạo mẫu hoa'}
         </Button>
         {onCancel && (

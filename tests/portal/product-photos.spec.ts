@@ -30,6 +30,10 @@ test.beforeEach(async ({ page }) => {
   await page.route('**/api/**/subscriptions', (route) =>
     route.fulfill({ json: { package: null, subscriptions: [] } }),
   );
+  await page.route('**/api/sellers/*/kiosks', (route) => route.fulfill({ json: [] }));
+  await page.route('**/api/sellers/*/chats?page=*', (route) =>
+    route.fulfill({ json: { items: [], page: 1, pageSize: 20, total: 0 } }),
+  );
   await page.route('**/api/**/wallet', (route) =>
     route.fulfill({
       json: {
@@ -126,6 +130,58 @@ for (const width of [390, 1440]) {
     expect(uploads).toBe(2);
   });
 }
+
+test('Seller captures a product photo from the device camera before uploading', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: { getUserMedia: async () => new MediaStream() },
+    });
+    Object.defineProperty(HTMLVideoElement.prototype, 'videoWidth', {
+      configurable: true,
+      get: () => 800,
+    });
+    Object.defineProperty(HTMLVideoElement.prototype, 'videoHeight', {
+      configurable: true,
+      get: () => 600,
+    });
+    CanvasRenderingContext2D.prototype.drawImage = () => undefined;
+  });
+  let uploaded = false;
+  await page.route('**/photos*', async (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: { items: [], hasMore: false } });
+    }
+    expect(route.request().headers()['content-type']).toBe('image/jpeg');
+    expect(route.request().postDataBuffer()?.length).toBeGreaterThan(0);
+    uploaded = true;
+    return route.fulfill({
+      json: {
+        id: 'camera-photo',
+        url: 'https://res.cloudinary.com/test/image/upload/v1/florabot/camera.jpg',
+        mimeType: 'image/jpeg',
+        sizeBytes: route.request().postDataBuffer()?.length || 0,
+        sha256: 'camera-digest',
+      },
+    });
+  });
+
+  await page.goto('/seller/products');
+  await page.locator('.product-list summary').click();
+  const section = page.locator('.product-photos');
+  await section.getByRole('button', { name: 'Chụp ảnh bằng camera' }).click();
+  const camera = section.getByLabel(`Hình ảnh trực tiếp từ camera cho ${product.name}`);
+  await expect(camera).toBeVisible();
+  await camera.dispatchEvent('loadedmetadata');
+  await section.getByRole('button', { name: 'Chụp ảnh', exact: true }).click();
+  await expect(section.getByText('Đã chụp ảnh.', { exact: false })).toBeVisible();
+  await expect(section.getByAltText(`Xem trước ảnh đã chọn cho ${product.name}`)).toBeVisible();
+  await section.getByRole('button', { name: 'Tải ảnh sản phẩm', exact: true }).click();
+  await expect.poll(() => uploaded).toBe(true);
+  await expect(section.getByText('Đã thêm ảnh cho sản phẩm.')).toBeVisible();
+});
 
 test('Expired shop reads gallery pages, retries failed reads and rejects unsafe image URLs', async ({
   page,

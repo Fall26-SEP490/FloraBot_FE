@@ -5,16 +5,15 @@ test.beforeEach(async ({ page }) => {
   await page.route('**/api/admin/withdrawals?*', (route) =>
     route.fulfill({ json: { items: [], page: 1, hasMore: false } }),
   );
-});
-
-test.beforeEach(async ({ page }) => {
   await page.route('**/api/admin/incidents?*', (route) =>
     route.fulfill({ json: { items: [], page: 1, hasMore: false } }),
   );
 });
 
 for (const width of [390, 1440]) {
-  test(`Admin slot assignment with conflicts and accessible focus ${width}`, async ({ page }) => {
+  test(`Admin assigns a whole kiosk with conflict handling and accessible focus ${width}`, async ({
+    page,
+  }) => {
     await page.setViewportSize({ width, height: 950 });
     const seller = {
       id: '20000000-0000-0000-0000-000000000099',
@@ -25,17 +24,14 @@ for (const width of [390, 1440]) {
       packageId: null,
       packageExpiresAt: '2099-12-31',
     };
-    const slot = {
-      id: '30000000-0000-0000-0000-000000000099',
-      kioskId: '40000000-0000-0000-0000-000000000099',
-      slotCode: 'A01',
-      status: 'FREE',
-      currentSellerId: null as string | null,
-      bouquetId: null,
-      kioskCode: 'FPT-01',
-      kioskName: 'Đại học FPT',
-      kioskAddress: 'Khu Công nghệ cao, Thủ Đức',
-      kioskStatus: 'ONLINE',
+    const kiosk = {
+      id: '40000000-0000-0000-0000-000000000099',
+      code: 'FPT-01',
+      name: 'Đại học FPT',
+      status: 'ONLINE',
+      sellerId: null as string | null,
+      sellerName: null as string | null,
+      slotCount: 6,
     };
     let attempts = 0;
     let ready = false;
@@ -58,33 +54,42 @@ for (const width of [390, 1440]) {
           new URL(route.request().url()).searchParams.get('status') === 'ACTIVE' ? [seller] : [],
       }),
     );
-    await page.route('**/api/admin/slots', (route) =>
-      route.fulfill(ready ? { json: [slot] } : { status: 503 }),
+    await page.route('**/api/admin/kiosks', (route) =>
+      route.fulfill(ready ? { json: [kiosk] } : { status: 503 }),
     );
-    await page.route('**/api/admin/flows/assign_slot', (route) => {
-      expect(route.request().postDataJSON()).toEqual({ p_slot: slot.id, p_seller: seller.id });
+    await page.route('**/api/admin/flows/assign_kiosk', (route) => {
+      expect(route.request().postDataJSON()).toEqual({ p_kiosk: kiosk.id, p_seller: seller.id });
       attempts++;
-      if (attempts === 1)
-        return route.fulfill({ status: 409, json: { detail: 'Vượt hạn mức ô của gói.' } });
-      slot.status = 'RENTED_EMPTY';
-      slot.currentSellerId = seller.id;
-      return route.fulfill({ json: '50000000-0000-0000-0000-000000000099' });
+      if (attempts === 1) {
+        return route.fulfill({
+          status: 409,
+          json: { detail: 'Kiosk còn hoa hoặc đang có giao dịch.' },
+        });
+      }
+      kiosk.sellerId = seller.id;
+      kiosk.sellerName = seller.shopName;
+      return route.fulfill({ json: { result: null } });
     });
+
     await page.goto('/admin/slots');
     const section = page.locator('.admin-slots');
-    await expect(section.getByRole('alert')).toContainText('Chưa tải được ô tủ');
+    await expect(section.getByRole('alert')).toContainText('Chưa tải được kiosk');
     ready = true;
-    await section.getByRole('button', { name: 'Làm mới danh sách ô' }).click();
-    await section.getByLabel('Tìm kiosk, địa chỉ hoặc mã ô').fill('không tìm thấy');
-    await expect(section.getByText('Không có ô phù hợp với bộ lọc hiện tại.')).toBeVisible();
-    await section.getByLabel('Tìm kiosk, địa chỉ hoặc mã ô').fill('FPT-01');
+    await section.getByRole('button', { name: 'Làm mới danh sách kiosk' }).click();
+    await section.getByLabel('Tìm mã kiosk, tên kiosk hoặc shop').fill('không tìm thấy');
+    await expect(section.getByText('Không có kiosk phù hợp với bộ lọc hiện tại.')).toBeVisible();
+    await section.getByLabel('Tìm mã kiosk, tên kiosk hoặc shop').fill('FPT-01');
     await section.locator('summary').click();
-    await section.getByRole('button', { name: 'Gán ô cho shop' }).click();
-    await expect(section.getByLabel('Shop thuê ô A01')).toBeFocused();
+
+    await section.getByRole('button', { name: 'Gán kiosk cho shop' }).click();
+    await expect(section.getByLabel('Shop quản lý toàn bộ kiosk')).toBeFocused();
     expect(attempts).toBe(0);
-    await section.getByLabel('Shop thuê ô A01').selectOption(seller.id);
-    await section.getByRole('button', { name: 'Gán ô cho shop' }).click();
-    await expect(section.getByRole('alert')).toHaveText('Vượt hạn mức ô của gói.');
+
+    await section.getByLabel('Shop quản lý toàn bộ kiosk').selectOption(seller.id);
+    await section.getByRole('button', { name: 'Gán kiosk cho shop' }).click();
+    await page.getByRole('button', { name: 'Gán toàn bộ kiosk' }).click();
+    await expect(section.getByRole('alert')).toHaveText('Kiosk còn hoa hoặc đang có giao dịch.');
+
     expect(
       (
         await new AxeBuilder({ page })
@@ -95,14 +100,20 @@ for (const width of [390, 1440]) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
-    await section.screenshot({ path: `.impeccable/review/portal-slots-${width}.png` });
-    await section.getByRole('button', { name: 'Gán ô cho shop' }).click();
-    await expect(section.getByRole('status').filter({ hasText: 'Đã gán ô A01' })).toBeFocused();
+    await section.screenshot({ path: `.impeccable/review/portal-kiosks-${width}.png` });
+
+    await section.getByRole('button', { name: 'Gán kiosk cho shop' }).click();
+    await page.getByRole('button', { name: 'Gán toàn bộ kiosk' }).click();
+    await expect(
+      section.getByRole('status').filter({ hasText: 'Đã gán toàn bộ kiosk Đại học FPT' }),
+    ).toBeFocused();
     await expect(section.locator('li')).toHaveCount(0);
-    await section.getByLabel('Lọc trạng thái ô').selectOption('RENTED_EMPTY');
+    await section.getByLabel('Lọc phân bổ').selectOption('ASSIGNED');
     await section.locator('summary').click();
     await expect(section.getByText('Tiệm Hoa Ban Mai', { exact: true })).toBeVisible();
-    await expect(section.getByRole('button', { name: 'Gán ô cho shop' })).toHaveCount(0);
+    await expect(
+      section.getByRole('button', { name: 'Chuyển kiosk sang shop khác' }),
+    ).toBeVisible();
     expect(attempts).toBe(2);
   });
 }
