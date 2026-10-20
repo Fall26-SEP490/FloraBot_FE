@@ -79,7 +79,7 @@ test.describe('FloraBot Identity Foundation - Workspace and Roles', () => {
     await retryButton.click();
 
     await expect(page).toHaveURL(/\/operations$/);
-    await expect(page.getByRole('heading', { name: 'Chào Nguyễn Quản Lý' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Tổng quan vận hành' })).toBeVisible();
     await expect(page.getByText('Quản lý vận hành').first()).toBeVisible();
   });
 
@@ -112,7 +112,8 @@ test.describe('FloraBot Identity Foundation - Workspace and Roles', () => {
 
     await page.route('**/api/operations/**', (route) => {
       const p = new URL(route.request().url()).pathname;
-      if (p.endsWith('/staff')) return route.fulfill({ json: [] });
+      if (['/staff', '/technicians', '/eligible-kiosks'].some((suffix) => p.endsWith(suffix)))
+        return route.fulfill({ json: [] });
       return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
     });
 
@@ -122,7 +123,7 @@ test.describe('FloraBot Identity Foundation - Workspace and Roles', () => {
     await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
 
     await expect(page).toHaveURL(/\/operations$/);
-    await expect(page.getByRole('heading', { name: 'Chào Nguyễn Quản Lý' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Tổng quan vận hành' })).toBeVisible();
     await expect(page.getByText('Quản lý vận hành').first()).toBeVisible();
 
     // Verify manager has NO financial navigation
@@ -435,8 +436,8 @@ test.describe('FloraBot Identity Foundation - Workspace and Roles', () => {
       return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
     });
 
-    await page.goto('/operations');
-    await expect(page.getByRole('heading', { name: 'Chào Nguyễn Quản Lý' })).toBeVisible();
+    await page.goto('/operations/tasks');
+    await expect(page.getByRole('heading', { name: 'Điều phối công việc kỹ thuật' })).toBeVisible();
     await page.getByText('Phân công công việc mới', { exact: true }).click();
     // Verify old un-scoped retry attempt was NOT restored:
     await expect(page.getByText('Chỉ thị cũ từ phiên trước')).toHaveCount(0);
@@ -494,13 +495,14 @@ test.describe('FloraBot Identity Foundation - Workspace and Roles', () => {
       await page.route('**/api/auth/me', (route) => route.fulfill({ json: managerSession }));
       await page.route('**/api/operations/**', (route) => {
         const p = new URL(route.request().url()).pathname;
-        if (p.endsWith('/staff')) return route.fulfill({ json: [] });
+        if (['/staff', '/technicians', '/eligible-kiosks'].some((suffix) => p.endsWith(suffix)))
+          return route.fulfill({ json: [] });
         return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
       });
       await page.goto('/operations');
 
       await expect(page.getByRole('link', { name: 'Bỏ qua tới nội dung' })).toBeAttached();
-      await expect(page.getByRole('heading', { name: 'Chào Nguyễn Quản Lý' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Tổng quan vận hành' })).toBeVisible();
 
       expect(
         (

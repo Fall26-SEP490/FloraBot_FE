@@ -211,7 +211,7 @@ test.describe('Portal UI Polish Verification - Viewports and A11y', () => {
           },
         }),
       );
-      await page.route('**/api/sellers/shop-1/products', (route) =>
+      await page.route('**/api/me/products', (route) =>
         route.fulfill({
           json: [
             {
@@ -228,6 +228,13 @@ test.describe('Portal UI Polish Verification - Viewports and A11y', () => {
             },
           ],
         }),
+      );
+      await page.route('**/api/sellers/shop-1/kiosks', (route) => route.fulfill({ json: [] }));
+      await page.route('**/api/me/products/prod-1/photos?*', (route) =>
+        route.fulfill({ json: { items: [], hasMore: false } }),
+      );
+      await page.route('**/api/sellers/shop-1/chats?*', (route) =>
+        route.fulfill({ json: { items: [], page: 1, hasMore: false } }),
       );
       await page.route('**/api/sellers/shop-1/wallet', (route) =>
         route.fulfill({ json: { balance: null } }),
@@ -362,8 +369,10 @@ test.describe('Portal UI Polish Verification - Viewports and A11y', () => {
         route.fulfill({ json: { items: [], hasMore: false } }),
       );
 
-      await page.goto('/operations');
-      await expect(page.getByRole('heading', { level: 1 })).toContainText('Nguyễn Quản Lý');
+      await page.goto('/operations/tasks');
+      await expect(page.getByRole('heading', { level: 1 })).toContainText(
+        'Điều phối công việc kỹ thuật',
+      );
       await expect(page.getByText('Quản lý vận hành').first()).toBeVisible();
 
       const a11y = await new AxeBuilder({ page })

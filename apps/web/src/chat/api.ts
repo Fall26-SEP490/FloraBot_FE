@@ -7,6 +7,7 @@ import type {
   CustomerSellerChatReadResult,
   EvidenceUploadResponse,
   OpenCustomerSellerChatInput,
+  ChatTransport,
 } from './types';
 
 export const MAX_MESSAGE_LENGTH = 2000;
@@ -85,6 +86,7 @@ export async function uploadChatImage(
   chatId: string,
   file: File,
   signal?: AbortSignal,
+  channel: 'customer' | 'staff' = 'customer',
 ): Promise<EvidenceUploadResponse> {
   const validationError = validateChatImageFile(file);
   if (validationError) {
@@ -96,17 +98,20 @@ export async function uploadChatImage(
     ? AbortSignal.any([signal, AbortSignal.timeout(40_000)])
     : AbortSignal.timeout(40_000);
 
-  const response = await fetch(`/api/chats/${encodeURIComponent(chatId)}/images`, {
-    method: 'POST',
-    credentials: 'include',
-    cache: 'no-store',
-    referrerPolicy: 'no-referrer',
-    headers: {
-      'Content-Type': file.type,
+  const response = await fetch(
+    `/api/${channel === 'staff' ? 'seller-staff/chats' : 'chats'}/${encodeURIComponent(chatId)}/images`,
+    {
+      method: 'POST',
+      credentials: 'include',
+      cache: 'no-store',
+      referrerPolicy: 'no-referrer',
+      headers: {
+        'Content-Type': file.type,
+      },
+      body: file,
+      signal: combinedSignal,
     },
-    body: file,
-    signal: combinedSignal,
-  });
+  );
 
   if (!response.ok) {
     const problem = (await response.json().catch(() => ({}))) as {
@@ -185,6 +190,15 @@ export async function markChatAsRead(chatId: string): Promise<CustomerSellerChat
     'POST',
   );
 }
+
+export const customerChatTransport: ChatTransport = {
+  kind: 'customer',
+  getMessages: getChatMessages,
+  markRead: markChatAsRead,
+  send: sendChatMessage,
+  upload: uploadChatImage,
+  validate: validateMessageContent,
+};
 
 export function formatChatError(cause: unknown): string {
   if (cause instanceof ApiError) {

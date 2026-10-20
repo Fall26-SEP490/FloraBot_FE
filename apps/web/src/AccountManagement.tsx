@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -312,6 +313,11 @@ export default function AccountManagement({
       className: 'management-actions-cell',
       render: (item) => (
         <div className="management-row-actions">
+          {actorRole === 'SELLER' && targetRole === 'SELLER_STAFF' && item.status === 'ACTIVE' && (
+            <Link href={`/seller/staff-chats?staff=${encodeURIComponent(item.id)}`}>
+              Nhắn tin<span className="sr-only"> {item.fullName}</span>
+            </Link>
+          )}
           <button type="button" onClick={() => setViewing(item)}>
             Chi tiết
             <span className="sr-only"> {item.fullName}</span>

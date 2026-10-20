@@ -34,6 +34,7 @@ const icons = {
   staff: Users,
   orders: ClipboardList,
   chats: MessageSquare,
+  'staff-chats': MessageSquare,
   incidents: CircleAlert,
   tasks: ListChecks,
   shops: Store,
@@ -63,7 +64,7 @@ const groups = {
   ],
   SELLER: [
     ['Bán hoa', ['orders', 'chats', 'products', 'stock', 'accessories', 'tasks']],
-    ['Cửa hàng', ['staff', 'kiosks', 'subscriptions', 'wallet']],
+    ['Cửa hàng', ['staff', 'staff-chats', 'kiosks', 'subscriptions', 'wallet']],
   ],
 } as const;
 
@@ -185,11 +186,25 @@ export default function WorkspaceNavigation({
           </>
         ) : role === 'SELLER_STAFF' ? (
           <>
-            <Link onKeyDown={handleEscape} onClick={closeMenu} href="/staff" aria-current="page">
+            <Link
+              onKeyDown={handleEscape}
+              onClick={closeMenu}
+              href="/staff"
+              aria-current={section !== 'chats' ? 'page' : undefined}
+            >
               <ClipboardList size={19} aria-hidden="true" />
               Công việc giao hoa
             </Link>
-            <Link onKeyDown={handleEscape} onClick={closeMenu} href="#staff-guide">
+            <Link
+              onKeyDown={handleEscape}
+              onClick={closeMenu}
+              href="/staff/chats"
+              aria-current={section === 'chats' ? 'page' : undefined}
+            >
+              <MessageSquare size={19} aria-hidden="true" />
+              Nhắn với chủ shop
+            </Link>
+            <Link onKeyDown={handleEscape} onClick={closeMenu} href="/staff#staff-guide">
               <ListChecks size={19} aria-hidden="true" />
               Hướng dẫn làm việc
             </Link>
@@ -219,7 +234,7 @@ export default function WorkspaceNavigation({
               <Link
                 onKeyDown={handleEscape}
                 onClick={closeMenu}
-                href="/operations#staff-tasks"
+                href="/operations/tasks"
                 aria-current={section === 'tasks' ? 'page' : undefined}
               >
                 <ListChecks size={19} aria-hidden="true" />
@@ -234,7 +249,11 @@ export default function WorkspaceNavigation({
                 <Users size={19} aria-hidden="true" />
                 <span>Kỹ thuật viên</span>
               </Link>
-              <Link onKeyDown={handleEscape} onClick={closeMenu} href="#operations-guide">
+              <Link
+                onKeyDown={handleEscape}
+                onClick={closeMenu}
+                href="/operations#operations-guide"
+              >
                 <ClipboardList size={19} aria-hidden="true" />
                 <span>Hướng dẫn điều phối</span>
               </Link>

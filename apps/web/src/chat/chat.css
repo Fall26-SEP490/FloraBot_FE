@@ -1,4 +1,75 @@
-/* Customer & Seller Realtime Chat Styling */
+/* Customer/seller and private shop-team chat */
+
+.staff-chat-section {
+  min-width: 0;
+}
+.staff-chat-intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.staff-chat-intro h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.2rem;
+}
+.staff-chat-intro p {
+  color: #52685d;
+  margin: 0;
+}
+.staff-chat-start {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+.staff-chat-start label {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.staff-chat-start select {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #64735f;
+  border-radius: 8px;
+  padding: 0.5rem;
+  font: inherit;
+  color: #183e2b;
+  background: white;
+}
+.staff-chat-start p {
+  font-size: 0.8rem;
+}
+.staff-chat-open-shop {
+  margin-top: 1rem;
+  width: 100%;
+}
+.staff-chat-active {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+  height: 100%;
+}
+.staff-chat-active .chat-conversation {
+  flex: 1;
+  min-height: 0;
+}
+.staff-chat-readonly {
+  background: #fff7e8;
+  color: #6c481e;
+  padding: 0.85rem 1rem;
+  margin: 0;
+  font-size: 0.85rem;
+  border-bottom: 1px solid #e6d3b0;
+}
+.staff-chat-layout .chat-sidebar-header {
+  flex-shrink: 0;
+}
+.staff-chat-layout .chat-sidebar-header [role='alert'] {
+  color: #9c301d;
+  font-size: 0.85rem;
+}
 
 .chat-layout {
   display: grid;
@@ -495,7 +566,9 @@
 }
 
 .chat-image.is-hidden {
-  display: none;
+  opacity: 0;
+  min-width: 120px;
+  min-height: 80px;
 }
 
 .chat-image-loading {

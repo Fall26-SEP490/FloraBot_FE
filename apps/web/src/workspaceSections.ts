@@ -24,6 +24,7 @@ export const workspaceSections = {
   SELLER: [
     ['orders', 'Đơn đặt trước', 'Báo giá, chuẩn bị hoa và theo dõi lịch nhận.'],
     ['chats', 'Tin nhắn', 'Trao đổi và giải đáp thắc mắc với khách hàng.'],
+    ['staff-chats', 'Tin nhắn nhân viên', 'Trao đổi công việc và gửi ảnh với nhân viên của shop.'],
     [
       'products',
       'Mẫu hoa',
@@ -42,6 +43,7 @@ export const workspaceSections = {
     ['wallet', 'Ví & tài khoản nhận tiền', 'Theo dõi số dư, khoản chi và yêu cầu rút tiền.'],
   ],
   OPERATIONS_MANAGER: [
+    ['tasks', 'Công việc kỹ thuật', 'Phân công sự cố và kiểm tra báo cáo của kỹ thuật viên.'],
     [
       'installations',
       'Hồ sơ thuê & Lắp đặt',

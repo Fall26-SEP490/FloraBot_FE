@@ -50,7 +50,7 @@ test('Operations Manager assigns INCIDENT and recovers the same request after re
     return route.fulfill({ json: [] });
   });
 
-  await page.goto('/operations');
+  await page.goto('/operations/tasks');
   await page.getByText('Phân công công việc mới', { exact: true }).click();
 
   // Verify wrong-kind action absent: DELIVERY is not allowed for Operations Manager

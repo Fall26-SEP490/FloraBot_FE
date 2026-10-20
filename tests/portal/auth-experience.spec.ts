@@ -1,6 +1,16 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
+// These checks exercise enabled form validation; provider-disabled states have
+// separate coverage in auth-real-provider.spec.ts.
+test.beforeEach(async ({ page }) => {
+  await page.route('**/api/auth/config', (route) =>
+    route.fulfill({
+      json: { googleClientId: null, googleEnabled: false, registrationEmailEnabled: true },
+    }),
+  );
+});
+
 const screens = [
   ['/dang-nhap', 'Đăng nhập'],
   ['/dang-ky', 'Tạo tài khoản FloraBot'],
