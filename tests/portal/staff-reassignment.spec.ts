@@ -56,7 +56,7 @@ for (const width of [390, 1440])
       assigneeId = 'new';
       return route.abort();
     });
-    await page.goto('/operations');
+    await page.goto('/operations/tasks');
     let panel = page.locator('.staff-reassignment');
     await panel.locator('summary').click();
     await panel.getByRole('button', { name: 'Xác nhận bàn giao' }).click();

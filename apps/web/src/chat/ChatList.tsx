@@ -14,6 +14,7 @@ export function ChatList({
   error,
   onRetry,
   userRole,
+  internal = false,
 }: {
   items: CustomerSellerChatItem[];
   activeChatId: string | null;
@@ -26,6 +27,7 @@ export function ChatList({
   error?: unknown;
   onRetry: () => void;
   userRole: 'CUSTOMER' | 'SELLER';
+  internal?: boolean;
 }) {
   const formatTime = (isoString?: string | null) => {
     if (!isoString) return '';
@@ -68,9 +70,11 @@ export function ChatList({
       <div className="chat-list-empty">
         <h3>Chưa có cuộc trò chuyện nào</h3>
         <p>
-          {userRole === 'CUSTOMER'
-            ? 'Khi bạn nhắn tin với shop hoa từ các mẫu hoa đang xem, cuộc trò chuyện sẽ hiển thị tại đây.'
-            : 'Hiện tại chưa có khách hàng nào gửi tin nhắn tới shop của bạn.'}
+          {internal
+            ? 'Mở cuộc trò chuyện để trao đổi công việc trong shop. Tin nhắn sẽ được lưu tại đây.'
+            : userRole === 'CUSTOMER'
+              ? 'Khi bạn nhắn tin với shop hoa từ các mẫu hoa đang xem, cuộc trò chuyện sẽ hiển thị tại đây.'
+              : 'Hiện tại chưa có khách hàng nào gửi tin nhắn tới shop của bạn.'}
         </p>
       </div>
     );

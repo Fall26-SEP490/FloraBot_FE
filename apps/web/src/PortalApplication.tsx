@@ -39,7 +39,10 @@ import AccountManagement from './AccountManagement';
 import PersonalProfile from './PersonalProfile';
 import CustomerKioskOnboarding from './CustomerKioskOnboarding';
 import { SellerChatSection } from './chat/SellerChatSection';
+import { StaffChatSection } from './chat/StaffChatSection';
 import OperationsInstallations from './OperationsInstallations';
+import OperationsOverview from './OperationsOverview';
+import './operations.css';
 import TechnicianInstallations from './TechnicianInstallations';
 import AdminKioskRefunds from './AdminKioskRefunds';
 import AdminReports from './AdminReports';
@@ -216,7 +219,7 @@ function PortalUpdates() {
   return null;
 }
 
-function StaffWorkspace() {
+function StaffWorkspace({ section = 'tasks' }: { section?: string }) {
   const router = useRouter();
   const session = useQuery({ ...sessionQuery, refetchInterval: 60_000 });
   const logout = useMutation({
@@ -257,48 +260,61 @@ function StaffWorkspace() {
         onLogout={() => logout.mutate()}
       />
       <div className="dashboard-shell">
-        <WorkspaceNavigation workspaceRole="SELLER_STAFF" section="tasks" />
+        <WorkspaceNavigation workspaceRole="SELLER_STAFF" section={section} />
         <main id="main" className="workspace dashboard-content">
           <div className="dashboard-page-heading">
             <div>
-              <h1>Chào {session.data.name}</h1>
-              <p>Nhận việc, nạp hoa vào ô tủ và gửi báo cáo cho shop.</p>
+              <h1>{section === 'chats' ? 'Nhắn với chủ shop' : `Chào ${session.data.name}`}</h1>
+              <p>
+                {section === 'chats'
+                  ? 'Trao đổi yêu cầu công việc và chia sẻ ảnh trực tiếp với shop của bạn.'
+                  : 'Nhận việc, nạp hoa vào ô tủ và gửi báo cáo cho shop.'}
+              </p>
             </div>
             <span className="dashboard-context">Nhân viên shop</span>
           </div>
-          <StaffTasks
-            actorRole="SELLER_STAFF"
-            mode="worker"
-            actorId={session.data.id}
-            sellerId={session.data.sellerId}
-            apiBase="/staff/tasks"
-            allowedKinds={['DELIVERY']}
-          />
-          <section
-            id="staff-guide"
-            className="dashboard-staff-guide"
-            tabIndex={-1}
-            aria-labelledby="staff-guide-title"
-          >
-            <h2 id="staff-guide-title">Từ nhận việc đến hoàn thành</h2>
-            <ol>
-              <li>
-                <strong>Kiểm tra yêu cầu</strong>
-                <p>Xem đúng tủ, địa chỉ và nội dung được phân công.</p>
-              </li>
-              <li>
-                <strong>Nạp hoa vào ô</strong>
-                <p>Bắt đầu công việc, chọn ô trống, quét mã QR và xác nhận.</p>
-              </li>
-              <li>
-                <strong>Gửi báo cáo</strong>
-                <p>Cập nhật kết quả nạp hoa để chủ shop theo dõi.</p>
-              </li>
-            </ol>
-            <p className="dashboard-data-note">
-              Bạn chỉ thao tác trong phạm vi công việc được giao của shop phụ trách.
-            </p>
-          </section>
+          {section === 'chats' ? (
+            <StaffChatSection
+              key={`${session.data.id}:${session.data.sellerId}`}
+              session={session.data}
+            />
+          ) : (
+            <>
+              <StaffTasks
+                actorRole="SELLER_STAFF"
+                mode="worker"
+                actorId={session.data.id}
+                sellerId={session.data.sellerId}
+                apiBase="/staff/tasks"
+                allowedKinds={['DELIVERY']}
+              />
+              <section
+                id="staff-guide"
+                className="dashboard-staff-guide"
+                tabIndex={-1}
+                aria-labelledby="staff-guide-title"
+              >
+                <h2 id="staff-guide-title">Từ nhận việc đến hoàn thành</h2>
+                <ol>
+                  <li>
+                    <strong>Kiểm tra yêu cầu</strong>
+                    <p>Xem đúng tủ, địa chỉ và nội dung được phân công.</p>
+                  </li>
+                  <li>
+                    <strong>Nạp hoa vào ô</strong>
+                    <p>Bắt đầu công việc, chọn ô trống, quét mã QR và xác nhận.</p>
+                  </li>
+                  <li>
+                    <strong>Gửi báo cáo</strong>
+                    <p>Cập nhật kết quả nạp hoa để chủ shop theo dõi.</p>
+                  </li>
+                </ol>
+                <p className="dashboard-data-note">
+                  Bạn chỉ thao tác trong phạm vi công việc được giao của shop phụ trách.
+                </p>
+              </section>
+            </>
+          )}
           {logout.isError && <p role="alert">Chưa đăng xuất được. Bạn thử lại nhé.</p>}
         </main>
       </div>
@@ -444,7 +460,7 @@ function OperationsWorkspace({ section = 'overview' }: { section?: string }) {
         busy={logout.isPending}
         onLogout={() => logout.mutate()}
       />
-      <div className="dashboard-shell">
+      <div className="dashboard-shell operations-workspace">
         <WorkspaceNavigation
           workspaceRole={session.data.role === 'ADMIN' ? 'ADMIN' : 'OPERATIONS_MANAGER'}
           section={section}
@@ -453,12 +469,22 @@ function OperationsWorkspace({ section = 'overview' }: { section?: string }) {
           <div className="dashboard-page-heading">
             <div>
               <h1>
-                {section === 'technicians' ? 'Quản lý Kỹ thuật viên' : `Chào ${session.data.name}`}
+                {section === 'technicians'
+                  ? 'Quản lý kỹ thuật viên'
+                  : section === 'installations'
+                    ? 'Hồ sơ thuê & lắp đặt'
+                    : section === 'tasks'
+                      ? 'Điều phối công việc kỹ thuật'
+                      : 'Tổng quan vận hành'}
               </h1>
               <p>
                 {section === 'technicians'
-                  ? 'Tạo tài khoản và quản lý trạng thái kỹ thuật viên phụ trách xử lý sự cố tủ hoa.'
-                  : 'Phân công sự cố cho kỹ thuật viên và kiểm tra kết quả khắc phục lỗi tủ.'}
+                  ? 'Quản lý đội ngũ, thông tin liên hệ và trạng thái tài khoản kỹ thuật viên.'
+                  : section === 'installations'
+                    ? 'Theo dõi hồ sơ từ xác nhận liên hệ, xếp lịch lắp đặt đến nghiệm thu bàn giao.'
+                    : section === 'tasks'
+                      ? 'Phân công sự cố, điều chỉnh người phụ trách và duyệt báo cáo khắc phục.'
+                      : `Chào ${session.data.name}, cùng theo dõi hoạt động kiosk hôm nay.`}
               </p>
             </div>
             <span className="dashboard-context">
@@ -470,6 +496,11 @@ function OperationsWorkspace({ section = 'overview' }: { section?: string }) {
               key={`${session.data.id}:${session.data.role}`}
               session={session.data}
             />
+          ) : session.data.role === 'ADMIN' && section !== 'overview' ? (
+            <p role="status">
+              Các thao tác điều phối và quản lý kỹ thuật viên dành cho Quản lý vận hành.{' '}
+              <Link href="/operations/installations">Xem hồ sơ lắp đặt ở chế độ giám sát</Link>.
+            </p>
           ) : section === 'technicians' ? (
             <AccountManagement
               actorRole="OPERATIONS_MANAGER"
@@ -481,6 +512,8 @@ function OperationsWorkspace({ section = 'overview' }: { section?: string }) {
               itemName="kỹ thuật viên"
               apiBase="/operations/technicians"
             />
+          ) : section === 'overview' ? (
+            <OperationsOverview session={session.data} />
           ) : (
             <>
               <StaffTasks
@@ -516,8 +549,8 @@ function OperationsWorkspace({ section = 'overview' }: { section?: string }) {
                   </li>
                 </ol>
                 <p className="dashboard-data-note">
-                  Tài khoản quản lý được phân quyền theo cụm tủ phụ trách; không có quyền tài chính
-                  hay quản trị viên.
+                  Công việc sự cố được giới hạn theo cụm tủ phụ trách. Hồ sơ thuê và đội ngũ kỹ
+                  thuật được quản lý theo phân quyền nền tảng.
                 </p>
               </section>
             </>
@@ -651,6 +684,12 @@ function Workspace({
             />
           )}
           {role === 'SELLER' && section === 'chats' && <SellerChatSection session={session.data} />}
+          {role === 'SELLER' && section === 'staff-chats' && (
+            <StaffChatSection
+              key={`${session.data.id}:${session.data.sellerId}`}
+              session={session.data}
+            />
+          )}
           {role === 'SELLER' && section === 'products' && <Products session={session.data} />}
           {role === 'SELLER' && section === 'kiosks' && <SellerKiosks session={session.data} />}
           {role === 'SELLER' && section === 'subscriptions' && (
@@ -849,7 +888,7 @@ function Screen({ screen, section }: { screen: PortalScreen; section?: string })
       return (
         <div className="workspace-portal-root">
           <Guard requiredRole="SELLER_STAFF">
-            <StaffWorkspace />
+            <StaffWorkspace section={section} />
           </Guard>
         </div>
       );

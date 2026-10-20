@@ -4,21 +4,21 @@ import {
   ALLOWED_IMAGE_TYPES,
   MAX_MESSAGE_LENGTH,
   formatChatError,
-  sendChatMessage,
-  uploadChatImage,
+  customerChatTransport,
   validateChatImageFile,
-  validateMessageContent,
 } from './api';
-import type { CustomerSellerChatMessage } from './types';
+import type { ChatTransport, CustomerSellerChatMessage } from './types';
 
 export function MessageComposer({
   chatId,
   onMessageSent,
   disabled = false,
+  transport = customerChatTransport,
 }: {
   chatId: string;
   onMessageSent: (message: CustomerSellerChatMessage) => void;
   disabled?: boolean;
+  transport?: ChatTransport;
 }) {
   const [content, setContent] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -69,7 +69,7 @@ export function MessageComposer({
 
   const handleBlur = () => {
     if (!content.trim() && !selectedFile) return;
-    const validationErr = validateMessageContent(content, Boolean(selectedFile));
+    const validationErr = transport.validate(content, Boolean(selectedFile));
     if (validationErr) {
       setError(validationErr);
     } else {
@@ -82,7 +82,7 @@ export function MessageComposer({
     if (disabled || isSending || sendingLock.current) return;
 
     const trimmed = content.trim();
-    const validationErr = validateMessageContent(trimmed, Boolean(selectedFile));
+    const validationErr = transport.validate(trimmed, Boolean(selectedFile));
     if (validationErr) {
       setError(validationErr);
       textareaRef.current?.focus();
@@ -98,12 +98,12 @@ export function MessageComposer({
 
       if (selectedFile) {
         setSendStep('uploading');
-        const uploadResult = await uploadChatImage(chatId, selectedFile);
+        const uploadResult = await transport.upload(chatId, selectedFile);
         imageReference = uploadResult.reference;
       }
 
       setSendStep('sending');
-      const sent = await sendChatMessage(chatId, {
+      const sent = await transport.send(chatId, {
         content: trimmed || null,
         imageReference,
       });

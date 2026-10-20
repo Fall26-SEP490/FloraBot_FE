@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Button, RefreshCw } from '@florabot/ui';
-import { formatChatError, getChatMessages, markChatAsRead } from './api';
+import { customerChatTransport, formatChatError } from './api';
 import type {
   ChatMessageReceivedEvent,
   ChatMessagesReadEvent,
   CustomerSellerChatMessage,
+  ChatTransport,
 } from './types';
 import { MessageItem } from './MessageItem';
 import { MessageComposer } from './MessageComposer';
@@ -17,26 +18,40 @@ export function ConversationView({
   onBack,
   onMessagesReadLocally,
   registerRealtimeHandlers,
+  transport = customerChatTransport,
+  cacheScope = '',
+  disabled = false,
+  isActive = true,
 }: {
   chatId: string;
   otherPartyName: string;
   productContext?: string | null;
   onBack?: () => void;
   onMessagesReadLocally?: () => void;
+  transport?: ChatTransport;
+  cacheScope?: string;
+  disabled?: boolean;
+  isActive?: boolean;
   registerRealtimeHandlers?: (
     onMessage: (msg: ChatMessageReceivedEvent) => void,
     onRead: (event: ChatMessagesReadEvent) => void,
   ) => void;
 }) {
   const initialQuery = useQuery({
-    queryKey: ['chat-messages', chatId],
-    queryFn: () => getChatMessages(chatId, 1),
+    queryKey:
+      transport.kind === 'staff'
+        ? ['staff-chat-messages', cacheScope, chatId]
+        : ['chat-messages', chatId],
+    queryFn: () => transport.getMessages(chatId, 1),
+    enabled: isActive,
+    refetchInterval: transport.kind === 'staff' && isActive ? 30_000 : false,
   });
 
   const [olderPages, setOlderPages] = useState<CustomerSellerChatMessage[][]>([]);
   const [olderPageNumber, setOlderPageNumber] = useState(1);
   const [hasMoreFromPagination, setHasMoreFromPagination] = useState(false);
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
+  const [olderError, setOlderError] = useState<string | null>(null);
   const [realtimeMessages, setRealtimeMessages] = useState<CustomerSellerChatMessage[]>([]);
   const [readReceipts, setReadReceipts] = useState<Record<string, string>>({});
 
@@ -51,12 +66,23 @@ export function ConversationView({
 
   // Trigger mark read after messages arrive
   useEffect(() => {
-    if (initialQuery.data) {
-      void markChatAsRead(chatId)
-        .then(() => onMessagesReadLocally?.())
-        .catch(() => undefined);
-    }
-  }, [chatId, initialQuery.data, onMessagesReadLocally]);
+    const markVisible = () => {
+      if (
+        initialQuery.data &&
+        !initialQuery.isError &&
+        isActive &&
+        document.visibilityState === 'visible'
+      ) {
+        void transport
+          .markRead(chatId)
+          .then(() => onMessagesReadLocally?.())
+          .catch(() => undefined);
+      }
+    };
+    markVisible();
+    document.addEventListener('visibilitychange', markVisible);
+    return () => document.removeEventListener('visibilitychange', markVisible);
+  }, [chatId, initialQuery.data, initialQuery.isError, isActive, onMessagesReadLocally, transport]);
 
   // Auto-scroll helper
   const scrollToBottom = useCallback((smooth = true) => {
@@ -148,9 +174,11 @@ export function ConversationView({
       });
 
       // Mark as read immediately when viewed in active chat
-      void markChatAsRead(chatId)
-        .then(() => onMessagesReadLocally?.())
-        .catch(() => undefined);
+      if (isActive && document.visibilityState === 'visible')
+        void transport
+          .markRead(chatId)
+          .then(() => onMessagesReadLocally?.())
+          .catch(() => undefined);
 
       if (isNearBottomRef.current) {
         setTimeout(() => scrollToBottom(true), 50);
@@ -174,12 +202,21 @@ export function ConversationView({
     };
 
     registerRealtimeHandlers(handleMessage, handleRead);
-  }, [chatId, registerRealtimeHandlers, allMessages, onMessagesReadLocally, scrollToBottom]);
+  }, [
+    chatId,
+    registerRealtimeHandlers,
+    allMessages,
+    onMessagesReadLocally,
+    scrollToBottom,
+    isActive,
+    transport,
+  ]);
 
   // Load older messages (page + 1)
   const handleLoadOlder = async () => {
     if (isLoadingOlder || !hasMoreOlder) return;
     setIsLoadingOlder(true);
+    setOlderError(null);
 
     const el = scrollContainerRef.current;
     if (el) {
@@ -190,11 +227,12 @@ export function ConversationView({
 
     try {
       const nextPage = olderPageNumber + 1;
-      const data = await getChatMessages(chatId, nextPage);
+      const data = await transport.getMessages(chatId, nextPage);
       setOlderPageNumber(nextPage);
       setHasMoreFromPagination(data.hasMore);
       setOlderPages((prev) => [data.items, ...prev]);
-    } catch {
+    } catch (cause) {
+      setOlderError(formatChatError(cause));
       shouldRestoreScrollRef.current = false;
     } finally {
       setIsLoadingOlder(false);
@@ -253,6 +291,7 @@ export function ConversationView({
           <>
             {hasMoreOlder && (
               <div className="chat-load-older-container">
+                {olderError && <p role="alert">{olderError}</p>}
                 <Button
                   type="button"
                   variant="outline"
@@ -285,7 +324,8 @@ export function ConversationView({
         <MessageComposer
           chatId={chatId}
           onMessageSent={handleMessageSent}
-          disabled={initialQuery.isPending}
+          disabled={disabled || initialQuery.isPending || initialQuery.isError}
+          transport={transport}
         />
       </footer>
     </section>

@@ -85,6 +85,8 @@ export function ChatImage({ src, alt }: { src: string; alt?: string }) {
           type="button"
           className="chat-image-button"
           onClick={handleOpenModal}
+          disabled={status !== 'loaded'}
+          aria-busy={status === 'loading'}
           aria-label="Xem ảnh phóng to"
         >
           <img
