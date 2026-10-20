@@ -320,30 +320,33 @@ test.describe('Flower Catalog (/dat-hoa) Redesign & Chat Integration', () => {
 });
 
 test.describe('Guide Page (/huong-dan-dat-hoa) and Contact (/lien-he) Overhaul', () => {
-  test('Guide page renders 6-step timeline and comparison cards', async ({ page }) => {
+  test('Guide page renders both accessible purchase flows and comparison cards', async ({
+    page,
+  }) => {
     await page.goto('/huong-dan-dat-hoa');
 
-    // Verify 6 step cards
-    await expect(page.getByRole('heading', { name: 'Chọn sản phẩm hoặc mẫu riêng' })).toBeVisible();
-    await expect(
-      page.getByRole('heading', { name: 'Chọn shop, tủ kiosk & thời gian' }),
-    ).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Nhận báo giá chi tiết' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Xác nhận và thanh toán' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Shop chuẩn bị & nạp vào tủ' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Đến tủ nhận hoa bằng mã' })).toBeVisible();
-
-    // Verify comparison section
+    await expect(page.getByText('Dữ liệu minh họa', { exact: true })).toBeVisible();
+    await expect(page.getByText('Hoặc nhập PIN 6 số', { exact: true })).toBeVisible();
     await expect(
       page.getByRole('heading', { name: 'Đặt mẫu riêng để shop chuẩn bị' }),
     ).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Mua hoa có sẵn tại tủ' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Mua có sẵn tại tủ' })).toBeVisible();
 
-    // CTAs exist
-    await expect(
-      page.getByRole('link', { name: 'Chọn hoa của bạn', exact: true }).first(),
-    ).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Tìm kiosk gần bạn', exact: true })).toBeVisible();
+    const availableTab = page.getByRole('tab', { name: 'Mua có sẵn' });
+    const customTab = page.getByRole('tab', { name: 'Đặt mẫu riêng' });
+    await expect(availableTab).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByRole('heading', { name: 'Chọn hoa & kiosk' })).toBeVisible();
+
+    await customTab.click();
+    await expect(customTab).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByRole('heading', { name: 'Gửi yêu cầu' })).toBeVisible();
+
+    await page.keyboard.press('ArrowLeft');
+    await expect(availableTab).toHaveAttribute('aria-selected', 'true');
+    await expect(availableTab).toBeFocused();
+
+    await expect(page.getByRole('link', { name: 'Chọn hoa ngay', exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Tìm kiosk', exact: true })).toBeVisible();
   });
 
   test('Contact page renders support cards with appropriate destinations', async ({ page }) => {

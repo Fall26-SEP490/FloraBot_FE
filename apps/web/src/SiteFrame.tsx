@@ -258,8 +258,15 @@ function Frame({ children }: { children: ReactNode }) {
   const workspace =
     /^\/(admin|seller|staff|operations|technician|workspace)(\/|$)/.test(pathname) &&
     pathname !== '/admin/login';
+  const frameClassName = [
+    'site-frame',
+    workspace ? 'site-frame-workspace' : '',
+    pathname === '/huong-dan-dat-hoa' ? 'site-frame-guide' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
   return (
-    <div className={workspace ? 'site-frame site-frame-workspace' : 'site-frame'}>
+    <div className={frameClassName}>
       <a className="skip-link" href="#main">
         Bỏ qua tới nội dung
       </a>
