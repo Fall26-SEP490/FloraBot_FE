@@ -1,13 +1,11 @@
 .auth-page {
   --auth-forest: #164b35;
   --auth-leaf: #d9edb6;
-  --auth-mint: #f0f6ec;
   --auth-text: #173d2c;
   --auth-muted: #45634f;
   --auth-line: #718874;
   --auth-danger: #922f31;
   color: var(--auth-text);
-  background: var(--auth-mint);
   min-height: 600px;
   overflow-wrap: anywhere;
   padding: 40px clamp(1rem, 4vw, 4rem);

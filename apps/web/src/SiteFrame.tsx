@@ -266,7 +266,7 @@ function Frame({ children }: { children: ReactNode }) {
       </a>
       {!workspace && <SiteHeader />}
       <div className="site-content">{children}</div>
-      <SiteFooter />
+      {!workspace && <SiteFooter />}
     </div>
   );
 }

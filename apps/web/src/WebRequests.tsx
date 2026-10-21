@@ -572,7 +572,7 @@ export default function WebRequests({
       ) : (
         <>
           {!filtered.length && (
-            <p role="status">
+            <p className="seller-empty-state" role="status">
               {items.length
                 ? 'Không có yêu cầu phù hợp bộ lọc trong trang này.'
                 : 'Chưa có yêu cầu ở trang này.'}
@@ -587,7 +587,9 @@ export default function WebRequests({
                       {row.orderCode || `Yêu cầu ${row.id.slice(0, 8)}`} ·{' '}
                       {row.kind === 'CUSTOM' ? 'Hoa theo yêu cầu' : 'Hoa có sẵn'}
                     </strong>
-                    <span>{statusName(row)}</span>
+                    <span className="order-status-pill" data-status={row.orderStatus || row.state}>
+                      {statusName(row)}
+                    </span>
                   </summary>
                   <OrderActions
                     row={row}
