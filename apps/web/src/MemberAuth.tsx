@@ -976,10 +976,6 @@ export default function MemberAuth({ mode }: { mode: Mode }) {
               className="auth-google-custom-container"
               style={{ display: gisStatus === 'ready' ? 'block' : 'none' }}
             >
-              <button type="button" className="auth-google-btn" tabIndex={-1} aria-hidden="true">
-                <GoogleIcon />
-                <span>{mode === 'register' ? 'Đăng ký bằng Google' : 'Đăng nhập bằng Google'}</span>
-              </button>
               <div
                 ref={googleBtnContainerRef}
                 className="auth-google-rendered-wrapper"
