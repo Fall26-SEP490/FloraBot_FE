@@ -12,7 +12,7 @@
 }
 body {
   background:
-    linear-gradient(#fffdf7d9, #fffdf7d9),
+    linear-gradient(rgba(253, 254, 252, 0.965), rgba(253, 254, 252, 0.965)),
     url('/images/generated/florabot-pattern.webp') center / 620px repeat;
 }
 #main {

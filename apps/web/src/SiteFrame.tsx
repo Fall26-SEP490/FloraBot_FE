@@ -2,10 +2,10 @@
 
 import { memo, useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { Flower2, LogIn, LogOut, Menu, User, X } from '@florabot/ui';
-import { queryClient, request, sessionQuery } from './api';
+import { logoutSession, queryClient, sessionQuery } from './api';
 import { workspaceBase } from './workspaceSections';
 
 const navigation = [
@@ -26,7 +26,6 @@ export function SiteBrand({ className = 'site-brand', href = '/' }) {
 
 function SiteHeader() {
   const pathname = usePathname();
-  const router = useRouter();
   const [openedPath, setOpenedPath] = useState<string | null>(null);
   const expanded = openedPath === pathname;
   const toggle = useRef<HTMLButtonElement>(null);
@@ -106,9 +105,8 @@ function SiteHeader() {
     setBusy(true);
     setError('');
     try {
-      await request('/auth/logout', {});
-      queryClient.clear();
-      router.push('/dang-nhap');
+      await logoutSession();
+      window.location.replace('/dang-nhap');
     } catch {
       setError('Chưa đăng xuất được. Hãy thử lại.');
     } finally {
@@ -258,11 +256,7 @@ function Frame({ children }: { children: ReactNode }) {
   const workspace =
     /^\/(admin|seller|staff|operations|technician|workspace)(\/|$)/.test(pathname) &&
     pathname !== '/admin/login';
-  const frameClassName = [
-    'site-frame',
-    workspace ? 'site-frame-workspace' : '',
-    pathname === '/huong-dan-dat-hoa' ? 'site-frame-guide' : '',
-  ]
+  const frameClassName = ['site-frame', workspace ? 'site-frame-workspace' : '']
     .filter(Boolean)
     .join(' ');
   return (

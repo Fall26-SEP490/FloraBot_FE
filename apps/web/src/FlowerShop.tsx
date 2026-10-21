@@ -333,12 +333,6 @@ export default function FlowerShop() {
 
   const handleOpenChat = useCallback(
     async (item: Item) => {
-      if (item.isDemoSample) {
-        setChatError(
-          'Mẫu minh họa chưa gắn với shop thật. Hãy chọn sản phẩm từ danh mục API để nhắn tin.',
-        );
-        return;
-      }
       if (!session.data) {
         const returnUrl = `/dat-hoa?action=chat&sellerId=${encodeURIComponent(item.sellerId)}&productId=${encodeURIComponent(item.productId)}&shopName=${encodeURIComponent(item.shopName)}&name=${encodeURIComponent(item.name)}`;
         router.push(`/dang-nhap?returnUrl=${encodeURIComponent(returnUrl)}`);
@@ -346,6 +340,12 @@ export default function FlowerShop() {
       }
       if (session.data.role !== 'CUSTOMER') {
         setChatError('Chỉ tài khoản khách hàng thành viên mới có thể nhắn tin với shop.');
+        return;
+      }
+      if (item.isDemoSample) {
+        setChatError(
+          'Mẫu minh họa chưa gắn với shop thật. Hãy chọn sản phẩm từ danh mục API để nhắn tin.',
+        );
         return;
       }
       setOpeningChatId(item.productId);

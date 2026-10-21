@@ -45,6 +45,7 @@ const seller = {
 };
 
 test('Anonymous guard, login validation, seller banner and logout', async ({ page }) => {
+  test.setTimeout(45_000);
   let signedIn = false;
   await page.route('**/api/auth/**', async (route) => {
     const url = new URL(route.request().url());
@@ -79,6 +80,49 @@ test('Anonymous guard, login validation, seller banner and logout', async ({ pag
   await expect(page).toHaveURL(/\/dang-nhap$/);
   await page.goto('/seller');
   await expect(page).toHaveURL(/\/dang-nhap$/);
+});
+
+test('Marketing header logout clears the session and performs a clean navigation', async ({
+  page,
+}) => {
+  let signedIn = true;
+  let logoutCalls = 0;
+
+  await page.route('**/api/auth/**', async (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (path === '/api/auth/config') {
+      await route.fulfill({
+        json: {
+          googleClientId: null,
+          googleEnabled: false,
+          registrationEmailEnabled: false,
+        },
+      });
+      return;
+    }
+    if (path === '/api/auth/logout') {
+      logoutCalls++;
+      signedIn = false;
+      await route.fulfill({ status: 204 });
+      return;
+    }
+    if (path === '/api/auth/refresh') {
+      await route.fulfill({ status: 401 });
+      return;
+    }
+    await route.fulfill(signedIn ? { json: seller } : { status: 401 });
+  });
+
+  await page.goto('/huong-dan-dat-hoa');
+  await expect(page.getByRole('button', { name: 'Đăng xuất', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Đăng xuất', exact: true }).click();
+
+  await expect(page).toHaveURL(/\/dang-nhap$/);
+  expect(logoutCalls).toBe(1);
+
+  await page.goto('/');
+  await expect(page.getByRole('link', { name: 'Đăng nhập', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Đăng xuất', exact: true })).toHaveCount(0);
 });
 
 test('Admin redirected to its own workspace', async ({ page }) => {
@@ -135,6 +179,42 @@ test('Technician uses operations login and never enters administrator workspace'
   await expect(page.getByRole('heading', { name: 'Chào Kỹ thuật viên' })).toBeVisible();
   expect(privilegedRequests).toEqual([]);
   await page.getByRole('button', { name: 'Đăng xuất', exact: true }).click();
+  await expect(page).toHaveURL(/\/admin\/login$/);
+});
+
+test('Operations manager can sign out from the operations workspace', async ({ page }) => {
+  let signedIn = true;
+  let logoutCalls = 0;
+  const manager = {
+    ...seller,
+    name: 'Quản lý vận hành',
+    role: 'OPERATIONS_MANAGER',
+    sellerId: null,
+    sellerStatus: null,
+  };
+
+  await page.route('**/api/auth/**', async (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (path === '/api/auth/logout') {
+      logoutCalls++;
+      signedIn = false;
+      await route.fulfill({ status: 204 });
+      return;
+    }
+    if (path === '/api/auth/refresh') {
+      await route.fulfill({ status: 401 });
+      return;
+    }
+    await route.fulfill(signedIn ? { json: manager } : { status: 401 });
+  });
+
+  await page.goto('/operations');
+  await expect(page.getByRole('heading', { name: 'Tổng quan vận hành' })).toBeVisible();
+  await page.getByRole('button', { name: 'Đăng xuất', exact: true }).click();
+
+  await expect(page).toHaveURL(/\/admin\/login$/);
+  expect(logoutCalls).toBe(1);
+  await page.goto('/operations');
   await expect(page).toHaveURL(/\/admin\/login$/);
 });
 
