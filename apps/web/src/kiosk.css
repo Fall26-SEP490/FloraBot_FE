@@ -78,6 +78,77 @@
   line-height: 1.5;
 }
 
+/* Seller Kiosks Toolbar */
+:where(.seller-kiosks-page, .customer-kiosk-page) .seller-kiosks-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  padding: 12px 16px;
+  background: var(--color-workspace-surface, #ffffff);
+  border: 1px solid var(--color-workspace-line, #c9d9c8);
+  border-radius: var(--radius-workspace-panel, 12px);
+  box-shadow: var(--shadow-workspace-panel, 0 1px 3px rgba(24, 62, 43, 0.04));
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-search-field {
+  flex: 1;
+  min-width: 240px;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-search-input {
+  width: 100%;
+  min-height: 40px;
+  padding: 0.5rem 0.85rem;
+  border-radius: var(--radius-workspace-control, 8px);
+  border: 1px solid var(--color-workspace-line, #64735f);
+  font-size: 0.92rem;
+  background: #ffffff;
+  color: var(--color-workspace-ink, #183e2b);
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-select-filter {
+  min-height: 40px;
+  padding: 0.5rem 0.85rem;
+  border-radius: var(--radius-workspace-control, 8px);
+  border: 1px solid var(--color-workspace-line, #64735f);
+  font-size: 0.92rem;
+  background: #ffffff;
+  color: var(--color-workspace-ink, #183e2b);
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-map-inactive {
+  display: grid;
+  place-items: center;
+  min-height: 280px;
+  background: #f4f8f2;
+  border: 2px dashed #cfe0ca;
+  border-radius: var(--radius-workspace-control, 8px);
+  padding: 24px;
+  text-align: center;
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-map-inactive-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-workspace-muted, #476451);
+}
+
+:where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-btn-open-map {
+  font-weight: 600;
+}
+
 :where(.seller-kiosks-page, .customer-kiosk-page) .kiosk-role-warning {
   display: flex;
   align-items: center;

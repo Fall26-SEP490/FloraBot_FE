@@ -186,7 +186,7 @@ export default function SellerAccessories({ session }: { session: Session }) {
         </p>
       )}
       {loaded && inventory.data?.length === 0 && (
-        <p>Shop chưa có phụ kiện được thiết lập tại tủ.</p>
+        <p className="seller-empty-state">Shop chưa có phụ kiện được thiết lập tại tủ.</p>
       )}
       <ul className="admin-shop-list">
         {inventory.data?.map((item) => (

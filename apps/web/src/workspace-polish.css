@@ -161,7 +161,12 @@
   max-height: calc(100dvh - 98px);
   overflow-y: auto;
   padding: 4px;
-  scrollbar-color: #d3e5ca #174b35;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.workspace-portal-root .workspace-sidebar nav::-webkit-scrollbar {
+  display: none;
 }
 
 .workspace-portal-root .workspace-sidebar a {

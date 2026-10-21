@@ -358,7 +358,7 @@ export default function StaffTasks(props: StaffTasksProps) {
       ) : (
         <>
           {tasks.data.items.length === 0 ? (
-            <p>Chưa có công việc trong danh sách này.</p>
+            <p className="seller-empty-state">Chưa có công việc trong danh sách này.</p>
           ) : (
             tasks.data.items.map((task) => (
               <TaskItem
@@ -374,23 +374,25 @@ export default function StaffTasks(props: StaffTasksProps) {
               />
             ))
           )}
-          <nav aria-label="Phân trang công việc">
-            <Button
-              variant="outline"
-              disabled={page === 1 || tasks.isFetching}
-              onClick={() => setPage(page - 1)}
-            >
-              Trang trước
-            </Button>
-            <span aria-live="polite"> Trang {page} </span>
-            <Button
-              variant="outline"
-              disabled={!tasks.data.hasMore || tasks.isFetching}
-              onClick={() => setPage(page + 1)}
-            >
-              Trang sau
-            </Button>
-          </nav>
+          {(tasks.data.items.length > 0 || page > 1) && (
+            <nav aria-label="Phân trang công việc">
+              <Button
+                variant="outline"
+                disabled={page === 1 || tasks.isFetching}
+                onClick={() => setPage(page - 1)}
+              >
+                Trang trước
+              </Button>
+              <span aria-live="polite"> Trang {page} </span>
+              <Button
+                variant="outline"
+                disabled={!tasks.data.hasMore || tasks.isFetching}
+                onClick={() => setPage(page + 1)}
+              >
+                Trang sau
+              </Button>
+            </nav>
+          )}
         </>
       )}
     </section>

@@ -5,6 +5,8 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button, MapPin, RefreshCw, CircleAlert, Check } from '@florabot/ui';
 import { ApiError, queryClient, request, type Session } from './api';
 import KioskPickerMap from './KioskPickerMap';
+import { TablePagination } from './dashboard/DataTable';
+import { clampPage, paginate } from './dashboard/pagination';
 import {
   type SellerKioskItem,
   type UpdateKioskLocationPayload,
@@ -25,10 +27,14 @@ function KioskCard({
   kiosk,
   sellerId,
   isSellerRole,
+  isActiveMap,
+  onSelectMap,
 }: {
   kiosk: SellerKioskItem;
   sellerId: string;
   isSellerRole: boolean;
+  isActiveMap: boolean;
+  onSelectMap: () => void;
 }) {
   const [address, setAddress] = useState(kiosk.address || '');
   const [latInput, setLatInput] = useState(
@@ -325,13 +331,34 @@ function KioskCard({
           </div>
 
           <div className="kiosk-map-column">
-            <KioskPickerMap
-              latitude={parsedLat}
-              longitude={parsedLon}
-              onLocationSelect={handleMapPin}
-              interactive={canEdit}
-              ariaLabel={`Bản đồ chọn vị trí cho ${kiosk.name}`}
-            />
+            {isActiveMap ? (
+              <KioskPickerMap
+                latitude={parsedLat}
+                longitude={parsedLon}
+                onLocationSelect={handleMapPin}
+                interactive={canEdit}
+                ariaLabel={`Bản đồ chọn vị trí cho ${kiosk.name}`}
+              />
+            ) : (
+              <div className="kiosk-map-inactive">
+                <div className="kiosk-map-inactive-content">
+                  <MapPin size={28} aria-hidden="true" />
+                  <p>
+                    {coordsValid
+                      ? `Tọa độ đã lưu: ${latInput}, ${lonInput}`
+                      : 'Bản đồ đang tạm ẩn để tối ưu hiệu năng'}
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={onSelectMap}
+                    className="kiosk-btn-open-map"
+                  >
+                    <span>Mở bản đồ tủ này</span>
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -364,6 +391,11 @@ function KioskCard({
 export default function SellerKiosks({ session }: SellerKiosksProps) {
   const sellerId = session.sellerId;
   const isSellerRole = session.role === 'SELLER';
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'INCOMPLETE' | 'ACTIVE'>('ALL');
+  const [selectedKioskId, setSelectedKioskId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 8;
 
   const kiosksQuery = useQuery({
     queryKey: ['seller-kiosks', sellerId],
@@ -389,26 +421,38 @@ export default function SellerKiosks({ session }: SellerKiosksProps) {
     (k) => !k.locationComplete || !k.address || k.latitude === null || k.longitude === null,
   );
 
+  const filteredKiosks = kiosks.filter((k) => {
+    if (
+      statusFilter === 'INCOMPLETE' &&
+      k.locationComplete &&
+      k.address &&
+      k.latitude !== null &&
+      k.longitude !== null
+    ) {
+      return false;
+    }
+    if (statusFilter === 'ACTIVE' && !isKioskActive(k.status)) {
+      return false;
+    }
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.trim().toLowerCase();
+    return (
+      (k.name && k.name.toLowerCase().includes(q)) ||
+      (k.code && k.code.toLowerCase().includes(q)) ||
+      (k.address && k.address.toLowerCase().includes(q)) ||
+      (k.region && k.region.toLowerCase().includes(q))
+    );
+  });
+
+  const safePage = clampPage(page, filteredKiosks.length, PAGE_SIZE);
+  const pageItems = paginate(filteredKiosks, safePage, PAGE_SIZE);
+  const activeKioskId = selectedKioskId || pageItems[0]?.id || null;
+
   return (
     <section className="seller-kiosks-page" aria-labelledby="kiosks-title">
-      <div className="seller-kiosks-header">
-        <h2 id="kiosks-title" className="sr-only">
-          Danh sách kiosk
-        </h2>
-        <Button
-          variant="outline"
-          onClick={() => void kiosksQuery.refetch()}
-          disabled={kiosksQuery.isFetching}
-          className="kiosk-reload-btn"
-        >
-          <RefreshCw
-            size={16}
-            aria-hidden="true"
-            className={kiosksQuery.isFetching ? 'spin' : ''}
-          />
-          <span>{kiosksQuery.isFetching ? 'Đang tải lại…' : 'Tải lại danh sách'}</span>
-        </Button>
-      </div>
+      <h2 id="kiosks-title" className="sr-only">
+        Danh sách kiosk
+      </h2>
 
       {session.role === 'SELLER_STAFF' && (
         <div className="kiosk-role-warning" role="note">
@@ -437,6 +481,58 @@ export default function SellerKiosks({ session }: SellerKiosksProps) {
         </div>
       )}
 
+      {kiosks.length > 0 && (
+        <div className="seller-kiosks-toolbar">
+          <div className="kiosk-search-field">
+            <label htmlFor="seller-kiosk-search" className="sr-only">
+              Tìm kiếm kiosk
+            </label>
+            <input
+              id="seller-kiosk-search"
+              type="search"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setPage(1);
+              }}
+              placeholder="Tìm theo tên kiosk, mã tủ, địa chỉ hoặc khu vực…"
+              className="kiosk-search-input"
+            />
+          </div>
+          <div className="kiosk-filter-group">
+            <select
+              id="seller-kiosk-status-filter"
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value as 'ALL' | 'INCOMPLETE' | 'ACTIVE');
+                setPage(1);
+              }}
+              className="kiosk-select-filter"
+              aria-label="Lọc theo trạng thái kiosk"
+            >
+              <option value="ALL">Tất cả kiosk ({kiosks.length})</option>
+              {incompleteKiosks.length > 0 && (
+                <option value="INCOMPLETE">Cần bổ sung vị trí ({incompleteKiosks.length})</option>
+              )}
+              <option value="ACTIVE">Đang hoạt động</option>
+            </select>
+            <Button
+              variant="outline"
+              onClick={() => void kiosksQuery.refetch()}
+              disabled={kiosksQuery.isFetching}
+              className="kiosk-reload-btn"
+            >
+              <RefreshCw
+                size={16}
+                aria-hidden="true"
+                className={kiosksQuery.isFetching ? 'spin' : ''}
+              />
+              <span>{kiosksQuery.isFetching ? 'Đang tải lại…' : 'Tải lại danh sách'}</span>
+            </Button>
+          </div>
+        </div>
+      )}
+
       {kiosksQuery.isPending && (
         <div className="kiosk-loading-state" role="status">
           <p>Đang tải danh sách kiosk của shop…</p>
@@ -451,7 +547,11 @@ export default function SellerKiosks({ session }: SellerKiosksProps) {
               ? kiosksQuery.error.message
               : 'Không thể tải danh sách kiosk. Vui lòng kiểm tra kết nối mạng và thử lại.'}
           </p>
-          <Button variant="default" onClick={() => void kiosksQuery.refetch()}>
+          <Button
+            variant="default"
+            className="kiosk-reload-btn"
+            onClick={() => void kiosksQuery.refetch()}
+          >
             Thử lại
           </Button>
         </div>
@@ -465,20 +565,59 @@ export default function SellerKiosks({ session }: SellerKiosksProps) {
             Shop của bạn hiện chưa được phân bổ tủ kiosk nào. Vui lòng kiểm tra gói thuê ô tủ hoặc
             liên hệ quản trị viên hệ thống để được hỗ trợ phân bổ tủ.
           </p>
+          <Button
+            variant="outline"
+            className="kiosk-reload-btn"
+            onClick={() => void kiosksQuery.refetch()}
+            disabled={kiosksQuery.isFetching}
+          >
+            <RefreshCw size={16} aria-hidden="true" />
+            Tải lại danh sách
+          </Button>
         </div>
       )}
 
-      {kiosks.length > 0 && (
+      {!kiosksQuery.isPending &&
+        !kiosksQuery.isError &&
+        kiosks.length > 0 &&
+        pageItems.length === 0 && (
+          <div className="kiosk-empty-state" role="status">
+            <p>Không tìm thấy kiosk nào khớp với bộ lọc tìm kiếm.</p>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSearchQuery('');
+                setStatusFilter('ALL');
+              }}
+            >
+              Xóa bộ lọc
+            </Button>
+          </div>
+        )}
+
+      {pageItems.length > 0 && (
         <div className="kiosks-list">
-          {kiosks.map((kiosk) => (
+          {pageItems.map((kiosk) => (
             <KioskCard
               key={kiosk.id}
               kiosk={kiosk}
               sellerId={sellerId}
               isSellerRole={isSellerRole}
+              isActiveMap={kiosk.id === activeKioskId}
+              onSelectMap={() => setSelectedKioskId(kiosk.id)}
             />
           ))}
         </div>
+      )}
+
+      {filteredKiosks.length > PAGE_SIZE && (
+        <TablePagination
+          page={safePage}
+          pageSize={PAGE_SIZE}
+          totalItems={filteredKiosks.length}
+          onPageChange={setPage}
+          ariaLabel="Phân trang danh sách kiosk"
+        />
       )}
     </section>
   );

@@ -43,6 +43,7 @@ import { StaffChatSection } from './chat/StaffChatSection';
 import OperationsInstallations from './OperationsInstallations';
 import OperationsOverview from './OperationsOverview';
 import './operations.css';
+import './seller.css';
 import TechnicianInstallations from './TechnicianInstallations';
 import AdminKioskRefunds from './AdminKioskRefunds';
 import AdminReports from './AdminReports';
@@ -605,7 +606,7 @@ function Workspace({
         busy={logout.isPending}
         onLogout={() => logout.mutate()}
       />
-      <div className="dashboard-shell">
+      <div className={`dashboard-shell ${role === 'SELLER' ? 'seller-workspace' : ''}`}>
         <WorkspaceNavigation key={section} workspaceRole={role} section={section} />
         <main id="main" className="workspace dashboard-content">
           <PortalUpdates />
@@ -626,7 +627,10 @@ function Workspace({
               </p>
             </div>
             <span className="dashboard-context">
-              {section === 'overview' ? 'Tổng quan' : 'Không gian làm việc'}
+              {section === 'overview'
+                ? 'Tổng quan'
+                : workspaceSections[role]?.find(([key]) => key === section)?.[1] ||
+                  (role === 'SELLER' ? 'Cửa hàng' : 'Hệ thống')}
             </span>
           </div>
           {section === 'overview' && (

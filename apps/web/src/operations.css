@@ -384,6 +384,11 @@
   top: 100px;
   max-height: calc(100dvh - 116px);
   overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.workspace-portal-root .operations-workspace .workspace-sidebar nav::-webkit-scrollbar {
+  display: none;
 }
 @media (max-width: 1100px) {
   .operations-overview-grid {

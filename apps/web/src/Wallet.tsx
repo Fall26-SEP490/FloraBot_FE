@@ -309,7 +309,9 @@ export default function Wallet({ session }: { session: Session }) {
                 <li key={row.id}>
                   <div>
                     <strong>{money(row.amount)}</strong>
-                    <p>{statuses[row.status] || row.status}</p>
+                    <p className="wallet-status-badge" data-status={row.status}>
+                      {statuses[row.status] || row.status}
+                    </p>
                     <p className="quiet">
                       Gửi lúc {date(row.createdAt)}
                       {row.paidAt && ` · Chuyển lúc ${date(row.paidAt)}`}
@@ -331,7 +333,9 @@ export default function Wallet({ session }: { session: Session }) {
               dòng: giảm tiền chờ và tăng tiền có thể rút.
             </p>
             {!overview.data.entries.length ? (
-              <p>Chưa có giao dịch. Tiền bán hoa sẽ xuất hiện tại đây khi đơn được thanh toán.</p>
+              <p className="seller-empty-state">
+                Chưa có giao dịch. Tiền bán hoa sẽ xuất hiện tại đây khi đơn được thanh toán.
+              </p>
             ) : (
               <ul className="wallet-history">
                 {overview.data.entries.map((row) => (

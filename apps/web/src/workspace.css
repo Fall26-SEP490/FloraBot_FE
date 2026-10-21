@@ -95,7 +95,12 @@
   max-height: calc(100dvh - 28px);
   overflow-y: auto;
   padding: 5px;
-  scrollbar-color: #d3e5ca #174b35;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.workspace-sidebar nav::-webkit-scrollbar {
+  display: none;
 }
 .workspace-sidebar a {
   display: flex;
