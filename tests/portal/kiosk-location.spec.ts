@@ -108,7 +108,9 @@ test.beforeEach(async ({ page }) => {
     route.fulfill({
       status: 200,
       contentType: 'image/png',
-      body: Buffer.from(
+      body: (
+        globalThis as unknown as { Buffer: { from: (s: string, enc: string) => unknown } }
+      ).Buffer.from(
         'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
         'base64',
       ),
@@ -552,8 +554,40 @@ test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
     expect(xssFiredAfterPopup).toBeUndefined();
   });
 
-  test('Radius filter is disabled until origin is provided, then emits radiusKm query', async ({
+  test('Unified search filters kiosk list client-side and supports clearing query', async ({
     page,
+  }) => {
+    await page.route('**/api/kiosk-locations*', (route) =>
+      route.fulfill({ json: sampleCustomerLocations }),
+    );
+
+    await page.goto('/tim-kiosk');
+
+    const searchInput = page.locator('.customer-quick-search-input');
+    await expect(searchInput).toBeVisible();
+
+    // Filter by keyword "Landmark"
+    await searchInput.fill('Landmark');
+    await expect(page.locator('.customer-kiosk-item')).toHaveCount(1);
+    await expect(page.getByRole('heading', { name: 'Kiosk Landmark 81' })).toBeVisible();
+
+    // Clear search using clear button
+    await page.locator('.customer-search-clear-btn').click();
+    await expect(searchInput).toHaveValue('');
+    await expect(page.locator('.customer-kiosk-item')).toHaveCount(sampleCustomerLocations.length);
+
+    // Search for non-existent keyword -> shows empty state inside unified card
+    await searchInput.fill('DiaDiemKhongTonTai123');
+    await expect(page.locator('.customer-empty-state')).toContainText('Không có kiosk phù hợp');
+
+    // Click "Xóa bộ lọc tìm kiếm"
+    await page.locator('.customer-empty-state button').click();
+    await expect(page.locator('.customer-kiosk-item')).toHaveCount(sampleCustomerLocations.length);
+  });
+
+  test('Geolocation button triggers location request and emits coordinates and radiusKm query', async ({
+    page,
+    context,
   }) => {
     let capturedUrl: string | null = null;
     await page.route('**/api/kiosk-locations*', (route) => {
@@ -563,28 +597,30 @@ test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
 
     await page.goto('/tim-kiosk');
 
-    const radiusSelect = page.locator('#customer-radius-select');
-    // Radius must be disabled before active origin exists
-    await expect(radiusSelect).toBeDisabled();
-    await expect(page.locator('#radius-disabled-hint')).toContainText(
-      'Chỉ áp dụng khi đã có tọa độ vị trí của bạn',
-    );
-
-    // Initial query has NO radiusKm
+    // Initial query has NO latitude/longitude
     await expect.poll(() => capturedUrl).not.toBeNull();
     const initialUrl = new URL(capturedUrl!);
-    expect(initialUrl.searchParams.get('radiusKm')).toBeNull();
+    expect(initialUrl.searchParams.get('latitude')).toBeNull();
 
-    // Fill manual origin coordinates
-    await page.locator('#customer-origin-lat').fill('10.7800');
-    await page.locator('#customer-origin-lon').fill('106.7000');
-    await page.locator('.customer-btn-apply').click();
+    // Grant geolocation and click locate button
+    await context.grantPermissions(['geolocation']);
+    await context.setGeolocation({ latitude: 10.78, longitude: 106.7 });
+    await page.locator('.customer-btn-geolocate').click();
 
-    // Now radius is enabled!
-    await expect(radiusSelect).toBeEnabled();
+    // Active bar appears with radius selector
+    const radiusSelect = page.locator('#customer-radius-select');
+    await expect(radiusSelect).toBeVisible();
+
+    // Query now includes latitude & longitude
+    await expect
+      .poll(() => {
+        if (!capturedUrl) return null;
+        return new URL(capturedUrl).searchParams.get('latitude');
+      })
+      .toContain('10.78');
+
+    // Select radius 10 km
     await radiusSelect.selectOption('10');
-    await page.locator('.customer-btn-apply').click();
-
     await expect
       .poll(() => {
         if (!capturedUrl) return null;
@@ -592,18 +628,15 @@ test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
       })
       .toBe('10');
 
-    // Reset / clear origin button
+    // Clear origin
     await page.locator('.customer-btn-clear').click();
-    await expect(page.locator('#customer-origin-lat')).toHaveValue('');
-    await expect(page.locator('#customer-origin-lon')).toHaveValue('');
-    await expect(radiusSelect).toBeDisabled();
+    await expect(radiusSelect).toBeHidden();
   });
 
   test('Geolocation denied handles gracefully without requesting on mount', async ({
     page,
     context,
   }) => {
-    // Explicitly deny geolocation in browser context
     await context.clearPermissions();
 
     await page.route('**/api/kiosk-locations*', (route) =>
@@ -612,16 +645,31 @@ test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
 
     await page.goto('/tim-kiosk');
 
-    // On mount, no permission requested or message shown
-    await expect(page.locator('.customer-geo-message')).toBeHidden();
+    // On mount, no message shown
+    await expect(page.locator('.customer-geo-notice')).toBeHidden();
 
-    // Click "Dùng vị trí hiện tại"
+    // Click locate icon
     await page.locator('.customer-btn-geolocate').click();
 
     // Denial message is shown gracefully
     await expect(page.locator('.customer-geo-message')).toContainText(
       'Quyền truy cập vị trí đã bị từ chối',
     );
+  });
+
+  test('Unified card displays region filter pills when regions are present', async ({ page }) => {
+    await page.route('**/api/kiosk-locations*', (route) =>
+      route.fulfill({ json: sampleCustomerLocations }),
+    );
+
+    await page.goto('/tim-kiosk');
+
+    const areasWrap = page.locator('.customer-quick-areas');
+    await expect(areasWrap).toBeVisible();
+    await expect(areasWrap.locator('.customer-area-pill')).toContainText([
+      'Tất cả',
+      'TP. Hồ Chí Minh',
+    ]);
   });
 
   test('Responsive design and accessibility at mobile (390px) and tablet (1024px)', async ({
@@ -640,9 +688,19 @@ test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
 
       // Verify touch targets are at least 44px
       const geolocateBtn = page.locator('.customer-btn-geolocate');
-      const box = await geolocateBtn.boundingBox();
+      const geoBox = await geolocateBtn.boundingBox();
+      expect(geoBox).not.toBeNull();
+      expect(geoBox!.height).toBeGreaterThanOrEqual(44);
+
+      const reloadBtn = page.locator('.customer-reload-btn');
+      const box = await reloadBtn.boundingBox();
       expect(box).not.toBeNull();
       expect(box!.height).toBeGreaterThanOrEqual(44);
+
+      const searchInput = page.locator('.customer-quick-search-input');
+      const inputBbox = await searchInput.boundingBox();
+      expect(inputBbox).not.toBeNull();
+      expect(inputBbox!.height).toBeGreaterThanOrEqual(44);
 
       // Run Axe accessibility scan
       const axe = await new AxeBuilder({ page })

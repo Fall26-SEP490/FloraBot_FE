@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { Button, CircleAlert, Check, Eye, EyeOff, ArrowRight, RotateCcw } from '@florabot/ui';
 import {
   ApiError,
+  logoutSession,
   queryClient,
   request,
   sessionQuery,
@@ -48,7 +48,6 @@ export default function PersonalProfile() {
 }
 
 function PersonalProfileContent() {
-  const router = useRouter();
   const session = useQuery(sessionQuery);
 
   const isHumanRole =
@@ -159,10 +158,9 @@ function PersonalProfileContent() {
     setLoggingOut(true);
     setLogoutError('');
     try {
-      await request('/auth/logout', {});
+      await logoutSession();
       setRevealedData(null);
-      queryClient.clear();
-      router.push(
+      window.location.replace(
         session.data?.role === 'ADMIN' ||
           session.data?.role === 'OPERATIONS_MANAGER' ||
           session.data?.role === 'TECHNICIAN' ||

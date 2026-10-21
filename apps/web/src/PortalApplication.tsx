@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button, Eye, EyeOff } from '@florabot/ui';
-import { ApiError, queryClient, request, sessionQuery, type Session } from './api';
+import { ApiError, logoutSession, queryClient, request, sessionQuery, type Session } from './api';
 import './i18n';
 import './workspace-polish.css';
 import Products from './Products';
@@ -220,13 +220,11 @@ function PortalUpdates() {
 }
 
 function StaffWorkspace({ section = 'tasks' }: { section?: string }) {
-  const router = useRouter();
   const session = useQuery({ ...sessionQuery, refetchInterval: 60_000 });
   const logout = useMutation({
-    mutationFn: () => request('/auth/logout', {}),
+    mutationFn: logoutSession,
     onSuccess: async () => {
-      queryClient.clear();
-      router.push('/dang-nhap');
+      window.location.replace('/dang-nhap');
     },
   });
   if (session.isPending)
@@ -323,13 +321,11 @@ function StaffWorkspace({ section = 'tasks' }: { section?: string }) {
 }
 
 function TechnicianWorkspace({ section = 'tasks' }: { section?: string }) {
-  const router = useRouter();
   const session = useQuery({ ...sessionQuery, refetchInterval: 60_000 });
   const logout = useMutation({
-    mutationFn: () => request('/auth/logout', {}),
+    mutationFn: logoutSession,
     onSuccess: async () => {
-      queryClient.clear();
-      router.push('/admin/login');
+      window.location.replace('/admin/login');
     },
   });
   if (session.isPending)
@@ -421,13 +417,11 @@ function TechnicianWorkspace({ section = 'tasks' }: { section?: string }) {
 }
 
 function OperationsWorkspace({ section = 'overview' }: { section?: string }) {
-  const router = useRouter();
   const session = useQuery({ ...sessionQuery, refetchInterval: 60_000 });
   const logout = useMutation({
-    mutationFn: () => request('/auth/logout', {}),
+    mutationFn: logoutSession,
     onSuccess: async () => {
-      queryClient.clear();
-      router.push('/admin/login');
+      window.location.replace('/admin/login');
     },
   });
   if (session.isPending)
@@ -570,13 +564,11 @@ function Workspace({
   section?: string;
 }) {
   const { t } = useTranslation();
-  const router = useRouter();
   const session = useQuery({ ...sessionQuery, refetchInterval: 60_000 });
   const logout = useMutation({
-    mutationFn: () => request('/auth/logout', {}),
+    mutationFn: logoutSession,
     onSuccess: async () => {
-      queryClient.clear();
-      router.push(role === 'ADMIN' ? '/admin/login' : '/dang-nhap');
+      window.location.replace(role === 'ADMIN' ? '/admin/login' : '/dang-nhap');
     },
   });
   if (session.isPending)

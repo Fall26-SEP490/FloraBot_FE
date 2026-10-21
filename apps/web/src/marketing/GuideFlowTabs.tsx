@@ -1,6 +1,7 @@
 'use client';
 
-import { useRef, useState, type KeyboardEvent } from 'react';
+import { useRef, useState, type ComponentType, type KeyboardEvent } from 'react';
+import { ClipboardList, Package, QrCode, Send, ShieldCheck, Unlock, Wallet } from '@florabot/ui';
 
 type FlowId = 'available' | 'custom';
 
@@ -8,7 +9,15 @@ type Flow = {
   id: FlowId;
   label: string;
   description: string;
-  steps: Array<{ title: string; description: string }>;
+  steps: Array<{
+    title: string;
+    description: string;
+    icon: ComponentType<{
+      size?: number;
+      className?: string;
+      'aria-hidden'?: boolean | 'true' | 'false';
+    }>;
+  }>;
 };
 
 const flows: Flow[] = [
@@ -20,18 +29,22 @@ const flows: Flow[] = [
       {
         title: 'Chọn hoa & kiosk',
         description: 'Chọn mẫu đang có sẵn và điểm nhận thuận tiện với bạn.',
+        icon: Package,
       },
       {
         title: 'Thanh toán an toàn',
         description: 'Kiểm tra đơn và hoàn tất thanh toán trực tuyến.',
+        icon: ShieldCheck,
       },
       {
         title: 'Nhận QR & PIN',
-        description: 'Biên nhận điện tử cung cấp mã QR và PIN 6 số.',
+        description: 'Hệ thống cung cấp mã QR và PIN 6 số để nhận hoa.',
+        icon: QrCode,
       },
       {
         title: 'Mở tủ & nhận hoa',
         description: 'Quét QR hoặc nhập PIN để mở đúng ô tại kiosk.',
+        icon: Unlock,
       },
     ],
   },
@@ -43,18 +56,22 @@ const flows: Flow[] = [
       {
         title: 'Gửi yêu cầu',
         description: 'Chọn shop, kiosk và mô tả mẫu hoa theo ngân sách.',
+        icon: Send,
       },
       {
         title: 'Duyệt báo giá',
         description: 'Xem giá trọn gói và lịch hoàn thành do shop đề xuất.',
+        icon: ClipboardList,
       },
       {
         title: 'Thanh toán & chuẩn bị',
         description: 'Xác nhận thanh toán để shop hoàn thiện và nạp hoa vào tủ.',
+        icon: Wallet,
       },
       {
         title: 'Nhận hoa tại kiosk',
         description: 'Đến đúng giờ hẹn và dùng QR hoặc PIN 6 số để mở ô.',
+        icon: Unlock,
       },
     ],
   },
@@ -129,15 +146,21 @@ export default function GuideFlowTabs() {
           >
             <p className="guide-process-desc">{flow.description}</p>
             <ol className="guide-steps-grid">
-              {flow.steps.map((step, index) => (
-                <li className="guide-step-card" key={step.title}>
-                  <span className="guide-step-number" aria-hidden="true">
-                    {index + 1}
-                  </span>
-                  <h3>{step.title}</h3>
-                  <p>{step.description}</p>
-                </li>
-              ))}
+              {flow.steps.map((step, index) => {
+                const StepIcon = step.icon;
+                return (
+                  <li className="guide-step-card" key={step.title}>
+                    <span className="guide-step-number" aria-hidden="true">
+                      {index + 1}
+                    </span>
+                    <div className="guide-step-icon-badge" aria-hidden="true">
+                      <StepIcon size={20} />
+                    </div>
+                    <h3>{step.title}</h3>
+                    <p>{step.description}</p>
+                  </li>
+                );
+              })}
             </ol>
           </div>
         );

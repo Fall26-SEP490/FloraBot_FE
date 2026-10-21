@@ -74,4 +74,8 @@ export {
   LayoutGrid,
   List,
   ChevronDown,
+  QrCode,
+  KeyRound,
+  Sparkles,
+  CheckCircle2,
 } from 'lucide-react';

@@ -28,6 +28,7 @@ export const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: false, staleTime: 30_000 } },
 });
 let refresh: Promise<boolean> | undefined;
+let logoutRequest: Promise<void> | undefined;
 
 export async function request<T>(
   path: string,
@@ -54,7 +55,7 @@ export async function request<T>(
     '/auth/forgot-password',
     '/auth/reset-password',
   ];
-  if (response.status === 401 && retry && !anonymousAuthPaths.includes(path)) {
+  if (response.status === 401 && retry && !logoutRequest && !anonymousAuthPaths.includes(path)) {
     // A rotating refresh token must be consumed once even when several queries expire together.
     refresh ??= fetch('/api/auth/refresh', {
       method: 'POST',
@@ -96,6 +97,25 @@ export async function request<T>(
     );
   }
   return response.status === 204 ? (undefined as T) : (response.json() as Promise<T>);
+}
+
+export function logoutSession(): Promise<void> {
+  logoutRequest ??= (async () => {
+    // Do not wait here: some query functions do not consume React Query's abort signal,
+    // so awaiting cancellation can leave the logout button stuck in its busy state.
+    void queryClient.cancelQueries();
+
+    // Wait for token rotation that started before logout, then revoke the newest token.
+    const pendingRefresh = refresh;
+    if (pendingRefresh) await pendingRefresh.catch(() => false);
+
+    await request<void>('/auth/logout', {}, false);
+    queryClient.clear();
+  })().finally(() => {
+    logoutRequest = undefined;
+  });
+
+  return logoutRequest;
 }
 export interface PersonalBankInfo {
   bankName: string;

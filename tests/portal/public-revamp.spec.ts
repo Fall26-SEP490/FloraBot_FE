@@ -241,7 +241,30 @@ test.describe('Flower Catalog (/dat-hoa) Redesign & Chat Integration', () => {
     page,
   }) => {
     await page.route('**/api/auth/me', (route) => route.fulfill({ status: 401, json: {} }));
-    await page.goto('/dat-hoa?demo=1');
+    await page.route('**/api/shop/catalog?*', (route) =>
+      route.fulfill({
+        json: {
+          items: [
+            {
+              productId: '30000000-0000-0000-0000-000000000001',
+              sellerId: '20000000-0000-0000-0000-000000000001',
+              shopName: 'Tiệm Hoa Nắng Mai',
+              name: 'Bó Hoa Cúc Họa Mi',
+              description: 'Hoa tươi trong ngày',
+              price: 250000,
+              kioskId: '40000000-0000-0000-0000-000000000001',
+              kioskName: 'Kiosk NVH Thanh Niên',
+              address: '4 Phạm Ngọc Thạch',
+              photo: null,
+              bouquets: [],
+            },
+          ],
+          page: 1,
+          hasMore: false,
+        },
+      }),
+    );
+    await page.goto('/dat-hoa');
 
     await page
       .locator('.flower-card')
@@ -255,6 +278,29 @@ test.describe('Flower Catalog (/dat-hoa) Redesign & Chat Integration', () => {
     page,
   }) => {
     let chatOpenedPayload: { sellerId: string; productId: string } | null = null;
+    await page.route('**/api/shop/catalog?*', (route) =>
+      route.fulfill({
+        json: {
+          items: [
+            {
+              productId: '30000000-0000-0000-0000-000000000001',
+              sellerId: '20000000-0000-0000-0000-000000000001',
+              shopName: 'Tiệm Hoa Nắng Mai',
+              name: 'Bó Hoa Cúc Họa Mi',
+              description: 'Hoa tươi trong ngày',
+              price: 250000,
+              kioskId: '40000000-0000-0000-0000-000000000001',
+              kioskName: 'Kiosk NVH Thanh Niên',
+              address: '4 Phạm Ngọc Thạch',
+              photo: null,
+              bouquets: [],
+            },
+          ],
+          page: 1,
+          hasMore: false,
+        },
+      }),
+    );
     await page.route('**/api/auth/me', (route) =>
       route.fulfill({ json: { id: 'user-01', name: 'Khách hàng', role: 'CUSTOMER' } }),
     );
@@ -300,7 +346,7 @@ test.describe('Flower Catalog (/dat-hoa) Redesign & Chat Integration', () => {
       route.fulfill({ json: { items: [], page: 1, hasMore: false } }),
     );
 
-    await page.goto('/dat-hoa?demo=1');
+    await page.goto('/dat-hoa');
 
     // Click chat on the first product card
     await page
@@ -325,8 +371,7 @@ test.describe('Guide Page (/huong-dan-dat-hoa) and Contact (/lien-he) Overhaul',
   }) => {
     await page.goto('/huong-dan-dat-hoa');
 
-    await expect(page.getByText('Dữ liệu minh họa', { exact: true })).toBeVisible();
-    await expect(page.getByText('Hoặc nhập PIN 6 số', { exact: true })).toBeVisible();
+    await expect(page.getByText('Biên nhận điện tử', { exact: true })).toHaveCount(0);
     await expect(
       page.getByRole('heading', { name: 'Đặt mẫu riêng để shop chuẩn bị' }),
     ).toBeVisible();
