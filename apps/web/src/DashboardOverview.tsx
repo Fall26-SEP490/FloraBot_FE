@@ -435,48 +435,44 @@ function SellerOverview({ session }: { session: Session }) {
   const pendingOrders = orders.data?.items?.length ?? 0;
 
   return (
-    <div className="dashboard-overview">
-      <div className="dashboard-focus" aria-labelledby="seller-focus-title">
+    <div className="operations-overview">
+      <section className="operations-welcome" aria-labelledby="seller-welcome-title">
         <div>
-          <span className="seller-eyebrow">KHÔNG GIAN CỬA HÀNG</span>
-          <h2 id="seller-focus-title">Mỗi bó hoa, một kết nối tròn vẹn.</h2>
-          <p>Kiểm tra yêu cầu mới, chăm chút mẫu hoa và theo dõi dòng tiền bán hàng tại tủ.</p>
-          <div className="dashboard-focus-actions">
-            <Link className="button button-primary" href="/seller/products">
+          <span className="operations-eyebrow">KHÔNG GIAN CỬA HÀNG</span>
+          <h2 id="seller-welcome-title">Mỗi bó hoa, một kết nối tròn vẹn.</h2>
+          <p>Kiểm tra yêu cầu mới, chăm chút mẫu hoa và theo dõi dòng tiền bán hàng tại kiosk.</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+            <Link className="button" href="/seller/products">
               Quản lý mẫu hoa <ArrowRight size={18} aria-hidden="true" />
             </Link>
-            <div className="dashboard-focus-chips" aria-label="Tóm tắt cửa hàng">
-              <span className="dashboard-focus-chip">
-                Trạng thái shop:{' '}
-                <strong>
-                  {session.sellerStatus === 'ACTIVE'
-                    ? 'Đang hoạt động'
-                    : session.sellerStatus === 'PAST_DUE'
-                      ? 'Quá hạn'
-                      : 'Chờ kích hoạt'}
-                </strong>
-              </span>
-            </div>
+            <span className="dashboard-focus-chip">
+              Trạng thái shop:{' '}
+              <strong>
+                {session.sellerStatus === 'ACTIVE'
+                  ? 'Đang hoạt động'
+                  : session.sellerStatus === 'PAST_DUE'
+                    ? 'Quá hạn'
+                    : 'Chờ kích hoạt'}
+              </strong>
+            </span>
           </div>
         </div>
-        <div className="dashboard-focus-aside" aria-hidden="true">
+        <div className="operations-welcome-aside" aria-hidden="true">
           <Store size={68} />
           <span>Mẫu hoa · Tủ kiosk · Dòng tiền</span>
         </div>
-      </div>
+      </section>
 
-      <div className="seller-section-heading">
+      <div className="operations-section-heading">
         <div>
-          <span className="seller-eyebrow">NHỊP BÁN HÀNG</span>
+          <span className="operations-eyebrow">NHỊP BÁN HÀNG</span>
           <h2>Chỉ số cần theo dõi</h2>
         </div>
         <Button
           variant="outline"
           disabled={busy}
           onClick={() => {
-            void products.refetch();
-            void wallet.refetch();
-            void orders.refetch();
+            queries.forEach((query) => void query.refetch());
           }}
         >
           <RefreshCw size={16} aria-hidden="true" className={busy ? 'spin' : ''} />
@@ -484,36 +480,37 @@ function SellerOverview({ session }: { session: Session }) {
         </Button>
       </div>
 
-      <section className="dashboard-business" aria-label="Tình hình cửa hàng">
-        <Link href="/seller/products" className="seller-metric-card">
+      <section className="operations-metrics" aria-label="Tình hình cửa hàng">
+        <Link href="/seller/products" className="operations-metric">
           <Flower2 aria-hidden="true" />
           <span>Mẫu hoa đang bán</span>
           <strong>{products.isError ? '—' : products.isPending ? '…' : activeProducts}</strong>
           <small>
-            {products.isError ? 'Chưa tải được mẫu hoa' : `/ ${totalProducts} mẫu trong danh mục`}
+            {products.isError ? 'Chưa tải được mẫu' : `/ ${totalProducts} mẫu trong danh mục`}
           </small>
         </Link>
-        <Link href="/seller/wallet" className="seller-metric-card">
+        <Link href="/seller/wallet" className="operations-metric">
           <Wallet aria-hidden="true" />
           <span>Tiền có thể rút</span>
-          <strong className="dashboard-value">
-            {wallet.isError
-              ? '—'
-              : wallet.isPending
-                ? '…'
-                : wallet.data?.balance
-                  ? money(wallet.data.balance.availableBalance)
-                  : money(0)}
-          </strong>
-          <small>
-            {wallet.isError
-              ? 'Chưa tải được số dư ví'
-              : wallet.data?.balance
-                ? `Đang chờ: ${money(wallet.data.balance.pendingBalance)}`
-                : 'Ví chưa có số dư ghi nhận'}
-          </small>
+          {wallet.isPending ? (
+            <strong>…</strong>
+          ) : wallet.isError ? (
+            <>
+              <strong>—</strong>
+              <small>Chưa tải được số dư ví</small>
+            </>
+          ) : wallet.data?.balance ? (
+            <>
+              <strong className="dashboard-value">
+                {money(wallet.data.balance.availableBalance)}
+              </strong>
+              <small>Đang chờ: {money(wallet.data.balance.pendingBalance)}</small>
+            </>
+          ) : (
+            <p>Ví chưa có số dư được ghi nhận.</p>
+          )}
         </Link>
-        <Link href="/seller/orders" className="seller-metric-card">
+        <Link href="/seller/orders" className="operations-metric">
           <ClipboardList aria-hidden="true" />
           <span>Đơn hoa chờ xử lý</span>
           <strong>{orders.isError ? '—' : orders.isPending ? '…' : pendingOrders}</strong>
@@ -522,15 +519,57 @@ function SellerOverview({ session }: { session: Session }) {
       </section>
 
       <div className="operations-overview-grid">
-        <OrderFeed session={session} />
+        <section className="operations-surface" aria-labelledby="seller-recent-title">
+          <div className="operations-section-heading">
+            <div>
+              <h2 id="seller-recent-title">Yêu cầu đặt hoa mới nhất</h2>
+              <p>Tối đa 5 yêu cầu gần nhất, theo ngày nhận.</p>
+            </div>
+            <Link href="/seller/orders">
+              Xem tất cả <ArrowRight size={16} aria-hidden="true" />
+            </Link>
+          </div>
+          {orders.isPending && <p role="status">Đang tải đơn đặt hoa…</p>}
+          {orders.isError && <p role="alert">Chưa tải được đơn đặt hoa. Hãy thử làm mới.</p>}
+          {orders.data?.items.length === 0 && (
+            <div className="operations-empty">
+              <ClipboardList size={32} aria-hidden="true" />
+              <h3>Chưa có yêu cầu đặt hoa</h3>
+              <p>Yêu cầu mới sẽ xuất hiện ở đây khi khách đặt hoa trên website.</p>
+            </div>
+          )}
+          <div className="operations-recent-list">
+            {orders.data?.items.slice(0, 5).map((row) => (
+              <Link key={row.id} href="/seller/orders">
+                <span className="operations-list-icon">
+                  <Flower2 size={20} aria-hidden="true" />
+                </span>
+                <span className="operations-recent-name">
+                  <strong>{row.productName || row.orderCode || 'Yêu cầu đặt hoa'}</strong>
+                  <small>
+                    {row.kioskName || 'Tủ nhận'} · Hẹn nhận {date(row.pickupAt)}
+                  </small>
+                </span>
+                <span
+                  className="kiosk-status-pill order-status-pill"
+                  data-status={row.orderStatus || row.state}
+                >
+                  {statusName(row)}
+                </span>
+                <ArrowRight size={16} aria-hidden="true" />
+              </Link>
+            ))}
+          </div>
+        </section>
+
         <section
-          className="operations-surface seller-guide"
-          id="seller-guide"
-          aria-labelledby="seller-guide-title"
+          className="operations-surface operations-guide"
+          id="operations-guide"
+          aria-labelledby="operations-guide-title"
         >
-          <span className="seller-eyebrow">QUY TRÌNH BÁN HOA</span>
-          <h2 id="seller-guide-title">Các bước vận hành tại tủ</h2>
-          <ol className="seller-steps">
+          <span className="operations-eyebrow">QUY TRÌNH LÀM VIỆC</span>
+          <h2 id="operations-guide-title">Từ đơn hàng đến nhận tiền</h2>
+          <ol>
             <li>
               <strong>Đăng ký mẫu hoa</strong>
               <p>Khai báo kích thước, hình ảnh và gắn tem mã vạch trước khi nạp hoa.</p>
@@ -540,7 +579,7 @@ function SellerOverview({ session }: { session: Session }) {
               <p>Chọn ô kiosk đang trống của shop và xác nhận nạp qua tem mã vạch.</p>
             </li>
             <li>
-              <strong>Theo dõi & Nhận tiền</strong>
+              <strong>Theo dõi &amp; Nhận tiền</strong>
               <p>Khách nhận hoa tại tủ, doanh thu tự động ghi nhận vào ví của shop.</p>
             </li>
           </ol>

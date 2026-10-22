@@ -1,15 +1,19 @@
-.operations-workspace {
+.operations-workspace,
+.seller-workspace {
   --ops-ink: #193e30;
   --ops-muted: #52685d;
   --ops-line: #dce6de;
 }
-.operations-workspace .dashboard-content {
+.operations-workspace .dashboard-content,
+.seller-workspace .dashboard-content {
   min-width: 0;
 }
-.operations-workspace .dashboard-page-heading h1 {
+.operations-workspace .dashboard-page-heading h1,
+.seller-workspace .dashboard-page-heading h1 {
   font-size: clamp(1.6rem, 2.3vw, 2rem);
 }
-.operations-workspace .dashboard-page-heading p {
+.operations-workspace .dashboard-page-heading p,
+.seller-workspace .dashboard-page-heading p {
   max-width: 64ch;
 }
 .operations-eyebrow {
