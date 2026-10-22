@@ -45,7 +45,9 @@ for (const role of ['ADMIN', 'SELLER'] as const)
       });
       await page.route('**/hub/**', (route) => route.fulfill({ status: 503 }));
       await page.goto(base);
-      await expect(page.getByRole('heading', { level: 1 })).toHaveText('Chào Thảo,');
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+        role === 'SELLER' ? 'Tổng quan cửa hàng' : 'Chào Thảo,',
+      );
       await expect(page.getByRole('heading', { name: 'Yêu cầu đặt hoa gần đây' })).toBeVisible();
       await expect.poll(() => businessReads.length).toBeGreaterThanOrEqual(3);
       expect(
@@ -58,10 +60,12 @@ for (const role of ['ADMIN', 'SELLER'] as const)
         await expect(nav).toBeHidden();
         await page.getByRole('button', { name: 'Mở danh mục quản lý' }).click();
       }
-      await expect(nav.getByRole('link', { name: 'Tổng quan', exact: true })).toHaveAttribute(
-        'aria-current',
-        'page',
-      );
+      await expect(
+        nav.getByRole('link', {
+          name: role === 'SELLER' ? 'Tổng quan cửa hàng' : 'Tổng quan',
+          exact: true,
+        }),
+      ).toHaveAttribute('aria-current', 'page');
       await nav.getByRole('link', { name: title, exact: true }).click();
       await expect(page).toHaveURL(`${base}/${section}`);
       await expect(page.getByRole('heading', { level: 1 })).toHaveText(title);
@@ -72,7 +76,9 @@ for (const role of ['ADMIN', 'SELLER'] as const)
       );
       await page.goBack();
       await expect(page).toHaveURL(base);
-      await expect(page.getByRole('heading', { level: 1 })).toHaveText('Chào Thảo,');
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+        role === 'SELLER' ? 'Tổng quan cửa hàng' : 'Chào Thảo,',
+      );
       await expect(page.locator('body')).toHaveJSProperty('scrollWidth', width);
       expect(
         (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze())

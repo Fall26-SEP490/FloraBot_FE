@@ -615,20 +615,24 @@ function Workspace({
             <div>
               <h1>
                 {section === 'overview'
-                  ? t('welcome', { name: session.data.name })
+                  ? role === 'SELLER'
+                    ? 'Tổng quan cửa hàng'
+                    : t('welcome', { name: session.data.name })
                   : workspaceSections[role].find(([key]) => key === section)?.[1]}
               </h1>
               <p>
                 {section === 'overview'
                   ? role === 'ADMIN'
                     ? 'Tình hình vận hành và các việc cần bạn xử lý.'
-                    : 'Đơn hàng, danh mục hoa và tài chính của shop.'
+                    : `Chào ${session.data.name}, cùng theo dõi hoạt động kiosk hôm nay.`
                   : workspaceSections[role].find(([key]) => key === section)?.[2]}
               </p>
             </div>
             <span className="dashboard-context">
               {section === 'overview'
-                ? 'Tổng quan'
+                ? role === 'SELLER'
+                  ? 'Chủ shop'
+                  : 'Tổng quan'
                 : workspaceSections[role]?.find(([key]) => key === section)?.[1] ||
                   (role === 'SELLER' ? 'Cửa hàng' : 'Hệ thống')}
             </span>

@@ -438,24 +438,39 @@ function SellerOverview({ session }: { session: Session }) {
     <div className="operations-overview">
       <section className="operations-welcome" aria-labelledby="seller-welcome-title">
         <div>
-          <span className="operations-eyebrow">KHÔNG GIAN CỬA HÀNG</span>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              flexWrap: 'wrap',
+              marginBottom: '0.45rem',
+            }}
+          >
+            <span className="operations-eyebrow" style={{ margin: 0 }}>
+              KHÔNG GIAN CỬA HÀNG
+            </span>
+            {session.sellerStatus && (
+              <span
+                className="dashboard-focus-chip"
+                style={{ minHeight: '26px', padding: '0.15rem 0.65rem', fontSize: '0.75rem' }}
+              >
+                Trạng thái shop:{' '}
+                <strong>
+                  {session.sellerStatus === 'ACTIVE'
+                    ? 'Đang hoạt động'
+                    : session.sellerStatus === 'PAST_DUE'
+                      ? 'Quá hạn'
+                      : 'Chờ kích hoạt'}
+                </strong>
+              </span>
+            )}
+          </div>
           <h2 id="seller-welcome-title">Mỗi bó hoa, một kết nối tròn vẹn.</h2>
           <p>Kiểm tra yêu cầu mới, chăm chút mẫu hoa và theo dõi dòng tiền bán hàng tại kiosk.</p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-            <Link className="button" href="/seller/products">
-              Quản lý mẫu hoa <ArrowRight size={18} aria-hidden="true" />
-            </Link>
-            <span className="dashboard-focus-chip">
-              Trạng thái shop:{' '}
-              <strong>
-                {session.sellerStatus === 'ACTIVE'
-                  ? 'Đang hoạt động'
-                  : session.sellerStatus === 'PAST_DUE'
-                    ? 'Quá hạn'
-                    : 'Chờ kích hoạt'}
-              </strong>
-            </span>
-          </div>
+          <Link className="button" href="/seller/products">
+            Quản lý mẫu hoa <ArrowRight size={18} aria-hidden="true" />
+          </Link>
         </div>
         <div className="operations-welcome-aside" aria-hidden="true">
           <Store size={68} />
@@ -466,7 +481,7 @@ function SellerOverview({ session }: { session: Session }) {
       <div className="operations-section-heading">
         <div>
           <span className="operations-eyebrow">NHỊP BÁN HÀNG</span>
-          <h2>Chỉ số cần theo dõi</h2>
+          <h2>Việc cần theo dõi</h2>
         </div>
         <Button
           variant="outline"
@@ -522,7 +537,7 @@ function SellerOverview({ session }: { session: Session }) {
         <section className="operations-surface" aria-labelledby="seller-recent-title">
           <div className="operations-section-heading">
             <div>
-              <h2 id="seller-recent-title">Yêu cầu đặt hoa mới nhất</h2>
+              <h2 id="seller-recent-title">Yêu cầu đặt hoa gần đây</h2>
               <p>Tối đa 5 yêu cầu gần nhất, theo ngày nhận.</p>
             </div>
             <Link href="/seller/orders">

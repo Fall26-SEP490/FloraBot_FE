@@ -177,7 +177,8 @@ test.describe('Portal UI Polish Verification - Viewports and A11y', () => {
       );
 
       await page.goto('/seller');
-      await expect(page.getByRole('heading', { level: 1 })).toContainText('Chủ Shop Hoa');
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tổng quan cửa hàng');
+      await expect(page.getByText('Chào Chủ Shop Hoa')).toBeVisible();
 
       // Seller entitlement must be labeled as sellerStatus, not subscription status
       await expect(page.getByText('Trạng thái shop:')).toBeVisible();
