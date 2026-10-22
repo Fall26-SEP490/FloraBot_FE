@@ -1,6 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Button } from '@florabot/ui';
+import {
+  Button,
+  ClipboardList,
+  CircleAlert,
+  Package,
+  Boxes,
+  RefreshCw,
+  ArrowLeft,
+  ArrowRight,
+} from '@florabot/ui';
 import { ApiError, queryClient, request } from './api';
 import type { components } from '../../../packages/contracts/src/generated/api';
 import {
@@ -527,44 +536,61 @@ export default function WebRequests({
           ? 'Theo dõi báo giá, thanh toán và thời điểm hoa sẵn sàng tại tủ.'
           : 'Đơn mẫu riêng cần báo giá, xác nhận thanh toán rồi nạp đúng bó hoa vào ô của shop.'}
       </p>
-      <div className="order-summary-strip" aria-label="Tóm tắt trang đơn đang xem">
-        <div>
-          <strong>{items.length}</strong>
+      <div
+        className="operations-metrics order-summary-strip"
+        aria-label="Tóm tắt trang đơn đang xem"
+      >
+        <div className="operations-metric">
+          <ClipboardList aria-hidden="true" />
           <span>Yêu cầu trong trang</span>
+          <strong>{items.length}</strong>
+          <small>Toàn bộ đơn hiển thị</small>
         </div>
-        <div>
-          <strong>{items.filter((row) => needsOrderAction(row, mode)).length}</strong>
+        <div className="operations-metric">
+          <CircleAlert aria-hidden="true" />
           <span>Cần theo dõi</span>
+          <strong>{items.filter((row) => needsOrderAction(row, mode)).length}</strong>
+          <small>Chờ phản hồi / xử lý</small>
         </div>
-        <div>
-          <strong>{items.filter((row) => row.orderStatus === 'PAID' && !row.ready).length}</strong>
+        <div className="operations-metric">
+          <Package aria-hidden="true" />
           <span>Đang chuẩn bị</span>
+          <strong>{items.filter((row) => row.orderStatus === 'PAID' && !row.ready).length}</strong>
+          <small>Đã thanh toán · cần nạp</small>
         </div>
-        <div>
-          <strong>{items.filter((row) => row.ready && row.orderStatus === 'PAID').length}</strong>
+        <div className="operations-metric">
+          <Boxes aria-hidden="true" />
           <span>Sẵn sàng tại tủ</span>
+          <strong>{items.filter((row) => row.ready && row.orderStatus === 'PAID').length}</strong>
+          <small>Khách có thể nhận hoa</small>
         </div>
       </div>
       <p className="quiet">
         Số lượng và bộ lọc áp dụng cho trang hiện tại, không phải tổng toàn bộ đơn hàng.
       </p>
-      <div className="order-filter-bar">
-        <label htmlFor={`order-filter-${mode}`}>Lọc yêu cầu trong trang</label>
-        <select
-          id={`order-filter-${mode}`}
-          value={filter}
-          onChange={(event) => setFilter(event.target.value as OrderFilter)}
-        >
-          <option value="all">Tất cả yêu cầu</option>
-          <option value="attention">Cần theo dõi</option>
-          <option value="preparing">Đang chuẩn bị</option>
-          <option value="ready">Sẵn sàng tại tủ</option>
-          <option value="closed">Đã kết thúc</option>
-        </select>
+      <div className="queue-filter-bar order-filter-bar">
+        <div className="filter-group">
+          <label htmlFor={`order-filter-${mode}`} className="sr-only">
+            Lọc yêu cầu trong trang
+          </label>
+          <select
+            id={`order-filter-${mode}`}
+            aria-label="Lọc yêu cầu trong trang"
+            value={filter}
+            onChange={(event) => setFilter(event.target.value as OrderFilter)}
+          >
+            <option value="all">Tất cả yêu cầu</option>
+            <option value="attention">Cần theo dõi</option>
+            <option value="preparing">Đang chuẩn bị</option>
+            <option value="ready">Sẵn sàng tại tủ</option>
+            <option value="closed">Đã kết thúc</option>
+          </select>
+        </div>
+        <Button variant="outline" disabled={query.isFetching} onClick={() => void query.refetch()}>
+          <RefreshCw size={16} aria-hidden="true" className={query.isFetching ? 'spin' : ''} />
+          {query.isFetching ? 'Đang cập nhật…' : 'Cập nhật đơn đặt trước'}
+        </Button>
       </div>
-      <Button variant="outline" disabled={query.isFetching} onClick={() => void query.refetch()}>
-        Cập nhật đơn đặt trước
-      </Button>
       {query.isPending ? (
         <p role="status">Đang tải yêu cầu…</p>
       ) : query.isError ? (
@@ -572,11 +598,15 @@ export default function WebRequests({
       ) : (
         <>
           {!filtered.length && (
-            <p className="seller-empty-state" role="status">
-              {items.length
-                ? 'Không có yêu cầu phù hợp bộ lọc trong trang này.'
-                : 'Chưa có yêu cầu ở trang này.'}
-            </p>
+            <div className="operations-empty" role="status">
+              <ClipboardList size={32} aria-hidden="true" />
+              <h3>Chưa có đơn đặt trước</h3>
+              <p>
+                {items.length
+                  ? 'Không có yêu cầu phù hợp bộ lọc trong trang này.'
+                  : 'Chưa có yêu cầu ở trang này.'}
+              </p>
+            </div>
           )}
           <ul className="member-orders">
             {filtered.map((row) => (
@@ -605,21 +635,23 @@ export default function WebRequests({
               </li>
             ))}
           </ul>
-          <nav className="stock-actions" aria-label="Phân trang đơn đặt trước">
+          <nav className="order-pagination" aria-label="Phân trang đơn đặt trước">
             <Button
               variant="outline"
               disabled={page === 1 || query.isFetching}
               onClick={() => setPage((value) => value - 1)}
             >
-              Yêu cầu trước
+              <ArrowLeft size={15} aria-hidden="true" />
+              <span>Yêu cầu trước</span>
             </Button>
-            <span>Trang {page}</span>
+            <span className="order-page-indicator">Trang {page}</span>
             <Button
               variant="outline"
               disabled={!query.data.hasMore || query.isFetching}
               onClick={() => setPage((value) => value + 1)}
             >
-              Yêu cầu sau
+              <span>Yêu cầu sau</span>
+              <ArrowRight size={15} aria-hidden="true" />
             </Button>
           </nav>
         </>

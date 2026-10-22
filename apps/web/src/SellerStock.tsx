@@ -3,7 +3,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button } from '@florabot/ui';
+import { Button, CircleAlert, Flower2, Package, RefreshCw, Store } from '@florabot/ui';
 import type { components } from '../../../packages/contracts/src/generated/api';
 import { queryClient, request, type Session } from './api';
 import ReportFault from './ReportFault';
@@ -152,6 +152,11 @@ export default function SellerStock({ session }: { session: Session }) {
               if (selectedKioskId) void slots.refetch();
             }}
           >
+            <RefreshCw
+              size={15}
+              aria-hidden="true"
+              className={kiosks.isFetching || slots.isFetching || products.isFetching ? 'spin' : ''}
+            />
             Làm mới kiosk, ô và sản phẩm
           </Button>
         </div>
@@ -171,6 +176,45 @@ export default function SellerStock({ session }: { session: Session }) {
       <p role="status" ref={notice} tabIndex={-1}>
         {message}
       </p>
+
+      {selectedKioskId && slots.data && slots.data.length > 0 && (
+        <div className="operations-metrics order-summary-strip" aria-label="Thống kê ô tủ">
+          <div className="operations-metric">
+            <Store aria-hidden="true" />
+            <span>Tổng số ô quản lý</span>
+            <strong>{slots.data.length}</strong>
+            <small>Tại {selectedKiosk?.name || 'kiosk đã chọn'}</small>
+          </div>
+          <div className="operations-metric">
+            <Package aria-hidden="true" style={{ color: '#0369a1' }} />
+            <span>Sẵn sàng nạp hoa</span>
+            <strong style={{ color: '#0369a1' }}>{empty.length}</strong>
+            <small>Ô còn trống</small>
+          </div>
+          <div className="operations-metric">
+            <Flower2 aria-hidden="true" style={{ color: '#16a34a' }} />
+            <span>Đã nạp hoa</span>
+            <strong style={{ color: 'var(--color-status-success-ink)' }}>
+              {slots.data.filter((s) => s.status === 'STOCKED').length}
+            </strong>
+            <small>Đang bày bán tại tủ</small>
+          </div>
+          <div className="operations-metric">
+            <CircleAlert aria-hidden="true" style={{ color: '#b45309' }} />
+            <span>Cần theo dõi</span>
+            <strong style={{ color: '#b45309' }}>
+              {
+                slots.data.filter((s) =>
+                  ['FAULT', 'PENDING_REMOVAL', 'PENDING_RELEASE', 'LOCKED', 'HELD'].includes(
+                    s.status,
+                  ),
+                ).length
+              }
+            </strong>
+            <small>Sự cố / lấy hoa</small>
+          </div>
+        </div>
+      )}
 
       {canStock && selectedKioskId && (
         <form
@@ -261,7 +305,9 @@ export default function SellerStock({ session }: { session: Session }) {
             <details>
               <summary>
                 <strong>Ô {slot.slotCode}</strong>
-                <span>{statuses[slot.status] || slot.status}</span>
+                <span className="slot-status-pill" data-status={slot.status}>
+                  {statuses[slot.status] || slot.status}
+                </span>
               </summary>
               <div className="shop-profile">
                 <p>
@@ -291,11 +337,11 @@ export default function SellerStock({ session }: { session: Session }) {
                     <div>
                       <dt>Hạn bán</dt>
                       <dd>
-                        {slot.sellableUntil
-                          ? new Date(slot.sellableUntil).toLocaleString('vi-VN', {
+                        {!slot.sellableUntil || slot.sellableUntil.startsWith('9999')
+                          ? 'Không áp dụng hạn tươi (Hoa giả)'
+                          : new Date(slot.sellableUntil).toLocaleString('vi-VN', {
                               timeZone: 'Asia/Ho_Chi_Minh',
-                            })
-                          : 'Không áp dụng hạn tươi'}
+                            })}
                       </dd>
                     </div>
                   </dl>

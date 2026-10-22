@@ -216,56 +216,60 @@ export function ProductCreateForm({
       onSubmit={form.handleSubmit(onSubmit)}
       aria-label="Thêm mẫu hoa giả mới"
     >
-      <h3>Thêm mẫu hoa giả mới</h3>
-      <p className="quiet">
-        Bó hoa giả mới sẽ được tạo ở trạng thái <strong>Bản nháp (DRAFT)</strong>. Hoa giả không áp
-        dụng thời hạn tươi.
-      </p>
-
-      <div className="form-field">
-        <label htmlFor="create-product-kiosk">Kiosk của shop</label>
-        <select
-          id="create-product-kiosk"
-          disabled={!canEdit || submitting || kiosks.length === 0}
-          {...form.register('kioskId')}
-          aria-invalid={!!form.formState.errors.kioskId}
-          aria-describedby="create-product-kiosk-help create-product-kiosk-error"
-        >
-          <option value="">Chọn kiosk</option>
-          {kiosks.map((kiosk) => (
-            <option key={kiosk.id} value={kiosk.id}>
-              {kiosk.name} · {kiosk.code}
-            </option>
-          ))}
-        </select>
-        <p className="quiet" id="create-product-kiosk-help">
-          Kiosk dùng để xác nhận shop có quyền tạo sản phẩm; sản phẩm vẫn thuộc danh mục chung của
-          shop.
-        </p>
-        {form.formState.errors.kioskId && (
-          <p className="error" id="create-product-kiosk-error">
-            {form.formState.errors.kioskId.message}
-          </p>
-        )}
+      <h3 className="sr-only">Thêm mẫu hoa giả mới</h3>
+      <div className="product-form-badge-strip">
+        <span className="product-badge-pill">Bản nháp (DRAFT)</span>
+        <span className="product-badge-note">
+          Hoa giả không áp dụng thời hạn tươi · Bán và tải ảnh sau khi tạo.
+        </span>
       </div>
 
-      <div className="form-field">
-        <label htmlFor="create-product-name">Tên mẫu hoa</label>
-        <input
-          id="create-product-name"
-          type="text"
-          maxLength={120}
-          placeholder="Nhập tên mẫu hoa (tối đa 120 ký tự)"
-          disabled={!canEdit || submitting}
-          {...form.register('name')}
-          aria-invalid={!!form.formState.errors.name}
-          aria-describedby={form.formState.errors.name ? 'create-product-name-error' : undefined}
-        />
-        {form.formState.errors.name && (
-          <p className="error" id="create-product-name-error">
-            {form.formState.errors.name.message}
+      <div className="form-grid-2">
+        <div className="form-field">
+          <label htmlFor="create-product-name">Tên mẫu hoa</label>
+          <input
+            id="create-product-name"
+            type="text"
+            maxLength={120}
+            placeholder="Nhập tên mẫu hoa (tối đa 120 ký tự)"
+            disabled={!canEdit || submitting}
+            {...form.register('name')}
+            aria-invalid={!!form.formState.errors.name}
+            aria-describedby={form.formState.errors.name ? 'create-product-name-error' : undefined}
+          />
+          <p className="quiet field-subhint">Tên hiển thị trên website và hóa đơn nhận hoa.</p>
+          {form.formState.errors.name && (
+            <p className="error" id="create-product-name-error">
+              {form.formState.errors.name.message}
+            </p>
+          )}
+        </div>
+
+        <div className="form-field">
+          <label htmlFor="create-product-kiosk">Kiosk của shop</label>
+          <select
+            id="create-product-kiosk"
+            disabled={!canEdit || submitting || kiosks.length === 0}
+            {...form.register('kioskId')}
+            aria-invalid={!!form.formState.errors.kioskId}
+            aria-describedby="create-product-kiosk-help create-product-kiosk-error"
+          >
+            <option value="">Chọn kiosk</option>
+            {kiosks.map((kiosk) => (
+              <option key={kiosk.id} value={kiosk.id}>
+                {kiosk.name} · {kiosk.code}
+              </option>
+            ))}
+          </select>
+          <p className="quiet field-subhint" id="create-product-kiosk-help">
+            Kiosk xác nhận quyền tạo sản phẩm; hoa thuộc danh mục chung.
           </p>
-        )}
+          {form.formState.errors.kioskId && (
+            <p className="error" id="create-product-kiosk-error">
+              {form.formState.errors.kioskId.message}
+            </p>
+          )}
+        </div>
       </div>
 
       <div className="form-field">
@@ -289,25 +293,49 @@ export function ProductCreateForm({
         )}
       </div>
 
-      <div className="form-field">
-        <label htmlFor="create-product-price">Giá bán (đồng)</label>
-        <input
-          id="create-product-price"
-          type="number"
-          min="1"
-          step="1"
-          inputMode="numeric"
-          placeholder="Nhập giá bán bằng số nguyên"
-          disabled={!canEdit || submitting}
-          {...form.register('price', { valueAsNumber: true })}
-          aria-invalid={!!form.formState.errors.price}
-          aria-describedby={form.formState.errors.price ? 'create-product-price-error' : undefined}
-        />
-        {form.formState.errors.price && (
-          <p className="error" id="create-product-price-error">
-            {form.formState.errors.price.message}
-          </p>
-        )}
+      <div className="form-grid-2">
+        <div className="form-field">
+          <label htmlFor="create-product-price">Giá bán (đồng)</label>
+          <input
+            id="create-product-price"
+            type="number"
+            min="1"
+            step="1"
+            inputMode="numeric"
+            placeholder="Nhập giá bán bằng số nguyên"
+            disabled={!canEdit || submitting}
+            {...form.register('price', { valueAsNumber: true })}
+            aria-invalid={!!form.formState.errors.price}
+            aria-describedby={
+              form.formState.errors.price ? 'create-product-price-error' : undefined
+            }
+          />
+          {form.formState.errors.price && (
+            <p className="error" id="create-product-price-error">
+              {form.formState.errors.price.message}
+            </p>
+          )}
+        </div>
+
+        <div className="form-field">
+          <label htmlFor="create-product-tags">Từ khóa tìm kiếm (phân cách bằng dấu phẩy)</label>
+          <input
+            id="create-product-tags"
+            type="text"
+            placeholder="hoa hồng, hoa lụa, quà tặng"
+            disabled={!canEdit || submitting}
+            {...form.register('tagsInput')}
+            aria-invalid={!!form.formState.errors.tagsInput}
+            aria-describedby={
+              form.formState.errors.tagsInput ? 'create-product-tags-error' : undefined
+            }
+          />
+          {form.formState.errors.tagsInput && (
+            <p className="error" id="create-product-tags-error">
+              {form.formState.errors.tagsInput.message}
+            </p>
+          )}
+        </div>
       </div>
 
       <fieldset className="dimensions-fieldset">
@@ -386,26 +414,6 @@ export function ProductCreateForm({
           </div>
         </div>
       </fieldset>
-
-      <div className="form-field">
-        <label htmlFor="create-product-tags">Từ khóa tìm kiếm (phân cách bằng dấu phẩy)</label>
-        <input
-          id="create-product-tags"
-          type="text"
-          placeholder="hoa hồng, hoa lụa, quà tặng"
-          disabled={!canEdit || submitting}
-          {...form.register('tagsInput')}
-          aria-invalid={!!form.formState.errors.tagsInput}
-          aria-describedby={
-            form.formState.errors.tagsInput ? 'create-product-tags-error' : undefined
-          }
-        />
-        {form.formState.errors.tagsInput && (
-          <p className="error" id="create-product-tags-error">
-            {form.formState.errors.tagsInput.message}
-          </p>
-        )}
-      </div>
 
       <div className="form-actions">
         <Button type="submit" disabled={!canEdit || submitting || kiosks.length === 0}>

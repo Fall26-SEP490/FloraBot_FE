@@ -97,7 +97,12 @@ for (const role of ['ADMIN', 'SELLER', 'SELLER_STAFF'] as const) {
         return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
       });
       await page.goto(role === 'ADMIN' ? '/admin' : role === 'SELLER' ? '/seller' : '/staff');
-      await expect(page.getByRole('heading', { level: 1 })).toContainText('Ngọc Anh');
+      if (role === 'SELLER') {
+        await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tổng quan cửa hàng');
+        await expect(page.getByText('Chào Ngọc Anh')).toBeVisible();
+      } else {
+        await expect(page.getByRole('heading', { level: 1 })).toContainText('Ngọc Anh');
+      }
       if (role === 'ADMIN')
         await expect(page.getByText('Cửa ô A02 chưa đóng sau lượt nhận hoa')).toBeVisible();
       if (role === 'SELLER') await expect(page.getByText(/1\.250\.000/)).toBeVisible();

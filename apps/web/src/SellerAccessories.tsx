@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Button } from '@florabot/ui';
+import { Boxes, Button, CheckCircle2, MapPin, Package, RefreshCw } from '@florabot/ui';
 import type { components } from '../../../packages/contracts/src/generated/api';
 import { ApiError, request, type Session } from './api';
 
@@ -67,23 +67,41 @@ function Restock({
     }
   }
   return (
-    <li>
-      <h3>{item.name}</h3>
-      <p>
-        {item.kioskName} · {item.kioskCode} · {item.kioskAddress}
+    <li className="accessory-card">
+      <div className="accessory-card-header">
+        <div>
+          <h3>{item.name}</h3>
+          <p className="accessory-kiosk-info">
+            <MapPin size={14} aria-hidden="true" />
+            <span>
+              {item.kioskName} · {item.kioskCode} · {item.kioskAddress}
+            </span>
+          </p>
+        </div>
+        <div className="accessory-meta-pills">
+          <span className="accessory-stock-pill">
+            Tồn hiện tại: <strong>{item.stockQuantity}</strong>
+          </span>
+          <span className="accessory-price-pill">
+            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(
+              Number(item.price),
+            )}
+          </span>
+        </div>
+      </div>
+
+      <p className="accessory-status-strip">
+        <span className="accessory-pill" data-active={item.status === 'ACTIVE'}>
+          {item.status === 'ACTIVE' ? 'Phụ kiện đang bật bán' : 'Phụ kiện đang tắt bán'}
+        </span>
+        {' · '}
+        <span className="kiosk-status-pill" data-status={item.kioskStatus}>
+          {kioskStatuses[item.kioskStatus] || `Trạng thái tủ: ${item.kioskStatus}`}
+        </span>
       </p>
-      <p>
-        Tồn hiện tại: <strong>{item.stockQuantity}</strong> ·{' '}
-        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(
-          Number(item.price),
-        )}
-      </p>
-      <p>
-        {item.status === 'ACTIVE' ? 'Phụ kiện đang bật bán' : 'Phụ kiện đang tắt bán'} ·{' '}
-        {kioskStatuses[item.kioskStatus] || `Trạng thái tủ: ${item.kioskStatus}`}
-      </p>
+
       <form
-        className="stock-form"
+        className="accessory-restock-box"
         noValidate
         onSubmit={(event) => {
           event.preventDefault();
@@ -100,24 +118,27 @@ function Restock({
         }}
       >
         <label htmlFor={`accessory-${item.id}`}>Số lượng bổ sung cho {item.name}</label>
-        <input
-          id={`accessory-${item.id}`}
-          ref={input}
-          inputMode="numeric"
-          autoComplete="off"
-          value={quantity}
-          disabled={pending || uncertain || review !== undefined}
-          onChange={(event) => setQuantity(event.target.value)}
-          aria-describedby={`accessory-notice-${item.id}`}
-          aria-invalid={!!error && !valid}
-        />
         {review === undefined && (
-          <Button type="submit" disabled={pending || uncertain}>
-            Kiểm tra số lượng
-          </Button>
+          <div className="accessory-restock-row">
+            <input
+              id={`accessory-${item.id}`}
+              ref={input}
+              inputMode="numeric"
+              autoComplete="off"
+              placeholder="Nhập số lượng..."
+              value={quantity}
+              disabled={pending || uncertain}
+              onChange={(event) => setQuantity(event.target.value)}
+              aria-describedby={`accessory-notice-${item.id}`}
+              aria-invalid={!!error && !valid}
+            />
+            <Button type="submit" disabled={pending || uncertain}>
+              Kiểm tra số lượng
+            </Button>
+          </div>
         )}
         {review !== undefined && (
-          <div ref={reviewPanel} tabIndex={-1}>
+          <div ref={reviewPanel} tabIndex={-1} className="accessory-review-panel">
             <p>
               Bổ sung <strong>{review}</strong> {item.name} tại {item.kioskName} ({item.kioskCode}).
               Chỉ xác nhận sau khi đã đặt phụ kiện vào đúng tủ.
@@ -164,21 +185,54 @@ export default function SellerAccessories({ session }: { session: Session }) {
   if (!session.sellerId) return null;
   return (
     <section className="seller-accessories" aria-labelledby="accessories-title">
-      <h2 id="accessories-title">Phụ kiện chỉ dành cho đơn đặt trước</h2>
-      <p>
-        Phụ kiện chỉ áp dụng cho đơn đặt trước. Xem tồn phụ kiện ở từng tủ và ghi nhận số lượng vừa
-        bổ sung. Thao tác này chỉ cộng tồn, không tự bật bán phụ kiện hay mở cửa tủ.
-      </p>
-      <Button
-        variant="outline"
-        disabled={inventory.isFetching}
-        onClick={() => {
-          if (loaded) void inventory.refetch();
-          else setLoaded(true);
-        }}
-      >
-        {loaded ? 'Làm mới tồn phụ kiện' : 'Xem tồn phụ kiện'}
-      </Button>
+      <div className="accessory-page-header">
+        <div>
+          <h2 id="accessories-title">Phụ kiện chỉ dành cho đơn đặt trước</h2>
+          <p>
+            Phụ kiện chỉ áp dụng cho đơn đặt trước. Xem tồn phụ kiện ở từng tủ và ghi nhận số lượng
+            vừa bổ sung. Thao tác này chỉ cộng tồn, không tự bật bán phụ kiện hay mở cửa tủ.
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          disabled={inventory.isFetching}
+          onClick={() => {
+            if (loaded) void inventory.refetch();
+            else setLoaded(true);
+          }}
+        >
+          <RefreshCw size={15} aria-hidden="true" className={inventory.isFetching ? 'spin' : ''} />
+          {loaded ? 'Làm mới tồn phụ kiện' : 'Xem tồn phụ kiện'}
+        </Button>
+      </div>
+
+      {loaded && inventory.data && inventory.data.length > 0 && (
+        <div className="operations-metrics order-summary-strip" aria-label="Thống kê phụ kiện">
+          <div className="operations-metric">
+            <Package aria-hidden="true" />
+            <span>Tổng loại phụ kiện</span>
+            <strong>{inventory.data.length}</strong>
+            <small>Đang quản lý ở các tủ</small>
+          </div>
+          <div className="operations-metric">
+            <Boxes aria-hidden="true" />
+            <span>Tổng tồn kho</span>
+            <strong>
+              {inventory.data.reduce((sum, item) => sum + Number(item.stockQuantity), 0)}
+            </strong>
+            <small>Số lượng thực tế ở tủ</small>
+          </div>
+          <div className="operations-metric">
+            <CheckCircle2 aria-hidden="true" style={{ color: '#16a34a' }} />
+            <span>Đang bật bán</span>
+            <strong style={{ color: 'var(--color-status-success-ink)' }}>
+              {inventory.data.filter((item) => item.status === 'ACTIVE').length}
+            </strong>
+            <small>Áp dụng cho đơn trước</small>
+          </div>
+        </div>
+      )}
+
       {inventory.isFetching && <p role="status">Đang tải tồn phụ kiện…</p>}
       {inventory.isError && (
         <p role="alert" className="error">
@@ -188,7 +242,7 @@ export default function SellerAccessories({ session }: { session: Session }) {
       {loaded && inventory.data?.length === 0 && (
         <p className="seller-empty-state">Shop chưa có phụ kiện được thiết lập tại tủ.</p>
       )}
-      <ul className="admin-shop-list">
+      <ul className="admin-shop-list accessory-list">
         {inventory.data?.map((item) => (
           <Restock
             key={item.id}

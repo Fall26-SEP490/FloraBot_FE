@@ -75,7 +75,8 @@ test('Anonymous guard, login validation, seller banner and logout', async ({ pag
   await expect(page.getByLabel('Trạng thái gói')).toContainText('Gói hết hạn ngày 1/10/2026');
   await page.goto('/admin');
   await expect(page).toHaveURL(/\/seller$/);
-  await expect(page.getByRole('heading', { name: 'Chào Tiệm Hoa Nhỏ,' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Tổng quan cửa hàng' })).toBeVisible();
+  await expect(page.getByText('Chào Tiệm Hoa Nhỏ,')).toBeVisible();
   await page.getByRole('button', { name: 'Đăng xuất' }).click();
   await expect(page).toHaveURL(/\/dang-nhap$/);
   await page.goto('/seller');

@@ -268,7 +268,7 @@ export default function WorkspaceNavigation({
               aria-current={section === 'overview' ? 'page' : undefined}
             >
               <LayoutDashboard size={19} aria-hidden="true" />
-              Tổng quan
+              {role === 'SELLER' ? 'Tổng quan cửa hàng' : 'Tổng quan'}
             </Link>
             {groups[role as 'ADMIN' | 'SELLER']?.map(([label, keys]) => (
               <div className="workspace-nav-group" key={label}>

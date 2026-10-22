@@ -3,7 +3,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button, Plus, Minus } from '@florabot/ui';
+import { Button, Plus, Minus, Search } from '@florabot/ui';
 import { money } from '@florabot/contracts';
 import type { components } from '../../../packages/contracts/src/generated/api';
 import { ApiError, queryClient, request, type Session } from './api';
@@ -249,20 +249,64 @@ export default function Products({ session }: { session: Session }) {
           Shop cần có gói đang hoạt động để chỉnh sửa sản phẩm. Bạn vẫn có thể xem danh sách.
         </p>
       )}
-      <div className="product-actions-bar">
-        <Button
-          type="button"
-          onClick={() => {
-            setCreateNotice('');
-            setShowCreateForm(!showCreateForm);
-          }}
-          disabled={!canEdit || kiosks.isPending || !kiosks.data?.length}
-          aria-expanded={showCreateForm}
-          aria-controls="product-create-section"
-        >
-          <Plus size={18} aria-hidden="true" />
-          {showCreateForm ? 'Đóng biểu mẫu thêm hoa' : 'Thêm bó hoa giả mới'}
-        </Button>
+      <div className="product-toolbar">
+        <div className="product-filters">
+          <div className="filter-group">
+            <label htmlFor="product-search" className="sr-only">
+              Tìm tên sản phẩm
+            </label>
+            <div className="product-search-wrapper">
+              <Search size={18} className="product-search-icon" aria-hidden="true" />
+              <input
+                id="product-search"
+                type="search"
+                aria-label="Tìm tên sản phẩm"
+                placeholder="Tìm tên sản phẩm…"
+                value={search}
+                onChange={(event) => {
+                  setSearch(event.target.value);
+                  setPage(1);
+                }}
+              />
+            </div>
+          </div>
+          <div className="filter-group">
+            <label htmlFor="product-filter" className="sr-only">
+              Lọc trạng thái
+            </label>
+            <select
+              id="product-filter"
+              aria-label="Lọc trạng thái"
+              value={filter}
+              onChange={(event) => {
+                setFilter(event.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="ALL">Tất cả trạng thái</option>
+              {Object.entries(statusNames).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div className="product-actions-bar">
+          <Button
+            type="button"
+            onClick={() => {
+              setCreateNotice('');
+              setShowCreateForm(!showCreateForm);
+            }}
+            disabled={!canEdit || kiosks.isPending || !kiosks.data?.length}
+            aria-expanded={showCreateForm}
+            aria-controls="product-create-section"
+          >
+            <Plus size={18} aria-hidden="true" />
+            {showCreateForm ? 'Đóng biểu mẫu thêm hoa' : 'Thêm bó hoa giả mới'}
+          </Button>
+        </div>
       </div>
       {showCreateForm && (
         <Modal
@@ -296,38 +340,6 @@ export default function Products({ session }: { session: Session }) {
       <p ref={createNoticeRef} role="status" tabIndex={-1}>
         {createNotice}
       </p>
-      <div className="product-filters">
-        <div>
-          <label htmlFor="product-search">Tìm tên sản phẩm</label>
-          <input
-            id="product-search"
-            type="search"
-            value={search}
-            onChange={(event) => {
-              setSearch(event.target.value);
-              setPage(1);
-            }}
-          />
-        </div>
-        <div>
-          <label htmlFor="product-filter">Lọc trạng thái</label>
-          <select
-            id="product-filter"
-            value={filter}
-            onChange={(event) => {
-              setFilter(event.target.value);
-              setPage(1);
-            }}
-          >
-            <option value="ALL">Tất cả trạng thái</option>
-            {Object.entries(statusNames).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
       {query.isPending && <p role="status">Đang tải sản phẩm…</p>}
       {query.error && (
         <div>
