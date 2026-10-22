@@ -1,7 +1,14 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
-import { Button } from '@florabot/ui';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Button,
+  CheckCircle2,
+  ClipboardList,
+  RefreshCw,
+} from '@florabot/ui';
 import { ApiError, queryClient, request } from './api';
 import AdminTaskAssignment from './AdminTaskAssignment';
 import StaffStock from './StaffStock';
@@ -308,6 +315,40 @@ export default function StaffTasks(props: StaffTasksProps) {
   return (
     <section id="staff-tasks" aria-labelledby="staff-tasks-title">
       <h2 id="staff-tasks-title">{sectionTitle}</h2>
+      <p>{sectionDescription}</p>
+      {tasks.data && (
+        <div className="operations-metrics order-summary-strip" aria-label="Thống kê công việc">
+          <div className="operations-metric">
+            <ClipboardList aria-hidden="true" />
+            <span>Tổng công việc</span>
+            <strong>{tasks.data.items.length}</strong>
+            <small>Trong danh sách</small>
+          </div>
+          <div className="operations-metric">
+            <RefreshCw aria-hidden="true" style={{ color: '#0369a1' }} />
+            <span>Đang thực hiện</span>
+            <strong style={{ color: '#0369a1' }}>
+              {
+                tasks.data.items.filter(
+                  (t) => t.status === 'IN_PROGRESS' || t.status === 'ASSIGNED',
+                ).length
+              }
+            </strong>
+            <small>Chờ hoặc đang làm</small>
+          </div>
+          <div className="operations-metric">
+            <CheckCircle2 aria-hidden="true" style={{ color: '#16a34a' }} />
+            <span>Đã duyệt / Hoàn tất</span>
+            <strong style={{ color: 'var(--color-status-success-ink)' }}>
+              {
+                tasks.data.items.filter((t) => t.status === 'SUBMITTED' || t.status === 'COMPLETED')
+                  .length
+              }
+            </strong>
+            <small>Đã gửi báo cáo</small>
+          </div>
+        </div>
+      )}
       {canAssign && actorId && (
         <AdminTaskAssignment
           actorId={actorId}
@@ -320,10 +361,11 @@ export default function StaffTasks(props: StaffTasksProps) {
           sellerId={sellerId}
         />
       )}
-      <p>{sectionDescription}</p>
       <div className="staff-task-toolbar">
         <div>
-          <label htmlFor="task-status">Lọc trạng thái</label>
+          <label htmlFor="task-status" className="sr-only">
+            Lọc trạng thái
+          </label>
           <select
             id="task-status"
             value={status}
@@ -348,6 +390,7 @@ export default function StaffTasks(props: StaffTasksProps) {
             if (!result.isError) setReload((value) => value + 1);
           }}
         >
+          <RefreshCw size={15} aria-hidden="true" className={tasks.isFetching ? 'spin' : ''} />
           Tải lại công việc
         </Button>
       </div>
@@ -358,7 +401,11 @@ export default function StaffTasks(props: StaffTasksProps) {
       ) : (
         <>
           {tasks.data.items.length === 0 ? (
-            <p className="seller-empty-state">Chưa có công việc trong danh sách này.</p>
+            <div className="operations-empty">
+              <ClipboardList size={36} aria-hidden="true" />
+              <h3>Chưa có công việc</h3>
+              <p>Chưa có công việc trong danh sách này.</p>
+            </div>
           ) : (
             tasks.data.items.map((task) => (
               <TaskItem
@@ -375,21 +422,25 @@ export default function StaffTasks(props: StaffTasksProps) {
             ))
           )}
           {(tasks.data.items.length > 0 || page > 1) && (
-            <nav aria-label="Phân trang công việc">
+            <nav aria-label="Phân trang công việc" className="order-pagination">
               <Button
                 variant="outline"
                 disabled={page === 1 || tasks.isFetching}
                 onClick={() => setPage(page - 1)}
               >
-                Trang trước
+                <ArrowLeft size={16} aria-hidden="true" />
+                <span>Trang trước</span>
               </Button>
-              <span aria-live="polite"> Trang {page} </span>
+              <span className="order-pagination-indicator" aria-live="polite">
+                Trang {page}
+              </span>
               <Button
                 variant="outline"
                 disabled={!tasks.data.hasMore || tasks.isFetching}
                 onClick={() => setPage(page + 1)}
               >
-                Trang sau
+                <span>Trang sau</span>
+                <ArrowRight size={16} aria-hidden="true" />
               </Button>
             </nav>
           )}

@@ -6,7 +6,18 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button, CircleAlert, Eye, EyeOff, Plus, RefreshCw } from '@florabot/ui';
+import {
+  Button,
+  CheckCircle2,
+  CircleAlert,
+  Eye,
+  EyeOff,
+  Lock,
+  Plus,
+  RefreshCw,
+  Search,
+  Users,
+} from '@florabot/ui';
 import { ApiError, queryClient, request } from './api';
 import { ConfirmDialog, Modal } from './dashboard/Modal';
 import { DataTable, TablePagination, type DataTableColumn } from './dashboard/DataTable';
@@ -435,22 +446,28 @@ export default function AccountManagement({
       {/* Summary stats */}
       <div
         role="region"
-        className="management-stats"
+        className="management-stats order-summary-strip"
         aria-label={`Thống kê ${title.toLocaleLowerCase('vi-VN')}`}
       >
-        <article>
+        <article className="operations-metric">
+          <Users aria-hidden="true" />
           <span>Tổng số {itemName}</span>
           <strong>{accounts.length}</strong>
+          <small>Tài khoản trong danh sách</small>
         </article>
-        <article>
+        <article className="operations-metric">
+          <CheckCircle2 aria-hidden="true" style={{ color: '#16a34a' }} />
           <span>Đang hoạt động</span>
           <strong style={{ color: 'var(--color-status-success-ink)' }}>{activeCount}</strong>
+          <small>Đang làm việc bình thường</small>
         </article>
-        <article>
+        <article className="operations-metric">
+          <Lock aria-hidden="true" style={{ color: '#dc2626' }} />
           <span>Tạm khóa / Vô hiệu</span>
           <strong style={{ color: 'var(--color-status-danger-ink)' }}>
             {lockedCount + disabledCount}
           </strong>
+          <small>Đang tạm dừng hoặc vô hiệu</small>
         </article>
       </div>
 
@@ -460,16 +477,19 @@ export default function AccountManagement({
           <label htmlFor="account-search-input" className="sr-only">
             Tìm kiếm theo họ tên, email hoặc số điện thoại
           </label>
-          <input
-            id="account-search-input"
-            type="search"
-            placeholder="Tìm theo họ tên, email, SĐT…"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-          />
+          <div className="management-search-wrapper">
+            <Search size={16} aria-hidden="true" className="management-search-icon" />
+            <input
+              id="account-search-input"
+              type="search"
+              placeholder="Tìm theo họ tên, email, SĐT…"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+            />
+          </div>
         </div>
         <div>
           <label htmlFor="account-status-filter" className="sr-only">
