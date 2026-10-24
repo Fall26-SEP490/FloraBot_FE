@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { queryClient } from '../api';
 import { getCustomerChats } from './api';
@@ -129,9 +129,9 @@ export function CustomerChatSection({ initialChatId }: { initialChatId?: string 
     setViewMode('list');
   };
 
-  const handleMessagesReadLocally = () => {
+  const handleMessagesReadLocally = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: ['member-chats'] });
-  };
+  }, []);
 
   return (
     <div className={`chat-layout mode-${viewMode}`}>

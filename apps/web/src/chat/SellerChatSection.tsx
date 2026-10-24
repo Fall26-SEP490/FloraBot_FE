@@ -1,5 +1,6 @@
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Button, RefreshCw } from '@florabot/ui';
 import { queryClient, type Session } from '../api';
 import { getSellerChats } from './api';
 import { useChatRealtime } from './useChatRealtime';
@@ -68,6 +69,12 @@ export function SellerChatSection({ session }: { session: Session }) {
     },
   });
 
+  const handleMessagesReadLocally = useCallback(() => {
+    if (sellerId) {
+      void queryClient.invalidateQueries({ queryKey: ['seller-chats', sellerId] });
+    }
+  }, [sellerId]);
+
   if (!isValidSeller) {
     return (
       <div className="chat-seller-safe-error" role="alert">
@@ -89,60 +96,73 @@ export function SellerChatSection({ session }: { session: Session }) {
     setViewMode('list');
   };
 
-  const handleMessagesReadLocally = () => {
-    if (sellerId) {
-      void queryClient.invalidateQueries({ queryKey: ['seller-chats', sellerId] });
+  const handleRefreshAll = () => {
+    void chatsQuery.refetch();
+    if (activeChatId) {
+      void queryClient.invalidateQueries({ queryKey: ['chat-messages', activeChatId] });
     }
   };
 
   return (
-    <div className={`chat-layout mode-${viewMode}`}>
-      <div className="chat-layout-sidebar">
-        <div className="chat-sidebar-header">
-          <h2 className="chat-sidebar-title">Khách hàng nhắn tin</h2>
-          <p className="chat-sidebar-subtitle quiet">
-            Tư vấn sản phẩm và giải đáp thắc mắc từ khách hàng
-          </p>
+    <section className="staff-chat-section" aria-label="Tin nhắn khách hàng">
+      <div className="staff-chat-intro">
+        <div>
+          <h2>Trao đổi với khách hàng</h2>
+          <p>Tư vấn mẫu hoa, gửi ảnh thực tế và phản hồi thắc mắc trực tiếp.</p>
         </div>
-
-        <ChatList
-          items={items}
-          activeChatId={activeChatId}
-          onSelectChat={handleSelectChat}
-          page={page}
-          hasMore={hasMore}
-          onPageChange={setPage}
-          isLoading={chatsQuery.isPending}
-          isError={chatsQuery.isError}
-          error={chatsQuery.error}
-          onRetry={() => void chatsQuery.refetch()}
-          userRole="SELLER"
-        />
+        <Button variant="outline" disabled={chatsQuery.isFetching} onClick={handleRefreshAll}>
+          <RefreshCw size={16} aria-hidden="true" />
+          Làm mới hội thoại
+        </Button>
       </div>
-
-      <div className="chat-layout-main">
-        {activeChat ? (
-          <ConversationView
-            key={activeChat.id}
-            chatId={activeChat.id}
-            otherPartyName={activeChat.otherPartyName}
-            productContext={activeChat.productContext}
-            onBack={handleBackToList}
-            onMessagesReadLocally={handleMessagesReadLocally}
-            registerRealtimeHandlers={(handleMessage, handleRead) => {
-              onRealtimeMessageRef.current = handleMessage;
-              onRealtimeReadRef.current = handleRead;
-            }}
-          />
-        ) : (
-          <div className="chat-empty-selection">
-            <p className="chat-empty-selection-title">Chưa chọn khách hàng</p>
-            <p className="quiet">
-              Chọn một khách hàng từ danh sách bên trái để xem cuộc trò chuyện và gửi phản hồi.
+      <div className={`chat-layout mode-${viewMode}`}>
+        <div className="chat-layout-sidebar">
+          <div className="chat-sidebar-header">
+            <h2 className="chat-sidebar-title">Khách hàng nhắn tin</h2>
+            <p className="chat-sidebar-subtitle quiet">
+              Tư vấn sản phẩm và giải đáp thắc mắc từ khách hàng
             </p>
           </div>
-        )}
+
+          <ChatList
+            items={items}
+            activeChatId={activeChatId}
+            onSelectChat={handleSelectChat}
+            page={page}
+            hasMore={hasMore}
+            onPageChange={setPage}
+            isLoading={chatsQuery.isPending}
+            isError={chatsQuery.isError}
+            error={chatsQuery.error}
+            onRetry={() => void chatsQuery.refetch()}
+            userRole="SELLER"
+          />
+        </div>
+
+        <div className="chat-layout-main">
+          {activeChat ? (
+            <ConversationView
+              key={activeChat.id}
+              chatId={activeChat.id}
+              otherPartyName={activeChat.otherPartyName}
+              productContext={activeChat.productContext}
+              onBack={handleBackToList}
+              onMessagesReadLocally={handleMessagesReadLocally}
+              registerRealtimeHandlers={(handleMessage, handleRead) => {
+                onRealtimeMessageRef.current = handleMessage;
+                onRealtimeReadRef.current = handleRead;
+              }}
+            />
+          ) : (
+            <div className="chat-empty-selection">
+              <p className="chat-empty-selection-title">Chưa chọn khách hàng</p>
+              <p className="quiet">
+                Chọn một khách hàng từ danh sách bên trái để xem cuộc trò chuyện và gửi phản hồi.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
