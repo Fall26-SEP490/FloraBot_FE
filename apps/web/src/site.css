@@ -74,6 +74,10 @@ html {
   font-weight: 900;
 }
 
+.site-nav-backdrop {
+  display: none;
+}
+
 .florabot-header.site-header nav {
   display: flex;
   align-items: center;
@@ -302,27 +306,81 @@ html {
     margin-left: auto;
   }
 
-  .florabot-header.site-header nav {
-    display: none;
-    order: 4;
-    flex-basis: 100%;
-    border-radius: 16px;
-    padding: 12px;
-    gap: 6px;
-    grid-template-columns: 1fr 1fr;
-    justify-content: stretch;
-    max-height: 55dvh;
-    overflow-y: auto;
-    background: #f4f8f1;
+  .site-nav-backdrop {
+    display: block;
+    position: fixed;
+    top: var(--header-height, 56px);
+    inset-inline: 0;
+    bottom: 0;
+    background: rgba(10, 30, 20, 0.4);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    z-index: 1090;
+    animation: navFadeIn 0.2s ease-out;
   }
 
-  .florabot-header.site-header nav a {
-    justify-content: flex-start;
-    padding: 10px 14px;
+  .florabot-header.site-header nav {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    width: 100%;
+    box-sizing: border-box;
+    background: #ffffff;
+    border-top: 1px solid #edf4ec;
+    border-bottom: 1px solid #d5e2d2;
+    border-radius: 0 0 16px 16px;
+    box-shadow:
+      0 16px 32px -4px rgba(17, 52, 33, 0.12),
+      0 4px 12px rgba(0, 0, 0, 0.04);
+    padding: 10px 16px 14px;
+    margin: 0;
+    flex-direction: column;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    gap: 6px;
+    max-height: 70dvh;
+    overflow-y: auto;
+    z-index: 1100;
+    animation: navSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .florabot-header.site-header nav.is-open {
-    display: grid;
+    display: flex !important;
+  }
+
+  .florabot-header.site-header nav a {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 11px 16px !important;
+    min-height: 44px;
+    border-radius: 8px;
+    font-size: 14.5px;
+    font-weight: 500;
+    color: #243c2c;
+    background: transparent;
+    border-left: 3px solid transparent;
+    transition: all 0.15s ease;
+  }
+
+  .florabot-header.site-header nav a:hover {
+    background: #f4f8f2;
+    color: #174b35;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .florabot-header.site-header nav a[aria-current='page'] {
+    background: #eef7f0;
+    color: #174b35;
+    font-weight: 700;
+    border-left: 3px solid #174b35;
+    box-shadow: none;
+    transform: none;
   }
 
   .footer-container {
@@ -363,10 +421,6 @@ html {
     font-size: 12px;
     padding: 6px 10px;
     min-height: 44px;
-  }
-
-  .florabot-header.site-header nav {
-    grid-template-columns: 1fr;
   }
 
   .footer-container {
@@ -1022,5 +1076,25 @@ html {
   .guide-step-number,
   .guide-tab {
     transition: none;
+  }
+}
+
+@keyframes navSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes navFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
