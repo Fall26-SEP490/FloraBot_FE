@@ -68,9 +68,8 @@ for (const width of [390, 1440]) {
     await expect(section.getByRole('heading', { level: 2 })).toBeVisible();
     expect(reads).toBe(0);
     await section.getByRole('button', { name: 'Xem tồn phụ kiện' }).click();
-    await expect(section.getByText('Phụ kiện đang tắt bán', { exact: false })).toContainText(
-      'Tủ đang mất kết nối',
-    );
+    await expect(section.getByText('Phụ kiện đang tắt bán', { exact: true })).toBeVisible();
+    await expect(section.getByText('Tủ đang mất kết nối', { exact: true })).toBeVisible();
     await section.getByRole('button', { name: 'Kiểm tra số lượng' }).click();
     await expect(section.getByLabel('Số lượng bổ sung cho Thiệp hoa')).toBeFocused();
     await expect(section.getByRole('alert')).toContainText('Nhập số lượng nguyên');

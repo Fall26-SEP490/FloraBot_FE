@@ -79,7 +79,7 @@ async function mockCustomer(
 
 test.describe('Coordinator onboarding acceptance boundaries', () => {
   for (const width of [390, 1024]) {
-    test(`annual package layout is usable at ${width}px`, async ({ page }) => {
+    test(`annual package layout is usable at ${width}px`, async ({ page }, testInfo) => {
       await mockCustomer(page, { hasApplication: false });
       await page.route('**/api/kiosk-packages', (route) =>
         route.fulfill({
@@ -126,7 +126,7 @@ test.describe('Coordinator onboarding acceptance boundaries', () => {
       await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
       await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
       await page.screenshot({
-        path: `D:/academy/KY9/SEP490/FLorabot/.agent/subscription-installation/screenshots/annual-packages-fixture-${width}.png`,
+        path: testInfo.outputPath(`annual-packages-fixture-${width}.png`),
         fullPage: true,
       });
     });

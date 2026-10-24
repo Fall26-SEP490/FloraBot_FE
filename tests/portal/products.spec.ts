@@ -260,8 +260,8 @@ test('Create artificial flower for an owned kiosk: validation, conflict handling
   await expect(newItemSummary.locator('.product-kind-badge')).toHaveText('Hoa giả');
   await expect(newItemSummary.locator('.product-status')).toHaveText('Bản nháp');
 
-  // Open details of new artificial product
-  await newItemSummary.locator('summary').click();
+  // A newly created product is expanded automatically so its result is immediately reviewable.
+  await expect(newItemSummary.locator('details')).toHaveAttribute('open', '');
   await expect(
     newItemSummary.getByText('Bó hoa giả cao cấp — không áp dụng thời hạn tươi.'),
   ).toBeVisible();

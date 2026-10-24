@@ -17,10 +17,12 @@ export default function MarketingEffects() {
         [
           graphic
             ? { opacity: 0.45, transform: `translateX(${from * distance}px) scale(.98)` }
-            : { opacity: 0.15, transform: `translateX(${from * distance}px)` },
+            : element.matches('.hero h1 > span, .hero-copy > p')
+              ? { transform: `translateX(${from * distance}px)` }
+              : { opacity: 0.4, transform: `translateX(${from * distance}px)` },
           { opacity: 1, transform: 'none' },
         ],
-        { duration: graphic ? 1100 : 1000, delay, easing: 'cubic-bezier(.22,1,.36,1)' },
+        { duration: graphic ? 600 : 450, delay, easing: 'cubic-bezier(.22,1,.36,1)' },
       );
       entranceAnimations.add(animation);
       void animation.finished.then(

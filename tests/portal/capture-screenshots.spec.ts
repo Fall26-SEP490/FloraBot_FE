@@ -429,16 +429,12 @@ test.describe('Capture workspace UI repair inspection screenshots', () => {
       fullPage: true,
     });
 
-    // Verify DOM order: profile section appears before shop registration
-    const profileSectionTop = await page.locator('#member-profile').boundingBox();
-    const shopSectionTop = await page.locator('#member-shop').boundingBox();
-    expect(profileSectionTop).not.toBeNull();
-    expect(shopSectionTop).not.toBeNull();
-    expect(profileSectionTop!.y).toBeLessThan(shopSectionTop!.y);
-
-    // Verify reachable navigation anchor chips
+    // Verify each tab exposes its corresponding panel in the new single-panel layout.
     const memberNav = page.locator('.member-tabs');
-    await expect(memberNav.getByRole('link', { name: 'Hồ sơ cá nhân' })).toBeVisible();
+    await memberNav.getByRole('link', { name: 'Hồ sơ cá nhân' }).click();
+    await expect(page.locator('#member-profile')).toBeVisible();
+    await memberNav.getByRole('link', { name: 'Shop của bạn' }).click();
+    await expect(page.locator('#member-shop')).toBeVisible();
     await expect(memberNav.getByRole('link', { name: 'Đơn đặt trước' })).toBeVisible();
     await expect(memberNav.getByRole('link', { name: 'Lịch sử mua' })).toBeVisible();
   });

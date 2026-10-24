@@ -56,7 +56,10 @@ export default function ReturnFlowers({
     },
     onSettled: async () => {
       sending.current = false;
-      await queryClient.invalidateQueries({ queryKey: ['seller-slots', sellerId] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['seller-slots'] }),
+        queryClient.invalidateQueries({ queryKey: ['seller-kiosk-slots'] }),
+      ]);
     },
   });
   if (

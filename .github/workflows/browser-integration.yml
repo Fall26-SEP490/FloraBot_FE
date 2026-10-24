@@ -26,6 +26,11 @@ jobs:
           ref: ${{ inputs.backend_ref }}
           token: ${{ secrets.COMPANION_REPO_TOKEN || github.token }}
           path: BE
+      - uses: actions/checkout@v4
+        with:
+          repository: Fall26-SEP490/FloraBot_Kios
+          token: ${{ secrets.COMPANION_REPO_TOKEN || github.token }}
+          path: Kios
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
