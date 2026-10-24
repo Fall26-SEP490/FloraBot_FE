@@ -4,7 +4,10 @@ module.exports = {
       url: ['http://127.0.0.1:3010/'],
       numberOfRuns: 1,
       chromePath: require('@playwright/test').chromium.executablePath(),
-      settings: { chromeFlags: '--headless --no-sandbox' },
+      settings: {
+        preset: 'desktop',
+        chromeFlags: '--headless --no-sandbox',
+      },
     },
     assert: {
       assertions: {

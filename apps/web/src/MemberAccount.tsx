@@ -614,11 +614,7 @@ export default function MemberAccount() {
         )}
 
         {/* Tab 8: Shop */}
-        {activeTab === 'shop' && (
-          <div id="member-shop">
-            <MemberShop />
-          </div>
-        )}
+        {activeTab === 'shop' && <MemberShop />}
       </main>
     </>
   );

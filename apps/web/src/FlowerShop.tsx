@@ -16,6 +16,7 @@ import {
 } from '@florabot/ui';
 import { ApiError, queryClient, request, sessionQuery } from './api';
 import { formatChatError, openCustomerChat } from './chat/api';
+import { MOCK_CATALOG_ITEMS } from './mockCatalog';
 
 type Item = {
   productId: string;
@@ -31,6 +32,7 @@ type Item = {
   bouquets: string[];
   occasion?: string;
   tags?: string[];
+  isDemoSample?: boolean;
 };
 type Catalog = { items: Item[]; page: number; hasMore: boolean };
 const OCCASIONS = [
@@ -69,6 +71,13 @@ function RequestForm({ item }: { item: Item }) {
     if (sending.current || !confirmed) return;
     sending.current = true;
     setBusy(true);
+    if (item.isDemoSample) {
+      setError('Mẫu minh họa chỉ dùng để xem giao diện và không thể tạo đơn thật.');
+      sending.current = false;
+      setBusy(false);
+      setUncertain(false);
+      return;
+    }
     pending.current ??= {
       id: crypto.randomUUID(),
       kind,
@@ -108,6 +117,12 @@ function RequestForm({ item }: { item: Item }) {
         </p>
         <Link href="/tai-khoan">Theo dõi và thanh toán trong tài khoản</Link>
       </div>
+    );
+  if (item.isDemoSample)
+    return (
+      <p role="note">
+        Mẫu minh họa để xem giao diện. Không tạo đơn, thanh toán hoặc tin nhắn cho mẫu này.
+      </p>
     );
   if (!session.data)
     return (
@@ -239,6 +254,11 @@ export default function FlowerShop() {
     setMobileFiltersOpen(false);
     filterToggleRef.current?.focus();
   };
+  const [demoEnabled] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    const params = new URLSearchParams(window.location.search);
+    return params.get('demo') === '1' || params.get('demo') === 'true';
+  });
 
   const catalog = useQuery({
     queryKey: ['web-catalog', search, page],
@@ -319,6 +339,12 @@ export default function FlowerShop() {
 
   const handleOpenChat = useCallback(
     async (item: Item) => {
+      if (item.isDemoSample) {
+        setChatError(
+          'Mẫu minh họa chưa gắn với shop thật. Hãy chọn sản phẩm từ danh mục API để nhắn tin.',
+        );
+        return;
+      }
       if (!session.data) {
         const returnUrl = `/dat-hoa?action=chat&sellerId=${encodeURIComponent(item.sellerId)}&productId=${encodeURIComponent(item.productId)}&shopName=${encodeURIComponent(item.shopName)}&name=${encodeURIComponent(item.name)}`;
         router.push(`/dang-nhap?returnUrl=${encodeURIComponent(returnUrl)}`);
@@ -360,11 +386,14 @@ export default function FlowerShop() {
     [session.data, router],
   );
 
-  // Base items from backend API
+  // Prefer backend data. Demo data is opt-in via ?demo=1 and never creates real writes.
   const hasLiveItems = (catalog.data?.items?.length ?? 0) > 0;
   const rawItems: Item[] = useMemo(() => {
+    if (demoEnabled) {
+      return MOCK_CATALOG_ITEMS.map((item) => ({ ...item, isDemoSample: true }));
+    }
     return catalog.data?.items ?? [];
-  }, [catalog.data?.items]);
+  }, [catalog.data?.items, demoEnabled]);
 
   // Resume "Nhắn tin với shop" after returning from login
   useEffect(() => {
@@ -662,8 +691,6 @@ export default function FlowerShop() {
             id="catalog-filters"
             className={`catalog-sidebar ${mobileFiltersOpen ? 'is-mobile-open' : ''}`}
             aria-label="Bộ lọc sản phẩm"
-            role={mobileFiltersOpen ? 'dialog' : undefined}
-            aria-modal={mobileFiltersOpen ? true : undefined}
           >
             <div className="catalog-sheet-drag-handle" aria-hidden="true" />
             <div className="catalog-sidebar-header">
@@ -711,6 +738,7 @@ export default function FlowerShop() {
                         {occasionFilter === 'all' && <Check size={12} strokeWidth={3} />}
                       </span>
                       <span className="catalog-option-text">Tất cả dịp</span>
+                      <span className="catalog-option-count">({rawItems.length})</span>
                     </button>
                   </li>
                   {occasionList.map((occ) => {
@@ -730,6 +758,7 @@ export default function FlowerShop() {
                             {isSelected && <Check size={12} strokeWidth={3} />}
                           </span>
                           <span className="catalog-option-text">{occ}</span>
+                          <span className="catalog-option-count">({count})</span>
                         </button>
                       </li>
                     );
@@ -772,6 +801,7 @@ export default function FlowerShop() {
                             {isSelected && <Check size={12} strokeWidth={3} />}
                           </span>
                           <span className="catalog-option-text">{tier.label}</span>
+                          <span className="catalog-option-count">({tier.count})</span>
                         </button>
                       </li>
                     );
@@ -810,6 +840,7 @@ export default function FlowerShop() {
                             {isSelected && <Check size={12} strokeWidth={3} />}
                           </span>
                           <span className="catalog-option-text">{avail.label}</span>
+                          <span className="catalog-option-count">({avail.count})</span>
                         </button>
                       </li>
                     );
@@ -833,6 +864,7 @@ export default function FlowerShop() {
                           {shopFilter === 'all' && <Check size={12} strokeWidth={3} />}
                         </span>
                         <span className="catalog-option-text">Tất cả cửa hàng</span>
+                        <span className="catalog-option-count">({rawItems.length})</span>
                       </button>
                     </li>
                     {availableShops.map((shop) => {
@@ -851,6 +883,7 @@ export default function FlowerShop() {
                               {isSelected && <Check size={12} strokeWidth={3} />}
                             </span>
                             <span className="catalog-option-text">{shop}</span>
+                            <span className="catalog-option-count">({count})</span>
                           </button>
                         </li>
                       );
@@ -875,6 +908,7 @@ export default function FlowerShop() {
                           {kioskFilter === 'all' && <Check size={12} strokeWidth={3} />}
                         </span>
                         <span className="catalog-option-text">Tất cả tủ kiosk</span>
+                        <span className="catalog-option-count">({rawItems.length})</span>
                       </button>
                     </li>
                     {availableKiosks.map((kiosk) => {
@@ -893,6 +927,7 @@ export default function FlowerShop() {
                               {isSelected && <Check size={12} strokeWidth={3} />}
                             </span>
                             <span className="catalog-option-text">{kiosk}</span>
+                            <span className="catalog-option-count">({count})</span>
                           </button>
                         </li>
                       );
@@ -914,6 +949,7 @@ export default function FlowerShop() {
                 type="button"
                 className="catalog-mobile-apply-btn"
                 onClick={closeMobileFilters}
+                aria-label={`Xem ${displayedItems.length} mẫu phù hợp`}
               >
                 Áp dụng {displayedItems.length > 0 ? `(${displayedItems.length} mẫu)` : ''}
               </button>
@@ -986,6 +1022,16 @@ export default function FlowerShop() {
                       <span className="catalog-filter-badge">{activeFilters.length}</span>
                     )}
                   </button>
+
+                  {activeFilters.length > 0 && (
+                    <button
+                      type="button"
+                      className="catalog-mobile-clear-btn"
+                      onClick={resetFilters}
+                    >
+                      Xóa tất cả
+                    </button>
+                  )}
 
                   <div className="catalog-results-count" role="status" aria-live="polite">
                     <span>
@@ -1069,12 +1115,7 @@ export default function FlowerShop() {
                     const occBadgeClass = getOccasionBadgeClass(mockItem.occasion);
                     return (
                       <li key={`${item.productId}-${item.kioskId}`} className="flower-card">
-                        <button
-                          type="button"
-                          className="flower-card-media"
-                          onClick={(e) => openDetailModal(item, e.currentTarget)}
-                          aria-label={`Xem chi tiết bó hoa ${item.name}`}
-                        >
+                        <div className="flower-card-media">
                           <img
                             src={item.photo || '/images/floral-white-online.webp'}
                             alt={`Mẫu ${item.name} từ ${item.shopName}`}
@@ -1102,19 +1143,10 @@ export default function FlowerShop() {
                               </span>
                             )}
                           </div>
-                        </button>
+                        </div>
 
                         <div className="flower-card-body">
-                          <h2 className="flower-card-title">
-                            <button
-                              type="button"
-                              className="flower-card-title-btn"
-                              onClick={(e) => openDetailModal(item, e.currentTarget)}
-                              aria-label={`Xem chi tiết ${item.name}`}
-                            >
-                              {item.name}
-                            </button>
-                          </h2>
+                          <h2 className="flower-card-title">{item.name}</h2>
                           <p className="flower-card-desc">
                             {item.description || 'Mẫu hoa do shop thiết kế theo yêu cầu của bạn.'}
                           </p>
@@ -1147,20 +1179,31 @@ export default function FlowerShop() {
                                 window.scrollTo({ top: 0, behavior: 'instant' });
                               }}
                             >
-                              Chọn mẫu
+                              Chọn mẫu và cách nhận
                             </Button>
-                            <Button
-                              variant="outline"
-                              type="button"
-                              className="chat-open-btn flower-card-chat-btn"
-                              disabled={openingChatId === item.productId}
-                              title={`Nhắn tin với ${item.shopName}`}
-                              aria-label={`Nhắn tin với ${item.shopName}`}
-                              onClick={() => void handleOpenChat(item)}
-                            >
-                              <MessageSquare size={14} aria-hidden="true" />
-                              <span>{openingChatId === item.productId ? '…' : 'Chat'}</span>
-                            </Button>
+                            <div className="flower-card-secondary-btns">
+                              <Button
+                                variant="outline"
+                                className="flower-card-detail-btn"
+                                onClick={(e) => openDetailModal(item, e.currentTarget)}
+                              >
+                                Xem chi tiết
+                              </Button>
+                              <Button
+                                variant="outline"
+                                type="button"
+                                className="chat-open-btn flower-card-chat-btn"
+                                disabled={openingChatId === item.productId}
+                                title={`Nhắn tin với ${item.shopName}`}
+                                aria-label="Nhắn tin với shop"
+                                onClick={() => void handleOpenChat(item)}
+                              >
+                                <MessageSquare size={14} aria-hidden="true" />
+                                <span>
+                                  {openingChatId === item.productId ? 'Đang mở…' : 'Nhắn tin shop'}
+                                </span>
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       </li>

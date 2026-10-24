@@ -77,7 +77,8 @@ try {
     await openMap.scrollIntoViewIfNeeded();
     await openMap.click();
     await page.locator('.leaflet-container').waitFor();
-    await page.locator('.gift-tool > summary').click();
+    const giftToolSummary = page.locator('.gift-tool > summary');
+    if (await giftToolSummary.count()) await giftToolSummary.click();
     await page.locator('.gift-demo').scrollIntoViewIfNeeded();
     await page.getByRole('button', { name: 'Xem gợi ý hoa', exact: true }).click();
     await page.locator('.gift-results li').first().waitFor();

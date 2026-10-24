@@ -50,7 +50,9 @@ for (const width of [390, 1440]) {
     if (width < 1250) await header.getByRole('button', { name: 'Menu', exact: true }).click();
     await header.getByRole('link', { name: 'Sản phẩm hoa', exact: true }).click();
     await expect(page).toHaveURL('/dat-hoa');
-    await expect(page.getByRole('heading', { name: 'Chưa có mẫu hoa phù hợp' })).toBeVisible();
+    await expect(page.locator('.catalog-empty-title')).toContainText('chưa có mẫu hoa', {
+      ignoreCase: true,
+    });
     expect(
       await originalHeader!.evaluate((element) => element === document.querySelector('header')),
     ).toBe(true);

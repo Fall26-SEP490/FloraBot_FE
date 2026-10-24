@@ -101,7 +101,7 @@ html {
   justify-content: center;
   padding: 7px 16px;
   border-radius: 9999px;
-  min-height: 36px;
+  min-height: 44px;
   color: #1f2937;
   font-size: 14px;
   font-weight: 600;
@@ -262,7 +262,7 @@ html {
 .footer-col nav a {
   display: inline-flex;
   align-items: center;
-  min-height: 36px;
+  min-height: 44px;
   font-size: 14px;
   color: #2b5437;
   text-decoration: none;
@@ -288,10 +288,15 @@ html {
 }
 
 .florabot-header :focus-visible,
-.florabot-footer :focus-visible {
-  outline: 3px solid #174b35;
-  outline-offset: 3px;
-  box-shadow: 0 0 0 3px white;
+.florabot-footer :focus-visible,
+select:focus,
+select:focus-visible,
+input:focus,
+input:focus-visible,
+button:focus,
+button:focus-visible {
+  outline: 3px solid #174b35 !important;
+  outline-offset: 2px !important;
 }
 
 @media (max-width: 1024px) {

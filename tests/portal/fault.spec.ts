@@ -47,6 +47,19 @@ async function setup(page: Page) {
     }),
   );
   await page.route('**/api/**/products', (route) => route.fulfill({ json: [] }));
+  await page.route(`**/api/sellers/${sellerId}/kiosks`, (route) =>
+    route.fulfill({
+      json: [
+        {
+          id: slot.kioskId,
+          code: slot.kioskCode,
+          name: slot.kioskName,
+          address: slot.kioskAddress,
+          status: 'ACTIVE',
+        },
+      ],
+    }),
+  );
   await page.route('**/api/**/subscriptions', (route) =>
     route.fulfill({ json: { package: null, subscriptions: [] } }),
   );

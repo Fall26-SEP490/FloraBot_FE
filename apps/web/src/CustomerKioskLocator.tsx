@@ -12,6 +12,7 @@ import {
   ArrowUpRight,
   Search,
   X,
+  Store,
 } from '@florabot/ui';
 import CustomerKioskMap from './CustomerKioskMap';
 import {
@@ -32,6 +33,7 @@ export default function CustomerKioskLocator() {
   const [radiusKm, setRadiusKm] = useState<string>('ALL');
   const [geoStatus, setGeoStatus] = useState<'IDLE' | 'LOCATING' | 'ERROR'>('IDLE');
   const [geoMessage, setGeoMessage] = useState<string | null>(null);
+  const [mobileTab, setMobileTab] = useState<'list' | 'map'>('list');
 
   const handleGeolocate = () => {
     if (typeof window === 'undefined' || !('geolocation' in navigator)) {
@@ -115,6 +117,14 @@ export default function CustomerKioskLocator() {
     ),
   );
 
+  const selectedKiosk = items.find((k) => k.id === selectedKioskId) || null;
+  const selectedDirectionsUrl =
+    selectedKiosk &&
+    isValidLatitude(selectedKiosk.latitude) &&
+    isValidLongitude(selectedKiosk.longitude)
+      ? buildGoogleMapsDirectionsUrl(selectedKiosk.latitude, selectedKiosk.longitude)
+      : null;
+
   const displayedItems = items.filter((kiosk) => {
     // Fixed: properly filter out kiosks without region when a specific area is selected
     if (selectedArea !== 'ALL' && (!kiosk.region || !kiosk.region.includes(selectedArea))) {
@@ -142,9 +152,36 @@ export default function CustomerKioskLocator() {
         </div>
       </header>
 
+      {/* Mobile Tab Switcher */}
+      <div className="customer-kiosk-mobile-tabs" role="tablist" aria-label="Chế độ xem">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mobileTab === 'list'}
+          className={`customer-tab-btn ${mobileTab === 'list' ? 'is-active' : ''}`}
+          onClick={() => setMobileTab('list')}
+        >
+          <Store size={16} aria-hidden="true" />
+          <span>Danh sách ({displayedItems.length})</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mobileTab === 'map'}
+          className={`customer-tab-btn ${mobileTab === 'map' ? 'is-active' : ''}`}
+          onClick={() => setMobileTab('map')}
+        >
+          <MapPin size={16} aria-hidden="true" />
+          <span>Bản đồ</span>
+        </button>
+      </div>
+
       {/* Standard Store Locator Split Layout (Left: Unified Search & Results Card, Right: Stationary Map) */}
       <div className="customer-kiosk-split-view">
-        <aside className="customer-kiosk-sidebar-pane" aria-label="Bộ lọc và danh sách kiosk">
+        <aside
+          className={`customer-kiosk-sidebar-pane ${mobileTab === 'map' ? 'is-mobile-hidden' : ''}`}
+          aria-label="Bộ lọc và danh sách kiosk"
+        >
           <div className="customer-kiosk-unified-card">
             {/* Search and Quick Filters Header */}
             <div className="customer-unified-search-header">
@@ -431,7 +468,10 @@ export default function CustomerKioskLocator() {
                               type="button"
                               variant="outline"
                               className="customer-btn-focus"
-                              onClick={() => setSelectedKioskId(kiosk.id)}
+                              onClick={() => {
+                                setSelectedKioskId(kiosk.id);
+                                setMobileTab('map');
+                              }}
                             >
                               <MapPin size={16} aria-hidden="true" />
                               <span>Xem trên bản đồ</span>
@@ -469,7 +509,10 @@ export default function CustomerKioskLocator() {
         </aside>
 
         {/* Right Column: Stationary Map Pane */}
-        <section className="customer-kiosk-map-section" aria-labelledby="map-section-title">
+        <section
+          className={`customer-kiosk-map-section ${mobileTab === 'list' ? 'is-mobile-hidden' : ''}`}
+          aria-labelledby="map-section-title"
+        >
           <h2 id="map-section-title" className="sr-only">
             Bản đồ điểm đặt kiosk
           </h2>
@@ -479,6 +522,48 @@ export default function CustomerKioskLocator() {
             selectedKioskId={selectedKioskId}
             onSelectKiosk={(id) => setSelectedKioskId(id)}
           />
+
+          {selectedKiosk && (
+            <div className="customer-map-floating-card">
+              <div className="customer-floating-card-header">
+                <div className="customer-floating-card-title">
+                  <span className="customer-kiosk-code">{selectedKiosk.code}</span>
+                  <h4 className="customer-kiosk-name">{selectedKiosk.name}</h4>
+                </div>
+                <button
+                  type="button"
+                  className="customer-floating-close-btn"
+                  onClick={() => setSelectedKioskId(null)}
+                  aria-label="Đóng chi tiết kiosk"
+                  title="Đóng chi tiết"
+                >
+                  <X size={16} aria-hidden="true" />
+                </button>
+              </div>
+              <p className="customer-floating-address">
+                <MapPin size={14} aria-hidden="true" className="customer-icon-pin" />
+                <span>{selectedKiosk.address || 'Chưa cập nhật địa chỉ'}</span>
+              </p>
+              <div className="customer-floating-actions">
+                {selectedDirectionsUrl && (
+                  <a
+                    href={selectedDirectionsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="customer-btn-directions"
+                    aria-label={`Chỉ đường đến ${selectedKiosk.name} trên Google Maps`}
+                  >
+                    <Navigation size={14} aria-hidden="true" />
+                    <span>Chỉ đường</span>
+                    <ArrowUpRight size={13} aria-hidden="true" />
+                  </a>
+                )}
+                <Link href="/dat-hoa" className="customer-btn-shop">
+                  Xem mẫu hoa
+                </Link>
+              </div>
+            </div>
+          )}
         </section>
       </div>
     </main>
