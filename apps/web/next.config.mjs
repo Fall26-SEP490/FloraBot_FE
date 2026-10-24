@@ -26,7 +26,7 @@ export default {
     return [
       { source: '/kiosk', destination: `${kioskOrigin}/kiosk/index.html` },
       { source: '/kiosk/:path*', destination: `${kioskOrigin}/kiosk/:path*` },
-      ...['/api/:path*', '/hub/:path*', '/openapi/:path*'].map((source) => ({
+      ...['/hub/:path*', '/openapi/:path*'].map((source) => ({
         source,
         destination: `${apiOrigin}${source}`,
       })),

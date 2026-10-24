@@ -64,25 +64,51 @@ export function ConversationView({
   const prevScrollTopRef = useRef(0);
   const shouldRestoreScrollRef = useRef(false);
 
-  // Trigger mark read after messages arrive
+  const onMessagesReadLocallyRef = useRef(onMessagesReadLocally);
+  const registerRealtimeHandlersRef = useRef(registerRealtimeHandlers);
+  const lastMarkedKeyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    onMessagesReadLocallyRef.current = onMessagesReadLocally;
+    registerRealtimeHandlersRef.current = registerRealtimeHandlers;
+  });
+
+  // Trigger mark read after messages arrive (without looping on parent re-renders)
   useEffect(() => {
     const markVisible = () => {
       if (
-        initialQuery.data &&
-        !initialQuery.isError &&
-        isActive &&
-        document.visibilityState === 'visible'
+        !initialQuery.data ||
+        initialQuery.isError ||
+        !isActive ||
+        document.visibilityState !== 'visible'
       ) {
-        void transport
-          .markRead(chatId)
-          .then(() => onMessagesReadLocally?.())
-          .catch(() => undefined);
+        return;
       }
+      const latestIncomingId = initialQuery.data.items.find((m) => !m.isMine)?.id ?? 'none';
+      const markKey = `${chatId}:${latestIncomingId}`;
+      if (lastMarkedKeyRef.current === markKey) {
+        return;
+      }
+      lastMarkedKeyRef.current = markKey;
+      void transport
+        .markRead(chatId)
+        .then((res) => {
+          const marked =
+            res && typeof res === 'object' && 'messagesMarkedRead' in res
+              ? Number((res as { messagesMarkedRead?: number }).messagesMarkedRead)
+              : 1;
+          if (marked > 0) {
+            onMessagesReadLocallyRef.current?.();
+          }
+        })
+        .catch(() => {
+          lastMarkedKeyRef.current = null;
+        });
     };
     markVisible();
     document.addEventListener('visibilitychange', markVisible);
     return () => document.removeEventListener('visibilitychange', markVisible);
-  }, [chatId, initialQuery.data, initialQuery.isError, isActive, onMessagesReadLocally, transport]);
+  }, [chatId, initialQuery.data, initialQuery.isError, isActive, transport]);
 
   // Auto-scroll helper
   const scrollToBottom = useCallback((smooth = true) => {
@@ -156,7 +182,7 @@ export function ConversationView({
 
   // Register realtime handlers
   useEffect(() => {
-    if (!registerRealtimeHandlers) return;
+    if (!registerRealtimeHandlersRef.current) return;
 
     const handleMessage = (event: ChatMessageReceivedEvent) => {
       setRealtimeMessages((prev) => {
@@ -174,11 +200,13 @@ export function ConversationView({
       });
 
       // Mark as read immediately when viewed in active chat
-      if (isActive && document.visibilityState === 'visible')
+      if (isActive && document.visibilityState === 'visible') {
+        lastMarkedKeyRef.current = `${chatId}:${event.id}`;
         void transport
           .markRead(chatId)
-          .then(() => onMessagesReadLocally?.())
+          .then(() => onMessagesReadLocallyRef.current?.())
           .catch(() => undefined);
+      }
 
       if (isNearBottomRef.current) {
         setTimeout(() => scrollToBottom(true), 50);
@@ -201,16 +229,8 @@ export function ConversationView({
       });
     };
 
-    registerRealtimeHandlers(handleMessage, handleRead);
-  }, [
-    chatId,
-    registerRealtimeHandlers,
-    allMessages,
-    onMessagesReadLocally,
-    scrollToBottom,
-    isActive,
-    transport,
-  ]);
+    registerRealtimeHandlersRef.current(handleMessage, handleRead);
+  }, [chatId, allMessages, scrollToBottom, isActive, transport]);
 
   // Load older messages (page + 1)
   const handleLoadOlder = async () => {

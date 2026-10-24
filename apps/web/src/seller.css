@@ -961,9 +961,31 @@
 
 /* Chat keeps its domain layout but shares the operations surfaces and density. */
 .seller-workspace .chat-layout {
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  height: clamp(440px, calc(100dvh - 300px), 680px);
+  max-height: calc(100dvh - 160px);
   border-color: var(--seller-line);
   border-radius: 16px;
   box-shadow: none;
+  overflow: hidden;
+}
+
+.seller-workspace .chat-layout-sidebar,
+.seller-workspace .chat-layout-main,
+.seller-workspace .staff-chat-active,
+.seller-workspace .chat-conversation {
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.seller-workspace .chat-messages-scroll-area {
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .seller-workspace .chat-layout-sidebar,

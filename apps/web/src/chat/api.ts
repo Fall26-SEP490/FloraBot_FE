@@ -98,20 +98,34 @@ export async function uploadChatImage(
     ? AbortSignal.any([signal, AbortSignal.timeout(40_000)])
     : AbortSignal.timeout(40_000);
 
-  const response = await fetch(
-    `/api/${channel === 'staff' ? 'seller-staff/chats' : 'chats'}/${encodeURIComponent(chatId)}/images`,
-    {
-      method: 'POST',
-      credentials: 'include',
-      cache: 'no-store',
-      referrerPolicy: 'no-referrer',
-      headers: {
-        'Content-Type': file.type,
-      },
-      body: file,
-      signal: combinedSignal,
+  const endpoint = `/api/${channel === 'staff' ? 'seller-staff/chats' : 'chats'}/${encodeURIComponent(chatId)}/images`;
+  const requestInit: RequestInit = {
+    method: 'POST',
+    credentials: 'include',
+    cache: 'no-store',
+    referrerPolicy: 'no-referrer',
+    headers: {
+      'Content-Type': file.type,
     },
-  );
+    body: file,
+    signal: combinedSignal,
+  };
+
+  let response = await fetch(endpoint, requestInit);
+  if (response.status === 401) {
+    try {
+      const refreshed = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        credentials: 'include',
+        cache: 'no-store',
+      });
+      if (refreshed.ok) {
+        response = await fetch(endpoint, requestInit);
+      }
+    } catch {
+      /* Preserve original 401 handling */
+    }
+  }
 
   if (!response.ok) {
     const problem = (await response.json().catch(() => ({}))) as {

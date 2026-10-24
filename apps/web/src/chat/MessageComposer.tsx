@@ -9,6 +9,50 @@ import {
 } from './api';
 import type { ChatTransport, CustomerSellerChatMessage } from './types';
 
+const GATEWAY_SAFE_IMAGE_BYTES = 58 * 1024;
+
+async function compressChatImageIfNeeded(file: File): Promise<File> {
+  if (file.size <= GATEWAY_SAFE_IMAGE_BYTES || typeof document === 'undefined') {
+    return file;
+  }
+  try {
+    const bitmap = typeof createImageBitmap === 'function' ? await createImageBitmap(file) : null;
+    if (!bitmap) return file;
+
+    const maxDim = 960;
+    const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      bitmap.close?.();
+      return file;
+    }
+    ctx.drawImage(bitmap, 0, 0, width, height);
+    bitmap.close?.();
+
+    for (const quality of [0.8, 0.65, 0.5]) {
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, 'image/webp', quality),
+      );
+      if (blob && blob.size > 0 && blob.size < file.size) {
+        const baseName = file.name.replace(/\.[^.]+$/, '') || 'chat-image';
+        const candidate = new File([blob], `${baseName}.webp`, { type: 'image/webp' });
+        if (candidate.size <= GATEWAY_SAFE_IMAGE_BYTES || quality === 0.5) {
+          return candidate;
+        }
+      }
+    }
+  } catch {
+    /* Fall back to original file if canvas compression is unavailable */
+  }
+  return file;
+}
+
 export function MessageComposer({
   chatId,
   onMessageSent,
@@ -22,6 +66,7 @@ export function MessageComposer({
 }) {
   const [content, setContent] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadedRef, setUploadedRef] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
   const [sendStep, setSendStep] = useState<'' | 'uploading' | 'sending'>('');
@@ -48,6 +93,7 @@ export function MessageComposer({
       if (fileInputRef.current) fileInputRef.current.value = '';
       if (previewUrl) URL.revokeObjectURL(previewUrl);
       setSelectedFile(null);
+      setUploadedRef(null);
       setPreviewUrl(null);
       return;
     }
@@ -55,12 +101,14 @@ export function MessageComposer({
     setError(null);
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setSelectedFile(file);
+    setUploadedRef(null);
     setPreviewUrl(URL.createObjectURL(file));
   };
 
   const handleRemoveImage = () => {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setSelectedFile(null);
+    setUploadedRef(null);
     setPreviewUrl(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
     setError(null);
@@ -94,12 +142,14 @@ export function MessageComposer({
     sendingLock.current = true;
 
     try {
-      let imageReference: string | null = null;
+      let imageReference: string | null = uploadedRef;
 
-      if (selectedFile) {
+      if (selectedFile && !imageReference) {
         setSendStep('uploading');
-        const uploadResult = await transport.upload(chatId, selectedFile);
+        const preparedFile = await compressChatImageIfNeeded(selectedFile);
+        const uploadResult = await transport.upload(chatId, preparedFile);
         imageReference = uploadResult.reference;
+        setUploadedRef(imageReference);
       }
 
       setSendStep('sending');
@@ -111,6 +161,7 @@ export function MessageComposer({
       // Clear input on success
       setContent('');
       setSelectedFile(null);
+      setUploadedRef(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
       setError(null);
       onMessageSent(sent);

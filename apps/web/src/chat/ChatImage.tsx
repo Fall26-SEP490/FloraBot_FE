@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, RefreshCw, X } from '@florabot/ui';
 
 export function ChatImage({ src, alt }: { src: string; alt?: string }) {
@@ -9,16 +9,45 @@ export function ChatImage({ src, alt }: { src: string; alt?: string }) {
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
   const modalRef = useRef<HTMLDivElement | null>(null);
+  const imgRef = useRef<HTMLImageElement | null>(null);
+  const refreshedOnceRef = useRef(false);
 
-  const imageSrc = retryKey > 0 ? `${src}?r=${retryKey}` : src;
+  const imageSrc = retryKey > 0 ? `${src}${src.includes('?') ? '&' : '?'}r=${retryKey}` : src;
+
+  useEffect(() => {
+    const img = imgRef.current;
+    if (img && img.complete && img.naturalWidth > 0) {
+      setStatus('loaded');
+    }
+  }, [imageSrc]);
 
   const handleOpenModal = () => {
     setModalOpen(true);
   };
 
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setModalOpen(false);
     triggerRef.current?.focus();
+  }, []);
+
+  const handleImageError = async () => {
+    if (!refreshedOnceRef.current) {
+      refreshedOnceRef.current = true;
+      try {
+        const refreshed = await fetch('/api/auth/refresh', {
+          method: 'POST',
+          credentials: 'include',
+        });
+        if (refreshed.ok) {
+          setStatus('loading');
+          setRetryKey((k) => k + 1);
+          return;
+        }
+      } catch {
+        /* Fall through to error UI */
+      }
+    }
+    setStatus('error');
   };
 
   useEffect(() => {
@@ -52,7 +81,7 @@ export function ChatImage({ src, alt }: { src: string; alt?: string }) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [modalOpen]);
+  }, [modalOpen, handleCloseModal]);
 
   return (
     <div className="chat-image-wrapper">
@@ -71,6 +100,7 @@ export function ChatImage({ src, alt }: { src: string; alt?: string }) {
             variant="outline"
             className="chat-image-retry-btn"
             onClick={() => {
+              refreshedOnceRef.current = false;
               setStatus('loading');
               setRetryKey((k) => k + 1);
             }}
@@ -90,13 +120,13 @@ export function ChatImage({ src, alt }: { src: string; alt?: string }) {
           aria-label="Xem ảnh phóng to"
         >
           <img
+            ref={imgRef}
             key={retryKey}
             src={imageSrc}
             alt={alt || 'Hình ảnh đính kèm trong tin nhắn'}
-            loading="lazy"
             className={`chat-image ${status === 'loaded' ? 'is-loaded' : 'is-hidden'}`}
             onLoad={() => setStatus('loaded')}
-            onError={() => setStatus('error')}
+            onError={() => void handleImageError()}
           />
         </button>
       )}
