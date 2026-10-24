@@ -213,6 +213,7 @@ export default function Products({ session }: { session: Session }) {
   const [page, setPage] = useState(1);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [createNotice, setCreateNotice] = useState('');
+  const [expandedProductId, setExpandedProductId] = useState<string | null>(null);
   const createNoticeRef = useRef<HTMLParagraphElement>(null);
 
   useEffect(() => {
@@ -320,8 +321,11 @@ export default function Products({ session }: { session: Session }) {
               sellerId={sellerId}
               kiosks={kiosks.data ?? []}
               canEdit={canEdit}
-              onSuccess={() => {
+              onSuccess={(createdProductId) => {
                 setShowCreateForm(false);
+                if (createdProductId) {
+                  setExpandedProductId(createdProductId);
+                }
                 setCreateNotice('Đã tạo mẫu hoa giả mới ở trạng thái Bản nháp.');
               }}
               onCancel={() => setShowCreateForm(false)}
@@ -361,7 +365,14 @@ export default function Products({ session }: { session: Session }) {
       <ul className="product-list">
         {pageItems.map((product) => (
           <li key={product.id}>
-            <details>
+            <details
+              open={expandedProductId === product.id ? true : undefined}
+              onToggle={(event) => {
+                if (!event.currentTarget.open && expandedProductId === product.id) {
+                  setExpandedProductId(null);
+                }
+              }}
+            >
               <summary>
                 <span>
                   <strong>{product.name}</strong>

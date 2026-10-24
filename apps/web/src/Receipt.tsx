@@ -185,6 +185,20 @@ export default function Receipt() {
           </h2>
           <p className="receipt-status">{statuses[receipt.status] || 'Đang cập nhật trạng thái'}</p>
           <p>Đặt lúc {date(receipt.createdAt)}</p>
+          <dl className="receipt-totals" aria-label="Mã nhận hoa tại Kiosk">
+            <div>
+              <dt>ID biên nhận (nhập tại Kiosk)</dt>
+              <dd>
+                <code>{receipt.orderId}</code>
+              </dd>
+            </div>
+            <div>
+              <dt>Mã biên nhận 8 ký tự</dt>
+              <dd>
+                <strong>{token.trim().toUpperCase()}</strong>
+              </dd>
+            </div>
+          </dl>
           <ul className="receipt-items">
             {receipt.items.map((item, index) => (
               <li key={index}>
