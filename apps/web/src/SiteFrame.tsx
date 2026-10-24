@@ -128,6 +128,9 @@ function SiteHeader() {
       >
         {expanded ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />} Menu
       </button>
+      {expanded && (
+        <div className="site-nav-backdrop" onClick={() => setOpenedPath(null)} aria-hidden="true" />
+      )}
       <nav id="main-navigation" aria-label="Điều hướng chính" className={expanded ? 'is-open' : ''}>
         {navigation.map(([href, label]) => (
           <Link
