@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -41,12 +41,14 @@ export default function Subscriptions({ session }: { session: Session }) {
   });
   const months = useWatch({ control: form.control, name: 'months' });
   const linkRef = useRef<HTMLAnchorElement>(null);
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey }),
+      queryClient.invalidateQueries({
+        queryKey: ['subscriptions', session.sellerId],
+      }),
       queryClient.invalidateQueries({ queryKey: ['session'] }),
     ]);
-  };
+  }, [session.sellerId]);
   const subscribe = useMutation({
     mutationFn: (values: z.infer<typeof schema>) =>
       request(`${base}/flows/subscribe`, { p_months: values.months }),
@@ -77,6 +79,13 @@ export default function Subscriptions({ session }: { session: Session }) {
     const frame = requestAnimationFrame(() => linkRef.current?.focus());
     return () => cancelAnimationFrame(frame);
   }, [payment.data, selectedPending]);
+  useEffect(() => {
+    if (!payment.data || !selectedPending) return;
+    const timer = window.setInterval(() => {
+      void refresh();
+    }, 5_000);
+    return () => window.clearInterval(timer);
+  }, [payment.data, selectedPending, refresh]);
   return (
     <section
       id="subscriptions"
@@ -213,7 +222,8 @@ export default function Subscriptions({ session }: { session: Session }) {
                 ref={linkRef}
                 className="button button-primary"
                 href={payment.data.checkoutUrl}
-                rel="noreferrer"
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 Tiếp tục trên payOS
               </a>

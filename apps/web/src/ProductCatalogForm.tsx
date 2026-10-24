@@ -158,7 +158,7 @@ export function ProductCreateForm({
   sellerId: string;
   kiosks: ProductKioskOption[];
   canEdit: boolean;
-  onSuccess?: () => void;
+  onSuccess?: (createdProductId?: string) => void;
   onCancel?: () => void;
 }) {
   const [submitting, setSubmitting] = useState(false);
@@ -197,11 +197,11 @@ export function ProductCreateForm({
         widthCm: values.widthCm,
         heightCm: values.heightCm,
       };
-      await postProduct(payload);
+      const created = await postProduct(payload);
       await queryClient.invalidateQueries({ queryKey: ['products', sellerId] });
       setSuccessMessage('Đã tạo mẫu hoa giả mới ở trạng thái Bản nháp.');
       form.reset();
-      if (onSuccess) onSuccess();
+      if (onSuccess) onSuccess(created?.id);
     } catch (err) {
       setServerError(errorText(err));
     } finally {

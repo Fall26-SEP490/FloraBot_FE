@@ -34,6 +34,13 @@ const schema = z.object({
 const money = (value: number | string) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(value));
 
+function slotZoneDescription(slotCode: string): string {
+  const upper = slotCode.trim().toUpperCase();
+  if (upper.startsWith('W')) return 'Bán trực tiếp tại Kiosk (Walk-in)';
+  if (upper.startsWith('P')) return 'Đơn đặt trước trên Web (Pre-order)';
+  return 'Dùng chung: Bán tại Kiosk & Đặt trước trên Web';
+}
+
 export default function SellerStock({ session }: { session: Session }) {
   const sellerId = session.sellerId;
   const [selectedKioskChoice, setSelectedKioskChoice] = useState('');
@@ -235,11 +242,15 @@ export default function SellerStock({ session }: { session: Session }) {
                 aria-describedby="stock-slot-error"
               >
                 <option value="">Chọn ô trống</option>
-                {empty.map((slot) => (
-                  <option key={slot.id} value={slot.id}>
-                    Ô {slot.slotCode}
-                  </option>
-                ))}
+                {empty.map((slot) => {
+                  const zone = slotZoneDescription(slot.slotCode);
+                  return (
+                    <option key={slot.id} value={slot.id}>
+                      Ô {slot.slotCode}
+                      {zone ? ` — ${zone}` : ''}
+                    </option>
+                  );
+                })}
               </select>
               {form.formState.errors.slotId && (
                 <p className="error" id="stock-slot-error">
@@ -300,58 +311,62 @@ export default function SellerStock({ session }: { session: Session }) {
         <p>Kiosk chưa có ô nào để quản lý.</p>
       )}
       <ul className="admin-shop-list">
-        {slots.data?.map((slot) => (
-          <li key={slot.id}>
-            <details>
-              <summary>
-                <strong>Ô {slot.slotCode}</strong>
-                <span className="slot-status-pill" data-status={slot.status}>
-                  {statuses[slot.status] || slot.status}
-                </span>
-              </summary>
-              <div className="shop-profile">
-                <p>
-                  {slot.kioskName} · {slot.kioskCode} · {slot.kioskAddress}
-                </p>
-                {slot.bouquetId && (
-                  <dl>
-                    <div>
-                      <dt>Sản phẩm</dt>
-                      <dd>
-                        {products.data?.find((product) => product.id === slot.productId)?.name ||
-                          'Chưa tải được tên sản phẩm'}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>Mã bó hoa</dt>
-                      <dd>{slot.qrCode || 'Hệ thống chưa trả mã'}</dd>
-                    </div>
-                    <div>
-                      <dt>Giá khi nạp</dt>
-                      <dd>
-                        {slot.priceSnapshot == null
-                          ? 'Chưa có thông tin'
-                          : money(slot.priceSnapshot)}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>Hạn bán</dt>
-                      <dd>
-                        {!slot.sellableUntil || slot.sellableUntil.startsWith('9999')
-                          ? 'Không áp dụng hạn tươi (Hoa giả)'
-                          : new Date(slot.sellableUntil).toLocaleString('vi-VN', {
-                              timeZone: 'Asia/Ho_Chi_Minh',
-                            })}
-                      </dd>
-                    </div>
-                  </dl>
-                )}
-                <ReturnFlowers slot={slot} sellerId={sellerId} />
-                <ReportFault slot={slot} sellerId={sellerId} />
-              </div>
-            </details>
-          </li>
-        ))}
+        {slots.data?.map((slot) => {
+          const zone = slotZoneDescription(slot.slotCode);
+          return (
+            <li key={slot.id}>
+              <details>
+                <summary>
+                  <strong>Ô {slot.slotCode}</strong>
+                  {zone && <span className="quiet"> · {zone}</span>}
+                  <span className="slot-status-pill" data-status={slot.status}>
+                    {statuses[slot.status] || slot.status}
+                  </span>
+                </summary>
+                <div className="shop-profile">
+                  <p>
+                    {slot.kioskName} · {slot.kioskCode} · {slot.kioskAddress}
+                  </p>
+                  {slot.bouquetId && (
+                    <dl>
+                      <div>
+                        <dt>Sản phẩm</dt>
+                        <dd>
+                          {products.data?.find((product) => product.id === slot.productId)?.name ||
+                            'Chưa tải được tên sản phẩm'}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Mã bó hoa</dt>
+                        <dd>{slot.qrCode || 'Hệ thống chưa trả mã'}</dd>
+                      </div>
+                      <div>
+                        <dt>Giá khi nạp</dt>
+                        <dd>
+                          {slot.priceSnapshot == null
+                            ? 'Chưa có thông tin'
+                            : money(slot.priceSnapshot)}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Hạn bán</dt>
+                        <dd>
+                          {!slot.sellableUntil || slot.sellableUntil.startsWith('9999')
+                            ? 'Không áp dụng hạn tươi (Hoa giả)'
+                            : new Date(slot.sellableUntil).toLocaleString('vi-VN', {
+                                timeZone: 'Asia/Ho_Chi_Minh',
+                              })}
+                        </dd>
+                      </div>
+                    </dl>
+                  )}
+                  <ReturnFlowers slot={slot} sellerId={sellerId} />
+                  <ReportFault slot={slot} sellerId={sellerId} />
+                </div>
+              </details>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );

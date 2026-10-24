@@ -105,6 +105,7 @@ function OrderActions({
   const sending = useRef(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [copiedField, setCopiedField] = useState<'' | 'orderId' | 'token'>('');
   const [link, setLink] = useState<string | null>(null);
   const [price, setPrice] = useState(String(row.quotedPrice || ''));
   const [note, setNote] = useState('');
@@ -122,11 +123,27 @@ function OrderActions({
     note: string | null;
   } | null>(null);
   const slots = useQuery({
-    queryKey: ['seller-slots', row.sellerId],
+    queryKey: ['seller-kiosk-slots', row.sellerId, row.kioskId],
     queryFn: () =>
-      request<components['schemas']['SellerSlotResponse'][]>(`/sellers/${row.sellerId}/slots`),
-    enabled: action === 'fulfill',
+      request<components['schemas']['SellerSlotResponse'][]>(`/me/kiosks/${row.kioskId}/slots`),
+    enabled: action === 'fulfill' && Boolean(row.kioskId),
   });
+  const emptyKioskSlots =
+    slots.data?.filter((item) => item.kioskId === row.kioskId && item.status === 'RENTED_EMPTY') ??
+    [];
+  const preorderSlots = emptyKioskSlots.filter(
+    (item) => !item.slotCode.trim().toUpperCase().startsWith('W'),
+  );
+  const fulfillSlots = preorderSlots.length > 0 ? preorderSlots : emptyKioskSlots;
+  async function copyText(value: string, field: 'orderId' | 'token') {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedField(field);
+      window.setTimeout(() => setCopiedField(''), 2000);
+    } catch {
+      /* Clipboard permission may be unavailable in some contexts */
+    }
+  }
   async function send(kind: string, body: unknown) {
     if (sending.current || uncertain) return;
     sending.current = true;
@@ -225,12 +242,42 @@ function OrderActions({
         </p>
       )}
       {mode === 'member' && row.orderId && row.trackingToken && (
-        <a
-          href={`/receipt#order=${encodeURIComponent(row.orderId)}&token=${encodeURIComponent(row.trackingToken)}`}
-          referrerPolicy="no-referrer"
-        >
-          Xem biên nhận, mã nhận hoa và hỗ trợ hoàn tiền
-        </a>
+        <div className="order-pickup-credentials" aria-label="Thông tin nhận hoa tại Kiosk">
+          <dl className="bank-summary">
+            <div>
+              <dt>ID biên nhận (nhập tại Kiosk)</dt>
+              <dd>
+                <code>{row.orderId}</code>{' '}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => void copyText(row.orderId!, 'orderId')}
+                >
+                  {copiedField === 'orderId' ? 'Đã chép ID' : 'Sao chép ID'}
+                </Button>
+              </dd>
+            </div>
+            <div>
+              <dt>Mã biên nhận 8 ký tự</dt>
+              <dd>
+                <code>{row.trackingToken}</code>{' '}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => void copyText(row.trackingToken!, 'token')}
+                >
+                  {copiedField === 'token' ? 'Đã chép mã' : 'Sao chép mã'}
+                </Button>
+              </dd>
+            </div>
+          </dl>
+          <a
+            href={`/receipt#order=${encodeURIComponent(row.orderId)}&token=${encodeURIComponent(row.trackingToken)}`}
+            referrerPolicy="no-referrer"
+          >
+            Xem biên nhận, mã nhận hoa và hỗ trợ hoàn tiền
+          </a>
+        </div>
       )}
       <div className="stock-actions">
         {mode === 'member' && row.state === 'QUOTED' && !row.orderId && (
@@ -412,25 +459,32 @@ function OrderActions({
                   onChange={(event) => setSlot(event.target.value)}
                 >
                   <option value="">Chọn ô đã nạp</option>
-                  {slots.data
-                    ?.filter(
-                      (item) => item.kioskId === row.kioskId && item.status === 'RENTED_EMPTY',
-                    )
-                    .map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.slotCode}
-                      </option>
-                    ))}
+                  {fulfillSlots.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.slotCode}
+                    </option>
+                  ))}
                 </select>
                 {slots.isError && <p role="alert">Chưa tải được ô. Đóng biểu mẫu rồi mở lại.</p>}
                 <label htmlFor={`order-qr-${row.id}`}>Mã QR của bó hoa</label>
-                <input
-                  id={`order-qr-${row.id}`}
-                  required
-                  maxLength={120}
-                  value={qr}
-                  onChange={(event) => setQr(event.target.value)}
-                />
+                <div className="field-action">
+                  <input
+                    id={`order-qr-${row.id}`}
+                    required
+                    maxLength={120}
+                    value={qr}
+                    onChange={(event) => setQr(event.target.value)}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() =>
+                      setQr(`BOUQUET-${(row.orderCode || row.id.slice(0, 8)).toUpperCase()}`)
+                    }
+                  >
+                    Tạo mã tự động
+                  </Button>
+                </div>
               </>
             )}
             {action === 'cancel' && row.orderStatus === 'PAID' && (
@@ -521,7 +575,8 @@ export default function WebRequests({
   const query = useQuery({
     queryKey: ['web-orders', base, page],
     queryFn: () => request<Page>(`${base}?page=${page}`),
-    refetchInterval: 30_000,
+    refetchInterval: (q) =>
+      q.state.data?.items?.some((item) => item.orderStatus === 'AWAITING_PAYMENT') ? 5_000 : 30_000,
     enabled: mode !== 'seller' || Boolean(sellerId),
   });
   const items = query.data?.items ?? [];
