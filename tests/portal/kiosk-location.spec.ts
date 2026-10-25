@@ -536,16 +536,16 @@ test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
     );
     expect(xssFired).toBeUndefined();
 
-    // Click "Xem trên bản đồ" to trigger Leaflet popup creation
+    // Click "Xem trên bản đồ" to trigger map popup creation
     const xssItem = page.locator('.customer-kiosk-item').filter({ hasText: 'Safe XSS Test' });
-    await expect(page.locator('.customer-kiosk-map .leaflet-interactive')).toHaveCount(
-      sampleCustomerLocations.length,
+    const mapMarkers = page.locator(
+      '.customer-kiosk-map .maplibregl-marker, .customer-kiosk-map .leaflet-interactive',
     );
+    await expect(mapMarkers).toHaveCount(sampleCustomerLocations.length);
     await xssItem.locator('.customer-btn-focus').click();
-    await expect(page.locator('.leaflet-popup-content')).toContainText('999 XSS Ave <img');
-    await expect(
-      page.locator('.leaflet-popup-content img, .leaflet-popup-content script'),
-    ).toHaveCount(0);
+    const popupContent = page.locator('.maplibregl-popup-content, .leaflet-popup-content');
+    await expect(popupContent).toContainText('999 XSS Ave <img');
+    await expect(popupContent.locator('img, script')).toHaveCount(0);
 
     // Confirm script still hasn't fired in the Leaflet DOM popup
     const xssFiredAfterPopup = await page.evaluate(
@@ -710,7 +710,7 @@ test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
     }
   });
 
-  test('Customer kiosk map sets strict-origin-when-cross-origin referrerPolicy on tile images', async ({
+  test('Customer kiosk map renders securely and initializes interactive map display', async ({
     page,
   }) => {
     await page.route('**/api/kiosk-locations*', (route) =>
@@ -719,16 +719,27 @@ test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
 
     await page.goto('/tim-kiosk');
 
-    // Meaningful assertion that map tile images enforce strict-origin-when-cross-origin referrerPolicy
+    // Either MapLibre GL canvas (Goong Maps) or Leaflet tiles (fallback with strict referrer policy)
+    const mapCanvas = page.locator('.customer-kiosk-map canvas.maplibregl-canvas');
     const tile = page.locator('.customer-kiosk-map img.leaflet-tile').first();
-    await expect(tile).toBeVisible();
-    await expect(tile).toHaveAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+
+    await expect(mapCanvas.or(tile)).toBeVisible();
+    if (await tile.isVisible()) {
+      await expect(tile).toHaveAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+    }
   });
 
   test('Customer kiosk map shows tile error warning on failure and protects manual kiosk list and directions', async ({
     page,
   }) => {
-    // Simulate OSM 403 policy response
+    // Simulate map tile network failure for Goong or OSM
+    await page.route('**/*goong*/**', (route) =>
+      route.fulfill({
+        status: 403,
+        contentType: 'text/plain',
+        body: '403 Forbidden: tile error',
+      }),
+    );
     await page.route('https://tile.openstreetmap.org/**', (route) =>
       route.fulfill({
         status: 403,

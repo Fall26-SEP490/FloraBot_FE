@@ -25,9 +25,10 @@ describe('Goong Maps helper unit tests', () => {
     process.env.NEXT_PUBLIC_GOONG_MAPTILES_KEY = 'test_goong_maptiles_key_12345';
     const config = getMapTileConfig();
     expect(config.isGoong).toBe(true);
-    expect(config.tileUrl).toBe(
-      'https://tiles.goong.io/assets/goong_map_web.png?api_key=test_goong_maptiles_key_12345',
+    expect(config.styleUrl).toBe(
+      'https://tiles.goong.io/assets/goong_map_web.json?api_key=test_goong_maptiles_key_12345',
     );
+    expect(config.tileUrl).toBe(config.styleUrl);
     expect(config.attribution).toContain('Goong Maps');
     expect(config.maxZoom).toBe(20);
   });
