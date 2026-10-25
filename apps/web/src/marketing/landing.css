@@ -753,15 +753,7 @@ input[aria-invalid='true'],
 select[aria-invalid='true'] {
   border: 2px solid var(--color-error);
 }
-input:focus,
-input:focus-visible,
-select:focus,
-select:focus-visible,
-button:focus,
-button:focus-visible {
-  outline: 3px solid #174b35 !important;
-  outline-offset: 2px !important;
-}
+
 .gift-results {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
