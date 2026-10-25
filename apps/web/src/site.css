@@ -288,15 +288,10 @@ html {
 }
 
 .florabot-header :focus-visible,
-.florabot-footer :focus-visible,
-select:focus,
-select:focus-visible,
-input:focus,
-input:focus-visible,
-button:focus,
-button:focus-visible {
-  outline: 3px solid #174b35 !important;
-  outline-offset: 2px !important;
+.florabot-footer :focus-visible {
+  outline: 3px solid #174b35;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 3px white;
 }
 
 @media (max-width: 1024px) {

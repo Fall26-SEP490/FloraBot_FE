@@ -72,8 +72,7 @@
     select,
     textarea
   ):focus {
-  outline: 2px solid var(--interaction-focus-outline) !important;
-  outline-offset: 2px !important;
+  outline: none !important;
   border-color: var(--interaction-border-focus) !important;
   box-shadow: 0 0 0 2px var(--interaction-focus-ring) !important;
 }
