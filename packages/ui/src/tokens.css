@@ -42,6 +42,12 @@
   --radius-workspace-control: 8px;
   --radius-workspace-badge: 6px;
   --shadow-workspace-panel: 0 1px 3px rgb(24 62 43 / 4%);
+  --interaction-border-hover: #78947d;
+  --interaction-border-focus: #174b35;
+  --interaction-focus-ring: rgb(23 75 53 / 16%);
+  --interaction-focus-outline: #174b35;
+  --interaction-error-border: #a9342f;
+  --interaction-error-ring: rgb(169 52 47 / 16%);
   color: var(--color-ink);
   background: var(--color-canvas);
   font-family: var(--font-body);
@@ -84,9 +90,8 @@ a {
   -webkit-tap-highlight-color: transparent;
 }
 :focus-visible {
-  outline: 3px solid var(--color-ink);
-  outline-offset: 4px;
-  box-shadow: 0 0 0 4px white;
+  outline: 2px solid var(--interaction-focus-outline);
+  outline-offset: 2px;
 }
 h1,
 h2,
@@ -135,7 +140,7 @@ img {
   color: var(--color-ink);
 }
 .button-outline:hover {
-  background: white;
+  background: var(--color-surface-soft);
 }
 .button:disabled {
   cursor: wait;

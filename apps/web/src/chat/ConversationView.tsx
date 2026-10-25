@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/no-noninteractive-tabindex */
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Button, RefreshCw } from '@florabot/ui';
@@ -292,6 +293,8 @@ export function ConversationView({
       <div
         ref={scrollContainerRef}
         className="chat-messages-scroll-area"
+        role="region"
+        tabIndex={0}
         onScroll={handleScroll}
         aria-label="Lịch sử tin nhắn"
       >

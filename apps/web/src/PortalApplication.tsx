@@ -44,6 +44,7 @@ import OperationsInstallations from './OperationsInstallations';
 import OperationsOverview from './OperationsOverview';
 import './operations.css';
 import './seller.css';
+import './workspace-typography.css';
 import TechnicianInstallations from './TechnicianInstallations';
 import AdminKioskRefunds from './AdminKioskRefunds';
 import AdminReports from './AdminReports';

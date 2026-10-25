@@ -76,7 +76,10 @@ export default function ReportFault({ slot, sellerId }: { slot: Slot; sellerId: 
     },
     onSettled: async () => {
       sending.current = false;
-      await queryClient.invalidateQueries({ queryKey: ['seller-slots', sellerId] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['seller-slots'] }),
+        queryClient.invalidateQueries({ queryKey: ['seller-kiosk-slots'] }),
+      ]);
     },
   });
   const unavailable = ['FAULT', 'LOCKED'].includes(slot.status);

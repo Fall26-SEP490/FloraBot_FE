@@ -1,0 +1,181 @@
+/*
+ * Shared interaction states.
+ *
+ * This file is imported after the page styles so controls do not combine the
+ * old global outline with page-specific borders and shadows. Keep the focus
+ * indicator visible without changing border width or moving the layout.
+ */
+
+:root
+  body
+  :where(
+    input:not([type]),
+    input[type='text'],
+    input[type='email'],
+    input[type='password'],
+    input[type='search'],
+    input[type='tel'],
+    input[type='url'],
+    input[type='number'],
+    input[type='date'],
+    input[type='datetime-local'],
+    input[type='month'],
+    input[type='time'],
+    input[type='week'],
+    select,
+    textarea
+  ) {
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease;
+}
+
+:root
+  body
+  :where(
+    input:not([type]),
+    input[type='text'],
+    input[type='email'],
+    input[type='password'],
+    input[type='search'],
+    input[type='tel'],
+    input[type='url'],
+    input[type='number'],
+    input[type='date'],
+    input[type='datetime-local'],
+    input[type='month'],
+    input[type='time'],
+    input[type='week'],
+    select,
+    textarea
+  ):not(:disabled):not([readonly]):not([aria-invalid='true']):hover {
+  border-color: var(--interaction-border-hover) !important;
+}
+
+:root
+  body
+  :where(
+    input:not([type]),
+    input[type='text'],
+    input[type='email'],
+    input[type='password'],
+    input[type='search'],
+    input[type='tel'],
+    input[type='url'],
+    input[type='number'],
+    input[type='date'],
+    input[type='datetime-local'],
+    input[type='month'],
+    input[type='time'],
+    input[type='week'],
+    select,
+    textarea
+  ):focus {
+  outline: none !important;
+  border-color: var(--interaction-border-focus) !important;
+  box-shadow: 0 0 0 2px var(--interaction-focus-ring) !important;
+}
+
+:root
+  body
+  :where(
+    input:not([type]),
+    input[type='text'],
+    input[type='email'],
+    input[type='password'],
+    input[type='search'],
+    input[type='tel'],
+    input[type='url'],
+    input[type='number'],
+    input[type='date'],
+    input[type='datetime-local'],
+    input[type='month'],
+    input[type='time'],
+    input[type='week'],
+    select,
+    textarea
+  ):focus-visible {
+  outline: 2px solid var(--interaction-focus-outline, #174b35) !important;
+  outline-offset: 1px !important;
+}
+
+:root
+  body
+  :where(
+    input:not([type]),
+    input[type='text'],
+    input[type='email'],
+    input[type='password'],
+    input[type='search'],
+    input[type='tel'],
+    input[type='url'],
+    input[type='number'],
+    input[type='date'],
+    input[type='datetime-local'],
+    input[type='month'],
+    input[type='time'],
+    input[type='week'],
+    select,
+    textarea
+  )[aria-invalid='true'] {
+  border-color: var(--interaction-error-border) !important;
+}
+
+:root
+  body
+  :where(
+    input:not([type]),
+    input[type='text'],
+    input[type='email'],
+    input[type='password'],
+    input[type='search'],
+    input[type='tel'],
+    input[type='url'],
+    input[type='number'],
+    input[type='date'],
+    input[type='datetime-local'],
+    input[type='month'],
+    input[type='time'],
+    input[type='week'],
+    select,
+    textarea
+  )[aria-invalid='true']:focus {
+  box-shadow: 0 0 0 2px var(--interaction-error-ring) !important;
+}
+
+:where(a[href], button, summary, [role='button'], [tabindex]:not([tabindex='-1'])):focus-visible {
+  outline: 2px solid var(--interaction-focus-outline) !important;
+  outline-offset: 2px !important;
+  box-shadow: none !important;
+}
+
+.product-photo-file-button:has(.product-photo-file-input:focus-visible) {
+  outline: 2px solid var(--interaction-focus-outline) !important;
+  outline-offset: 2px !important;
+  box-shadow: none;
+}
+
+@media (forced-colors: active) {
+  :where(
+    input:not([type]),
+    input[type='text'],
+    input[type='email'],
+    input[type='password'],
+    input[type='search'],
+    input[type='tel'],
+    input[type='url'],
+    input[type='number'],
+    input[type='date'],
+    input[type='datetime-local'],
+    input[type='month'],
+    input[type='time'],
+    input[type='week'],
+    select,
+    textarea
+  ):focus {
+    outline: 2px solid Highlight !important;
+    outline-offset: 2px !important;
+    box-shadow: none !important;
+  }
+}

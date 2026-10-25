@@ -138,6 +138,11 @@ h3 {
   min-width: 0;
 }
 .hero h1 {
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-wrap: break-word;
+  word-break: break-word;
   color: #fffdf7;
   font-size: clamp(2rem, 4vw, 3.8rem);
   margin: 0 0 1.6rem;
@@ -748,6 +753,7 @@ input[aria-invalid='true'],
 select[aria-invalid='true'] {
   border: 2px solid var(--color-error);
 }
+
 .gift-results {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1069,7 +1075,7 @@ select[aria-invalid='true'] {
     inset: 0 0 45% 0;
   }
   .hero h1 {
-    font-size: clamp(1.7rem, 8vw, 2.7rem);
+    font-size: clamp(1.5rem, 5.5vw, 2.15rem);
   }
   .hero-actions {
     gap: 1rem;

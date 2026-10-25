@@ -396,6 +396,15 @@ test.describe('Real Auth Provider & Email OTP Flow (Mocked Network in Tests Only
 
   test('Standard password login regressions stay intact', async ({ page }) => {
     let loginData: unknown = null;
+    await page.route('**/api/auth/config', (route) =>
+      route.fulfill({
+        json: {
+          googleClientId: null,
+          googleEnabled: false,
+          registrationEmailEnabled: true,
+        },
+      }),
+    );
     await page.route('**/api/auth/login', async (route) => {
       loginData = route.request().postDataJSON();
       await route.fulfill({
