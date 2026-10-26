@@ -4,8 +4,7 @@ export type KioskCoordinates = components['schemas']['KioskCoordinates'];
 export type SellerKioskDto = components['schemas']['SellerKioskDto'];
 export type SellerKioskItem = SellerKioskDto;
 export type UpdateKioskLocationPayload = components['schemas']['UpdateKioskLocationRequest'];
-export type PublicKioskDto =
-  components['schemas']['AnonymousTypeOfGuidAndstringAndstringAndstringAndstringAndstringAnddoubleAnddoubleAndboolean'];
+export type PublicKioskDto = components['schemas']['PublicKioskDto'];
 export type CustomerKioskLocationItem = Omit<
   PublicKioskDto,
   'code' | 'name' | 'address' | 'region' | 'status' | 'latitude' | 'longitude'
