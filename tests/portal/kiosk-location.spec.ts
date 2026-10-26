@@ -8,8 +8,8 @@ const sampleSellerKiosks = [
     id: 'kiosk-01',
     code: 'KS-01',
     name: 'Kiosk Landmark 81',
-    address: '720A Äiá»‡n BiÃªn Phá»§, P. 22, BÃ¬nh Tháº¡nh, TP.HCM',
-    region: 'TP. Há»“ ChÃ­ Minh',
+    address: '720A Điện Biên Phủ, P. 22, Bình Thạnh, TP.HCM',
+    region: 'TP. Hồ Chí Minh',
     status: 'ONLINE',
     latitude: 10.795,
     longitude: 106.7218,
@@ -21,7 +21,7 @@ const sampleSellerKiosks = [
     code: 'KS-02',
     name: 'Kiosk FPT University',
     address: null,
-    region: 'TP. Thá»§ Äá»©c',
+    region: 'TP. Thủ Đức',
     status: 'ONLINE',
     latitude: null,
     longitude: null,
@@ -32,8 +32,8 @@ const sampleSellerKiosks = [
     id: 'kiosk-03',
     code: 'KS-03',
     name: 'Kiosk Shared Central',
-    address: '123 LÃª Lá»£i, Quáº­n 1, TP.HCM',
-    region: 'TP. Há»“ ChÃ­ Minh',
+    address: '123 Lê Lợi, Quận 1, TP.HCM',
+    region: 'TP. Hồ Chí Minh',
     status: 'MAINTENANCE',
     latitude: 10.7769,
     longitude: 106.7009,
@@ -48,8 +48,8 @@ const sampleCustomerLocations = [
     id: 'kiosk-01',
     code: 'KS-01',
     name: 'Kiosk Landmark 81',
-    address: '720A Äiá»‡n BiÃªn Phá»§, P. 22, BÃ¬nh Tháº¡nh, TP.HCM',
-    region: 'TP. Há»“ ChÃ­ Minh',
+    address: '720A Điện Biên Phủ, P. 22, Bình Thạnh, TP.HCM',
+    region: 'TP. Hồ Chí Minh',
     status: 'ONLINE',
     latitude: 10.795,
     longitude: 106.7218,
@@ -60,7 +60,7 @@ const sampleCustomerLocations = [
     code: 'KS-02',
     name: 'Kiosk Maintenance Hub',
     address: '456 Hai Ba Trung, District 3',
-    region: 'TP. Há»“ ChÃ­ Minh',
+    region: 'TP. Hồ Chí Minh',
     status: 'MAINTENANCE',
     latitude: 10.788,
     longitude: 106.692,
@@ -70,8 +70,8 @@ const sampleCustomerLocations = [
     id: 'kiosk-03',
     code: 'KS-03',
     name: 'Kiosk Shared Central',
-    address: '123 LÃª Lá»£i, Quáº­n 1, TP.HCM',
-    region: 'TP. Há»“ ChÃ­ Minh',
+    address: '123 Lê Lợi, Quận 1, TP.HCM',
+    region: 'TP. Hồ Chí Minh',
     status: 'OFFLINE',
     latitude: 10.7769,
     longitude: 106.7009,
@@ -82,7 +82,7 @@ const sampleCustomerLocations = [
     code: 'KS-XSS',
     name: 'Safe XSS Test <script>window.__xss_fired=true</script>',
     address: '999 XSS Ave <img src="x" onerror="window.__xss_fired=true">',
-    region: 'TP. Há»“ ChÃ­ Minh',
+    region: 'TP. Hồ Chí Minh',
     status: 'ONLINE',
     latitude: 10.78,
     longitude: 106.7,
@@ -131,7 +131,7 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
       route.fulfill({
         json: {
           id: 'user-seller',
-          name: 'Chá»§ shop Hoa TÆ°Æ¡i',
+          name: 'Chủ shop Hoa Tươi',
           role: 'SELLER',
           sellerId,
           sellerStatus: 'ACTIVE',
@@ -146,12 +146,12 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
     await page.goto('/seller/kiosks');
 
     // Page heading in workspace
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Vá»‹ trÃ­ kiosk');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Vị trí kiosk');
 
     // Missing-location required-action banner
     const banner = page.locator('.kiosk-required-banner');
     await expect(banner).toBeVisible();
-    await expect(banner).toContainText('YÃªu cáº§u cáº­p nháº­t vá»‹ trÃ­ kiosk');
+    await expect(banner).toContainText('Yêu cầu cập nhật vị trí kiosk');
     await expect(banner).toContainText('1'); // 1 kiosk incomplete
 
     // Check kiosk cards rendered
@@ -159,13 +159,13 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
     await expect(page.getByRole('heading', { name: 'Kiosk FPT University' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Kiosk Shared Central' })).toBeVisible();
 
-    // Check MAINTENANCE status is labeled 'Báº£o trÃ¬', NOT 'Hoáº¡t Ä‘á»™ng'
+    // Check MAINTENANCE status is labeled 'Bảo trì', NOT 'Hoạt động'
     const maintenanceCard = page.locator('.kiosk-card').filter({ hasText: 'Kiosk Shared Central' });
-    await expect(maintenanceCard.locator('.kiosk-status-badge')).toHaveText('Báº£o trÃ¬');
+    await expect(maintenanceCard.locator('.kiosk-status-badge')).toHaveText('Bảo trì');
 
     // Shared / uneditable kiosk has notice and disabled inputs
     await expect(maintenanceCard.locator('.kiosk-permission-notice')).toContainText(
-      'Tá»§ kiosk nÃ y dÃ¹ng chung hoáº·c chÆ°a Ä‘Æ°á»£c gÃ¡n toÃ n quyá»n cho shop',
+      'Tủ kiosk này dùng chung hoặc chưa được gán toàn quyền cho shop',
     );
     await expect(maintenanceCard.locator('input[name="address"]')).toBeDisabled();
     await expect(maintenanceCard.locator('input[name="latitude"]')).toBeDisabled();
@@ -177,7 +177,7 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
       route.fulfill({
         json: {
           id: 'user-staff',
-          name: 'NhÃ¢n viÃªn giao nháº­n',
+          name: 'Nhân viên giao nhận',
           role: 'SELLER_STAFF',
           sellerId,
           sellerStatus: 'ACTIVE',
@@ -189,11 +189,9 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
 
     // Role guard in Workspace redirects non-SELLER to their assigned workspace (/staff)
     await expect(page).toHaveURL('/staff');
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-      'ChÃ o NhÃ¢n viÃªn giao nháº­n',
-    );
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Chào Nhân viên giao nhận');
     // Staff navigation does not expose /seller/kiosks
-    await expect(page.getByRole('link', { name: 'Vá»‹ trÃ­ kiosk' })).toBeHidden();
+    await expect(page.getByRole('link', { name: 'Vị trí kiosk' })).toBeHidden();
   });
 
   test('Validates inputs, differentiates 0 from blank, and handles out-of-range coords', async ({
@@ -204,7 +202,7 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
       route.fulfill({
         json: {
           id: 'user-seller',
-          name: 'Chá»§ shop',
+          name: 'Chủ shop',
           role: 'SELLER',
           sellerId,
           sellerStatus: 'ACTIVE',
@@ -240,16 +238,16 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
     // 1. Submit with empty address
     await submitBtn.click();
     await expect(card.locator('.kiosk-feedback-error')).toContainText(
-      'Vui lÃ²ng nháº­p Ä‘á»‹a chá»‰ cá»¥ thá»ƒ cá»§a kiosk.',
+      'Vui lòng nhập địa chỉ cụ thể của kiosk.',
     );
 
     // 2. Fill address but leave coordinates blank (must NOT coerce blank to 0)
-    await addressInput.fill('Khu CÃ´ng Nghá»‡ Cao, TP. Thá»§ Äá»©c');
+    await addressInput.fill('Khu Công Nghệ Cao, TP. Thủ Đức');
     await latInput.fill('');
     await lonInput.fill('');
     await submitBtn.click();
     await expect(card.locator('.kiosk-feedback-error')).toContainText(
-      'Cáº£ vÄ© Ä‘á»™ vÃ  kinh Ä‘á»™ Ä‘á»u pháº£i Ä‘Æ°á»£c cung cáº¥p cÃ¹ng nhau.',
+      'Cả vĩ độ và kinh độ đều phải được cung cấp cùng nhau.',
     );
 
     // 3. Invalid latitude bounds (>90)
@@ -257,7 +255,7 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
     await lonInput.fill('106.8098');
     await submitBtn.click();
     await expect(card.locator('.kiosk-feedback-error')).toContainText(
-      'VÄ© Ä‘á»™ pháº£i lÃ  sá»‘ há»£p lá»‡ trong khoáº£ng tá»« -90 Ä‘áº¿n 90.',
+      'Vĩ độ phải là số hợp lệ trong khoảng từ -90 đến 90.',
     );
 
     // 4. Invalid longitude bounds (>180)
@@ -265,16 +263,16 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
     await lonInput.fill('190.5');
     await submitBtn.click();
     await expect(card.locator('.kiosk-feedback-error')).toContainText(
-      'Kinh Ä‘á»™ pháº£i lÃ  sá»‘ há»£p lá»‡ trong khoáº£ng tá»« -180 Ä‘áº¿n 180.',
+      'Kinh độ phải là số hợp lệ trong khoảng từ -180 đến 180.',
     );
 
     // 5. Valid coordinate 0 (equator/prime meridian) MUST be accepted as numeric 0, not rejected
     await latInput.fill('0');
     await lonInput.fill('0');
     await submitBtn.click();
-    await expect(card.locator('.kiosk-feedback-success')).toContainText('thÃ nh cÃ´ng');
+    await expect(card.locator('.kiosk-feedback-success')).toContainText('thành công');
     expect(savedPayload).toEqual({
-      address: 'Khu CÃ´ng Nghá»‡ Cao, TP. Thá»§ Äá»©c',
+      address: 'Khu Công Nghệ Cao, TP. Thủ Đức',
       latitude: 0,
       longitude: 0,
     });
@@ -289,7 +287,7 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
       route.fulfill({
         json: {
           id: 'user-seller',
-          name: 'Chá»§ shop',
+          name: 'Chủ shop',
           role: 'SELLER',
           sellerId,
           sellerStatus: 'ACTIVE',
@@ -306,7 +304,7 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
       return route.fulfill({
         json: {
           ...sampleSellerKiosks[1],
-          address: 'Khu CÃ´ng Nghá»‡ Cao, TP. Thá»§ Äá»©c',
+          address: 'Khu Công Nghệ Cao, TP. Thủ Đức',
           latitude: 10.8414,
           longitude: 106.8098,
           locationComplete: true,
@@ -317,7 +315,7 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
     await page.goto('/seller/kiosks');
 
     const card = page.locator('.kiosk-card').filter({ hasText: 'Kiosk FPT University' });
-    await card.locator('input[name="address"]').fill('Khu CÃ´ng Nghá»‡ Cao, TP. Thá»§ Äá»©c');
+    await card.locator('input[name="address"]').fill('Khu Công Nghệ Cao, TP. Thủ Đức');
     await card.locator('input[name="latitude"]').fill('10.8414');
     await card.locator('input[name="longitude"]').fill('106.8098');
 
@@ -334,11 +332,11 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
     await card.locator('button[type="submit"]').click();
 
     await expect(card.locator('.kiosk-feedback-success')).toContainText(
-      'ÄÃ£ lÆ°u vá»‹ trÃ­ cho kiosk Kiosk FPT University thÃ nh cÃ´ng.',
+      'Đã lưu vị trí cho kiosk Kiosk FPT University thành công.',
     );
 
     expect(putPayload).toEqual({
-      address: 'Khu CÃ´ng Nghá»‡ Cao, TP. Thá»§ Äá»©c',
+      address: 'Khu Công Nghệ Cao, TP. Thủ Đức',
       latitude: 10.8414,
       longitude: 106.8098,
     });
@@ -349,7 +347,7 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
       route.fulfill({
         json: {
           id: 'user-seller',
-          name: 'Chá»§ shop',
+          name: 'Chủ shop',
           role: 'SELLER',
           sellerId,
           sellerStatus: 'ACTIVE',
@@ -362,16 +360,16 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
 
     await page.goto('/seller/kiosks');
     await expect(page.locator('.kiosk-empty-state')).toContainText(
-      'ChÆ°a cÃ³ kiosk nÃ o Ä‘Æ°á»£c phÃ¢n bá»•',
+      'Chưa có kiosk nào được phân bổ',
     );
 
     // Error state with retry
     await page.route(`**/api/sellers/${sellerId}/kiosks`, (route) =>
-      route.fulfill({ status: 500, json: { message: 'MÃ¡y chá»§ gáº·p lá»—i' } }),
+      route.fulfill({ status: 500, json: { message: 'Máy chủ gặp lỗi' } }),
     );
 
     await page.locator('.kiosk-reload-btn').click();
-    await expect(page.locator('.kiosk-error-state')).toContainText('MÃ¡y chá»§ gáº·p lá»—i');
+    await expect(page.locator('.kiosk-error-state')).toContainText('Máy chủ gặp lỗi');
   });
 
   test('Kiosk picker map sets strict-origin-when-cross-origin referrerPolicy on tile images', async ({
@@ -381,7 +379,7 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
       route.fulfill({
         json: {
           id: 'user-seller',
-          name: 'Chá»§ shop',
+          name: 'Chủ shop',
           role: 'SELLER',
           sellerId,
           sellerStatus: 'ACTIVE',
@@ -417,7 +415,7 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
       route.fulfill({
         json: {
           id: 'user-seller',
-          name: 'Chá»§ shop',
+          name: 'Chủ shop',
           role: 'SELLER',
           sellerId,
           sellerStatus: 'ACTIVE',
@@ -435,7 +433,7 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
     const tileWarning = card.locator('.kiosk-map-tile-warning');
     await expect(tileWarning).toBeVisible();
     await expect(tileWarning).toContainText(
-      'Báº£n Ä‘á»“ chÆ°a táº£i Ä‘Æ°á»£c Ä‘áº§y Ä‘á»§ Ã´ hÃ¬nh áº£nh. Báº¡n váº«n cÃ³ thá»ƒ nháº­p Ä‘á»‹a chá»‰ vÃ  tá»a Ä‘á»™ báº±ng tay.',
+      'Bản đồ chưa tải được đầy đủ ô hình ảnh. Bạn vẫn có thể nhập địa chỉ và tọa độ bằng tay.',
     );
 
     // Manual fallback remains interactive even when tiles fail
@@ -447,14 +445,14 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
 });
 
 test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
-  test('Customer page displays array response, handles status labels (MAINTENANCE=Báº£o trÃ¬) and XSS prevention', async ({
+  test('Customer page displays array response, handles status labels (MAINTENANCE=Bảo trì) and XSS prevention', async ({
     page,
   }) => {
     let callCount = 0;
     await page.route('**/api/kiosks', (route) => {
       callCount++;
       if (callCount === 1) {
-        return route.fulfill({ status: 500, json: { message: 'Lá»—i táº£i danh sÃ¡ch' } });
+        return route.fulfill({ status: 500, json: { message: 'Lỗi tải danh sách' } });
       }
       // Return ARRAY per backend contract
       return route.fulfill({ json: sampleCustomerLocations });
@@ -463,12 +461,10 @@ test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
     await page.goto('/tim-kiosk');
 
     // Heading
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-      'TÃ¬m kiosk nháº­n hoa FloraBot',
-    );
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tìm kiosk nhận hoa FloraBot');
 
     // 1. Error state first
-    await expect(page.locator('.customer-error-state')).toContainText('Lá»—i táº£i danh sÃ¡ch');
+    await expect(page.locator('.customer-error-state')).toContainText('Lỗi tải danh sách');
 
     // Click retry
     await page.locator('.customer-error-state button').click();
@@ -478,25 +474,25 @@ test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
     await expect(page.getByRole('heading', { name: 'Kiosk Shared Central' })).toBeVisible();
 
     // Status verification:
-    // ONLINE = Äang hoáº¡t Ä‘á»™ng
+    // ONLINE = Đang hoạt động
     await expect(
       page.locator('.customer-kiosk-item').filter({ hasText: 'Kiosk Landmark 81' }),
-    ).toContainText('Äang hoáº¡t Ä‘á»™ng');
+    ).toContainText('Đang hoạt động');
 
-    // MAINTENANCE = Báº£o trÃ¬ (NOT Hoáº¡t Ä‘á»™ng)
+    // MAINTENANCE = Bảo trì (NOT Hoạt động)
     const maintItem = page
       .locator('.customer-kiosk-item')
       .filter({ hasText: 'Kiosk Maintenance Hub' });
-    await expect(maintItem.locator('.customer-status-badge')).toHaveText('Báº£o trÃ¬');
+    await expect(maintItem.locator('.customer-status-badge')).toHaveText('Bảo trì');
     await expect(maintItem.locator('.customer-maintenance-notice')).toContainText(
-      'Kiosk Ä‘ang trong quÃ¡ trÃ¬nh báº£o trÃ¬ ká»¹ thuáº­t',
+      'Kiosk đang trong quá trình bảo trì kỹ thuật',
     );
 
-    // OFFLINE = Ngoáº¡i tuyáº¿n
+    // OFFLINE = Ngoại tuyến
     const offlineItem = page
       .locator('.customer-kiosk-item')
       .filter({ hasText: 'Kiosk Shared Central' });
-    await expect(offlineItem.locator('.customer-status-badge')).toHaveText('Ngoáº¡i tuyáº¿n');
+    await expect(offlineItem.locator('.customer-status-badge')).toHaveText('Ngoại tuyến');
 
     // Directions anchor has google.com/maps/dir with api=1 destination coords only, noopener
     const dirLink = page
@@ -523,7 +519,7 @@ test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
     );
     expect(xssFired).toBeUndefined();
 
-    // Click "Xem trÃªn báº£n Ä‘á»“" to trigger map popup creation
+    // Click "Xem trên bản đồ" to trigger map popup creation
     const xssItem = page.locator('.customer-kiosk-item').filter({ hasText: 'Safe XSS Test' });
     const mapMarkers = page.locator(
       '.customer-kiosk-map .maplibregl-marker, .customer-kiosk-map .leaflet-interactive',
@@ -563,11 +559,9 @@ test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
 
     // Search for non-existent keyword -> shows empty state inside unified card
     await searchInput.fill('DiaDiemKhongTonTai123');
-    await expect(page.locator('.customer-empty-state')).toContainText(
-      'KhÃ´ng cÃ³ kiosk phÃ¹ há»£p',
-    );
+    await expect(page.locator('.customer-empty-state')).toContainText('Không có kiosk phù hợp');
 
-    // Click "XÃ³a bá»™ lá»c tÃ¬m kiáº¿m"
+    // Click "Xóa bộ lọc tìm kiếm"
     await page.locator('.customer-empty-state button').click();
     await expect(page.locator('.customer-kiosk-item')).toHaveCount(sampleCustomerLocations.length);
   });
@@ -618,7 +612,7 @@ test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
 
     // Denial message is shown gracefully
     await expect(page.locator('.customer-geo-message')).toContainText(
-      'Quyá»n truy cáº­p vá»‹ trÃ­ Ä‘Ã£ bá»‹ tá»« chá»‘i',
+      'Quyền truy cập vị trí đã bị từ chối',
     );
   });
 
@@ -639,8 +633,8 @@ test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
     const areasWrap = page.locator('.customer-quick-areas');
     await expect(areasWrap).toBeVisible();
     await expect(areasWrap.locator('.customer-area-pill')).toContainText([
-      'Táº¥t cáº£',
-      'TP. Há»“ ChÃ­ Minh',
+      'Tất cả',
+      'TP. Hồ Chí Minh',
     ]);
   });
 
@@ -658,7 +652,7 @@ test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
 
       // Verify touch targets are at least 44px
       if (width === 390) {
-        await page.locator('.customer-tab-btn').filter({ hasText: 'Báº£n Ä‘á»“' }).click();
+        await page.locator('.customer-tab-btn').filter({ hasText: 'Bản đồ' }).click();
       }
       const geolocateBtn = page.locator('.customer-btn-geolocate');
       const geoBox = await geolocateBtn.boundingBox();
@@ -666,7 +660,7 @@ test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
       expect(geoBox!.height).toBeGreaterThanOrEqual(44);
 
       if (width === 390) {
-        await page.locator('.customer-tab-btn').filter({ hasText: 'Danh sÃ¡ch' }).click();
+        await page.locator('.customer-tab-btn').filter({ hasText: 'Danh sách' }).click();
       }
 
       const reloadBtn = page.locator('.customer-reload-btn');
@@ -730,7 +724,7 @@ test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
     const warning = page.locator('.customer-kiosk-map-container .kiosk-map-tile-warning');
     await expect(warning).toBeVisible();
     await expect(warning).toContainText(
-      'Báº£n Ä‘á»“ chÆ°a táº£i Ä‘Æ°á»£c Ä‘áº§y Ä‘á»§ hÃ¬nh áº£nh. Báº¡n váº«n cÃ³ thá»ƒ xem danh sÃ¡ch Ä‘á»‹a chá»‰ vÃ  báº¥m chá»‰ Ä‘Æ°á»ng bÃªn dÆ°á»›i.',
+      'Bản đồ chưa tải được đầy đủ hình ảnh. Bạn vẫn có thể xem danh sách địa chỉ và bấm chỉ đường bên dưới.',
     );
 
     // Kiosk cards and directions button remain accessible as manual fallback
