@@ -64,22 +64,4 @@ export const workspaceSections = {
   ],
 } as const;
 export type WorkspaceRole = keyof typeof workspaceSections;
-export const workspaceBase = (role: string) => {
-  switch (role) {
-    case 'ADMIN':
-      return '/admin';
-    case 'OPERATIONS_MANAGER':
-      return '/operations';
-    case 'TECHNICIAN':
-      return '/technician';
-    case 'SELLER':
-      return '/seller';
-    case 'SELLER_STAFF':
-      return '/staff';
-    case 'CUSTOMER':
-      return '/tai-khoan';
-    case 'STAFF':
-    default:
-      return '/workspace';
-  }
-};
+export { workspaceBase } from './roleRoutes';

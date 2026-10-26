@@ -5,7 +5,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Button, Flower2, LogOut, CircleAlert } from '@florabot/ui';
 import { ApiError, logoutSession, sessionQuery } from './api';
-import { accountPath } from './MemberAuth';
+import { accountPath } from './roleRoutes';
 
 export const ROLE_LABELS: Record<string, string> = {
   ADMIN: 'Quản trị viên',
