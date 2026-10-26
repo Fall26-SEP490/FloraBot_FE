@@ -1,0 +1,226 @@
+/* Catalog Filters: Sidebar, Active tags, Filter Groups & Options */
+.catalog-sidebar {
+  width: 228px;
+  flex-shrink: 0;
+  background: #ffffff;
+  border: 0;
+  border-right: none;
+  border-radius: 0;
+  padding: 0.25rem 1rem 0 0;
+  box-shadow: none;
+  position: static;
+}
+
+.catalog-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid #edf4ec;
+  margin-bottom: 0.75rem;
+}
+
+.catalog-sidebar-title {
+  margin: 0;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #113421;
+}
+
+.catalog-sidebar-reset-btn {
+  width: 28px;
+  height: 28px;
+  min-height: 28px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border: 1px solid #dce8d8;
+  border-radius: 6px;
+  color: #49634e;
+  padding: 0 !important;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: none !important;
+}
+
+.catalog-sidebar-reset-btn:hover {
+  background: #fee4e2;
+  border-color: #f87171;
+  color: #b42318;
+}
+
+.catalog-sidebar-reset-btn:focus-visible {
+  outline: 2px solid #174b35;
+  outline-offset: 1px;
+}
+
+/* Active Filters Section */
+.catalog-active-filters-wrap {
+  margin-bottom: 1.15rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #edf4ec;
+}
+
+.catalog-active-filters-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.45rem;
+}
+
+.catalog-active-filters-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #49634e;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.catalog-active-tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.catalog-active-tag {
+  min-height: 44px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.22rem 0.5rem;
+  background: #f2f7f0;
+  border: 1px solid #c9dec6;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #174b35;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.catalog-active-tag:hover {
+  background: #fee4e2;
+  border-color: #fecdd3;
+  color: #991b1b;
+}
+
+/* Filter Groups */
+.catalog-filter-group {
+  margin-bottom: 0.8rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #f0f6ee;
+}
+
+.catalog-filter-group:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.catalog-filter-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #113421;
+  margin: 0 0 0.55rem;
+}
+
+.catalog-filter-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.catalog-filter-option {
+  min-height: 38px;
+  line-height: 1.5;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.35rem;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  color: #385540;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.catalog-filter-option:hover {
+  background: #f4f8f2;
+  color: #113421;
+}
+
+.catalog-filter-option.is-active {
+  background: transparent;
+  color: #113421;
+  font-weight: 700;
+}
+
+.catalog-option-checkbox {
+  width: 17px;
+  height: 17px;
+  border-radius: 4px;
+  border: 1.5px solid #a8caa0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  flex-shrink: 0;
+  background: #ffffff;
+  transition: all 0.15s ease;
+}
+
+.catalog-filter-option.is-active .catalog-option-checkbox {
+  background: #174b35;
+  border-color: #174b35;
+}
+
+.catalog-option-text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.catalog-option-count {
+  font-size: 0.76rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.catalog-filter-option.is-active .catalog-option-count {
+  color: #174b35;
+  font-weight: 700;
+}
+
+.catalog-filter-option.is-empty {
+  color: #3d5644;
+}
+
+.catalog-filter-option.is-empty .catalog-option-text {
+  color: #3d5644;
+}
+
+.catalog-filter-option.is-empty .catalog-option-count {
+  color: #3d5644;
+}
+
+.catalog-filter-option.is-empty:hover {
+  background-color: #f6faf5;
+}

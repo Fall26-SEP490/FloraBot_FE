@@ -1,0 +1,314 @@
+/* Catalog Product Cards & Grid Layout */
+.flower-catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 2rem;
+}
+
+@media (min-width: 1180px) {
+  .flower-catalog-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.85rem;
+  }
+}
+
+.flower-card {
+  min-width: 0;
+  background: #ffffff;
+  border: 1px solid #dce8d8;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: none;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.flower-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px -6px rgba(24, 62, 43, 0.16);
+  border-color: #9bc390;
+}
+
+.flower-card-media {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: #edf5eb;
+  overflow: hidden;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.flower-card-media:focus-visible {
+  outline: 3px solid #174b35;
+  outline-offset: -3px;
+}
+
+.flower-card-img,
+.flower-catalog .flower-card-img {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 0 !important;
+  object-fit: cover !important;
+  transition: transform 0.35s ease;
+}
+
+.flower-card:hover .flower-card-img {
+  transform: scale(1.04);
+}
+
+.flower-card-badges {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.35rem;
+  pointer-events: none;
+}
+
+.flower-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.22rem 0.55rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  backdrop-filter: blur(8px);
+}
+
+.flower-badge-stock {
+  background: rgba(17, 52, 33, 0.92);
+  color: #ffffff;
+}
+
+.flower-badge-custom {
+  background: rgba(255, 255, 255, 0.96);
+  color: #174b35;
+  border: 1px solid #c9dec6;
+}
+
+.flower-badge-occasion {
+  background: rgba(255, 255, 255, 0.92);
+  color: #8a3b14;
+  font-weight: 600;
+  border: 1px solid #fed7aa;
+}
+
+/* Distinctive occasion color classes */
+.flower-badge-occasion.occasion-sinhnhat {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.flower-badge-occasion.occasion-totnghiep {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.flower-badge-occasion.occasion-tinhyeu {
+  background: #ffe4e6;
+  color: #9f1239;
+  border: 1px solid #fecdd3;
+}
+
+.flower-badge-occasion.occasion-khaitruong {
+  background: #ffedd5;
+  color: #9a3412;
+  border: 1px solid #fed7aa;
+}
+
+.flower-badge-occasion.occasion-camon {
+  background: #f3e8ff;
+  color: #6b21a8;
+  border: 1px solid #e9d5ff;
+}
+
+.flower-badge-occasion.occasion-kyniem {
+  background: #fdf2f8;
+  color: #9d174d;
+  border: 1px solid #fbcfe8;
+}
+
+.flower-badge-occasion.occasion-chucmung {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.flower-card-body {
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.flower-card-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #113421;
+  margin: 0 0 0.35rem;
+  line-height: 1.35;
+  min-height: 2.5em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.flower-card-title-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color 0.15s ease;
+  width: 100%;
+}
+
+.flower-card-title-btn:hover {
+  color: #174b35;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.flower-card-title-btn:focus-visible {
+  outline: 2px solid #174b35;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.flower-card-desc {
+  font-size: 0.75rem;
+  color: #49634e;
+  line-height: 1.45;
+  margin: 0 0 0.4rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.flower-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.72rem;
+  color: #385540;
+  margin-top: auto;
+  padding-block: 0.4rem;
+  border-top: 1px solid #edf4ec;
+}
+
+.flower-meta-item {
+  display: flex;
+  gap: 0.35rem;
+  align-items: flex-start;
+  overflow-wrap: anywhere;
+}
+
+.flower-meta-item span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.flower-meta-item svg {
+  flex-shrink: 0;
+  margin-top: 0.25em;
+}
+
+.flower-card-price-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem;
+  padding-top: 0.35rem;
+  margin-bottom: 0.55rem;
+}
+
+.flower-card-price {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #183e2b;
+}
+
+.flower-card-price-label {
+  font-size: 0.7rem;
+  color: #34523e;
+}
+
+.flower-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: auto;
+  padding-top: 0.45rem;
+}
+
+.flower-card-select-btn.button {
+  width: 100% !important;
+  min-height: 44px !important;
+  height: auto !important;
+  font-size: 0.84rem !important;
+  font-weight: 700 !important;
+  padding: 0.45rem 0.65rem !important;
+  border-radius: 8px !important;
+  white-space: normal !important;
+}
+
+.flower-card-secondary-btns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+}
+
+.flower-card-detail-btn.button,
+.flower-card-chat-btn.button {
+  width: 100% !important;
+  min-height: 44px !important;
+  height: auto !important;
+  font-size: 0.78rem !important;
+  font-weight: 600 !important;
+  padding: 0.35rem 0.5rem !important;
+  border-radius: 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.3rem !important;
+  white-space: nowrap !important;
+  border: 1px solid #c9dec6 !important;
+  color: #174b35 !important;
+  background: #ffffff !important;
+}
+
+.flower-card-detail-btn.button:hover,
+.flower-card-chat-btn.button:hover {
+  background: #f2f8f0 !important;
+  border-color: #174b35 !important;
+  color: #113421 !important;
+}

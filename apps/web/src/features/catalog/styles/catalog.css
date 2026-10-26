@@ -1,0 +1,7 @@
+/* FloraBot Catalog Modular Stylesheet Entry */
+@import './catalog-shell.css';
+@import './catalog-filters.css';
+@import './catalog-toolbar.css';
+@import './catalog-cards.css';
+@import './catalog-dialogs.css';
+@import './catalog-responsive.css';
