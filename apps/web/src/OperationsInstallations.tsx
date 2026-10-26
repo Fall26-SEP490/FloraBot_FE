@@ -18,7 +18,8 @@ import type {
 import { KIOSK_STATUS_LABELS } from './kioskApplicationTypes';
 import type { AccountDirectoryItem } from './AccountManagement';
 import { Modal } from './dashboard/Modal';
-import './kiosk-onboarding.css';
+import './kiosk-shared.css';
+import './operations-installations.css';
 
 interface OperationsInstallationsProps {
   session: Session;

@@ -21,7 +21,8 @@ import type {
   EvidenceUploadResponse,
 } from './kioskApplicationTypes';
 import { KIOSK_STATUS_LABELS } from './kioskApplicationTypes';
-import './kiosk-onboarding.css';
+import './kiosk-shared.css';
+import './technician-installations.css';
 
 interface TechnicianInstallationsProps {
   session: Session;

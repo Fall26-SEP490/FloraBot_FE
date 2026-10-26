@@ -1,0 +1,73 @@
+/* Admin Kiosk Refunds Workspace Styles */
+
+.admin-kiosk-refunds-view {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.refund-amount-text {
+  color: #cf1322;
+  font-size: 1rem;
+}
+
+.refund-reason-cell {
+  max-width: 200px;
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.refund-actions-split {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.refund-step-card {
+  background: #fbfdfa;
+  border: 1px solid #dbe5da;
+  border-radius: 10px;
+  padding: 1.25rem;
+}
+
+.refund-step-card h3 {
+  font-size: 1.05rem;
+  margin: 0 0 0.5rem 0;
+  color: #183e2b;
+}
+
+.confirm-payout-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-top: 0.75rem;
+}
+
+.revealed-bank-box {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 0.85rem;
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.bank-number-revealed {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #166534;
+  font-family: monospace;
+}
+
+.masked-bank-box {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}

@@ -12,9 +12,12 @@ const PersonalProfile = dynamic(() => import('../../../PersonalProfile'), {
   loading: () => <p role="status">Đang tải hồ sơ cá nhân…</p>,
 });
 
-const CustomerKioskOnboarding = dynamic(() => import('../../../CustomerKioskOnboarding'), {
-  loading: () => <p role="status">Đang tải đăng ký thuê kiosk…</p>,
-});
+const CustomerKioskOnboarding = dynamic(
+  () => import('../../kiosk-onboarding/CustomerKioskOnboarding'),
+  {
+    loading: () => <p role="status">Đang tải đăng ký thuê kiosk…</p>,
+  },
+);
 
 export default function CustomerWorkspace({
   screen,
