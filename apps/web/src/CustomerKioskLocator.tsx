@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -16,6 +16,8 @@ import {
   X,
   Store,
   Crosshair,
+  SlidersHorizontal,
+  RotateCcw,
 } from '@florabot/ui';
 import CustomerKioskMap from './CustomerKioskMap';
 import {
@@ -27,13 +29,13 @@ import {
   buildGoogleMapsDirectionsUrl,
   normalizePublicKiosk,
 } from './kioskTypes';
-import { buildGoongDirectionsUrl } from './goongMaps';
 import './kiosk.css';
 
 export default function CustomerKioskLocator() {
   const [keyword, setKeyword] = useState('');
   const [selectedArea, setSelectedArea] = useState('ALL');
   const [selectedKioskId, setSelectedKioskId] = useState<string | null>(null);
+  const [selectedMarkerPos, setSelectedMarkerPos] = useState<{ x: number; y: number } | null>(null);
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'MAINTENANCE' | 'OFFLINE'>(
     'ALL',
   );
@@ -42,6 +44,24 @@ export default function CustomerKioskLocator() {
   const [geoMessage, setGeoMessage] = useState<string | null>(null);
   const [mobileTab, setMobileTab] = useState<'list' | 'map'>('list');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  const handlePositionChange = useCallback((pos: { x: number; y: number } | null) => {
+    setSelectedMarkerPos((prev) => {
+      if (!prev && !pos) return prev;
+      if (prev && pos && prev.x === pos.x && prev.y === pos.y) return prev;
+      return pos;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (selectedKioskId) {
+      const el = document.getElementById(`kiosk-item-${selectedKioskId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+  }, [selectedKioskId]);
 
   const handleGeolocate = () => {
     if (typeof window === 'undefined' || !('geolocation' in navigator)) {
@@ -111,7 +131,7 @@ export default function CustomerKioskLocator() {
     staleTime: 60_000,
   });
 
-  const items = kiosksQuery.data || [];
+  const items = useMemo(() => kiosksQuery.data || [], [kiosksQuery.data]);
 
   // Extract unique regions for quick area pills
   const availableRegions = Array.from(
@@ -121,11 +141,18 @@ export default function CustomerKioskLocator() {
   );
 
   // Status counts for filter chips
+  const totalCount = items.length;
   const activeCount = items.filter((k) => isKioskActive(k.status)).length;
+  const maintenanceCount = items.filter((k) => k.status === 'MAINTENANCE').length;
+  const offlineCount = items.filter((k) => k.status === 'OFFLINE').length;
   const selectedKiosk = items.find((k) => k.id === selectedKioskId) || null;
   const selectedIsOnline = selectedKiosk ? isKioskActive(selectedKiosk.status) : false;
   const selectedIsMaintenance = selectedKiosk?.status === 'MAINTENANCE';
-  const selectedIsOffline = selectedKiosk?.status === 'OFFLINE';
+
+  const regionCounts = availableRegions.reduce<Record<string, number>>((acc, r) => {
+    acc[r] = items.filter((k) => k.region === r).length;
+    return acc;
+  }, {});
 
   const selectedDirectionsUrl =
     selectedKiosk &&
@@ -134,45 +161,37 @@ export default function CustomerKioskLocator() {
       ? buildGoogleMapsDirectionsUrl(selectedKiosk.latitude, selectedKiosk.longitude)
       : null;
 
-  const selectedGoongUrl =
-    selectedKiosk &&
-    isValidLatitude(selectedKiosk.latitude) &&
-    isValidLongitude(selectedKiosk.longitude)
-      ? buildGoongDirectionsUrl(
-          selectedKiosk.latitude,
-          selectedKiosk.longitude,
-          userOrigin?.lat,
-          userOrigin?.lon,
-        )
-      : null;
+  const displayedItems = useMemo(() => {
+    return items.filter((kiosk) => {
+      // Area filter
+      if (selectedArea !== 'ALL' && (!kiosk.region || !kiosk.region.includes(selectedArea))) {
+        return false;
+      }
+      // Status filter
+      if (statusFilter === 'ACTIVE' && !isKioskActive(kiosk.status)) {
+        return false;
+      }
+      if (statusFilter === 'MAINTENANCE' && kiosk.status !== 'MAINTENANCE') {
+        return false;
+      }
+      if (statusFilter === 'OFFLINE' && kiosk.status !== 'OFFLINE') {
+        return false;
+      }
+      // Keyword search
+      if (!keyword.trim()) return true;
+      const q = keyword.trim().toLowerCase();
+      return (
+        kiosk.name.toLowerCase().includes(q) ||
+        kiosk.code.toLowerCase().includes(q) ||
+        (kiosk.address && kiosk.address.toLowerCase().includes(q)) ||
+        (kiosk.region && kiosk.region.toLowerCase().includes(q))
+      );
+    });
+  }, [items, selectedArea, statusFilter, keyword]);
 
-  const displayedItems = items.filter((kiosk) => {
-    // Area filter
-    if (selectedArea !== 'ALL' && (!kiosk.region || !kiosk.region.includes(selectedArea))) {
-      return false;
-    }
-    // Status filter
-    if (statusFilter === 'ACTIVE' && !isKioskActive(kiosk.status)) {
-      return false;
-    }
-    if (statusFilter === 'MAINTENANCE' && kiosk.status !== 'MAINTENANCE') {
-      return false;
-    }
-    if (statusFilter === 'OFFLINE' && kiosk.status !== 'OFFLINE') {
-      return false;
-    }
-    // Keyword search
-    if (!keyword.trim()) return true;
-    const q = keyword.trim().toLowerCase();
-    return (
-      kiosk.name.toLowerCase().includes(q) ||
-      kiosk.code.toLowerCase().includes(q) ||
-      (kiosk.address && kiosk.address.toLowerCase().includes(q)) ||
-      (kiosk.region && kiosk.region.toLowerCase().includes(q))
-    );
-  });
+  const activeFilterCount =
+    (statusFilter !== 'ALL' ? 1 : 0) + (selectedArea !== 'ALL' ? 1 : 0) + (userOrigin ? 1 : 0);
 
-  const hasAlternativeActiveKiosk = activeCount > 0;
   const hasActiveFilters =
     Boolean(keyword.trim()) ||
     selectedArea !== 'ALL' ||
@@ -229,21 +248,8 @@ export default function CustomerKioskLocator() {
           aria-label="Bộ lọc tìm kiếm"
         >
           <div className="customer-filter-card">
-            {hasActiveFilters && (
-              <div className="customer-filter-header customer-filter-reset-row">
-                <button
-                  type="button"
-                  className="customer-btn-reset-filters"
-                  onClick={handleResetFilters}
-                  title="Đặt lại toàn bộ bộ lọc"
-                >
-                  Xóa lọc
-                </button>
-              </div>
-            )}
-
-            {/* Search Input Bar + Compact GPS Button */}
-            <div className="customer-filter-section customer-filter-search">
+            {/* Search Input Bar & Filter Toggle in a Row */}
+            <div className="customer-search-row">
               <label htmlFor="kiosk-search-input" className="customer-filter-label sr-only">
                 Tìm kiếm theo từ khóa
               </label>
@@ -270,7 +276,104 @@ export default function CustomerKioskLocator() {
                   </button>
                 )}
               </div>
+
+              <button
+                type="button"
+                className={`customer-filter-toggle-btn ${activeFilterCount > 0 ? 'is-filtered' : ''} ${
+                  isFilterOpen ? 'is-active is-open' : ''
+                }`}
+                onClick={() => setIsFilterOpen((prev) => !prev)}
+                aria-expanded={isFilterOpen}
+                aria-controls="customer-filter-drawer"
+                title={isFilterOpen ? 'Đóng bộ lọc' : 'Mở bộ lọc kiosk'}
+                aria-label={isFilterOpen ? 'Đóng bộ lọc' : 'Mở bộ lọc kiosk'}
+              >
+                {isFilterOpen ? (
+                  <>
+                    <X size={16} aria-hidden="true" />
+                    <span>Đóng</span>
+                  </>
+                ) : (
+                  <>
+                    <SlidersHorizontal size={15} aria-hidden="true" />
+                    <span>Bộ lọc</span>
+                    {activeFilterCount > 0 && (
+                      <span className="customer-filter-badge">{activeFilterCount}</span>
+                    )}
+                  </>
+                )}
+              </button>
             </div>
+
+            {/* Active Selected Filters Bar with X to close/remove */}
+            {hasActiveFilters && (
+              <div
+                className="customer-active-filters-bar"
+                role="region"
+                aria-label="Bộ lọc đang áp dụng"
+              >
+                <span className="customer-active-filters-title">Đang chọn:</span>
+                <div className="customer-active-filters-list">
+                  {statusFilter !== 'ALL' && (
+                    <span className="customer-active-filter-tag">
+                      <span>
+                        {statusFilter === 'ACTIVE'
+                          ? 'Đang hoạt động'
+                          : statusFilter === 'MAINTENANCE'
+                            ? 'Bảo trì'
+                            : 'Ngoại tuyến'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setStatusFilter('ALL')}
+                        title="Bỏ lọc trạng thái"
+                        aria-label="Bỏ lọc trạng thái"
+                        className="customer-tag-remove-btn"
+                      >
+                        <X size={12} aria-hidden="true" />
+                      </button>
+                    </span>
+                  )}
+                  {selectedArea !== 'ALL' && (
+                    <span className="customer-active-filter-tag">
+                      <span>{selectedArea}</span>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedArea('ALL')}
+                        title={`Bỏ lọc khu vực ${selectedArea}`}
+                        aria-label={`Bỏ lọc khu vực ${selectedArea}`}
+                        className="customer-tag-remove-btn"
+                      >
+                        <X size={12} aria-hidden="true" />
+                      </button>
+                    </span>
+                  )}
+                  {userOrigin && (
+                    <span className="customer-active-filter-tag">
+                      <Navigation size={11} aria-hidden="true" />
+                      <span>Gần tôi</span>
+                      <button
+                        type="button"
+                        onClick={handleClearOrigin}
+                        title="Bỏ lọc vị trí gần tôi"
+                        aria-label="Bỏ lọc vị trí gần tôi"
+                        className="customer-tag-remove-btn"
+                      >
+                        <X size={12} aria-hidden="true" />
+                      </button>
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    className="customer-btn-clear-all"
+                    onClick={handleResetFilters}
+                    title="Xóa tất cả bộ lọc"
+                  >
+                    Xóa tất cả
+                  </button>
+                </div>
+              </div>
+            )}
 
             {geoMessage && (
               <div className="customer-geo-notice" role="alert">
@@ -312,66 +415,131 @@ export default function CustomerKioskLocator() {
               </div>
             )}
 
-            {/* Status Filter Pills (Betahaus style horizontal pills) */}
-            <div className="customer-filter-section customer-filter-status">
-              <span className="customer-filter-label">Trạng thái tủ</span>
-              <div className="customer-filter-chips" role="group" aria-label="Lọc theo trạng thái">
-                <button
-                  type="button"
-                  className={`customer-chip-btn ${statusFilter === 'ALL' ? 'is-active' : ''}`}
-                  onClick={() => setStatusFilter('ALL')}
-                >
-                  Tất cả
-                </button>
-                <button
-                  type="button"
-                  className={`customer-chip-btn ${statusFilter === 'ACTIVE' ? 'is-active' : ''}`}
-                  onClick={() => setStatusFilter('ACTIVE')}
-                >
-                  Hoạt động
-                </button>
-                <button
-                  type="button"
-                  className={`customer-chip-btn ${statusFilter === 'MAINTENANCE' ? 'is-active' : ''}`}
-                  onClick={() => setStatusFilter('MAINTENANCE')}
-                >
-                  Bảo trì
-                </button>
-                <button
-                  type="button"
-                  className={`customer-chip-btn ${statusFilter === 'OFFLINE' ? 'is-active' : ''}`}
-                  onClick={() => setStatusFilter('OFFLINE')}
-                >
-                  Ngoại tuyến
-                </button>
-              </div>
-            </div>
-
-            {/* Region / District Filter Pills */}
-            {availableRegions.length > 0 && (
-              <div className="customer-filter-section customer-filter-areas">
-                <span className="customer-filter-label">Khu vực / Quận</span>
-                <div className="customer-quick-areas" role="group" aria-label="Lọc theo khu vực">
-                  <button
-                    type="button"
-                    className={`customer-area-pill ${selectedArea === 'ALL' ? 'is-active' : ''}`}
-                    onClick={() => setSelectedArea('ALL')}
-                  >
-                    Tất cả khu vực
-                  </button>
-                  {availableRegions.map((region) => {
-                    return (
+            {/* Expandable Filter Section matching FlowerShop layout */}
+            {isFilterOpen && (
+              <div id="customer-filter-drawer" className="customer-filter-drawer">
+                <div className="customer-filter-drawer-header">
+                  <span className="customer-filter-drawer-title">
+                    <SlidersHorizontal size={13} aria-hidden="true" />
+                    <span>Bộ lọc kiosk</span>
+                  </span>
+                  <div className="customer-filter-drawer-actions">
+                    {hasActiveFilters && (
                       <button
-                        key={region}
                         type="button"
-                        className={`customer-area-pill ${selectedArea === region ? 'is-active' : ''}`}
-                        onClick={() => setSelectedArea(region)}
+                        className="customer-btn-reset-filters"
+                        onClick={handleResetFilters}
+                        title="Đặt lại toàn bộ bộ lọc"
                       >
-                        {region}
+                        Xóa lọc
                       </button>
-                    );
-                  })}
+                    )}
+                    <button
+                      type="button"
+                      className="customer-filter-close-btn"
+                      onClick={() => setIsFilterOpen(false)}
+                      title="Đóng bộ lọc"
+                      aria-label="Đóng bộ lọc"
+                    >
+                      <X size={16} aria-hidden="true" />
+                    </button>
+                  </div>
                 </div>
+
+                {/* Status Filter Pills */}
+                <div className="customer-filter-section customer-filter-status">
+                  <span className="customer-filter-label">Trạng thái tủ</span>
+                  <div
+                    className="customer-filter-chips"
+                    role="group"
+                    aria-label="Lọc theo trạng thái"
+                  >
+                    <button
+                      type="button"
+                      className={`customer-chip-btn ${statusFilter === 'ALL' ? 'is-active' : ''}`}
+                      onClick={() => setStatusFilter('ALL')}
+                    >
+                      Tất cả <span className="customer-chip-count">({totalCount})</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`customer-chip-btn ${statusFilter === 'ACTIVE' ? 'is-active' : ''}`}
+                      onClick={() =>
+                        setStatusFilter((prev) => (prev === 'ACTIVE' ? 'ALL' : 'ACTIVE'))
+                      }
+                    >
+                      Hoạt động <span className="customer-chip-count">({activeCount})</span>
+                      {statusFilter === 'ACTIVE' && (
+                        <X size={12} aria-hidden="true" className="customer-chip-x" />
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      className={`customer-chip-btn ${statusFilter === 'MAINTENANCE' ? 'is-active' : ''}`}
+                      onClick={() =>
+                        setStatusFilter((prev) => (prev === 'MAINTENANCE' ? 'ALL' : 'MAINTENANCE'))
+                      }
+                    >
+                      Bảo trì <span className="customer-chip-count">({maintenanceCount})</span>
+                      {statusFilter === 'MAINTENANCE' && (
+                        <X size={12} aria-hidden="true" className="customer-chip-x" />
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      className={`customer-chip-btn ${statusFilter === 'OFFLINE' ? 'is-active' : ''}`}
+                      onClick={() =>
+                        setStatusFilter((prev) => (prev === 'OFFLINE' ? 'ALL' : 'OFFLINE'))
+                      }
+                    >
+                      Ngoại tuyến <span className="customer-chip-count">({offlineCount})</span>
+                      {statusFilter === 'OFFLINE' && (
+                        <X size={12} aria-hidden="true" className="customer-chip-x" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Region / District Filter Pills */}
+                {availableRegions.length > 0 && (
+                  <div className="customer-filter-section customer-filter-areas">
+                    <span className="customer-filter-label">Khu vực / Quận</span>
+                    <div
+                      className="customer-quick-areas"
+                      role="group"
+                      aria-label="Lọc theo khu vực"
+                    >
+                      <button
+                        type="button"
+                        className={`customer-area-pill ${selectedArea === 'ALL' ? 'is-active' : ''}`}
+                        onClick={() => setSelectedArea('ALL')}
+                      >
+                        Tất cả khu vực <span className="customer-chip-count">({totalCount})</span>
+                      </button>
+                      {availableRegions.map((region) => {
+                        const isSelected = selectedArea === region;
+                        return (
+                          <button
+                            key={region}
+                            type="button"
+                            className={`customer-area-pill ${isSelected ? 'is-active' : ''}`}
+                            onClick={() =>
+                              setSelectedArea((prev) => (prev === region ? 'ALL' : region))
+                            }
+                          >
+                            {region}{' '}
+                            <span className="customer-chip-count">
+                              ({regionCounts[region] || 0})
+                            </span>
+                            {isSelected && (
+                              <X size={12} aria-hidden="true" className="customer-chip-x" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -383,56 +551,31 @@ export default function CustomerKioskLocator() {
           </div>
         </aside>
 
-        {/* Bottom-Left Panel: Scrollable Kiosk List & Rich Detail Pane */}
+        {/* Bottom-Left Panel: Scrollable Kiosk List */}
         <section
           id="customer-kiosk-results-panel"
           className={`customer-kiosk-sidebar-pane ${mobileTab === 'map' ? 'is-mobile-hidden' : ''}`}
           aria-label="Danh sách và chi tiết kiosk"
         >
           <div className="customer-kiosk-unified-card">
-            {selectedKiosk ? (
-              <div className="customer-detail-header-bar">
-                <button
-                  type="button"
-                  className="customer-detail-back-btn"
-                  onClick={() => setSelectedKioskId(null)}
-                  title="Quay lại danh sách kiosk"
-                >
-                  <ArrowLeft size={15} aria-hidden="true" />
-                  <span>Tất cả kiosk</span>
-                </button>
-                <span
-                  className={`customer-status-badge ${
-                    selectedIsOnline
-                      ? 'status-active'
-                      : selectedIsMaintenance
-                        ? 'status-maintenance'
-                        : 'status-offline'
-                  }`}
-                >
-                  {getKioskStatusLabel(selectedKiosk.status)}
-                </span>
-              </div>
-            ) : (
-              <div className="customer-results-heading-row">
-                <h2 id="results-title">Điểm nhận hoa</h2>
-                <Button
-                  variant="outline"
-                  onClick={() => void kiosksQuery.refetch()}
-                  disabled={kiosksQuery.isFetching}
-                  className="customer-reload-btn"
-                  title="Tải lại danh sách"
-                  aria-label="Tải lại danh sách kiosk"
-                >
-                  <RefreshCw
-                    size={14}
-                    aria-hidden="true"
-                    className={kiosksQuery.isFetching ? 'spin' : ''}
-                  />
-                  <span className="sr-only">Tải lại</span>
-                </Button>
-              </div>
-            )}
+            <div className="customer-results-heading-row">
+              <h2 id="results-title">Điểm nhận hoa</h2>
+              <Button
+                variant="outline"
+                onClick={() => void kiosksQuery.refetch()}
+                disabled={kiosksQuery.isFetching}
+                className="customer-reload-btn"
+                title="Tải lại danh sách"
+                aria-label="Tải lại danh sách kiosk"
+              >
+                <RefreshCw
+                  size={14}
+                  aria-hidden="true"
+                  className={kiosksQuery.isFetching ? 'spin' : ''}
+                />
+                <span className="sr-only">Tải lại</span>
+              </Button>
+            </div>
 
             <div className="customer-unified-results-body">
               {kiosksQuery.isPending && (
@@ -459,7 +602,9 @@ export default function CustomerKioskLocator() {
 
               {!kiosksQuery.isPending && !kiosksQuery.isError && items.length === 0 && (
                 <div className="customer-empty-state">
-                  <MapPin size={36} aria-hidden="true" />
+                  <div className="customer-empty-icon-wrap" aria-hidden="true">
+                    <MapPin size={28} strokeWidth={1.8} />
+                  </div>
                   <h3>Không tìm thấy kiosk nào</h3>
                   <p>Hiện chưa có kiosk nào được kích hoạt trên hệ thống.</p>
                 </div>
@@ -470,107 +615,31 @@ export default function CustomerKioskLocator() {
                 items.length > 0 &&
                 displayedItems.length === 0 && (
                   <div className="customer-empty-state">
-                    <MapPin size={36} aria-hidden="true" />
+                    <div className="customer-empty-icon-wrap" aria-hidden="true">
+                      <MapPin size={28} strokeWidth={1.8} />
+                    </div>
                     <h3>Không có kiosk phù hợp</h3>
                     <p>
-                      Không tìm thấy điểm đặt nào phù hợp với &quot;{keyword}&quot; hoặc bộ lọc đã
-                      chọn.
+                      {keyword.trim()
+                        ? `Không tìm thấy điểm đặt nào phù hợp với "${keyword.trim()}".`
+                        : 'Không tìm thấy điểm nhận hoa nào phù hợp với bộ lọc đã chọn.'}
                     </p>
-                    <Button variant="outline" onClick={handleResetFilters}>
-                      Xóa bộ lọc tìm kiếm
+                    <Button
+                      variant="outline"
+                      className="customer-empty-reset-btn"
+                      onClick={handleResetFilters}
+                    >
+                      <RotateCcw size={14} aria-hidden="true" />
+                      <span>Đặt lại bộ lọc</span>
                     </Button>
                   </div>
                 )}
 
-              {/* Rich Detail Card when a kiosk is selected */}
-              {selectedKiosk && (
-                <div className="customer-kiosk-detail-view" aria-label="Chi tiết điểm đặt kiosk">
-                  <div className="customer-detail-meta-block">
-                    <span className="customer-detail-kiosk-code">{selectedKiosk.code}</span>
-                    <h3 className="customer-detail-name">{selectedKiosk.name}</h3>
-                    <p className="customer-detail-address">
-                      <MapPin size={16} aria-hidden="true" className="customer-icon-pin" />
-                      <span>{selectedKiosk.address || 'Chưa cập nhật địa chỉ'}</span>
-                    </p>
-                    {selectedKiosk.region && (
-                      <p className="customer-detail-region">
-                        Khu vực: <strong>{selectedKiosk.region}</strong>
-                      </p>
-                    )}
-                  </div>
-
-                  {selectedIsMaintenance ? (
-                    <p className="customer-maintenance-notice" role="note">
-                      Kiosk đang trong quá trình bảo trì kỹ thuật.{' '}
-                      {hasAlternativeActiveKiosk
-                        ? 'Bạn có thể chọn kiosk đang hoạt động khác.'
-                        : 'Bạn vẫn có thể xem trước danh mục hoa trực tuyến.'}
-                    </p>
-                  ) : selectedIsOffline ? (
-                    <p className="customer-offline-notice" role="note">
-                      Kiosk hiện tạm ngưng nhận hoa tại tủ.{' '}
-                      {hasAlternativeActiveKiosk
-                        ? 'Bạn có thể chọn kiosk lân cận khác.'
-                        : 'Vui lòng quay lại sau hoặc xem trước mẫu hoa trực tuyến.'}
-                    </p>
-                  ) : null}
-
-                  <div className="customer-detail-actions">
-                    <Link
-                      href="/dat-hoa"
-                      className={`customer-btn-shop customer-btn-primary-cta ${
-                        !selectedIsOnline ? 'is-secondary-cta' : ''
-                      }`}
-                    >
-                      <Store size={16} aria-hidden="true" />
-                      <span>
-                        {selectedIsOnline
-                          ? 'Chọn hoa nhận tại tủ này'
-                          : 'Xem danh mục hoa tham khảo'}
-                      </span>
-                      <ArrowRight size={15} aria-hidden="true" />
-                    </Link>
-
-                    <div className="customer-detail-dir-row">
-                      {selectedDirectionsUrl && (
-                        <a
-                          href={selectedDirectionsUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="customer-btn-directions"
-                          aria-label={`Chỉ đường đến ${selectedKiosk.name} trên Google Maps`}
-                        >
-                          <Navigation size={14} aria-hidden="true" />
-                          <span>Google Maps</span>
-                          <ArrowUpRight size={13} aria-hidden="true" />
-                        </a>
-                      )}
-                      {selectedGoongUrl && (
-                        <a
-                          href={selectedGoongUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="customer-btn-goong-directions"
-                          aria-label={`Chỉ đường đến ${selectedKiosk.name} trên Goong Maps`}
-                        >
-                          <Navigation size={14} aria-hidden="true" />
-                          <span>Goong Maps</span>
-                          <ArrowUpRight size={13} aria-hidden="true" />
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Betahaus-Style Kiosk Cards List */}
+              {/* Kiosk Cards List */}
               <div
                 className={`customer-kiosk-list-wrap ${selectedKiosk ? 'has-active-selection' : ''}`}
               >
-                {selectedKiosk && displayedItems.length > 1 && (
-                  <h4 className="customer-sub-list-title">Danh sách kiosk</h4>
-                )}
-                {displayedItems.length > 0 && (!selectedKiosk || displayedItems.length > 1) && (
+                {displayedItems.length > 0 && (
                   <ul className="customer-kiosk-list" aria-label="Danh sách các kiosk FloraBot">
                     {displayedItems.map((kiosk) => {
                       const isOnline = isKioskActive(kiosk.status);
@@ -587,6 +656,7 @@ export default function CustomerKioskLocator() {
                       return (
                         <li
                           key={kiosk.id}
+                          id={`kiosk-item-${kiosk.id}`}
                           className={`customer-kiosk-item ${selectedKioskId === kiosk.id ? 'is-selected' : ''}`}
                         >
                           <div className="customer-item-card-inner">
@@ -594,9 +664,6 @@ export default function CustomerKioskLocator() {
                               <div className="customer-item-header">
                                 <div className="customer-item-title-row">
                                   <h3 className="customer-kiosk-name">{kiosk.name}</h3>
-                                </div>
-                                <div className="customer-item-meta-tags">
-                                  <span className="customer-kiosk-code">{kiosk.code}</span>
                                   <span
                                     className={`customer-status-badge ${
                                       isOnline
@@ -605,8 +672,10 @@ export default function CustomerKioskLocator() {
                                           ? 'status-maintenance'
                                           : 'status-offline'
                                     }`}
+                                    title={statusLabel}
+                                    aria-label={statusLabel}
                                   >
-                                    {statusLabel}
+                                    <span className="sr-only">{statusLabel}</span>
                                   </span>
                                 </div>
                               </div>
@@ -661,7 +730,7 @@ export default function CustomerKioskLocator() {
                                         }}
                                         title="Định vị kiosk này trên bản đồ"
                                       >
-                                        <MapPin size={14} aria-hidden="true" />
+                                        <MapPin size={13} aria-hidden="true" />
                                         <span>Định vị</span>
                                       </Button>
 
@@ -676,7 +745,7 @@ export default function CustomerKioskLocator() {
                                         >
                                           <Navigation size={13} aria-hidden="true" />
                                           <span>Chỉ đường</span>
-                                          <ArrowUpRight size={12} aria-hidden="true" />
+                                          <ArrowUpRight size={11} aria-hidden="true" />
                                         </a>
                                       )}
                                     </div>
@@ -761,38 +830,60 @@ export default function CustomerKioskLocator() {
             userOrigin={userOrigin}
             selectedKioskId={selectedKioskId}
             onSelectKiosk={(id) => setSelectedKioskId(id)}
+            onSelectedPositionChange={handlePositionChange}
           />
 
           {/* Floating Preview Card on Map */}
           {selectedKiosk && (
-            <div className="customer-map-floating-card">
+            <div
+              className={`customer-map-floating-card ${selectedMarkerPos ? 'is-anchored' : ''} ${
+                selectedMarkerPos && selectedMarkerPos.y < 230 ? 'is-flipped' : ''
+              }`}
+              style={
+                selectedMarkerPos
+                  ? {
+                      left: `${selectedMarkerPos.x}px`,
+                      top:
+                        selectedMarkerPos.y < 230
+                          ? `${selectedMarkerPos.y + 10}px`
+                          : `${selectedMarkerPos.y - 54}px`,
+                    }
+                  : undefined
+              }
+            >
               <div className="customer-floating-card-body">
                 <div className="customer-floating-content">
                   <div className="customer-floating-card-header">
                     <div className="customer-floating-card-title">
-                      <span className="customer-kiosk-code">{selectedKiosk.code}</span>
                       <h4 className="customer-kiosk-name">{selectedKiosk.name}</h4>
                     </div>
-                    <span
-                      className={`customer-status-badge ${
-                        selectedIsOnline
-                          ? 'status-active'
-                          : selectedIsMaintenance
-                            ? 'status-maintenance'
-                            : 'status-offline'
-                      }`}
-                    >
-                      {getKioskStatusLabel(selectedKiosk.status)}
-                    </span>
-                    <button
-                      type="button"
-                      className="customer-floating-close-btn"
-                      onClick={() => setSelectedKioskId(null)}
-                      aria-label="Đóng chi tiết kiosk"
-                      title="Đóng chi tiết"
-                    >
-                      <X size={16} aria-hidden="true" />
-                    </button>
+                    <div className="customer-floating-header-right">
+                      <span
+                        className={`customer-status-badge ${
+                          selectedIsOnline
+                            ? 'status-active'
+                            : selectedIsMaintenance
+                              ? 'status-maintenance'
+                              : 'status-offline'
+                        }`}
+                        title={getKioskStatusLabel(selectedKiosk.status)}
+                        aria-label={getKioskStatusLabel(selectedKiosk.status)}
+                      >
+                        <span className="sr-only">{getKioskStatusLabel(selectedKiosk.status)}</span>
+                      </span>
+                      <button
+                        type="button"
+                        className="customer-floating-close-btn"
+                        onClick={() => {
+                          setSelectedKioskId(null);
+                          setSelectedMarkerPos(null);
+                        }}
+                        aria-label="Đóng chi tiết kiosk"
+                        title="Đóng chi tiết"
+                      >
+                        <X size={16} aria-hidden="true" />
+                      </button>
+                    </div>
                   </div>
                   <p className="customer-floating-address">
                     <MapPin size={13} aria-hidden="true" className="customer-icon-pin" />

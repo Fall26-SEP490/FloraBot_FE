@@ -23,6 +23,7 @@ interface CustomerKioskMapProps {
   userOrigin: { lat: number; lon: number } | null;
   selectedKioskId: string | null;
   onSelectKiosk?: (id: string) => void;
+  onSelectedPositionChange?: (pos: { x: number; y: number } | null) => void;
 }
 
 function getKioskMarkerStatus(status: CustomerKioskLocationItem['status']) {
@@ -56,6 +57,7 @@ export default function CustomerKioskMap({
   userOrigin,
   selectedKioskId,
   onSelectKiosk,
+  onSelectedPositionChange,
 }: CustomerKioskMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const tileConfig = getMapTileConfig();
@@ -78,10 +80,21 @@ export default function CustomerKioskMap({
   const [tileError, setTileError] = useState(false);
   const [mapReady, setMapReady] = useState(false);
   const onSelectKioskRef = useRef(onSelectKiosk);
+  const onSelectedPositionChangeRef = useRef(onSelectedPositionChange);
+  const kiosksRef = useRef(kiosks);
+  const prevPosRef = useRef<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    kiosksRef.current = kiosks;
+  }, [kiosks]);
 
   useEffect(() => {
     onSelectKioskRef.current = onSelectKiosk;
   }, [onSelectKiosk]);
+
+  useEffect(() => {
+    onSelectedPositionChangeRef.current = onSelectedPositionChange;
+  }, [onSelectedPositionChange]);
 
   // Step 1: Initialize Map engine once on mount
   useEffect(() => {
@@ -478,6 +491,90 @@ export default function CustomerKioskMap({
     }
   }, [kiosks, userOrigin, mapReady, isGoong]);
 
+  // Step 2.5: Report screen coordinates of selected marker for anchored modal
+  useEffect(() => {
+    if (!selectedKioskId) {
+      if (prevPosRef.current !== null) {
+        prevPosRef.current = null;
+        onSelectedPositionChangeRef.current?.(null);
+      }
+      return;
+    }
+
+    const kiosk = kiosksRef.current.find((k) => k.id === selectedKioskId);
+    const lat = kiosk?.latitude;
+    const lon = kiosk?.longitude;
+    if (
+      !kiosk ||
+      lat === null ||
+      lat === undefined ||
+      lon === null ||
+      lon === undefined ||
+      !isValidLatitude(lat) ||
+      !isValidLongitude(lon)
+    ) {
+      if (prevPosRef.current !== null) {
+        prevPosRef.current = null;
+        onSelectedPositionChangeRef.current?.(null);
+      }
+      return;
+    }
+
+    const validLat: number = lat;
+    const validLon: number = lon;
+
+    const updateScreenPosition = () => {
+      let p: { x: number; y: number } | null = null;
+      if (isGoong) {
+        const map = mapLibreRef.current;
+        if (!map) return;
+        const pt = map.project([validLon, validLat]);
+        p = { x: Math.round(pt.x), y: Math.round(pt.y) };
+      } else {
+        const map = leafletMapRef.current;
+        if (!map) return;
+        const pt = map.latLngToContainerPoint([validLat, validLon]);
+        p = { x: Math.round(pt.x), y: Math.round(pt.y) };
+      }
+
+      if (p) {
+        if (prevPosRef.current && prevPosRef.current.x === p.x && prevPosRef.current.y === p.y) {
+          return;
+        }
+        prevPosRef.current = p;
+        onSelectedPositionChangeRef.current?.(p);
+      }
+    };
+
+    updateScreenPosition();
+
+    if (isGoong) {
+      const map = mapLibreRef.current;
+      if (map) {
+        map.on('move', updateScreenPosition);
+        map.on('zoom', updateScreenPosition);
+        map.on('resize', updateScreenPosition);
+        return () => {
+          map.off('move', updateScreenPosition);
+          map.off('zoom', updateScreenPosition);
+          map.off('resize', updateScreenPosition);
+        };
+      }
+    } else {
+      const map = leafletMapRef.current;
+      if (map) {
+        map.on('move', updateScreenPosition);
+        map.on('zoom', updateScreenPosition);
+        map.on('resize', updateScreenPosition);
+        return () => {
+          map.off('move', updateScreenPosition);
+          map.off('zoom', updateScreenPosition);
+          map.off('resize', updateScreenPosition);
+        };
+      }
+    }
+  }, [selectedKioskId, isGoong, mapReady]);
+
   // Step 3: Handle selectedKioskId changes without rebuilding markers
   useEffect(() => {
     if (isGoong) {
@@ -489,7 +586,11 @@ export default function CustomerKioskMap({
       const marker = mapLibreMarkersRef.current.get(selectedKioskId);
       if (map && marker) {
         const lngLat = marker.getLngLat();
-        map.flyTo({ center: lngLat, zoom: Math.max(map.getZoom(), 14) });
+        map.flyTo({
+          center: lngLat,
+          zoom: Math.max(map.getZoom(), 14),
+          offset: [0, -50],
+        });
         if (!marker.getPopup().isOpen()) {
           marker.togglePopup();
         }
