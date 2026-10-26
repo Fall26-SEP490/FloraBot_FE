@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import './member.css';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';

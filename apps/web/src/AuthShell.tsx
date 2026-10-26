@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import './auth.css';
 import Link from 'next/link';
 import { Flower2 } from '@florabot/ui';
 import bouquet from '../../../packages/ui/assets/flowers/pastelBouquet-960.webp';

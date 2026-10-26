@@ -3,18 +3,7 @@ import type { ReactNode } from 'react';
 import SiteFrame from '../src/SiteFrame';
 import '@florabot/ui/tokens.css';
 import '../src/marketing/fonts.css';
-import '../src/portal.css';
-import '../src/member.css';
-import '../src/workspace.css';
-import '../src/dashboard-management.css';
-import '../src/profile.css';
-import '../src/auth.css';
-import '../src/marketing/landing.css';
-import '../src/marketing/gallery.css';
 import '../src/site.css';
-import '../src/chat/chat.css';
-import '../src/flower-shop.css';
-import '../src/api-workflows.css';
 import '../src/interactions.css';
 
 export const metadata: Metadata = {
