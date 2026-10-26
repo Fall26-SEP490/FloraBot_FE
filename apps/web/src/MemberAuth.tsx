@@ -13,6 +13,7 @@ import {
   type RegisterPendingResponse,
 } from './api';
 import type { GoogleCredentialResponse } from './google-identity';
+import { accountPath } from './roleRoutes';
 
 type Mode = 'login' | 'register' | 'forgot' | 'reset';
 type Fields = {
@@ -38,25 +39,7 @@ type GisStatus = 'loading' | 'ready' | 'unavailable' | 'error' | 'slow_load_erro
 let initializedGoogleClientId: string | null = null;
 let activeGoogleCredentialHandler: ((response: GoogleCredentialResponse) => void) | null = null;
 
-export const accountPath = (role: string) => {
-  switch (role) {
-    case 'ADMIN':
-      return '/admin';
-    case 'OPERATIONS_MANAGER':
-      return '/operations';
-    case 'TECHNICIAN':
-      return '/technician';
-    case 'SELLER':
-      return '/seller';
-    case 'SELLER_STAFF':
-      return '/staff';
-    case 'CUSTOMER':
-      return '/tai-khoan';
-    case 'STAFF':
-    default:
-      return '/workspace';
-  }
-};
+export { accountPath };
 
 export const passwordRule = (value: string) =>
   value.length < 12

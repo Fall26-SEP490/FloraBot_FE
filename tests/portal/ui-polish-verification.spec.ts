@@ -183,6 +183,11 @@ test.describe('Portal UI Polish Verification - Viewports and A11y', () => {
       // Seller entitlement must be labeled as sellerStatus, not subscription status
       await expect(page.getByText('Trạng thái shop:')).toBeVisible();
 
+      // DashboardOverview relies on the shared operations layout stylesheet.
+      // Keep this assertion so route-level code splitting cannot silently drop that CSS again.
+      await expect(page.locator('.operations-welcome')).toHaveCSS('display', 'flex');
+      await expect(page.locator('.operations-metrics')).toHaveCSS('display', 'grid');
+
       const a11y = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
         .analyze();
