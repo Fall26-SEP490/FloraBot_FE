@@ -30,6 +30,9 @@ type Role = 'ADMIN' | 'SELLER' | 'OPERATIONS_MANAGER' | 'TECHNICIAN' | 'SELLER_S
 const icons = {
   overview: LayoutDashboard,
   managers: Users,
+  accounts: Users,
+  customers: Users,
+  sellers: Store,
   technicians: Users,
   staff: Users,
   orders: ClipboardList,
@@ -55,7 +58,7 @@ const icons = {
 };
 const groups = {
   ADMIN: [
-    ['Vận hành', ['managers', 'orders', 'incidents', 'tasks']],
+    ['Vận hành', ['accounts', 'managers', 'orders', 'incidents', 'tasks']],
     ['Mạng lưới', ['shops', 'slots']],
     [
       'Giao dịch',
@@ -221,7 +224,28 @@ export default function WorkspaceNavigation({
               Tổng quan vận hành
             </Link>
             <div className="workspace-nav-group">
-              <p>Vận hành kỹ thuật</p>
+              <p>Quản lý tài khoản</p>
+              <Link
+                onKeyDown={handleEscape}
+                onClick={closeMenu}
+                href="/operations/sellers"
+                aria-current={section === 'sellers' ? 'page' : undefined}
+              >
+                <Store size={19} aria-hidden="true" />
+                <span>Quản lý shop hoa</span>
+              </Link>
+              <Link
+                onKeyDown={handleEscape}
+                onClick={closeMenu}
+                href="/operations/customers"
+                aria-current={section === 'customers' ? 'page' : undefined}
+              >
+                <Users size={19} aria-hidden="true" />
+                <span>Khách hàng</span>
+              </Link>
+            </div>
+            <div className="workspace-nav-group">
+              <p>Điều phối kỹ thuật</p>
               <Link
                 onKeyDown={handleEscape}
                 onClick={closeMenu}

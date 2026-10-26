@@ -1,5 +1,10 @@
 export const workspaceSections = {
   ADMIN: [
+    [
+      'accounts',
+      'Tài khoản hệ thống',
+      'Tra cứu tài khoản theo vai trò và xem hồ sơ toàn hệ thống.',
+    ],
     ['managers', 'Quản lý vận hành', 'Tạo tài khoản và quản lý trạng thái Quản lý vận hành.'],
     ['orders', 'Đơn đặt trước', 'Theo dõi yêu cầu đặt hoa và tiến độ chuẩn bị.'],
     ['incidents', 'Sự cố tủ', 'Kiểm tra lỗi thiết bị, cửa tủ và tiền bị kẹt.'],
@@ -43,6 +48,12 @@ export const workspaceSections = {
     ['wallet', 'Ví & tài khoản nhận tiền', 'Theo dõi số dư, khoản chi và yêu cầu rút tiền.'],
   ],
   OPERATIONS_MANAGER: [
+    ['sellers', 'Quản lý shop hoa', 'Thông tin shop, tài khoản chủ shop và lịch sử trạng thái.'],
+    [
+      'customers',
+      'Khách hàng',
+      'Tạo tài khoản, cập nhật thông tin và quản lý trạng thái khách hàng.',
+    ],
     ['tasks', 'Công việc kỹ thuật', 'Phân công sự cố và kiểm tra báo cáo của kỹ thuật viên.'],
     [
       'installations',

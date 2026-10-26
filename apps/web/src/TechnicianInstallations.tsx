@@ -28,7 +28,7 @@ interface TechnicianInstallationsProps {
 }
 
 interface JobDetailCardProps {
-  job: TechnicianInstallationDetail | TechnicianInstallationSummary;
+  job: TechnicianInstallationDetail;
   session: Session;
   onInvalidate: () => void;
 }
@@ -76,6 +76,7 @@ function TechJobDetailCard({ job: selectedJob, session, onInvalidate }: JobDetai
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const reportInputId = useId();
+  const evidenceInputId = useId();
 
   // Query: Attached evidence for selected job
   const evidenceQuery = useQuery({
@@ -253,6 +254,26 @@ function TechJobDetailCard({ job: selectedJob, session, onInvalidate }: JobDetai
       )}
 
       {/* Contact Information */}
+      <ol className="platform-installation-steps" aria-label="Tiến độ lắp đặt">
+        {['Được phân công', 'Thực hiện', 'Chờ nghiệm thu', 'Hoàn tất'].map((label, index) => {
+          const current = Math.max(
+            0,
+            ['SCHEDULED', 'INSTALLING', 'AWAITING_HANDOVER', 'ACTIVE'].indexOf(selectedJob.status),
+          );
+          return (
+            <li
+              key={label}
+              data-complete={index < current || undefined}
+              aria-current={index === current ? 'step' : undefined}
+            >
+              <span aria-hidden="true">
+                {index < current ? '✓' : String(index + 1).padStart(2, '0')}
+              </span>
+              <strong>{label}</strong>
+            </li>
+          );
+        })}
+      </ol>
       <div className="tech-contact-box">
         <div>
           <strong>Điện thoại liên hệ:</strong>
@@ -310,9 +331,16 @@ function TechJobDetailCard({ job: selectedJob, session, onInvalidate }: JobDetai
             </p>
 
             <div className="file-input-row">
+              <label htmlFor={evidenceInputId} className="sr-only">
+                Ảnh minh chứng lắp đặt
+              </label>
               <input
+                id={evidenceInputId}
+                className="sr-only"
+                tabIndex={-1}
                 ref={fileInputRef}
                 type="file"
+                disabled={uploading || submitReportMutation.isPending}
                 accept="image/png,image/jpeg,image/webp"
                 onChange={(e) => {
                   const file = e.target.files?.[0] || null;
@@ -320,11 +348,27 @@ function TechJobDetailCard({ job: selectedJob, session, onInvalidate }: JobDetai
                   setUploadStatus('');
                 }}
               />
+              <div className="platform-upload-picker">
+                <ClipboardList size={26} aria-hidden="true" />
+                <div>
+                  <strong>{selectedFile?.name || 'Chọn ảnh minh chứng'}</strong>
+                  <small>PNG, JPEG hoặc WebP · Tối đa 5 MB</small>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  aria-controls={evidenceInputId}
+                  disabled={uploading || submitReportMutation.isPending}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {selectedFile ? 'Thay ảnh' : 'Chọn ảnh'}
+                </Button>
+              </div>
               <Button
                 type="button"
                 variant="outline"
                 onClick={handleUploadPhoto}
-                disabled={!selectedFile || uploading}
+                disabled={!selectedFile || uploading || submitReportMutation.isPending}
               >
                 <Plus size={16} aria-hidden="true" />
                 {uploading ? 'Đang tải...' : 'Tải ảnh lên'}
@@ -340,7 +384,16 @@ function TechJobDetailCard({ job: selectedJob, session, onInvalidate }: JobDetai
             {/* Evidence List */}
             <div className="attached-evidence-list">
               <strong>Danh sách minh chứng đã đính kèm ({evidenceItems.length}):</strong>
-              {evidenceItems.length === 0 ? (
+              {evidenceQuery.isPending ? (
+                <p role="status">Đang tải minh chứng…</p>
+              ) : evidenceQuery.isError ? (
+                <div role="alert">
+                  <p>Chưa đọc được minh chứng lắp đặt.</p>
+                  <Button variant="outline" onClick={() => void evidenceQuery.refetch()}>
+                    Tải lại minh chứng
+                  </Button>
+                </div>
+              ) : evidenceItems.length === 0 ? (
                 <p className="empty-sub-text">
                   Chưa có ảnh nào được đính kèm. Vui lòng tải lên ít nhất 1 ảnh.
                 </p>
@@ -375,8 +428,9 @@ function TechJobDetailCard({ job: selectedJob, session, onInvalidate }: JobDetai
 
             <Button
               onClick={() => {
-                if (!reportText.trim()) {
-                  setActionError('Vui lòng nhập nội dung báo cáo.');
+                if (uploading || evidenceQuery.isError || evidenceQuery.isPending) return;
+                if (reportText.trim().length < 10) {
+                  setActionError('Báo cáo cần ít nhất 10 ký tự.');
                   return;
                 }
                 if (evidenceItems.length === 0) {
@@ -388,12 +442,16 @@ function TechJobDetailCard({ job: selectedJob, session, onInvalidate }: JobDetai
                   report: reportText.trim(),
                 });
               }}
-              disabled={submitReportMutation.isPending || evidenceItems.length === 0}
+              disabled={
+                submitReportMutation.isPending ||
+                uploading ||
+                evidenceQuery.isError ||
+                evidenceQuery.isPending ||
+                evidenceItems.length === 0
+              }
             >
               <Check size={18} aria-hidden="true" />
-              {submitReportMutation.isPending
-                ? 'Đang gửi...'
-                : 'Nộp báo cáo hoàn thành (Chuyển sang Chờ nghiệm thu)'}
+              {submitReportMutation.isPending ? 'Đang gửi...' : 'Nộp báo cáo hoàn thành'}
             </Button>
           </div>
         </div>
@@ -446,9 +504,10 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
     queryFn: () =>
       request<TechnicianInstallationDetail>(`/staff/kiosk-installations/${effectiveJobId}`),
     enabled: !!effectiveJobId,
+    refetchOnWindowFocus: false,
   });
 
-  const selectedJob = jobDetailQuery.data || jobs.find((j) => j.id === effectiveJobId) || null;
+  const selectedJob = jobDetailQuery.data ?? null;
 
   const invalidate = () => {
     void queryClient.invalidateQueries({
@@ -488,14 +547,25 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
         <div role="alert" className="kiosk-field-error-banner">
           <CircleAlert size={18} aria-hidden="true" />
           <span>Không thể tải danh sách công việc. Vui lòng thử lại.</span>
+          <Button variant="outline" onClick={() => void jobsQuery.refetch()}>
+            Tải lại công việc
+          </Button>
         </div>
       )}
 
       {jobs.length === 0 && !jobsQuery.isLoading && !jobsQuery.isError && (
         <div className="kiosk-empty-state">
-          <Check size={32} aria-hidden="true" />
+          <span className="platform-empty-icon">
+            <ClipboardList size={30} aria-hidden="true" />
+          </span>
           <h3>Chưa có công việc lắp đặt nào</h3>
           <p>Hiện bạn không có công việc lắp đặt kiosk nào đang chờ thực hiện.</p>
+          <p className="platform-empty-hint">
+            Công việc sẽ xuất hiện tại đây khi Quản lý vận hành phân công cho bạn.
+          </p>
+          <a className="button button-outline" href="/technician">
+            Xem công việc kỹ thuật
+          </a>
         </div>
       )}
 
@@ -557,7 +627,18 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
           </section>
 
           {/* Right Column: Selected Job Details with stable key */}
-          {selectedJob && (
+          {jobDetailQuery.isPending && effectiveJobId && (
+            <p role="status">Đang tải chi tiết lắp đặt…</p>
+          )}
+          {jobDetailQuery.isError && (
+            <div role="alert">
+              <p>Chưa đọc được chi tiết. Hãy tải lại trước khi thao tác.</p>
+              <Button variant="outline" onClick={() => void jobDetailQuery.refetch()}>
+                Tải lại chi tiết lắp đặt
+              </Button>
+            </div>
+          )}
+          {selectedJob && !jobDetailQuery.isError && (
             <TechJobDetailCard
               key={`${session.id}-${selectedJob.id}`}
               job={selectedJob}

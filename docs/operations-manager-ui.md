@@ -1,5 +1,7 @@
 # Operations Manager — FE UI/UX và API
 
+Bổ sung ngày 26/10/2026: quản lý Customer, shop/chủ shop, lịch sử khóa/mở và sửa hồ sơ Technician được mô tả tại [platform-role-workspaces.md](./platform-role-workspaces.md). Nội dung bên dưới ghi nhận đợt triển khai trước.
+
 Nhánh: `feat/operations-manager-ui`, tách từ `main` tại `35ad4c9`.
 
 ## Giao diện

@@ -18,10 +18,11 @@ import {
   Search,
   Users,
 } from '@florabot/ui';
-import { ApiError, queryClient, request } from './api';
+import { ApiError, queryClient, request, sessionQuery } from './api';
 import { ConfirmDialog, Modal } from './dashboard/Modal';
 import { DataTable, TablePagination, type DataTableColumn } from './dashboard/DataTable';
 import { paginate } from './dashboard/pagination';
+import AccountProfileDialog from './platform/AccountProfileDialog';
 
 export type AccountStatus = 'ACTIVE' | 'LOCKED' | 'DISABLED';
 export type AccountRole = 'OPERATIONS_MANAGER' | 'TECHNICIAN' | 'SELLER_STAFF';
@@ -108,6 +109,7 @@ export default function AccountManagement({
   listEndpoint,
   sellerId,
 }: AccountManagementProps) {
+  const actorSession = useQuery(sessionQuery);
   const [createOpen, setCreateOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [viewing, setViewing] = useState<AccountDirectoryItem | null>(null);
@@ -708,8 +710,17 @@ export default function AccountManagement({
       </Modal>
 
       {/* Details Modal */}
+      {viewing && targetRole !== 'SELLER_STAFF' && (
+        <AccountProfileDialog
+          key={viewing.id}
+          actorId={actorSession.data?.id ?? actorRole}
+          endpoint={`${apiBase}/${viewing.id}`}
+          title={`Chi tiết ${itemName}`}
+          close={closeDetails}
+        />
+      )}
       <Modal
-        open={viewing !== null}
+        open={viewing !== null && targetRole === 'SELLER_STAFF'}
         title={`Chi tiết ${itemName}`}
         description="Thông tin tài khoản trên hệ thống FloraBot."
         onClose={closeDetails}
