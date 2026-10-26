@@ -36,6 +36,9 @@ import StaffTasks from './StaffTasks';
 import FlowerShop from './FlowerShop';
 import WebRequests from './WebRequests';
 import AccountManagement from './AccountManagement';
+import OperationsSellers from './platform/OperationsSellers';
+import ManagedCustomers from './platform/ManagedCustomers';
+import AdminAccounts from './platform/AdminAccounts';
 import PersonalProfile from './PersonalProfile';
 import CustomerKioskOnboarding from './CustomerKioskOnboarding';
 import { SellerChatSection } from './chat/SellerChatSection';
@@ -45,6 +48,7 @@ import OperationsOverview from './OperationsOverview';
 import './operations.css';
 import './seller.css';
 import './workspace-typography.css';
+import './platform/platform-workspace.css';
 import TechnicianInstallations from './TechnicianInstallations';
 import AdminKioskRefunds from './AdminKioskRefunds';
 import AdminReports from './AdminReports';
@@ -465,22 +469,30 @@ function OperationsWorkspace({ section = 'overview' }: { section?: string }) {
           <div className="dashboard-page-heading">
             <div>
               <h1>
-                {section === 'technicians'
-                  ? 'Quản lý kỹ thuật viên'
-                  : section === 'installations'
-                    ? 'Hồ sơ thuê & lắp đặt'
-                    : section === 'tasks'
-                      ? 'Điều phối công việc kỹ thuật'
-                      : 'Tổng quan vận hành'}
+                {section === 'sellers'
+                  ? 'Quản lý shop hoa'
+                  : section === 'customers'
+                    ? 'Quản lý khách hàng'
+                    : section === 'technicians'
+                      ? 'Quản lý kỹ thuật viên'
+                      : section === 'installations'
+                        ? 'Hồ sơ thuê & lắp đặt'
+                        : section === 'tasks'
+                          ? 'Điều phối công việc kỹ thuật'
+                          : 'Tổng quan vận hành'}
               </h1>
               <p>
-                {section === 'technicians'
-                  ? 'Quản lý đội ngũ, thông tin liên hệ và trạng thái tài khoản kỹ thuật viên.'
-                  : section === 'installations'
-                    ? 'Theo dõi hồ sơ từ xác nhận liên hệ, xếp lịch lắp đặt đến nghiệm thu bàn giao.'
-                    : section === 'tasks'
-                      ? 'Phân công sự cố, điều chỉnh người phụ trách và duyệt báo cáo khắc phục.'
-                      : `Chào ${session.data.name}, cùng theo dõi hoạt động kiosk hôm nay.`}
+                {section === 'sellers'
+                  ? 'Theo dõi shop, thông tin chủ shop và lịch sử trạng thái hoạt động.'
+                  : section === 'customers'
+                    ? 'Quản lý thông tin liên hệ và trạng thái tài khoản khách hàng.'
+                    : section === 'technicians'
+                      ? 'Quản lý đội ngũ, thông tin liên hệ và trạng thái tài khoản kỹ thuật viên.'
+                      : section === 'installations'
+                        ? 'Theo dõi hồ sơ từ xác nhận liên hệ, xếp lịch lắp đặt đến nghiệm thu bàn giao.'
+                        : section === 'tasks'
+                          ? 'Phân công sự cố, điều chỉnh người phụ trách và duyệt báo cáo khắc phục.'
+                          : `Chào ${session.data.name}, cùng theo dõi hoạt động kiosk hôm nay.`}
               </p>
             </div>
             <span className="dashboard-context">
@@ -497,6 +509,10 @@ function OperationsWorkspace({ section = 'overview' }: { section?: string }) {
               Các thao tác điều phối và quản lý kỹ thuật viên dành cho Quản lý vận hành.{' '}
               <Link href="/operations/installations">Xem hồ sơ lắp đặt ở chế độ giám sát</Link>.
             </p>
+          ) : section === 'sellers' ? (
+            <OperationsSellers key={session.data.id} session={session.data} />
+          ) : section === 'customers' ? (
+            <ManagedCustomers key={session.data.id} session={session.data} />
           ) : section === 'technicians' ? (
             <AccountManagement
               actorRole="OPERATIONS_MANAGER"
@@ -741,6 +757,9 @@ function Workspace({
               apiBase="/admin/managers"
             />
           )}
+          {role === 'ADMIN' && section === 'accounts' && (
+            <AdminAccounts key={session.data.id} session={session.data} />
+          )}
           {role === 'ADMIN' && section === 'shops' && <AdminSellers />}
           {role === 'ADMIN' && section === 'tasks' && (
             <StaffTasks
@@ -879,7 +898,7 @@ function Screen({ screen, section }: { screen: PortalScreen; section?: string })
       );
     case 'admin':
       return (
-        <div className="workspace-portal-root">
+        <div className="workspace-portal-root platform-workspace" data-platform-role="admin">
           <Guard requiredRole="ADMIN">
             <Workspace portalRole="ADMIN" section={section} />
           </Guard>
@@ -895,7 +914,7 @@ function Screen({ screen, section }: { screen: PortalScreen; section?: string })
       );
     case 'technician':
       return (
-        <div className="workspace-portal-root">
+        <div className="workspace-portal-root platform-workspace" data-platform-role="technician">
           <Guard requiredRole="TECHNICIAN">
             <TechnicianWorkspace />
           </Guard>
@@ -903,7 +922,7 @@ function Screen({ screen, section }: { screen: PortalScreen; section?: string })
       );
     case 'technician-installations':
       return (
-        <div className="workspace-portal-root">
+        <div className="workspace-portal-root platform-workspace" data-platform-role="technician">
           <Guard requiredRole="TECHNICIAN">
             <TechnicianWorkspace section="installations" />
           </Guard>
@@ -911,7 +930,7 @@ function Screen({ screen, section }: { screen: PortalScreen; section?: string })
       );
     case 'operations':
       return (
-        <div className="workspace-portal-root">
+        <div className="workspace-portal-root platform-workspace" data-platform-role="operations">
           <Guard requiredRole="OPERATIONS_MANAGER">
             <OperationsWorkspace section={section} />
           </Guard>

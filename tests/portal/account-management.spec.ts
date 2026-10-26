@@ -138,6 +138,8 @@ test.describe('Account Management UI - Multi-Role, Hierarchy & Security', () => 
       const url = new URL(req.url());
 
       if (req.method() === 'GET') {
+        const id = url.pathname.split('/')[4];
+        if (id) return route.fulfill({ json: managers.find((manager) => manager.id === id) });
         return route.fulfill({ json: managers });
       }
 
@@ -208,7 +210,7 @@ test.describe('Account Management UI - Multi-Role, Hierarchy & Security', () => 
     await expect(detailDialog.getByText('ops1@florabot.vn')).toBeVisible();
     await expect(detailDialog.getByText('0901234567')).toBeVisible();
     await expect(detailDialog.getByText(/password|mật khẩu/i)).toHaveCount(0);
-    await detailDialog.getByRole('button', { name: 'Đóng', exact: true }).click();
+    await detailDialog.getByRole('button', { name: 'Đóng hộp thoại', exact: true }).click();
     await expect(detailDialog).toBeHidden();
 
     // 5. Create validation errors & show/hide password accessible toggle
