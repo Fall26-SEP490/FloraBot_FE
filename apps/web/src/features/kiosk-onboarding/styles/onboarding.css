@@ -1,0 +1,6 @@
+/* FloraBot Kiosk Onboarding Modular Stylesheet Entry */
+@import '../../../kiosk-shared.css';
+@import './onboarding-layout.css';
+@import './onboarding-packages.css';
+@import './onboarding-form.css';
+@import './onboarding-status.css';

@@ -1,0 +1,146 @@
+/* Customer Kiosk Onboarding Application Form Styles */
+
+.kiosk-application-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.kiosk-form-group {
+  border: 1px solid #dbe5da;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 0;
+}
+
+.kiosk-form-group legend {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #183e2b;
+  padding: 0 0.5rem;
+}
+
+.kiosk-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1.15rem;
+}
+
+.kiosk-form-field:last-child {
+  margin-bottom: 0;
+}
+
+.kiosk-form-field label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #183e2b;
+}
+
+.required-star {
+  color: #e03131;
+}
+
+.kiosk-form-field input,
+.kiosk-form-field textarea,
+.kiosk-form-field select {
+  font-family: inherit;
+  font-size: 0.95rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid #c9d9c8;
+  border-radius: 8px;
+  color: #183e2b;
+  background: #ffffff;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+.kiosk-form-field input:focus,
+.kiosk-form-field textarea:focus,
+.kiosk-form-field select:focus {
+  outline: none;
+  border-color: #174b35;
+  box-shadow: 0 0 0 2px rgba(23, 75, 53, 0.15);
+}
+
+.form-fields-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.kiosk-group-note {
+  font-size: 0.88rem;
+  color: #4b6754;
+  margin: 0 0 1rem 0;
+}
+
+/* Map Picker Block */
+.kiosk-map-picker-block {
+  margin-top: 1rem;
+  border: 1px solid #dbe5da;
+  border-radius: 10px;
+  padding: 1rem;
+  background: #fbfdfa;
+}
+
+.map-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.map-picker-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  display: block;
+  color: #183e2b;
+}
+
+.kiosk-onboarding-container .kiosk-picker-embed {
+  min-height: 280px;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #c9d9c8;
+}
+
+.kiosk-onboarding-container .kiosk-picker-map {
+  height: 280px;
+  width: 100%;
+}
+
+.kiosk-onboarding-container .kiosk-map-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  padding: 0.6rem;
+  font-size: 0.75rem;
+}
+
+.kiosk-onboarding-container .kiosk-map-attribution {
+  margin: 0;
+}
+
+.manual-coords-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.kiosk-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.kiosk-form-actions button,
+.kiosk-form-actions a {
+  min-height: 44px;
+}

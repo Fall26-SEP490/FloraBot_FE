@@ -1,0 +1,232 @@
+/* Operations Manager Workspace (/operations/installations) */
+.operations-installations-view {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.queue-filter-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  background: #ffffff;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #dbe5da;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.filter-group select {
+  font-family: inherit;
+  font-size: 0.9rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #c9d9c8;
+  min-height: 40px;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  background: #ffffff;
+  border: 1px solid #dbe5da;
+  border-radius: 8px;
+}
+
+.kiosk-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.kiosk-data-table th,
+.kiosk-data-table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid #eef2ed;
+}
+
+.kiosk-data-table th {
+  background: #f7faf5;
+  font-weight: 700;
+  color: #174b35;
+}
+
+.kiosk-data-table tr.is-selected-row {
+  background: #f0f7ed;
+}
+
+.table-sub-text {
+  font-size: 0.8rem;
+  color: #55725e;
+}
+
+.address-truncate {
+  max-width: 240px;
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.table-pagination-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #eef2ed;
+}
+
+.operations-detail-panel {
+  background: #ffffff;
+  border: 1px solid #c9d9c8;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+  box-shadow: 0 4px 12px rgba(24, 62, 43, 0.05);
+}
+
+.detail-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid #eef2ed;
+  padding-bottom: 1rem;
+}
+
+.detail-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.detail-info-grid dt {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #55725e;
+  margin-bottom: 0.25rem;
+}
+
+.detail-info-grid dd {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #183e2b;
+}
+
+.operations-action-card {
+  background: #f9fbf8;
+  border: 1px solid #dbe5da;
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin-top: 1.25rem;
+}
+
+.operations-action-card h3 {
+  font-size: 1.1rem;
+  margin: 0 0 0.5rem 0;
+  color: #183e2b;
+}
+
+.operations-action-card p {
+  font-size: 0.9rem;
+  color: #3b5a45;
+  margin: 0 0 1rem 0;
+}
+
+.field-label-with-action {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.link-inline-btn {
+  background: none;
+  border: none;
+  color: #174b35;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.evidence-thumbnails-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin: 0.75rem 0 1rem 0;
+}
+
+.evidence-thumb-card {
+  border: 1px solid #c9d9c8;
+  border-radius: 8px;
+  padding: 0.75rem;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.thumb-label {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #183e2b;
+}
+
+.thumb-ref {
+  font-size: 0.75rem;
+  color: #55725e;
+  word-break: break-all;
+}
+
+.rework-sub-section {
+  border-top: 1px dashed #dbe5da;
+  padding-top: 1rem;
+  margin-top: 1.25rem;
+}
+
+.rework-sub-section h4 {
+  font-size: 0.95rem;
+  margin: 0 0 0.5rem 0;
+  color: #cf1322;
+}
+
+.kiosk-platform-failure-details {
+  margin-top: 1.5rem;
+  border-top: 1px solid #eef2ed;
+  padding-top: 1rem;
+}
+
+.kiosk-platform-failure-details summary {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #8c5d00;
+  cursor: pointer;
+}
+
+.kiosk-provision-panel {
+  background: #f8faf6;
+  border: 1px solid #dbe5da;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.provision-field-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.65rem;
+  font-size: 0.95rem;
+}

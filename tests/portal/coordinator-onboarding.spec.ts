@@ -172,6 +172,31 @@ test.describe('Coordinator onboarding acceptance boundaries', () => {
     expect(calls.create).toBe(0);
   });
 
+  test('cancel dialog traps focus, closes with Escape, and restores the trigger', async ({
+    page,
+  }) => {
+    await mockCustomer(page);
+    await page.goto('/thue-kiosk');
+
+    const cancelTrigger = page.getByRole('button', { name: 'Hủy hồ sơ', exact: true });
+    await cancelTrigger.click();
+
+    const dialog = page.getByRole('dialog', {
+      name: 'Xác nhận hủy hồ sơ thuê kiosk',
+    });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole('button', { name: 'Đóng', exact: true })).toBeFocused();
+    await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe('hidden');
+
+    await page.keyboard.press('Shift+Tab');
+    await expect(dialog.getByRole('button', { name: 'Xác nhận hủy', exact: true })).toBeFocused();
+
+    await page.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0);
+    await expect(cancelTrigger).toBeFocused();
+    await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe('');
+  });
+
   test('invalid edit after valid coordinates never submits old map position; explicit zero remains valid', async ({
     page,
   }) => {

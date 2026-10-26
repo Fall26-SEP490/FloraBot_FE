@@ -1,0 +1,197 @@
+/* Technician Installations Workspace Styles */
+
+.technician-installations-view {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.technician-workspace-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+@media (min-width: 900px) {
+  .technician-workspace-layout {
+    grid-template-columns: 360px 1fr;
+  }
+}
+
+.tech-jobs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.tech-job-card {
+  background: #ffffff;
+  border: 1px solid #dbe5da;
+  border-radius: 10px;
+  padding: 1.15rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.tech-job-card:hover,
+.tech-job-card:focus-visible {
+  border-color: #174b35;
+  box-shadow: 0 2px 8px rgba(24, 62, 43, 0.08);
+}
+
+.tech-job-card.is-selected {
+  border-color: #174b35;
+  background: #f7faf5;
+  box-shadow: 0 0 0 1px #174b35;
+}
+
+.job-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.job-card-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: #183e2b;
+}
+
+.job-address-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: #4b6754;
+  margin: 0 0 0.65rem 0;
+}
+
+.job-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+  color: #55725e;
+}
+
+.job-rework-tag {
+  background: #fff1f0;
+  border: 1px solid #ffa39e;
+  color: #cf1322;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+  margin-top: 0.65rem;
+}
+
+.tech-job-detail-card {
+  background: #ffffff;
+  border: 1px solid #c9d9c8;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(24, 62, 43, 0.04);
+}
+
+.job-detail-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid #eef2ed;
+  padding-bottom: 1rem;
+}
+
+.job-code-subtitle {
+  font-size: 0.9rem;
+  color: #55725e;
+  margin: 0.25rem 0 0 0;
+}
+
+.directions-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+}
+
+.tech-contact-box {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  background: #f9fbf8;
+  border: 1px solid #e1ebe0;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.tech-contact-box strong {
+  display: block;
+  font-size: 0.8rem;
+  color: #55725e;
+  margin-bottom: 0.2rem;
+}
+
+.tech-contact-box p {
+  margin: 0;
+  color: #183e2b;
+}
+
+.tech-action-step {
+  border-top: 1px solid #eef2ed;
+  padding-top: 1.25rem;
+}
+
+.tech-action-step h3 {
+  font-size: 1.15rem;
+  margin: 0 0 0.5rem 0;
+  color: #183e2b;
+}
+
+.evidence-upload-block {
+  background: #fdfefe;
+  border: 1px solid #dbe5da;
+  border-radius: 8px;
+  padding: 1.15rem;
+  margin: 1rem 0;
+}
+
+.file-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin: 0.75rem 0;
+}
+
+.evidence-pills-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0 0;
+}
+
+.evidence-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #eef5ea;
+  border: 1px solid #b7eb8f;
+  color: #174b35;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+}
+
+.report-submit-block {
+  margin-top: 1.25rem;
+}

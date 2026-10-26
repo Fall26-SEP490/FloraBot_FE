@@ -1,0 +1,228 @@
+/* Shared styles for FloraBot Kiosk Components (Customer, Operations, Technician, Admin) */
+
+@keyframes kiosk-spin-anim {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.kiosk-spin,
+.spin {
+  animation: kiosk-spin-anim 1s linear infinite;
+}
+
+/* Status Pill */
+.kiosk-status-pill {
+  display: inline-block;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: #eef5ea;
+  color: #174b35;
+  border: 1px solid #c9d9c8;
+}
+
+.kiosk-status-pill[data-status='AWAITING_PAYMENT'] {
+  background: #fff8e6;
+  color: #8c5d00;
+  border-color: #ffe08a;
+}
+
+.kiosk-status-pill[data-status='PAID_REVIEW'],
+.kiosk-status-pill[data-status='UNDER_REVIEW'] {
+  background: #e6f4ff;
+  color: #0050b3;
+  border-color: #91caff;
+}
+
+.kiosk-status-pill[data-status='CONFIRMED'],
+.kiosk-status-pill[data-status='SCHEDULED'],
+.kiosk-status-pill[data-status='INSTALLING'],
+.kiosk-status-pill[data-status='AWAITING_HANDOVER'] {
+  background: #f0f5ff;
+  color: #1d39c4;
+  border-color: #adc6ff;
+}
+
+.kiosk-status-pill[data-status='ACTIVE'] {
+  background: #f6ffed;
+  color: #237804;
+  border-color: #b7eb8f;
+}
+
+.kiosk-status-pill[data-status='CANCELLED'],
+.kiosk-status-pill[data-status='REJECTED'] {
+  background: #fff1f0;
+  color: #cf1322;
+  border-color: #ffa39e;
+}
+
+.kiosk-status-pill[data-status='REFUND_PENDING'],
+.kiosk-status-pill[data-status='REFUNDED'] {
+  background: #fff7e6;
+  color: #d46b08;
+  border-color: #ffd591;
+}
+
+.kiosk-status-pill[data-status='APPROVED'] {
+  background: #e6f4ff;
+  color: #0050b3;
+  border-color: #91caff;
+}
+
+/* Status Notice Banners */
+.status-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  margin: 1rem 0;
+}
+
+.notice-info {
+  background: #f0f7ff;
+  border: 1px solid #bae0ff;
+  color: #003a8c;
+}
+
+.notice-success {
+  background: #f6ffed;
+  border: 1px solid #b7eb8f;
+  color: #237804;
+}
+
+/* Form and Field Notices / Errors */
+.kiosk-field-hint {
+  font-size: 0.8rem;
+  color: #55725e;
+}
+
+.kiosk-field-error {
+  color: #cf1322;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0.25rem 0 0 0;
+}
+
+.kiosk-field-error-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.85rem 1rem;
+  background: #fff1f0;
+  border: 1px solid #ffa39e;
+  border-radius: 8px;
+  color: #cf1322;
+  font-size: 0.9rem;
+  margin: 1rem 0;
+}
+
+/* Modal Dialog Controls */
+.kiosk-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.kiosk-modal-card {
+  background: #ffffff;
+  border-radius: 12px;
+  max-width: 540px;
+  width: 100%;
+  padding: 1.5rem;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.kiosk-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.kiosk-modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #183e2b;
+}
+
+.kiosk-modal-close {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #55725e;
+  padding: 0.4rem;
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kiosk-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+/* Empty State */
+.kiosk-empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  background: #ffffff;
+  border: 1px solid #dbe5da;
+  border-radius: 12px;
+  color: #476451;
+}
+
+.kiosk-empty-state > svg {
+  margin-inline: auto;
+}
+
+.kiosk-empty-state h3 {
+  font-size: 1.2rem;
+  margin: 0.75rem 0 0.25rem 0;
+  color: #183e2b;
+}
+
+.kiosk-empty-state p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+/* Photo / Evidence placeholders */
+.evidence-actual-img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #dbe5da;
+}
+
+.evidence-fallback-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 120px;
+  background: #f0f4ee;
+  border-radius: 6px;
+  color: #55725e;
+  gap: 0.35rem;
+}

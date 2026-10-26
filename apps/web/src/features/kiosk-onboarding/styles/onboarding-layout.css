@@ -1,0 +1,46 @@
+/* Customer Kiosk Onboarding Layout Styles */
+
+.kiosk-onboarding-container {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 4rem;
+  box-sizing: border-box;
+  font-family: inherit;
+  color: #183e2b;
+}
+
+.kiosk-onboarding-header {
+  margin-bottom: 2rem;
+}
+
+.kiosk-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+  color: #476451;
+}
+
+.kiosk-breadcrumb a {
+  color: #174b35;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.kiosk-onboarding-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.25;
+  color: #183e2b;
+}
+
+.kiosk-onboarding-lead {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #3b5a45;
+  margin: 0;
+  max-width: 800px;
+}

@@ -10,7 +10,8 @@ import type {
   ConfirmKioskRefundRequest,
   EvidenceUploadResponse,
 } from './kioskApplicationTypes';
-import './kiosk-onboarding.css';
+import './kiosk-shared.css';
+import './admin-kiosk-refunds.css';
 
 interface AdminKioskRefundsProps {
   session: Session;

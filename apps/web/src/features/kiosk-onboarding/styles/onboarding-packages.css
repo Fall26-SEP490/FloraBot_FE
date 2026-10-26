@@ -1,0 +1,144 @@
+/* Customer Kiosk Onboarding Packages Grid Styles */
+
+.kiosk-packages-section {
+  margin-bottom: 2.5rem;
+}
+
+.section-title-wrap {
+  margin-bottom: 1.25rem;
+}
+
+.section-title-wrap h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem 0;
+  color: #183e2b;
+}
+
+.section-title-wrap p {
+  font-size: 0.95rem;
+  color: #476451;
+  margin: 0;
+}
+
+.kiosk-packages-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.kiosk-package-card {
+  border: 2px solid #c9d9c8;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  outline: none;
+  min-height: 240px;
+}
+
+.kiosk-package-card:hover,
+.kiosk-package-card:focus-visible {
+  border-color: #174b35;
+  box-shadow: 0 4px 12px rgba(24, 62, 43, 0.08);
+}
+
+.kiosk-package-card.is-selected {
+  border-color: #174b35;
+  background: #f7faf5;
+  box-shadow: 0 0 0 1px #174b35;
+}
+
+.package-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.package-tier-badge {
+  background: #eef5ea;
+  color: #174b35;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid #c9d9c8;
+}
+
+.package-price {
+  text-align: right;
+}
+
+.package-price .price-number {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #183e2b;
+}
+
+.package-price .price-unit {
+  display: block;
+  font-size: 0.8rem;
+  color: #55725e;
+}
+
+.package-slots-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.75rem 0;
+  border-top: 1px dashed #dbe5da;
+  border-bottom: 1px dashed #dbe5da;
+  margin: 0.75rem 0;
+}
+
+.slot-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #2e4d39;
+}
+
+.slot-total {
+  font-size: 0.85rem;
+  color: #174b35;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+.package-desc {
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #4b6754;
+  margin: 0.5rem 0 1rem 0;
+}
+
+.package-select-action {
+  margin-top: auto;
+}
+
+.select-indicator {
+  display: block;
+  text-align: center;
+  padding: 0.6rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: 1px solid #c9d9c8;
+  color: #174b35;
+  background: #ffffff;
+  min-height: 44px;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+.select-indicator.is-active {
+  background: #174b35;
+  color: #ffffff;
+  border-color: #174b35;
+}
