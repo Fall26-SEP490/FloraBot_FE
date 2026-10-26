@@ -7,6 +7,7 @@ import {
   removeReceipt,
   type SavedReceipt,
 } from './guestReceipts';
+import './portal.css';
 import './receipt.css';
 
 export default function GuestHistory() {

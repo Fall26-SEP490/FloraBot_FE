@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
+import './chat.css';
 import { useQuery } from '@tanstack/react-query';
 import { Button, RefreshCw } from '@florabot/ui';
 import { queryClient, type Session } from '../api';

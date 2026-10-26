@@ -1,5 +1,7 @@
 'use client';
 
+import './chat.css';
+
 import { useCallback, useRef, useState, useSyncExternalStore } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useMutation, useQuery } from '@tanstack/react-query';

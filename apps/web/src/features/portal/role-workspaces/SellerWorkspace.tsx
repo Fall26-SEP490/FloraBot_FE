@@ -11,7 +11,8 @@ import { accountPath } from '../../../roleRoutes';
 import WorkspaceNavigation, { WorkspaceHeader } from '../../../WorkspaceNavigation';
 import { workspaceSections } from '../../../workspaceSections';
 import { startPortalUpdates } from '../../../realtime';
-import '../../../operations.css';
+import '../workspace-styles.css';
+import '../../../dashboard-overview.css';
 import '../../../seller.css';
 
 const DashboardOverview = dynamic(() => import('../../../DashboardOverview'), {

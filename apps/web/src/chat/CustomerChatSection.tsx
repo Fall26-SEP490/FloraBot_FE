@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
+import './chat.css';
 import { useQuery } from '@tanstack/react-query';
 import { queryClient } from '../api';
 import { getCustomerChats } from './api';

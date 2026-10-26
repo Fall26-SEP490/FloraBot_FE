@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@florabot/ui';
 import type { components } from '../../../packages/contracts/src/generated/api';
+import './portal.css';
 import './receipt.css';
 import RefundAccount from './RefundAccount';
 import ReceiptComplaint from './ReceiptComplaint';

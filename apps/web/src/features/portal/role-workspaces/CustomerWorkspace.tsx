@@ -2,6 +2,7 @@
 
 import React from 'react';
 import dynamic from 'next/dynamic';
+import '../workspace-styles.css';
 
 const MemberAccount = dynamic(() => import('../../../MemberAccount'), {
   loading: () => <p role="status">Đang tải thông tin tài khoản…</p>,

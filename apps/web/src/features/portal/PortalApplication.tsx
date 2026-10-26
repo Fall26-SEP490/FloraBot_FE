@@ -2,8 +2,6 @@
 
 import React, { useLayoutEffect } from 'react';
 import '../../i18n';
-import '../../workspace-polish.css';
-import '../../workspace-typography.css';
 import { PortalScreenRouter } from './PortalScreen';
 import type { PortalScreen } from './portal.types';
 

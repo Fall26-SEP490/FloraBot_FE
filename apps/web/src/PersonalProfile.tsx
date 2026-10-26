@@ -1,5 +1,7 @@
 'use client';
 
+import './profile.css';
+
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';

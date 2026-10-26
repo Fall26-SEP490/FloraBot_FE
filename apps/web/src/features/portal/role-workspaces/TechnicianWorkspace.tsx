@@ -8,6 +8,7 @@ import { Button } from '@florabot/ui';
 import { logoutSession, sessionQuery } from '../../../api';
 import { accountPath } from '../../../roleRoutes';
 import WorkspaceNavigation, { WorkspaceHeader } from '../../../WorkspaceNavigation';
+import '../workspace-styles.css';
 import '../../../platform/platform-workspace.css';
 
 const TechnicianInstallations = dynamic(() => import('../../../TechnicianInstallations'), {
