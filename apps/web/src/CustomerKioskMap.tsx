@@ -1,7 +1,11 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import type { Map as LeafletMap, CircleMarker } from 'leaflet';
+import type {
+  Map as LeafletMap,
+  Marker as LeafletMarker,
+  CircleMarker as LeafletCircleMarker,
+} from 'leaflet';
 import type { Map as MapLibreMap, Marker as MapLibreMarker } from 'maplibre-gl';
 import 'leaflet/dist/leaflet.css';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -19,6 +23,32 @@ interface CustomerKioskMapProps {
   userOrigin: { lat: number; lon: number } | null;
   selectedKioskId: string | null;
   onSelectKiosk?: (id: string) => void;
+}
+
+function getKioskMarkerStatus(status: CustomerKioskLocationItem['status']) {
+  if (status === 'ONLINE' || status === 'ACTIVE') return 'active';
+  if (status === 'MAINTENANCE') return 'maintenance';
+  return 'offline';
+}
+
+function createKioskMarkerElement(kiosk: CustomerKioskLocationItem) {
+  const marker = document.createElement('button');
+  marker.type = 'button';
+  marker.className = `customer-map-kiosk-marker marker-${getKioskMarkerStatus(kiosk.status)}`;
+  marker.setAttribute('aria-label', `Kiosk ${kiosk.name}: ${getKioskStatusLabel(kiosk.status)}`);
+  marker.title = `${kiosk.name} · ${getKioskStatusLabel(kiosk.status)}`;
+
+  const pin = document.createElement('span');
+  pin.className = 'customer-map-kiosk-pin';
+  pin.setAttribute('aria-hidden', 'true');
+
+  const glyph = document.createElement('span');
+  glyph.className = 'customer-map-kiosk-glyph';
+  glyph.textContent = '✿';
+  pin.appendChild(glyph);
+  marker.appendChild(pin);
+
+  return marker;
 }
 
 export default function CustomerKioskMap({
@@ -42,8 +72,8 @@ export default function CustomerKioskMap({
   const leafletMapRef = useRef<LeafletMap | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const leafletLibRef = useRef<any>(null);
-  const leafletMarkersRef = useRef<Map<string, CircleMarker>>(new Map());
-  const leafletUserMarkerRef = useRef<CircleMarker | null>(null);
+  const leafletMarkersRef = useRef<Map<string, LeafletMarker>>(new Map());
+  const leafletUserMarkerRef = useRef<LeafletCircleMarker | null>(null);
 
   const [tileError, setTileError] = useState(false);
   const [mapReady, setMapReady] = useState(false);
@@ -67,6 +97,10 @@ export default function CustomerKioskMap({
         .then((maplibregl) => {
           if (cancelled || !containerRef.current) return;
           mapLibreLibRef.current = maplibregl;
+
+          if (typeof window !== 'undefined' && typeof maplibregl.setWorkerUrl === 'function') {
+            maplibregl.setWorkerUrl('/maplibre-gl-worker.mjs');
+          }
 
           const defaultLng = 106.6955;
           const defaultLat = 10.7822;
@@ -235,33 +269,8 @@ export default function CustomerKioskMap({
       // Add kiosk markers
       kiosks.forEach((kiosk) => {
         if (isValidLatitude(kiosk.latitude) && isValidLongitude(kiosk.longitude)) {
-          const isOnline = kiosk.status === 'ONLINE' || kiosk.status === 'ACTIVE';
-          const isMaintenance = kiosk.status === 'MAINTENANCE';
           const statusLabel = getKioskStatusLabel(kiosk.status);
-
-          const pinColor = isOnline ? '#174b35' : isMaintenance ? '#b25e00' : '#842323';
-          const pinFill = isOnline ? '#ffcf24' : isMaintenance ? '#ffd591' : '#e5aaaa';
-
-          const markerEl = document.createElement('div');
-          markerEl.className = 'customer-map-kiosk-pin';
-          markerEl.setAttribute('role', 'button');
-          markerEl.setAttribute('tabindex', '0');
-          markerEl.setAttribute('aria-label', `Kiosk: ${kiosk.name}`);
-          markerEl.style.width = '20px';
-          markerEl.style.height = '20px';
-          markerEl.style.borderRadius = '50%';
-          markerEl.style.cursor = 'pointer';
-          markerEl.style.border = `3px solid ${pinColor}`;
-          markerEl.style.backgroundColor = pinFill;
-          markerEl.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
-          markerEl.style.transition = 'transform 0.15s ease';
-
-          markerEl.addEventListener('mouseenter', () => {
-            markerEl.style.transform = 'scale(1.25)';
-          });
-          markerEl.addEventListener('mouseleave', () => {
-            markerEl.style.transform = 'scale(1)';
-          });
+          const markerEl = createKioskMarkerElement(kiosk);
 
           // Popup container
           const popupContainer = document.createElement('div');
@@ -287,13 +296,6 @@ export default function CustomerKioskMap({
           addressEl.style.fontSize = '13px';
           addressEl.textContent = kiosk.address || 'Chưa cập nhật địa chỉ';
           popupContainer.appendChild(addressEl);
-
-          if (kiosk.distanceKm !== null && kiosk.distanceKm !== undefined) {
-            const distEl = document.createElement('div');
-            distEl.style.marginTop = '4px';
-            distEl.textContent = `~${Number(kiosk.distanceKm).toFixed(1)} km (đường chim bay)`;
-            popupContainer.appendChild(distEl);
-          }
 
           const actionEl = document.createElement('div');
           actionEl.style.marginTop = '8px';
@@ -332,11 +334,11 @@ export default function CustomerKioskMap({
 
           popupContainer.appendChild(actionEl);
 
-          const popup = new maplibregl.Popup({ offset: 15, maxWidth: '280px' }).setDOMContent(
+          const popup = new maplibregl.Popup({ offset: 30, maxWidth: '280px' }).setDOMContent(
             popupContainer,
           );
 
-          const marker = new maplibregl.Marker({ element: markerEl })
+          const marker = new maplibregl.Marker({ element: markerEl, anchor: 'bottom' })
             .setLngLat([kiosk.longitude, kiosk.latitude])
             .setPopup(popup)
             .addTo(map);
@@ -396,16 +398,19 @@ export default function CustomerKioskMap({
 
       kiosks.forEach((kiosk) => {
         if (isValidLatitude(kiosk.latitude) && isValidLongitude(kiosk.longitude)) {
-          const isOnline = kiosk.status === 'ONLINE' || kiosk.status === 'ACTIVE';
-          const isMaintenance = kiosk.status === 'MAINTENANCE';
           const statusLabel = getKioskStatusLabel(kiosk.status);
-
-          const marker = L.circleMarker([kiosk.latitude, kiosk.longitude], {
-            radius: 8,
-            color: isOnline ? '#174b35' : isMaintenance ? '#b25e00' : '#842323',
-            fillColor: isOnline ? '#ffcf24' : isMaintenance ? '#ffd591' : '#e5aaaa',
-            fillOpacity: 1,
-            weight: 2,
+          const markerElement = createKioskMarkerElement(kiosk);
+          const markerIcon = L.divIcon({
+            html: markerElement,
+            className: 'customer-leaflet-kiosk-icon leaflet-interactive',
+            iconSize: [40, 48],
+            iconAnchor: [20, 46],
+            popupAnchor: [0, -42],
+          });
+          const marker = L.marker([kiosk.latitude, kiosk.longitude], {
+            icon: markerIcon,
+            keyboard: true,
+            title: kiosk.name,
           }).addTo(map);
 
           const dirUrl = buildGoogleMapsDirectionsUrl(kiosk.latitude, kiosk.longitude);
@@ -433,13 +438,6 @@ export default function CustomerKioskMap({
           addressEl.style.fontSize = '13px';
           addressEl.textContent = kiosk.address || 'Chưa cập nhật địa chỉ';
           popupContainer.appendChild(addressEl);
-
-          if (kiosk.distanceKm !== null && kiosk.distanceKm !== undefined) {
-            const distEl = document.createElement('div');
-            distEl.style.marginTop = '4px';
-            distEl.textContent = `~${Number(kiosk.distanceKm).toFixed(1)} km (đường chim bay)`;
-            popupContainer.appendChild(distEl);
-          }
 
           const actionEl = document.createElement('div');
           actionEl.style.marginTop = '8px';
@@ -482,10 +480,12 @@ export default function CustomerKioskMap({
 
   // Step 3: Handle selectedKioskId changes without rebuilding markers
   useEffect(() => {
-    if (!selectedKioskId) return;
-
     if (isGoong) {
       const map = mapLibreRef.current;
+      mapLibreMarkersRef.current.forEach((candidate, kioskId) => {
+        candidate.getElement().classList.toggle('is-selected', kioskId === selectedKioskId);
+      });
+      if (!selectedKioskId) return;
       const marker = mapLibreMarkersRef.current.get(selectedKioskId);
       if (map && marker) {
         const lngLat = marker.getLngLat();
@@ -496,6 +496,11 @@ export default function CustomerKioskMap({
       }
     } else {
       const map = leafletMapRef.current;
+      leafletMarkersRef.current.forEach((candidate, kioskId) => {
+        const markerElement = candidate.getElement()?.querySelector('.customer-map-kiosk-marker');
+        markerElement?.classList.toggle('is-selected', kioskId === selectedKioskId);
+      });
+      if (!selectedKioskId) return;
       const marker = leafletMarkersRef.current.get(selectedKioskId);
       if (map && marker) {
         marker.openPopup();
@@ -514,13 +519,13 @@ export default function CustomerKioskMap({
       />
       <div className="customer-map-legend">
         <span className="legend-item">
-          <span className="legend-dot dot-active" aria-hidden="true" /> Tủ hoạt động
+          <span className="legend-dot dot-active" aria-hidden="true" /> Đang hoạt động
         </span>
         <span className="legend-item">
-          <span className="legend-dot dot-maintenance" aria-hidden="true" /> Tủ bảo trì
+          <span className="legend-dot dot-maintenance" aria-hidden="true" /> Bảo trì
         </span>
         <span className="legend-item">
-          <span className="legend-dot dot-offline" aria-hidden="true" /> Tủ ngoại tuyến
+          <span className="legend-dot dot-offline" aria-hidden="true" /> Ngoại tuyến
         </span>
         {userOrigin && (
           <span className="legend-item">

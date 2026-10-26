@@ -42,7 +42,7 @@ const sampleSellerKiosks = [
   },
 ];
 
-// Per API-CONTRACT.md, /api/kiosk-locations returns an ARRAY
+// Deployed public contract: GET /api/kiosks returns an array and accepts no parameters.
 const sampleCustomerLocations = [
   {
     id: 'kiosk-01',
@@ -53,10 +53,7 @@ const sampleCustomerLocations = [
     status: 'ONLINE',
     latitude: 10.795,
     longitude: 106.7218,
-    coordinates: { latitude: 10.795, longitude: 106.7218 },
     locationComplete: true,
-    distanceKm: 2.4,
-    directionsUrl: 'https://www.google.com/maps/dir/?api=1&destination=10.795%2C106.7218',
   },
   {
     id: 'kiosk-02',
@@ -67,10 +64,7 @@ const sampleCustomerLocations = [
     status: 'MAINTENANCE',
     latitude: 10.788,
     longitude: 106.692,
-    coordinates: { latitude: 10.788, longitude: 106.692 },
     locationComplete: true,
-    distanceKm: 3.8,
-    directionsUrl: 'https://www.google.com/maps/dir/?api=1&destination=10.788%2C106.692',
   },
   {
     id: 'kiosk-03',
@@ -81,10 +75,7 @@ const sampleCustomerLocations = [
     status: 'OFFLINE',
     latitude: 10.7769,
     longitude: 106.7009,
-    coordinates: { latitude: 10.7769, longitude: 106.7009 },
     locationComplete: true,
-    distanceKm: 5.1,
-    directionsUrl: 'https://www.google.com/maps/dir/?api=1&destination=10.7769%2C106.7009',
   },
   {
     id: 'kiosk-04',
@@ -95,10 +86,7 @@ const sampleCustomerLocations = [
     status: 'ONLINE',
     latitude: 10.78,
     longitude: 106.7,
-    coordinates: { latitude: 10.78, longitude: 106.7 },
     locationComplete: true,
-    distanceKm: 1.2,
-    directionsUrl: 'https://www.google.com/maps/dir/?api=1&destination=10.78%2C106.7',
   },
 ];
 
@@ -461,7 +449,7 @@ test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
     page,
   }) => {
     let callCount = 0;
-    await page.route('**/api/kiosk-locations*', (route) => {
+    await page.route('**/api/kiosks', (route) => {
       callCount++;
       if (callCount === 1) {
         return route.fulfill({ status: 500, json: { message: 'Lỗi tải danh sách' } });
@@ -505,11 +493,6 @@ test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
       .locator('.customer-kiosk-item')
       .filter({ hasText: 'Kiosk Shared Central' });
     await expect(offlineItem.locator('.customer-status-badge')).toHaveText('Ngoại tuyến');
-
-    // Distance label has straight-line estimate disclaimer
-    await expect(
-      page.locator('.customer-kiosk-item').filter({ hasText: 'Kiosk Landmark 81' }),
-    ).toContainText('ước tính đường chim bay');
 
     // Directions anchor has google.com/maps/dir with api=1 destination coords only, noopener
     const dirLink = page
@@ -557,9 +540,7 @@ test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
   test('Unified search filters kiosk list client-side and supports clearing query', async ({
     page,
   }) => {
-    await page.route('**/api/kiosk-locations*', (route) =>
-      route.fulfill({ json: sampleCustomerLocations }),
-    );
+    await page.route('**/api/kiosks', (route) => route.fulfill({ json: sampleCustomerLocations }));
 
     await page.goto('/tim-kiosk');
 
@@ -585,52 +566,32 @@ test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
     await expect(page.locator('.customer-kiosk-item')).toHaveCount(sampleCustomerLocations.length);
   });
 
-  test('Geolocation button triggers location request and emits coordinates and radiusKm query', async ({
+  test('Geolocation button displays the browser position without changing the public kiosk request', async ({
     page,
     context,
   }) => {
-    let capturedUrl: string | null = null;
-    await page.route('**/api/kiosk-locations*', (route) => {
-      capturedUrl = route.request().url();
+    let requestCount = 0;
+    await page.route('**/api/kiosks', (route) => {
+      requestCount++;
       return route.fulfill({ json: sampleCustomerLocations });
     });
 
     await page.goto('/tim-kiosk');
 
-    // Initial query has NO latitude/longitude
-    await expect.poll(() => capturedUrl).not.toBeNull();
-    const initialUrl = new URL(capturedUrl!);
-    expect(initialUrl.searchParams.get('latitude')).toBeNull();
+    await expect.poll(() => requestCount).toBe(1);
 
     // Grant geolocation and click locate button
     await context.grantPermissions(['geolocation']);
     await context.setGeolocation({ latitude: 10.78, longitude: 106.7 });
     await page.locator('.customer-btn-geolocate').click();
 
-    // Active bar appears with radius selector
-    const radiusSelect = page.locator('#customer-radius-select');
-    await expect(radiusSelect).toBeVisible();
-
-    // Query now includes latitude & longitude
-    await expect
-      .poll(() => {
-        if (!capturedUrl) return null;
-        return new URL(capturedUrl).searchParams.get('latitude');
-      })
-      .toContain('10.78');
-
-    // Select radius 10 km
-    await radiusSelect.selectOption('10');
-    await expect
-      .poll(() => {
-        if (!capturedUrl) return null;
-        return new URL(capturedUrl).searchParams.get('radiusKm');
-      })
-      .toBe('10');
+    const activeLocation = page.locator('.customer-geo-active-bar');
+    await expect(activeLocation).toContainText('10.780');
+    await expect.poll(() => requestCount).toBe(1);
 
     // Clear origin
     await page.locator('.customer-btn-clear').click();
-    await expect(radiusSelect).toBeHidden();
+    await expect(activeLocation).toBeHidden();
   });
 
   test('Geolocation denied handles gracefully without requesting on mount', async ({
@@ -639,9 +600,7 @@ test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
   }) => {
     await context.clearPermissions();
 
-    await page.route('**/api/kiosk-locations*', (route) =>
-      route.fulfill({ json: sampleCustomerLocations }),
-    );
+    await page.route('**/api/kiosks', (route) => route.fulfill({ json: sampleCustomerLocations }));
 
     await page.goto('/tim-kiosk');
 
@@ -658,9 +617,7 @@ test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
   });
 
   test('Unified card displays region filter pills when regions are present', async ({ page }) => {
-    await page.route('**/api/kiosk-locations*', (route) =>
-      route.fulfill({ json: sampleCustomerLocations }),
-    );
+    await page.route('**/api/kiosks', (route) => route.fulfill({ json: sampleCustomerLocations }));
 
     await page.goto('/tim-kiosk');
 
@@ -675,9 +632,7 @@ test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
   test('Responsive design and accessibility at mobile (390px) and tablet (1024px)', async ({
     page,
   }) => {
-    await page.route('**/api/kiosk-locations*', (route) =>
-      route.fulfill({ json: sampleCustomerLocations }),
-    );
+    await page.route('**/api/kiosks', (route) => route.fulfill({ json: sampleCustomerLocations }));
 
     for (const width of [390, 1024]) {
       await page.setViewportSize({ width, height: 844 });
@@ -687,10 +642,17 @@ test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
       await expect(page.locator('body')).toHaveJSProperty('scrollWidth', width);
 
       // Verify touch targets are at least 44px
+      if (width === 390) {
+        await page.locator('.customer-tab-btn').filter({ hasText: 'Bản đồ' }).click();
+      }
       const geolocateBtn = page.locator('.customer-btn-geolocate');
       const geoBox = await geolocateBtn.boundingBox();
       expect(geoBox).not.toBeNull();
       expect(geoBox!.height).toBeGreaterThanOrEqual(44);
+
+      if (width === 390) {
+        await page.locator('.customer-tab-btn').filter({ hasText: 'Danh sách' }).click();
+      }
 
       const reloadBtn = page.locator('.customer-reload-btn');
       const box = await reloadBtn.boundingBox();
@@ -713,9 +675,7 @@ test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
   test('Customer kiosk map renders securely and initializes interactive map display', async ({
     page,
   }) => {
-    await page.route('**/api/kiosk-locations*', (route) =>
-      route.fulfill({ json: sampleCustomerLocations }),
-    );
+    await page.route('**/api/kiosks', (route) => route.fulfill({ json: sampleCustomerLocations }));
 
     await page.goto('/tim-kiosk');
 
@@ -748,9 +708,7 @@ test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
       }),
     );
 
-    await page.route('**/api/kiosk-locations*', (route) =>
-      route.fulfill({ json: sampleCustomerLocations }),
-    );
+    await page.route('**/api/kiosks', (route) => route.fulfill({ json: sampleCustomerLocations }));
 
     await page.goto('/tim-kiosk');
 

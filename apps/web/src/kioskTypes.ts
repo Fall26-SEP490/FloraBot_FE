@@ -4,8 +4,34 @@ export type KioskCoordinates = components['schemas']['KioskCoordinates'];
 export type SellerKioskDto = components['schemas']['SellerKioskDto'];
 export type SellerKioskItem = SellerKioskDto;
 export type UpdateKioskLocationPayload = components['schemas']['UpdateKioskLocationRequest'];
-export type CustomerKioskLocationItem = components['schemas']['KioskLocationItem'];
+export type PublicKioskDto =
+  components['schemas']['AnonymousTypeOfGuidAndstringAndstringAndstringAndstringAndstringAnddoubleAnddoubleAndboolean'];
+export type CustomerKioskLocationItem = Omit<
+  PublicKioskDto,
+  'code' | 'name' | 'address' | 'region' | 'status' | 'latitude' | 'longitude'
+> & {
+  code: string;
+  name: string;
+  address: string;
+  region: string;
+  status: string;
+  latitude: number | null;
+  longitude: number | null;
+};
 export type CustomerKioskLocationsResponse = CustomerKioskLocationItem[];
+
+export function normalizePublicKiosk(kiosk: PublicKioskDto): CustomerKioskLocationItem {
+  return {
+    ...kiosk,
+    code: kiosk.code?.trim() ?? '',
+    name: kiosk.name?.trim() ?? '',
+    address: kiosk.address?.trim() ?? '',
+    region: kiosk.region?.trim() ?? '',
+    status: kiosk.status?.trim() ?? 'UNKNOWN',
+    latitude: parseCoordinate(kiosk.latitude),
+    longitude: parseCoordinate(kiosk.longitude),
+  };
+}
 
 export function getKioskStatusLabel(status: string): string {
   switch (status) {
