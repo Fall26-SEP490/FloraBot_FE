@@ -77,5 +77,7 @@ export {
   QrCode,
   KeyRound,
   Sparkles,
+  Clock,
   CheckCircle2,
+  Crosshair,
 } from 'lucide-react';

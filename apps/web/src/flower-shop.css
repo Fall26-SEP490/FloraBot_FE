@@ -339,11 +339,11 @@ body:has(.flower-shop-page) {
 }
 
 .catalog-option-count {
-  display: none !important;
   font-size: 0.76rem;
-  color: #2b4e33;
+  color: #64748b;
   font-weight: 600;
   margin-left: auto;
+  flex-shrink: 0;
 }
 
 .catalog-filter-option.is-active .catalog-option-count {
@@ -785,9 +785,9 @@ select.catalog-sort-select:focus {
 }
 
 .flower-card-price {
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: #113421;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #183e2b;
 }
 
 .flower-card-price-label {

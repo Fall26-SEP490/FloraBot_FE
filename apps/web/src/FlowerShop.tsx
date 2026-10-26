@@ -811,7 +811,7 @@ export default function FlowerShop() {
 
               {/* Filter Group: Tình trạng hoa */}
               <div className="catalog-filter-group">
-                <h3 className="catalog-filter-title">Tình trạng hoa</h3>
+                <h3 className="catalog-filter-title">Hình thức nhận hoa</h3>
                 <ul className="catalog-filter-list">
                   {[
                     { id: 'all', label: 'Tất cả tình trạng', count: rawItems.length },
@@ -1174,20 +1174,22 @@ export default function FlowerShop() {
                           <div className="flower-card-actions">
                             <Button
                               className="flower-card-select-btn"
+                              aria-label="Chọn mẫu và cách nhận"
                               onClick={() => {
                                 setSelected(item);
                                 window.scrollTo({ top: 0, behavior: 'instant' });
                               }}
                             >
-                              Chọn mẫu và cách nhận
+                              Chọn mẫu
                             </Button>
                             <div className="flower-card-secondary-btns">
                               <Button
                                 variant="outline"
                                 className="flower-card-detail-btn"
+                                aria-label="Xem chi tiết"
                                 onClick={(e) => openDetailModal(item, e.currentTarget)}
                               >
-                                Xem chi tiết
+                                Chi tiết
                               </Button>
                               <Button
                                 variant="outline"
@@ -1200,7 +1202,7 @@ export default function FlowerShop() {
                               >
                                 <MessageSquare size={14} aria-hidden="true" />
                                 <span>
-                                  {openingChatId === item.productId ? 'Đang mở…' : 'Nhắn tin shop'}
+                                  {openingChatId === item.productId ? 'Đang mở…' : 'Chat'}
                                 </span>
                               </Button>
                             </div>

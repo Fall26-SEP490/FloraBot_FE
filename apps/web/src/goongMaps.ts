@@ -1,13 +1,14 @@
 /**
  * Goong Maps integration helper for FloraBot
  * Supports:
- * 1. Goong Map Tiles (raster tiles compatible with Leaflet)
+ * 1. Goong Map Style / Vector Tiles via MapLibre GL
  * 2. Goong Places Autocomplete & Geocoding REST APIs
- * 3. Graceful fallback to CartoDB Voyager when Goong Map Tiles key is absent
+ * 3. Graceful fallback to OpenStreetMap when Goong Map Tiles key is absent
  */
 
 export interface GoongMapTileConfig {
   isGoong: boolean;
+  styleUrl: string;
   tileUrl: string;
   attribution: string;
   subdomains?: string;
@@ -18,26 +19,30 @@ export interface GoongMapTileConfig {
 /**
  * Returns the active map tile configuration.
  * Uses Goong Maps if NEXT_PUBLIC_GOONG_MAPTILES_KEY is configured in .env.local;
- * otherwise safely falls back to high-reliability CartoDB Voyager tiles.
+ * otherwise safely falls back to OpenStreetMap.
  */
 export function getMapTileConfig(): GoongMapTileConfig {
   const goongMapTilesKey = process.env.NEXT_PUBLIC_GOONG_MAPTILES_KEY?.trim();
 
   if (goongMapTilesKey && goongMapTilesKey.length > 5 && !goongMapTilesKey.startsWith('YOUR_')) {
+    const style = `https://tiles.goong.io/assets/goong_map_web.json?api_key=${goongMapTilesKey}`;
     return {
       isGoong: true,
-      tileUrl: `https://tiles.goong.io/assets/goong_map_web.png?api_key=${goongMapTilesKey}`,
+      styleUrl: style,
+      tileUrl: style,
       attribution:
-        'Dữ liệu bản đồ © <a href="https://www.goong.io" target="_blank" rel="noopener noreferrer">Goong Maps</a> · <a href="https://leafletjs.com" target="_blank" rel="noopener noreferrer">Leaflet</a>',
+        'Dữ liệu bản đồ © <a href="https://www.goong.io" target="_blank" rel="noopener noreferrer">Goong Maps</a> · <a href="https://maplibre.org" target="_blank" rel="noopener noreferrer">MapLibre</a>',
       maxZoom: 20,
       minZoom: 4,
     };
   }
 
   // Fallback to OpenStreetMap
+  const osmUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
   return {
     isGoong: false,
-    tileUrl: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    styleUrl: osmUrl,
+    tileUrl: osmUrl,
     attribution:
       'Dữ liệu bản đồ © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> · <a href="https://leafletjs.com" target="_blank" rel="noopener noreferrer">Leaflet</a>',
     maxZoom: 19,
