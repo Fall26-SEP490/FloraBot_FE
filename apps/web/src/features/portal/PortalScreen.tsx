@@ -37,7 +37,7 @@ const MemberAuth = dynamic(() => import('../../MemberAuth'), {
   ),
 });
 
-const FlowerShop = dynamic(() => import('../../FlowerShop'), {
+const FlowerShop = dynamic(() => import('../catalog/FlowerShop'), {
   loading: () => (
     <main id="main">
       <p role="status">Đang tải cửa hàng hoa…</p>
