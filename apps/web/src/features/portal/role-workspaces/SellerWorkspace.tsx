@@ -37,7 +37,7 @@ const StaffChatSection = dynamic(
   },
 );
 
-const Products = dynamic(() => import('../../../Products'), {
+const Products = dynamic(() => import('../../product-management/ProductManagement'), {
   loading: () => <p role="status">Đang tải danh sách mẫu hoa…</p>,
 });
 
