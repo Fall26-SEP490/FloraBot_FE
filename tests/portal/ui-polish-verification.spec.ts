@@ -63,7 +63,8 @@ test.describe('Portal UI Polish Verification - Viewports and A11y', () => {
       await expect(trackingButton).toBeVisible();
 
       // Counts state first-page limits
-      await expect(page.locator('.dashboard-focus-chips')).toContainText('giới hạn trang 1');
+      await expect(page.locator('.dashboard-focus-chips')).toContainText('Sự cố trong trang đầu');
+      await expect(page.locator('.dashboard-focus-chips')).toContainText('Báo cáo trong trang đầu');
 
       // A11y and reflow
       const a11y = await new AxeBuilder({ page })
