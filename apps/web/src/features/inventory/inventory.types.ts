@@ -1,5 +1,5 @@
 import type { components } from '../../../../../packages/contracts/src/generated/api';
-import type { ActiveTaskRole } from '../../StaffTasks';
+import type { ActiveTaskRole } from '../task-management/task-management.types';
 
 export type Slot = components['schemas']['SellerSlotResponse'];
 export type Product = components['schemas']['ProductResponse'];

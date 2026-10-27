@@ -2,38 +2,13 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { Button } from '@florabot/ui';
-import { ApiError, queryClient, request } from './api';
+import { ApiError, queryClient, request } from '../../../api';
+import type { StaffReassignmentProps } from '../task-management.types';
+import { getReassignStorageKey, restoreReassignAttempt } from '../task-management.utils';
 
-import type { ActiveTaskRole } from './StaffTasks';
+export type { StaffReassignmentProps };
 
 type Fields = { assigneeId: string; reason: string; confirm: boolean };
-type ReassignAttempt = { version: number; assigneeId: string; reason: string };
-
-function restore(key: string): ReassignAttempt | null {
-  try {
-    const value = JSON.parse(sessionStorage.getItem(key) || 'null') as ReassignAttempt | null;
-    return value &&
-      Number.isInteger(value.version) &&
-      typeof value.assigneeId === 'string' &&
-      typeof value.reason === 'string'
-      ? value
-      : null;
-  } catch {
-    return null;
-  }
-}
-
-export type StaffReassignmentProps = {
-  taskId: string;
-  version: number;
-  assigneeId: string;
-  assigneeName: string;
-  apiBase?: string;
-  directoryEndpoint?: string;
-  actorId?: string;
-  sellerId?: string | null;
-  role?: ActiveTaskRole;
-};
 
 export default function StaffReassignment({
   taskId,
@@ -47,8 +22,8 @@ export default function StaffReassignment({
   role,
 }: StaffReassignmentProps) {
   const scopeKey = sellerId ? `seller:${sellerId}` : apiBase;
-  const key = `florabot-staff-reassign:${role ?? 'none'}:${actorId ?? 'none'}:${scopeKey}:${taskId}`;
-  const savedAttempt = restore(key);
+  const key = getReassignStorageKey(role, actorId, scopeKey, taskId);
+  const savedAttempt = restoreReassignAttempt(key);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [uncertain, setUncertain] = useState(

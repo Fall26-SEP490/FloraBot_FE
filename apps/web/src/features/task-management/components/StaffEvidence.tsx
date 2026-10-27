@@ -1,39 +1,20 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
-import { ApiError, queryClient, request } from './api';
-import EvidenceUpload from './EvidenceUpload';
+import { ApiError, queryClient, request } from '../../../api';
+import EvidenceUpload from '../../installations/components/EvidenceUpload';
+import type {
+  StaffEvidenceProps,
+  TaskEvidenceAttempt,
+  TaskEvidencePage,
+} from '../task-management.types';
+import {
+  formatTaskDate,
+  getEvidenceStorageKey,
+  restoreEvidenceAttempt,
+} from '../task-management.utils';
 
-import type { ActiveTaskRole } from './StaffTasks';
-
-type Attempt = { id: string; version: number; reference: string };
-type EvidencePage = { items: { id: string; createdAt: string }[]; page: number; hasMore: boolean };
-function restore(key: string): Attempt | null {
-  try {
-    const value = JSON.parse(sessionStorage.getItem(key) || 'null') as Attempt | null;
-    return value &&
-      typeof value.id === 'string' &&
-      Number.isInteger(value.version) &&
-      typeof value.reference === 'string' &&
-      value.reference.startsWith('evidence:v1:')
-      ? value
-      : null;
-  } catch {
-    return null;
-  }
-}
-
-export type StaffEvidenceProps = {
-  taskId: string;
-  version: number;
-  admin?: boolean;
-  actorId?: string;
-  sellerId?: string | null;
-  role?: ActiveTaskRole;
-  active: boolean;
-  apiBase?: string;
-  mode?: 'worker' | 'manager' | 'oversight';
-};
+export type { StaffEvidenceProps };
 
 export default function StaffEvidence({
   taskId,
@@ -52,8 +33,10 @@ export default function StaffEvidence({
   const scopeKey = sellerId
     ? `seller:${sellerId}`
     : (explicitApiBase ?? (admin ? '/admin/staff-tasks' : '/staff/tasks'));
-  const key = `florabot-staff-evidence:${actorId ?? 'none'}:${scopeKey}:${taskId}`;
-  const [attempt, setAttempt] = useState<Attempt | null>(() => (!isWorker ? null : restore(key)));
+  const key = getEvidenceStorageKey(actorId, scopeKey, taskId);
+  const [attempt, setAttempt] = useState<TaskEvidenceAttempt | null>(() =>
+    !isWorker ? null : restoreEvidenceAttempt(key),
+  );
   const [reference, setReference] = useState('');
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(1);
@@ -63,7 +46,7 @@ export default function StaffEvidence({
   const [uploadKey, setUploadKey] = useState(0);
   const evidence = useQuery({
     queryKey: ['staff-evidence', taskId, actorId ?? 'none', scopeKey, version, page],
-    queryFn: () => request<EvidencePage>(`${path}?page=${page}`),
+    queryFn: () => request<TaskEvidencePage>(`${path}?page=${page}`),
     enabled: open,
   });
   function clearAttempt() {
@@ -72,7 +55,7 @@ export default function StaffEvidence({
     setReference('');
     setUploadKey((value) => value + 1);
   }
-  async function send(payload: Attempt, recover: boolean) {
+  async function send(payload: TaskEvidenceAttempt, recover: boolean) {
     if (busy) return;
     setBusy(true);
     setError('');
@@ -83,7 +66,7 @@ export default function StaffEvidence({
       persisted = true;
       setAttempt(payload);
       const existing = recover
-        ? await request<EvidencePage>(`${path}?attachmentId=${encodeURIComponent(payload.id)}`)
+        ? await request<TaskEvidencePage>(`${path}?attachmentId=${encodeURIComponent(payload.id)}`)
         : null;
       if (!existing?.items.some((item) => item.id === payload.id)) await request(path, payload);
       clearAttempt();
@@ -95,7 +78,7 @@ export default function StaffEvidence({
       if (cause instanceof ApiError && [400, 409].includes(cause.status)) {
         // Check the saved ID before discarding an expired ticket after a lost response.
         try {
-          const saved = await request<EvidencePage>(
+          const saved = await request<TaskEvidencePage>(
             `${path}?attachmentId=${encodeURIComponent(payload.id)}`,
           );
           const found = saved.items.some((item) => item.id === payload.id);
@@ -142,9 +125,7 @@ export default function StaffEvidence({
                     Xem ảnh {(page - 1) * 25 + index + 1} (mở tab mới)
                   </a>
                   {' · '}
-                  <time dateTime={item.createdAt}>
-                    {new Date(item.createdAt).toLocaleString('vi-VN')}
-                  </time>
+                  <time dateTime={item.createdAt}>{formatTaskDate(item.createdAt)}</time>
                 </li>
               ))}
             </ol>

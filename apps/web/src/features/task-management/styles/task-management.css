@@ -1,0 +1,120 @@
+.staff-task-toolbar {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.8rem 0;
+  margin-block: 1rem;
+  border-block: 1px solid #dce6d7;
+}
+
+.staff-task-toolbar label {
+  margin-top: 0;
+}
+
+.staff-task-toolbar select {
+  min-width: 230px;
+}
+
+.staff-task-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.staff-task-label {
+  display: inline-block;
+  background: #e3eddb;
+  color: #294d35;
+  border-radius: 6px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .staff-task-toolbar select {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .staff-task-toolbar > div {
+    width: 100%;
+  }
+
+  .staff-task-heading {
+    flex-wrap: wrap;
+  }
+}
+
+.staff-task-details,
+.staff-evidence,
+.staff-reassignment {
+  margin-block: 1rem;
+}
+
+#staff-tasks textarea {
+  display: block;
+  width: 100%;
+  min-height: 120px;
+  padding: 0.75rem;
+  background: white;
+  color: #183e2b;
+  border: 1px solid #64735f;
+  border-radius: 8px;
+  font: inherit;
+  resize: vertical;
+}
+
+.staff-reassignment summary,
+.staff-task-details summary,
+.staff-evidence summary {
+  min-height: 44px;
+  padding-block: 0.6rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.staff-task-details h4 {
+  margin-top: 1.5rem;
+}
+
+.staff-evidence li {
+  padding-block: 0.5rem;
+}
+
+.staff-evidence a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.staff-evidence .evidence-upload {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.staff-task-history {
+  padding-left: 1.5rem;
+}
+
+.staff-task-history li {
+  padding-block: 1rem;
+  border-bottom: 1px solid #c6d9c7;
+}
+
+.staff-task-history time {
+  color: #495f4e;
+  font-size: 0.95rem;
+}
+
+.staff-history-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}

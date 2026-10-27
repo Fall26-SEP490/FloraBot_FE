@@ -20,7 +20,7 @@ const TechnicianInstallations = dynamic(
   },
 );
 
-const StaffTasks = dynamic(() => import('../../../StaffTasks'), {
+const StaffTasks = dynamic(() => import('../../task-management/TaskManagement'), {
   loading: () => <p role="status">Đang tải công việc kỹ thuật…</p>,
 });
 

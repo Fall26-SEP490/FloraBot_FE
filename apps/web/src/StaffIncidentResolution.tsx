@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { Button } from '@florabot/ui';
 import { ApiError, queryClient, request } from './api';
 
-import type { ActiveTaskRole } from './StaffTasks';
+import type { ActiveTaskRole } from './features/task-management/task-management.types';
 
 type Attempt = { id: string; version: number; report: string };
 function restore(key: string): Attempt | null {
