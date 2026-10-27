@@ -1,3 +1,9 @@
+import {
+  ALLOWED_IMAGE_MIME_TYPES,
+  MAX_EVIDENCE_SIZE_BYTES,
+  TIME_WINDOW_REGEX,
+} from './installations.constants';
+
 export function validatePayosCheckoutUrl(rawUrl: string): {
   valid: boolean;
   url?: string;
@@ -67,4 +73,125 @@ export function parseAndValidateCoordinate(
     }
   }
   return { valid: true, value: num };
+}
+
+export function validateTimeWindow(timeWindow: string): { valid: boolean; error?: string } {
+  const trimmed = timeWindow.trim();
+  if (!TIME_WINDOW_REGEX.test(trimmed) || trimmed.slice(0, 5) >= trimmed.slice(8, 13)) {
+    return {
+      valid: false,
+      error: 'Nhập khung giờ HH:mm - HH:mm, giờ kết thúc phải sau giờ bắt đầu.',
+    };
+  }
+  return { valid: true };
+}
+
+export interface EnrollKioskFormData {
+  code: string;
+  name: string;
+  hardwareId: string;
+  walkInSlots: number;
+  preorderSlots: number;
+}
+
+export function validateEnrollKioskForm(data: EnrollKioskFormData): {
+  valid: boolean;
+  error?: string;
+} {
+  const code = data.code.trim();
+  const name = data.name.trim();
+  const hardwareId = data.hardwareId.trim();
+
+  if (!code || !name || !hardwareId) {
+    return { valid: false, error: 'Vui lòng điền đầy đủ mã tủ, tên tủ và Hardware ID.' };
+  }
+  if (code.length < 2 || name.length < 2 || name.length > 120 || hardwareId.length < 2) {
+    return {
+      valid: false,
+      error: 'Mã tủ và Hardware ID cần ít nhất 2 ký tự; tên tủ từ 2 đến 120 ký tự.',
+    };
+  }
+  if (
+    !Number.isInteger(data.walkInSlots) ||
+    !Number.isInteger(data.preorderSlots) ||
+    data.walkInSlots < 1 ||
+    data.preorderSlots < 1 ||
+    data.walkInSlots + data.preorderSlots > 50
+  ) {
+    return {
+      valid: false,
+      error: 'Mỗi loại ô cần ít nhất 1 ô; tổng số ô không vượt quá 50.',
+    };
+  }
+  return { valid: true };
+}
+
+export function validateConfirmNote(note: string): { valid: boolean; error?: string } {
+  if (note.trim().length < 5) {
+    return { valid: false, error: 'Ghi chú xác nhận liên hệ cần ít nhất 5 ký tự.' };
+  }
+  return { valid: true };
+}
+
+export function validateRejectReason(reason: string): { valid: boolean; error?: string } {
+  if (reason.trim().length < 5) {
+    return { valid: false, error: 'Lý do từ chối cần ít nhất 5 ký tự.' };
+  }
+  return { valid: true };
+}
+
+export function validateReworkReason(reason: string): { valid: boolean; error?: string } {
+  if (reason.trim().length < 5) {
+    return { valid: false, error: 'Lý do yêu cầu sửa lại cần ít nhất 5 ký tự.' };
+  }
+  return { valid: true };
+}
+
+export function validatePlatformFailureReason(reason: string): { valid: boolean; error?: string } {
+  if (reason.trim().length < 5) {
+    return { valid: false, error: 'Lý do sự cố bất khả kháng cần ít nhất 5 ký tự.' };
+  }
+  return { valid: true };
+}
+
+export function validateReportText(text: string): { valid: boolean; error?: string } {
+  if (text.trim().length < 10) {
+    return { valid: false, error: 'Báo cáo cần ít nhất 10 ký tự.' };
+  }
+  return { valid: true };
+}
+
+export function validateEvidenceFile(file: File | null): { valid: boolean; error?: string } {
+  if (!file) {
+    return { valid: false, error: 'Vui lòng chọn file ảnh.' };
+  }
+  const isAllowedType = (ALLOWED_IMAGE_MIME_TYPES as readonly string[]).includes(file.type);
+  if (!isAllowedType || file.size === 0 || file.size > MAX_EVIDENCE_SIZE_BYTES) {
+    return {
+      valid: false,
+      error: 'Vui lòng chọn file ảnh PNG, JPEG hoặc WebP với dung lượng dưới 5 MB.',
+    };
+  }
+  return { valid: true };
+}
+
+export function getOperationsActiveStep(status?: string, needsSchedule?: boolean): number {
+  if (status === 'PAID_REVIEW') return 0;
+  if (needsSchedule) return 1;
+  if (status === 'INSTALLING' || status === 'AWAITING_HANDOVER') return 2;
+  if (status === 'ACTIVE') return 3;
+  return -1;
+}
+
+export function getTechnicianStepIndex(status: string): number {
+  return Math.max(0, ['SCHEDULED', 'INSTALLING', 'AWAITING_HANDOVER', 'ACTIVE'].indexOf(status));
+}
+
+export function formatDateVN(dateStr?: string | null): string {
+  if (!dateStr) return 'Chưa có ngày';
+  try {
+    return new Date(`${dateStr.slice(0, 10)}T00:00:00`).toLocaleDateString('vi-VN');
+  } catch {
+    return dateStr;
+  }
 }

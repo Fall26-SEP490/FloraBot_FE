@@ -76,3 +76,11 @@ export type AdminKioskBankDetailsResponse = KioskRefundBankResponse;
 export type EnrollKioskResponse = components['schemas']['EnrollKioskResponse'];
 export type ProvisionKioskKeyResponse = components['schemas']['ProvisionKioskKeyResponse'];
 export type ConfirmKioskRefundRequest = components['schemas']['ConfirmKioskRefundRequest'];
+
+export interface ProvisionedKeyInfo {
+  kioskId: string;
+  code: string;
+  apiKey: string;
+}
+
+export type StageTabValue = 'ALL' | 'PAID_REVIEW' | 'CONFIRMED' | 'AWAITING_HANDOVER';
