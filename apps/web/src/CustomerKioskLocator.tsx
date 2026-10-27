@@ -280,7 +280,7 @@ export default function CustomerKioskLocator() {
               <button
                 type="button"
                 className={`customer-filter-toggle-btn ${activeFilterCount > 0 ? 'is-filtered' : ''} ${
-                  isFilterOpen ? 'is-active is-open' : ''
+                  isFilterOpen ? 'is-active' : ''
                 }`}
                 onClick={() => setIsFilterOpen((prev) => !prev)}
                 aria-expanded={isFilterOpen}
@@ -288,25 +288,16 @@ export default function CustomerKioskLocator() {
                 title={isFilterOpen ? 'Đóng bộ lọc' : 'Mở bộ lọc kiosk'}
                 aria-label={isFilterOpen ? 'Đóng bộ lọc' : 'Mở bộ lọc kiosk'}
               >
-                {isFilterOpen ? (
-                  <>
-                    <X size={16} aria-hidden="true" />
-                    <span>Đóng</span>
-                  </>
-                ) : (
-                  <>
-                    <SlidersHorizontal size={15} aria-hidden="true" />
-                    <span>Bộ lọc</span>
-                    {activeFilterCount > 0 && (
-                      <span className="customer-filter-badge">{activeFilterCount}</span>
-                    )}
-                  </>
+                <SlidersHorizontal size={15} aria-hidden="true" />
+                <span>Bộ lọc</span>
+                {activeFilterCount > 0 && (
+                  <span className="customer-filter-badge">{activeFilterCount}</span>
                 )}
               </button>
             </div>
 
-            {/* Active Selected Filters Bar with X to close/remove */}
-            {hasActiveFilters && (
+            {/* Active Selected Filters Bar with X to close/remove (only when drawer is closed) */}
+            {hasActiveFilters && !isFilterOpen && (
               <div
                 className="customer-active-filters-bar"
                 role="region"
@@ -423,27 +414,16 @@ export default function CustomerKioskLocator() {
                     <SlidersHorizontal size={13} aria-hidden="true" />
                     <span>Bộ lọc kiosk</span>
                   </span>
-                  <div className="customer-filter-drawer-actions">
-                    {hasActiveFilters && (
-                      <button
-                        type="button"
-                        className="customer-btn-reset-filters"
-                        onClick={handleResetFilters}
-                        title="Đặt lại toàn bộ bộ lọc"
-                      >
-                        Xóa lọc
-                      </button>
-                    )}
+                  {hasActiveFilters && (
                     <button
                       type="button"
-                      className="customer-filter-close-btn"
-                      onClick={() => setIsFilterOpen(false)}
-                      title="Đóng bộ lọc"
-                      aria-label="Đóng bộ lọc"
+                      className="customer-btn-reset-filters"
+                      onClick={handleResetFilters}
+                      title="Đặt lại toàn bộ bộ lọc"
                     >
-                      <X size={16} aria-hidden="true" />
+                      Xóa tất cả
                     </button>
-                  </div>
+                  )}
                 </div>
 
                 {/* Status Filter Pills */}
@@ -469,9 +449,6 @@ export default function CustomerKioskLocator() {
                       }
                     >
                       Hoạt động <span className="customer-chip-count">({activeCount})</span>
-                      {statusFilter === 'ACTIVE' && (
-                        <X size={12} aria-hidden="true" className="customer-chip-x" />
-                      )}
                     </button>
                     <button
                       type="button"
@@ -481,9 +458,6 @@ export default function CustomerKioskLocator() {
                       }
                     >
                       Bảo trì <span className="customer-chip-count">({maintenanceCount})</span>
-                      {statusFilter === 'MAINTENANCE' && (
-                        <X size={12} aria-hidden="true" className="customer-chip-x" />
-                      )}
                     </button>
                     <button
                       type="button"
@@ -493,9 +467,6 @@ export default function CustomerKioskLocator() {
                       }
                     >
                       Ngoại tuyến <span className="customer-chip-count">({offlineCount})</span>
-                      {statusFilter === 'OFFLINE' && (
-                        <X size={12} aria-hidden="true" className="customer-chip-x" />
-                      )}
                     </button>
                   </div>
                 </div>
@@ -531,9 +502,6 @@ export default function CustomerKioskLocator() {
                             <span className="customer-chip-count">
                               ({regionCounts[region] || 0})
                             </span>
-                            {isSelected && (
-                              <X size={12} aria-hidden="true" className="customer-chip-x" />
-                            )}
                           </button>
                         );
                       })}

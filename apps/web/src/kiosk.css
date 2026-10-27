@@ -839,18 +839,6 @@ body:has(.customer-kiosk-page) {
   color: #174b35;
 }
 
-.customer-kiosk-page .customer-filter-toggle-btn.is-open {
-  background: #fef2f2;
-  border-color: #fecaca;
-  color: #b91c1c;
-}
-
-.customer-kiosk-page .customer-filter-toggle-btn.is-open:hover {
-  background: #fee2e2;
-  border-color: #fca5a5;
-  color: #991b1b;
-}
-
 .customer-kiosk-page .customer-filter-badge {
   display: inline-flex;
   align-items: center;
@@ -978,33 +966,6 @@ body:has(.customer-kiosk-page) {
   color: #475569;
 }
 
-.customer-kiosk-page .customer-filter-drawer-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-}
-
-.customer-kiosk-page .customer-filter-close-btn {
-  width: 26px;
-  height: 26px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  color: #64748b;
-  cursor: pointer;
-  padding: 0;
-  transition: all 0.15s ease;
-}
-
-.customer-kiosk-page .customer-filter-close-btn:hover {
-  background: #f1f5f9;
-  color: #0f172a;
-  border-color: #cbd5e1;
-}
-
 .customer-kiosk-page .customer-chip-x {
   margin-left: 0.2rem;
   stroke-width: 2.5;
@@ -1037,11 +998,11 @@ body:has(.customer-kiosk-page) {
   width: 100%;
   min-height: 44px;
   height: 44px;
-  padding: 0.45rem 2.2rem 0.45rem 2.35rem;
+  padding: 0.45rem 2rem 0.45rem 2.25rem;
   border-radius: 10px;
   border: 1px solid transparent;
   background: #f4f7f4;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: #183e2b;
   outline: none;
   box-sizing: border-box;
@@ -1194,8 +1155,8 @@ body:has(.customer-kiosk-page) {
   display: flex;
   flex-wrap: nowrap;
   overflow-x: auto;
-  gap: 0.4rem;
-  padding-bottom: 2px;
+  gap: 0.45rem;
+  padding: 2px 0.75rem 4px 2px;
   scrollbar-width: none;
 }
 
@@ -1207,8 +1168,9 @@ body:has(.customer-kiosk-page) {
 .customer-kiosk-page .customer-chip-btn,
 .customer-kiosk-page .customer-area-pill {
   min-height: 32px;
-  padding: 0.25rem 0.75rem;
-  font-size: 0.76rem;
+  height: 32px;
+  padding: 0 0.85rem;
+  font-size: 0.78rem;
   font-weight: 600;
   border-radius: 999px;
   border: 1px solid #e2ece5;
@@ -1217,6 +1179,12 @@ body:has(.customer-kiosk-page) {
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  line-height: 1;
+  box-sizing: border-box;
   transition: all 0.15s ease;
 }
 
