@@ -4,9 +4,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@florabot/ui';
-import type { components } from '../../../packages/contracts/src/generated/api';
-import { queryClient, request } from './api';
-import { ConfirmDialog } from './dashboard/Modal';
+import type { components } from '../../../../../packages/contracts/src/generated/api';
+import { queryClient, request } from '../../api';
+import { ConfirmDialog } from '../../dashboard/Modal';
 
 type Kiosk = components['schemas']['AdminKioskResponse'];
 type Seller = components['schemas']['AdminSellerResponse'];

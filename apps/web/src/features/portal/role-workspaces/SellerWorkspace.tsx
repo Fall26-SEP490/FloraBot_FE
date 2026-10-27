@@ -41,7 +41,7 @@ const Products = dynamic(() => import('../../product-management/ProductManagemen
   loading: () => <p role="status">Đang tải danh sách mẫu hoa…</p>,
 });
 
-const SellerKiosks = dynamic(() => import('../../../SellerKiosks'), {
+const SellerKiosks = dynamic(() => import('../../kiosk-management/SellerKiosks'), {
   loading: () => <p role="status">Đang tải danh sách kiosk…</p>,
 });
 
@@ -49,11 +49,11 @@ const Subscriptions = dynamic(() => import('../../../Subscriptions'), {
   loading: () => <p role="status">Đang tải gói dịch vụ…</p>,
 });
 
-const SellerStock = dynamic(() => import('../../../SellerStock'), {
+const SellerStock = dynamic(() => import('../../inventory/SellerStock'), {
   loading: () => <p role="status">Đang tải danh sách tồn kho…</p>,
 });
 
-const SellerAccessories = dynamic(() => import('../../../SellerAccessories'), {
+const SellerAccessories = dynamic(() => import('../../inventory/SellerAccessories'), {
   loading: () => <p role="status">Đang tải danh mục phụ kiện…</p>,
 });
 

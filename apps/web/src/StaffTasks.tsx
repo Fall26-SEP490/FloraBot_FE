@@ -11,7 +11,7 @@ import {
 } from '@florabot/ui';
 import { ApiError, queryClient, request } from './api';
 import AdminTaskAssignment from './AdminTaskAssignment';
-import StaffStock from './StaffStock';
+import StaffStock from './features/inventory/StaffStock';
 import StaffTaskDetails from './StaffTaskDetails';
 import StaffReassignment from './StaffReassignment';
 import StaffEvidence from './StaffEvidence';

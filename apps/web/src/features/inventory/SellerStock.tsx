@@ -4,10 +4,10 @@ import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button, CircleAlert, Flower2, Package, RefreshCw, Store } from '@florabot/ui';
-import type { components } from '../../../packages/contracts/src/generated/api';
-import { queryClient, request, type Session } from './api';
-import ReportFault from './ReportFault';
-import ReturnFlowers from './features/orders/ReturnFlowers';
+import type { components } from '../../../../../packages/contracts/src/generated/api';
+import { queryClient, request, type Session } from '../../api';
+import ReportFault from '../../ReportFault';
+import ReturnFlowers from '../orders/ReturnFlowers';
 
 type Slot = components['schemas']['SellerSlotResponse'];
 type Product = components['schemas']['ProductResponse'];

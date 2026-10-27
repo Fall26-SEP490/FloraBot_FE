@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { Button } from '@florabot/ui';
-import { ApiError, queryClient, request } from './api';
+import { ApiError, queryClient, request } from '../../api';
 
-import type { ActiveTaskRole } from './StaffTasks';
+import type { ActiveTaskRole } from '../../StaffTasks';
 
 type Payload = { id: string; productId: string; slotId: string; qrCode: string };
 type Options = {
