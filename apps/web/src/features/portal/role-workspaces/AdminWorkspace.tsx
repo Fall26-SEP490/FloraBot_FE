@@ -20,7 +20,7 @@ const DashboardOverview = dynamic(() => import('../../../DashboardOverview'), {
   loading: () => <p role="status">Đang tải tổng quan hệ thống…</p>,
 });
 
-const WebRequests = dynamic(() => import('../../../WebRequests'), {
+const WebRequests = dynamic(() => import('../../orders/WebRequests'), {
   loading: () => <p role="status">Đang tải danh sách đơn hàng…</p>,
 });
 

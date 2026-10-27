@@ -1,5 +1,12 @@
-export type SavedReceipt = { orderId: string; token: string; orderCode: string; savedAt: string };
-const key = 'florabot-personal-receipts-v1';
+import { RECEIPT_STORAGE_KEY } from './receipts.constants';
+import type { SavedReceipt } from './receipts.types';
+
+export const money = (amount: number | string) =>
+  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(amount));
+
+export const date = (value: string) =>
+  new Date(value).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+
 const valid = (value: unknown): value is SavedReceipt => {
   if (!value || typeof value !== 'object') return false;
   const item = value as SavedReceipt;
@@ -15,30 +22,35 @@ const valid = (value: unknown): value is SavedReceipt => {
     Number.isFinite(Date.parse(item.savedAt))
   );
 };
+
 export function readReceipts(): SavedReceipt[] {
-  const items: unknown = JSON.parse(localStorage.getItem(key) || '[]');
+  const items: unknown = JSON.parse(localStorage.getItem(RECEIPT_STORAGE_KEY) || '[]');
   if (!Array.isArray(items) || items.length > 50 || !items.every(valid))
     throw new Error(
       'Danh sách lưu trên thiết bị không đọc được. Bạn vẫn có thể tra cứu bằng mã biên nhận.',
     );
   return items;
 }
+
 export function saveReceipt(item: SavedReceipt) {
   if (!valid(item)) throw new Error('Thông tin biên nhận không hợp lệ.');
   const previous = readReceipts().filter((value) => value.orderId !== item.orderId);
   if (previous.length >= 50)
     throw new Error('Đã lưu 50 biên nhận. Xóa một biên nhận cũ trước khi lưu thêm.');
-  localStorage.setItem(key, JSON.stringify([item, ...previous]));
+  localStorage.setItem(RECEIPT_STORAGE_KEY, JSON.stringify([item, ...previous]));
 }
+
 export function removeReceipt(orderId: string) {
   localStorage.setItem(
-    key,
+    RECEIPT_STORAGE_KEY,
     JSON.stringify(readReceipts().filter((item) => item.orderId !== orderId)),
   );
 }
+
 export function clearReceipts() {
-  localStorage.removeItem(key);
+  localStorage.removeItem(RECEIPT_STORAGE_KEY);
 }
+
 export function receiptLink(item: SavedReceipt) {
   return `/receipt#${new URLSearchParams({ order: item.orderId, token: item.token })}`;
 }

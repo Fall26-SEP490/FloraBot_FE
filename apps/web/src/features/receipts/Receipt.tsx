@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@florabot/ui';
-import type { components } from '../../../packages/contracts/src/generated/api';
-import './portal.css';
-import './receipt.css';
-import RefundAccount from './RefundAccount';
-import ReceiptComplaint from './ReceiptComplaint';
-import { saveReceipt } from './guestReceipts';
+import type { components } from '../../../../../packages/contracts/src/generated/api';
+import '../../portal.css';
+import './styles/receipt.css';
+import RefundAccount from '../../RefundAccount';
+import ReceiptComplaint from './components/ReceiptComplaint';
+import { saveReceipt } from './receipts.utils';
 
 type ReceiptData = components['schemas']['ReceiptResponse'];
 const money = (amount: number | string) =>

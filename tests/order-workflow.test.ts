@@ -5,7 +5,7 @@ import {
   orderClosed,
   orderNextStep,
   orderStage,
-} from '../apps/web/src/orderWorkflow';
+} from '../apps/web/src/features/orders/orders.utils';
 
 describe('Order guidance follows backend state', () => {
   it('distinguishes a quote, confirmed money, stock readiness and physical completion', () => {

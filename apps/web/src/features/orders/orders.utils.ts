@@ -1,10 +1,17 @@
-export type OrderPhase = {
-  state: string;
-  orderStatus: string | null;
-  ready: boolean;
-};
-export type OrderMode = 'member' | 'seller' | 'admin';
-export type OrderFilter = 'all' | 'attention' | 'preparing' | 'ready' | 'closed';
+import { ORDER_STATES, REQUEST_STATES } from './orders.constants';
+import type { OrderFilter, OrderMode, OrderPhase, WebOrder } from './orders.types';
+
+export const money = (value: number) => value.toLocaleString('vi-VN') + ' đ';
+
+export const when = (value: string) =>
+  new Date(value).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+
+export const statusName = (row: WebOrder) =>
+  row.orderStatus === 'PAID' && row.ready
+    ? 'Hoa đã sẵn sàng tại tủ'
+    : row.orderStatus
+      ? ORDER_STATES[row.orderStatus] || row.orderStatus
+      : REQUEST_STATES[row.state] || row.state;
 
 export function orderStage(row: OrderPhase): number {
   if (row.orderStatus === 'COMPLETED') return 4;
@@ -13,12 +20,14 @@ export function orderStage(row: OrderPhase): number {
   if (row.orderStatus === 'AWAITING_PAYMENT' || row.state === 'QUOTED') return 1;
   return 0;
 }
+
 export function orderClosed(row: OrderPhase) {
   return (
     ['COMPLETED', 'CANCELLED', 'EXPIRED', 'REFUNDED'].includes(row.orderStatus ?? row.state) ||
     row.state === 'REJECTED'
   );
 }
+
 export function needsOrderAction(row: OrderPhase, mode: OrderMode) {
   if (orderClosed(row)) return false;
   if (mode === 'member') return row.state === 'QUOTED' || row.orderStatus === 'AWAITING_PAYMENT';
@@ -28,6 +37,7 @@ export function needsOrderAction(row: OrderPhase, mode: OrderMode) {
     );
   return ['DISPUTED', 'DISPENSE_FAILED'].includes(row.orderStatus ?? '');
 }
+
 export function matchesOrderFilter(row: OrderPhase, filter: OrderFilter, mode: OrderMode) {
   switch (filter) {
     case 'attention':
@@ -42,6 +52,7 @@ export function matchesOrderFilter(row: OrderPhase, filter: OrderFilter, mode: O
       return true;
   }
 }
+
 export function orderNextStep(row: OrderPhase, mode: OrderMode) {
   if (row.orderStatus === 'COMPLETED')
     return 'Đã hoàn tất theo trạng thái backend. Biên nhận lưu thông tin giao dịch và hỗ trợ phản ánh.';

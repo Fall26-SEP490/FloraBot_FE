@@ -13,7 +13,7 @@ const AdminLoginScreen = dynamic(() => import('./screens/AdminLoginScreen'), {
   ),
 });
 
-const Receipt = dynamic(() => import('../../Receipt'), {
+const Receipt = dynamic(() => import('../receipts/Receipt'), {
   loading: () => (
     <main id="main">
       <p role="status">Đang tải biên nhận…</p>
@@ -21,7 +21,7 @@ const Receipt = dynamic(() => import('../../Receipt'), {
   ),
 });
 
-const GuestHistory = dynamic(() => import('../../GuestHistory'), {
+const GuestHistory = dynamic(() => import('../receipts/GuestHistory'), {
   loading: () => (
     <main id="main">
       <p role="status">Đang tải lịch sử mua hàng…</p>

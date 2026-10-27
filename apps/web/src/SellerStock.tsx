@@ -7,7 +7,7 @@ import { Button, CircleAlert, Flower2, Package, RefreshCw, Store } from '@florab
 import type { components } from '../../../packages/contracts/src/generated/api';
 import { queryClient, request, type Session } from './api';
 import ReportFault from './ReportFault';
-import ReturnFlowers from './ReturnFlowers';
+import ReturnFlowers from './features/orders/ReturnFlowers';
 
 type Slot = components['schemas']['SellerSlotResponse'];
 type Product = components['schemas']['ProductResponse'];

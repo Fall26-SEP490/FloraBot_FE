@@ -19,8 +19,8 @@ import {
 } from '@florabot/ui';
 import { ApiError, queryClient } from '../../api';
 import { passwordRule } from '../auth/auth.schemas';
-import WebRequests from '../../WebRequests';
-import MemberShop from '../../MemberShop';
+import WebRequests from '../orders/WebRequests';
+import MemberShop from '../orders/MemberShop';
 import GoogleAccountLink from '../auth/GoogleAccountLink';
 import { CustomerChatSection } from '../../chat/CustomerChatSection';
 import { getCustomerChats } from '../../chat/api';
