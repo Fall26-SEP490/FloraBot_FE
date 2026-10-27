@@ -1,14 +1,9 @@
 import { useState } from 'react';
 import { Button } from '@florabot/ui';
-import {
-  clearReceipts,
-  readReceipts,
-  receiptLink,
-  removeReceipt,
-  type SavedReceipt,
-} from './guestReceipts';
-import './portal.css';
-import './receipt.css';
+import { clearReceipts, readReceipts, receiptLink, removeReceipt } from './receipts.utils';
+import type { SavedReceipt } from './receipts.types';
+import '../../portal.css';
+import './styles/receipt.css';
 
 export default function GuestHistory() {
   const [state, setState] = useState<{ items: SavedReceipt[]; error: string }>(() => {

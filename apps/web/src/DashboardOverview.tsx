@@ -14,7 +14,8 @@ import {
 } from '@florabot/ui';
 import type { components } from '../../../packages/contracts/src/generated/api';
 import { request, type Session } from './api';
-import { statusName, type WebOrder } from './WebRequests';
+import type { WebOrder } from './features/orders/orders.types';
+import { statusName } from './features/orders/orders.utils';
 import WorkspaceWelcome from './platform/WorkspaceWelcome';
 
 type Row = { id: string; title: string; detail: string; state: string };

@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -10,70 +12,19 @@ import {
   ArrowLeft,
   ArrowRight,
 } from '@florabot/ui';
-import { ApiError, queryClient, request } from './api';
-import type { components } from '../../../packages/contracts/src/generated/api';
+import { ApiError, queryClient, request } from '../../api';
+import type { components } from '../../../../../packages/contracts/src/generated/api';
 import {
   matchesOrderFilter,
   needsOrderAction,
   orderClosed,
   orderNextStep,
   orderStage,
-  type OrderFilter,
-} from './orderWorkflow';
-
-export type WebOrder = {
-  id: string;
-  kind: 'CUSTOM' | 'STOCK';
-  state: string;
-  productId: string;
-  kioskId: string;
-  sellerId: string;
-  instructions: string;
-  pickupAt: string;
-  pickupBefore: string;
-  quotedPrice: number | null;
-  quoteNote: string | null;
-  quoteExpiresAt: string | null;
-  orderId: string | null;
-  checkoutId: string | null;
-  orderCode: string | null;
-  orderStatus: string | null;
-  trackingToken: string | null;
-  ready: boolean;
-  payBefore: string | null;
-  productName?: string | null;
-  shopName?: string | null;
-  kioskName?: string | null;
-  address?: string | null;
-};
-type Page = { items: WebOrder[]; page: number; hasMore: boolean };
-const money = (value: number) => value.toLocaleString('vi-VN') + ' đ';
-const when = (value: string) =>
-  new Date(value).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
-const orderStates: Record<string, string> = {
-  AWAITING_PAYMENT: 'Chờ thanh toán',
-  PAID: 'Shop đang chuẩn bị',
-  DISPENSING: 'Đang nhận hoa tại tủ',
-  COMPLETED: 'Đã nhận hoa',
-  EXPIRED: 'Hết hạn thanh toán',
-  CANCELLED: 'Đã hủy',
-  DISPENSE_FAILED: 'Chờ xử lý hoàn tiền',
-  REFUNDED: 'Đã hoàn tiền',
-  DISPUTED: 'Đang xử lý phản ánh',
-};
-const requestStates: Record<string, string> = {
-  REQUESTED: 'Chờ shop báo giá',
-  QUOTED: 'Đã có báo giá',
-  REJECTED: 'Shop chưa thể nhận đơn',
-  CANCELLED: 'Đã hủy',
-  ORDERED: 'Đã tạo đơn',
-};
-export const statusName = (row: WebOrder) =>
-  row.orderStatus === 'PAID' && row.ready
-    ? 'Hoa đã sẵn sàng tại tủ'
-    : row.orderStatus
-      ? orderStates[row.orderStatus] || row.orderStatus
-      : requestStates[row.state] || row.state;
+  statusName,
+  money,
+  when,
+} from './orders.utils';
+import type { OrderFilter, Page, WebOrder } from './orders.types';
 
 function OrderActions({
   row,

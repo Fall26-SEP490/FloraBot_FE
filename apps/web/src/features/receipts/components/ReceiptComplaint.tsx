@@ -1,10 +1,10 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import EvidenceUpload from './EvidenceUpload';
+import EvidenceUpload from '../../../EvidenceUpload';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@florabot/ui';
-import type { components } from '../../../packages/contracts/src/generated/api';
+import type { components } from '../../../../../../packages/contracts/src/generated/api';
 
 const schema = z.object({
   reason: z
