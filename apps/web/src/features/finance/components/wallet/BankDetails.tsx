@@ -4,10 +4,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@florabot/ui';
-import type { components } from '../../../packages/contracts/src/generated/api';
-import { ApiError, queryClient, request, type Session } from './api';
+import type { SellerBankResponse } from '../../finance.types';
+import { ApiError, queryClient, request, type Session } from '../../../../api';
 
-type Bank = components['schemas']['SellerBankResponse'];
+type Bank = SellerBankResponse;
 const text = (label: string) =>
   z
     .string()

@@ -3,15 +3,15 @@
 import { useId, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button, CircleAlert, Check, RefreshCw, Banknote, Plus, Eye, EyeOff } from '@florabot/ui';
-import { ApiError, queryClient, request, type Session } from './api';
+import { ApiError, queryClient, request, type Session } from '../../../../api';
 import type {
   AdminKioskRefundSummary,
   KioskRefundBankResponse,
   ConfirmKioskRefundRequest,
   EvidenceUploadResponse,
-} from './features/installations/installations.types';
-import './kiosk-shared.css';
-import './admin-kiosk-refunds.css';
+} from '../../finance.types';
+import '../../../../kiosk-shared.css';
+import '../../styles/admin-kiosk-refunds.css';
 
 interface AdminKioskRefundsProps {
   session: Session;

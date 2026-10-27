@@ -1,10 +1,10 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Button } from '@florabot/ui';
-import type { components } from '../../../packages/contracts/src/generated/api';
-import { ApiError, request } from './api';
+import type { DailyReconciliationResult, GatewayReconciliationResult } from '../../finance.types';
+import { ApiError, request } from '../../../../api';
 
-type Daily = components['schemas']['DailyReconciliationResult'];
-type Gateway = components['schemas']['GatewayReconciliationResult'];
+type Daily = DailyReconciliationResult;
+type Gateway = GatewayReconciliationResult;
 type Statement = { txn: string; amount: number }[];
 const integer = (value: number | string) =>
   typeof value === 'string' && /^-?\d+$/.test(value)

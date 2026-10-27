@@ -4,24 +4,24 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@florabot/ui';
-import type { components } from '../../../packages/contracts/src/generated/api';
-import { ApiError, queryClient, request } from './api';
+import type { ApproveRefundRequest, ConfirmRefundRequest } from '../../finance.types';
+import { ApiError, queryClient, request } from '../../../../api';
+import EvidenceUpload from '../../../installations/components/EvidenceUpload';
+import { REFUND_STATUS_NAMES } from '../../finance.constants';
+import type {
+  AdminRefundDetail,
+  AdminRefundPage,
+  AdminRefundResponse,
+  RefundBankResponse,
+} from '../../finance.types';
+import { formatFinanceDate, formatMoney } from '../../finance.utils';
+import FinancialProofs from '../FinancialProofs';
 
-import EvidenceUpload from './EvidenceUpload';
-import FinancialProofs from './FinancialProofs';
+type Item = AdminRefundResponse;
+type Detail = AdminRefundDetail;
+type Bank = RefundBankResponse;
+type Queue = AdminRefundPage;
 
-type Item = components['schemas']['AdminRefundResponse'];
-type Detail = components['schemas']['AdminRefundDetail'];
-type Bank = components['schemas']['RefundBankResponse'];
-type Queue = components['schemas']['AdminRefundPage'];
-const names = {
-  PENDING: 'Chờ xử lý',
-  SUCCEEDED: 'Đã ghi nhận chi',
-  FAILED: 'Không thành công',
-  CANCELLED: 'Đã hủy',
-  EXPIRED: 'Hết hạn',
-};
-const money = (value: number | string) => `${Number(value).toLocaleString('vi-VN')} đ`;
 const schema = z.object({
   proof: z
     .string()
@@ -126,12 +126,12 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
       if (action === 'approve')
         await request('/admin/flows/approve_refund', {
           p_refund: id,
-        } satisfies components['schemas']['ApproveRefundRequest']);
+        } satisfies ApproveRefundRequest);
       else
         await request('/admin/flows/confirm_refund', {
           p_refund: id,
           p_proof_url: form.getValues('proof'),
-        } satisfies components['schemas']['ConfirmRefundRequest']);
+        } satisfies ConfirmRefundRequest);
       onNotice(
         action === 'approve'
           ? 'Đã duyệt khoản hoàn. Bước chi cần một admin khác.'
@@ -180,7 +180,8 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
         <>
           <p className="quiet">Mã khoản hoàn: {id}</p>
           <h3>
-            Hoàn {money(data.refund.amount)} cho đơn {data.refund.orderCode || data.refund.orderId}
+            Hoàn {formatMoney(data.refund.amount)} cho đơn{' '}
+            {data.refund.orderCode || data.refund.orderId}
           </h3>
           <p className="incident-text">{data.refund.reason}</p>
           {data.refund.status === 'PENDING' && (
@@ -294,8 +295,8 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
                         <>
                           <h4 ref={heading} tabIndex={-1}>
                             {action === 'approve'
-                              ? `Duyệt khoản hoàn ${money(data.refund.amount)}?`
-                              : `Ghi nhận đã chi hoàn ${money(data.refund.amount)}?`}
+                              ? `Duyệt khoản hoàn ${formatMoney(data.refund.amount)}?`
+                              : `Ghi nhận đã chi hoàn ${formatMoney(data.refund.amount)}?`}
                           </h4>
                           <p>
                             {action === 'approve'
@@ -355,13 +356,7 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
           )}
           {data.refund.paidAt && <FinancialProofs purpose="confirm_refund" resourceId={id} />}
           {data.refund.paidAt && (
-            <p>
-              Đã ghi nhận chi lúc{' '}
-              {new Date(data.refund.paidAt).toLocaleString('vi-VN', {
-                timeZone: 'Asia/Ho_Chi_Minh',
-              })}
-              .
-            </p>
+            <p>Đã ghi nhận chi lúc {formatFinanceDate(data.refund.paidAt)}.</p>
           )}
         </>
       )}
@@ -399,12 +394,12 @@ function RefundItem({ item, onNotice }: { item: Item; onNotice: (message: string
       <details onToggle={(event) => setOpen(event.currentTarget.open)}>
         <summary>
           <strong>
-            Đơn {item.orderCode || item.orderId || item.id} · {money(item.amount)}
+            Đơn {item.orderCode || item.orderId || item.id} · {formatMoney(item.amount)}
           </strong>
           <span>
             {item.status === 'PENDING' && item.requiresApproval
               ? 'Cần admin duyệt'
-              : names[item.status as keyof typeof names] || item.status}
+              : REFUND_STATUS_NAMES[item.status] || item.status}
           </span>
         </summary>
         {open && <RefundDetails id={item.id} onNotice={onNotice} />}
@@ -438,7 +433,7 @@ export default function AdminRefunds() {
           setPage(1);
         }}
       >
-        {Object.entries(names).map(([value, label]) => (
+        {Object.entries(REFUND_STATUS_NAMES).map(([value, label]) => (
           <option key={value} value={value}>
             {label}
           </option>

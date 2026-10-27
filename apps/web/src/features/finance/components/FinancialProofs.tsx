@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
-import type { components } from '../../../packages/contracts/src/generated/api';
-import { request } from './api';
+import { request } from '../../../api';
+import type { IncidentEvidenceResponse } from '../finance.types';
 
 export default function FinancialProofs({
   purpose,
@@ -12,10 +12,7 @@ export default function FinancialProofs({
 }) {
   const query = useQuery({
     queryKey: ['financial-proofs', purpose, resourceId],
-    queryFn: () =>
-      request<components['schemas']['IncidentEvidenceResponse']>(
-        `/admin/evidence/${purpose}/${resourceId}`,
-      ),
+    queryFn: () => request<IncidentEvidenceResponse>(`/admin/evidence/${purpose}/${resourceId}`),
   });
   if (query.isPending) return <p role="status">Đang tải chứng từ…</p>;
   if (query.isError)

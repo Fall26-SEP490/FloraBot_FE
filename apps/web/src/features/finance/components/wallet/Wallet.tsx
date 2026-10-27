@@ -4,11 +4,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@florabot/ui';
-import type { components } from '../../../packages/contracts/src/generated/api';
-import { ApiError, queryClient, request, type Session } from './api';
+import type { FlowResult, WalletResponse } from '../../finance.types';
+import { ApiError, queryClient, request, type Session } from '../../../../api';
 import BankDetails from './BankDetails';
 
-type Overview = components['schemas']['WalletResponse'];
+type Overview = WalletResponse;
 const money = (value: number | string) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(value));
 const date = (value: string) =>
@@ -80,7 +80,7 @@ export default function Wallet({ session }: { session: Session }) {
   };
   const withdrawal = useMutation({
     mutationFn: (amount: number) =>
-      request<components['schemas']['FlowResult']>(`${base}/flows/request_withdrawal`, {
+      request<FlowResult>(`${base}/flows/request_withdrawal`, {
         p_amount: amount,
       }),
     onSuccess: () => {

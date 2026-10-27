@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@florabot/ui';
-import type { components } from '../../../packages/contracts/src/generated/api';
+import type { SubmitRefundInfoRequest } from '../../finance.types';
 
 const plainText = z
   .string()
@@ -66,7 +66,7 @@ export default function RefundAccount({
     setError('');
     const active = new AbortController();
     controller.current = active;
-    const body: components['schemas']['SubmitRefundInfoRequest'] = {
+    const body: SubmitRefundInfoRequest = {
       p_order: orderId,
       p_tracking: trackingToken,
       p_bank: values.bank,

@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
-import EvidenceUpload from '../../EvidenceUpload';
+import EvidenceUpload from '../installations/components/EvidenceUpload';
 import { ApiError, queryClient, request } from '../../api';
 
 export default function ReturnFlowers({

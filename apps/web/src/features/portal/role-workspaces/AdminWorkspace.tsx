@@ -52,21 +52,30 @@ const AdminComplaints = dynamic(() => import('../../complaints/AdminComplaints')
   loading: () => <p role="status">Đang tải khiếu nại…</p>,
 });
 
-const AdminRefunds = dynamic(() => import('../../../AdminRefunds'), {
+const AdminRefunds = dynamic(() => import('../../finance/components/refunds/AdminRefunds'), {
   loading: () => <p role="status">Đang tải hoàn tiền…</p>,
 });
 
-const AdminKioskRefunds = dynamic(() => import('../../../AdminKioskRefunds'), {
-  loading: () => <p role="status">Đang tải hoàn tiền kiosk…</p>,
-});
+const AdminKioskRefunds = dynamic(
+  () => import('../../finance/components/refunds/AdminKioskRefunds'),
+  {
+    loading: () => <p role="status">Đang tải hoàn tiền kiosk…</p>,
+  },
+);
 
-const AdminWithdrawals = dynamic(() => import('../../../AdminWithdrawals'), {
-  loading: () => <p role="status">Đang tải yêu cầu rút tiền…</p>,
-});
+const AdminWithdrawals = dynamic(
+  () => import('../../finance/components/withdrawals/AdminWithdrawals'),
+  {
+    loading: () => <p role="status">Đang tải yêu cầu rút tiền…</p>,
+  },
+);
 
-const AdminReconciliation = dynamic(() => import('../../../AdminReconciliation'), {
-  loading: () => <p role="status">Đang tải đối soát…</p>,
-});
+const AdminReconciliation = dynamic(
+  () => import('../../finance/components/reconciliation/AdminReconciliation'),
+  {
+    loading: () => <p role="status">Đang tải đối soát…</p>,
+  },
+);
 
 const AdminReports = dynamic(() => import('../../../AdminReports'), {
   loading: () => <p role="status">Đang tải báo cáo tổng quan…</p>,
