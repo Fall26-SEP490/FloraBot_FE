@@ -1,33 +1,14 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@florabot/ui';
-import { ApiError, queryClient, request } from './api';
+import { ApiError, queryClient, request } from '../../api';
+import type {
+  StaffIncidentResolutionAttempt,
+  StaffIncidentResolutionProps,
+} from './incidents.types';
+import { restoreIncidentResolutionAttempt } from './incidents.utils';
 
-import type { ActiveTaskRole } from './features/task-management/task-management.types';
-
-type Attempt = { id: string; version: number; report: string };
-function restore(key: string): Attempt | null {
-  try {
-    const value = JSON.parse(sessionStorage.getItem(key) || 'null') as Attempt | null;
-    return value &&
-      typeof value.id === 'string' &&
-      Number.isInteger(value.version) &&
-      typeof value.report === 'string'
-      ? value
-      : null;
-  } catch {
-    return null;
-  }
-}
-export type StaffIncidentResolutionProps = {
-  taskId: string;
-  actorId: string;
-  sellerId?: string | null;
-  role?: ActiveTaskRole;
-  version: number;
-  active: boolean;
-  apiBase?: string;
-};
+export type { StaffIncidentResolutionProps };
 
 export default function StaffIncidentResolution({
   taskId,
@@ -39,11 +20,13 @@ export default function StaffIncidentResolution({
 }: StaffIncidentResolutionProps) {
   const scopeKey = sellerId ? `seller:${sellerId}` : apiBase;
   const key = `florabot-staff-resolution:${actorId}:${scopeKey}:${taskId}`;
-  const [attempt, setAttempt] = useState<Attempt | null>(() => restore(key));
+  const [attempt, setAttempt] = useState<StaffIncidentResolutionAttempt | null>(() =>
+    restoreIncidentResolutionAttempt(key),
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const form = useForm<{ report: string; confirm: boolean }>();
-  async function send(payload: Attempt) {
+  async function send(payload: StaffIncidentResolutionAttempt) {
     if (busy) return;
     setBusy(true);
     setError('');

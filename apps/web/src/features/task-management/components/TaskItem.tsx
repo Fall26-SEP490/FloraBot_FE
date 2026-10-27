@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@florabot/ui';
 import { ApiError, queryClient, request } from '../../../api';
-import StaffIncidentResolution from '../../../StaffIncidentResolution';
+import StaffIncidentResolution from '../../incidents/StaffIncidentResolution';
 import StaffStock from '../../inventory/StaffStock';
 import { TASK_STATUS_LABELS } from '../task-management.constants';
 import type { ActiveTaskRole, Task } from '../task-management.types';

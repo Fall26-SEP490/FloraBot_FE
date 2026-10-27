@@ -1,14 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Controller, useForm } from 'react-hook-form';
-import EvidenceUpload from './EvidenceUpload';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@florabot/ui';
-import type { components } from '../../../packages/contracts/src/generated/api';
-import { ApiError, queryClient, request } from './api';
+import { ApiError, queryClient, request } from '../../api';
+import EvidenceUpload from '../installations/components/EvidenceUpload';
+import type {
+  FlowResult,
+  ReportDeviceFaultRequest,
+  ReportFaultProps,
+  SellerSlot,
+} from './incidents.types';
 
-type Slot = components['schemas']['SellerSlotResponse'];
+export type { ReportFaultProps };
+
 const schema = z.object({
   description: z
     .string()
@@ -19,7 +25,7 @@ const schema = z.object({
 });
 type Fields = z.infer<typeof schema>;
 
-export default function ReportFault({ slot, sellerId }: { slot: Slot; sellerId: string }) {
+export default function ReportFault({ slot, sellerId }: { slot: SellerSlot; sellerId: string }) {
   const marker = `florabot:fault-unconfirmed:${sellerId}:${slot.id}`;
   const [uncertain, setUncertain] = useState(() => {
     try {
@@ -52,15 +58,12 @@ export default function ReportFault({ slot, sellerId }: { slot: Slot; sellerId: 
   };
   const report = useMutation({
     mutationFn: (values: Fields) =>
-      request<components['schemas']['FlowResult']>(
-        `/sellers/${sellerId}/flows/report_device_fault`,
-        {
-          p_kiosk: slot.kioskId,
-          p_slot: slot.id,
-          p_desc: values.description,
-          p_photo: values.photo,
-        } satisfies components['schemas']['ReportDeviceFaultRequest'],
-      ),
+      request<FlowResult>(`/sellers/${sellerId}/flows/report_device_fault`, {
+        p_kiosk: slot.kioskId,
+        p_slot: slot.id,
+        p_desc: values.description,
+        p_photo: values.photo,
+      } satisfies ReportDeviceFaultRequest),
     onSuccess: () => {
       markUncertain(false);
       setReview(null);
