@@ -24,7 +24,7 @@ const application = {
   assignedTechnicianName: 'Minh Kỹ Thuật',
   assignedKioskId: 'kiosk-1',
   assignedKioskCode: 'K-HCM-01',
-  scheduledDate: '2026-11-10',
+  scheduledDate: '2026-11-10T08:30:00Z',
   timeWindow: '10:00 - 12:00',
   createdAt: '2026-10-20T08:00:00Z',
   updatedAt: '2026-10-20T08:00:00Z',
@@ -100,7 +100,13 @@ async function setup(
     if (path === '/api/operations/incidents')
       return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
     if (post) {
-      writes.push({ path, body: route.request().postDataJSON() });
+      const data = route.request().postData();
+      writes.push({ path, body: data ? route.request().postDataJSON() : {} });
+      if (path.includes('/provision-key')) {
+        return route.fulfill({
+          json: { kioskId: 'kiosk-1', apiKey: 'test-reprovisioned-key-xyz' },
+        });
+      }
       return route.fulfill({ json: application });
     }
     return route.fulfill({ json: [] });
@@ -126,6 +132,9 @@ test('Rescheduling preserves the reserved kiosk and validates the time window be
 }) => {
   const writes = await setup(page);
   await page.goto(`/operations/installations?application=${application.id}`);
+  await expect(page.locator('.operations-detail-progress li[aria-current="step"]')).toHaveText(
+    '2. Xếp lịch lắp đặt',
+  );
   await expect(page.getByLabel('Tủ Kiosk cấp phát:')).toHaveValue('kiosk-1');
   await expect(page.getByLabel('Kỹ thuật viên phụ trách (ACTIVE):')).toHaveValue('tech-1');
   await expect(page.getByLabel('Ngày dự kiến lắp đặt:')).toHaveValue('2026-11-10');
@@ -147,6 +156,14 @@ test('Rescheduling preserves the reserved kiosk and validates the time window be
       timeWindow: '13:00 - 15:00',
     },
   });
+
+  // Re-provisioning API key displays real kiosk code (K-HCM-01) from assignedKioskCode
+  page.on('dialog', (dialog) => dialog.accept());
+  await page.getByRole('button', { name: 'Cấp lại khóa API' }).click();
+  await expect(page.getByText('Cấu hình khóa thiết bị Kiosk (API Key)')).toBeVisible();
+  await expect(page.locator('.provision-field-row strong')).toHaveText('K-HCM-01');
+  await page.getByRole('button', { name: 'Tôi đã sao chép khóa - Đóng bảng này' }).click();
+  await expect(page.getByText('Cấu hình khóa thiết bị Kiosk (API Key)')).not.toBeVisible();
 });
 
 test('Detail failure is recoverable and handover requires evidence', async ({ page }) => {

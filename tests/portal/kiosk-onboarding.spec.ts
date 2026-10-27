@@ -417,6 +417,167 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     await expect(page.getByText(/Đã nghiệm thu bàn giao và kích hoạt Chủ shop/)).toBeVisible();
   });
 
+  test('Operations: ProvisionedKeyModal resets copySuccess and cleanly unmounts across open-copy-close-reopen cycle', async ({
+    page,
+    context,
+  }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+
+    let enrollCount = 0;
+    await page.route('**/api/**', async (route) => {
+      const path = new URL(route.request().url()).pathname;
+      if (path === '/api/auth/me') {
+        return route.fulfill({
+          json: {
+            id: 'manager-01',
+            name: 'Phan Quản Lý',
+            role: 'OPERATIONS_MANAGER',
+            sellerId: null,
+            sellerStatus: null,
+            packageExpiresAt: null,
+          },
+        });
+      }
+      if (path === '/api/operations/kiosk-applications') {
+        return route.fulfill({
+          json: {
+            items: [
+              {
+                id: 'app-501',
+                packageId: 'pkg-1',
+                shopName: 'Hoa Tươi Thử Nghiệm',
+                packageName: 'Cơ bản',
+                annualFee: 12000,
+                walkInSlots: 2,
+                preorderSlots: 4,
+                totalSlots: 6,
+                phone: '0901234567',
+                contactName: 'Trần Văn A',
+                contactPhone: '0901234567',
+                contactEmail: 'shop@test.vn',
+                installationAddress: '123 Lê Lợi',
+                latitude: 10.77,
+                longitude: 106.69,
+                bankName: 'MB Bank',
+                bankAccountSuffix: '1234',
+                bankHolder: 'TRAN VAN A',
+                status: 'CONFIRMED',
+                assignedTechnicianId: null,
+                assignedKioskId: null,
+                scheduledDate: null,
+                timeWindow: null,
+                createdAt: '2026-10-10T00:00:00Z',
+              },
+            ],
+            page: 1,
+            hasMore: false,
+          },
+        });
+      }
+      if (path === '/api/operations/kiosk-applications/app-501') {
+        return route.fulfill({
+          json: {
+            application: {
+              id: 'app-501',
+              packageId: 'pkg-1',
+              shopName: 'Hoa Tươi Thử Nghiệm',
+              packageName: 'Cơ bản',
+              annualFee: 12000,
+              walkInSlots: 2,
+              preorderSlots: 4,
+              totalSlots: 6,
+              phone: '0901234567',
+              contactName: 'Trần Văn A',
+              contactPhone: '0901234567',
+              contactEmail: 'shop@test.vn',
+              installationAddress: '123 Lê Lợi',
+              latitude: 10.77,
+              longitude: 106.69,
+              bankName: 'MB Bank',
+              bankAccountSuffix: '1234',
+              bankHolder: 'TRAN VAN A',
+              status: 'CONFIRMED',
+              assignedTechnicianId: null,
+              assignedKioskId: null,
+              scheduledDate: null,
+              timeWindow: null,
+              createdAt: '2026-10-10T00:00:00Z',
+            },
+            evidencePhotos: [],
+          },
+        });
+      }
+      if (path === '/api/operations/technicians') {
+        return route.fulfill({ json: [] });
+      }
+      if (path === '/api/operations/eligible-kiosks') {
+        return route.fulfill({ json: [] });
+      }
+      if (path === '/api/operations/kiosks/enroll' && route.request().method() === 'POST') {
+        enrollCount += 1;
+        const body = route.request().postDataJSON();
+        return route.fulfill({
+          status: 201,
+          json: {
+            id: 'kiosk-' + enrollCount,
+            code: body.code,
+            name: body.name,
+            walkInSlots: body.walkInSlots,
+            preorderSlots: body.preorderSlots,
+            totalSlots: body.walkInSlots + body.preorderSlots,
+            status: 'OFFLINE',
+            apiKey:
+              enrollCount === 1 ? 'kiosk-device-api-key-FIRST' : 'kiosk-device-api-key-SECOND',
+          },
+        });
+      }
+      return route.fulfill({ json: {} });
+    });
+
+    await page.setViewportSize({ width: 1024, height: 768 });
+    await page.goto('/operations/installations');
+
+    await expect(page.getByText('Hoa Tươi Thử Nghiệm')).toBeVisible();
+    await page.getByRole('button', { name: 'Chi tiết' }).click();
+
+    // 1. First Enrollment
+    await page.getByRole('button', { name: '+ Thêm tủ mới (Asset Enrollment)' }).click();
+    await page.getByLabel('Mã tủ (Code) *').fill('K-CYCLE-01');
+    await page.getByLabel('Tên tủ *').fill('Kiosk Chu Kỳ 1');
+    await page.getByLabel('Hardware ID (Serial) *').fill('SN-CYCLE-001');
+    await page.getByRole('button', { name: 'Đăng ký thiết bị (OFFLINE)' }).click();
+
+    // Verify Modal 1 is visible
+    await expect(page.getByText('Cấu hình khóa thiết bị Kiosk (API Key)')).toBeVisible();
+    await expect(page.locator('#device-api-key-input')).toHaveValue('kiosk-device-api-key-FIRST');
+    const copyHint = page.getByText('Đã sao chép cấu hình JSON vào bộ nhớ tạm!');
+    await expect(copyHint).not.toBeVisible();
+
+    // Copy Key 1
+    await page.getByRole('button', { name: 'Sao chép cấu hình JSON' }).click();
+    await expect(copyHint).toBeVisible();
+
+    // Close Modal 1
+    await page.getByRole('button', { name: 'Tôi đã sao chép khóa - Đóng bảng này' }).click();
+    await expect(page.getByText('Cấu hình khóa thiết bị Kiosk (API Key)')).not.toBeVisible();
+
+    // 2. Second Enrollment
+    await page.getByRole('button', { name: '+ Thêm tủ mới (Asset Enrollment)' }).click();
+    await page.getByLabel('Mã tủ (Code) *').fill('K-CYCLE-02');
+    await page.getByLabel('Tên tủ *').fill('Kiosk Chu Kỳ 2');
+    await page.getByLabel('Hardware ID (Serial) *').fill('SN-CYCLE-002');
+    await page.getByRole('button', { name: 'Đăng ký thiết bị (OFFLINE)' }).click();
+
+    // Verify Modal 2 opens with NEW key and copySuccess is reset
+    await expect(page.getByText('Cấu hình khóa thiết bị Kiosk (API Key)')).toBeVisible();
+    await expect(page.locator('#device-api-key-input')).toHaveValue('kiosk-device-api-key-SECOND');
+    await expect(page.getByText('Đã sao chép cấu hình JSON vào bộ nhớ tạm!')).not.toBeVisible();
+
+    // Close Modal 2
+    await page.getByRole('button', { name: 'Tôi đã sao chép khóa - Đóng bảng này' }).click();
+    await expect(page.getByText('Cấu hình khóa thiết bị Kiosk (API Key)')).not.toBeVisible();
+  });
+
   test('Admin viewing operations installations has NO write buttons (strict role boundary)', async ({
     page,
   }) => {
