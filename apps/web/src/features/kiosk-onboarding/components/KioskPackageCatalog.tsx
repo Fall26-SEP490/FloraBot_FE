@@ -1,5 +1,5 @@
 import { Boxes, Button, CircleAlert, RefreshCw, Store } from '@florabot/ui';
-import type { KioskPackageResponse } from '../../../kioskApplicationTypes';
+import type { KioskPackageResponse } from '../../installations/installations.types';
 
 interface KioskPackageCatalogProps {
   packages: KioskPackageResponse[] | undefined;

@@ -1,6 +1,6 @@
 import { Button, CircleAlert, RefreshCw } from '@florabot/ui';
-import type { KioskApplicationResponse } from '../../../kioskApplicationTypes';
-import { KIOSK_STATUS_LABELS } from '../../../kioskApplicationTypes';
+import type { KioskApplicationResponse } from '../../installations/installations.types';
+import { KIOSK_STATUS_LABELS } from '../../installations/installations.constants';
 
 interface TerminalApplicationPanelProps {
   appData: KioskApplicationResponse;

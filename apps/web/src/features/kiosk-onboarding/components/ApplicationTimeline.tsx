@@ -1,4 +1,4 @@
-import type { KioskApplicationResponse } from '../../../kioskApplicationTypes';
+import type { KioskApplicationResponse } from '../../installations/installations.types';
 
 interface ApplicationTimelineProps {
   status: KioskApplicationResponse['status'];

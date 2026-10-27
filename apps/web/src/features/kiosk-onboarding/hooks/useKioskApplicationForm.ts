@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
-import { parseAndValidateCoordinate } from '../../../kioskApplicationTypes';
-import type { CreateKioskApplicationRequest } from '../../../kioskApplicationTypes';
+import { parseAndValidateCoordinate } from '../../installations/installations.utils';
+import type { CreateKioskApplicationRequest } from '../../installations/installations.types';
 import { validateKioskApplicationDraft } from '../onboarding.utils';
 
 export function useKioskApplicationForm() {

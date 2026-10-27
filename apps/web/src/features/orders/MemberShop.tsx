@@ -7,8 +7,8 @@ import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { Button, ArrowRight, RefreshCw } from '@florabot/ui';
 import { ApiError, queryClient, request, sessionQuery, type Session } from '../../api';
-import type { KioskApplicationResponse } from '../../kioskApplicationTypes';
-import { KIOSK_STATUS_LABELS } from '../../kioskApplicationTypes';
+import type { KioskApplicationResponse } from '../installations/installations.types';
+import { KIOSK_STATUS_LABELS } from '../installations/installations.constants';
 
 type Fields = { shopName: string; phone: string; address: string };
 

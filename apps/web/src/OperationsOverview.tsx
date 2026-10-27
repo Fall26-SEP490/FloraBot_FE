@@ -6,8 +6,11 @@ import { ArrowRight, Boxes, ClipboardList, RefreshCw, Users, Button } from '@flo
 import type { components } from '../../../packages/contracts/src/generated/api';
 import { request, type Session } from './api';
 import type { AccountDirectoryItem } from './AccountManagement';
-import type { EligibleKioskResponse, KioskApplicationPage } from './kioskApplicationTypes';
-import { KIOSK_STATUS_LABELS } from './kioskApplicationTypes';
+import type {
+  EligibleKioskResponse,
+  KioskApplicationPage,
+} from './features/installations/installations.types';
+import { KIOSK_STATUS_LABELS } from './features/installations/installations.constants';
 import WorkspaceWelcome from './platform/WorkspaceWelcome';
 
 export default function OperationsOverview({ session }: { session: Session }) {

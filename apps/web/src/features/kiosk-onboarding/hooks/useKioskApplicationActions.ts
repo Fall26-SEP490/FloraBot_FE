@@ -6,8 +6,9 @@ import type {
   CreateKioskApplicationRequest,
   KioskApplicationResponse,
   PaymentLinkResponse,
-} from '../../../kioskApplicationTypes';
-import { KIOSK_STATUS_LABELS, validatePayosCheckoutUrl } from '../../../kioskApplicationTypes';
+} from '../../installations/installations.types';
+import { KIOSK_STATUS_LABELS } from '../../installations/installations.constants';
+import { validatePayosCheckoutUrl } from '../../installations/installations.utils';
 
 export function useKioskApplicationActions(sessionData: Session | undefined) {
   const router = useRouter();

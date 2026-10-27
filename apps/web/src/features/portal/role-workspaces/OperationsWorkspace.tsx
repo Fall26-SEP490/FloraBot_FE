@@ -14,9 +14,12 @@ import '../../../operations.css';
 import '../../../platform/platform-workspace.css';
 import '../../../platform/platform-refresh.css';
 
-const OperationsInstallations = dynamic(() => import('../../../OperationsInstallations'), {
-  loading: () => <p role="status">Đang tải hồ sơ thuê & lắp đặt…</p>,
-});
+const OperationsInstallations = dynamic(
+  () => import('../../installations/OperationsInstallations'),
+  {
+    loading: () => <p role="status">Đang tải hồ sơ thuê & lắp đặt…</p>,
+  },
+);
 
 const OperationsSellers = dynamic(() => import('../../../platform/OperationsSellers'), {
   loading: () => <p role="status">Đang tải danh sách shop hoa…</p>,

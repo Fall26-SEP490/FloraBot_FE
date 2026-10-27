@@ -3,7 +3,7 @@ import { ApiError, request, type Session } from '../../../api';
 import type {
   KioskApplicationResponse,
   KioskPackageResponse,
-} from '../../../kioskApplicationTypes';
+} from '../../installations/installations.types';
 
 export function useKioskApplication(sessionData: Session | undefined) {
   // Load packages from GET /api/kiosk-packages (real server data, no silent mock fallback)

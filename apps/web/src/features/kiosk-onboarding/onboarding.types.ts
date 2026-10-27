@@ -1,4 +1,4 @@
-import type { CreateKioskApplicationRequest } from '../../kioskApplicationTypes';
+import type { CreateKioskApplicationRequest } from '../installations/installations.types';
 
 export interface KioskApplicationFormDraft {
   packageId: string;

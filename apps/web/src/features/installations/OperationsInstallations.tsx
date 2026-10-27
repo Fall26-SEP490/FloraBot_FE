@@ -4,7 +4,7 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button, CircleAlert, Check, RefreshCw, ClipboardList, Eye, X, Lock } from '@florabot/ui';
-import { ApiError, queryClient, request, type Session } from './api';
+import { ApiError, queryClient, request, type Session } from '../../api';
 import type {
   KioskApplicationResponse,
   KioskApplicationPage,
@@ -14,12 +14,12 @@ import type {
   EnrollKioskResponse,
   ProvisionKioskKeyResponse,
   IncidentPhoto,
-} from './kioskApplicationTypes';
-import { KIOSK_STATUS_LABELS } from './kioskApplicationTypes';
-import type { AccountDirectoryItem } from './AccountManagement';
-import { Modal } from './dashboard/Modal';
-import './kiosk-shared.css';
-import './operations-installations.css';
+} from './installations.types';
+import { KIOSK_STATUS_LABELS } from './installations.constants';
+import type { AccountDirectoryItem } from '../../AccountManagement';
+import { Modal } from '../../dashboard/Modal';
+import '../../kiosk-shared.css';
+import './styles/operations-installations.css';
 
 interface OperationsInstallationsProps {
   session: Session;
