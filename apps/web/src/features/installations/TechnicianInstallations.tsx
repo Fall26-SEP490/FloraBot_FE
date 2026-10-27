@@ -12,17 +12,17 @@ import {
   ListChecks,
   Plus,
 } from '@florabot/ui';
-import { ApiError, queryClient, request, type Session } from './api';
-import { buildGoogleMapsDirectionsUrl } from './features/kiosk-location/kiosk-location.utils';
+import { ApiError, queryClient, request, type Session } from '../../api';
+import { buildGoogleMapsDirectionsUrl } from '../kiosk-location/kiosk-location.utils';
 import type {
   TechnicianInstallationSummary,
   TechnicianInstallationDetail,
   StaffEvidenceItem,
   EvidenceUploadResponse,
-} from './kioskApplicationTypes';
-import { KIOSK_STATUS_LABELS } from './kioskApplicationTypes';
-import './kiosk-shared.css';
-import './technician-installations.css';
+} from './installations.types';
+import { KIOSK_STATUS_LABELS } from './installations.constants';
+import '../../kiosk-shared.css';
+import './styles/technician-installations.css';
 
 interface TechnicianInstallationsProps {
   session: Session;

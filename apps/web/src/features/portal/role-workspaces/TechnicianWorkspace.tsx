@@ -13,9 +13,12 @@ import '../../../platform/platform-workspace.css';
 import '../../../platform/platform-refresh.css';
 import WorkspaceWelcome from '../../../platform/WorkspaceWelcome';
 
-const TechnicianInstallations = dynamic(() => import('../../../TechnicianInstallations'), {
-  loading: () => <p role="status">Đang tải hồ sơ lắp đặt…</p>,
-});
+const TechnicianInstallations = dynamic(
+  () => import('../../installations/TechnicianInstallations'),
+  {
+    loading: () => <p role="status">Đang tải hồ sơ lắp đặt…</p>,
+  },
+);
 
 const StaffTasks = dynamic(() => import('../../../StaffTasks'), {
   loading: () => <p role="status">Đang tải công việc kỹ thuật…</p>,

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Button, X } from '@florabot/ui';
-import type { KioskApplicationResponse } from '../../../kioskApplicationTypes';
+import type { KioskApplicationResponse } from '../../installations/installations.types';
 
 interface CancelApplicationDialogProps {
   isOpen: boolean;

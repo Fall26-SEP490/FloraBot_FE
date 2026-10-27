@@ -1,4 +1,4 @@
-import { parseAndValidateCoordinate } from '../../kioskApplicationTypes';
+import { parseAndValidateCoordinate } from '../installations/installations.utils';
 import { EMAIL_REGEX, PHONE_REGEX } from './onboarding.constants';
 import type { KioskApplicationFormDraft, KioskValidationResult } from './onboarding.types';
 

@@ -9,7 +9,7 @@ import type {
   KioskRefundBankResponse,
   ConfirmKioskRefundRequest,
   EvidenceUploadResponse,
-} from './kioskApplicationTypes';
+} from './features/installations/installations.types';
 import './kiosk-shared.css';
 import './admin-kiosk-refunds.css';
 

@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest';
 import {
   validatePayosCheckoutUrl,
   parseAndValidateCoordinate,
+} from '../apps/web/src/features/installations/installations.utils';
+import {
   KIOSK_PACKAGE_DEFAULTS,
   KIOSK_STATUS_LABELS,
-} from '../apps/web/src/kioskApplicationTypes';
+} from '../apps/web/src/features/installations/installations.constants';
 
 describe('Annual Kiosk Onboarding Unit Tests', () => {
   describe('validatePayosCheckoutUrl (fail-closed security validation)', () => {
