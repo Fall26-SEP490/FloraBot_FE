@@ -40,7 +40,7 @@ const StaffTasks = dynamic(() => import('../../../StaffTasks'), {
   loading: () => <p role="status">Đang tải danh sách công việc…</p>,
 });
 
-const AdminSlots = dynamic(() => import('../../../AdminSlots'), {
+const AdminSlots = dynamic(() => import('../../kiosk-management/AdminSlots'), {
   loading: () => <p role="status">Đang tải quản lý ô tủ…</p>,
 });
 
