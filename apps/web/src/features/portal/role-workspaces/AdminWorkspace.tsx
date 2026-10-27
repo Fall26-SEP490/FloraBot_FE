@@ -36,7 +36,7 @@ const AdminSellers = dynamic(() => import('../../../AdminSellers'), {
   loading: () => <p role="status">Đang tải danh sách shop hoa…</p>,
 });
 
-const StaffTasks = dynamic(() => import('../../../StaffTasks'), {
+const StaffTasks = dynamic(() => import('../../task-management/TaskManagement'), {
   loading: () => <p role="status">Đang tải danh sách công việc…</p>,
 });
 

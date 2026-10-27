@@ -2,62 +2,18 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { Button } from '@florabot/ui';
-import { ApiError, queryClient, request } from './api';
+import { ApiError, queryClient, request } from '../../../api';
+import type {
+  AdminTaskAssignmentProps,
+  DeliveryScope,
+  IncidentCandidate,
+  TaskAssignmentPayload,
+} from '../task-management.types';
+import { restoreAssignmentPayload } from '../task-management.utils';
 
-import type { ActiveTaskRole } from './StaffTasks';
+export type { AdminTaskAssignmentProps };
 
-type Scope = {
-  sellerId: string;
-  shopName: string;
-  kioskId: string;
-  kioskName: string;
-  address: string;
-};
-type Incident = {
-  id: string;
-  kioskId: string;
-  reason: string;
-  location: { kioskName: string } | null;
-};
-type Payload = {
-  id: string;
-  assigneeId: string;
-  kind: string;
-  kioskId: string;
-  sellerId: string | null;
-  incidentId: string | null;
-  instructions: string;
-};
 type Fields = { assigneeId: string; target: string; instructions: string };
-
-export type AdminTaskAssignmentProps = {
-  actorId?: string;
-  adminId?: string;
-  apiBase?: string;
-  actorRole?: ActiveTaskRole;
-  role?: ActiveTaskRole;
-  allowedKinds?: ('INCIDENT' | 'DELIVERY')[];
-  directoryEndpoint?: string;
-  incidentsEndpoint?: string;
-  deliveryScopesEndpoint?: string;
-  sellerId?: string | null;
-};
-
-function restore(key: string): Payload | null {
-  try {
-    const value = JSON.parse(sessionStorage.getItem(key) || 'null') as Payload | null;
-    return value &&
-      typeof value.id === 'string' &&
-      typeof value.assigneeId === 'string' &&
-      typeof value.kioskId === 'string' &&
-      typeof value.instructions === 'string' &&
-      ['INCIDENT', 'DELIVERY'].includes(value.kind)
-      ? value
-      : null;
-  } catch {
-    return null;
-  }
-}
 
 export default function AdminTaskAssignment({
   actorId: explicitActorId,
@@ -75,7 +31,9 @@ export default function AdminTaskAssignment({
   const effectiveRole = actorRole ?? role;
   const scopeKey = sellerId ? `seller:${sellerId}` : apiBase;
   const key = `florabot-task-assignment:${effectiveRole ?? 'none'}:${actorId}:${scopeKey}`;
-  const [attempt, setAttempt] = useState<Payload | null>(() => restore(key));
+  const [attempt, setAttempt] = useState<TaskAssignmentPayload | null>(() =>
+    restoreAssignmentPayload(key),
+  );
   const defaultKind = allowedKinds.includes('INCIDENT') ? 'INCIDENT' : 'DELIVERY';
   const [kind, setKind] = useState(defaultKind);
   const [page, setPage] = useState(1);
@@ -89,19 +47,19 @@ export default function AdminTaskAssignment({
   });
   const scopes = useQuery({
     queryKey: ['staff-delivery-scopes', actorId, deliveryScopesEndpoint, scopeKey],
-    queryFn: () => request<Scope[]>(deliveryScopesEndpoint),
+    queryFn: () => request<DeliveryScope[]>(deliveryScopesEndpoint),
     enabled: kind === 'DELIVERY' && !attempt,
   });
   const incidents = useQuery({
     queryKey: ['assignment-incidents', actorId, incidentsEndpoint, scopeKey, page],
     queryFn: () =>
-      request<{ items: Incident[]; hasMore: boolean }>(
+      request<{ items: IncidentCandidate[]; hasMore: boolean }>(
         `${incidentsEndpoint}?status=OPEN&page=${page}`,
       ),
     enabled: kind === 'INCIDENT' && !attempt,
   });
   const targetQuery = kind === 'INCIDENT' ? incidents : scopes;
-  async function send(payload: Payload) {
+  async function send(payload: TaskAssignmentPayload) {
     if (busy) return;
     setBusy(true);
     setError('');

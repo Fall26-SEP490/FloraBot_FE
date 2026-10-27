@@ -61,7 +61,7 @@ const Wallet = dynamic(() => import('../../../Wallet'), {
   loading: () => <p role="status">Đang tải ví và giao dịch…</p>,
 });
 
-const StaffTasks = dynamic(() => import('../../../StaffTasks'), {
+const StaffTasks = dynamic(() => import('../../task-management/TaskManagement'), {
   loading: () => <p role="status">Đang tải danh sách công việc…</p>,
 });
 

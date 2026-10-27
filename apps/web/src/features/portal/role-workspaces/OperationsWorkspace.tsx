@@ -37,7 +37,7 @@ const OperationsOverview = dynamic(() => import('../../../OperationsOverview'), 
   loading: () => <p role="status">Đang tải tổng quan vận hành…</p>,
 });
 
-const StaffTasks = dynamic(() => import('../../../StaffTasks'), {
+const StaffTasks = dynamic(() => import('../../task-management/TaskManagement'), {
   loading: () => <p role="status">Đang tải điều phối công việc…</p>,
 });
 

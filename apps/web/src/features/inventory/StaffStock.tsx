@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { Button } from '@florabot/ui';
 import { ApiError, queryClient, request } from '../../api';
 
-import type { ActiveTaskRole } from '../../StaffTasks';
+import type { ActiveTaskRole } from '../task-management/task-management.types';
 
 type Payload = { id: string; productId: string; slotId: string; qrCode: string };
 type Options = {
