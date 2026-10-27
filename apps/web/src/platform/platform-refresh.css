@@ -1,0 +1,731 @@
+/* The three platform roles share this presentation; business routes keep their own styles. */
+.workspace-portal-root.platform-workspace {
+  --platform-ink: #203b34;
+  --platform-muted: #61716a;
+  --platform-line: #e2e8e4;
+  --platform-accent: #205c45;
+  --ops-ink: var(--platform-ink);
+  --ops-muted: var(--platform-muted);
+  --ops-line: var(--platform-line);
+  background: #f5f7f6;
+}
+.workspace-portal-root.platform-workspace .dashboard-header {
+  min-height: 76px;
+  gap: 20px;
+  padding: 14px 30px;
+  background: #fff;
+}
+.workspace-portal-root.platform-workspace .dashboard-brand {
+  min-width: 202px;
+  font-size: 1.6rem;
+}
+.workspace-portal-root.platform-workspace .dashboard-role {
+  border-left: 1px solid var(--platform-line);
+  border-radius: 0;
+  padding: 5px 0 5px 22px;
+  background: transparent;
+  font-weight: 500;
+  color: #61716a;
+}
+.workspace-portal-root.platform-workspace .dashboard-user {
+  gap: 10px;
+  margin-left: auto;
+}
+.workspace-portal-root.platform-workspace .dashboard-avatar {
+  width: 38px;
+  height: 38px;
+  color: #28543e;
+  background: #edf3e8;
+  border: 1px solid #dce7d5;
+}
+.workspace-portal-root.platform-workspace .dashboard-logout {
+  min-width: 44px;
+  background: white;
+  border-color: #dfe7e1;
+}
+.workspace-portal-root.platform-workspace .dashboard-shell {
+  grid-template-columns: 252px minmax(0, 1fr);
+  min-height: calc(100dvh - 76px);
+  background: #f5f7f6;
+}
+.workspace-portal-root.platform-workspace .workspace-sidebar {
+  top: 76px;
+  height: calc(100dvh - 76px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 26px 16px 18px;
+  border: 0;
+  background: #173e33;
+  color: white;
+}
+.workspace-portal-root.platform-workspace .platform-nav-heading {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  padding: 0 6px 20px;
+  border-bottom: 1px solid #38594c;
+}
+.workspace-portal-root.platform-workspace .platform-nav-heading > span {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border: 1px solid #587466;
+  background: #294e40;
+  border-radius: 12px;
+  color: #e2cf9e;
+}
+.workspace-portal-root.platform-workspace .platform-nav-heading small {
+  display: block;
+  color: #b8cdc2;
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  margin-bottom: 5px;
+}
+.workspace-portal-root.platform-workspace .platform-nav-heading strong {
+  display: block;
+  color: #f7fbf8;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.workspace-portal-root.platform-workspace .workspace-sidebar nav {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  padding: 0 2px 5px;
+  scrollbar-width: thin;
+  scrollbar-color: #5c7969 transparent;
+}
+.workspace-portal-root.platform-workspace .workspace-sidebar a {
+  min-height: 43px;
+  gap: 11px;
+  padding: 10px 12px;
+  color: #d7e4dc;
+  font-size: 0.79rem;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  line-height: 1.55;
+}
+.workspace-portal-root.platform-workspace .workspace-sidebar a > svg {
+  width: 18px;
+  height: 18px;
+  opacity: 0.85;
+}
+.workspace-portal-root.platform-workspace .workspace-sidebar a:hover {
+  color: #fff;
+  background: #2b5041;
+}
+.workspace-portal-root.platform-workspace .workspace-sidebar a[aria-current='page'] {
+  color: #173e33;
+  background: #e2edda;
+  border-color: #d2e1c6;
+  box-shadow: none;
+  font-weight: 750;
+}
+.workspace-portal-root.platform-workspace .workspace-sidebar a:focus-visible {
+  outline: 2px solid #e2cf9e;
+  outline-offset: 1px;
+}
+.workspace-portal-root.platform-workspace .workspace-nav-group {
+  margin-top: 22px;
+}
+.workspace-portal-root.platform-workspace .workspace-nav-group > p {
+  color: #a9c4b5;
+  font-size: 0.59rem;
+  letter-spacing: 0.11em;
+  padding-inline: 13px;
+  margin-bottom: 9px;
+}
+.workspace-portal-root.platform-workspace .workspace-personal-links {
+  border-color: #38594c;
+  margin-top: 22px;
+}
+.workspace-portal-root.platform-workspace .dashboard-content {
+  min-width: 0;
+  width: 100%;
+  max-width: 1560px;
+  padding: 32px clamp(24px, 3.1vw, 48px) 56px;
+}
+.workspace-portal-root.platform-workspace .dashboard-page-heading {
+  margin-bottom: 26px;
+}
+.workspace-portal-root.platform-workspace .dashboard-page-heading > div:first-child::before {
+  color: #78867c;
+  font-size: 0.59rem;
+  letter-spacing: 0.13em;
+  margin-bottom: 10px;
+}
+.workspace-portal-root.platform-workspace .dashboard-page-heading h1 {
+  font-size: clamp(1.5rem, 2.1vw, 1.95rem);
+  font-weight: 800;
+  color: #233c32;
+}
+.workspace-portal-root.platform-workspace .dashboard-context {
+  background: #fff;
+  border: 1px solid #dce5df;
+  color: #56705f;
+  padding: 8px 12px;
+  border-radius: 999px;
+}
+.workspace-portal-root.platform-workspace .platform-welcome {
+  overflow: hidden;
+  margin-bottom: 26px;
+  border: 1px solid #214f3d;
+  border-radius: 20px;
+  background: linear-gradient(110deg, #183e32, #2c5843);
+  color: #fff;
+  box-shadow: 0 8px 20px rgb(30 61 43 / 8%);
+}
+.workspace-portal-root.platform-workspace .platform-welcome-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+  padding: 30px 34px;
+}
+.workspace-portal-root.platform-workspace .platform-welcome-copy {
+  min-width: 0;
+  max-width: 720px;
+}
+.workspace-portal-root.platform-workspace .platform-welcome-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 13px;
+  color: #e3d4aa;
+  font-size: 0.66rem;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+}
+.workspace-portal-root.platform-workspace .platform-welcome h2 {
+  margin: 0 0 12px;
+  color: white;
+  font-size: clamp(1.45rem, 2.3vw, 2.1rem);
+  font-weight: 750;
+  line-height: 1.35;
+  letter-spacing: -0.025em;
+  max-width: 30ch;
+}
+.workspace-portal-root.platform-workspace .platform-welcome-copy > p {
+  max-width: 62ch;
+  margin: 0;
+  color: #dae6dc;
+  font-size: 0.82rem;
+  line-height: 1.8;
+}
+.workspace-portal-root.platform-workspace .platform-welcome-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 22px;
+}
+.workspace-portal-root.platform-workspace .platform-welcome-actions .button {
+  background: #e5edda;
+  color: #1a3e2c;
+  border: 1px solid #e5edda;
+  padding-inline: 17px;
+}
+.workspace-portal-root.platform-workspace .platform-welcome-actions .button:hover {
+  background: white;
+  border-color: white;
+}
+.workspace-portal-root.platform-workspace .platform-welcome-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  color: #fff;
+  font-size: 0.77rem;
+  text-decoration: none;
+}
+.workspace-portal-root.platform-workspace .platform-welcome-secondary:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.workspace-portal-root.platform-workspace .platform-welcome a:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 5px;
+}
+.workspace-portal-root.platform-workspace .platform-welcome-emblem {
+  display: grid;
+  place-items: center;
+  flex: 0 0 134px;
+  width: 134px;
+  height: 134px;
+  border: 1px solid #76917b;
+  border-radius: 32px;
+  background: #ffffff0d;
+  color: #e1cf9d;
+  box-shadow:
+    0 0 0 12px #ffffff04,
+    0 0 0 24px #ffffff03;
+}
+.workspace-portal-root.platform-workspace .platform-welcome-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 18px 30px;
+  gap: 16px;
+  background: #0e2f2447;
+  border-top: 1px solid #ffffff20;
+}
+.workspace-portal-root.platform-workspace .platform-welcome-steps li {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  min-width: 0;
+}
+.workspace-portal-root.platform-workspace .platform-welcome-steps li > span {
+  display: grid;
+  place-items: center;
+  flex: 0 0 30px;
+  height: 30px;
+  border: 1px solid #76917b;
+  border-radius: 50%;
+  color: #e1cf9d;
+  font-size: 0.61rem;
+}
+.workspace-portal-root.platform-workspace .platform-welcome-steps strong {
+  display: block;
+  color: #f3f7ef;
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+.workspace-portal-root.platform-workspace .platform-welcome-steps small {
+  display: block;
+  color: #c4d5c8;
+  font-size: 0.62rem;
+  line-height: 1.6;
+  margin-top: 3px;
+}
+.workspace-portal-root.platform-workspace .platform-welcome .dashboard-focus-chips {
+  margin-top: 22px;
+}
+.workspace-portal-root.platform-workspace .platform-welcome .dashboard-focus-chip {
+  color: #e2eadf;
+  background: #ffffff0d;
+  border-color: #7a957b;
+  border-radius: 8px;
+  padding: 7px 11px;
+  font-size: 0.7rem;
+}
+.workspace-portal-root.platform-workspace .platform-welcome .dashboard-focus-chip strong {
+  color: #fff;
+  font-size: 1rem;
+}
+.workspace-portal-root.platform-workspace .platform-welcome .dashboard-focus-chip small {
+  color: #d1dfce;
+  font-size: 0.63rem;
+}
+.workspace-portal-root.platform-workspace
+  :is(.operations-metric, .management-stats article, .personnel-summary-stat) {
+  border: 1px solid var(--platform-line);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 3px 10px #243a2e04;
+  padding: 22px;
+}
+.workspace-portal-root.platform-workspace .operations-metric > svg {
+  box-sizing: content-box;
+  padding: 10px;
+  width: 21px;
+  height: 21px;
+  border-radius: 12px;
+  color: #3d7456;
+  background: #edf5ec;
+}
+.workspace-portal-root.platform-workspace .operations-metric:nth-child(2) > svg {
+  background: #edf2fa;
+  color: #426381;
+}
+.workspace-portal-root.platform-workspace .operations-metric:nth-child(3) > svg {
+  background: #faf3e7;
+  color: #84652d;
+}
+.workspace-portal-root.platform-workspace .operations-metric > strong {
+  font-size: 2.1rem;
+  letter-spacing: -0.04em;
+}
+.workspace-portal-root.platform-workspace :is(.operations-metric, .personnel-summary-stat) > span {
+  color: #61716a;
+  font-size: 0.75rem;
+  font-weight: 550;
+}
+.workspace-portal-root.platform-workspace :is(.operations-metric, .personnel-summary-stat) > small {
+  color: #61716a;
+  font-size: 0.67rem;
+}
+.workspace-portal-root.platform-workspace .personnel-summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.workspace-portal-root.platform-workspace .personnel-summary-header > div {
+  flex: 1 1 280px;
+}
+.workspace-portal-root.platform-workspace .personnel-summary-header p:last-child {
+  max-width: 65ch;
+  font-size: 0.8rem;
+  line-height: 1.75;
+  color: #61716a;
+}
+.workspace-portal-root.platform-workspace .personnel-summary-stats {
+  gap: 14px;
+}
+.workspace-portal-root.platform-workspace .personnel-summary-stat {
+  border-top: 3px solid #cadbbd;
+  padding: 17px 20px;
+  background: #fafcf9;
+}
+.workspace-portal-root.platform-workspace .personnel-summary-stat strong {
+  color: #234734;
+  font-size: 1.9rem;
+  margin-top: 10px;
+}
+.workspace-portal-root.platform-workspace .dashboard-panel {
+  padding: 24px;
+}
+.workspace-portal-root.platform-workspace .dashboard-panel-heading {
+  padding-bottom: 16px;
+  border-bottom: 1px solid #edf0ed;
+}
+.workspace-portal-root.platform-workspace .dashboard-empty {
+  padding: 28px 18px;
+  background: #fafcf9;
+  border: 1px dashed #dce5db;
+  border-radius: 12px;
+}
+.workspace-portal-root.platform-workspace .dashboard-empty > svg,
+.workspace-portal-root.platform-workspace .operations-empty > svg {
+  box-sizing: content-box;
+  padding: 13px;
+  background: #eaf1e5;
+  border-radius: 16px;
+  color: #52734e;
+  margin-bottom: 12px;
+}
+.workspace-portal-root.platform-workspace .dashboard-shortcuts a {
+  background: #fff;
+  border: 1px solid var(--platform-line);
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: none;
+}
+.workspace-portal-root.platform-workspace .platform-task-panel {
+  padding: 26px;
+  background: white;
+  border: 1px solid var(--platform-line);
+  border-radius: 18px;
+  margin-bottom: 26px;
+}
+.workspace-portal-root.platform-workspace .platform-task-panel > h2 {
+  color: #263f33;
+  font-size: 1.14rem;
+  margin: 0 0 8px;
+}
+.workspace-portal-root.platform-workspace .platform-task-panel > p {
+  color: #61716a;
+  font-size: 0.8rem;
+  margin-bottom: 22px;
+}
+.workspace-portal-root.platform-workspace .platform-task-panel .operations-metric {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  background: #f9fbf8;
+  padding: 18px;
+}
+.workspace-portal-root.platform-workspace .platform-task-panel .operations-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-block: 22px;
+}
+.workspace-portal-root.platform-workspace .platform-task-panel .operations-metric > svg {
+  grid-column: 2;
+  grid-row: 1 / 3;
+}
+.workspace-portal-root.platform-workspace .platform-task-panel .operations-metric > small {
+  grid-column: 1 / -1;
+}
+.workspace-portal-root.platform-workspace .platform-task-panel .operations-empty {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  margin-top: 20px;
+  padding: 40px 24px;
+  background: #fafcf9;
+  border: 1px dashed #d9e4d7;
+  border-radius: 14px;
+}
+.workspace-portal-root.platform-workspace .platform-task-panel .operations-empty h3 {
+  margin: 0 0 7px;
+  font-size: 1rem;
+  color: var(--platform-ink);
+}
+.workspace-portal-root.platform-workspace .platform-task-panel .operations-empty p {
+  font-size: 0.78rem;
+  color: var(--platform-muted);
+}
+.workspace-portal-root.platform-workspace .platform-empty-hint {
+  max-width: 52ch;
+  margin: 8px auto 0;
+  color: #61716a;
+  font-size: 0.78rem;
+  line-height: 1.8;
+}
+.workspace-portal-root.platform-workspace .dashboard-staff-guide {
+  padding: 26px;
+}
+.workspace-portal-root.platform-workspace .dashboard-staff-guide ol {
+  counter-reset: platform-guide;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  list-style: none;
+  padding: 0;
+  margin-block: 22px;
+}
+.workspace-portal-root.platform-workspace .dashboard-staff-guide li::before {
+  counter-increment: platform-guide;
+  content: '0' counter(platform-guide);
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  background: #edf3e8;
+  color: #3e6143;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+.workspace-portal-root.platform-workspace .dashboard-staff-guide li p {
+  font-size: 0.79rem;
+  line-height: 1.8;
+  color: #61716a;
+}
+.workspace-portal-root.platform-workspace .platform-tools {
+  border-color: #e5eae5;
+  background: #f8faf8;
+  padding: 18px;
+}
+.workspace-portal-root.platform-workspace .platform-result-count {
+  border: 1px solid #dce7d8;
+  background: #f2f7ef;
+  color: #4c6a48;
+}
+.workspace-portal-root.platform-workspace .management-table th {
+  padding: 15px 18px;
+  background: #f5f8f4;
+  font-size: 0.65rem;
+  font-weight: 650;
+}
+.workspace-portal-root.platform-workspace .management-table td {
+  padding: 19px 18px;
+  border-color: #eef1ee;
+}
+.workspace-portal-root.platform-workspace .platform-identity-avatar {
+  background: #e8efdf;
+  border: 1px solid #dce6d2;
+  border-radius: 12px;
+}
+.workspace-portal-root.platform-workspace .platform-profile-hero {
+  background: #f0f5ea;
+  border-color: #dce6d3;
+  padding: 24px;
+}
+.workspace-portal-root.platform-workspace .management-modal-header {
+  border-bottom-color: #e5ebe2;
+  background: #fafcf8;
+}
+@media (max-width: 1100px) {
+  .workspace-portal-root.platform-workspace .platform-welcome-emblem {
+    flex-basis: 100px;
+    width: 100px;
+    height: 100px;
+    border-radius: 25px;
+  }
+  .workspace-portal-root.platform-workspace .platform-welcome-emblem svg {
+    width: 50px;
+    height: 50px;
+  }
+  .workspace-portal-root.platform-workspace .dashboard-context {
+    display: none;
+  }
+}
+@media (max-width: 900px) {
+  .workspace-portal-root.platform-workspace .dashboard-header {
+    min-height: 68px;
+    padding: 12px 18px;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .workspace-portal-root.platform-workspace .dashboard-brand {
+    min-width: 0;
+    font-size: 1.4rem;
+    order: 0;
+  }
+  .workspace-portal-root.platform-workspace .dashboard-role {
+    display: none;
+  }
+  .workspace-portal-root.platform-workspace .dashboard-user {
+    order: 1;
+    max-width: 42%;
+    padding: 0;
+    margin-left: auto;
+  }
+  .workspace-portal-root.platform-workspace .dashboard-logout {
+    order: 2;
+    margin: 0;
+    font-size: 0.76rem;
+  }
+  .workspace-portal-root.platform-workspace .dashboard-shell {
+    display: block;
+  }
+  .workspace-portal-root.platform-workspace .workspace-sidebar {
+    display: block;
+    position: static;
+    height: auto;
+    padding: 10px 18px;
+    background: #173e33;
+  }
+  .workspace-portal-root.platform-workspace .platform-nav-heading {
+    display: none;
+  }
+  .workspace-portal-root.platform-workspace .workspace-menu-toggle {
+    width: 100%;
+    color: #f4f8ef;
+    background: #254b3c;
+    border-color: #55755f;
+    font-size: 0.78rem;
+  }
+  .workspace-portal-root.platform-workspace .workspace-menu-toggle:focus-visible {
+    outline-color: #e2cf9e;
+  }
+  .workspace-portal-root.platform-workspace .workspace-sidebar nav {
+    max-height: 65dvh;
+    padding-top: 14px;
+  }
+  .workspace-portal-root.platform-workspace .dashboard-content {
+    padding: 24px 20px 40px;
+  }
+}
+@media (max-width: 640px) {
+  .workspace-portal-root.platform-workspace .dashboard-header {
+    gap: 9px;
+    padding: 10px 16px;
+  }
+  .workspace-portal-root.platform-workspace .dashboard-brand {
+    font-size: 1.22rem;
+  }
+  .workspace-portal-root.platform-workspace .dashboard-avatar {
+    width: 31px;
+    height: 31px;
+  }
+  .workspace-portal-root.platform-workspace .dashboard-user {
+    font-size: 0.69rem;
+    gap: 6px;
+    min-width: 0;
+  }
+  .workspace-portal-root.platform-workspace .dashboard-user > span:last-child {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .workspace-portal-root.platform-workspace .dashboard-logout {
+    width: 40px;
+    min-width: 40px;
+    padding: 0;
+  }
+  .workspace-portal-root.platform-workspace .dashboard-logout > span {
+    display: none;
+  }
+  .workspace-portal-root.platform-workspace .dashboard-content {
+    padding: 24px 16px 36px;
+  }
+  .workspace-portal-root.platform-workspace .dashboard-page-heading p {
+    font-size: 0.79rem;
+  }
+  .workspace-portal-root.platform-workspace .platform-welcome {
+    border-radius: 16px;
+    margin-bottom: 22px;
+  }
+  .workspace-portal-root.platform-workspace .platform-welcome-body {
+    padding: 24px;
+  }
+  .workspace-portal-root.platform-workspace .platform-welcome-emblem {
+    display: none;
+  }
+  .workspace-portal-root.platform-workspace .platform-welcome h2 {
+    font-size: 1.5rem;
+  }
+  .workspace-portal-root.platform-workspace .platform-welcome-actions {
+    gap: 6px 16px;
+    margin-top: 18px;
+  }
+  .workspace-portal-root.platform-workspace .platform-welcome-actions > .button {
+    width: 100%;
+  }
+  .workspace-portal-root.platform-workspace .platform-welcome-steps {
+    padding: 18px 22px;
+    gap: 10px;
+  }
+  .workspace-portal-root.platform-workspace .platform-welcome-steps li {
+    display: grid;
+    gap: 9px;
+    align-content: start;
+  }
+  .workspace-portal-root.platform-workspace .platform-welcome-steps li > span {
+    width: 30px;
+  }
+  .workspace-portal-root.platform-workspace .platform-welcome-steps li > div {
+    display: block;
+  }
+  .workspace-portal-root.platform-workspace .platform-welcome-steps small {
+    display: none;
+  }
+  .workspace-portal-root.platform-workspace .platform-welcome .dashboard-focus-chip {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .workspace-portal-root.platform-workspace
+    :is(.operations-metric, .management-stats article, .personnel-summary-stat) {
+    padding: 17px;
+  }
+  .workspace-portal-root.platform-workspace .personnel-summary-header {
+    gap: 16px;
+  }
+  .workspace-portal-root.platform-workspace .personnel-summary-header > div {
+    flex-basis: 100%;
+  }
+  .workspace-portal-root.platform-workspace .platform-task-panel,
+  .workspace-portal-root.platform-workspace .dashboard-staff-guide {
+    padding: 20px;
+  }
+  .workspace-portal-root.platform-workspace .platform-task-panel .operations-metrics {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .workspace-portal-root.platform-workspace .dashboard-staff-guide ol {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .workspace-portal-root.platform-workspace .dashboard-staff-guide li {
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e5ebe2;
+  }
+  .workspace-portal-root.platform-workspace .management-table td {
+    padding: 12px 15px;
+  }
+  .workspace-portal-root.platform-workspace .platform-profile-hero {
+    padding: 17px;
+  }
+}

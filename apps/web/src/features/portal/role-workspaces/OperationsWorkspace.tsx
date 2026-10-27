@@ -12,6 +12,7 @@ import '../workspace-styles.css';
 import '../../../dashboard-overview.css';
 import '../../../operations.css';
 import '../../../platform/platform-workspace.css';
+import '../../../platform/platform-refresh.css';
 
 const OperationsInstallations = dynamic(() => import('../../../OperationsInstallations'), {
   loading: () => <p role="status">Đang tải hồ sơ thuê & lắp đặt…</p>,

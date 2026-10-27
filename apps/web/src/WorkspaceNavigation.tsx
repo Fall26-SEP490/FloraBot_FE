@@ -19,6 +19,7 @@ import {
   LogOut,
   Button,
   MessageSquare,
+  ShieldCheck,
 } from '@florabot/ui';
 import { useQuery } from '@tanstack/react-query';
 import { workspaceBase, workspaceSections } from './workspaceSections';
@@ -107,9 +108,15 @@ export function WorkspaceHeader({
         </span>
         <span>{name}</span>
       </Link>
-      <Button className="dashboard-logout" variant="outline" onClick={onLogout} disabled={busy}>
+      <Button
+        className="dashboard-logout"
+        variant="outline"
+        onClick={onLogout}
+        disabled={busy}
+        aria-label={busy ? 'Đang đăng xuất…' : 'Đăng xuất'}
+      >
         <LogOut size={18} aria-hidden="true" />
-        {busy ? 'Đang đăng xuất…' : 'Đăng xuất'}
+        <span>{busy ? 'Đang đăng xuất…' : 'Đăng xuất'}</span>
       </Button>
     </header>
   );
@@ -137,6 +144,15 @@ export default function WorkspaceNavigation({
   const [expanded, setExpanded] = useState(false);
   const toggle = useRef<HTMLButtonElement>(null);
   const base = workspaceBase(role);
+  const platformName =
+    role === 'ADMIN'
+      ? 'Quản trị hệ thống'
+      : role === 'OPERATIONS_MANAGER'
+        ? 'Điều phối vận hành'
+        : role === 'TECHNICIAN'
+          ? 'Đội ngũ kỹ thuật'
+          : null;
+  const WorkspaceIcon = role === 'ADMIN' ? ShieldCheck : role === 'TECHNICIAN' ? ListChecks : Boxes;
   const closeMenu = () => setExpanded(false);
   const handleEscape = (event: React.KeyboardEvent) => {
     if (event.key === 'Escape' && expanded) {
@@ -146,6 +162,17 @@ export default function WorkspaceNavigation({
   };
   return (
     <aside className="workspace-sidebar">
+      {platformName && (
+        <div className="platform-nav-heading">
+          <span>
+            <WorkspaceIcon size={20} aria-hidden="true" />
+          </span>
+          <div>
+            <small>KHÔNG GIAN LÀM VIỆC</small>
+            <strong>{platformName}</strong>
+          </div>
+        </div>
+      )}
       <button
         ref={toggle}
         onKeyDown={handleEscape}
@@ -182,7 +209,7 @@ export default function WorkspaceNavigation({
               <Boxes size={19} aria-hidden="true" />
               Lắp đặt Kiosk
             </Link>
-            <Link onKeyDown={handleEscape} onClick={closeMenu} href="#technician-guide">
+            <Link onKeyDown={handleEscape} onClick={closeMenu} href="/technician#technician-guide">
               <ListChecks size={19} aria-hidden="true" />
               Hướng dẫn xử lý sự cố
             </Link>

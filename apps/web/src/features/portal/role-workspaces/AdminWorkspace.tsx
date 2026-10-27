@@ -14,6 +14,7 @@ import { startPortalUpdates } from '../../../realtime';
 import '../workspace-styles.css';
 import '../../../dashboard-overview.css';
 import '../../../platform/platform-workspace.css';
+import '../../../platform/platform-refresh.css';
 
 const DashboardOverview = dynamic(() => import('../../../DashboardOverview'), {
   loading: () => <p role="status">Đang tải tổng quan hệ thống…</p>,

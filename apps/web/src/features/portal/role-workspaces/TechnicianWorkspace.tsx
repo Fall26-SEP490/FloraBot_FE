@@ -10,6 +10,8 @@ import { accountPath } from '../../../roleRoutes';
 import WorkspaceNavigation, { WorkspaceHeader } from '../../../WorkspaceNavigation';
 import '../workspace-styles.css';
 import '../../../platform/platform-workspace.css';
+import '../../../platform/platform-refresh.css';
+import WorkspaceWelcome from '../../../platform/WorkspaceWelcome';
 
 const TechnicianInstallations = dynamic(() => import('../../../TechnicianInstallations'), {
   loading: () => <p role="status">Đang tải hồ sơ lắp đặt…</p>,
@@ -74,6 +76,7 @@ export default function TechnicianWorkspace({ section = 'tasks' }: { section?: s
                 </div>
                 <span className="dashboard-context">Kỹ thuật viên</span>
               </div>
+              <WorkspaceWelcome workspaceRole="technician" />
               <StaffTasks
                 actorRole="TECHNICIAN"
                 mode="worker"

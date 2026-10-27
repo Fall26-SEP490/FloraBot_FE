@@ -251,6 +251,7 @@ export default function StaffTasks(props: StaffTasksProps) {
   const actorId = props.actorId ?? props.staffId ?? props.adminId;
   const sellerId = props.sellerId ?? null;
   const isManagement = mode === 'manager' || mode === 'oversight';
+  const isPlatform = role === 'ADMIN' || role === 'OPERATIONS_MANAGER' || role === 'TECHNICIAN';
   const readOnly = props.readOnly ?? (mode === 'oversight' && role === 'ADMIN');
 
   const apiBase = props.apiBase ?? (isManagement ? '/admin/staff-tasks' : '/staff/tasks');
@@ -313,7 +314,11 @@ export default function StaffTasks(props: StaffTasksProps) {
             : 'Bắt đầu công việc, nạp hoa vào ô tủ và gửi báo cáo để chủ shop theo dõi.';
 
   return (
-    <section id="staff-tasks" aria-labelledby="staff-tasks-title">
+    <section
+      id="staff-tasks"
+      className={isPlatform ? 'platform-task-panel' : undefined}
+      aria-labelledby="staff-tasks-title"
+    >
       <h2 id="staff-tasks-title">{sectionTitle}</h2>
       <p>{sectionDescription}</p>
       {tasks.data && (
@@ -322,7 +327,7 @@ export default function StaffTasks(props: StaffTasksProps) {
             <ClipboardList aria-hidden="true" />
             <span>Tổng công việc</span>
             <strong>{tasks.data.items.length}</strong>
-            <small>Trong danh sách</small>
+            <small>{isPlatform ? 'Trong trang đang xem' : 'Trong danh sách'}</small>
           </div>
           <div className="operations-metric">
             <RefreshCw aria-hidden="true" style={{ color: '#0369a1' }} />
@@ -338,7 +343,7 @@ export default function StaffTasks(props: StaffTasksProps) {
           </div>
           <div className="operations-metric">
             <CheckCircle2 aria-hidden="true" style={{ color: '#16a34a' }} />
-            <span>Đã duyệt / Hoàn tất</span>
+            <span>{isPlatform ? 'Đã gửi / Hoàn tất' : 'Đã duyệt / Hoàn tất'}</span>
             <strong style={{ color: 'var(--color-status-success-ink)' }}>
               {
                 tasks.data.items.filter((t) => t.status === 'SUBMITTED' || t.status === 'COMPLETED')
@@ -405,6 +410,15 @@ export default function StaffTasks(props: StaffTasksProps) {
               <ClipboardList size={36} aria-hidden="true" />
               <h3>Chưa có công việc</h3>
               <p>Chưa có công việc trong danh sách này.</p>
+              {isPlatform && (
+                <p className="platform-empty-hint">
+                  {status || page > 1
+                    ? 'Thử đổi bộ lọc hoặc quay về trang đầu để xem các công việc khác.'
+                    : role === 'TECHNICIAN'
+                      ? 'Khi được quản lý phân công, thông tin địa điểm, hướng dẫn và tiến độ sẽ xuất hiện tại đây.'
+                      : 'Các công việc được ghi nhận và phân công sẽ xuất hiện tại đây để theo dõi.'}
+                </p>
+              )}
             </div>
           ) : (
             tasks.data.items.map((task) => (

@@ -15,6 +15,7 @@ import {
 import type { components } from '../../../packages/contracts/src/generated/api';
 import { request, type Session } from './api';
 import { statusName, type WebOrder } from './WebRequests';
+import WorkspaceWelcome from './platform/WorkspaceWelcome';
 
 type Row = { id: string; title: string; detail: string; state: string };
 type Feed = { rows: Row[]; more: boolean };
@@ -353,25 +354,18 @@ function AdminOverview({ session }: { session: Session }) {
   });
   return (
     <div className="dashboard-overview">
-      <div className="dashboard-focus">
-        <div>
-          <h2>Ưu tiên giám sát hệ thống</h2>
-          <p>Theo dõi sự cố đang mở và báo cáo xử lý của nhân viên trên toàn hệ thống.</p>
-          <div className="dashboard-focus-chips" aria-label="Tóm tắt công việc trang 1">
-            <span className="dashboard-focus-chip">
-              Sự cố đang mở: <strong>{incidents.data ? incidents.data.rows.length : '—'}</strong>{' '}
-              <small>(giới hạn trang 1)</small>
-            </span>
-            <span className="dashboard-focus-chip">
-              Báo cáo đã gửi: <strong>{reports.data ? reports.data.rows.length : '—'}</strong>{' '}
-              <small>(giới hạn trang 1)</small>
-            </span>
-          </div>
+      <WorkspaceWelcome workspaceRole="admin">
+        <div className="dashboard-focus-chips" aria-label="Tóm tắt dữ liệu trong trang đầu">
+          <span className="dashboard-focus-chip">
+            Sự cố trong trang đầu:{' '}
+            <strong>{incidents.data ? incidents.data.rows.length : '—'}</strong>
+          </span>
+          <span className="dashboard-focus-chip">
+            Báo cáo trong trang đầu:{' '}
+            <strong>{reports.data ? reports.data.rows.length : '—'}</strong>
+          </span>
         </div>
-        <Link className="button button-primary" href="/admin/tasks">
-          Theo dõi công việc <ArrowRight size={18} aria-hidden="true" />
-        </Link>
-      </div>
+      </WorkspaceWelcome>
       <AdminPersonnelSummary session={session} />
       <div className="dashboard-overview-grid">
         <FeedPanel

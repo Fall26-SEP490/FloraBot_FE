@@ -8,6 +8,7 @@ import { request, type Session } from './api';
 import type { AccountDirectoryItem } from './AccountManagement';
 import type { EligibleKioskResponse, KioskApplicationPage } from './kioskApplicationTypes';
 import { KIOSK_STATUS_LABELS } from './kioskApplicationTypes';
+import WorkspaceWelcome from './platform/WorkspaceWelcome';
 
 export default function OperationsOverview({ session }: { session: Session }) {
   const enabled = session.role === 'OPERATIONS_MANAGER';
@@ -47,23 +48,7 @@ export default function OperationsOverview({ session }: { session: Session }) {
 
   return (
     <div className="operations-overview">
-      <section className="operations-welcome" aria-labelledby="operations-welcome-title">
-        <div>
-          <span className="operations-eyebrow">KHÔNG GIAN ĐIỀU PHỐI</span>
-          <h2 id="operations-welcome-title">Mỗi điểm đặt, một khởi đầu chỉn chu.</h2>
-          <p>
-            Theo sát hồ sơ thuê, sắp xếp đội ngũ và kiểm tra kết quả trước khi bàn giao kiosk cho
-            shop.
-          </p>
-          <Link className="button" href="/operations/installations">
-            Xử lý hồ sơ lắp đặt <ArrowRight size={18} aria-hidden="true" />
-          </Link>
-        </div>
-        <div className="operations-welcome-aside" aria-hidden="true">
-          <Boxes size={68} />
-          <span>Tiếp nhận · Điều phối · Bàn giao</span>
-        </div>
-      </section>
+      <WorkspaceWelcome workspaceRole="operations" />
 
       <div className="operations-section-heading">
         <div>
