@@ -45,7 +45,7 @@ const FlowerShop = dynamic(() => import('../catalog/FlowerShop'), {
   ),
 });
 
-const WorkspaceAccount = dynamic(() => import('../../WorkspaceAccount'), {
+const WorkspaceAccount = dynamic(() => import('./WorkspaceAccount'), {
   loading: () => (
     <main id="main">
       <p role="status">Đang tải tài khoản…</p>
