@@ -19,17 +19,16 @@ import {
   SlidersHorizontal,
   RotateCcw,
 } from '@florabot/ui';
-import CustomerKioskMap from './CustomerKioskMap';
+import CustomerKioskMap from './components/CustomerKioskMap';
+import { fetchPublicKiosks } from './kiosk-location.api';
 import {
-  type PublicKioskDto,
   isValidLatitude,
   isValidLongitude,
   getKioskStatusLabel,
   isKioskActive,
   buildGoogleMapsDirectionsUrl,
-  normalizePublicKiosk,
-} from './kioskTypes';
-import './kiosk.css';
+} from './kiosk-location.utils';
+import './styles/kiosk-location.css';
 
 export default function CustomerKioskLocator() {
   const [keyword, setKeyword] = useState('');
@@ -112,22 +111,7 @@ export default function CustomerKioskLocator() {
   // Public kiosk directory. The deployed endpoint accepts no query parameters.
   const kiosksQuery = useQuery({
     queryKey: ['public-kiosks'],
-    queryFn: async () => {
-      const response = await fetch('/api/kiosks', {
-        method: 'GET',
-        credentials: 'omit',
-        cache: 'no-store',
-      });
-      if (!response.ok) {
-        const err = (await response.json().catch(() => ({}))) as {
-          detail?: string;
-          message?: string;
-        };
-        throw new Error(err.detail || err.message || 'Không thể tải danh sách kiosk.');
-      }
-      const payload = (await response.json()) as PublicKioskDto[];
-      return payload.map(normalizePublicKiosk);
-    },
+    queryFn: fetchPublicKiosks,
     staleTime: 60_000,
   });
 

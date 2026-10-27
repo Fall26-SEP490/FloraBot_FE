@@ -9,14 +9,15 @@ import type {
 import type { Map as MapLibreMap, Marker as MapLibreMarker } from 'maplibre-gl';
 import 'leaflet/dist/leaflet.css';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import type { CustomerKioskLocationItem } from '../kiosk-location.types';
 import {
-  type CustomerKioskLocationItem,
   isValidLatitude,
   isValidLongitude,
   getKioskStatusLabel,
   buildGoogleMapsDirectionsUrl,
-} from './kioskTypes';
-import { getMapTileConfig, buildGoongDirectionsUrl } from './goongMaps';
+  getMapTileConfig,
+  buildGoongDirectionsUrl,
+} from '../kiosk-location.utils';
 
 interface CustomerKioskMapProps {
   kiosks: CustomerKioskLocationItem[];

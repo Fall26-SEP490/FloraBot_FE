@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import CustomerKioskLocator from '../../src/CustomerKioskLocator';
+import CustomerKioskLocator from '../../src/features/kiosk-location/CustomerKioskLocator';
 
 export const metadata: Metadata = {
   title: 'Tìm kiosk nhận hoa | FloraBot',

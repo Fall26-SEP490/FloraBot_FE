@@ -1,5 +1,8 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { getMapTileConfig, buildGoongDirectionsUrl } from '../apps/web/src/goongMaps';
+import {
+  getMapTileConfig,
+  buildGoongDirectionsUrl,
+} from '../apps/web/src/features/kiosk-location/kiosk-location.utils';
 
 describe('Goong Maps helper unit tests', () => {
   const originalKey = process.env.NEXT_PUBLIC_GOONG_MAPTILES_KEY;

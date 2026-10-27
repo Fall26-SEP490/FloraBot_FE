@@ -1,5 +1,5 @@
 import { Button, MapPin } from '@florabot/ui';
-import KioskPickerMap from '../../../KioskPickerMap';
+import KioskPickerMap from '../../kiosk-location/components/KioskPickerMap';
 
 interface KioskLocationFieldsProps {
   installationAddress: string;

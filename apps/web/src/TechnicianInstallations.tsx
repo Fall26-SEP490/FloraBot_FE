@@ -13,7 +13,7 @@ import {
   Plus,
 } from '@florabot/ui';
 import { ApiError, queryClient, request, type Session } from './api';
-import { buildGoogleMapsDirectionsUrl } from './kioskTypes';
+import { buildGoogleMapsDirectionsUrl } from './features/kiosk-location/kiosk-location.utils';
 import type {
   TechnicianInstallationSummary,
   TechnicianInstallationDetail,
