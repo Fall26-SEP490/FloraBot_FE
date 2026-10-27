@@ -32,7 +32,7 @@ const AdminAccounts = dynamic(() => import('../../account-management/components/
   loading: () => <p role="status">Đang tải tài khoản quản trị…</p>,
 });
 
-const AdminSellers = dynamic(() => import('../../../AdminSellers'), {
+const AdminSellers = dynamic(() => import('../../account-management/components/AdminSellers'), {
   loading: () => <p role="status">Đang tải danh sách shop hoa…</p>,
 });
 
@@ -77,7 +77,7 @@ const AdminReconciliation = dynamic(
   },
 );
 
-const AdminReports = dynamic(() => import('../../../AdminReports'), {
+const AdminReports = dynamic(() => import('../../dashboard/components/AdminReports'), {
   loading: () => <p role="status">Đang tải báo cáo tổng quan…</p>,
 });
 

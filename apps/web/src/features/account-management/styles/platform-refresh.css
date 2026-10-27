@@ -574,7 +574,9 @@
     order: 0;
   }
   .workspace-portal-root.platform-workspace .dashboard-role {
-    display: none;
+    font-size: 0.72rem;
+    padding: 2px 0 2px 10px;
+    align-self: center;
   }
   .workspace-portal-root.platform-workspace .dashboard-user {
     order: 1;
