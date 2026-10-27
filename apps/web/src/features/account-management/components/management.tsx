@@ -3,37 +3,22 @@
 import { useId, useState, type FormEvent, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button, Search, RefreshCw, X, Users } from '@florabot/ui';
-import { request, type Session } from '../api';
-import type { components } from '../../../../packages/contracts/src/generated/api';
-import './platform-management.css';
+import { request, type Session } from '../../../api';
+import type { Profile, ProfileInput } from '../account-management.types';
+import { accountStatuses, roleLabels, statusLabels } from '../account-management.constants';
+import { message, dateText } from '../account-management.utils';
+import '../styles/platform-management.css';
 
-export type Profile = components['schemas']['AccountDetailResponse'];
-export type ProfileInput = components['schemas']['UpdateAccountProfileRequest'];
-export const accountStatuses = ['ACTIVE', 'LOCKED', 'DISABLED'] as const;
-export const roleLabels: Record<string, string> = {
-  ADMIN: 'Admin',
-  OPERATIONS_MANAGER: 'Quản lý vận hành',
-  TECHNICIAN: 'Kỹ thuật viên',
-  SELLER: 'Chủ shop',
-  SELLER_STAFF: 'Nhân viên shop',
-  CUSTOMER: 'Khách hàng',
+export {
+  accountStatuses,
+  roleLabels,
+  statusLabels,
+  message,
+  dateText,
+  type Profile,
+  type ProfileInput,
 };
-export const statusLabels: Record<string, string> = {
-  ACTIVE: 'Đang hoạt động',
-  LOCKED: 'Tạm khóa',
-  DISABLED: 'Vô hiệu hóa',
-  PENDING: 'Chờ duyệt',
-  APPROVED: 'Đã duyệt',
-  PAST_DUE: 'Gói hết hạn',
-  SUSPENDED: 'Tạm ngừng shop',
-  CLOSED: 'Đã đóng shop',
-};
-export const message = (error: unknown) =>
-  error instanceof Error ? error.message : 'Chưa xử lý được yêu cầu. Vui lòng thử lại.';
-export const dateText = (value?: string | null) =>
-  value
-    ? new Date(value).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })
-    : 'Chưa cập nhật';
+
 export function Status({ value }: { value: string }) {
   return (
     <span className="management-status" data-status={value}>
@@ -41,6 +26,7 @@ export function Status({ value }: { value: string }) {
     </span>
   );
 }
+
 export function DirectoryIdentity({
   name,
   secondary,
@@ -72,6 +58,7 @@ export function DirectoryIdentity({
     </div>
   );
 }
+
 export function DirectoryHeading({
   id,
   title,
@@ -103,6 +90,7 @@ export function DirectoryHeading({
     </div>
   );
 }
+
 export function useDirectory<T>(session: Session, endpoint: string, allowedRole: string) {
   const [draft, setDraft] = useState('');
   const [search, setSearch] = useState('');
@@ -132,6 +120,7 @@ export function useDirectory<T>(session: Session, endpoint: string, allowedRole:
     query,
   };
 }
+
 export function DirectoryTools<T>({
   directory: d,
   statuses = accountStatuses,
@@ -232,6 +221,7 @@ export function DirectoryTools<T>({
     </form>
   );
 }
+
 export function PageControls({
   page,
   hasMore,
@@ -255,6 +245,7 @@ export function PageControls({
     </nav>
   );
 }
+
 export function LoadState({
   pending,
   error,
@@ -278,6 +269,7 @@ export function LoadState({
     );
   return <>{children}</>;
 }
+
 export function BasicProfileForm({
   initial,
   save,

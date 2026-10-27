@@ -16,8 +16,8 @@ import type {
   IncidentPhoto,
 } from './installations.types';
 import { KIOSK_STATUS_LABELS } from './installations.constants';
-import type { AccountDirectoryItem } from '../../AccountManagement';
-import { Modal } from '../../dashboard/Modal';
+import type { AccountDirectoryItem } from '../account-management/account-management.types';
+import { Modal } from '../../shared/components/Modal';
 import '../../kiosk-shared.css';
 import './styles/operations-installations.css';
 

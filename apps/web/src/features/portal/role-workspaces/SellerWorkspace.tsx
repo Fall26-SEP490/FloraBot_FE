@@ -12,10 +12,10 @@ import WorkspaceNavigation, { WorkspaceHeader } from '../../../WorkspaceNavigati
 import { workspaceSections } from '../../../workspaceSections';
 import { startPortalUpdates } from '../../../realtime';
 import '../workspace-styles.css';
-import '../../../dashboard-overview.css';
+import '../../dashboard/styles/dashboard-overview.css';
 import '../../../seller.css';
 
-const DashboardOverview = dynamic(() => import('../../../DashboardOverview'), {
+const DashboardOverview = dynamic(() => import('../../dashboard/DashboardOverview'), {
   loading: () => <p role="status">Đang tải tổng quan cửa hàng…</p>,
 });
 
@@ -65,7 +65,7 @@ const StaffTasks = dynamic(() => import('../../task-management/TaskManagement'),
   loading: () => <p role="status">Đang tải danh sách công việc…</p>,
 });
 
-const AccountManagement = dynamic(() => import('../../../AccountManagement'), {
+const AccountManagement = dynamic(() => import('../../account-management/AccountManagement'), {
   loading: () => <p role="status">Đang tải quản lý nhân sự…</p>,
 });
 

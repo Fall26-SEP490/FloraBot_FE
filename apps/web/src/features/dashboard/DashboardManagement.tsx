@@ -5,9 +5,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Button, Plus } from '@florabot/ui';
-import { DataTable, TablePagination, type DataTableColumn } from './DataTable';
-import { ConfirmDialog, Modal } from './Modal';
-import { paginate } from './pagination';
+import {
+  DataTable,
+  TablePagination,
+  type DataTableColumn,
+} from '../../shared/components/DataTable';
+import { ConfirmDialog, Modal } from '../../shared/components/Modal';
+import { paginate } from '../../shared/pagination';
 
 export type ManagementRole = 'ADMIN' | 'SELLER' | 'SELLER_STAFF';
 

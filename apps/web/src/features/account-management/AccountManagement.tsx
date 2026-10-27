@@ -18,11 +18,15 @@ import {
   Search,
   Users,
 } from '@florabot/ui';
-import { ApiError, queryClient, request, sessionQuery } from './api';
-import { ConfirmDialog, Modal } from './dashboard/Modal';
-import { DataTable, TablePagination, type DataTableColumn } from './dashboard/DataTable';
-import { paginate } from './dashboard/pagination';
-import AccountProfileDialog from './platform/AccountProfileDialog';
+import { ApiError, queryClient, request, sessionQuery } from '../../api';
+import { ConfirmDialog, Modal } from '../../shared/components/Modal';
+import {
+  DataTable,
+  TablePagination,
+  type DataTableColumn,
+} from '../../shared/components/DataTable';
+import { paginate } from '../../shared/pagination';
+import AccountProfileDialog from './components/AccountProfileDialog';
 
 export type AccountStatus = 'ACTIVE' | 'LOCKED' | 'DISABLED';
 export type AccountRole = 'OPERATIONS_MANAGER' | 'TECHNICIAN' | 'SELLER_STAFF';

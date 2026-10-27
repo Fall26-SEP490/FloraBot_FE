@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import type { z } from 'zod';
 import { Button } from '@florabot/ui';
 import { queryClient } from '../../../api';
-import { Modal } from '../../../dashboard/Modal';
+import { Modal } from '../../../shared/components/Modal';
 import { updateProductPrice, setProductStatus } from '../product.api';
 import { priceSchema } from '../product.schemas';
 import type { Product } from '../product.types';

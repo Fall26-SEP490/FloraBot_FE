@@ -3,10 +3,16 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
-import { queryClient, request, type Session } from '../api';
-import { DataTable } from '../dashboard/DataTable';
-import { Modal } from '../dashboard/Modal';
-import type { components } from '../../../../packages/contracts/src/generated/api';
+import { queryClient, request, type Session } from '../../../api';
+import { DataTable } from '../../../shared/components/DataTable';
+import { Modal } from '../../../shared/components/Modal';
+import type { components } from '../../../../../../packages/contracts/src/generated/api';
+import type {
+  OperationsSellerSummary as Seller,
+  OperationsSellerDetail as Detail,
+  SellerAccountResponse as Owner,
+  SellerStatusHistoryResponse as History,
+} from '../account-management.types';
 import {
   BasicProfileForm,
   DirectoryTools,
@@ -21,10 +27,6 @@ import {
   type ProfileInput,
 } from './management';
 
-type Seller = components['schemas']['OperationsSellerSummary'];
-type Detail = components['schemas']['OperationsSellerDetail'];
-type Owner = components['schemas']['SellerAccountResponse'];
-type History = components['schemas']['SellerStatusHistoryResponse'];
 const shopStatuses = ['PENDING', 'APPROVED', 'ACTIVE', 'PAST_DUE', 'SUSPENDED', 'CLOSED'];
 
 function SellerDetail({ id, actorId, close }: { id: string; actorId: string; close: () => void }) {

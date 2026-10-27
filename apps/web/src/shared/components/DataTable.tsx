@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { clampPage, pageRange, totalPages } from './pagination';
+import { clampPage, pageRange, totalPages } from '../pagination';
 
 export type DataTableColumn<T> = {
   key: string;

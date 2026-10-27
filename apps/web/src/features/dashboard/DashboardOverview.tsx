@@ -12,11 +12,11 @@ import {
   ClipboardList,
   RefreshCw,
 } from '@florabot/ui';
-import type { components } from '../../../packages/contracts/src/generated/api';
-import { request, type Session } from './api';
-import type { WebOrder } from './features/orders/orders.types';
-import { statusName } from './features/orders/orders.utils';
-import WorkspaceWelcome from './platform/WorkspaceWelcome';
+import type { components } from '../../../../../packages/contracts/src/generated/api';
+import { request, type Session } from '../../api';
+import type { WebOrder } from '../orders/orders.types';
+import { statusName } from '../orders/orders.utils';
+import WorkspaceWelcome from '../../shared/components/WorkspaceWelcome';
 
 type Row = { id: string; title: string; detail: string; state: string };
 type Feed = { rows: Row[]; more: boolean };

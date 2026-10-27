@@ -9,10 +9,10 @@ import { logoutSession, sessionQuery } from '../../../api';
 import { accountPath } from '../../../roleRoutes';
 import WorkspaceNavigation, { WorkspaceHeader } from '../../../WorkspaceNavigation';
 import '../workspace-styles.css';
-import '../../../dashboard-overview.css';
+import '../../dashboard/styles/dashboard-overview.css';
 import '../../../operations.css';
-import '../../../platform/platform-workspace.css';
-import '../../../platform/platform-refresh.css';
+import '../../account-management/styles/platform-workspace.css';
+import '../../account-management/styles/platform-refresh.css';
 
 const OperationsInstallations = dynamic(
   () => import('../../installations/OperationsInstallations'),
@@ -21,15 +21,21 @@ const OperationsInstallations = dynamic(
   },
 );
 
-const OperationsSellers = dynamic(() => import('../../../platform/OperationsSellers'), {
-  loading: () => <p role="status">Đang tải danh sách shop hoa…</p>,
-});
+const OperationsSellers = dynamic(
+  () => import('../../account-management/components/OperationsSellers'),
+  {
+    loading: () => <p role="status">Đang tải danh sách shop hoa…</p>,
+  },
+);
 
-const ManagedCustomers = dynamic(() => import('../../../platform/ManagedCustomers'), {
-  loading: () => <p role="status">Đang tải danh sách khách hàng…</p>,
-});
+const ManagedCustomers = dynamic(
+  () => import('../../account-management/components/ManagedCustomers'),
+  {
+    loading: () => <p role="status">Đang tải danh sách khách hàng…</p>,
+  },
+);
 
-const AccountManagement = dynamic(() => import('../../../AccountManagement'), {
+const AccountManagement = dynamic(() => import('../../account-management/AccountManagement'), {
   loading: () => <p role="status">Đang tải quản lý kỹ thuật viên…</p>,
 });
 
