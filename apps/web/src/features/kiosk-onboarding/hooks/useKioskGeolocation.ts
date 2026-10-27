@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { isValidLatitude, isValidLongitude } from '../../../kioskTypes';
+import { isValidLatitude, isValidLongitude } from '../../kiosk-location/kiosk-location.utils';
 
 export function useKioskGeolocation(onLocationSelect: (lat: number, lon: number) => void) {
   const [gpsLoading, setGpsLoading] = useState(false);

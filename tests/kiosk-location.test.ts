@@ -7,7 +7,7 @@ import {
   isKioskActive,
   buildGoogleMapsDirectionsUrl,
   buildGoogleMapsSearchUrl,
-} from '../apps/web/src/kioskTypes';
+} from '../apps/web/src/features/kiosk-location/kiosk-location.utils';
 
 describe('kioskTypes coordinates and URL helpers', () => {
   it('does NOT coerce blank or whitespace to 0', () => {

@@ -4,19 +4,21 @@ import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button, MapPin, RefreshCw, CircleAlert, Check } from '@florabot/ui';
 import { ApiError, queryClient, request, type Session } from './api';
-import KioskPickerMap from './KioskPickerMap';
+import KioskPickerMap from './features/kiosk-location/components/KioskPickerMap';
 import { TablePagination } from './dashboard/DataTable';
 import { clampPage, paginate } from './dashboard/pagination';
+import type {
+  SellerKioskItem,
+  UpdateKioskLocationPayload,
+} from './features/kiosk-location/kiosk-location.types';
 import {
-  type SellerKioskItem,
-  type UpdateKioskLocationPayload,
   parseCoordinate,
   isValidLatitude,
   isValidLongitude,
   getKioskStatusLabel,
   isKioskActive,
   buildGoogleMapsSearchUrl,
-} from './kioskTypes';
+} from './features/kiosk-location/kiosk-location.utils';
 import './kiosk.css';
 
 interface SellerKiosksProps {

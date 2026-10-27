@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { CircleMarker, Map as LeafletMap } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { isValidLatitude, isValidLongitude } from './kioskTypes';
+import { isValidLatitude, isValidLongitude } from '../kiosk-location.utils';
 
 interface KioskPickerMapProps {
   latitude: number | null;
