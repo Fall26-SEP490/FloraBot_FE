@@ -231,6 +231,11 @@ test.describe('Member Google Account Linking', () => {
       await route.fulfill({ status: 200, contentType: 'application/javascript', body: stub });
     });
 
+    let releaseConfig: () => void = () => {};
+    const configHold = new Promise<void>((resolve) => {
+      releaseConfig = resolve;
+    });
+
     await page.route('**/api/**', async (route) => {
       const url = new URL(route.request().url());
       if (url.pathname === '/api/auth/me') return route.fulfill({ json: customerSession });
@@ -239,8 +244,8 @@ test.describe('Member Google Account Linking', () => {
         return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
       }
       if (url.pathname === '/api/auth/config') {
-        // Artificially delay config to ensure pending state unmounted container first
-        await new Promise((resolve) => setTimeout(resolve, 300));
+        // Hold config response until pending state assertions have completed
+        await configHold;
         return route.fulfill({
           json: {
             googleClientId: 'test-client-id-delayed.apps.googleusercontent.com',
@@ -258,6 +263,9 @@ test.describe('Member Google Account Linking', () => {
     const loadingMessage = page.getByText('Đang tải cấu hình liên kết Google…');
     await expect(loadingMessage).toBeVisible();
     expect(await page.locator('[data-testid="google-link-button-container"]').count()).toBe(0);
+
+    // Release config so the component receives data and finishes rendering
+    releaseConfig();
 
     // Wait for button to be rendered once config arrives
     const gisButton = page.locator('[data-testid="mock-gis-button"]');

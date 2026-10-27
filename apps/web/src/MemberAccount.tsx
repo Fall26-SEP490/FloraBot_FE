@@ -16,11 +16,11 @@ import {
   User,
 } from '@florabot/ui';
 import { ApiError, queryClient, request } from './api';
-import { passwordRule } from './MemberAuth';
+import { passwordRule } from './features/auth/auth.schemas';
 import type { components } from '../../../packages/contracts/src/generated/api';
 import WebRequests from './WebRequests';
 import MemberShop from './MemberShop';
-import MemberGoogleLink from './MemberGoogleLink';
+import GoogleAccountLink from './features/auth/GoogleAccountLink';
 import { CustomerChatSection } from './chat/CustomerChatSection';
 import { getCustomerChats } from './chat/api';
 
@@ -462,7 +462,7 @@ export default function MemberAccount() {
             ) : (
               <>
                 <MemberBasicProfileForm defaultFullName={profile.data.fullName} />
-                <MemberGoogleLink email={profile.data.email} />
+                <GoogleAccountLink email={profile.data.email} />
                 <div
                   style={{
                     marginTop: '1.5rem',
