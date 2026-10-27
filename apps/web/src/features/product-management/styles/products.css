@@ -362,3 +362,13 @@
   min-height: 42px;
   padding: 0 1.25rem;
 }
+
+@media (max-width: 768px) {
+  .product-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .management-modal:has(.product-create-container) {
+    width: 100%;
+  }
+}

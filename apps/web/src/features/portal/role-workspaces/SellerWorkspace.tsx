@@ -45,9 +45,12 @@ const SellerKiosks = dynamic(() => import('../../kiosk-management/SellerKiosks')
   loading: () => <p role="status">Đang tải danh sách kiosk…</p>,
 });
 
-const Subscriptions = dynamic(() => import('../../../Subscriptions'), {
-  loading: () => <p role="status">Đang tải gói dịch vụ…</p>,
-});
+const Subscriptions = dynamic(
+  () => import('../../finance/components/subscriptions/Subscriptions'),
+  {
+    loading: () => <p role="status">Đang tải gói dịch vụ…</p>,
+  },
+);
 
 const SellerStock = dynamic(() => import('../../inventory/SellerStock'), {
   loading: () => <p role="status">Đang tải danh sách tồn kho…</p>,

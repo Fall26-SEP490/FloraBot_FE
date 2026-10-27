@@ -10,6 +10,7 @@ const reuseExistingServer =
 export default defineConfig({
   testDir: './tests/portal',
   outputDir: './test-results/portal',
+  workers: process.env.CI ? 2 : 2,
   use: { baseURL, trace: 'retain-on-failure' },
   webServer: {
     command:

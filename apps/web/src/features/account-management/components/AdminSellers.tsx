@@ -5,10 +5,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@florabot/ui';
-import type { components } from '../../../packages/contracts/src/generated/api';
-import { queryClient, request } from './api';
-import { TablePagination } from './shared/components/DataTable';
-import { clampPage, paginate } from './shared/pagination';
+import type { components } from '../../../../../../packages/contracts/src/generated/api';
+import { queryClient, request } from '../../../api';
+import { TablePagination } from '../../../shared/components/DataTable';
+import { clampPage, paginate } from '../../../shared/pagination';
 
 type Seller = components['schemas']['AdminSellerResponse'];
 type Package = components['schemas']['PackageResponse'];

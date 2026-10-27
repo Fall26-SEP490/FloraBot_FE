@@ -4,8 +4,8 @@ import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@florabot/ui';
-import type { components } from '../../../packages/contracts/src/generated/api';
-import { ApiError, queryClient, request, type Session } from './api';
+import type { components } from '../../../../../../../packages/contracts/src/generated/api';
+import { ApiError, queryClient, request, type Session } from '../../../../api';
 
 type Overview = components['schemas']['SubscriptionOverviewResponse'];
 type PaymentLink = components['schemas']['PaymentLinkResponse'];

@@ -39,7 +39,7 @@ const AccountManagement = dynamic(() => import('../../account-management/Account
   loading: () => <p role="status">Đang tải quản lý kỹ thuật viên…</p>,
 });
 
-const OperationsOverview = dynamic(() => import('../../../OperationsOverview'), {
+const OperationsOverview = dynamic(() => import('../../dashboard/OperationsOverview'), {
   loading: () => <p role="status">Đang tải tổng quan vận hành…</p>,
 });
 
