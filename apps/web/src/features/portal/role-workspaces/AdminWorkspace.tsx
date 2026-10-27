@@ -44,11 +44,11 @@ const AdminSlots = dynamic(() => import('../../kiosk-management/AdminSlots'), {
   loading: () => <p role="status">Đang tải quản lý ô tủ…</p>,
 });
 
-const AdminIncidents = dynamic(() => import('../../../AdminIncidents'), {
+const AdminIncidents = dynamic(() => import('../../incidents/AdminIncidents'), {
   loading: () => <p role="status">Đang tải danh sách sự cố…</p>,
 });
 
-const AdminComplaints = dynamic(() => import('../../../AdminComplaints'), {
+const AdminComplaints = dynamic(() => import('../../complaints/AdminComplaints'), {
   loading: () => <p role="status">Đang tải khiếu nại…</p>,
 });
 

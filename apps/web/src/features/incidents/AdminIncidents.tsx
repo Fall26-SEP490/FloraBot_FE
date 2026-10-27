@@ -4,12 +4,19 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@florabot/ui';
-import type { components } from '../../../packages/contracts/src/generated/api';
-import { ApiError, queryClient, request } from './api';
+import { ApiError, queryClient, request } from '../../api';
+import type {
+  AdminIncidentDetail,
+  AdminIncidentPage,
+  AdminIncidentResponse,
+  ResolveDeviceFaultRequest,
+} from './incidents.types';
+import { formatIncidentDate, formatIncidentLabel, safeUrl } from './incidents.utils';
 
-type Incident = components['schemas']['AdminIncidentResponse'];
-type Detail = components['schemas']['AdminIncidentDetail'];
-type Page = components['schemas']['AdminIncidentPage'];
+type Incident = AdminIncidentResponse;
+type Detail = AdminIncidentDetail;
+type Page = AdminIncidentPage;
+
 const schema = z.object({
   note: z
     .string()
@@ -17,19 +24,6 @@ const schema = z.object({
     .min(5, 'Ghi kết quả kiểm tra ít nhất 5 ký tự.')
     .max(2000, 'Ghi chú tối đa 2.000 ký tự.'),
 });
-const date = (value: string) =>
-  new Date(value).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
-const label = (row: Incident) =>
-  `${row.location?.kioskName || row.kioskId}${row.slot ? ` · Ô ${row.slot.slotCode}` : ' · Toàn kiosk'}`;
-const safeUrl = (value: string) => {
-  try {
-    if (/^\/api\/admin\/evidence\/[0-9a-f-]{36}$/.test(value)) return value;
-    const url = new URL(value);
-    return url.protocol === 'https:' && !url.username && !url.password ? url.href : null;
-  } catch {
-    return null;
-  }
-};
 
 function IncidentItem({ row, onNotice }: { row: Incident; onNotice: (message: string) => void }) {
   const [open, setOpen] = useState(false);
@@ -53,11 +47,11 @@ function IncidentItem({ row, onNotice }: { row: Incident; onNotice: (message: st
       request('/admin/flows/resolve_device_fault', {
         p_dispute: row.id,
         p_note: note,
-      } satisfies components['schemas']['ResolveDeviceFaultRequest']),
+      } satisfies ResolveDeviceFaultRequest),
     onSuccess: () => {
       form.reset();
       setReview(null);
-      onNotice(`Đã ghi nhận xử lý sự cố tại ${label(row)}.`);
+      onNotice(`Đã ghi nhận xử lý sự cố tại ${formatIncidentLabel(row)}.`);
     },
     onError: (error) => {
       setReview(null);
@@ -76,7 +70,6 @@ function IncidentItem({ row, onNotice }: { row: Incident; onNotice: (message: st
     },
   });
   const confirm = () => {
-    // Background reads must not cancel a pointer press; the flow checks current state atomically.
     if (
       sending.current ||
       review === null ||
@@ -91,10 +84,10 @@ function IncidentItem({ row, onNotice }: { row: Incident; onNotice: (message: st
     <li>
       <details onToggle={(event) => setOpen(event.currentTarget.open)}>
         <summary>
-          <strong>{label(row)}</strong>
+          <strong>{formatIncidentLabel(row)}</strong>
           <span>
             {row.kind === 'DISPENSE_FAILED' ? 'Không giao được hoa' : 'Sự cố thiết bị'} ·{' '}
-            {date(row.createdAt)}
+            {formatIncidentDate(row.createdAt)}
           </span>
         </summary>
         {open && (
@@ -175,7 +168,9 @@ function IncidentItem({ row, onNotice }: { row: Incident; onNotice: (message: st
                     {review !== null && (
                       <>
                         <p>
-                          <strong>Xác nhận đã kiểm tra và xử lý tại {label(row)}?</strong>
+                          <strong>
+                            Xác nhận đã kiểm tra và xử lý tại {formatIncidentLabel(row)}?
+                          </strong>
                         </p>
                         <p className="incident-text">{review}</p>
                       </>
@@ -216,7 +211,7 @@ function IncidentItem({ row, onNotice }: { row: Incident; onNotice: (message: st
                       {detail.data.incident.decision || 'Chưa có ghi chú.'}
                     </p>
                     {detail.data.incident.resolvedAt && (
-                      <p>{date(detail.data.incident.resolvedAt)}</p>
+                      <p>{formatIncidentDate(detail.data.incident.resolvedAt)}</p>
                     )}
                   </>
                 )}

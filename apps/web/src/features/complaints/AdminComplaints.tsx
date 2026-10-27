@@ -4,12 +4,19 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@florabot/ui';
-import type { components } from '../../../packages/contracts/src/generated/api';
-import { ApiError, queryClient, request } from './api';
+import { ApiError, queryClient, request } from '../../api';
+import type {
+  AdminComplaintDetail,
+  AdminComplaintPage,
+  AdminComplaintResponse,
+  ResolveDisputeRequest,
+} from './complaints.types';
+import { formatComplaintDate, formatComplaintMoney, safeUrl } from './complaints.utils';
 
-type Row = components['schemas']['AdminComplaintResponse'];
-type Detail = components['schemas']['AdminComplaintDetail'];
-type Queue = components['schemas']['AdminComplaintPage'];
+type Row = AdminComplaintResponse;
+type Detail = AdminComplaintDetail;
+type Queue = AdminComplaintPage;
+
 const schema = z.object({
   amount: z
     .string()
@@ -22,18 +29,6 @@ const schema = z.object({
     .max(2000, 'Lý do tối đa 2.000 ký tự.'),
 });
 type Fields = z.infer<typeof schema>;
-const money = (value: number | string) => `${Number(value).toLocaleString('vi-VN')} đ`;
-const date = (value: string) =>
-  new Date(value).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
-const safeUrl = (value: string) => {
-  try {
-    if (/^\/api\/admin\/evidence\/[0-9a-f-]{36}$/.test(value)) return value;
-    const url = new URL(value);
-    return url.protocol === 'https:' && !url.username && !url.password ? url.href : null;
-  } catch {
-    return null;
-  }
-};
 
 function Complaint({ row, onSaved }: { row: Row; onSaved: (message: string) => void }) {
   const [open, setOpen] = useState(false);
@@ -77,7 +72,7 @@ function Complaint({ row, onSaved }: { row: Row; onSaved: (message: string) => v
         p_dispute: row.id,
         p_refund: Number(review.amount),
         p_decision: review.decision,
-      } satisfies components['schemas']['ResolveDisputeRequest']);
+      } satisfies ResolveDisputeRequest);
       onSaved(`Đã ghi nhận quyết định cho đơn ${row.orderCode}.`);
       form.reset();
       setReview(null);
@@ -104,7 +99,7 @@ function Complaint({ row, onSaved }: { row: Row; onSaved: (message: string) => v
         <summary>
           <strong>Đơn {row.orderCode}</strong>
           <span>
-            {date(row.createdAt)} · {money(row.orderTotal)}
+            {formatComplaintDate(row.createdAt)} · {formatComplaintMoney(row.orderTotal)}
           </span>
         </summary>
         {open && (
@@ -122,7 +117,7 @@ function Complaint({ row, onSaved }: { row: Row; onSaved: (message: string) => v
                 <ul>
                   {detail.data.items.map((item, index) => (
                     <li key={index}>
-                      {item.name} · {item.quantity} × {money(item.unitPrice)}
+                      {item.name} · {item.quantity} × {formatComplaintMoney(item.unitPrice)}
                     </li>
                   ))}
                 </ul>
@@ -208,7 +203,7 @@ function Complaint({ row, onSaved }: { row: Row; onSaved: (message: string) => v
                         <h4 ref={heading} tabIndex={-1}>
                           {Number(review.amount) === 0
                             ? 'Xác nhận từ chối hoàn tiền'
-                            : `Xác nhận duyệt hoàn ${money(review.amount)}`}
+                            : `Xác nhận duyệt hoàn ${formatComplaintMoney(review.amount)}`}
                         </h4>
                         <p className="incident-text">{review.decision}</p>
                         <p>
@@ -247,7 +242,7 @@ function Complaint({ row, onSaved }: { row: Row; onSaved: (message: string) => v
                     <>
                       <h3>
                         {detail.data.complaint.status === 'RESOLVED_REFUND'
-                          ? `Đã duyệt hoàn ${money(detail.data.complaint.refundAmount ?? 0)}`
+                          ? `Đã duyệt hoàn ${formatComplaintMoney(detail.data.complaint.refundAmount ?? 0)}`
                           : 'Đã từ chối hoàn tiền'}
                       </h3>
                       <p className="incident-text">{detail.data.complaint.decision}</p>
