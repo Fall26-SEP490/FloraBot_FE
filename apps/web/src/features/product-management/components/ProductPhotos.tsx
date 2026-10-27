@@ -1,19 +1,15 @@
+'use client';
+
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
-import type { components } from '../../../packages/contracts/src/generated/api';
-import { ApiError, request } from './api';
+import { ApiError } from '../../../api';
+import { fetchProductPhotos } from '../product.api';
+import type { PhotoPage, PhotoItem } from '../product.types';
+import { safeImage } from '../product.utils';
 
-type PhotoPage = components['schemas']['ProductPhotoPage'];
 const maximumBytes = 5 * 1024 * 1024;
-function safeImage(url: string) {
-  try {
-    const parsed = new URL(url);
-    return parsed.protocol === 'https:' && !parsed.username && !parsed.password;
-  } catch {
-    return false;
-  }
-}
+
 function StoredPhoto({ url, label }: { url: string; label: string }) {
   const [failed, setFailed] = useState(false);
   return failed || !safeImage(url) ? (
@@ -61,11 +57,13 @@ export default function ProductPhotos({
   const notice = useRef<HTMLParagraphElement>(null);
   const objectUrl = useRef('');
   const sending = useRef(false);
-  const photos = useQuery({
+
+  const photos = useQuery<PhotoPage>({
     queryKey: ['product-photos', sellerId, productId, page],
-    queryFn: () => request<PhotoPage>(`${base}?page=${page}`),
+    queryFn: () => fetchProductPhotos(productId, page),
     enabled: loaded,
   });
+
   useEffect(
     () => () => {
       if (objectUrl.current) URL.revokeObjectURL(objectUrl.current);
@@ -73,6 +71,7 @@ export default function ProductPhotos({
     },
     [],
   );
+
   useEffect(() => {
     if (!cameraOpen || !video.current || !cameraStream.current) return;
     video.current.srcObject = cameraStream.current;
@@ -153,6 +152,7 @@ export default function ProductPhotos({
     select(captured);
     setMessage('Đã chụp ảnh. Hãy kiểm tra ảnh xem trước trước khi tải lên.');
   }
+
   function select(value?: File) {
     if (objectUrl.current) URL.revokeObjectURL(objectUrl.current);
     objectUrl.current = '';
@@ -174,6 +174,7 @@ export default function ProductPhotos({
     setPreview(objectUrl.current);
     setFile(value);
   }
+
   async function upload() {
     if (!file || !canEdit || sending.current || uncertain) return;
     sending.current = true;
@@ -219,6 +220,7 @@ export default function ProductPhotos({
       notice.current?.focus();
     }
   }
+
   return (
     <section className="product-photos" aria-labelledby={`photos-title-${productId}`}>
       <h3 id={`photos-title-${productId}`}>Để bó hoa lên hình thật xinh</h3>
@@ -244,7 +246,7 @@ export default function ProductPhotos({
       )}
       {loaded && photos.data?.items.length === 0 && <p>Chưa có ảnh trên trang này.</p>}
       <ul className="product-photo-gallery">
-        {photos.data?.items.map((photo, index) => (
+        {photos.data?.items.map((photo: PhotoItem, index: number) => (
           <li key={photo.id}>
             <StoredPhoto
               url={photo.url}
