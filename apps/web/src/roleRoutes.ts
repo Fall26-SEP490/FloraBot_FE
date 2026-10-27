@@ -34,3 +34,29 @@ export function accountPath(role?: PlatformRole | null): string {
 }
 
 export const workspaceBase = accountPath;
+
+export const ROLE_LABELS: Record<string, string> = {
+  ADMIN: 'Quản trị viên',
+  OPERATIONS_MANAGER: 'Quản lý vận hành',
+  TECHNICIAN: 'Kỹ thuật viên',
+  SELLER: 'Chủ shop',
+  SELLER_STAFF: 'Nhân viên shop',
+  CUSTOMER: 'Khách hàng',
+  STAFF: 'Nhân viên FloraBot (cũ)',
+};
+
+export const getRoleLabel = (role: string): string => ROLE_LABELS[role] ?? role;
+
+export const isDedicatedWorkspaceRole = (role: string): boolean =>
+  role === 'OPERATIONS_MANAGER' || role === 'TECHNICIAN' || role === 'SELLER_STAFF';
+
+export const isExistingFullPortalRole = (role: string): boolean =>
+  role === 'ADMIN' ||
+  role === 'OPERATIONS_MANAGER' ||
+  role === 'TECHNICIAN' ||
+  role === 'SELLER' ||
+  role === 'SELLER_STAFF' ||
+  role === 'CUSTOMER';
+
+export const isPlatformOperatorRole = (role: string): boolean =>
+  role === 'OPERATIONS_MANAGER' || role === 'TECHNICIAN' || role === 'ADMIN' || role === 'STAFF';

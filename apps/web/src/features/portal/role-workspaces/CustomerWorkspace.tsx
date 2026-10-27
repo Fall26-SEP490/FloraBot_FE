@@ -4,11 +4,11 @@ import React from 'react';
 import dynamic from 'next/dynamic';
 import '../workspace-styles.css';
 
-const MemberAccount = dynamic(() => import('../../../MemberAccount'), {
+const MemberAccount = dynamic(() => import('../../customer-account/MemberAccount'), {
   loading: () => <p role="status">Đang tải thông tin tài khoản…</p>,
 });
 
-const PersonalProfile = dynamic(() => import('../../../PersonalProfile'), {
+const PersonalProfile = dynamic(() => import('../../profile/PersonalProfile'), {
   loading: () => <p role="status">Đang tải hồ sơ cá nhân…</p>,
 });
 

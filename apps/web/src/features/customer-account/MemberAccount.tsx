@@ -1,5 +1,7 @@
+'use client';
+
 import { useEffect, useState } from 'react';
-import './member.css';
+import './styles/member.css';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
@@ -15,116 +17,26 @@ import {
   Store,
   User,
 } from '@florabot/ui';
-import { ApiError, queryClient, request } from './api';
-import { passwordRule } from './features/auth/auth.schemas';
-import type { components } from '../../../packages/contracts/src/generated/api';
-import WebRequests from './WebRequests';
-import MemberShop from './MemberShop';
-import GoogleAccountLink from './features/auth/GoogleAccountLink';
-import { CustomerChatSection } from './chat/CustomerChatSection';
-import { getCustomerChats } from './chat/api';
-
-type Profile = { id: string; fullName: string; email: string | null; loyaltyPoints: number };
-
-function MemberBasicProfileForm({ defaultFullName }: { defaultFullName?: string }) {
-  const [saving, setSaving] = useState(false);
-  const [notice, setNotice] = useState('');
-  const [error, setError] = useState('');
-
-  const form = useForm<{ fullName: string }>({
-    mode: 'onBlur',
-    reValidateMode: 'onBlur',
-    defaultValues: { fullName: defaultFullName || '' },
-  });
-
-  useEffect(() => {
-    if (defaultFullName && !form.formState.isDirty) {
-      form.reset({ fullName: defaultFullName });
-    }
-  }, [defaultFullName, form]);
-
-  async function handleSave(data: { fullName: string }) {
-    if (saving) return;
-    setSaving(true);
-    setError('');
-    setNotice('');
-    try {
-      await request('/member/profile', { fullName: data.fullName.trim() });
-      await queryClient.invalidateQueries({ queryKey: ['member-profile'] });
-      setNotice('Đã lưu thay đổi hồ sơ cá nhân.');
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Chưa cập nhật được thông tin.');
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <form noValidate onSubmit={form.handleSubmit(handleSave)} style={{ marginBottom: '1.75rem' }}>
-      <h3 style={{ fontSize: '1.1rem', color: '#113421', marginBottom: '0.75rem' }}>
-        Thông tin cá nhân
-      </h3>
-      {notice && (
-        <p role="status" className="notice-success" style={{ color: '#185a32', fontWeight: 600 }}>
-          {notice}
-        </p>
-      )}
-      {error && (
-        <p role="alert" className="error">
-          {error}
-        </p>
-      )}
-      <div style={{ marginBottom: '1rem', maxWidth: '480px' }}>
-        <label htmlFor="member-fullname">Họ và tên *</label>
-        <input
-          id="member-fullname"
-          type="text"
-          {...form.register('fullName', {
-            required: 'Vui lòng nhập họ và tên.',
-            minLength: { value: 2, message: 'Họ và tên cần từ 2 đến 100 ký tự.' },
-            maxLength: { value: 100, message: 'Họ và tên tối đa 100 ký tự.' },
-            validate: (val) => val.trim().length >= 2 || 'Họ và tên cần từ 2 đến 100 ký tự.',
-          })}
-          aria-invalid={!!form.formState.errors.fullName}
-          aria-describedby={form.formState.errors.fullName ? 'member-fullname-error' : undefined}
-        />
-        {form.formState.errors.fullName && (
-          <p id="member-fullname-error" className="error" role="alert">
-            {form.formState.errors.fullName.message}
-          </p>
-        )}
-      </div>
-      <Button type="submit" disabled={saving}>
-        {saving ? 'Đang lưu…' : 'Lưu thông tin cá nhân'}
-      </Button>
-    </form>
-  );
-}
-
-type TabKey =
-  'overview' | 'profile' | 'chats' | 'orders' | 'history' | 'kiosks' | 'security' | 'shop';
-
-const TAB_HASH_MAP: Record<string, TabKey> = {
-  overview: 'overview',
-  'member-profile': 'profile',
-  'member-chats': 'chats',
-  'web-orders': 'orders',
-  'member-orders': 'history',
-  'member-kiosks': 'kiosks',
-  'member-security': 'security',
-  'member-shop': 'shop',
-};
-
-const TAB_TO_HASH: Record<TabKey, string> = {
-  overview: 'overview',
-  profile: 'member-profile',
-  chats: 'member-chats',
-  orders: 'web-orders',
-  history: 'member-orders',
-  kiosks: 'member-kiosks',
-  security: 'member-security',
-  shop: 'member-shop',
-};
+import { ApiError, queryClient } from '../../api';
+import { passwordRule } from '../auth/auth.schemas';
+import WebRequests from '../../WebRequests';
+import MemberShop from '../../MemberShop';
+import GoogleAccountLink from '../auth/GoogleAccountLink';
+import { CustomerChatSection } from '../../chat/CustomerChatSection';
+import { getCustomerChats } from '../../chat/api';
+import MemberBasicProfileForm from './components/MemberBasicProfileForm';
+import {
+  fetchMemberProfile,
+  changeMemberPassword,
+  fetchMemberHistory,
+} from './customer-account.api';
+import {
+  type TabKey,
+  type CustomerHistoryItem,
+  TAB_HASH_MAP,
+  TAB_TO_HASH,
+  ORDER_STATUS_LABELS,
+} from './customer-account.types';
 
 export default function MemberAccount() {
   const router = useRouter();
@@ -172,14 +84,13 @@ export default function MemberAccount() {
 
   const profile = useQuery({
     queryKey: ['member-profile'],
-    queryFn: () => request<Profile>('/member/profile'),
+    queryFn: fetchMemberProfile,
   });
 
   const [page, setPage] = useState(1);
   const history = useQuery({
     queryKey: ['member-history', page],
-    queryFn: () =>
-      request<components['schemas']['CustomerHistoryPage']>(`/member/history?page=${page}`),
+    queryFn: () => fetchMemberHistory(page),
   });
 
   const chatsQuery = useQuery({
@@ -206,7 +117,7 @@ export default function MemberAccount() {
     setError('');
     setNotice('');
     try {
-      await request(password ? '/member/password' : '/member/profile', body);
+      await changeMemberPassword(body);
       if (password) {
         passwords.reset();
         queryClient.clear();
@@ -226,18 +137,6 @@ export default function MemberAccount() {
       setBusy(false);
     }
   }
-
-  const statuses: Record<string, string> = {
-    AWAITING_PAYMENT: 'Chờ thanh toán',
-    PAID: 'Đã thanh toán',
-    DISPENSING: 'Đang nhận hoa',
-    COMPLETED: 'Đã nhận hoa',
-    CANCELLED: 'Đã hủy',
-    EXPIRED: 'Hết hạn thanh toán',
-    DISPENSE_FAILED: 'Đang xử lý sự cố',
-    REFUNDED: 'Đã hoàn tiền',
-    DISPUTED: 'Đang xử lý phản ánh',
-  };
 
   const initialLetter = (profile.data?.fullName || 'F').trim().charAt(0).toUpperCase();
 
@@ -508,13 +407,13 @@ export default function MemberAccount() {
               <>
                 {history.data.items.length ? (
                   <ul className="member-orders">
-                    {history.data.items.map((order) => (
+                    {history.data.items.map((order: CustomerHistoryItem) => (
                       <li key={order.id}>
                         <h3>
                           {order.shopName} · {order.orderCode}
                         </h3>
                         <p>
-                          {statuses[order.status] || order.status} ·{' '}
+                          {ORDER_STATUS_LABELS[order.status] || order.status} ·{' '}
                           {new Date(order.createdAt).toLocaleString('vi-VN')}
                         </p>
                         <p>{order.items.join(', ') || 'Hoa đặt theo yêu cầu'}</p>

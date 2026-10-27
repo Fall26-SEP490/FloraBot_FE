@@ -4,35 +4,24 @@ import { useRouter } from 'next/navigation';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Button, Flower2, LogOut, CircleAlert } from '@florabot/ui';
-import { ApiError, logoutSession, sessionQuery } from './api';
-import { accountPath } from './roleRoutes';
-import './features/portal/workspace-styles.css';
+import { ApiError, logoutSession, sessionQuery } from '../../api';
+import {
+  accountPath,
+  getRoleLabel,
+  isDedicatedWorkspaceRole,
+  isExistingFullPortalRole,
+  isPlatformOperatorRole,
+  ROLE_LABELS,
+} from '../../roleRoutes';
+import './workspace-styles.css';
 
-export const ROLE_LABELS: Record<string, string> = {
-  ADMIN: 'Quản trị viên',
-  OPERATIONS_MANAGER: 'Quản lý vận hành',
-  TECHNICIAN: 'Kỹ thuật viên',
-  SELLER: 'Chủ shop',
-  SELLER_STAFF: 'Nhân viên shop',
-  CUSTOMER: 'Khách hàng',
-  STAFF: 'Nhân viên FloraBot (cũ)',
+export {
+  ROLE_LABELS,
+  getRoleLabel,
+  isDedicatedWorkspaceRole,
+  isExistingFullPortalRole,
+  isPlatformOperatorRole,
 };
-
-export const getRoleLabel = (role: string): string => ROLE_LABELS[role] ?? role;
-
-export const isDedicatedWorkspaceRole = (role: string): boolean =>
-  role === 'OPERATIONS_MANAGER' || role === 'TECHNICIAN' || role === 'SELLER_STAFF';
-
-export const isExistingFullPortalRole = (role: string): boolean =>
-  role === 'ADMIN' ||
-  role === 'OPERATIONS_MANAGER' ||
-  role === 'TECHNICIAN' ||
-  role === 'SELLER' ||
-  role === 'SELLER_STAFF' ||
-  role === 'CUSTOMER';
-
-export const isPlatformOperatorRole = (role: string): boolean =>
-  role === 'OPERATIONS_MANAGER' || role === 'TECHNICIAN' || role === 'ADMIN' || role === 'STAFF';
 
 export default function WorkspaceAccount() {
   const { t } = useTranslation();

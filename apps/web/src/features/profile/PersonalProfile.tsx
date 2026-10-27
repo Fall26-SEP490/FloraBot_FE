@@ -1,46 +1,33 @@
 'use client';
 
-import './profile.css';
+import './styles/profile.css';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { Button, CircleAlert, Check, Eye, EyeOff, ArrowRight, RotateCcw } from '@florabot/ui';
+import { ApiError, logoutSession, queryClient, sessionQuery, type Session } from '../../api';
+import { getRoleLabel } from '../../roleRoutes';
+import { workspaceBase } from '../../workspaceSections';
+import { ConfirmDialog } from '../../dashboard/Modal';
 import {
-  ApiError,
-  logoutSession,
-  queryClient,
-  request,
-  sessionQuery,
-  type AccountProfile,
-  type BankRevealResponse,
-  type ContactEmailChallenge,
-  type Session,
-  type UpdateProfilePayload,
-} from './api';
-import { getRoleLabel } from './WorkspaceAccount';
-import { workspaceBase } from './workspaceSections';
-import { ConfirmDialog } from './dashboard/Modal';
-
-const phonePattern = /^(0[35789][0-9]{8}|\+84[35789][0-9]{8})$/;
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const asciiAlphanumeric = /^[A-Za-z0-9]{4,34}$/;
-
-const hasControlChars = (value: string): boolean =>
-  Array.from(value).some((c) => c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127);
-
-interface BasicFormValues {
-  fullName: string;
-  phone: string;
-  address: string;
-}
-
-interface BankFormValues {
-  bankName: string;
-  accountHolder: string;
-  accountNumber: string;
-}
+  getAccountProfile,
+  updateAccountProfile,
+  requestContactEmailChallenge,
+  verifyContactEmail,
+  resetContactEmail,
+  revealBank,
+} from './profile.api';
+import type {
+  ContactEmailChallenge,
+  BasicFormValues,
+  BankFormValues,
+  BankMode,
+  ContactMode,
+  UpdateProfilePayload,
+} from './profile.types';
+import { phonePattern, emailPattern, asciiAlphanumeric, hasControlChars } from './profile.schemas';
 
 export default function PersonalProfile() {
   const session = useQuery(sessionQuery);
@@ -60,7 +47,7 @@ function PersonalProfileContent() {
 
   const profile = useQuery({
     queryKey: ['account-profile', session.data?.id],
-    queryFn: () => request<AccountProfile>('/account/profile'),
+    queryFn: getAccountProfile,
     enabled: !!isHumanRole && !!session.data?.id,
     staleTime: 30_000,
   });
@@ -92,7 +79,7 @@ function PersonalProfileContent() {
   }, [profile.data, basicForm]);
 
   // Contact email state
-  const [contactMode, setContactMode] = useState<'idle' | 'requesting' | 'otp'>('idle');
+  const [contactMode, setContactMode] = useState<ContactMode>('idle');
   const [targetContactEmail, setTargetContactEmail] = useState('');
   const [contactChallenge, setContactChallenge] = useState<ContactEmailChallenge | null>(null);
   const [otpCode, setOtpCode] = useState('');
@@ -104,7 +91,7 @@ function PersonalProfileContent() {
   const [contactError, setContactError] = useState('');
 
   // Bank section state
-  const [bankMode, setBankMode] = useState<'idle' | 'edit' | 'review' | 'clear-confirm'>('idle');
+  const [bankMode, setBankMode] = useState<BankMode>('idle');
   const [bankValues, setBankValues] = useState<BankFormValues>({
     bankName: '',
     accountHolder: '',
@@ -340,7 +327,7 @@ function PersonalProfileContent() {
     };
 
     try {
-      const updated = await request<AccountProfile>('/account/profile', payload, true, 'PUT');
+      const updated = await updateAccountProfile(payload);
       queryClient.setQueryData(['account-profile', session.data?.id], updated);
       queryClient.setQueryData(['session'], (old: Session | undefined) =>
         old ? { ...old, name: updated.fullName } : old,
@@ -383,7 +370,7 @@ function PersonalProfileContent() {
     }
 
     try {
-      const challenge = await request<ContactEmailChallenge>('/account/contact-email', { email });
+      const challenge = await requestContactEmailChallenge(email);
       setContactChallenge(challenge);
       setResendCountdown(challenge.resendAfterSeconds || 60);
       setContactMode('otp');
@@ -417,10 +404,7 @@ function PersonalProfileContent() {
     }
 
     try {
-      const updated = await request<AccountProfile>('/account/contact-email/verify', {
-        challengeId: contactChallenge.challengeId,
-        code,
-      });
+      const updated = await verifyContactEmail(contactChallenge.challengeId, code);
       queryClient.setQueryData(['account-profile', session.data?.id], updated);
       void queryClient.invalidateQueries({ queryKey: ['account-profile'] });
       setContactMode('idle');
@@ -446,9 +430,7 @@ function PersonalProfileContent() {
     setContactError('');
     setContactNotice('');
     try {
-      const challenge = await request<ContactEmailChallenge>('/account/contact-email', {
-        email: targetContactEmail.trim(),
-      });
+      const challenge = await requestContactEmailChallenge(targetContactEmail.trim());
       setContactChallenge(challenge);
       setResendCountdown(challenge.resendAfterSeconds || 60);
       setContactNotice(`Đã gửi lại mã xác thực mới tới ${targetContactEmail.trim()}.`);
@@ -468,7 +450,7 @@ function PersonalProfileContent() {
     setContactError('');
     setContactNotice('');
     try {
-      const updated = await request<AccountProfile>('/account/contact-email/reset', {});
+      const updated = await resetContactEmail();
       queryClient.setQueryData(['account-profile', session.data?.id], updated);
       void queryClient.invalidateQueries({ queryKey: ['account-profile'] });
       setContactMode('idle');
@@ -491,7 +473,7 @@ function PersonalProfileContent() {
     setRevealingBank(true);
     setBankError('');
     try {
-      const res = await request<BankRevealResponse>('/account/profile/bank/reveal', {});
+      const res = await revealBank();
       setRevealedData({ userId: session.data?.id ?? '', accountNumber: res.accountNumber });
     } catch (cause) {
       setBankError(
@@ -566,7 +548,7 @@ function PersonalProfileContent() {
     };
 
     try {
-      const updated = await request<AccountProfile>('/account/profile', payload, true, 'PUT');
+      const updated = await updateAccountProfile(payload);
       queryClient.setQueryData(['account-profile', session.data?.id], updated);
       void queryClient.invalidateQueries({ queryKey: ['account-profile'] });
       setBankValues({ bankName: '', accountHolder: '', accountNumber: '' });
@@ -598,7 +580,7 @@ function PersonalProfileContent() {
     };
 
     try {
-      const updated = await request<AccountProfile>('/account/profile', payload, true, 'PUT');
+      const updated = await updateAccountProfile(payload);
       queryClient.setQueryData(['account-profile', session.data?.id], updated);
       void queryClient.invalidateQueries({ queryKey: ['account-profile'] });
       setBankMode('idle');
