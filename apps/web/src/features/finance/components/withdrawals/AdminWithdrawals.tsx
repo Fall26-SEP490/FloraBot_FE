@@ -4,16 +4,24 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@florabot/ui';
-import type { components } from '../../../packages/contracts/src/generated/api';
-import { ApiError, queryClient, request } from './api';
+import type {
+  AdminWithdrawalDetail,
+  AdminWithdrawalPage,
+  AdminWithdrawalResponse,
+  ApproveWithdrawalRequest,
+  PayWithdrawalRequest,
+  RejectWithdrawalRequest,
+  WithdrawalBankResponse,
+} from '../../finance.types';
+import { ApiError, queryClient, request } from '../../../../api';
 
-import EvidenceUpload from './EvidenceUpload';
-import FinancialProofs from './FinancialProofs';
+import EvidenceUpload from '../../../installations/components/EvidenceUpload';
+import FinancialProofs from '../FinancialProofs';
 
-type Item = components['schemas']['AdminWithdrawalResponse'];
-type Detail = components['schemas']['AdminWithdrawalDetail'];
-type Bank = components['schemas']['WithdrawalBankResponse'];
-type Page = components['schemas']['AdminWithdrawalPage'];
+type Item = AdminWithdrawalResponse;
+type Detail = AdminWithdrawalDetail;
+type Bank = WithdrawalBankResponse;
+type Page = AdminWithdrawalPage;
 type Action = 'approve' | 'reject' | 'pay';
 const names: Record<string, string> = {
   PENDING: 'Chờ duyệt',
@@ -65,16 +73,16 @@ function WithdrawalDetails({ id, onNotice }: { id: string; onNotice: (message: s
       kind === 'approve'
         ? request('/admin/flows/approve_withdrawal', {
             p_w: id,
-          } satisfies components['schemas']['ApproveWithdrawalRequest'])
+          } satisfies ApproveWithdrawalRequest)
         : kind === 'reject'
           ? request('/admin/flows/reject_withdrawal', {
               p_w: id,
               p_reason: value,
-            } satisfies components['schemas']['RejectWithdrawalRequest'])
+            } satisfies RejectWithdrawalRequest)
           : request('/admin/flows/pay_withdrawal', {
               p_w: id,
               p_proof_url: value,
-            } satisfies components['schemas']['PayWithdrawalRequest']),
+            } satisfies PayWithdrawalRequest),
     onSuccess: (_, input) => {
       setBank(null);
       setAction(null);

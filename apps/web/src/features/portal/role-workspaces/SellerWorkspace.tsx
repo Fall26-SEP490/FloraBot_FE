@@ -57,7 +57,7 @@ const SellerAccessories = dynamic(() => import('../../inventory/SellerAccessorie
   loading: () => <p role="status">Đang tải danh mục phụ kiện…</p>,
 });
 
-const Wallet = dynamic(() => import('../../../Wallet'), {
+const Wallet = dynamic(() => import('../../finance/components/wallet/Wallet'), {
   loading: () => <p role="status">Đang tải ví và giao dịch…</p>,
 });
 
