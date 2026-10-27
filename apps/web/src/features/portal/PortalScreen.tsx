@@ -29,7 +29,7 @@ const GuestHistory = dynamic(() => import('../../GuestHistory'), {
   ),
 });
 
-const MemberAuth = dynamic(() => import('../../MemberAuth'), {
+const MemberAuth = dynamic(() => import('../auth/MemberAuth'), {
   loading: () => (
     <main id="main">
       <p role="status">Đang tải xác thực tài khoản…</p>

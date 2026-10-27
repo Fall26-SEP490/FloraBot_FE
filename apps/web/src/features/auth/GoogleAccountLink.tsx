@@ -1,61 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
-import { ApiError, request } from './api';
-import styles from './MemberGoogleLink.module.css';
+import { ApiError } from '../../api';
+import { fetchAuthConfig, linkGoogleAccount } from './auth.api';
+import styles from './styles/GoogleAccountLink.module.css';
+import type { GoogleAccountLinkProps, GoogleCredentialResponse, GoogleWindow } from './auth.types';
 
 const GIS_SCRIPT_URL = 'https://accounts.google.com/gsi/client';
 const SCRIPT_OWNER_TAG = 'member-google-link';
 const GIS_LOAD_TIMEOUT_MS = 10_000;
 
-interface AuthConfig {
-  googleClientId: string | null;
-  googleEnabled: boolean;
-  registrationEmailEnabled: boolean;
-}
-
-interface GoogleCredentialResponse {
-  credential?: string;
-  select_by?: string;
-}
-
-interface GoogleIdConfiguration {
-  client_id: string;
-  callback: (response: GoogleCredentialResponse) => void;
-  auto_select?: boolean;
-  cancel_on_tap_outside?: boolean;
-}
-
-interface GsiButtonConfiguration {
-  type?: 'standard' | 'icon';
-  theme?: 'outline' | 'filled_blue' | 'filled_black';
-  size?: 'large' | 'medium' | 'small';
-  text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin';
-  shape?: 'rectangular' | 'pill' | 'circle' | 'square';
-  logo_alignment?: 'left' | 'center';
-  width?: number | string;
-  locale?: string;
-}
-
-interface GoogleAccountsId {
-  initialize: (config: GoogleIdConfiguration) => void;
-  renderButton: (parent: HTMLElement, options: GsiButtonConfiguration) => void;
-}
-
-type GoogleWindow = Window &
-  typeof globalThis & {
-    google?: {
-      accounts?: {
-        id?: GoogleAccountsId;
-      };
-    };
-  };
-
-interface MemberGoogleLinkProps {
-  email: string | null;
-}
-
-export default function MemberGoogleLink({ email }: MemberGoogleLinkProps) {
+export default function GoogleAccountLink({ email }: GoogleAccountLinkProps) {
   const isMountedRef = useRef(true);
   const isSubmittingRef = useRef(false);
   const ownedScriptRef = useRef<HTMLScriptElement | null>(null);
@@ -81,7 +36,7 @@ export default function MemberGoogleLink({ email }: MemberGoogleLinkProps) {
 
   const configQuery = useQuery({
     queryKey: ['auth-config'],
-    queryFn: () => request<AuthConfig>('/auth/config'),
+    queryFn: () => fetchAuthConfig(),
   });
 
   const config = configQuery.data;
@@ -204,7 +159,7 @@ export default function MemberGoogleLink({ email }: MemberGoogleLinkProps) {
       setNotice('');
 
       try {
-        const result = await request<{ message: string }>('/member/google/link', {
+        const result = await linkGoogleAccount({
           idToken: response.credential,
         });
         if (!isMountedRef.current) return;

@@ -10,7 +10,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button, Eye, EyeOff } from '@florabot/ui';
 import { ApiError, queryClient, request, type Session } from '../../../api';
-import AuthShell from '../../../AuthShell';
+import AuthShell from '../../auth/components/AuthShell';
 import { accountPath } from '../../../roleRoutes';
 
 const loginSchema = z.object({

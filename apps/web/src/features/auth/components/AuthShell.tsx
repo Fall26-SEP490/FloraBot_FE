@@ -1,16 +1,15 @@
 import type { ReactNode } from 'react';
-import './auth.css';
+import '../styles/auth.css';
 import Link from 'next/link';
 import { Flower2 } from '@florabot/ui';
-import bouquet from '../../../packages/ui/assets/flowers/pastelBouquet-960.webp';
+import bouquet from '../../../../../../packages/ui/assets/flowers/pastelBouquet-960.webp';
 
-export default function AuthShell({
-  children,
-  mode,
-}: {
+export interface AuthShellProps {
   children: ReactNode;
   mode: 'login' | 'register' | 'forgot' | 'reset' | 'staff';
-}) {
+}
+
+export default function AuthShell({ children, mode }: AuthShellProps) {
   const staff = mode === 'staff';
   return (
     <div className="auth-page">
