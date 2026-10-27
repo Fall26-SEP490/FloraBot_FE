@@ -9,9 +9,9 @@ import { logoutSession, sessionQuery } from '../../../api';
 import { accountPath } from '../../../roleRoutes';
 import WorkspaceNavigation, { WorkspaceHeader } from '../../../WorkspaceNavigation';
 import '../workspace-styles.css';
-import '../../../platform/platform-workspace.css';
-import '../../../platform/platform-refresh.css';
-import WorkspaceWelcome from '../../../platform/WorkspaceWelcome';
+import '../../account-management/styles/platform-workspace.css';
+import '../../account-management/styles/platform-refresh.css';
+import WorkspaceWelcome from '../../../shared/components/WorkspaceWelcome';
 
 const TechnicianInstallations = dynamic(
   () => import('../../installations/TechnicianInstallations'),

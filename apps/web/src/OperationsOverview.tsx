@@ -5,13 +5,13 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, Boxes, ClipboardList, RefreshCw, Users, Button } from '@florabot/ui';
 import type { components } from '../../../packages/contracts/src/generated/api';
 import { request, type Session } from './api';
-import type { AccountDirectoryItem } from './AccountManagement';
+import type { AccountDirectoryItem } from './features/account-management/account-management.types';
 import type {
   EligibleKioskResponse,
   KioskApplicationPage,
 } from './features/installations/installations.types';
 import { KIOSK_STATUS_LABELS } from './features/installations/installations.constants';
-import WorkspaceWelcome from './platform/WorkspaceWelcome';
+import WorkspaceWelcome from './shared/components/WorkspaceWelcome';
 
 export default function OperationsOverview({ session }: { session: Session }) {
   const enabled = session.role === 'OPERATIONS_MANAGER';

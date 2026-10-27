@@ -10,7 +10,7 @@ import { Button, CircleAlert, Check, Eye, EyeOff, ArrowRight, RotateCcw } from '
 import { ApiError, logoutSession, queryClient, sessionQuery, type Session } from '../../api';
 import { getRoleLabel } from '../../roleRoutes';
 import { workspaceBase } from '../../workspaceSections';
-import { ConfirmDialog } from '../../dashboard/Modal';
+import { ConfirmDialog } from '../../shared/components/Modal';
 import {
   getAccountProfile,
   updateAccountProfile,

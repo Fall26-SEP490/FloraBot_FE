@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clampPage, paginate, pageRange, totalPages } from '../apps/web/src/dashboard/pagination';
+import { clampPage, paginate, pageRange, totalPages } from '../apps/web/src/shared/pagination';
 
 describe('dashboard table pagination', () => {
   it('calculates pages and slices a complete last page', () => {

@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { Button } from '@florabot/ui';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
 import { queryClient, request } from '../../api';
-import { ConfirmDialog } from '../../dashboard/Modal';
+import { ConfirmDialog } from '../../shared/components/Modal';
 
 type Kiosk = components['schemas']['AdminKioskResponse'];
 type Seller = components['schemas']['AdminSellerResponse'];

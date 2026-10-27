@@ -12,11 +12,11 @@ import WorkspaceNavigation, { WorkspaceHeader } from '../../../WorkspaceNavigati
 import { workspaceSections } from '../../../workspaceSections';
 import { startPortalUpdates } from '../../../realtime';
 import '../workspace-styles.css';
-import '../../../dashboard-overview.css';
-import '../../../platform/platform-workspace.css';
-import '../../../platform/platform-refresh.css';
+import '../../dashboard/styles/dashboard-overview.css';
+import '../../account-management/styles/platform-workspace.css';
+import '../../account-management/styles/platform-refresh.css';
 
-const DashboardOverview = dynamic(() => import('../../../DashboardOverview'), {
+const DashboardOverview = dynamic(() => import('../../dashboard/DashboardOverview'), {
   loading: () => <p role="status">Đang tải tổng quan hệ thống…</p>,
 });
 
@@ -24,11 +24,11 @@ const WebRequests = dynamic(() => import('../../orders/WebRequests'), {
   loading: () => <p role="status">Đang tải danh sách đơn hàng…</p>,
 });
 
-const AccountManagement = dynamic(() => import('../../../AccountManagement'), {
+const AccountManagement = dynamic(() => import('../../account-management/AccountManagement'), {
   loading: () => <p role="status">Đang tải quản lý nhân sự…</p>,
 });
 
-const AdminAccounts = dynamic(() => import('../../../platform/AdminAccounts'), {
+const AdminAccounts = dynamic(() => import('../../account-management/components/AdminAccounts'), {
   loading: () => <p role="status">Đang tải tài khoản quản trị…</p>,
 });
 

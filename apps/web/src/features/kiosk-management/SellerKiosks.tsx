@@ -5,8 +5,8 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button, MapPin, RefreshCw, CircleAlert, Check } from '@florabot/ui';
 import { ApiError, queryClient, request, type Session } from '../../api';
 import KioskPickerMap from '../kiosk-location/components/KioskPickerMap';
-import { TablePagination } from '../../dashboard/DataTable';
-import { clampPage, paginate } from '../../dashboard/pagination';
+import { TablePagination } from '../../shared/components/DataTable';
+import { clampPage, paginate } from '../../shared/pagination';
 import type { SellerKioskItem, UpdateKioskLocationPayload } from './kiosk-management.types';
 import {
   parseCoordinate,

@@ -2,10 +2,13 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@florabot/ui';
-import { request, type Session } from '../api';
-import { Modal } from '../dashboard/Modal';
-import { DataTable } from '../dashboard/DataTable';
-import type { components } from '../../../../packages/contracts/src/generated/api';
+import { request, type Session } from '../../../api';
+import { Modal } from '../../../shared/components/Modal';
+import { DataTable } from '../../../shared/components/DataTable';
+import type {
+  AdminAccountSummary as Summary,
+  AdminAccountProfileResponse as Detail,
+} from '../account-management.types';
 import {
   DirectoryTools,
   DirectoryHeading,
@@ -18,9 +21,6 @@ import {
   roleLabels,
   useDirectory,
 } from './management';
-
-type Summary = components['schemas']['AdminAccountSummary'];
-type Detail = components['schemas']['AdminAccountProfileResponse'];
 
 function SensitiveProfile({
   id,
