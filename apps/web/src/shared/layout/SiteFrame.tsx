@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { Flower2, LogIn, LogOut, Menu, User, X } from '@florabot/ui';
-import { logoutSession, queryClient, sessionQuery } from './api';
-import { workspaceBase } from './workspaceSections';
+import { workspaceBase } from '@/features/portal/config/workspaceSections';
+import { logoutSession, queryClient, sessionQuery } from '@/shared/lib/api';
 
 const navigation = [
   ['/', 'Trang chủ'],

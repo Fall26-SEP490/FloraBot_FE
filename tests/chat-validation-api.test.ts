@@ -4,8 +4,8 @@ import {
   formatChatError,
   validateChatImageFile,
   validateMessageContent,
-} from '../apps/web/src/chat/api';
-import { ApiError } from '../apps/web/src/api';
+} from '../apps/web/src/features/chat/api';
+import { ApiError } from '../apps/web/src/shared/lib/api';
 
 describe('Chat text validation', () => {
   it('rejects empty content when there is no image', () => {

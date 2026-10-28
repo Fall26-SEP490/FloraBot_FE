@@ -13,7 +13,7 @@ import {
   RefreshCw,
 } from '@florabot/ui';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
-import { request, type Session } from '../../api';
+import { request, type Session } from '@/shared/lib/api';
 import type { WebOrder } from '../orders/orders.types';
 import { statusName } from '../orders/orders.utils';
 import WorkspaceWelcome from '../../shared/components/WorkspaceWelcome';

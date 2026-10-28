@@ -5,12 +5,12 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { Button } from '@florabot/ui';
-import { logoutSession, sessionQuery } from '../../../api';
-import { accountPath } from '../../../roleRoutes';
-import WorkspaceNavigation, { WorkspaceHeader } from '../../../WorkspaceNavigation';
+import { logoutSession, sessionQuery } from '@/shared/lib/api';
+import { accountPath } from '@/features/portal/config/roleRoutes';
+import WorkspaceNavigation, { WorkspaceHeader } from '../components/WorkspaceNavigation';
 import '../workspace-styles.css';
 import '../../dashboard/styles/dashboard-overview.css';
-import '../../../operations.css';
+import '../styles/operations.css';
 import '../../account-management/styles/platform-workspace.css';
 import '../../account-management/styles/platform-refresh.css';
 

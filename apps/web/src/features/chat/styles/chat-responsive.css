@@ -1,0 +1,68 @@
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .chat-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr);
+    height: 70vh;
+  }
+
+  .chat-layout.mode-list .chat-layout-sidebar {
+    display: flex;
+  }
+
+  .chat-layout.mode-list .chat-layout-main {
+    display: none;
+  }
+
+  .chat-layout.mode-conversation .chat-layout-sidebar {
+    display: none;
+  }
+
+  .chat-layout.mode-conversation .chat-layout-main {
+    display: flex;
+  }
+
+  .chat-back-button {
+    display: inline-flex;
+  }
+}
+
+@media (max-width: 640px) {
+  .chat-composer-controls {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas:
+      'input input input'
+      'attach counter submit';
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .chat-composer-input-wrapper {
+    grid-area: input;
+    width: 100%;
+  }
+
+  .chat-composer-textarea {
+    min-height: 52px;
+    font-size: 1rem;
+  }
+
+  .chat-composer-image-btn {
+    grid-area: attach;
+    width: 40px;
+    height: 40px;
+  }
+
+  .chat-composer-counter {
+    grid-area: counter;
+    text-align: left;
+    margin: 0 0.5rem;
+  }
+
+  .chat-composer-submit-btn.button {
+    grid-area: submit;
+    min-height: 40px;
+    padding: 0.5rem 1.1rem;
+  }
+}

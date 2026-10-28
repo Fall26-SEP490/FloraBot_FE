@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
-import { queryClient, request, type Session } from '../../../api';
+import { queryClient, request, type Session } from '@/shared/lib/api';
 import { DataTable } from '../../../shared/components/DataTable';
 import { Modal } from '../../../shared/components/Modal';
 import type { components } from '../../../../../../packages/contracts/src/generated/api';

@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Boxes, Button, CheckCircle2, MapPin, Package, RefreshCw } from '@florabot/ui';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
-import { ApiError, request, type Session } from '../../api';
+import { ApiError, request, type Session } from '@/shared/lib/api';
 
 type Accessory = components['schemas']['SellerAccessoryResponse'];
 const kioskStatuses: Record<string, string> = {

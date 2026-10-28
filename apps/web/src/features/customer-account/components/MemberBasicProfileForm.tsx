@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@florabot/ui';
-import { ApiError, queryClient } from '../../../api';
+import { ApiError, queryClient } from '@/shared/lib/api';
 import { updateMemberProfile } from '../customer-account.api';
 
 export default function MemberBasicProfileForm({ defaultFullName }: { defaultFullName?: string }) {

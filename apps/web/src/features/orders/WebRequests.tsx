@@ -12,7 +12,7 @@ import {
   ArrowLeft,
   ArrowRight,
 } from '@florabot/ui';
-import { ApiError, queryClient, request } from '../../api';
+import { ApiError, queryClient, request } from '@/shared/lib/api';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
 import {
   matchesOrderFilter,

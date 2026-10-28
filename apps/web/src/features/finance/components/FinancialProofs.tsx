@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
-import { request } from '../../../api';
+import { request } from '@/shared/lib/api';
 import type { IncidentEvidenceResponse } from '../finance.types';
 
 export default function FinancialProofs({

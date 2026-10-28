@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import Layout from '@/marketing/MarketingLayout';
+import Layout from '@/features/marketing/MarketingLayout';
 import { HelpCircle, MapPin, Package, ShieldCheck, Store } from '@florabot/ui';
 
 export const metadata = {

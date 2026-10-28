@@ -1,4 +1,4 @@
-import type { Session, AuthConfig, RegisterPendingResponse } from '../../api';
+import type { Session, AuthConfig, RegisterPendingResponse } from '@/shared/lib/api';
 
 export type AuthMode = 'login' | 'register' | 'forgot' | 'reset';
 

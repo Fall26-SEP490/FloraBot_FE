@@ -5,13 +5,13 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { Button } from '@florabot/ui';
-import { logoutSession, sessionQuery } from '../../../api';
-import { accountPath } from '../../../roleRoutes';
-import WorkspaceNavigation, { WorkspaceHeader } from '../../../WorkspaceNavigation';
+import { logoutSession, sessionQuery } from '@/shared/lib/api';
+import { accountPath } from '@/features/portal/config/roleRoutes';
+import WorkspaceNavigation, { WorkspaceHeader } from '../components/WorkspaceNavigation';
 import '../workspace-styles.css';
 
 const StaffChatSection = dynamic(
-  () => import('../../../chat/StaffChatSection').then((mod) => mod.StaffChatSection),
+  () => import('@/features/chat/StaffChatSection').then((mod) => mod.StaffChatSection),
   {
     loading: () => <p role="status">Đang tải tin nhắn…</p>,
   },

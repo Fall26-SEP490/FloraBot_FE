@@ -1,0 +1,5 @@
+@import './styles/chat-shell.css';
+@import './styles/chat-list.css';
+@import './styles/chat-conversation.css';
+@import './styles/chat-composer.css';
+@import './styles/chat-responsive.css';

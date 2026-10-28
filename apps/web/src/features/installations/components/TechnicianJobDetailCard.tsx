@@ -1,7 +1,7 @@
 import { useId, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button, Check, CircleAlert, ListChecks, MapPin } from '@florabot/ui';
-import { request, type Session } from '../../../api';
+import { request, type Session } from '@/shared/lib/api';
 import { buildGoogleMapsDirectionsUrl } from '../../kiosk-location/kiosk-location.utils';
 import { KIOSK_STATUS_LABELS, TECHNICIAN_PROGRESS_STEPS } from '../installations.constants';
 import type { StaffEvidenceItem, TechnicianInstallationDetail } from '../installations.types';

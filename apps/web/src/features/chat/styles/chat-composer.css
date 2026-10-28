@@ -1,0 +1,208 @@
+/* Composer */
+.chat-conversation-footer {
+  padding: 1rem 1.5rem 1.25rem;
+  background: #ffffff;
+  border-top: 1px solid #d8e5d5;
+  flex-shrink: 0;
+}
+
+.chat-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.chat-composer-preview {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: #f4f8f2;
+  border: 1px solid #d8e8ce;
+  border-radius: 8px;
+}
+
+.chat-composer-thumbnail {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid #c9d9c8;
+}
+
+.chat-composer-preview-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-composer-filename {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #183e2b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-composer-filesize {
+  font-size: 0.75rem;
+  color: #354e3c;
+}
+
+.chat-composer-remove-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #495f4e;
+  padding: 6px;
+  border-radius: 4px;
+  display: grid;
+  place-items: center;
+  min-width: 32px;
+  min-height: 32px;
+}
+
+.chat-composer-remove-btn:hover {
+  background: #e2ede0;
+  color: #183e2b;
+}
+
+.chat-composer-error {
+  margin: 0;
+  padding: 0.4rem 0.65rem;
+  border-radius: 6px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  font-size: 0.85rem;
+}
+
+.chat-composer-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.chat-composer-file-input {
+  display: none;
+}
+
+.chat-composer-image-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: #f4f8f2;
+  border: 1px solid #c9dec8;
+  color: #183e2b;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease-in-out;
+}
+
+.chat-composer-image-btn:hover:not(:disabled) {
+  background: #e2ede0;
+  border-color: #2b6a45;
+  color: #0e2d1d;
+}
+
+.chat-composer-image-btn:focus-visible {
+  outline: 3px solid #183e2b;
+  outline-offset: 2px;
+}
+
+.chat-composer-input-wrapper {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-composer-textarea {
+  width: 100%;
+  min-height: 44px;
+  height: 44px;
+  max-height: 140px;
+  padding: 0.65rem 0.95rem;
+  border-radius: 10px;
+  border: 1px solid #c8d9c5;
+  background: #fafdf9;
+  color: #183e2b;
+  font-family: inherit;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  resize: none;
+  box-sizing: border-box;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.chat-composer-textarea:focus {
+  outline: none;
+  border-color: #2d6b46;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(45, 107, 70, 0.12);
+}
+
+.chat-composer-counter {
+  position: absolute;
+  right: 10px;
+  bottom: -18px;
+  font-size: 0.72rem;
+  color: #64735f;
+  text-align: right;
+  pointer-events: none;
+}
+
+.chat-composer-counter.is-warning {
+  color: #b45309;
+  font-weight: 600;
+}
+
+.chat-composer-counter.is-error {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.chat-composer-submit-btn.button {
+  min-height: 44px;
+  height: 44px;
+  padding: 0.5rem 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border-radius: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Product action button */
+.chat-open-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.workspace-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding-inline: 5px;
+  border-radius: 999px;
+  background: #e0ec9c;
+  color: #113421;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-left: auto;
+}

@@ -1,0 +1,177 @@
+body:has(.marketing-site) {
+  --color-canvas: #fffdf7;
+  --color-ink: #183e2b;
+  --color-muted: #495f4e;
+  --color-brand: #edf2d9;
+  --color-surface-soft: #f4f0e3;
+  --color-divider: #b4beab;
+  --color-line: #64735f;
+  --color-action-hover: #2b593e;
+  --landing-accent: #e0ec9c;
+  --landing-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  background:
+    linear-gradient(rgba(253, 254, 252, 0.965), rgba(253, 254, 252, 0.965)),
+    url('/images/generated/florabot-pattern.webp') center / 620px repeat;
+}
+.marketing-site #main {
+  overflow-x: clip;
+}
+.marketing-site :is(h1, h2, h3, summary, label) {
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
+}
+.marketing-site :is(h1, h2, h3) {
+  text-wrap: balance;
+}
+.marketing-site p {
+  text-wrap: pretty;
+}
+html:has(.marketing-site) {
+  scroll-padding-top: calc(var(--header-height, 8rem) + 1rem);
+}
+.marketing-site :is(h1, h2) {
+  font-family: var(--font-body);
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+}
+.marketing-site h3 {
+  line-height: 1.4;
+}
+.hero {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin: auto;
+  background: var(--color-ink);
+  color: #fffdf7;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0 50% 0 0;
+  background: url('/images/generated/florabot-pattern.webp') center / 520px repeat;
+  opacity: 0.09;
+}
+.hero-copy {
+  padding: 4rem 8% 4rem max(9%, calc((100vw - 1310px) / 2));
+  align-self: center;
+  min-width: 0;
+}
+.hero h1 {
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  color: #fffdf7;
+  font-size: clamp(2rem, 4vw, 3.8rem);
+  margin: 0 0 1.6rem;
+  line-height: 1.25;
+}
+.hero h1 > span {
+  display: block;
+}
+.hero-highlight {
+  color: var(--landing-accent);
+  text-decoration: underline;
+  text-decoration-color: #ed9275;
+  text-decoration-thickness: 0.065em;
+  text-underline-offset: 0.18em;
+}
+.hero-copy > p {
+  font-size: 1rem;
+  max-width: 38ch;
+  color: #f0f2e5;
+}
+.hero-actions {
+  margin-block: 2rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 1.5rem;
+}
+.hero .button-primary {
+  background: var(--landing-accent);
+  color: var(--color-ink);
+  border-color: var(--landing-accent);
+}
+.hero .button-primary:hover {
+  background: #f2f7d2;
+  border-color: #f2f7d2;
+}
+.hero-rate {
+  font-size: 0.85rem;
+  margin: 0;
+  color: #f0f2e5;
+}
+.hero-rate strong {
+  color: var(--landing-accent);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.hero a:focus-visible {
+  outline-color: var(--landing-accent);
+}
+.text-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.hero-garden {
+  position: relative;
+  min-width: 0;
+  margin: 0;
+  min-height: 580px;
+  overflow: hidden;
+  background: #faf5e6;
+}
+.garden-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 65%;
+  border-radius: 0;
+}
+.hero-cabinet {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  margin: 0;
+  color: var(--color-ink);
+}
+.hero-cabinet img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.graphic-divider {
+  height: 56px;
+  margin: auto;
+  background: url('/images/generated/florabot-pattern.webp') center / 350px repeat;
+  border-block: 1px solid var(--color-ink);
+}
+.button {
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
+  font-weight: 600;
+}
+.button svg {
+  flex-shrink: 0;
+  transition: transform 0.18s var(--landing-ease);
+}
+.button:hover:not(:disabled) svg {
+  transform: translateX(3px);
+}
+.button:disabled {
+  cursor: default;
+}

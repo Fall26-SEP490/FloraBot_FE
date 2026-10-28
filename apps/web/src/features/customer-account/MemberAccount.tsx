@@ -17,13 +17,13 @@ import {
   Store,
   User,
 } from '@florabot/ui';
-import { ApiError, queryClient } from '../../api';
+import { ApiError, queryClient } from '@/shared/lib/api';
 import { passwordRule } from '../auth/auth.schemas';
 import WebRequests from '../orders/WebRequests';
 import MemberShop from '../orders/MemberShop';
 import GoogleAccountLink from '../auth/GoogleAccountLink';
-import { CustomerChatSection } from '../../chat/CustomerChatSection';
-import { getCustomerChats } from '../../chat/api';
+import { CustomerChatSection } from '@/features/chat/CustomerChatSection';
+import { getCustomerChats } from '@/features/chat/api';
 import MemberBasicProfileForm from './components/MemberBasicProfileForm';
 import {
   fetchMemberProfile,

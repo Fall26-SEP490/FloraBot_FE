@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import SiteFrame from '../src/SiteFrame';
+import SiteFrame from '../src/shared/layout/SiteFrame';
 import '@florabot/ui/tokens.css';
-import '../src/marketing/fonts.css';
-import '../src/site.css';
-import '../src/interactions.css';
+import '../src/features/marketing/fonts.css';
+import '../src/shared/styles/site.css';
+import '../src/shared/styles/interactions.css';
 
 export const metadata: Metadata = {
   title: 'FloraBot - Đặt hoa và quản lý cửa hàng',

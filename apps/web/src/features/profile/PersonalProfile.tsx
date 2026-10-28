@@ -7,9 +7,9 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { Button, CircleAlert, Check, Eye, EyeOff, ArrowRight, RotateCcw } from '@florabot/ui';
-import { ApiError, logoutSession, queryClient, sessionQuery, type Session } from '../../api';
-import { getRoleLabel } from '../../roleRoutes';
-import { workspaceBase } from '../../workspaceSections';
+import { ApiError, logoutSession, queryClient, sessionQuery, type Session } from '@/shared/lib/api';
+import { getRoleLabel } from '@/features/portal/config/roleRoutes';
+import { workspaceBase } from '@/features/portal/config/workspaceSections';
 import { ConfirmDialog } from '../../shared/components/Modal';
 import {
   getAccountProfile,

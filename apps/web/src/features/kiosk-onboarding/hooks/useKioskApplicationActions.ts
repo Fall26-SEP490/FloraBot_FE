@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
-import { ApiError, queryClient, request, type Session } from '../../../api';
+import { ApiError, queryClient, request, type Session } from '@/shared/lib/api';
 import type {
   CreateKioskApplicationRequest,
   KioskApplicationResponse,

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@florabot/ui';
 import { clearReceipts, readReceipts, receiptLink, removeReceipt } from './receipts.utils';
 import type { SavedReceipt } from './receipts.types';
-import '../../portal.css';
+import '../portal/styles/portal.css';
 import './styles/receipt.css';
 
 export default function GuestHistory() {

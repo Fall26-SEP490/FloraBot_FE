@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import Layout from '@/marketing/MarketingLayout';
-import GuideFlowTabs from '@/marketing/GuideFlowTabs';
+import Layout from '@/features/marketing/MarketingLayout';
+import GuideFlowTabs from '@/features/marketing/GuideFlowTabs';
 import {
   ArrowRight,
   Flower2,

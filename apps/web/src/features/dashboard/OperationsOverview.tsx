@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, Boxes, ClipboardList, RefreshCw, Users, Button } from '@florabot/ui';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
-import { request, type Session } from '../../api';
+import { request, type Session } from '@/shared/lib/api';
 import type { AccountDirectoryItem } from '../account-management/account-management.types';
 import type {
   EligibleKioskResponse,

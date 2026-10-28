@@ -9,9 +9,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button, Eye, EyeOff } from '@florabot/ui';
-import { ApiError, queryClient, request, type Session } from '../../../api';
+import { ApiError, queryClient, request, type Session } from '@/shared/lib/api';
 import AuthShell from '../../auth/components/AuthShell';
-import { accountPath } from '../../../roleRoutes';
+import { accountPath } from '@/features/portal/config/roleRoutes';
 
 const loginSchema = z.object({
   email: z.email('Nhập địa chỉ email hợp lệ.'),

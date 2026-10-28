@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button, MapPin, RefreshCw, CircleAlert, Check } from '@florabot/ui';
-import { ApiError, queryClient, request, type Session } from '../../api';
+import { ApiError, queryClient, request, type Session } from '@/shared/lib/api';
 import KioskPickerMap from '../kiosk-location/components/KioskPickerMap';
 import { TablePagination } from '../../shared/components/DataTable';
 import { clampPage, paginate } from '../../shared/pagination';

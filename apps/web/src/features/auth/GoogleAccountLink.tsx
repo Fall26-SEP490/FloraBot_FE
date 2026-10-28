@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
-import { ApiError } from '../../api';
+import { ApiError } from '@/shared/lib/api';
 import { fetchAuthConfig, linkGoogleAccount } from './auth.api';
 import styles from './styles/GoogleAccountLink.module.css';
 import type { GoogleAccountLinkProps, GoogleCredentialResponse, GoogleWindow } from './auth.types';

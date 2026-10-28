@@ -1,4 +1,4 @@
-import { ApiError, request } from '../api';
+import { ApiError, request } from '@/shared/lib/api';
 import type {
   CustomerSellerChatItem,
   CustomerSellerChatMessage,

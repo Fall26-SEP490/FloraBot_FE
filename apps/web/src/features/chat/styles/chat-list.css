@@ -1,0 +1,232 @@
+/* Sidebar */
+.chat-layout-sidebar {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #d8e5d5;
+  background: #fbfdfa;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.chat-sidebar-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #d8e5d5;
+  background: #ffffff;
+  min-height: 80px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.chat-sidebar-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #113421;
+  margin: 0;
+}
+
+.chat-sidebar-subtitle {
+  font-size: 0.85rem;
+  color: #495f4e;
+  margin: 0.25rem 0 0;
+  line-height: 1.4;
+}
+
+/* Chat List */
+.chat-list-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.chat-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.chat-list-row {
+  border-bottom: 1px solid #edf4eb;
+}
+
+.chat-list-item {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #183e2b;
+  font-family: inherit;
+  transition: background-color 0.15s ease;
+  min-height: 64px;
+}
+
+.chat-list-item:hover {
+  background: #f0f6ed;
+}
+
+.chat-list-item:focus-visible {
+  outline: 3px solid #183e2b;
+  outline-offset: -3px;
+}
+
+.chat-list-item.is-active {
+  background: #edf5ea;
+  border-left: 4px solid #183e2b;
+}
+
+.chat-list-item-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #d8e8ce;
+  color: #183e2b;
+  border: 1px solid #c0d8b4;
+  font-weight: 700;
+  font-size: 0.95rem;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.chat-list-item-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.chat-list-item-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.chat-list-item-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #113421;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-list-item-time {
+  font-size: 0.75rem;
+  color: #354e3c;
+  flex-shrink: 0;
+}
+
+.chat-list-item-context {
+  font-size: 0.8rem;
+  color: #2e6844;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-list-item-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.chat-list-item-preview {
+  font-size: 0.85rem;
+  color: #495f4e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.chat-list-item-has-image {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  color: #235232;
+  font-weight: 500;
+}
+
+.chat-list-item-empty-preview {
+  font-style: italic;
+  color: #354e3c;
+}
+
+.chat-unread-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding-inline: 6px;
+  border-radius: 999px;
+  background: #183e2b;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* Sidebar Pagination */
+.chat-list-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.8rem;
+  border-top: 1px solid #e3ede1;
+  background: #ffffff;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.chat-list-page-btn.button {
+  min-height: 36px;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.8rem;
+}
+
+.chat-list-page-info {
+  font-weight: 600;
+  color: #495f4e;
+}
+
+.chat-list-loading,
+.chat-list-empty,
+.chat-list-error {
+  padding: 2rem 1.25rem;
+  text-align: center;
+  color: #495f4e;
+}
+
+.chat-list-empty h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #113421;
+  margin-bottom: 0.5rem;
+}
+
+.chat-list-empty p {
+  font-size: 0.85rem;
+  line-height: 1.5;
+}

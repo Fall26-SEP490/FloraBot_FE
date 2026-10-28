@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { queryClient, request, type Session } from '../../../api';
+import { queryClient, request, type Session } from '@/shared/lib/api';
 import type { AccountDirectoryItem } from '../../account-management/account-management.types';
 import type {
   EligibleKioskResponse,

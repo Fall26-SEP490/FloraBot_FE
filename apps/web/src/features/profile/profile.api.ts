@@ -1,4 +1,4 @@
-import { request } from '../../api';
+import { request } from '@/shared/lib/api';
 import type {
   AccountProfile,
   BankRevealResponse,

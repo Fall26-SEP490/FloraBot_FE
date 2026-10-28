@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
-import { queryClient, request } from '../../../api';
+import { queryClient, request } from '@/shared/lib/api';
 import { Modal } from '../../../shared/components/Modal';
 import {
   BasicProfileForm,

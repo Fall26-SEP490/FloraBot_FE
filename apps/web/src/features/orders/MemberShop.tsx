@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { Button, ArrowRight, RefreshCw } from '@florabot/ui';
-import { ApiError, queryClient, request, sessionQuery, type Session } from '../../api';
+import { ApiError, queryClient, request, sessionQuery, type Session } from '@/shared/lib/api';
 import type { KioskApplicationResponse } from '../installations/installations.types';
 import { KIOSK_STATUS_LABELS } from '../installations/installations.constants';
 

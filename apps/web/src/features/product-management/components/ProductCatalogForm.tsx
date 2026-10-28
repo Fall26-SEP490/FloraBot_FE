@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@florabot/ui';
-import { queryClient } from '../../../api';
+import { queryClient } from '@/shared/lib/api';
 import { postProduct, putProduct } from '../product.api';
 import {
   productMetadataSchema,

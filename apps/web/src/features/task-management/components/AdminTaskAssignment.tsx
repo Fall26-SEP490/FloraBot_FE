@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { Button } from '@florabot/ui';
-import { ApiError, queryClient, request } from '../../../api';
+import { ApiError, queryClient, request } from '@/shared/lib/api';
 import type {
   AdminTaskAssignmentProps,
   DeliveryScope,

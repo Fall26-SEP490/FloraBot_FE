@@ -1,4 +1,4 @@
-import type { components } from '../../../../packages/contracts/src/generated/api';
+import type { components } from '../../../../../packages/contracts/src/generated/api';
 
 export type CustomerSellerChatItem = components['schemas']['CustomerSellerChatItem'];
 export type CustomerSellerChatPage = components['schemas']['CustomerSellerChatPage'];

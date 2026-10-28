@@ -1,6 +1,6 @@
-@import '../../portal.css';
-@import '../../workspace.css';
+@import './styles/portal.css';
+@import './styles/workspace.css';
 @import '../dashboard/styles/dashboard-management.css';
-@import '../../api-workflows.css';
-@import '../../workspace-polish.css';
-@import '../../workspace-typography.css';
+@import './styles/api-workflows.css';
+@import './styles/workspace-polish.css';
+@import './styles/workspace-typography.css';

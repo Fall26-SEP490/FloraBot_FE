@@ -6,14 +6,14 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@florabot/ui';
-import { ApiError, logoutSession, sessionQuery, type Session } from '../../../api';
-import { accountPath } from '../../../roleRoutes';
-import WorkspaceNavigation, { WorkspaceHeader } from '../../../WorkspaceNavigation';
-import { workspaceSections } from '../../../workspaceSections';
-import { startPortalUpdates } from '../../../realtime';
+import { ApiError, logoutSession, sessionQuery, type Session } from '@/shared/lib/api';
+import { accountPath } from '@/features/portal/config/roleRoutes';
+import WorkspaceNavigation, { WorkspaceHeader } from '../components/WorkspaceNavigation';
+import { workspaceSections } from '@/features/portal/config/workspaceSections';
+import { startPortalUpdates } from '@/shared/lib/realtime';
 import '../workspace-styles.css';
 import '../../dashboard/styles/dashboard-overview.css';
-import '../../../seller.css';
+import '../styles/seller.css';
 
 const DashboardOverview = dynamic(() => import('../../dashboard/DashboardOverview'), {
   loading: () => <p role="status">Đang tải tổng quan cửa hàng…</p>,
@@ -24,14 +24,14 @@ const WebRequests = dynamic(() => import('../../orders/WebRequests'), {
 });
 
 const SellerChatSection = dynamic(
-  () => import('../../../chat/SellerChatSection').then((mod) => mod.SellerChatSection),
+  () => import('@/features/chat/SellerChatSection').then((mod) => mod.SellerChatSection),
   {
     loading: () => <p role="status">Đang tải tin nhắn…</p>,
   },
 );
 
 const StaffChatSection = dynamic(
-  () => import('../../../chat/StaffChatSection').then((mod) => mod.StaffChatSection),
+  () => import('@/features/chat/StaffChatSection').then((mod) => mod.StaffChatSection),
   {
     loading: () => <p role="status">Đang tải tin nhắn nhân viên…</p>,
   },

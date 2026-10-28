@@ -4,7 +4,7 @@ import type {
   ContactEmailChallenge,
   UpdateProfilePayload,
   Session,
-} from '../../api';
+} from '@/shared/lib/api';
 
 export type {
   AccountProfile,
