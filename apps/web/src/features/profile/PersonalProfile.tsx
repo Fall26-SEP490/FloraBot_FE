@@ -11,6 +11,9 @@ import { ApiError, logoutSession, queryClient, sessionQuery, type Session } from
 import { getRoleLabel } from '@/features/portal/config/roleRoutes';
 import { workspaceBase } from '@/features/portal/config/workspaceSections';
 import { ConfirmDialog } from '../../shared/components/Modal';
+import GoogleAccountLink from '../auth/GoogleAccountLink';
+import { passwordRule } from '../auth/auth.schemas';
+import { changeMemberPassword } from '../customer-account/customer-account.api';
 import {
   getAccountProfile,
   updateAccountProfile,
@@ -107,6 +110,41 @@ function PersonalProfileContent() {
   } | null>(null);
   const [bankNotice, setBankNotice] = useState('');
   const [bankError, setBankError] = useState('');
+
+  // Security section state (Customer & Seller only)
+  const isMember = Boolean(session.data && ['CUSTOMER', 'SELLER'].includes(session.data.role));
+  const passwords = useForm<{ currentPassword: string; newPassword: string; confirm: string }>({
+    mode: 'onBlur',
+  });
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+
+  const handleChangePassword = async (values: {
+    currentPassword: string;
+    newPassword: string;
+    confirm: string;
+  }) => {
+    if (passwordSaving) return;
+    setPasswordSaving(true);
+    setPasswordError('');
+    try {
+      await changeMemberPassword({
+        currentPassword: values.currentPassword,
+        newPassword: values.newPassword,
+      });
+      passwords.reset();
+      queryClient.clear();
+      window.location.replace('/dang-nhap');
+    } catch (cause) {
+      setPasswordError(
+        cause instanceof ApiError
+          ? cause.message
+          : 'Chưa xác nhận được thay đổi. Hãy tải lại để kiểm tra.',
+      );
+    } finally {
+      setPasswordSaving(false);
+    }
+  };
 
   // Logout state
   const [loggingOut, setLoggingOut] = useState(false);
@@ -631,6 +669,7 @@ function PersonalProfileContent() {
           <a href="#basic-info-heading">Thông tin cá nhân</a>
           <a href="#contact-email-heading">Email liên hệ</a>
           <a href="#personal-bank-heading">Tài khoản ngân hàng</a>
+          {isMember && <a href="#security">Bảo mật</a>}
         </nav>
 
         {/* Section 1: Read-only Login Identity & Role */}
@@ -1151,6 +1190,85 @@ function PersonalProfileContent() {
             onCancel={() => setBankMode('idle')}
           />
         </section>
+
+        {/* Section 5: Security & Google Linking (Customer and Seller only) */}
+        {isMember && (
+          <section id="security" aria-labelledby="security-heading" className="profile-section">
+            <div className="profile-section-heading">
+              <h2 id="security-heading">Bảo mật tài khoản</h2>
+              <p>
+                Quản lý mật khẩu đăng nhập và liên kết tài khoản Google để bảo vệ quyền lợi thành
+                viên.
+              </p>
+            </div>
+
+            <div className="profile-disclaimer-card">
+              Sau khi đổi mật khẩu, bạn cần đăng nhập lại trên các thiết bị để đảm bảo tính an toàn.
+            </div>
+
+            {passwordError && (
+              <p role="alert" className="profile-status-message profile-status-error">
+                {passwordError}
+              </p>
+            )}
+
+            <form
+              noValidate
+              className="profile-form"
+              aria-busy={passwordSaving}
+              onSubmit={passwords.handleSubmit(handleChangePassword)}
+            >
+              {(['currentPassword', 'newPassword', 'confirm'] as const).map((field, index) => (
+                <div key={field} className="profile-form-group">
+                  <label htmlFor={`security-${field}`}>
+                    {['Mật khẩu hiện tại', 'Mật khẩu mới', 'Nhập lại mật khẩu mới'][index]}
+                  </label>
+                  <input
+                    id={`security-${field}`}
+                    type="password"
+                    autoComplete={index === 0 ? 'current-password' : 'new-password'}
+                    disabled={passwordSaving}
+                    {...passwords.register(field, {
+                      required: 'Nhập mật khẩu.',
+                      validate:
+                        index === 1
+                          ? passwordRule
+                          : index === 2
+                            ? (value) =>
+                                value === passwords.getValues('newPassword') ||
+                                'Hai mật khẩu chưa khớp.'
+                            : undefined,
+                    })}
+                    aria-describedby={
+                      passwords.formState.errors[field] ? `security-${field}-error` : undefined
+                    }
+                    aria-invalid={!!passwords.formState.errors[field]}
+                  />
+                  {passwords.formState.errors[field] && (
+                    <p id={`security-${field}-error`} className="profile-field-error">
+                      {passwords.formState.errors[field]?.message}
+                    </p>
+                  )}
+                </div>
+              ))}
+              <div className="profile-actions">
+                <Button type="submit" disabled={passwordSaving}>
+                  {passwordSaving ? 'Đang cập nhật…' : 'Đổi mật khẩu và đăng nhập lại'}
+                </Button>
+              </div>
+            </form>
+
+            <div
+              style={{
+                marginTop: '2rem',
+                paddingTop: '1.5rem',
+                borderTop: '1px solid #e1ebe0',
+              }}
+            >
+              <GoogleAccountLink email={currentProfile.loginEmail || ''} />
+            </div>
+          </section>
+        )}
       </div>
     </main>
   );

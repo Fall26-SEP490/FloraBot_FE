@@ -139,17 +139,22 @@ test.describe('Account / Profile Page Redesign', () => {
     await expect(hero.getByText('maianh@example.com')).toBeVisible();
     await expect(hero.getByText('Điểm tích lũy: 35.000')).toBeVisible();
 
+    // Verify "Chỉnh sửa hồ sơ" links to /ho-so
+    await expect(hero.getByRole('link', { name: 'Chỉnh sửa hồ sơ' })).toHaveAttribute(
+      'href',
+      '/ho-so',
+    );
+
     // Tab navigation is visible
     const nav = page.getByRole('navigation', { name: 'Trong tài khoản' });
     await expect(nav).toBeVisible();
 
+    // Verify "Hồ sơ cá nhân" and "Bảo mật" are not present in member tabs
+    await expect(nav.getByRole('link', { name: /Hồ sơ cá nhân/ })).toHaveCount(0);
+    await expect(nav.getByRole('link', { name: /Bảo mật/ })).toHaveCount(0);
+
     // Unread badge on chat tab
     await expect(nav.getByRole('link', { name: /Tin nhắn/ })).toContainText('2');
-
-    // Click "Bảo mật & mật khẩu" tab
-    await nav.getByRole('link', { name: /Bảo mật/ }).click();
-    await expect(page).toHaveURL(/#member-security/);
-    await expect(page.locator('#member-security')).toBeVisible();
 
     // Click "Đơn đặt trước" tab
     await nav.getByRole('link', { name: /Đơn đặt trước/ }).click();
@@ -169,10 +174,27 @@ test.describe('Account / Profile Page Redesign', () => {
   });
 
   test('Password change form validates and shows error on blur and submit', async ({ page }) => {
-    await page.goto('/tai-khoan');
-    const nav = page.getByRole('navigation', { name: 'Trong tài khoản' });
-    await nav.getByRole('link', { name: /Bảo mật/ }).click();
-    await expect(page.locator('#member-security')).toBeVisible();
+    await page.route('**/api/account/profile', (route) =>
+      route.fulfill({
+        json: {
+          id: memberSession.id,
+          fullName: 'Nguyễn Mai Anh',
+          loginEmail: 'maianh@example.com',
+          phone: '0901234567',
+          address: '123 Đường Hoa',
+          contactEmail: 'maianh@example.com',
+          contactEmailIsDefault: true,
+          contactEmailVerified: false,
+          bank: { hasAccount: false },
+        },
+      }),
+    );
+
+    await page.goto('/ho-so#security');
+    await expect(page.locator('#security')).toBeVisible();
+    await expect(
+      page.getByRole('navigation', { name: 'Mục hồ sơ' }).getByRole('link', { name: 'Bảo mật' }),
+    ).toHaveAttribute('href', '#security');
 
     const currentPwd = page.getByLabel('Mật khẩu hiện tại');
     const newPwd = page.getByLabel('Mật khẩu mới', { exact: true });
@@ -194,6 +216,44 @@ test.describe('Account / Profile Page Redesign', () => {
     await page.getByRole('button', { name: 'Đổi mật khẩu và đăng nhập lại', exact: true }).click();
 
     await expect(page.getByText('Dùng ít nhất 12 ký tự cho mật khẩu.')).toBeVisible();
+  });
+
+  test('Successful password change posts the expected payload and returns to login', async ({
+    page,
+  }) => {
+    await page.route('**/api/account/profile', (route) =>
+      route.fulfill({
+        json: {
+          id: memberSession.id,
+          fullName: 'Nguyễn Mai Anh',
+          loginEmail: 'maianh@example.com',
+          phone: '0901234567',
+          address: '123 Đường Hoa',
+          contactEmail: 'maianh@example.com',
+          contactEmailIsDefault: true,
+          contactEmailVerified: false,
+          bank: { hasAccount: false },
+        },
+      }),
+    );
+
+    let passwordPayload: unknown;
+    await page.route('**/api/member/password', async (route) => {
+      passwordPayload = route.request().postDataJSON();
+      await route.fulfill({ status: 204 });
+    });
+
+    await page.goto('/ho-so#security');
+    await page.getByLabel('Mật khẩu hiện tại').fill('OldPassword123!');
+    await page.getByLabel('Mật khẩu mới', { exact: true }).fill('NewPassword456!');
+    await page.getByLabel('Nhập lại mật khẩu mới').fill('NewPassword456!');
+    await page.getByRole('button', { name: 'Đổi mật khẩu và đăng nhập lại', exact: true }).click();
+
+    await expect(page).toHaveURL(/\/dang-nhap$/);
+    expect(passwordPayload).toEqual({
+      currentPassword: 'OldPassword123!',
+      newPassword: 'NewPassword456!',
+    });
   });
 });
 
@@ -423,6 +483,8 @@ test.describe('Guide Page (/huong-dan-dat-hoa) and Contact (/lien-he) Overhaul',
   test('True 200% zoom and reflow audit on catalog, account, guide, and contact pages', async ({
     page,
   }) => {
+    test.slow();
+
     await page.route('**/api/auth/me', (route) =>
       route.fulfill({
         json: {

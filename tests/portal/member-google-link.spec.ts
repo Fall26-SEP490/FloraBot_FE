@@ -17,6 +17,46 @@ const customerProfile = {
   loyaltyPoints: 12000,
 };
 
+const customerAccountProfile = {
+  id: '10000000-0000-0000-0000-000000000010',
+  fullName: 'Lan Nguyễn',
+  loginEmail: 'lan@example.com',
+  phone: '0901234567',
+  address: '123 Đường Hoa, Phường Bến Nghé, Quận 1',
+  contactEmail: 'lan@example.com',
+  contactEmailIsDefault: true,
+  contactEmailVerified: false,
+  bank: { hasAccount: false },
+};
+
+const sellerSession = {
+  id: '10000000-0000-0000-0000-000000000020',
+  name: 'Tiệm Hoa Lan',
+  role: 'SELLER',
+  sellerId: '20000000-0000-0000-0000-000000000002',
+  sellerStatus: 'ACTIVE',
+  packageExpiresAt: '2026-12-31',
+};
+
+const sellerProfile = {
+  id: '10000000-0000-0000-0000-000000000020',
+  fullName: 'Chủ Tiệm Lan',
+  email: 'seller@example.com',
+  loyaltyPoints: 5000,
+};
+
+const sellerAccountProfile = {
+  id: '10000000-0000-0000-0000-000000000020',
+  fullName: 'Chủ Tiệm Lan',
+  loginEmail: 'seller@example.com',
+  phone: '0907654321',
+  address: '456 Phố Hoa, Quận 3',
+  contactEmail: 'seller@example.com',
+  contactEmailIsDefault: true,
+  contactEmailVerified: false,
+  bank: { hasAccount: false },
+};
+
 test.describe('Member Google Account Linking', () => {
   test('Shows disabled notice when Google linking is disabled in auth config', async ({ page }) => {
     let scriptLoaded = false;
@@ -28,6 +68,8 @@ test.describe('Member Google Account Linking', () => {
     await page.route('**/api/**', async (route) => {
       const url = new URL(route.request().url());
       if (url.pathname === '/api/auth/me') return route.fulfill({ json: customerSession });
+      if (url.pathname === '/api/account/profile')
+        return route.fulfill({ json: customerAccountProfile });
       if (url.pathname === '/api/member/profile') return route.fulfill({ json: customerProfile });
       if (url.pathname === '/api/member/history' || url.pathname.endsWith('/preorders')) {
         return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
@@ -44,7 +86,7 @@ test.describe('Member Google Account Linking', () => {
       return route.fulfill({ json: [] });
     });
 
-    await page.goto('/tai-khoan#member-profile');
+    await page.goto('/ho-so#security');
     const linkSection = page.locator('#member-google-link');
     await expect(linkSection).toBeVisible();
     await expect(
@@ -84,6 +126,8 @@ test.describe('Member Google Account Linking', () => {
     await page.route('**/api/**', async (route) => {
       const url = new URL(route.request().url());
       if (url.pathname === '/api/auth/me') return route.fulfill({ json: customerSession });
+      if (url.pathname === '/api/account/profile')
+        return route.fulfill({ json: customerAccountProfile });
       if (url.pathname === '/api/member/profile') return route.fulfill({ json: customerProfile });
       if (url.pathname === '/api/member/history' || url.pathname.endsWith('/preorders')) {
         return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
@@ -100,7 +144,7 @@ test.describe('Member Google Account Linking', () => {
       return route.fulfill({ json: [] });
     });
 
-    await page.goto('/tai-khoan#member-profile');
+    await page.goto('/ho-so#security');
     const linkSection = page.locator('#member-google-link');
     await expect(linkSection.getByRole('alert')).toContainText(
       'Không thể tải dịch vụ Google Identity',
@@ -149,6 +193,8 @@ test.describe('Member Google Account Linking', () => {
     await page.route('**/api/**', async (route) => {
       const url = new URL(route.request().url());
       if (url.pathname === '/api/auth/me') return route.fulfill({ json: customerSession });
+      if (url.pathname === '/api/account/profile')
+        return route.fulfill({ json: customerAccountProfile });
       if (url.pathname === '/api/member/profile') return route.fulfill({ json: customerProfile });
       if (url.pathname === '/api/member/history' || url.pathname.endsWith('/preorders')) {
         return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
@@ -173,7 +219,7 @@ test.describe('Member Google Account Linking', () => {
       return route.fulfill({ json: [] });
     });
 
-    await page.goto('/tai-khoan#member-profile');
+    await page.goto('/ho-so#security');
     const linkSection = page.locator('#member-google-link');
     await expect(linkSection).toBeVisible();
 
@@ -239,12 +285,13 @@ test.describe('Member Google Account Linking', () => {
     await page.route('**/api/**', async (route) => {
       const url = new URL(route.request().url());
       if (url.pathname === '/api/auth/me') return route.fulfill({ json: customerSession });
+      if (url.pathname === '/api/account/profile')
+        return route.fulfill({ json: customerAccountProfile });
       if (url.pathname === '/api/member/profile') return route.fulfill({ json: customerProfile });
       if (url.pathname === '/api/member/history' || url.pathname.endsWith('/preorders')) {
         return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
       }
       if (url.pathname === '/api/auth/config') {
-        // Hold config response until pending state assertions have completed
         await configHold;
         return route.fulfill({
           json: {
@@ -257,7 +304,7 @@ test.describe('Member Google Account Linking', () => {
       return route.fulfill({ json: [] });
     });
 
-    await page.goto('/tai-khoan#member-profile');
+    await page.goto('/ho-so#security');
 
     // While config is pending, container is not rendered
     const loadingMessage = page.getByText('Đang tải cấu hình liên kết Google…');
@@ -322,6 +369,8 @@ test.describe('Member Google Account Linking', () => {
     await page.route('**/api/**', async (route) => {
       const url = new URL(route.request().url());
       if (url.pathname === '/api/auth/me') return route.fulfill({ json: customerSession });
+      if (url.pathname === '/api/account/profile')
+        return route.fulfill({ json: customerAccountProfile });
       if (url.pathname === '/api/member/profile') return route.fulfill({ json: customerProfile });
       if (url.pathname === '/api/member/history' || url.pathname.endsWith('/preorders')) {
         return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
@@ -346,7 +395,7 @@ test.describe('Member Google Account Linking', () => {
       return route.fulfill({ json: [] });
     });
 
-    await page.goto('/tai-khoan#member-profile');
+    await page.goto('/ho-so#security');
     const gisButton = page.locator('[data-testid="mock-gis-button"]');
     await expect(gisButton).toBeVisible();
 
@@ -387,6 +436,8 @@ test.describe('Member Google Account Linking', () => {
     await page.route('**/api/**', async (route) => {
       const url = new URL(route.request().url());
       if (url.pathname === '/api/auth/me') return route.fulfill({ json: customerSession });
+      if (url.pathname === '/api/account/profile')
+        return route.fulfill({ json: customerAccountProfile });
       if (url.pathname === '/api/member/profile') return route.fulfill({ json: customerProfile });
       if (url.pathname === '/api/member/history' || url.pathname.endsWith('/preorders')) {
         return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
@@ -409,7 +460,7 @@ test.describe('Member Google Account Linking', () => {
       return route.fulfill({ json: [] });
     });
 
-    await page.goto('/tai-khoan#member-profile');
+    await page.goto('/ho-so#security');
     const gisButton = page.locator('[data-testid="mock-gis-button"]');
     await expect(gisButton).toBeVisible();
 
@@ -419,22 +470,7 @@ test.describe('Member Google Account Linking', () => {
     await expect(linkSection.getByRole('alert')).toContainText('Email tài khoản Google không khớp');
   });
 
-  test('SELLER profile can view same-email Google linking in MemberAccount', async ({ page }) => {
-    const sellerSession = {
-      id: '10000000-0000-0000-0000-000000000020',
-      name: 'Tiệm Hoa Lan',
-      role: 'SELLER',
-      sellerId: '20000000-0000-0000-0000-000000000002',
-      sellerStatus: 'ACTIVE',
-      packageExpiresAt: '2026-12-31',
-    };
-    const sellerProfile = {
-      id: '10000000-0000-0000-0000-000000000020',
-      fullName: 'Chủ Tiệm Lan',
-      email: 'seller@example.com',
-      loyaltyPoints: 5000,
-    };
-
+  test('SELLER profile can view same-email Google linking on /ho-so', async ({ page }) => {
     await page.route('https://accounts.google.com/gsi/client', async (route) => {
       const stub = `
         window.google = window.google || {};
@@ -452,6 +488,8 @@ test.describe('Member Google Account Linking', () => {
     await page.route('**/api/**', async (route) => {
       const url = new URL(route.request().url());
       if (url.pathname === '/api/auth/me') return route.fulfill({ json: sellerSession });
+      if (url.pathname === '/api/account/profile')
+        return route.fulfill({ json: sellerAccountProfile });
       if (url.pathname === '/api/member/profile') return route.fulfill({ json: sellerProfile });
       if (url.pathname === '/api/member/history' || url.pathname.endsWith('/preorders')) {
         return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
@@ -468,10 +506,97 @@ test.describe('Member Google Account Linking', () => {
       return route.fulfill({ json: [] });
     });
 
-    await page.goto('/tai-khoan#member-profile');
+    await page.goto('/ho-so#security');
     const linkSection = page.locator('#member-google-link');
     await expect(linkSection).toBeVisible();
     await expect(linkSection).toContainText('seller@example.com');
     await expect(page.locator('[data-testid="mock-gis-button"]')).toBeVisible();
+  });
+
+  test('Navigating to legacy /tai-khoan#member-profile or #member-security redirects to /ho-so', async ({
+    page,
+  }) => {
+    await page.route('**/api/**', async (route) => {
+      const url = new URL(route.request().url());
+      if (url.pathname === '/api/auth/me') return route.fulfill({ json: customerSession });
+      if (url.pathname === '/api/account/profile')
+        return route.fulfill({ json: customerAccountProfile });
+      if (url.pathname === '/api/member/profile') return route.fulfill({ json: customerProfile });
+      if (url.pathname === '/api/member/history' || url.pathname.endsWith('/preorders')) {
+        return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
+      }
+      if (url.pathname === '/api/auth/config') {
+        return route.fulfill({
+          json: {
+            googleClientId: 'test-client-id-legacy.apps.googleusercontent.com',
+            googleEnabled: true,
+            registrationEmailEnabled: true,
+          },
+        });
+      }
+      return route.fulfill({ json: [] });
+    });
+
+    await page.goto('/tai-khoan#member-profile');
+    await expect(page).toHaveURL(/\/ho-so$/);
+    await expect(page.getByRole('heading', { level: 1, name: 'Lan Nguyễn' })).toBeVisible();
+
+    await page.goto('/tai-khoan#member-security');
+    await expect(page).toHaveURL(/\/ho-so#security$/);
+    await expect(page.locator('#security')).toBeVisible();
+  });
+
+  test('Non-member roles do NOT see #security section or member password/Google endpoints on /ho-so', async ({
+    page,
+  }) => {
+    const adminSession = {
+      id: '10000000-0000-0000-0000-000000000001',
+      name: 'Quản Trị Viên',
+      role: 'ADMIN',
+      sellerId: null,
+      sellerStatus: null,
+      packageExpiresAt: null,
+    };
+    const adminProfile = {
+      id: '10000000-0000-0000-0000-000000000001',
+      fullName: 'Quản Trị Viên',
+      loginEmail: 'admin@florabot.vn',
+      phone: '0901112233',
+      address: 'Trụ sở FloraBot',
+      contactEmail: 'admin@florabot.vn',
+      contactEmailIsDefault: true,
+      contactEmailVerified: true,
+      bank: { hasAccount: false },
+    };
+
+    let memberEndpointCalled = false;
+
+    await page.route('**/api/**', async (route) => {
+      const url = new URL(route.request().url());
+      if (url.pathname.startsWith('/api/member/')) {
+        memberEndpointCalled = true;
+        return route.fulfill({ status: 403, json: { detail: 'Forbidden for non-members' } });
+      }
+      if (url.pathname === '/api/auth/me') return route.fulfill({ json: adminSession });
+      if (url.pathname === '/api/account/profile') return route.fulfill({ json: adminProfile });
+      return route.fulfill({ json: [] });
+    });
+
+    await page.goto('/ho-so');
+    await expect(page.getByRole('heading', { level: 1, name: 'Quản Trị Viên' })).toBeVisible();
+
+    // Security section and Google link are not rendered
+    await expect(page.locator('#security')).toHaveCount(0);
+    await expect(page.locator('#member-google-link')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Đổi mật khẩu và đăng nhập lại' })).toHaveCount(
+      0,
+    );
+
+    // Nav anchor for security is not present
+    await expect(
+      page.locator('.profile-quick-nav').getByRole('link', { name: 'Bảo mật' }),
+    ).toHaveCount(0);
+
+    expect(memberEndpointCalled).toBe(false);
   });
 });

@@ -1,4 +1,5 @@
-/* Platform-only presentation: Admin, Operations Manager and Technician. */
+/* Shared authenticated workspace presentation.
+   Operations Manager is the visual baseline; role-specific layers keep domain content distinct. */
 .workspace-portal-root.platform-workspace {
   --platform-ink: #203b30;
   --platform-muted: #52685d;

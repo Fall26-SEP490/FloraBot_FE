@@ -1,0 +1,111 @@
+/* Seller and seller staff use the Operations Manager workspace as the visual baseline.
+   Role-specific styles remain responsible only for domain content and workflows. */
+.workspace-portal-root.platform-workspace[data-platform-role='seller'] .seller-workspace,
+.workspace-portal-root.platform-workspace[data-platform-role='staff'] .staff-workspace {
+  --seller-ink: var(--platform-ink);
+  --seller-muted: var(--platform-muted);
+  --seller-line: var(--platform-line);
+  --seller-soft: #edf3e9;
+  --seller-surface: #ffffff;
+  --ops-ink: var(--platform-ink);
+  --ops-muted: var(--platform-muted);
+  --ops-line: var(--platform-line);
+}
+
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .dashboard-page-heading
+  > div:first-child::before {
+  content: 'FLORABOT / CỬA HÀNG';
+}
+
+.workspace-portal-root.platform-workspace[data-platform-role='staff']
+  .dashboard-page-heading
+  > div:first-child::before {
+  content: 'FLORABOT / NHÂN VIÊN SHOP';
+}
+
+.workspace-portal-root.platform-workspace:is(
+    [data-platform-role='seller'],
+    [data-platform-role='staff']
+  )
+  .dashboard-context {
+  border: 1px solid #dce5df;
+  background: #ffffff;
+  color: #56705f;
+}
+
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .seller-workspace
+  .dashboard-content
+  > section,
+.workspace-portal-root.platform-workspace[data-platform-role='staff']
+  .staff-workspace
+  .dashboard-content
+  > section {
+  margin-top: 1.25rem;
+  padding: 24px;
+  border: 1px solid var(--platform-line);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 3px 16px rgb(27 56 38 / 3%);
+}
+
+.workspace-portal-root.platform-workspace[data-platform-role='seller'] .subscription-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 1.25rem;
+  padding: 14px 18px;
+  border: 1px solid var(--platform-line);
+  border-radius: 12px;
+  background: #ffffff;
+  color: var(--platform-ink);
+  box-shadow: 0 3px 16px rgb(27 56 38 / 3%);
+}
+
+.workspace-portal-root.platform-workspace[data-platform-role='seller'] .subscription-banner p {
+  margin: 0;
+}
+
+.workspace-portal-root.platform-workspace:is(
+    [data-platform-role='seller'],
+    [data-platform-role='staff']
+  )
+  .dashboard-content
+  :is(input:not([type='checkbox']):not([type='radio']), select, textarea) {
+  border-color: #ccd9ce;
+  border-radius: 9px;
+}
+
+.workspace-portal-root.platform-workspace:is(
+    [data-platform-role='seller'],
+    [data-platform-role='staff']
+  )
+  .staff-task-toolbar
+  select,
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .order-filter-bar
+  .filter-group
+  select {
+  min-height: 44px;
+  border-radius: 9px;
+}
+
+@media (max-width: 680px) {
+  .workspace-portal-root.platform-workspace[data-platform-role='seller']
+    .seller-workspace
+    .dashboard-content
+    > section,
+  .workspace-portal-root.platform-workspace[data-platform-role='staff']
+    .staff-workspace
+    .dashboard-content
+    > section {
+    padding: 20px;
+  }
+
+  .workspace-portal-root.platform-workspace[data-platform-role='seller'] .subscription-banner {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

@@ -141,7 +141,7 @@ export function PortalScreenRouter({
       return <FlowerShop />;
     case 'seller':
       return (
-        <div className="workspace-portal-root">
+        <div className="workspace-portal-root platform-workspace" data-platform-role="seller">
           <PortalGuard requiredRole="SELLER">
             <SellerWorkspace section={section} />
           </PortalGuard>
@@ -157,7 +157,7 @@ export function PortalScreenRouter({
       );
     case 'staff':
       return (
-        <div className="workspace-portal-root">
+        <div className="workspace-portal-root platform-workspace" data-platform-role="staff">
           <PortalGuard requiredRole="SELLER_STAFF">
             <StaffWorkspace section={section} />
           </PortalGuard>
