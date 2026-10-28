@@ -1,5 +1,6 @@
 import { parseAndValidateCoordinate } from '../installations/installations.utils';
-import { EMAIL_REGEX, PHONE_REGEX } from './onboarding.constants';
+const PHONE_REGEX = /^(0[35789][0-9]{8}|\+84[35789][0-9]{8})$/;
+const EMAIL_REGEX = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 import type { KioskApplicationFormDraft, KioskValidationResult } from './onboarding.types';
 
 export function validateKioskApplicationDraft(

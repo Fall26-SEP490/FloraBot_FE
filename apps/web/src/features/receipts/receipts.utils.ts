@@ -1,4 +1,4 @@
-import { RECEIPT_STORAGE_KEY } from './receipts.constants';
+const RECEIPT_STORAGE_KEY = 'florabot-personal-receipts-v1';
 import type { SavedReceipt } from './receipts.types';
 
 export const money = (amount: number | string) =>

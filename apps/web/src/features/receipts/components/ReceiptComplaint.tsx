@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import EvidenceUpload from '../../installations/components/EvidenceUpload';
+import EvidenceUpload from '../../../shared/components/EvidenceUpload';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@florabot/ui';

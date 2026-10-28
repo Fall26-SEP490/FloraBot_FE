@@ -8,7 +8,6 @@ import { ApplicationStatusPanel } from './components/ApplicationStatusPanel';
 import { CancelApplicationDialog } from './components/CancelApplicationDialog';
 import { KioskApplicationForm } from './components/KioskApplicationForm';
 import { KioskPackageCatalog } from './components/KioskPackageCatalog';
-import { OnboardingHeader } from './components/OnboardingHeader';
 import { TerminalApplicationPanel } from './components/TerminalApplicationPanel';
 import { useKioskApplication } from './hooks/useKioskApplication';
 import { useKioskApplicationActions } from './hooks/useKioskApplicationActions';
@@ -156,7 +155,19 @@ function CustomerKioskContent({
 
   return (
     <main id="main" className="kiosk-onboarding-container">
-      <OnboardingHeader />
+      <header className="kiosk-onboarding-header">
+        <nav className="kiosk-breadcrumb" aria-label="Đường dẫn">
+          <Link href="/tai-khoan">Tài khoản của tôi</Link>
+          <span aria-hidden="true">/</span>
+          <span aria-current="page">Thuê Kiosk</span>
+        </nav>
+        <h1>Đăng ký thuê Kiosk hoa thông minh</h1>
+        <p className="kiosk-onboarding-lead">
+          FloraBot cung cấp mô hình kiosk hoa giả với 2 phân vùng ô riêng biệt: ô vãng lai (khách
+          mua trực tiếp) và ô đặt trước (khách nhận hoa hẹn trước). Phí thuê tính theo năm bắt đầu
+          từ ngày nghiệm thu bàn giao thực tế.
+        </p>
+      </header>
 
       {/* Active Application Status Panel */}
       {hasActiveApplication && appData && (

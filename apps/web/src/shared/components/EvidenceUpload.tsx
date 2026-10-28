@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type Ref } from 'react';
 import { Button } from '@florabot/ui';
-import type { components } from '../../../../../../packages/contracts/src/generated/api';
+import type { components } from '../../../../../packages/contracts/src/generated/api';
 
 export default function EvidenceUpload({
   id,

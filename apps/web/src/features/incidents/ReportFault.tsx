@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@florabot/ui';
 import { ApiError, queryClient, request } from '../../api';
-import EvidenceUpload from '../installations/components/EvidenceUpload';
+import EvidenceUpload from '../../shared/components/EvidenceUpload';
 import type {
   FlowResult,
   ReportDeviceFaultRequest,

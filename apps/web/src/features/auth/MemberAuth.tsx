@@ -23,7 +23,13 @@ import type {
   GoogleCredentialResponse,
 } from './auth.types';
 import { passwordRule } from './auth.schemas';
-import { accountPath, formatTime } from './auth.utils';
+import { accountPath } from '../../roleRoutes';
+
+function formatTime(totalSeconds: number): string {
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+}
 
 let initializedGoogleClientId: string | null = null;
 let activeGoogleCredentialHandler: ((response: GoogleCredentialResponse) => void) | null = null;
