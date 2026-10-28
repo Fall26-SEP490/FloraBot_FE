@@ -4,9 +4,6 @@ import type { Profile } from './customer-account.types';
 
 export const fetchMemberProfile = () => request<Profile>('/member/profile');
 
-export const updateMemberProfile = (data: { fullName: string }) =>
-  request('/member/profile', { fullName: data.fullName.trim() });
-
 export const changeMemberPassword = (body: unknown) => request('/member/password', body);
 
 export const fetchMemberHistory = (page: number) =>

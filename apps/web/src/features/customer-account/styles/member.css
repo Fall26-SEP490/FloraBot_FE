@@ -307,6 +307,11 @@
   place-items: center;
   box-shadow: 0 4px 10px rgba(24, 62, 43, 0.18);
   flex-shrink: 0;
+  text-decoration: none;
+}
+
+.account-avatar:hover {
+  color: #ffffff;
 }
 
 .account-hero-info {

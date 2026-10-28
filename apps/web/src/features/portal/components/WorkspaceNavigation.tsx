@@ -151,8 +151,19 @@ export default function WorkspaceNavigation({
         ? 'Điều phối vận hành'
         : role === 'TECHNICIAN'
           ? 'Đội ngũ kỹ thuật'
-          : null;
-  const WorkspaceIcon = role === 'ADMIN' ? ShieldCheck : role === 'TECHNICIAN' ? ListChecks : Boxes;
+          : role === 'SELLER'
+            ? 'Vận hành cửa hàng'
+            : 'Công việc tại shop';
+  const WorkspaceIcon =
+    role === 'ADMIN'
+      ? ShieldCheck
+      : role === 'TECHNICIAN'
+        ? ListChecks
+        : role === 'SELLER'
+          ? Store
+          : role === 'SELLER_STAFF'
+            ? ClipboardList
+            : Boxes;
   const closeMenu = () => setExpanded(false);
   const handleEscape = (event: React.KeyboardEvent) => {
     if (event.key === 'Escape' && expanded) {
@@ -162,17 +173,15 @@ export default function WorkspaceNavigation({
   };
   return (
     <aside className="workspace-sidebar">
-      {platformName && (
-        <div className="platform-nav-heading">
-          <span>
-            <WorkspaceIcon size={20} aria-hidden="true" />
-          </span>
-          <div>
-            <small>KHÔNG GIAN LÀM VIỆC</small>
-            <strong>{platformName}</strong>
-          </div>
+      <div className="platform-nav-heading">
+        <span>
+          <WorkspaceIcon size={20} aria-hidden="true" />
+        </span>
+        <div>
+          <small>KHÔNG GIAN LÀM VIỆC</small>
+          <strong>{platformName}</strong>
         </div>
-      )}
+      </div>
       <button
         ref={toggle}
         onKeyDown={handleEscape}
@@ -359,7 +368,7 @@ export default function WorkspaceNavigation({
           {role === 'SELLER' && (
             <Link onKeyDown={handleEscape} onClick={closeMenu} href="/tai-khoan">
               <Users size={19} aria-hidden="true" />
-              Tài khoản & mua hoa
+              Mua hoa cá nhân
             </Link>
           )}
           <Link onKeyDown={handleEscape} onClick={closeMenu} href="/ho-so">

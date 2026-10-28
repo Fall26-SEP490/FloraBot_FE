@@ -1,4 +1,4 @@
-/* The three platform roles share this presentation; business routes keep their own styles. */
+/* Shared workspace presentation for platform, seller and seller-staff roles. */
 .workspace-portal-root.platform-workspace {
   --platform-ink: #203b34;
   --platform-muted: #61716a;

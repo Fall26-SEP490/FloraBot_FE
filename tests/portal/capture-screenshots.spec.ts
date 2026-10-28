@@ -82,9 +82,10 @@ test.describe('Capture workspace UI repair inspection screenshots', () => {
         ],
       }),
     );
-    await page.route('**/api/**', (route) =>
-      route.fulfill({ json: { items: [], page: 1, hasMore: false } }),
-    );
+    await page.route('**/api/**', (route) => {
+      if (new URL(route.request().url()).pathname === '/api/auth/me') return route.fallback();
+      return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
+    });
 
     // 934px tablet viewport (coordinator observation baseline)
     await page.setViewportSize({ width: 934, height: 850 });
@@ -150,13 +151,24 @@ test.describe('Capture workspace UI repair inspection screenshots', () => {
         },
       }),
     );
-    await page.route('**/api/**', (route) =>
-      route.fulfill({ json: { items: [], page: 1, hasMore: false } }),
-    );
+    await page.route('**/api/**', (route) => {
+      if (new URL(route.request().url()).pathname === '/api/auth/me') return route.fallback();
+      return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
+    });
 
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/seller');
     await page.waitForLoadState('networkidle');
+    await expect(page.locator('.workspace-portal-root.platform-workspace')).toHaveAttribute(
+      'data-platform-role',
+      'seller',
+    );
+    await expect(page.getByText('Vận hành cửa hàng')).toBeVisible();
+    expect(
+      await page.locator('.workspace-sidebar').evaluate((element) => {
+        return window.getComputedStyle(element).backgroundColor;
+      }),
+    ).toBe('rgb(23, 62, 51)');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
@@ -205,6 +217,12 @@ test.describe('Capture workspace UI repair inspection screenshots', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/staff');
     await page.waitForLoadState('networkidle');
+    await expect(page.locator('.workspace-portal-root.platform-workspace')).toHaveAttribute(
+      'data-platform-role',
+      'staff',
+    );
+    await expect(page.getByRole('heading', { level: 1, name: 'Công việc giao hoa' })).toBeVisible();
+    await expect(page.getByText('Công việc tại shop')).toBeAttached();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
@@ -429,10 +447,14 @@ test.describe('Capture workspace UI repair inspection screenshots', () => {
       fullPage: true,
     });
 
-    // Verify each tab exposes its corresponding panel in the new single-panel layout.
+    // Verify tabs expose their corresponding panels in the purchase-focused layout.
     const memberNav = page.locator('.member-tabs');
-    await memberNav.getByRole('link', { name: 'Hồ sơ cá nhân' }).click();
-    await expect(page.locator('#member-profile')).toBeVisible();
+    await expect(memberNav.getByRole('link', { name: 'Hồ sơ cá nhân' })).toHaveCount(0);
+    await expect(memberNav.getByRole('link', { name: 'Bảo mật' })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Chỉnh sửa hồ sơ' })).toHaveAttribute(
+      'href',
+      '/ho-so',
+    );
     await memberNav.getByRole('link', { name: 'Shop của bạn' }).click();
     await expect(page.locator('#member-shop')).toBeVisible();
     await expect(memberNav.getByRole('link', { name: 'Đơn đặt trước' })).toBeVisible();

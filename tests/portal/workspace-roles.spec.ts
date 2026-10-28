@@ -212,7 +212,12 @@ test.describe('FloraBot Identity Foundation - Workspace and Roles', () => {
     await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
 
     await expect(page).toHaveURL(/\/staff$/);
-    await expect(page.getByRole('heading', { name: 'Chào Lê Nhân Viên Shop' })).toBeVisible();
+    await expect(page.locator('.workspace-portal-root.platform-workspace')).toHaveAttribute(
+      'data-platform-role',
+      'staff',
+    );
+    await expect(page.getByRole('heading', { level: 1, name: 'Công việc giao hoa' })).toBeVisible();
+    await expect(page.getByText('Công việc tại shop')).toBeVisible();
     await expect(page.getByText('Nhân viên shop').first()).toBeVisible();
     // Seller staff never has technical incident resolution
     await expect(page.getByText('Ghi nhận đã sửa sự cố')).toHaveCount(0);

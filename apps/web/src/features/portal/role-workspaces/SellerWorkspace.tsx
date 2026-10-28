@@ -14,6 +14,9 @@ import { startPortalUpdates } from '@/shared/lib/realtime';
 import '../workspace-styles.css';
 import '../../dashboard/styles/dashboard-overview.css';
 import '../styles/seller.css';
+import '../../account-management/styles/platform-workspace.css';
+import '../../account-management/styles/platform-refresh.css';
+import '../styles/workspace-role-parity.css';
 
 const DashboardOverview = dynamic(() => import('../../dashboard/DashboardOverview'), {
   loading: () => <p role="status">Đang tải tổng quan cửa hàng…</p>,
@@ -175,7 +178,6 @@ export default function SellerWorkspace({ section = 'overview' }: { section?: st
         <WorkspaceNavigation key={section} workspaceRole="SELLER" section={section} />
         <main id="main" className="workspace dashboard-content">
           <PortalUpdates />
-          <SubscriptionBanner session={session.data} />
           <div className="dashboard-page-heading">
             <div>
               <h1>
@@ -195,6 +197,7 @@ export default function SellerWorkspace({ section = 'overview' }: { section?: st
                 : workspaceSections['SELLER']?.find(([key]) => key === section)?.[1] || 'Cửa hàng'}
             </span>
           </div>
+          <SubscriptionBanner session={session.data} />
           {section === 'overview' && (
             <>
               <DashboardOverview session={session.data} />

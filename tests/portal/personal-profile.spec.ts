@@ -232,7 +232,8 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
     await page.goto('/ho-so');
 
     // Verify loginEmail is read-only
-    await expect(page.getByText('customer@florabot.vn')).toBeVisible();
+    const identitySection = page.getByRole('region', { name: 'Định danh tài khoản đăng nhập' });
+    await expect(identitySection.getByText('customer@florabot.vn')).toBeVisible();
 
     // Fill form
     await page.getByLabel('Họ và tên *').fill('Nguyễn Thành Viên Mới');
@@ -571,4 +572,34 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
       expect(axeResults.violations).toEqual([]);
     });
   }
+
+  test('Seller navigation exposes Mua hoa cá nhân to /tai-khoan and Hồ sơ cá nhân to /ho-so', async ({
+    page,
+  }) => {
+    await page.route('**/api/auth/me', (route) => route.fulfill({ json: sessions.SELLER }));
+    await page.route('**/api/account/profile', (route) =>
+      route.fulfill({
+        json: makeMockProfile({
+          id: sessions.SELLER.id,
+          fullName: sessions.SELLER.name,
+          loginEmail: 'seller@florabot.vn',
+        }),
+      }),
+    );
+    await page.route('**/api/seller/**', (route) =>
+      route.fulfill({ json: { items: [], total: 0 } }),
+    );
+
+    await page.goto('/seller');
+    const personalLinks = page.locator('.workspace-personal-links');
+    await expect(personalLinks).toBeVisible();
+
+    const buyPersonal = personalLinks.getByRole('link', { name: 'Mua hoa cá nhân' });
+    await expect(buyPersonal).toBeVisible();
+    await expect(buyPersonal).toHaveAttribute('href', '/tai-khoan');
+
+    const profileLink = personalLinks.getByRole('link', { name: 'Hồ sơ cá nhân' });
+    await expect(profileLink).toBeVisible();
+    await expect(profileLink).toHaveAttribute('href', '/ho-so');
+  });
 });

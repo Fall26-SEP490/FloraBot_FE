@@ -9,6 +9,10 @@ import { logoutSession, sessionQuery } from '@/shared/lib/api';
 import { accountPath } from '@/features/portal/config/roleRoutes';
 import WorkspaceNavigation, { WorkspaceHeader } from '../components/WorkspaceNavigation';
 import '../workspace-styles.css';
+import '../../dashboard/styles/dashboard-overview.css';
+import '../../account-management/styles/platform-workspace.css';
+import '../../account-management/styles/platform-refresh.css';
+import '../styles/workspace-role-parity.css';
 
 const StaffChatSection = dynamic(
   () => import('@/features/chat/StaffChatSection').then((mod) => mod.StaffChatSection),
@@ -59,16 +63,16 @@ export default function StaffWorkspace({ section = 'tasks' }: { section?: string
         busy={logout.isPending}
         onLogout={() => logout.mutate()}
       />
-      <div className="dashboard-shell">
+      <div className="dashboard-shell staff-workspace">
         <WorkspaceNavigation workspaceRole="SELLER_STAFF" section={section} />
         <main id="main" className="workspace dashboard-content">
           <div className="dashboard-page-heading">
             <div>
-              <h1>{section === 'chats' ? 'Nhắn với chủ shop' : `Chào ${session.data.name}`}</h1>
+              <h1>{section === 'chats' ? 'Nhắn với chủ shop' : 'Công việc giao hoa'}</h1>
               <p>
                 {section === 'chats'
                   ? 'Trao đổi yêu cầu công việc và chia sẻ ảnh trực tiếp với shop của bạn.'
-                  : 'Nhận việc, nạp hoa vào ô tủ và gửi báo cáo cho shop.'}
+                  : `Chào ${session.data.name}, theo dõi việc được giao, nạp hoa và gửi báo cáo cho shop.`}
               </p>
             </div>
             <span className="dashboard-context">Nhân viên shop</span>
