@@ -3,21 +3,13 @@
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  ArrowRight,
-  ChevronDown,
-  Flower2,
-  LayoutDashboard,
-  LogOut,
-  Store,
-  User,
-} from '@florabot/ui';
+import { ChevronDown, Flower2, LayoutDashboard, LogOut, Store, User } from '@florabot/ui';
 import '../styles/user-menu.css';
 
 export type UserMenuLink = {
   href: string;
   label: string;
-  icon: 'workspace' | 'shop' | 'purchase' | 'profile' | 'home';
+  icon: 'workspace' | 'shop' | 'purchase' | 'profile';
 };
 
 const icons = {
@@ -25,7 +17,6 @@ const icons = {
   shop: Store,
   purchase: Flower2,
   profile: User,
-  home: ArrowRight,
 } as const;
 
 export function UserMenu({

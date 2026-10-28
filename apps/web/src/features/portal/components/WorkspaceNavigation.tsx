@@ -14,8 +14,6 @@ import {
   Users,
   Flower2,
   MapPin,
-  ArrowRight,
-  ArrowUpRight,
   Menu,
   X,
   MessageSquare,
@@ -98,7 +96,7 @@ export function WorkspaceHeader({
 
   return (
     <header className="dashboard-header">
-      <SiteBrand className="dashboard-brand" href={workspaceBase(role)} />
+      <SiteBrand className="dashboard-brand" href="/" />
       <span className="dashboard-role">{roleLabel}</span>
       <WorkspaceUserMenu role={role} name={name} busy={busy} onLogout={onLogout} />
     </header>
@@ -131,7 +129,6 @@ export function WorkspaceUserMenu({
           },
         ]
       : []),
-    { href: '/', label: 'Về trang chủ', icon: 'home' },
   ];
 
   return (
@@ -245,10 +242,6 @@ export default function WorkspaceNavigation({
               <Boxes size={19} aria-hidden="true" />
               Lắp đặt Kiosk
             </Link>
-            <Link onKeyDown={handleEscape} onClick={closeMenu} href="/technician#technician-guide">
-              <ListChecks size={19} aria-hidden="true" />
-              Hướng dẫn xử lý sự cố
-            </Link>
           </>
         ) : role === 'SELLER_STAFF' ? (
           <>
@@ -269,10 +262,6 @@ export default function WorkspaceNavigation({
             >
               <MessageSquare size={19} aria-hidden="true" />
               Nhắn với chủ shop
-            </Link>
-            <Link onKeyDown={handleEscape} onClick={closeMenu} href="/staff#staff-guide">
-              <ListChecks size={19} aria-hidden="true" />
-              Hướng dẫn làm việc
             </Link>
           </>
         ) : role === 'OPERATIONS_MANAGER' ? (
@@ -336,14 +325,6 @@ export default function WorkspaceNavigation({
                 <Users size={19} aria-hidden="true" />
                 <span>Kỹ thuật viên</span>
               </Link>
-              <Link
-                onKeyDown={handleEscape}
-                onClick={closeMenu}
-                href="/operations#operations-guide"
-              >
-                <ClipboardList size={19} aria-hidden="true" />
-                <span>Hướng dẫn điều phối</span>
-              </Link>
             </div>
           </>
         ) : (
@@ -391,29 +372,6 @@ export default function WorkspaceNavigation({
             ))}
           </>
         )}
-        <div className="workspace-personal-links">
-          {role === 'SELLER' && (
-            <Link
-              className="workspace-cross-area-link"
-              onKeyDown={handleEscape}
-              onClick={closeMenu}
-              href="/tai-khoan"
-              title="Chuyển sang khu vực mua hoa"
-            >
-              <Flower2 size={19} aria-hidden="true" />
-              <span>Hoạt động mua hoa</span>
-              <ArrowUpRight className="workspace-link-direction" size={16} aria-hidden="true" />
-            </Link>
-          )}
-          <Link onKeyDown={handleEscape} onClick={closeMenu} href="/ho-so">
-            <Users size={19} aria-hidden="true" />
-            Hồ sơ cá nhân
-          </Link>
-          <Link onKeyDown={handleEscape} onClick={closeMenu} href="/">
-            <ArrowRight size={19} aria-hidden="true" />
-            Về trang chủ
-          </Link>
-        </div>
       </nav>
     </aside>
   );

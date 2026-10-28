@@ -139,10 +139,6 @@
   padding-inline: 13px;
   margin-bottom: 9px;
 }
-.workspace-portal-root.platform-workspace .workspace-personal-links {
-  border-color: #38594c;
-  margin-top: 22px;
-}
 .workspace-portal-root.platform-workspace .dashboard-content {
   min-width: 0;
   width: 100%;
