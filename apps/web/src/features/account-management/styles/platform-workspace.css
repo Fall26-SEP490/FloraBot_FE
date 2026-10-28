@@ -87,11 +87,6 @@
   text-transform: uppercase;
   margin-bottom: 8px;
 }
-.workspace-portal-root.platform-workspace .workspace-personal-links {
-  border-color: var(--platform-line);
-  margin-top: 24px;
-  padding-top: 15px;
-}
 .workspace-portal-root.platform-workspace .dashboard-content {
   padding: 32px clamp(20px, 3vw, 48px) 56px;
 }

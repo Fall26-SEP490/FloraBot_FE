@@ -115,6 +115,7 @@ test('Admin signs in, loads all workspaces and approves a shop through real API 
   await shop.getByRole('button', { name: 'Duyệt hồ sơ shop' }).click();
   await expect(shops.getByRole('status')).toContainText(`Đã duyệt ${shopName}`);
   expect(errors).toEqual([]);
+  await page.getByRole('button', { name: /Mở menu người dùng/ }).click();
   await page.getByRole('button', { name: 'Đăng xuất', exact: true }).click();
   await expect(page).toHaveURL(/\/admin\/login$/);
   await page.goto('/admin');

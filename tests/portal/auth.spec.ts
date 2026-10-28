@@ -1,5 +1,10 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+
+async function logoutFromWorkspace(page: Page) {
+  await page.getByRole('button', { name: /Mở menu người dùng/ }).click();
+  await page.getByRole('button', { name: 'Đăng xuất', exact: true }).click();
+}
 
 test.beforeEach(async ({ page }) => {
   await page.route('**/api/admin/withdrawals?*', (route) =>
@@ -77,7 +82,7 @@ test('Anonymous guard, login validation, seller banner and logout', async ({ pag
   await expect(page).toHaveURL(/\/seller$/);
   await expect(page.getByRole('heading', { name: 'Tổng quan cửa hàng' })).toBeVisible();
   await expect(page.getByText('Chào Tiệm Hoa Nhỏ,')).toBeVisible();
-  await page.getByRole('button', { name: 'Đăng xuất' }).click();
+  await logoutFromWorkspace(page);
   await expect(page).toHaveURL(/\/dang-nhap$/);
   await page.goto('/seller');
   await expect(page).toHaveURL(/\/dang-nhap$/);
@@ -115,6 +120,11 @@ test('Marketing header logout clears the session and performs a clean navigation
   });
 
   await page.goto('/huong-dan-dat-hoa');
+  await expect(
+    page.getByRole('button', { name: 'Mở menu người dùng của Tiệm Hoa Nhỏ' }),
+  ).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Đăng xuất', exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Mở menu người dùng của Tiệm Hoa Nhỏ' }).click();
   await expect(page.getByRole('button', { name: 'Đăng xuất', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Đăng xuất', exact: true }).click();
 
@@ -179,7 +189,7 @@ test('Technician uses operations login and never enters administrator workspace'
   await expect(page).toHaveURL(/\/technician$/);
   await expect(page.getByRole('heading', { name: 'Chào Kỹ thuật viên' })).toBeVisible();
   expect(privilegedRequests).toEqual([]);
-  await page.getByRole('button', { name: 'Đăng xuất', exact: true }).click();
+  await logoutFromWorkspace(page);
   await expect(page).toHaveURL(/\/admin\/login$/);
 });
 
@@ -211,7 +221,7 @@ test('Operations manager can sign out from the operations workspace', async ({ p
 
   await page.goto('/operations');
   await expect(page.getByRole('heading', { name: 'Tổng quan vận hành' })).toBeVisible();
-  await page.getByRole('button', { name: 'Đăng xuất', exact: true }).click();
+  await logoutFromWorkspace(page);
 
   await expect(page).toHaveURL(/\/admin\/login$/);
   expect(logoutCalls).toBe(1);

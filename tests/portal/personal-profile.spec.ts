@@ -189,7 +189,15 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
     await page.route('**/api/admin/managers**', (route) => route.fulfill({ json: [] }));
 
     await page.goto('/admin/managers');
-    const profileLink = page.getByRole('link', { name: `Hồ sơ cá nhân của ${admin.name}` });
+    const accountToggle = page.getByRole('button', {
+      name: `Mở menu người dùng của ${admin.name}`,
+    });
+    await expect(accountToggle).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Đăng xuất', exact: true })).toHaveCount(0);
+    await accountToggle.click();
+    const profileLink = page
+      .locator('#workspace-user-menu')
+      .getByRole('link', { name: 'Hồ sơ cá nhân', exact: true });
     await expect(profileLink).toBeVisible();
     await profileLink.click();
     await expect(page).toHaveURL(/\/ho-so$/);
@@ -573,7 +581,7 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
     });
   }
 
-  test('Seller navigation exposes Mua hoa cá nhân to /tai-khoan and Hồ sơ cá nhân to /ho-so', async ({
+  test('Seller keeps personal actions in the avatar menu and out of the workspace sidebar', async ({
     page,
   }) => {
     await page.route('**/api/auth/me', (route) => route.fulfill({ json: sessions.SELLER }));
@@ -591,15 +599,26 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
     );
 
     await page.goto('/seller');
-    const personalLinks = page.locator('.workspace-personal-links');
-    await expect(personalLinks).toBeVisible();
+    await expect(
+      page.getByRole('banner').getByRole('link', { name: 'FloraBot — trang chủ' }),
+    ).toHaveAttribute('href', '/');
+    const navigation = page.getByRole('navigation', { name: 'Điều hướng quản lý' });
+    await expect(navigation.getByRole('link', { name: 'Hoạt động mua hoa' })).toHaveCount(0);
+    await expect(navigation.getByRole('link', { name: 'Hồ sơ cá nhân' })).toHaveCount(0);
+    await expect(navigation.getByRole('link', { name: 'Về trang chủ' })).toHaveCount(0);
 
-    const buyPersonal = personalLinks.getByRole('link', { name: 'Mua hoa cá nhân' });
+    await page
+      .getByRole('button', { name: `Mở menu người dùng của ${sessions.SELLER.name}` })
+      .click();
+    const personalLinks = page.locator('#workspace-user-menu');
+
+    const buyPersonal = personalLinks.getByRole('link', { name: 'Hoạt động mua hoa' });
     await expect(buyPersonal).toBeVisible();
     await expect(buyPersonal).toHaveAttribute('href', '/tai-khoan');
 
     const profileLink = personalLinks.getByRole('link', { name: 'Hồ sơ cá nhân' });
     await expect(profileLink).toBeVisible();
     await expect(profileLink).toHaveAttribute('href', '/ho-so');
+    await expect(personalLinks.getByRole('link', { name: 'Về trang chủ' })).toHaveCount(0);
   });
 });

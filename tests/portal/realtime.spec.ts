@@ -67,6 +67,7 @@ test('Realtime refresh preserves filters and focus, reconnects, and stops on log
   sockets.at(-1)!.close({ code: 1011, reason: 'test reconnect' });
   await expect.poll(() => sockets.length).toBeGreaterThan(count);
   await expect(page.getByText(name, { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: /Mở menu người dùng/ }).click();
   await page.getByRole('button', { name: 'Đăng xuất', exact: true }).click();
   await expect(page).toHaveURL(/\/login$/);
   const readsAfterLogout = reads;

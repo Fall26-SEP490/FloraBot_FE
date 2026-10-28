@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { randomBytes, randomInt, randomUUID } from 'node:crypto';
 import {
   createPreorderFixture,
@@ -7,6 +7,11 @@ import {
   registerCustomer,
   sql,
 } from './role-workflows-helpers';
+
+async function logoutFromAvatarMenu(page: Page) {
+  await page.getByRole('button', { name: /Mở menu người dùng/ }).click();
+  await page.getByRole('button', { name: 'Đăng xuất', exact: true }).click();
+}
 
 test.describe('FloraBot Role Workflows Integration', () => {
   test('Workflow 1: Customer creates custom preorder by UI, seller quotes by UI, customer accepts to pending-payment, with consistent cancellation and refusal states', async ({
@@ -135,7 +140,7 @@ test.describe('FloraBot Role Workflows Integration', () => {
     await expect(row3.locator('summary')).toContainText('Đã hủy');
 
     // Customer logs out
-    await page.getByRole('button', { name: 'Đăng xuất' }).click();
+    await logoutFromAvatarMenu(page);
     await expect(page).toHaveURL(/\/dang-nhap$/);
 
     // 7. Seller logs in and views /seller/orders
@@ -200,7 +205,7 @@ test.describe('FloraBot Role Workflows Integration', () => {
     await expect(sellerRow3.locator('summary')).toContainText('Đã hủy');
 
     // Seller logs out
-    await page.getByRole('button', { name: 'Đăng xuất' }).first().click();
+    await logoutFromAvatarMenu(page);
     await expect(page).toHaveURL(/\/dang-nhap$/);
 
     // 10. Customer logs back in to review, verify rejection and accept quoted Order 1
@@ -340,7 +345,7 @@ test.describe('FloraBot Role Workflows Integration', () => {
     });
     expect([400, 403]).toContain(invalidDeliveryPost.status());
 
-    await page.getByRole('button', { name: 'Đăng xuất' }).first().click();
+    await logoutFromAvatarMenu(page);
     await expect(page).toHaveURL(/\/admin\/login$/);
 
     // 3. Technician logs in, starts INCIDENT task, and submits repair report
@@ -397,7 +402,7 @@ test.describe('FloraBot Role Workflows Integration', () => {
     expect((await page.request.get('/api/admin/withdrawals')).status()).toBe(403);
     expect((await page.request.get('/api/admin/refunds')).status()).toBe(403);
 
-    await page.getByRole('button', { name: 'Đăng xuất' }).first().click();
+    await logoutFromAvatarMenu(page);
     await expect(page).toHaveURL(/\/admin\/login$/);
 
     // 4. Operations Manager reviews and completes INCIDENT task
@@ -429,7 +434,7 @@ test.describe('FloraBot Role Workflows Integration', () => {
     expect((await reviewIncidentReq).status()).toBe(200);
     await expect(managerReviewCard.locator('.staff-task-label')).toHaveText('Đã duyệt');
 
-    await page.getByRole('button', { name: 'Đăng xuất' }).first().click();
+    await logoutFromAvatarMenu(page);
     await expect(page).toHaveURL(/\/admin\/login$/);
 
     // 5. Shop Owner logs in, goes to /seller/tasks, and assigns DELIVERY task to own SellerStaff
@@ -482,7 +487,7 @@ test.describe('FloraBot Role Workflows Integration', () => {
       .filter({ hasText: fixture.sellerStaffName });
     await expect(deliveryCardOnOwner.locator('.staff-task-label')).toHaveText('Chờ bắt đầu');
 
-    await page.getByRole('button', { name: 'Đăng xuất' }).first().click();
+    await logoutFromAvatarMenu(page);
     await expect(page).toHaveURL(/\/dang-nhap$/);
 
     // 6. SellerStaff logs in, starts DELIVERY task, and submits simulated delivery report
@@ -538,7 +543,7 @@ test.describe('FloraBot Role Workflows Integration', () => {
     expect((await page.request.get(`/api/sellers/${fixture.sellerId}/wallet`)).status()).toBe(404);
     expect((await page.request.get('/api/admin/withdrawals')).status()).toBe(403);
 
-    await page.getByRole('button', { name: 'Đăng xuất' }).first().click();
+    await logoutFromAvatarMenu(page);
     await expect(page).toHaveURL(/\/dang-nhap$/);
 
     // 7. Shop Owner logs in, reviews simulated delivery report and completes DELIVERY task
@@ -588,7 +593,7 @@ test.describe('FloraBot Role Workflows Integration', () => {
       ).status(),
     ).toBe(403);
 
-    await page.getByRole('button', { name: 'Đăng xuất' }).first().click();
+    await logoutFromAvatarMenu(page);
 
     // 8. Foreign Seller Staff session guards (cross-tenant isolation)
     await loginAccount(page, {
@@ -605,6 +610,6 @@ test.describe('FloraBot Role Workflows Integration', () => {
       404,
     );
 
-    await page.getByRole('button', { name: 'Đăng xuất' }).first().click();
+    await logoutFromAvatarMenu(page);
   });
 });

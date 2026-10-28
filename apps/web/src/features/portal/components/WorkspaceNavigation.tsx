@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
   ClipboardList,
@@ -13,21 +14,29 @@ import {
   Users,
   Flower2,
   MapPin,
-  ArrowRight,
   Menu,
   X,
-  LogOut,
-  Button,
   MessageSquare,
   ShieldCheck,
 } from '@florabot/ui';
 import { useQuery } from '@tanstack/react-query';
 import { getSellerChats } from '@/features/chat/api';
+import { getRoleLabel } from '@/features/portal/config/roleRoutes';
 import { workspaceBase, workspaceSections } from '@/features/portal/config/workspaceSections';
+import { UserMenu, type UserMenuLink } from '@/shared/components/UserMenu';
 import { SiteBrand } from '@/shared/layout/SiteFrame';
 import { sessionQuery } from '@/shared/lib/api';
 
 type Role = 'ADMIN' | 'SELLER' | 'OPERATIONS_MANAGER' | 'TECHNICIAN' | 'SELLER_STAFF';
+
+function workspaceRoleLabel(role: string) {
+  return role === 'ADMIN'
+    ? 'Quản trị vận hành'
+    : role === 'OPERATIONS_MANAGER'
+      ? 'Quản lý vận hành'
+      : getRoleLabel(role);
+}
+
 const icons = {
   overview: LayoutDashboard,
   managers: Users,
@@ -83,42 +92,57 @@ export function WorkspaceHeader({
   busy: boolean;
   onLogout: () => void;
 }) {
+  const roleLabel = workspaceRoleLabel(role);
+
   return (
     <header className="dashboard-header">
-      <SiteBrand className="dashboard-brand" href={workspaceBase(role)} />
-      <span className="dashboard-role">
-        {role === 'ADMIN'
-          ? 'Quản trị vận hành'
-          : role === 'OPERATIONS_MANAGER'
-            ? 'Quản lý vận hành'
-            : role === 'SELLER'
-              ? 'Chủ shop'
-              : role === 'TECHNICIAN'
-                ? 'Kỹ thuật viên'
-                : 'Nhân viên shop'}
-      </span>
-      <Link
-        href="/ho-so"
-        className="dashboard-user"
-        title="Xem và chỉnh sửa hồ sơ cá nhân"
-        aria-label={`Hồ sơ cá nhân của ${name}`}
-      >
-        <span className="dashboard-avatar" aria-hidden="true">
-          {name.trim().slice(0, 1).toLocaleUpperCase('vi-VN')}
-        </span>
-        <span>{name}</span>
-      </Link>
-      <Button
-        className="dashboard-logout"
-        variant="outline"
-        onClick={onLogout}
-        disabled={busy}
-        aria-label={busy ? 'Đang đăng xuất…' : 'Đăng xuất'}
-      >
-        <LogOut size={18} aria-hidden="true" />
-        <span>{busy ? 'Đang đăng xuất…' : 'Đăng xuất'}</span>
-      </Button>
+      <SiteBrand className="dashboard-brand" href="/" />
+      <span className="dashboard-role">{roleLabel}</span>
+      <WorkspaceUserMenu role={role} name={name} busy={busy} onLogout={onLogout} />
     </header>
+  );
+}
+
+export function WorkspaceUserMenu({
+  role,
+  name,
+  busy,
+  onLogout,
+}: {
+  role: string;
+  name: string;
+  busy: boolean;
+  onLogout: () => void;
+}) {
+  const pathname = usePathname();
+  const [openedPath, setOpenedPath] = useState<string | null>(null);
+  const menuOpen = openedPath === pathname;
+  const roleLabel = workspaceRoleLabel(role);
+  const links: UserMenuLink[] = [
+    { href: '/ho-so', label: 'Hồ sơ cá nhân', icon: 'profile' },
+    ...(role === 'SELLER'
+      ? [
+          {
+            href: '/tai-khoan',
+            label: 'Hoạt động mua hoa',
+            icon: 'purchase' as const,
+          },
+        ]
+      : []),
+  ];
+
+  return (
+    <UserMenu
+      className="dashboard-account"
+      menuId="workspace-user-menu"
+      name={name}
+      roleLabel={roleLabel}
+      links={links}
+      busy={busy}
+      onLogout={onLogout}
+      open={menuOpen}
+      onOpenChange={(open) => setOpenedPath(open ? pathname : null)}
+    />
   );
 }
 
@@ -218,10 +242,6 @@ export default function WorkspaceNavigation({
               <Boxes size={19} aria-hidden="true" />
               Lắp đặt Kiosk
             </Link>
-            <Link onKeyDown={handleEscape} onClick={closeMenu} href="/technician#technician-guide">
-              <ListChecks size={19} aria-hidden="true" />
-              Hướng dẫn xử lý sự cố
-            </Link>
           </>
         ) : role === 'SELLER_STAFF' ? (
           <>
@@ -242,10 +262,6 @@ export default function WorkspaceNavigation({
             >
               <MessageSquare size={19} aria-hidden="true" />
               Nhắn với chủ shop
-            </Link>
-            <Link onKeyDown={handleEscape} onClick={closeMenu} href="/staff#staff-guide">
-              <ListChecks size={19} aria-hidden="true" />
-              Hướng dẫn làm việc
             </Link>
           </>
         ) : role === 'OPERATIONS_MANAGER' ? (
@@ -309,14 +325,6 @@ export default function WorkspaceNavigation({
                 <Users size={19} aria-hidden="true" />
                 <span>Kỹ thuật viên</span>
               </Link>
-              <Link
-                onKeyDown={handleEscape}
-                onClick={closeMenu}
-                href="/operations#operations-guide"
-              >
-                <ClipboardList size={19} aria-hidden="true" />
-                <span>Hướng dẫn điều phối</span>
-              </Link>
             </div>
           </>
         ) : (
@@ -364,22 +372,6 @@ export default function WorkspaceNavigation({
             ))}
           </>
         )}
-        <div className="workspace-personal-links">
-          {role === 'SELLER' && (
-            <Link onKeyDown={handleEscape} onClick={closeMenu} href="/tai-khoan">
-              <Users size={19} aria-hidden="true" />
-              Mua hoa cá nhân
-            </Link>
-          )}
-          <Link onKeyDown={handleEscape} onClick={closeMenu} href="/ho-so">
-            <Users size={19} aria-hidden="true" />
-            Hồ sơ cá nhân
-          </Link>
-          <Link onKeyDown={handleEscape} onClick={closeMenu} href="/">
-            <ArrowRight size={19} aria-hidden="true" />
-            Về trang chủ
-          </Link>
-        </div>
       </nav>
     </aside>
   );

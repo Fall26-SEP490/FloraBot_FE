@@ -57,6 +57,10 @@
   border-radius: 999px;
 }
 
+.workspace-portal-root .dashboard-account {
+  margin-left: auto;
+}
+
 .workspace-portal-root .dashboard-user {
   display: flex;
   align-items: center;
@@ -104,8 +108,8 @@
     padding: 10px 16px;
   }
 
-  .workspace-portal-root .dashboard-user {
-    max-width: 220px;
+  .workspace-portal-root .dashboard-account {
+    margin-left: auto;
   }
 }
 
@@ -116,11 +120,6 @@
 
   .workspace-portal-root .dashboard-brand {
     min-width: 0;
-  }
-
-  .workspace-portal-root .dashboard-user {
-    max-width: 170px;
-    font-size: 0.8rem;
   }
 }
 

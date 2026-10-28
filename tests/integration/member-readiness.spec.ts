@@ -65,6 +65,10 @@ test('Member registers, edits profile, sees own orders and cannot enter staff wo
     page.getByRole('heading', { name: 'Chọn hoa cho một dịp thật riêng.' }),
   ).toBeVisible();
   expect((await page.request.get('/api/shop/catalog')).status()).toBe(200);
+  await page
+    .getByRole('banner')
+    .getByRole('button', { name: /Mở menu người dùng/ })
+    .click();
   await page.getByRole('button', { name: 'Đăng xuất', exact: true }).click();
   await expect(page).toHaveURL(/\/dang-nhap$/);
   await page.getByLabel('Email', { exact: true }).fill(email);

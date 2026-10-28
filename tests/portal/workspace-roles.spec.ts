@@ -1,5 +1,10 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+
+async function logoutFromWorkspace(page: Page) {
+  await page.getByRole('button', { name: /Mở menu người dùng/ }).click();
+  await page.getByRole('button', { name: 'Đăng xuất', exact: true }).click();
+}
 
 const managerSession = {
   id: '10000000-0000-0000-0000-000000000010',
@@ -133,7 +138,7 @@ test.describe('FloraBot Identity Foundation - Workspace and Roles', () => {
     await expect(nav.getByRole('link', { name: 'Rút tiền' })).toHaveCount(0);
     await expect(nav.getByRole('link', { name: 'Đối soát' })).toHaveCount(0);
 
-    await page.getByRole('button', { name: 'Đăng xuất' }).first().click();
+    await logoutFromWorkspace(page);
     await expect(page).toHaveURL(/\/admin\/login$/);
   });
 
@@ -175,7 +180,7 @@ test.describe('FloraBot Identity Foundation - Workspace and Roles', () => {
     // Technician never has stock forms or legacy staff guide
     await expect(page.getByText('Nạp hoa và xem kết quả')).toHaveCount(0);
 
-    await page.getByRole('button', { name: 'Đăng xuất' }).first().click();
+    await logoutFromWorkspace(page);
     await expect(page).toHaveURL(/\/admin\/login$/);
   });
 
@@ -222,7 +227,7 @@ test.describe('FloraBot Identity Foundation - Workspace and Roles', () => {
     // Seller staff never has technical incident resolution
     await expect(page.getByText('Ghi nhận đã sửa sự cố')).toHaveCount(0);
 
-    await page.getByRole('button', { name: 'Đăng xuất' }).first().click();
+    await logoutFromWorkspace(page);
     await expect(page).toHaveURL(/\/dang-nhap$/);
   });
 

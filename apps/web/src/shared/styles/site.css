@@ -128,6 +128,7 @@ html {
 }
 
 .site-account {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -155,34 +156,6 @@ html {
   background: linear-gradient(135deg, #133f2b 0%, #174b35 100%);
   box-shadow: 0 4px 14px rgba(23, 75, 53, 0.32);
   transform: translateY(-1px);
-}
-
-.site-logout {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  min-height: 40px;
-  padding: 8px 14px;
-  border: 1px solid #c9d9c8;
-  border-radius: 9999px;
-  background: #ffffff;
-  color: #55725c;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.site-logout:hover {
-  background: #fbf2f2;
-  border-color: #e5aaaa;
-  color: #922b25;
-  box-shadow: 0 2px 6px rgba(146, 43, 37, 0.08);
-}
-
-.site-logout:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 
 .site-menu {
@@ -418,12 +391,6 @@ html {
     font-size: 13px;
   }
 
-  .site-logout {
-    font-size: 12px;
-    padding: 6px 10px;
-    min-height: 44px;
-  }
-
   .footer-container {
     grid-template-columns: 1fr 1fr;
     gap: 20px 16px;
@@ -481,11 +448,6 @@ html {
   .site-menu svg {
     width: 18px;
     height: 18px;
-  }
-
-  .site-logout {
-    padding: 6px 8px;
-    font-size: 11.5px;
   }
 }
 
