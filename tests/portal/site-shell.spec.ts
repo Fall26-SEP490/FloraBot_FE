@@ -1,5 +1,43 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+
+async function readUserMenuVisualContract(page: Page) {
+  const account = page.locator('.user-menu-account');
+  await account.evaluate(async (element) => {
+    await Promise.all(
+      element
+        .getAnimations({ subtree: true })
+        .map((animation) => animation.finished.catch(() => undefined)),
+    );
+  });
+  return account.evaluate((account) => {
+    const trigger = account.querySelector<HTMLElement>('.user-menu-trigger');
+    const popover = account.querySelector<HTMLElement>('.user-menu-popover');
+    if (!trigger || !popover) throw new Error('User menu is not open');
+    const triggerStyle = getComputedStyle(trigger);
+    const popoverStyle = getComputedStyle(popover);
+    const triggerBounds = trigger.getBoundingClientRect();
+    return {
+      trigger: {
+        width: triggerBounds.width,
+        height: triggerBounds.height,
+        padding: triggerStyle.padding,
+        borderRadius: triggerStyle.borderRadius,
+        background: triggerStyle.backgroundColor,
+        color: triggerStyle.color,
+        shadow: triggerStyle.boxShadow,
+      },
+      popover: {
+        width: popoverStyle.width,
+        padding: popoverStyle.padding,
+        borderRadius: popoverStyle.borderRadius,
+        background: popoverStyle.backgroundColor,
+        color: popoverStyle.color,
+        shadow: popoverStyle.boxShadow,
+      },
+    };
+  });
+}
 
 test('Avatar menu preserves workspace, purchase, and profile destinations for every role', async ({
   page,
@@ -34,6 +72,24 @@ test('Avatar menu preserves workspace, purchase, and profile destinations for ev
     }
     await page.unroute('**/api/auth/me');
   }
+});
+
+test('Public and workspace headers share the same avatar menu visual contract', async ({
+  page,
+}) => {
+  const session = { id: 'admin', role: 'ADMIN', name: 'UAT Admin' };
+  await page.route('**/api/auth/me', (route) => route.fulfill({ json: session }));
+  await page.route('**/api/admin/managers**', (route) => route.fulfill({ json: [] }));
+
+  await page.goto('/ve-florabot');
+  await page.getByRole('button', { name: 'Mở menu người dùng của UAT Admin' }).click();
+  const publicContract = await readUserMenuVisualContract(page);
+
+  await page.goto('/admin/managers');
+  await page.getByRole('button', { name: 'Mở menu người dùng của UAT Admin' }).click();
+  const workspaceContract = await readUserMenuVisualContract(page);
+
+  expect(workspaceContract).toEqual(publicContract);
 });
 
 for (const width of [390, 1440]) {

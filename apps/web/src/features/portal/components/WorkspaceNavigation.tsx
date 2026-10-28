@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -18,9 +18,6 @@ import {
   ArrowUpRight,
   Menu,
   X,
-  LogOut,
-  ChevronDown,
-  User,
   MessageSquare,
   ShieldCheck,
 } from '@florabot/ui';
@@ -28,6 +25,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getSellerChats } from '@/features/chat/api';
 import { getRoleLabel } from '@/features/portal/config/roleRoutes';
 import { workspaceBase, workspaceSections } from '@/features/portal/config/workspaceSections';
+import { UserMenu, type UserMenuLink } from '@/shared/components/UserMenu';
 import { SiteBrand } from '@/shared/layout/SiteFrame';
 import { sessionQuery } from '@/shared/lib/api';
 
@@ -121,79 +119,33 @@ export function WorkspaceUserMenu({
   const pathname = usePathname();
   const [openedPath, setOpenedPath] = useState<string | null>(null);
   const menuOpen = openedPath === pathname;
-  const menu = useRef<HTMLDivElement>(null);
-  const toggle = useRef<HTMLButtonElement>(null);
   const roleLabel = workspaceRoleLabel(role);
-
-  useEffect(() => {
-    if (!menuOpen) return;
-    const closeOutside = (event: PointerEvent) => {
-      if (menu.current?.contains(event.target as Node)) return;
-      setOpenedPath(null);
-    };
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      setOpenedPath(null);
-      toggle.current?.focus();
-    };
-    document.addEventListener('pointerdown', closeOutside);
-    document.addEventListener('keydown', closeOnEscape);
-    return () => {
-      document.removeEventListener('pointerdown', closeOutside);
-      document.removeEventListener('keydown', closeOnEscape);
-    };
-  }, [menuOpen]);
+  const links: UserMenuLink[] = [
+    { href: '/ho-so', label: 'Hồ sơ cá nhân', icon: 'profile' },
+    ...(role === 'SELLER'
+      ? [
+          {
+            href: '/tai-khoan',
+            label: 'Hoạt động mua hoa',
+            icon: 'purchase' as const,
+          },
+        ]
+      : []),
+    { href: '/', label: 'Về trang chủ', icon: 'home' },
+  ];
 
   return (
-    <div ref={menu} className="dashboard-account">
-      <button
-        ref={toggle}
-        className="dashboard-user-trigger"
-        type="button"
-        aria-label={`Mở menu người dùng của ${name}`}
-        aria-controls="workspace-user-menu"
-        aria-expanded={menuOpen}
-        onClick={() => setOpenedPath(menuOpen ? null : pathname)}
-      >
-        <span className="dashboard-avatar" aria-hidden="true">
-          {name.trim().slice(0, 1).toLocaleUpperCase('vi-VN') || 'F'}
-        </span>
-        <ChevronDown size={16} aria-hidden="true" />
-      </button>
-      {menuOpen && (
-        <div id="workspace-user-menu" className="dashboard-user-menu" aria-label="Menu người dùng">
-          <div className="dashboard-user-summary">
-            <strong>{name}</strong>
-            <span>{roleLabel}</span>
-          </div>
-          <div className="dashboard-user-menu-links">
-            <Link href="/ho-so" onClick={() => setOpenedPath(null)}>
-              <User size={17} aria-hidden="true" />
-              <span>Hồ sơ cá nhân</span>
-            </Link>
-            {role === 'SELLER' && (
-              <Link href="/tai-khoan" onClick={() => setOpenedPath(null)}>
-                <Flower2 size={17} aria-hidden="true" />
-                <span>Hoạt động mua hoa</span>
-              </Link>
-            )}
-            <Link href="/" onClick={() => setOpenedPath(null)}>
-              <ArrowRight size={17} aria-hidden="true" />
-              <span>Về trang chủ</span>
-            </Link>
-          </div>
-          <button
-            className="dashboard-user-logout"
-            type="button"
-            disabled={busy}
-            onClick={onLogout}
-          >
-            <LogOut size={17} aria-hidden="true" />
-            <span>{busy ? 'Đang đăng xuất…' : 'Đăng xuất'}</span>
-          </button>
-        </div>
-      )}
-    </div>
+    <UserMenu
+      className="dashboard-account"
+      menuId="workspace-user-menu"
+      name={name}
+      roleLabel={roleLabel}
+      links={links}
+      busy={busy}
+      onLogout={onLogout}
+      open={menuOpen}
+      onOpenChange={(open) => setOpenedPath(open ? pathname : null)}
+    />
   );
 }
 
