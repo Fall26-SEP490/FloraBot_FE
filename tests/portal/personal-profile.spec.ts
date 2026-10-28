@@ -573,7 +573,7 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
     });
   }
 
-  test('Seller navigation exposes Mua hoa cá nhân to /tai-khoan and Hồ sơ cá nhân to /ho-so', async ({
+  test('Seller navigation exposes Hoạt động mua hoa to /tai-khoan and Hồ sơ cá nhân to /ho-so', async ({
     page,
   }) => {
     await page.route('**/api/auth/me', (route) => route.fulfill({ json: sessions.SELLER }));
@@ -594,7 +594,7 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
     const personalLinks = page.locator('.workspace-personal-links');
     await expect(personalLinks).toBeVisible();
 
-    const buyPersonal = personalLinks.getByRole('link', { name: 'Mua hoa cá nhân' });
+    const buyPersonal = personalLinks.getByRole('link', { name: 'Hoạt động mua hoa' });
     await expect(buyPersonal).toBeVisible();
     await expect(buyPersonal).toHaveAttribute('href', '/tai-khoan');
 

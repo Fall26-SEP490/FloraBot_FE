@@ -143,6 +143,10 @@
   padding-top: 0.75rem;
   margin-top: 1.4rem;
 }
+.workspace-cross-area-link .workspace-link-direction {
+  margin-left: auto;
+  opacity: 0.75;
+}
 .workspace-menu-toggle {
   display: none;
 }

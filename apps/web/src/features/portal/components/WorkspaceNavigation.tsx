@@ -14,6 +14,7 @@ import {
   Flower2,
   MapPin,
   ArrowRight,
+  ArrowUpRight,
   Menu,
   X,
   LogOut,
@@ -366,9 +367,16 @@ export default function WorkspaceNavigation({
         )}
         <div className="workspace-personal-links">
           {role === 'SELLER' && (
-            <Link onKeyDown={handleEscape} onClick={closeMenu} href="/tai-khoan">
-              <Users size={19} aria-hidden="true" />
-              Mua hoa cá nhân
+            <Link
+              className="workspace-cross-area-link"
+              onKeyDown={handleEscape}
+              onClick={closeMenu}
+              href="/tai-khoan"
+              title="Chuyển sang khu vực mua hoa"
+            >
+              <Flower2 size={19} aria-hidden="true" />
+              <span>Hoạt động mua hoa</span>
+              <ArrowUpRight className="workspace-link-direction" size={16} aria-hidden="true" />
             </Link>
           )}
           <Link onKeyDown={handleEscape} onClick={closeMenu} href="/ho-so">
