@@ -1,5 +1,6 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
   ClipboardList,
@@ -18,17 +19,28 @@ import {
   Menu,
   X,
   LogOut,
-  Button,
+  ChevronDown,
+  User,
   MessageSquare,
   ShieldCheck,
 } from '@florabot/ui';
 import { useQuery } from '@tanstack/react-query';
 import { getSellerChats } from '@/features/chat/api';
+import { getRoleLabel } from '@/features/portal/config/roleRoutes';
 import { workspaceBase, workspaceSections } from '@/features/portal/config/workspaceSections';
 import { SiteBrand } from '@/shared/layout/SiteFrame';
 import { sessionQuery } from '@/shared/lib/api';
 
 type Role = 'ADMIN' | 'SELLER' | 'OPERATIONS_MANAGER' | 'TECHNICIAN' | 'SELLER_STAFF';
+
+function workspaceRoleLabel(role: string) {
+  return role === 'ADMIN'
+    ? 'Quản trị vận hành'
+    : role === 'OPERATIONS_MANAGER'
+      ? 'Quản lý vận hành'
+      : getRoleLabel(role);
+}
+
 const icons = {
   overview: LayoutDashboard,
   managers: Users,
@@ -84,42 +96,104 @@ export function WorkspaceHeader({
   busy: boolean;
   onLogout: () => void;
 }) {
+  const roleLabel = workspaceRoleLabel(role);
+
   return (
     <header className="dashboard-header">
       <SiteBrand className="dashboard-brand" href={workspaceBase(role)} />
-      <span className="dashboard-role">
-        {role === 'ADMIN'
-          ? 'Quản trị vận hành'
-          : role === 'OPERATIONS_MANAGER'
-            ? 'Quản lý vận hành'
-            : role === 'SELLER'
-              ? 'Chủ shop'
-              : role === 'TECHNICIAN'
-                ? 'Kỹ thuật viên'
-                : 'Nhân viên shop'}
-      </span>
-      <Link
-        href="/ho-so"
-        className="dashboard-user"
-        title="Xem và chỉnh sửa hồ sơ cá nhân"
-        aria-label={`Hồ sơ cá nhân của ${name}`}
+      <span className="dashboard-role">{roleLabel}</span>
+      <WorkspaceUserMenu role={role} name={name} busy={busy} onLogout={onLogout} />
+    </header>
+  );
+}
+
+export function WorkspaceUserMenu({
+  role,
+  name,
+  busy,
+  onLogout,
+}: {
+  role: string;
+  name: string;
+  busy: boolean;
+  onLogout: () => void;
+}) {
+  const pathname = usePathname();
+  const [openedPath, setOpenedPath] = useState<string | null>(null);
+  const menuOpen = openedPath === pathname;
+  const menu = useRef<HTMLDivElement>(null);
+  const toggle = useRef<HTMLButtonElement>(null);
+  const roleLabel = workspaceRoleLabel(role);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const closeOutside = (event: PointerEvent) => {
+      if (menu.current?.contains(event.target as Node)) return;
+      setOpenedPath(null);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      setOpenedPath(null);
+      toggle.current?.focus();
+    };
+    document.addEventListener('pointerdown', closeOutside);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOutside);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [menuOpen]);
+
+  return (
+    <div ref={menu} className="dashboard-account">
+      <button
+        ref={toggle}
+        className="dashboard-user-trigger"
+        type="button"
+        aria-label={`Mở menu người dùng của ${name}`}
+        aria-controls="workspace-user-menu"
+        aria-expanded={menuOpen}
+        onClick={() => setOpenedPath(menuOpen ? null : pathname)}
       >
         <span className="dashboard-avatar" aria-hidden="true">
-          {name.trim().slice(0, 1).toLocaleUpperCase('vi-VN')}
+          {name.trim().slice(0, 1).toLocaleUpperCase('vi-VN') || 'F'}
         </span>
-        <span>{name}</span>
-      </Link>
-      <Button
-        className="dashboard-logout"
-        variant="outline"
-        onClick={onLogout}
-        disabled={busy}
-        aria-label={busy ? 'Đang đăng xuất…' : 'Đăng xuất'}
-      >
-        <LogOut size={18} aria-hidden="true" />
-        <span>{busy ? 'Đang đăng xuất…' : 'Đăng xuất'}</span>
-      </Button>
-    </header>
+        <ChevronDown size={16} aria-hidden="true" />
+      </button>
+      {menuOpen && (
+        <div id="workspace-user-menu" className="dashboard-user-menu" aria-label="Menu người dùng">
+          <div className="dashboard-user-summary">
+            <strong>{name}</strong>
+            <span>{roleLabel}</span>
+          </div>
+          <div className="dashboard-user-menu-links">
+            <Link href="/ho-so" onClick={() => setOpenedPath(null)}>
+              <User size={17} aria-hidden="true" />
+              <span>Hồ sơ cá nhân</span>
+            </Link>
+            {role === 'SELLER' && (
+              <Link href="/tai-khoan" onClick={() => setOpenedPath(null)}>
+                <Flower2 size={17} aria-hidden="true" />
+                <span>Hoạt động mua hoa</span>
+              </Link>
+            )}
+            <Link href="/" onClick={() => setOpenedPath(null)}>
+              <ArrowRight size={17} aria-hidden="true" />
+              <span>Về trang chủ</span>
+            </Link>
+          </div>
+          <button
+            className="dashboard-user-logout"
+            type="button"
+            disabled={busy}
+            onClick={onLogout}
+          >
+            <LogOut size={17} aria-hidden="true" />
+            <span>{busy ? 'Đang đăng xuất…' : 'Đăng xuất'}</span>
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 

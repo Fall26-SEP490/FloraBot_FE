@@ -111,6 +111,7 @@ test('Real registration, admin approval, provisioning and seller subscription', 
   await page.goto('/admin');
   expect((await refreshResponse).status()).toBe(200);
   await expect(page).toHaveURL(/\/admin$/);
+  await page.getByRole('button', { name: /Mở menu người dùng/ }).click();
   await page.getByRole('button', { name: 'Đăng xuất' }).click();
   await expect(page).toHaveURL(/\/admin\/login$/);
 
@@ -302,6 +303,7 @@ test('Real registration, admin approval, provisioning and seller subscription', 
   );
   expect(foreignFault.status()).toBe(404);
   expect((await page.request.get(`/api/admin/incidents/${reportId}`)).status()).toBe(403);
+  await page.getByRole('button', { name: /Mở menu người dùng/ }).click();
   await page.getByRole('button', { name: 'Đăng xuất' }).click();
   await page.goto('/admin/login');
   await loginAdminWithPacing(page, 'admin@florabot.vn', password);
@@ -378,6 +380,7 @@ test('Real registration, admin approval, provisioning and seller subscription', 
   );
   expect(payerSetup.status).toBe(0);
   provision(payerId, payerEmail, password);
+  await page.getByRole('button', { name: /Mở menu người dùng/ }).click();
   await page.getByRole('button', { name: 'Đăng xuất' }).click();
   await page.goto('/admin/login');
   await loginAdminWithPacing(page, payerEmail, password);

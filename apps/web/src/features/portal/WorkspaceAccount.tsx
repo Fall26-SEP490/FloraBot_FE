@@ -3,8 +3,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Button, Flower2, LogOut, CircleAlert } from '@florabot/ui';
+import { Button, Flower2, CircleAlert } from '@florabot/ui';
 import { ApiError, logoutSession, sessionQuery } from '@/shared/lib/api';
+import { WorkspaceUserMenu } from '@/features/portal/components/WorkspaceNavigation';
 import {
   accountPath,
   getRoleLabel,
@@ -157,8 +158,6 @@ export default function WorkspaceAccount() {
   const role = session.data.role;
   const isRetiredStaff = role === 'STAFF';
   const roleLabel = getRoleLabel(role);
-  const avatarLetter = session.data.name.trim().slice(0, 1).toLocaleUpperCase('vi-VN');
-
   return (
     <div className="workspace-account-shell">
       <header className="dashboard-header workspace-account-header">
@@ -167,20 +166,12 @@ export default function WorkspaceAccount() {
           FloraBot<span aria-hidden="true">.</span>
         </Link>
         <span className="dashboard-role">{roleLabel}</span>
-        <div className="dashboard-user">
-          <span className="dashboard-avatar" aria-hidden="true">
-            {avatarLetter}
-          </span>
-          <span>{session.data.name}</span>
-          <Button
-            variant="outline"
-            className="dashboard-logout button"
-            disabled={logout.isPending}
-            onClick={() => logout.mutate()}
-          >
-            <LogOut size={16} aria-hidden="true" /> Đăng xuất
-          </Button>
-        </div>
+        <WorkspaceUserMenu
+          role={role}
+          name={session.data.name}
+          busy={logout.isPending}
+          onLogout={() => logout.mutate()}
+        />
       </header>
 
       <main id="main" className="workspace dashboard-content workspace-account-content">

@@ -189,7 +189,15 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
     await page.route('**/api/admin/managers**', (route) => route.fulfill({ json: [] }));
 
     await page.goto('/admin/managers');
-    const profileLink = page.getByRole('link', { name: `Hồ sơ cá nhân của ${admin.name}` });
+    const accountToggle = page.getByRole('button', {
+      name: `Mở menu người dùng của ${admin.name}`,
+    });
+    await expect(accountToggle).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Đăng xuất', exact: true })).toHaveCount(0);
+    await accountToggle.click();
+    const profileLink = page
+      .locator('#workspace-user-menu')
+      .getByRole('link', { name: 'Hồ sơ cá nhân', exact: true });
     await expect(profileLink).toBeVisible();
     await profileLink.click();
     await expect(page).toHaveURL(/\/ho-so$/);
