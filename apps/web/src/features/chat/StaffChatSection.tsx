@@ -6,8 +6,8 @@ import { useCallback, useRef, useState, useSyncExternalStore } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button, MessageSquare, RefreshCw } from '@florabot/ui';
-import { queryClient, request, type Session } from '../api';
-import type { AccountDirectoryItem } from '../features/account-management/account-management.types';
+import { queryClient, request, type Session } from '@/shared/lib/api';
+import type { AccountDirectoryItem } from '@/features/account-management/account-management.types';
 import type { ChatMessageReceivedEvent, ChatMessagesReadEvent, SellerStaffChatItem } from './types';
 import { formatChatError } from './api';
 import {

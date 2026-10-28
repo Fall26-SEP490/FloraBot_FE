@@ -1,6 +1,6 @@
 import { useState, type RefObject } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { ApiError, queryClient, request, type Session } from '../../../api';
+import { ApiError, queryClient, request, type Session } from '@/shared/lib/api';
 import type { EvidenceUploadResponse, TechnicianInstallationDetail } from '../installations.types';
 import { validateEvidenceFile } from '../installations.utils';
 

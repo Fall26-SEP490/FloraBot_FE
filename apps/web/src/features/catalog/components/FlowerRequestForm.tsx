@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
-import { ApiError, queryClient, request, sessionQuery } from '../../../api';
+import { ApiError, queryClient, request, sessionQuery } from '@/shared/lib/api';
 import type { CatalogItem } from '../catalog.types';
 
 interface FlowerRequestFormProps {

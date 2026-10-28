@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Button, CircleAlert } from '@florabot/ui';
-import { ApiError, queryClient, request, type Session } from '../../../api';
+import { ApiError, queryClient, request, type Session } from '@/shared/lib/api';
 import { Modal } from '../../../shared/components/Modal';
 import { KIOSK_REGIONS } from '../installations.constants';
 import type { EnrollKioskRequest, EnrollKioskResponse } from '../installations.types';

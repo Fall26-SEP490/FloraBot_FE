@@ -2,7 +2,7 @@
 
 import { useId, useState, type FormEvent } from 'react';
 import { Button } from '@florabot/ui';
-import { ApiError, queryClient, request, type Session } from '../../../api';
+import { ApiError, queryClient, request, type Session } from '@/shared/lib/api';
 import { DataTable } from '../../../shared/components/DataTable';
 import { ConfirmDialog, Modal } from '../../../shared/components/Modal';
 import type { components } from '../../../../../../packages/contracts/src/generated/api';

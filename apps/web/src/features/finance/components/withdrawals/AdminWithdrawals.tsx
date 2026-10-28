@@ -13,7 +13,7 @@ import type {
   RejectWithdrawalRequest,
   WithdrawalBankResponse,
 } from '../../finance.types';
-import { ApiError, queryClient, request } from '../../../../api';
+import { ApiError, queryClient, request } from '@/shared/lib/api';
 
 import EvidenceUpload from '../../../../shared/components/EvidenceUpload';
 import FinancialProofs from '../FinancialProofs';

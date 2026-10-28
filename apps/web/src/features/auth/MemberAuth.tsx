@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { Button, ArrowRight, Check, Eye, EyeOff } from '@florabot/ui';
 import AuthShell from './components/AuthShell';
 import GoogleIcon from './components/GoogleIcon';
-import { ApiError, queryClient, type AuthConfig } from '../../api';
+import { ApiError, queryClient, type AuthConfig } from '@/shared/lib/api';
 import {
   confirmPasswordReset,
   fetchAuthConfig,
@@ -23,7 +23,7 @@ import type {
   GoogleCredentialResponse,
 } from './auth.types';
 import { passwordRule } from './auth.schemas';
-import { accountPath } from '../../roleRoutes';
+import { accountPath } from '@/features/portal/config/roleRoutes';
 
 function formatTime(totalSeconds: number): string {
   const m = Math.floor(totalSeconds / 60);

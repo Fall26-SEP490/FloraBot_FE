@@ -4,8 +4,8 @@ import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
-import { ApiError, sessionQuery } from '../../api';
-import { accountPath } from '../../roleRoutes';
+import { ApiError, sessionQuery } from '@/shared/lib/api';
+import { accountPath } from '@/features/portal/config/roleRoutes';
 
 export function PortalGuard({
   requiredRole,

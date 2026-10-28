@@ -1,9 +1,9 @@
-import Layout from '@/marketing/MarketingLayout';
-import Registration from '@/marketing/Registration';
-import KioskMap from '@/marketing/KioskMap';
-import GiftDemo from '@/marketing/GiftDemo';
-import FlowerPhoto from '@/marketing/FlowerPhoto';
-import FlowerGallery from '@/marketing/FlowerGallery';
+import Layout from '@/features/marketing/MarketingLayout';
+import Registration from '@/features/marketing/Registration';
+import KioskMap from '@/features/marketing/KioskMap';
+import GiftDemo from '@/features/marketing/GiftDemo';
+import FlowerPhoto from '@/features/marketing/FlowerPhoto';
+import FlowerGallery from '@/features/marketing/FlowerGallery';
 import { flowerPhotos } from '@florabot/ui/flower-photos';
 import { packages } from '@florabot/contracts';
 const portal = '';
@@ -25,7 +25,7 @@ const jsonLd = {
   ],
 };
 
-import MarketingEffects from '@/marketing/MarketingEffects';
+import MarketingEffects from '@/features/marketing/MarketingEffects';
 
 export const metadata = { title: 'FloraBot - Đặt hoa theo ý bạn, nhận tại tủ' };
 export default function Page() {

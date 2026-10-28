@@ -1,4 +1,4 @@
-import Layout from '@/marketing/MarketingLayout';
+import Layout from '@/features/marketing/MarketingLayout';
 const portal = '';
 
 export const metadata = {

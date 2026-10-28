@@ -3,14 +3,14 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button, CircleAlert, ClipboardList, RefreshCw } from '@florabot/ui';
-import { queryClient, request, type Session } from '../../api';
+import { queryClient, request, type Session } from '@/shared/lib/api';
 import type {
   TechnicianInstallationDetail,
   TechnicianInstallationSummary,
 } from './installations.types';
 import { TechnicianJobList } from './components/TechnicianJobList';
 import { TechnicianJobDetailCard } from './components/TechnicianJobDetailCard';
-import '../../kiosk-shared.css';
+import '../../shared/styles/kiosk-shared.css';
 import './styles/technician-installations.css';
 
 interface TechnicianInstallationsProps {

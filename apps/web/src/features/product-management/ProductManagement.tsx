@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button, Plus, Minus, Search } from '@florabot/ui';
 import { money } from '@florabot/contracts';
-import type { Session } from '../../api';
+import type { Session } from '@/shared/lib/api';
 import { TablePagination } from '../../shared/components/DataTable';
 import { Modal } from '../../shared/components/Modal';
 import { clampPage, paginate } from '../../shared/pagination';

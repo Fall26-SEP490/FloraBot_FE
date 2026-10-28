@@ -4,7 +4,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@florabot/ui';
-import { ApiError, queryClient, request } from '../../api';
+import { ApiError, queryClient, request } from '@/shared/lib/api';
 import EvidenceUpload from '../../shared/components/EvidenceUpload';
 import type {
   FlowResult,

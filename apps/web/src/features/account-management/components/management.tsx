@@ -3,7 +3,7 @@
 import { useId, useState, type FormEvent, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button, Search, RefreshCw, X, Users } from '@florabot/ui';
-import { request, type Session } from '../../../api';
+import { request, type Session } from '@/shared/lib/api';
 import type { Profile, ProfileInput } from '../account-management.types';
 import { accountStatuses, roleLabels, statusLabels } from '../account-management.constants';
 import { message, dateText } from '../account-management.utils';

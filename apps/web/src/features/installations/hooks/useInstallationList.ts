@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { queryClient, request, type Session } from '../../../api';
+import { queryClient, request, type Session } from '@/shared/lib/api';
 import type { KioskApplicationPage } from '../installations.types';
 
 export function useInstallationList(session: Session) {

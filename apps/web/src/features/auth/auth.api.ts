@@ -1,4 +1,9 @@
-import { request, type Session, type AuthConfig, type RegisterPendingResponse } from '../../api';
+import {
+  request,
+  type Session,
+  type AuthConfig,
+  type RegisterPendingResponse,
+} from '@/shared/lib/api';
 
 export function fetchAuthConfig(): Promise<AuthConfig> {
   return request<AuthConfig>('/auth/config');

@@ -1,0 +1,272 @@
+@media (max-width: 1050px) {
+  .hero-garden {
+    min-height: 500px;
+  }
+  .section {
+    padding-block: 3.3rem;
+  }
+  .section-intro,
+  .location-layout,
+  .registration-section {
+    gap: 2rem;
+  }
+  .plan {
+    padding: 1.4rem;
+  }
+  .privacy-layout {
+    gap: 2rem;
+  }
+  .steps {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+  }
+  .steps li {
+    display: grid;
+    grid-template-columns: minmax(0, 180px) minmax(0, 1fr);
+    gap: 1.5rem;
+    align-items: center;
+  }
+  .gift-picker {
+    grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
+  }
+  .gift-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 760px) {
+  .hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .hero-copy {
+    padding: 2.5rem 5%;
+  }
+  .hero::before {
+    inset: 0 0 45% 0;
+  }
+  .hero h1 {
+    font-size: clamp(1.5rem, 5.5vw, 2.15rem);
+  }
+  .hero-actions {
+    gap: 1rem;
+  }
+  .hero-garden {
+    min-height: 360px;
+    margin: 0;
+  }
+}
+@media (max-width: 700px) {
+  .section {
+    padding: 2.8rem 5%;
+  }
+  .section-intro,
+  .location-layout,
+  .faq-section,
+  .registration-section,
+  .money-section,
+  .price-options {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.2rem;
+  }
+  .section-intro {
+    margin-bottom: 1.5rem;
+  }
+  .steps {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.3rem;
+  }
+  .steps li {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  .step-art {
+    aspect-ratio: 4/3;
+  }
+  .flower-ribbon img {
+    height: 240px;
+    border-radius: 12px;
+  }
+  .money-photo {
+    height: 320px;
+  }
+  .faq-visual img {
+    height: 220px;
+  }
+  .plan {
+    padding: clamp(0.6rem, 3vw, 1.5rem);
+  }
+  .plan h3 {
+    font-size: 1.2rem;
+  }
+  .plan-price strong {
+    font-size: clamp(1.2rem, 7vw, 2rem);
+  }
+  .info-content {
+    padding: 0.8rem;
+  }
+  .gift-fields,
+  .gift-results,
+  .form-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .gift-picker {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .gift-picker-art {
+    min-height: 230px;
+  }
+  .budget-options {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .budget-options button {
+    min-width: 0;
+  }
+  .budget-full {
+    display: none;
+  }
+  .budget-short {
+    display: inline;
+  }
+  .gift-tool {
+    margin-top: 2rem;
+  }
+  .form-fields > div {
+    grid-column: 1;
+  }
+  .map-placeholder {
+    min-height: 240px;
+    padding: 1.5rem;
+  }
+  .kiosk-map {
+    height: 370px;
+  }
+  .registration-section form {
+    padding: 1.2rem;
+  }
+  .registration-flowers {
+    height: 250px;
+  }
+  .privacy-page {
+    padding: 0 5% 3rem;
+  }
+  .privacy-hero {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 1.4rem;
+    gap: 1.5rem;
+    margin: 1rem 0 2rem;
+  }
+  .privacy-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+  }
+  .privacy-nav {
+    position: static;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+    padding-bottom: 1rem;
+  }
+  .privacy-nav p {
+    grid-column: 1/-1;
+  }
+  .privacy-nav a {
+    font-size: 0.85rem;
+    background: #f3f7ef;
+    border-radius: 8px;
+    padding: 0.5rem;
+    margin: 0;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hero-garden .garden-photo {
+    animation: floral-open 0.75s var(--landing-ease) both;
+  }
+  .steps.is-in-view .step-art {
+    animation: flower-unfold 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .steps.is-in-view li:nth-child(2) .step-art {
+    animation-name: flower-unfold-right;
+  }
+  .steps.is-in-view li:nth-child(2) .step-art {
+    animation-delay: 0.12s;
+  }
+  .steps.is-in-view li:nth-child(3) .step-art {
+    animation-delay: 0.24s;
+  }
+  .graphic-divider.is-in-view,
+  .section-next.is-in-view {
+    animation: botanical-join 1.1s var(--landing-ease) both;
+  }
+  .gift-results li {
+    animation: bouquet-arrive 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .gift-results li:nth-child(2) {
+    animation-delay: 0.08s;
+  }
+  .gift-results li:nth-child(3) {
+    animation-delay: 0.16s;
+  }
+  .budget-options button:active {
+    transform: scale(0.97);
+  }
+}
+@keyframes flower-unfold {
+  from {
+    clip-path: inset(0 100% 0 0 round 8px);
+  }
+  to {
+    clip-path: inset(0 round 8px);
+  }
+}
+@keyframes flower-unfold-right {
+  from {
+    clip-path: inset(0 0 0 100% round 8px);
+  }
+  to {
+    clip-path: inset(0 round 8px);
+  }
+}
+@keyframes botanical-join {
+  from {
+    background-position:
+      0 0,
+      -100px center;
+  }
+  to {
+    background-position:
+      0 0,
+      0 center;
+  }
+}
+@keyframes bouquet-arrive {
+  from {
+    opacity: 0.25;
+    transform: translateX(-28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes floral-open {
+  from {
+    clip-path: inset(0 0 0 100%);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-garden .garden-photo,
+  .hero-cabinet {
+    animation: none;
+  }
+  .button svg {
+    transition: none;
+  }
+  .button:hover:not(:disabled) svg {
+    transform: none;
+  }
+}

@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@florabot/ui';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
-import { queryClient, request } from '../../api';
+import { queryClient, request } from '@/shared/lib/api';
 import { ConfirmDialog } from '../../shared/components/Modal';
 
 type Kiosk = components['schemas']['AdminKioskResponse'];

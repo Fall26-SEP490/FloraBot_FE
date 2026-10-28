@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Button } from '@florabot/ui';
 import type { DailyReconciliationResult, GatewayReconciliationResult } from '../../finance.types';
-import { ApiError, request } from '../../../../api';
+import { ApiError, request } from '@/shared/lib/api';
 
 type Daily = DailyReconciliationResult;
 type Gateway = GatewayReconciliationResult;

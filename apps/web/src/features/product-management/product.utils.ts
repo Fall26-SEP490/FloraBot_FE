@@ -1,4 +1,4 @@
-import { ApiError } from '../../api';
+import { ApiError } from '@/shared/lib/api';
 
 export function parseTags(input: string): string[] {
   if (!input || !input.trim()) return [];

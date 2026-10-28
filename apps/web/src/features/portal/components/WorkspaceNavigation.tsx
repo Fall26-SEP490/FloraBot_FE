@@ -22,10 +22,10 @@ import {
   ShieldCheck,
 } from '@florabot/ui';
 import { useQuery } from '@tanstack/react-query';
-import { workspaceBase, workspaceSections } from './workspaceSections';
-import { SiteBrand } from './SiteFrame';
-import { sessionQuery } from './api';
-import { getSellerChats } from './chat/api';
+import { getSellerChats } from '@/features/chat/api';
+import { workspaceBase, workspaceSections } from '@/features/portal/config/workspaceSections';
+import { SiteBrand } from '@/shared/layout/SiteFrame';
+import { sessionQuery } from '@/shared/lib/api';
 
 type Role = 'ADMIN' | 'SELLER' | 'OPERATIONS_MANAGER' | 'TECHNICIAN' | 'SELLER_STAFF';
 const icons = {

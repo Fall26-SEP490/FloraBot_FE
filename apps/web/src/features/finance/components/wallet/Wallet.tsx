@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@florabot/ui';
 import type { FlowResult, WalletResponse } from '../../finance.types';
-import { ApiError, queryClient, request, type Session } from '../../../../api';
+import { ApiError, queryClient, request, type Session } from '@/shared/lib/api';
 import BankDetails from './BankDetails';
 
 type Overview = WalletResponse;

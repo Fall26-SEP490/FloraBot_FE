@@ -1,0 +1,264 @@
+.section {
+  position: relative;
+  margin: auto;
+  padding: 4.5rem max(4.5%, calc((100% - 1310px) / 2));
+  scroll-margin-top: 1rem;
+  overflow-wrap: break-word;
+}
+.how,
+.locations,
+.faq-section {
+  background:
+    linear-gradient(#fffdf7ed, #fffdf7ed),
+    url('/images/generated/florabot-pattern.webp') center / 620px repeat;
+}
+.section h2 {
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  margin: 0 0 1rem;
+  max-width: 24ch;
+}
+.section-intro {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 3rem;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+.section-intro p {
+  margin: 0.25rem 0 0.75rem;
+  max-width: 45ch;
+  font-size: 0.95rem;
+}
+.context-label {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2.5rem;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem;
+}
+.steps li {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  min-width: 0;
+}
+.step-art {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.step-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+}
+.step-copy > div {
+  min-width: 0;
+}
+.step-number {
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #47714d;
+  padding-top: 0.2rem;
+}
+.steps h3 {
+  font-size: 1.15rem;
+  margin: 0 0 0.5rem;
+  text-wrap: pretty;
+}
+.steps p {
+  font-size: 0.9rem;
+  margin: 0;
+  max-width: 30ch;
+}
+.how > h2 {
+  margin-bottom: 2rem;
+}
+.section-next {
+  display: flex;
+  grid-column: 1/-1;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+  min-height: 64px;
+  margin-top: 2rem;
+  padding: 0.5rem 1rem;
+  border-block: 1px solid var(--color-divider);
+  background:
+    linear-gradient(90deg, #fffdf700, #fffdf7 65%),
+    url('/images/generated/florabot-pattern.webp') left center / 340px repeat;
+  color: var(--color-ink);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.section-next span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: var(--landing-accent);
+  color: var(--color-ink);
+  border-radius: 50%;
+}
+.section-next:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.flower-ribbon {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.3rem;
+  padding-top: 0.8rem;
+}
+.flower-ribbon img {
+  width: 100%;
+  height: 310px;
+  object-fit: cover;
+  border-radius: 16px;
+}
+.gift-section .flower-ribbon {
+  margin: -1rem 0 2rem;
+  padding-top: 0;
+}
+.info-hint {
+  max-width: 70ch;
+  margin: 0.6rem 0;
+}
+.info-hint > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: fit-content;
+  min-height: 44px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+  padding: 0.3rem 0;
+}
+.info-hint > summary::-webkit-details-marker {
+  display: none;
+}
+.info-hint > summary svg {
+  flex-shrink: 0;
+}
+.info-hint > summary:hover span,
+.info-hint[open] > summary span {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.info-content {
+  padding: 1rem 1.2rem;
+  margin: 0.3rem 0 0.8rem;
+  background: #f3f7ef;
+  border: 1px solid var(--color-divider);
+  border-radius: 12px;
+  color: var(--color-ink);
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+.info-content p {
+  margin: 0;
+  max-width: 65ch;
+}
+.pricing-section {
+  background:
+    linear-gradient(#fffdf7de, #fffdf7de),
+    url('/images/generated/florabot-pattern.webp') center / 460px repeat;
+}
+.pricing-section .section-intro {
+  background: var(--color-canvas);
+  padding: 1.2rem;
+}
+.price-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+.plan {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-divider);
+  padding: 2rem;
+  border-radius: 8px;
+  min-width: 0;
+}
+.plan-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+.plan h3 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+.plan-capacity {
+  padding: 0.2rem 0.65rem;
+  border: 1px solid #a7bda0;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.plan-price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 1.3rem 0 1.8rem;
+  font-variant-numeric: tabular-nums;
+}
+.plan-price strong {
+  font-size: clamp(2rem, 3.5vw, 3.2rem);
+  font-weight: 800;
+  white-space: nowrap;
+  line-height: 1.4;
+  letter-spacing: -0.025em;
+}
+.plan-price span {
+  font-size: 0.85rem;
+}
+.plan .button {
+  justify-content: space-between;
+  margin-top: auto;
+  color: var(--color-on-ink);
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+}
+.plan .button:hover {
+  background: var(--color-action-hover);
+}
+.plan-featured {
+  background: var(--color-ink);
+  color: var(--color-on-ink);
+  border-color: var(--color-ink);
+}
+.plan-featured .plan-capacity {
+  border-color: #90b692;
+}
+.plan-featured .plan-price strong {
+  color: var(--landing-accent);
+}
+.plan-featured .button {
+  background: var(--landing-accent);
+  color: var(--color-ink);
+  border-color: var(--landing-accent);
+}
+.plan-featured .button:hover {
+  background: #f2f7d2;
+}

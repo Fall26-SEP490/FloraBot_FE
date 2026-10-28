@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { validateMessageContent } from '../apps/web/src/chat/api';
+import { validateMessageContent } from '../apps/web/src/features/chat/api';
 import {
   getStaffMessages,
   openStaffChatForSeller,
@@ -7,7 +7,7 @@ import {
   sendStaffMessage,
   staffChatTransport,
   validateStaffMessage,
-} from '../apps/web/src/chat/staffChatApi';
+} from '../apps/web/src/features/chat/staffChatApi';
 
 afterEach(() => vi.unstubAllGlobals());
 

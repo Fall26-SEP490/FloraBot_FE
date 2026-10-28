@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { ApiError, request } from '../../../api';
+import { ApiError, request } from '@/shared/lib/api';
 import type {
   KioskApplicationResponse,
   ProvisionKioskKeyResponse,

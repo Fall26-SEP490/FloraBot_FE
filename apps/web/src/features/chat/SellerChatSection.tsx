@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import './chat.css';
 import { useQuery } from '@tanstack/react-query';
 import { Button, RefreshCw } from '@florabot/ui';
-import { queryClient, type Session } from '../api';
+import { queryClient, type Session } from '@/shared/lib/api';
 import { getSellerChats } from './api';
 import { useChatRealtime } from './useChatRealtime';
 import { ChatList } from './ChatList';

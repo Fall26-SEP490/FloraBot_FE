@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
-import { ApiError } from '../../../api';
+import { ApiError } from '@/shared/lib/api';
 import { fetchProductPhotos } from '../product.api';
 import type { PhotoPage, PhotoItem } from '../product.types';
 import { safeImage } from '../product.utils';

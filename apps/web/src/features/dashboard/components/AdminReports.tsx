@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
-import { request, type Session } from '../../../api';
+import { request, type Session } from '@/shared/lib/api';
 
 const reports = {
   v_admin_queue: {

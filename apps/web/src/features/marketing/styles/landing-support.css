@@ -1,0 +1,201 @@
+.money-section {
+  background: var(--color-ink);
+  color: var(--color-on-ink);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+.money-photo {
+  width: 100%;
+  height: 560px;
+  object-fit: cover;
+  object-position: center 65%;
+  border-radius: 16px;
+}
+.money-copy {
+  min-width: 0;
+}
+.money-benefits {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+.money-benefits article {
+  border-top: 1px solid #7d9b79;
+  padding-top: 1rem;
+}
+.money-benefits h3 {
+  font-size: 1.2rem;
+  margin: 0 0 0.5rem;
+}
+.faq-section {
+  display: grid;
+  grid-template-columns: 0.7fr 1.3fr;
+  gap: 3rem;
+}
+.faq-visual {
+  min-width: 0;
+}
+.faq-visual img {
+  width: 100%;
+  height: 340px;
+  object-fit: cover;
+  object-position: center 65%;
+  border-radius: 16px;
+}
+.faq-list details {
+  border-top: 1px solid var(--color-divider);
+}
+.faq-list details:last-child {
+  border-bottom: 1px solid var(--color-divider);
+}
+.faq-list summary {
+  min-height: 52px;
+  padding: 1.2rem 0.2rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.faq-list p {
+  margin: 0 0 1.2rem;
+  font-size: 0.9rem;
+}
+.registration-section {
+  background:
+    linear-gradient(#fffdf7e0, #fffdf7e0),
+    url('/images/generated/florabot-pattern.webp') center / 460px repeat;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 3rem;
+  align-items: start;
+}
+.registration-section p {
+  max-width: 40ch;
+}
+.registration-section form {
+  background: var(--color-canvas);
+  padding: 1.8rem;
+  border: 1px solid var(--color-divider);
+  border-radius: 8px;
+}
+.registration-section form .button {
+  width: 100%;
+  justify-content: space-between;
+}
+.registration-flowers {
+  margin-top: 1.5rem;
+  width: 100%;
+  height: 330px;
+  object-fit: cover;
+  border-radius: 16px;
+}
+.form-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  gap: 1.2rem;
+}
+.form-fields > div:first-child,
+.form-fields > div:last-child {
+  grid-column: 1/-1;
+}
+.form-privacy,
+.field-error {
+  font-size: 0.8rem;
+}
+.registration-section .form-privacy {
+  margin: 1.2rem 0;
+  line-height: 1.7;
+  max-width: none;
+}
+.form-privacy a {
+  display: inline-flex;
+  align-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  max-width: 100%;
+  text-underline-offset: 0.2em;
+}
+.form-status {
+  font-size: 0.9rem;
+  margin: 0;
+}
+.form-status:not(:empty) {
+  margin-top: 1rem;
+}
+.field-error {
+  color: var(--color-error);
+  margin: 0.4rem 0 0;
+}
+.honeypot {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.privacy-page {
+  max-width: 1440px;
+  margin: auto;
+  padding: 0 4.5% 4rem;
+  overflow-wrap: anywhere;
+}
+.privacy-hero {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 3rem;
+  background:
+    linear-gradient(90deg, #f4f0e3f2, #f4f0e3b8),
+    url('/images/floral-pink-online.webp') right 65% / cover no-repeat,
+    #f4f0e3;
+  border-radius: 8px;
+  padding: 2.5rem;
+  margin: 1rem 0 3rem;
+  align-items: center;
+}
+.privacy-hero h1 {
+  font-size: clamp(2rem, 3.5vw, 3.2rem);
+  margin: 0 0 1rem;
+}
+.privacy-hero p {
+  margin: 0;
+  max-width: 40ch;
+}
+.privacy-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.55fr) minmax(0, 1.45fr);
+  gap: 4rem;
+}
+.privacy-nav {
+  align-self: start;
+  position: sticky;
+  top: 1.5rem;
+}
+.privacy-nav p {
+  font-size: 0.85rem;
+  color: var(--color-muted);
+  margin: 0 0 0.7rem;
+}
+.privacy-nav a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 0.9rem;
+  margin: 0.3rem 0;
+  text-decoration: none;
+}
+.privacy-nav a:hover {
+  text-decoration: underline;
+}
+.privacy-content section {
+  border-top: 1px solid var(--color-divider);
+  padding: 1.8rem 0;
+  scroll-margin-top: 1rem;
+}
+.privacy-content h2 {
+  font-size: 1.4rem;
+  margin: 0 0 0.7rem;
+}
+.privacy-content section > p {
+  margin: 0;
+  max-width: 60ch;
+}

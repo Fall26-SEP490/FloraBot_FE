@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Button, Check, CircleAlert, RefreshCw, X } from '@florabot/ui';
-import { ApiError, type Session } from '../../../api';
+import { ApiError, type Session } from '@/shared/lib/api';
 import { KIOSK_STATUS_LABELS } from '../installations.constants';
 import type { ProvisionedKeyInfo } from '../installations.types';
 import { formatDateVN, getOperationsActiveStep } from '../installations.utils';

@@ -19,7 +19,7 @@
     ],
     "allowJs": true,
     "paths": {
-      "@/marketing/*": ["./src/marketing/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": [

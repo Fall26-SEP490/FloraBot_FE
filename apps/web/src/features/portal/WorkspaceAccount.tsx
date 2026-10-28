@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Button, Flower2, LogOut, CircleAlert } from '@florabot/ui';
-import { ApiError, logoutSession, sessionQuery } from '../../api';
+import { ApiError, logoutSession, sessionQuery } from '@/shared/lib/api';
 import {
   accountPath,
   getRoleLabel,
@@ -12,7 +12,7 @@ import {
   isExistingFullPortalRole,
   isPlatformOperatorRole,
   ROLE_LABELS,
-} from '../../roleRoutes';
+} from '@/features/portal/config/roleRoutes';
 import './workspace-styles.css';
 
 export {

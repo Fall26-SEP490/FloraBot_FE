@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import PortalClient from '../../portal-client';
-import { workspaceSections } from '../../../src/workspaceSections';
+import { workspaceSections } from '../../../src/features/portal/config/workspaceSections';
 export async function generateMetadata({
   params,
 }: {

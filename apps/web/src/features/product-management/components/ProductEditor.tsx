@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { z } from 'zod';
 import { Button } from '@florabot/ui';
-import { queryClient } from '../../../api';
+import { queryClient } from '@/shared/lib/api';
 import { Modal } from '../../../shared/components/Modal';
 import { updateProductPrice, setProductStatus } from '../product.api';
 import { priceSchema } from '../product.schemas';

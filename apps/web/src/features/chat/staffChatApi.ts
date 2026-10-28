@@ -1,4 +1,4 @@
-import { ApiError, request } from '../api';
+import { ApiError, request } from '@/shared/lib/api';
 import { MAX_MESSAGE_LENGTH, uploadChatImage } from './api';
 import type {
   ChatTransport,

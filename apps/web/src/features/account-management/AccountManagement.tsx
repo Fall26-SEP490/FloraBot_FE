@@ -18,7 +18,7 @@ import {
   Search,
   Users,
 } from '@florabot/ui';
-import { ApiError, queryClient, request, sessionQuery } from '../../api';
+import { ApiError, queryClient, request, sessionQuery } from '@/shared/lib/api';
 import { ConfirmDialog, Modal } from '../../shared/components/Modal';
 import {
   DataTable,

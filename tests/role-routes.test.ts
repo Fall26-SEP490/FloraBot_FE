@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { accountPath, workspaceBase } from '../apps/web/src/roleRoutes';
+import { accountPath, workspaceBase } from '../apps/web/src/features/portal/config/roleRoutes';
 
 describe('Role routes mapping unit tests', () => {
   it('maps ADMIN to /admin', () => {

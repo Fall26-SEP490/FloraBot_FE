@@ -1,5 +1,5 @@
-import Layout from '@/marketing/MarketingLayout';
-import InfoHint from '@/marketing/InfoHint';
+import Layout from '@/features/marketing/MarketingLayout';
+import InfoHint from '@/features/marketing/InfoHint';
 const sections = [
   { id: 'dang-ky', title: 'Thông tin đăng ký' },
   { id: 'giao-dich', title: 'Đơn hàng & giao dịch' },

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { Button, CircleAlert, RefreshCw } from '@florabot/ui';
-import { ApiError, sessionQuery, type Session } from '../../api';
+import { ApiError, sessionQuery, type Session } from '@/shared/lib/api';
 import { ApplicationStatusPanel } from './components/ApplicationStatusPanel';
 import { CancelApplicationDialog } from './components/CancelApplicationDialog';
 import { KioskApplicationForm } from './components/KioskApplicationForm';

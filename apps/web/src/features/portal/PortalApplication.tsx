@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useLayoutEffect } from 'react';
-import '../../i18n';
+import '@/shared/lib/i18n';
 import { PortalScreenRouter } from './PortalScreen';
 import type { PortalScreen } from './portal.types';
 

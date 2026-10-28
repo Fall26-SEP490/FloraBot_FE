@@ -3,14 +3,14 @@
 import { useCallback, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Check, CircleAlert } from '@florabot/ui';
-import { queryClient, type Session } from '../../api';
+import { queryClient, type Session } from '@/shared/lib/api';
 import type { EnrollKioskResponse, ProvisionedKeyInfo } from './installations.types';
 import { useInstallationList } from './hooks/useInstallationList';
 import { InstallationList } from './components/InstallationList';
 import { InstallationDetails } from './components/InstallationDetails';
 import { EnrollKioskModal } from './components/EnrollKioskModal';
 import { ProvisionedKeyModal } from './components/ProvisionedKeyModal';
-import '../../kiosk-shared.css';
+import '../../shared/styles/kiosk-shared.css';
 import './styles/operations-installations.css';
 
 interface OperationsInstallationsProps {

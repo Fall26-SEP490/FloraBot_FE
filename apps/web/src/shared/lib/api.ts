@@ -1,5 +1,5 @@
 import { QueryClient } from '@tanstack/react-query';
-import type { components } from '../../../packages/contracts/src/generated/api';
+import type { components } from '../../../../../packages/contracts/src/generated/api';
 
 export type Session = components['schemas']['SessionResponse'];
 

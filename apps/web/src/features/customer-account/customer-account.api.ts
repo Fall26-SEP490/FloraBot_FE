@@ -1,4 +1,4 @@
-import { request } from '../../api';
+import { request } from '@/shared/lib/api';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
 import type { Profile } from './customer-account.types';
 

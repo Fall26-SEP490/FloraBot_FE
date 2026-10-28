@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { ApiError, request, type Session } from '../../../api';
+import { ApiError, request, type Session } from '@/shared/lib/api';
 import type {
   KioskApplicationResponse,
   KioskPackageResponse,

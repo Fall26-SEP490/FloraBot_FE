@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
 import EvidenceUpload from '../../shared/components/EvidenceUpload';
-import { ApiError, queryClient, request } from '../../api';
+import { ApiError, queryClient, request } from '@/shared/lib/api';
 
 export default function ReturnFlowers({
   slot,

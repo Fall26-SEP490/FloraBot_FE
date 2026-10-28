@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@florabot/ui';
-import { request, type Session } from '../../../api';
+import { request, type Session } from '@/shared/lib/api';
 import { Modal } from '../../../shared/components/Modal';
 import { DataTable } from '../../../shared/components/DataTable';
 import type {

@@ -8,7 +8,7 @@ import {
   ClipboardList,
   RefreshCw,
 } from '@florabot/ui';
-import { request } from '../../api';
+import { request } from '@/shared/lib/api';
 import AdminTaskAssignment from './components/AdminTaskAssignment';
 import { TaskItem } from './components/TaskItem';
 import { TASK_STATUS_LABELS } from './task-management.constants';
