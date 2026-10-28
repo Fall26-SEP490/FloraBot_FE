@@ -115,6 +115,11 @@ test('Marketing header logout clears the session and performs a clean navigation
   });
 
   await page.goto('/huong-dan-dat-hoa');
+  await expect(
+    page.getByRole('button', { name: 'Mở menu người dùng của Tiệm Hoa Nhỏ' }),
+  ).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Đăng xuất', exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Mở menu người dùng của Tiệm Hoa Nhỏ' }).click();
   await expect(page.getByRole('button', { name: 'Đăng xuất', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Đăng xuất', exact: true }).click();
 

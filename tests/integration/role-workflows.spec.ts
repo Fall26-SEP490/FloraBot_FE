@@ -135,6 +135,10 @@ test.describe('FloraBot Role Workflows Integration', () => {
     await expect(row3.locator('summary')).toContainText('Đã hủy');
 
     // Customer logs out
+    await page
+      .getByRole('banner')
+      .getByRole('button', { name: /Mở menu người dùng/ })
+      .click();
     await page.getByRole('button', { name: 'Đăng xuất' }).click();
     await expect(page).toHaveURL(/\/dang-nhap$/);
 

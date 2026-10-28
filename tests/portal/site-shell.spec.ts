@@ -1,23 +1,37 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-test('Shared account link preserves all role destinations', async ({ page }) => {
-  for (const [role, destination] of [
-    ['ADMIN', '/admin'],
-    ['OPERATIONS_MANAGER', '/operations'],
-    ['TECHNICIAN', '/technician'],
-    ['SELLER_STAFF', '/staff'],
-    ['STAFF', '/workspace'],
-    ['CUSTOMER', '/tai-khoan'],
-    ['SELLER', '/tai-khoan'],
+test('Avatar menu preserves workspace, purchase, and profile destinations for every role', async ({
+  page,
+}) => {
+  for (const [role, label, destination] of [
+    ['ADMIN', 'Quản trị hệ thống', '/admin'],
+    ['OPERATIONS_MANAGER', 'Điều hành vận hành', '/operations'],
+    ['TECHNICIAN', 'Công việc kỹ thuật', '/technician'],
+    ['SELLER_STAFF', 'Công việc tại shop', '/staff'],
+    ['STAFF', 'Khu vực làm việc', '/workspace'],
+    ['CUSTOMER', 'Hoạt động mua hoa', '/tai-khoan'],
+    ['SELLER', 'Quản lý shop', '/seller'],
   ]) {
     await page.route('**/api/auth/me', (route) =>
       route.fulfill({ json: { id: role, role, name: 'UAT' } }),
     );
     await page.goto('/ve-florabot');
-    await expect(
-      page.getByRole('banner').getByRole('link', { name: 'Tài khoản', exact: true }),
-    ).toHaveAttribute('href', destination);
+    const header = page.getByRole('banner');
+    await header.getByRole('button', { name: 'Mở menu người dùng của UAT' }).click();
+    await expect(header.getByRole('link', { name: label, exact: true })).toHaveAttribute(
+      'href',
+      destination,
+    );
+    await expect(header.getByRole('link', { name: 'Hồ sơ cá nhân', exact: true })).toHaveAttribute(
+      'href',
+      '/ho-so',
+    );
+    if (role === 'SELLER') {
+      await expect(
+        header.getByRole('link', { name: 'Hoạt động mua hoa', exact: true }),
+      ).toHaveAttribute('href', '/tai-khoan');
+    }
     await page.unroute('**/api/auth/me');
   }
 });
@@ -44,7 +58,13 @@ for (const width of [390, 1440]) {
     await page.goto('/ve-florabot');
     const header = page.getByRole('banner');
     const footer = page.getByRole('contentinfo');
-    await expect(header.getByRole('link', { name: 'Tài khoản', exact: true })).toBeVisible();
+    const accountToggle = header.getByRole('button', { name: 'Mở menu người dùng của Hoa' });
+    await expect(accountToggle).toBeVisible();
+    await accountToggle.click();
+    await expect(header.locator('#site-user-menu')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(header.locator('#site-user-menu')).toHaveCount(0);
+    await expect(accountToggle).toBeFocused();
     const originalHeader = await header.elementHandle();
     const originalFooter = await footer.elementHandle();
     if (width < 1250) await header.getByRole('button', { name: 'Menu', exact: true }).click();

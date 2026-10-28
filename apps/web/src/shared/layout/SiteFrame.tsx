@@ -4,7 +4,18 @@ import { memo, useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { QueryClientProvider, useQuery } from '@tanstack/react-query';
-import { Flower2, LogIn, LogOut, Menu, User, X } from '@florabot/ui';
+import {
+  ChevronDown,
+  Flower2,
+  LayoutDashboard,
+  LogIn,
+  LogOut,
+  Menu,
+  Store,
+  User,
+  X,
+} from '@florabot/ui';
+import { getRoleLabel } from '@/features/portal/config/roleRoutes';
 import { workspaceBase } from '@/features/portal/config/workspaceSections';
 import { logoutSession, queryClient, sessionQuery } from '@/shared/lib/api';
 
@@ -14,6 +25,14 @@ const navigation = [
   ['/huong-dan-dat-hoa', 'Cách đặt & nhận hoa'],
   ['/tim-kiosk', 'Vị trí tủ'],
 ] as const;
+
+const workspaceLabels: Record<string, string> = {
+  ADMIN: 'Quản trị hệ thống',
+  OPERATIONS_MANAGER: 'Điều hành vận hành',
+  TECHNICIAN: 'Công việc kỹ thuật',
+  SELLER_STAFF: 'Công việc tại shop',
+  STAFF: 'Khu vực làm việc',
+};
 
 export function SiteBrand({ className = 'site-brand', href = '/' }) {
   return (
@@ -27,8 +46,12 @@ export function SiteBrand({ className = 'site-brand', href = '/' }) {
 function SiteHeader() {
   const pathname = usePathname();
   const [openedPath, setOpenedPath] = useState<string | null>(null);
+  const [openedAccountPath, setOpenedAccountPath] = useState<string | null>(null);
   const expanded = openedPath === pathname;
+  const accountMenuOpen = openedAccountPath === pathname;
   const toggle = useRef<HTMLButtonElement>(null);
+  const accountToggle = useRef<HTMLButtonElement>(null);
+  const accountMenu = useRef<HTMLDivElement>(null);
   const header = useRef<HTMLElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -46,10 +69,22 @@ function SiteHeader() {
     retryOnMount: false,
     refetchOnWindowFocus: false,
   });
-  const home =
-    session.data?.role === 'SELLER'
-      ? '/tai-khoan'
-      : workspaceBase(session.data?.role ?? 'CUSTOMER');
+  const accountLinks = session.data
+    ? session.data.role === 'SELLER'
+      ? [
+          { href: '/seller', label: 'Quản lý shop', icon: 'shop' as const },
+          { href: '/tai-khoan', label: 'Hoạt động mua hoa', icon: 'purchase' as const },
+        ]
+      : session.data.role === 'CUSTOMER'
+        ? [{ href: '/tai-khoan', label: 'Hoạt động mua hoa', icon: 'purchase' as const }]
+        : [
+            {
+              href: workspaceBase(session.data.role),
+              label: workspaceLabels[session.data.role] ?? 'Khu vực làm việc',
+              icon: 'workspace' as const,
+            },
+          ]
+    : [];
 
   useEffect(() => {
     const element = header.current;
@@ -62,10 +97,15 @@ function SiteHeader() {
     const observer = new ResizeObserver(measure);
     let focusFrame: number | undefined;
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && toggle.current?.getAttribute('aria-expanded') === 'true') {
-        setOpenedPath(null);
-        toggle.current.focus();
+      if (event.key !== 'Escape') return;
+      if (accountToggle.current?.getAttribute('aria-expanded') === 'true') {
+        setOpenedAccountPath(null);
+        accountToggle.current.focus();
+        return;
       }
+      if (toggle.current?.getAttribute('aria-expanded') !== 'true') return;
+      setOpenedPath(null);
+      toggle.current.focus();
     };
     const revealFocus = (event: FocusEvent) => {
       const target = event.target;
@@ -100,6 +140,16 @@ function SiteHeader() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!accountMenuOpen) return;
+    const closeOutside = (event: PointerEvent) => {
+      if (accountMenu.current?.contains(event.target as Node)) return;
+      setOpenedAccountPath(null);
+    };
+    document.addEventListener('pointerdown', closeOutside);
+    return () => document.removeEventListener('pointerdown', closeOutside);
+  }, [accountMenuOpen]);
+
   async function logout() {
     if (busy) return;
     setBusy(true);
@@ -124,7 +174,10 @@ function SiteHeader() {
         aria-label="Menu"
         aria-controls="main-navigation"
         aria-expanded={expanded}
-        onClick={() => setOpenedPath(expanded ? null : pathname)}
+        onClick={() => {
+          setOpenedAccountPath(null);
+          setOpenedPath(expanded ? null : pathname);
+        }}
       >
         {expanded ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />} Menu
       </button>
@@ -143,41 +196,79 @@ function SiteHeader() {
             {label}
           </Link>
         ))}
-        {session.data?.sellerId && (
-          <Link href="/seller" prefetch={false} onClick={() => setOpenedPath(null)}>
-            Quản lý shop
-          </Link>
-        )}
       </nav>
-      <div className="site-account">
-        <Link
-          className="site-account-link"
-          href={session.data ? home : '/dang-nhap'}
-          prefetch={false}
-        >
-          {session.data ? (
-            <>
-              <User size={16} aria-hidden="true" />
-              <span>Tài khoản</span>
-            </>
-          ) : (
-            <>
-              <LogIn size={16} aria-hidden="true" />
-              <span>Đăng nhập</span>
-            </>
-          )}
-        </Link>
-        {session.data && (
-          <button
-            className="site-logout"
-            type="button"
-            disabled={busy}
-            onClick={() => void logout()}
-            title="Đăng xuất khỏi hệ thống"
-          >
-            <LogOut size={15} aria-hidden="true" />
-            <span>{busy ? 'Đang thoát…' : 'Đăng xuất'}</span>
-          </button>
+      <div ref={accountMenu} className="site-account">
+        {session.data ? (
+          <>
+            <button
+              ref={accountToggle}
+              className="site-user-trigger"
+              type="button"
+              aria-label={`Mở menu người dùng của ${session.data.name}`}
+              aria-controls="site-user-menu"
+              aria-expanded={accountMenuOpen}
+              onClick={() => {
+                setOpenedPath(null);
+                setOpenedAccountPath(accountMenuOpen ? null : pathname);
+              }}
+            >
+              <span className="site-user-avatar" aria-hidden="true">
+                {session.data.name.trim().slice(0, 1).toLocaleUpperCase('vi-VN') || 'F'}
+              </span>
+              <ChevronDown size={16} aria-hidden="true" />
+            </button>
+            {accountMenuOpen && (
+              <div id="site-user-menu" className="site-user-menu" aria-label="Menu người dùng">
+                <div className="site-user-summary">
+                  <strong>{session.data.name}</strong>
+                  <span>{getRoleLabel(session.data.role)}</span>
+                </div>
+                <div className="site-user-menu-links">
+                  {accountLinks.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      prefetch={false}
+                      aria-current={pathname === item.href ? 'page' : undefined}
+                      onClick={() => setOpenedAccountPath(null)}
+                    >
+                      {item.icon === 'shop' ? (
+                        <Store size={17} aria-hidden="true" />
+                      ) : item.icon === 'purchase' ? (
+                        <Flower2 size={17} aria-hidden="true" />
+                      ) : (
+                        <LayoutDashboard size={17} aria-hidden="true" />
+                      )}
+                      <span>{item.label}</span>
+                    </Link>
+                  ))}
+                  <Link
+                    href="/ho-so"
+                    prefetch={false}
+                    aria-current={pathname === '/ho-so' ? 'page' : undefined}
+                    onClick={() => setOpenedAccountPath(null)}
+                  >
+                    <User size={17} aria-hidden="true" />
+                    <span>Hồ sơ cá nhân</span>
+                  </Link>
+                </div>
+                <button
+                  className="site-user-logout"
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void logout()}
+                >
+                  <LogOut size={17} aria-hidden="true" />
+                  <span>{busy ? 'Đang đăng xuất…' : 'Đăng xuất'}</span>
+                </button>
+              </div>
+            )}
+          </>
+        ) : (
+          <Link className="site-account-link" href="/dang-nhap" prefetch={false}>
+            <LogIn size={16} aria-hidden="true" />
+            <span>Đăng nhập</span>
+          </Link>
         )}
       </div>
       {error && (
