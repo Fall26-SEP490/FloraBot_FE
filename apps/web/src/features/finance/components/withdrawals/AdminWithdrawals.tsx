@@ -15,7 +15,7 @@ import type {
 } from '../../finance.types';
 import { ApiError, queryClient, request } from '../../../../api';
 
-import EvidenceUpload from '../../../installations/components/EvidenceUpload';
+import EvidenceUpload from '../../../../shared/components/EvidenceUpload';
 import FinancialProofs from '../FinancialProofs';
 
 type Item = AdminWithdrawalResponse;

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import { ApiError, queryClient, request } from '../../../api';
-import EvidenceUpload from '../../installations/components/EvidenceUpload';
+import EvidenceUpload from '../../../shared/components/EvidenceUpload';
 import type {
   StaffEvidenceProps,
   TaskEvidenceAttempt,

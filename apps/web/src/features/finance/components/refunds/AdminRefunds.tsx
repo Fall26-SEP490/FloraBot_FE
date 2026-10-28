@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { Button } from '@florabot/ui';
 import type { ApproveRefundRequest, ConfirmRefundRequest } from '../../finance.types';
 import { ApiError, queryClient, request } from '../../../../api';
-import EvidenceUpload from '../../../installations/components/EvidenceUpload';
+import EvidenceUpload from '../../../../shared/components/EvidenceUpload';
 import { REFUND_STATUS_NAMES } from '../../finance.constants';
 import type {
   AdminRefundDetail,

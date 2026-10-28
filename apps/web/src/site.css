@@ -6,6 +6,7 @@ input[type='password']::-ms-clear {
 
 html {
   scroll-padding-top: calc(var(--header-height, 0px) + 20px);
+  scroll-padding-bottom: 2rem;
 }
 
 .site-frame {

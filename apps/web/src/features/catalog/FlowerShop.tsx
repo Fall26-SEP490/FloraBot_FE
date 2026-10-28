@@ -8,7 +8,6 @@ import { MOCK_CATALOG_ITEMS } from '../../mockCatalog';
 import type { CatalogItem, CatalogResponse } from './catalog.types';
 import { CatalogEmptyState } from './components/CatalogEmptyState';
 import { CatalogGrid } from './components/CatalogGrid';
-import { CatalogHeader } from './components/CatalogHeader';
 import { CatalogSearchBar } from './components/CatalogSearchBar';
 import { CatalogSidebar } from './components/CatalogSidebar';
 import { CatalogToolbar } from './components/CatalogToolbar';
@@ -163,7 +162,16 @@ export default function FlowerShop() {
 
   return (
     <main id="main" className="flower-shop-page">
-      <CatalogHeader />
+      <header className="catalog-header-minimal" aria-labelledby="catalog-hero-title">
+        <div className="catalog-header-left">
+          <h1 id="catalog-hero-title" className="catalog-hero-title">
+            Chọn hoa cho một dịp thật riêng.
+          </h1>
+        </div>
+        <p className="catalog-hero-desc">
+          Đặt mẫu bạn thích để shop gửi đến tủ gần bạn, hoặc nhận ngay bó có sẵn.
+        </p>
+      </header>
 
       {chatError && (
         <p role="alert" className="error" style={{ marginBlock: '1rem' }}>
