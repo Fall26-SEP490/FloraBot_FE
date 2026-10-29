@@ -6,12 +6,12 @@ import { request, sessionQuery } from '@/shared/lib/api';
 import { formatChatError, openCustomerChat } from '@/features/chat/api';
 import { MOCK_CATALOG_ITEMS } from '@/features/catalog/mocks/mockCatalog';
 import type { CatalogItem, CatalogResponse } from './catalog.types';
+import { canOrderOnWeb } from './catalog.utils';
 import { CatalogEmptyState } from './components/CatalogEmptyState';
 import { CatalogGrid } from './components/CatalogGrid';
 import { CatalogSearchBar } from './components/CatalogSearchBar';
 import { CatalogSidebar } from './components/CatalogSidebar';
 import { CatalogToolbar } from './components/CatalogToolbar';
-import { FlowerDetailsDialog } from './components/FlowerDetailsDialog';
 import { FlowerRequestPanel } from './components/FlowerRequestPanel';
 import { useCatalogDialog } from './hooks/useCatalogDialog';
 import { useCatalogFilters } from './hooks/useCatalogFilters';
@@ -168,9 +168,7 @@ export default function FlowerShop() {
             Chọn hoa cho một dịp thật riêng.
           </h1>
         </div>
-        <p className="catalog-hero-desc">
-          Đặt mẫu bạn thích để shop gửi đến tủ gần bạn, hoặc nhận ngay bó có sẵn.
-        </p>
+        <p className="catalog-hero-desc">Chọn mẫu hoa yêu thích và đặt trước để nhận tại kiosk.</p>
       </header>
 
       {chatError && (
@@ -219,7 +217,6 @@ export default function FlowerShop() {
               mobileFiltersOpen={dialog.mobileFiltersOpen}
               onToggleMobileFilters={() => dialog.setMobileFiltersOpen((prev) => !prev)}
               activeFiltersCount={filters.activeFilters.length}
-              onResetFilters={filters.resetFilters}
               displayedCount={filters.displayedItems.length}
               searchQuery={search}
               sortBy={filters.sortBy}
@@ -248,10 +245,9 @@ export default function FlowerShop() {
                 hasLiveItems={hasLiveItems}
                 openingChatId={openingChatId}
                 onSelect={(item) => {
+                  if (!canOrderOnWeb(item)) return;
                   dialog.setSelected(item);
-                  window.scrollTo({ top: 0, behavior: 'instant' });
                 }}
-                onOpenDetail={(item, triggerEl) => dialog.openDetailModal(item, triggerEl)}
                 onOpenChat={(item) => void handleOpenChat(item)}
                 onPrevPage={() => setPage((value) => value - 1)}
                 onNextPage={() => setPage((value) => value + 1)}
@@ -259,15 +255,6 @@ export default function FlowerShop() {
             )}
         </section>
       </div>
-
-      <FlowerDetailsDialog
-        item={dialog.detailModalItem}
-        onClose={dialog.closeDetailModal}
-        onOpenChat={(item) => void handleOpenChat(item)}
-        openingChatId={openingChatId}
-        modalContentRef={dialog.modalContentRef}
-        modalCloseBtnRef={dialog.modalCloseBtnRef}
-      />
     </main>
   );
 }

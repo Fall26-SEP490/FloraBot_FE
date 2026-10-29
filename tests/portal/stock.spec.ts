@@ -111,9 +111,10 @@ for (const width of [390, 1440]) {
     const section = page.locator('.seller-stock');
     await expect(section.getByLabel('Kiosk của shop')).toHaveValue(kioskId);
     await section.getByRole('button', { name: 'Nạp hoa vào ô' }).click();
-    await expect(section.getByLabel(/Ô trống tại/)).toBeFocused();
+    await expect(section.getByLabel('Hình thức bán của ô tủ')).toBeFocused();
     expect(attempts).toBe(0);
 
+    await section.getByLabel('Hình thức bán của ô tủ').selectOption('UNKNOWN');
     await section.getByLabel(/Ô trống tại/).selectOption(slots[0].id);
     await section.getByLabel('Sản phẩm nạp vào ô').selectOption(product.id);
     await section.getByRole('button', { name: 'Nạp hoa vào ô' }).click();
@@ -128,6 +129,8 @@ for (const width of [390, 1440]) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
+    const slotTitle = await section.locator('summary strong').first().boundingBox();
+    expect(slotTitle!.height).toBeLessThan(40);
     await section.screenshot({ path: `.impeccable/review/portal-stock-${width}.png` });
 
     await section.getByRole('button', { name: 'Nạp hoa vào ô' }).click();
@@ -195,4 +198,88 @@ test('Expired seller can inspect a selected kiosk but cannot stock', async ({ pa
       ),
   ).toBeVisible();
   await expect(page.getByRole('button', { name: 'Nạp hoa vào ô' })).toHaveCount(0);
+});
+
+test('Seller uses returned zones, resets the slot when changing purpose and never guesses from slot codes', async ({
+  page,
+}) => {
+  const sellerId = '20000000-0000-0000-0000-000000000099';
+  const kioskId = '50000000-0000-0000-0000-000000000099';
+  const productId = '30000000-0000-0000-0000-000000000099';
+  const slots = [
+    { slotCode: 'A01', zone: 'WALK_IN' },
+    { slotCode: 'A02', zone: 'PREORDER' },
+    { slotCode: 'W03' },
+    { slotCode: 'P04', zone: 'UNRECOGNIZED' },
+  ].map((slot, index) => ({
+    ...slot,
+    id: `40000000-0000-0000-0000-00000000000${index}`,
+    kioskId,
+    status: 'RENTED_EMPTY',
+    bouquetId: null,
+    kioskCode: 'FPT-01',
+    kioskName: 'Kiosk FPT',
+    kioskAddress: 'Thủ Đức',
+    productId: null,
+    qrCode: null,
+    priceSnapshot: null,
+    sellableUntil: null,
+  }));
+  const writes: unknown[] = [];
+  await page.route('**/api/**', async (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (path === '/api/auth/me')
+      return route.fulfill({
+        json: {
+          id: 'user',
+          name: 'Shop',
+          role: 'SELLER',
+          sellerId,
+          sellerStatus: 'ACTIVE',
+          packageExpiresAt: '2099-12-31',
+        },
+      });
+    if (path === `/api/sellers/${sellerId}/kiosks`)
+      return route.fulfill({ json: [{ id: kioskId, code: 'FPT-01', name: 'Kiosk FPT' }] });
+    if (path === `/api/me/kiosks/${kioskId}/slots`) return route.fulfill({ json: slots });
+    if (path === '/api/me/products')
+      return route.fulfill({
+        json: [{ id: productId, name: 'Hoa hồng', status: 'ACTIVE', price: 350000 }],
+      });
+    if (path === '/api/me/flows/stock_bouquet') {
+      writes.push(route.request().postDataJSON());
+      return route.fulfill({ json: {} });
+    }
+    return route.fulfill({ json: [] });
+  });
+  await page.goto('/seller/stock');
+  const section = page.locator('.seller-stock');
+  const purpose = section.getByLabel('Hình thức bán của ô tủ');
+  const slot = section.getByLabel(/Ô trống tại/);
+  await expect(slot).toBeDisabled();
+  await purpose.selectOption('WALK_IN');
+  await expect(slot.locator('option')).toHaveCount(2);
+  await slot.selectOption(slots[0].id);
+  await section.getByLabel('Sản phẩm nạp vào ô').selectOption(productId);
+  const review = section.getByRole('note', { name: 'Kiểm tra trước khi nạp hoa' });
+  await expect(review).toContainText('Bó này chỉ mua trực tiếp tại kiosk');
+
+  await purpose.selectOption('PREORDER');
+  await expect(slot).toHaveValue('');
+  await expect(review).toHaveCount(0);
+  await expect(slot.locator('option')).toHaveCount(2);
+  await slot.selectOption(slots[1].id);
+  await expect(review).toContainText('Khách đặt và thanh toán trên web');
+  await section.getByRole('button', { name: 'Nạp hoa vào ô' }).click();
+  await expect.poll(() => writes.length).toBe(1);
+  expect(writes[0]).toEqual({ productId, slotId: slots[1].id });
+  await expect(
+    section.getByRole('status').filter({ hasText: 'Đã ghi nhận Hoa hồng vào ô A02' }),
+  ).toBeVisible();
+
+  await purpose.selectOption('UNKNOWN');
+  await expect(slot.locator('option')).toHaveCount(3);
+  await slot.selectOption(slots[2].id);
+  await expect(review).toContainText('chưa xác nhận hình thức bán');
+  await expect(section.getByText(/Dùng chung/)).toHaveCount(0);
 });

@@ -40,13 +40,13 @@ for (const role of ['CUSTOMER', 'SELLER'])
         await route.fulfill({ json: { result: input.id } });
       });
       await page.goto('/dat-hoa');
-      await page.getByRole('button', { name: 'Chọn mẫu và cách nhận' }).click();
+      await page.getByRole('button', { name: 'Đặt hoa', exact: true }).click();
       if (kind === 'CUSTOM') {
         await page.getByLabel('Thời gian mong muốn nhận hoa').fill('2026-10-10T16:30');
         await page
           .getByLabel('Dịp tặng, màu hoa, ngân sách và lời nhắn')
           .fill('Hoa sinh nhật màu hồng, ngân sách 400.000 đồng');
-      } else await page.getByRole('radio', { name: /Mua hoa có sẵn/ }).check();
+      } else await page.getByRole('radio', { name: /Mua bó PREORDER có sẵn/ }).check();
       await page.getByRole('checkbox').check();
       const axe = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
@@ -62,6 +62,66 @@ for (const role of ['CUSTOMER', 'SELLER'])
       await expect(page.getByRole('heading', { name: 'Đã nhận yêu cầu của bạn' })).toBeVisible();
       expect(submitted).toBe(1);
     });
+
+for (const slotZone of ['WALK_IN', 'UNKNOWN']) {
+  test(`stock with zone ${slotZone ?? 'missing'} cannot enter web ordering`, async ({ page }) => {
+    await page.route('**/api/auth/me', (route) => route.fulfill({ json: member }));
+    await page.route('**/api/shop/catalog?*', (route) =>
+      route.fulfill({ json: { items: [{ ...flower, slotZone }], page: 1, hasMore: false } }),
+    );
+    const writes: string[] = [];
+    page.on('request', (request) => {
+      if (request.method() === 'POST' && /preorders|checkout|payment/.test(request.url())) {
+        writes.push(request.url());
+      }
+    });
+    await page.goto('/dat-hoa');
+    const card = page.locator('.flower-card');
+    await expect(card).toHaveCount(1);
+    await expect(card.getByRole('button', { name: 'Đặt hoa', exact: true })).toHaveCount(0);
+    if (slotZone === 'WALK_IN') {
+      await expect(card.getByText('Chỉ mua tại kiosk', { exact: true })).toBeVisible();
+      await expect(card.getByText(flower.kioskName, { exact: true })).toBeVisible();
+      await expect(card.getByText(flower.address, { exact: true })).toBeVisible();
+    }
+    await expect(card.getByRole('button', { name: 'Xem chi tiết', exact: true })).toHaveCount(0);
+    await expect(
+      card.getByRole('button', { name: 'Nhắn tin với shop', exact: true }),
+    ).toBeVisible();
+    await expect(page.getByRole('button', { name: /thanh toán|Gửi yêu cầu/ })).toHaveCount(0);
+    await expect(page.locator('.flower-request')).toHaveCount(0);
+    expect(writes).toEqual([]);
+  });
+}
+
+test('legacy API design templates still place CUSTOM requests without guessing stock zones', async ({
+  page,
+}) => {
+  await page.route('**/api/auth/me', (route) => route.fulfill({ json: member }));
+  await page.route('**/api/shop/catalog?*', (route) =>
+    route.fulfill({
+      json: { items: [{ ...flower, slotZone: undefined, bouquets: [] }], page: 1, hasMore: false },
+    }),
+  );
+  await page.route('**/api/member/preorders', async (route) => {
+    expect(route.request().postDataJSON()).toMatchObject({ kind: 'CUSTOM', bouquetId: null });
+    // Server rejections must remain visible, with no success or checkout navigation.
+    await route.fulfill({ status: 409, json: { detail: 'Kiosk không nhận đơn mới' } });
+  });
+  await page.goto('/dat-hoa');
+  await page.getByRole('button', { name: 'Đặt hoa', exact: true }).click();
+  await expect(page.getByRole('radio')).toHaveCount(0);
+  await page.getByLabel('Thời gian mong muốn nhận hoa').fill('2026-11-01T16:30');
+  await page
+    .getByLabel('Dịp tặng, màu hoa, ngân sách và lời nhắn')
+    .fill('Hoa sinh nhật màu hồng, ngân sách 400.000 đồng');
+  await page.getByRole('checkbox').check();
+  await page.getByRole('button', { name: 'Gửi yêu cầu để shop báo giá', exact: true }).click();
+  await expect(page.locator('.flower-request').getByRole('alert')).toContainText(
+    'Kiosk không nhận đơn mới',
+  );
+  await expect(page.getByRole('heading', { name: 'Đã nhận yêu cầu của bạn' })).toHaveCount(0);
+});
 
 for (const width of [390, 1440])
   test(`Member registration is accessible and responsive ${width}`, async ({ page }) => {

@@ -134,7 +134,8 @@ export function ProductCreateForm({
             ))}
           </select>
           <p className="quiet field-subhint" id="create-product-kiosk-help">
-            Kiosk xác nhận quyền tạo sản phẩm; hoa thuộc danh mục chung.
+            Kiosk xác nhận quyền tạo sản phẩm; mẫu hoa thuộc danh mục chung. Tạo mẫu chưa nạp bó vào
+            tủ. Chọn ô bán tại kiosk hoặc ô đặt trên web ở màn “Hoa tại kiosk”.
           </p>
           {form.formState.errors.kioskId && (
             <p className="error" id="create-product-kiosk-error">

@@ -18,7 +18,6 @@ export function CatalogSidebar({
 }: CatalogSidebarProps) {
   const {
     availabilityFilter,
-    displayedItems,
     hasActiveFilters,
     kioskFilter,
     occasionFilter,
@@ -40,7 +39,6 @@ export function CatalogSidebar({
       shopCounts,
     },
   } = filters;
-  const displayedCount = displayedItems.length;
 
   // Occasion filter options
   const occasionOptions: FilterOption[] = [
@@ -104,7 +102,7 @@ export function CatalogSidebar({
     },
     {
       id: 'custom',
-      label: 'Đặt trước (Pre-order)',
+      label: 'Đặt trước',
       count: availabilityCounts.custom,
       isSelected: availabilityFilter === 'custom',
       isEmpty: availabilityCounts.custom === 0,
@@ -215,9 +213,9 @@ export function CatalogSidebar({
           type="button"
           className="catalog-mobile-apply-btn"
           onClick={onClose}
-          aria-label={`Xem ${displayedCount} mẫu phù hợp`}
+          aria-label="Áp dụng bộ lọc"
         >
-          Áp dụng {displayedCount > 0 ? `(${displayedCount} mẫu)` : ''}
+          Áp dụng
         </button>
       </div>
     </aside>

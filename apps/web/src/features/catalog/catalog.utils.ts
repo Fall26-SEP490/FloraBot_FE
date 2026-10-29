@@ -8,6 +8,21 @@ import type {
   SortOption,
 } from './catalog.types';
 
+export function isWalkIn(item: CatalogItem): boolean {
+  return item.slotZone === 'WALK_IN';
+}
+
+export function canOrderOnWeb(item: CatalogItem): boolean {
+  // /shop/catalog reads v_web_catalog: its bouquet IDs already exclude WALK_IN.
+  // An explicit zone takes precedence if the API later includes kiosk-only entries.
+  return item.slotZone == null || item.slotZone === 'PREORDER';
+}
+
+export function purchaseLabel(item: CatalogItem): string {
+  if (isWalkIn(item)) return 'Chỉ mua tại kiosk';
+  return canOrderOnWeb(item) ? 'Đặt trước' : 'Chưa xác định hình thức mua';
+}
+
 export function matchesOccasion(item: CatalogItem, occasion: string): boolean {
   return Boolean(
     item.occasion === occasion ||
@@ -36,11 +51,8 @@ export function matchesPrice(price: number, filter: PriceFilter): boolean {
   return true;
 }
 
-export function matchesAvailability(
-  bouquets: string[] | undefined,
-  filter: AvailabilityFilter,
-): boolean {
-  const hasStock = Boolean(bouquets && bouquets.length > 0);
+export function matchesAvailability(item: CatalogItem, filter: AvailabilityFilter): boolean {
+  const hasStock = isWalkIn(item) || item.bouquets.length > 0;
   if (filter === 'stock') return hasStock;
   if (filter === 'custom') return !hasStock;
   return true;
@@ -64,7 +76,7 @@ export function filterCatalogItems(items: CatalogItem[], criteria: FilterCriteri
     }
     if (criteria.shopFilter !== 'all' && item.shopName !== criteria.shopFilter) return false;
     if (criteria.kioskFilter !== 'all' && item.kioskName !== criteria.kioskFilter) return false;
-    if (!matchesAvailability(item.bouquets, criteria.availabilityFilter)) return false;
+    if (!matchesAvailability(item, criteria.availabilityFilter)) return false;
     return true;
   });
 }
@@ -104,7 +116,7 @@ export function computeFilterCounts(items: CatalogItem[]) {
   let stock = 0;
   let custom = 0;
   items.forEach((item) => {
-    if (item.bouquets && item.bouquets.length > 0) stock++;
+    if (matchesAvailability(item, 'stock')) stock++;
     else custom++;
   });
   const availabilityCounts: AvailabilityCounts = { stock, custom };

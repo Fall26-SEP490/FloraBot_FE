@@ -90,7 +90,7 @@ export function useCatalogFilters(rawItems: CatalogItem[], searchState?: Catalog
     if (availabilityFilter !== 'all') {
       list.push({
         id: 'availability',
-        label: availabilityFilter === 'stock' ? 'Có sẵn tại tủ' : 'Đặt trước (Pre-order)',
+        label: availabilityFilter === 'stock' ? 'Có sẵn tại tủ' : 'Đặt trước',
         onClear: () => setAvailabilityFilter('all'),
       });
     }

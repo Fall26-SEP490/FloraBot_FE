@@ -259,6 +259,23 @@
   border-top: 1px solid var(--seller-line);
 }
 
+.seller-workspace .seller-stock .admin-shop-list summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+}
+
+.seller-workspace .seller-stock .admin-shop-list summary strong {
+  white-space: nowrap;
+}
+
+.seller-workspace .seller-stock .admin-shop-list .slot-zone-label {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  margin: 0;
+  padding: 0;
+}
+
 .seller-workspace .shop-profile {
   background: #fbfcfa;
 }

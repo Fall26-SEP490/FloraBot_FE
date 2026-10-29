@@ -7,7 +7,6 @@ interface CatalogToolbarProps {
   mobileFiltersOpen: boolean;
   onToggleMobileFilters: () => void;
   activeFiltersCount: number;
-  onResetFilters: () => void;
   displayedCount: number;
   searchQuery: string;
   sortBy: SortOption;
@@ -19,7 +18,6 @@ export function CatalogToolbar({
   mobileFiltersOpen,
   onToggleMobileFilters,
   activeFiltersCount,
-  onResetFilters,
   displayedCount,
   searchQuery,
   sortBy,
@@ -38,16 +36,7 @@ export function CatalogToolbar({
         >
           <SlidersHorizontal size={15} aria-hidden="true" />
           <span>Bộ lọc</span>
-          {activeFiltersCount > 0 && (
-            <span className="catalog-filter-badge">{activeFiltersCount}</span>
-          )}
         </button>
-
-        {activeFiltersCount > 0 && (
-          <button type="button" className="catalog-mobile-clear-btn" onClick={onResetFilters}>
-            Xóa tất cả
-          </button>
-        )}
 
         <div className="catalog-results-count" role="status" aria-live="polite">
           <span>

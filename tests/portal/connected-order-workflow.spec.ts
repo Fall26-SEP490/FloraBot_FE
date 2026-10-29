@@ -154,7 +154,7 @@ test('Customer request → seller quote → customer acceptance/payment → sell
     },
   );
   await page.goto('/dat-hoa');
-  await page.getByRole('button', { name: 'Chọn mẫu và cách nhận', exact: true }).click();
+  await page.getByRole('button', { name: 'Đặt hoa', exact: true }).click();
   const localPickup = new Date(
     new Date(pickupAt).getTime() - new Date().getTimezoneOffset() * 60000,
   )
@@ -287,7 +287,7 @@ test('Every sample catalog item is display-only, including items with illustrati
     await route.abort();
   });
   await page.goto('/dat-hoa?demo=1');
-  await page.getByRole('button', { name: 'Chọn mẫu và cách nhận', exact: true }).first().click();
+  await page.getByRole('button', { name: 'Đặt hoa', exact: true }).first().click();
   await expect(page.getByText(/Không tạo đơn, thanh toán hoặc tin nhắn cho mẫu này/)).toBeVisible();
   await expect(
     page.getByRole('button', { name: 'Gửi yêu cầu để shop báo giá', exact: true }),

@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   computeFilterCounts,
+  canOrderOnWeb,
+  isWalkIn,
+  purchaseLabel,
   filterCatalogItems,
   formatPrice,
   getOccasionBadgeClass,
@@ -95,13 +98,34 @@ describe('Catalog Utilities - Search matching', () => {
 
 describe('Catalog Utilities - Availability matching', () => {
   it('identifies stock vs custom pre-order', () => {
-    expect(matchesAvailability(['bq-1'], 'stock')).toBe(true);
-    expect(matchesAvailability(['bq-1'], 'custom')).toBe(false);
-    expect(matchesAvailability([], 'stock')).toBe(false);
-    expect(matchesAvailability([], 'custom')).toBe(true);
-    expect(matchesAvailability(undefined, 'stock')).toBe(false);
-    expect(matchesAvailability(undefined, 'custom')).toBe(true);
-    expect(matchesAvailability(['bq-1'], 'all')).toBe(true);
+    expect(matchesAvailability(sampleItem(), 'stock')).toBe(true);
+    expect(matchesAvailability(sampleItem(), 'custom')).toBe(false);
+    expect(matchesAvailability(sampleItem({ bouquets: [] }), 'stock')).toBe(false);
+    expect(matchesAvailability(sampleItem({ bouquets: [] }), 'custom')).toBe(true);
+    expect(matchesAvailability(sampleItem(), 'all')).toBe(true);
+    expect(matchesAvailability(sampleItem({ slotZone: 'WALK_IN', bouquets: [] }), 'custom')).toBe(
+      false,
+    );
+  });
+});
+
+describe('Catalog purchase channels', () => {
+  it('allows PREORDER, blocks WALK_IN regardless of stock and rejects unknown zones', () => {
+    for (const bouquets of [[], ['b1']]) {
+      expect(canOrderOnWeb(sampleItem({ slotZone: 'PREORDER', bouquets }))).toBe(true);
+      const walkIn = sampleItem({ slotZone: 'WALK_IN', bouquets });
+      expect(canOrderOnWeb(walkIn)).toBe(false);
+      expect(isWalkIn(walkIn)).toBe(true);
+      expect(purchaseLabel(walkIn)).toBe('Chỉ mua tại kiosk');
+    }
+    expect(canOrderOnWeb(sampleItem({ slotZone: 'UNKNOWN' }))).toBe(false);
+  });
+
+  it('preserves web catalog stock eligibility guaranteed by the endpoint', () => {
+    expect(canOrderOnWeb(sampleItem({ bouquets: [] }))).toBe(true);
+    expect(canOrderOnWeb(sampleItem())).toBe(true);
+    expect(isWalkIn(sampleItem())).toBe(false);
+    expect(purchaseLabel(sampleItem())).toBe('Đặt trước');
   });
 });
 

@@ -196,28 +196,11 @@
   overflow-wrap: anywhere;
 }
 
-.catalog-option-count {
-  font-size: 0.76rem;
-  color: #64748b;
-  font-weight: 600;
-  margin-left: auto;
-  flex-shrink: 0;
-}
-
-.catalog-filter-option.is-active .catalog-option-count {
-  color: #174b35;
-  font-weight: 700;
-}
-
 .catalog-filter-option.is-empty {
   color: #3d5644;
 }
 
 .catalog-filter-option.is-empty .catalog-option-text {
-  color: #3d5644;
-}
-
-.catalog-filter-option.is-empty .catalog-option-count {
   color: #3d5644;
 }
 

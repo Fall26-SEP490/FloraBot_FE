@@ -163,14 +163,3 @@ select.catalog-sort-select:focus {
   outline: 2px solid #174b35 !important;
   outline-offset: 1px !important;
 }
-
-.catalog-mobile-clear-btn {
-  min-height: 44px;
-  background: transparent;
-  border: none;
-  color: #b42318;
-  font-size: 0.84rem;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 0.25rem 0.5rem;
-}

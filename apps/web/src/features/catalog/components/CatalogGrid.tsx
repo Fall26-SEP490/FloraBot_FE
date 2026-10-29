@@ -10,7 +10,6 @@ interface CatalogGridProps {
   hasLiveItems: boolean;
   openingChatId: string | null;
   onSelect: (item: CatalogItem) => void;
-  onOpenDetail: (item: CatalogItem, triggerEl: HTMLElement) => void;
   onOpenChat: (item: CatalogItem) => void;
   onPrevPage: () => void;
   onNextPage: () => void;
@@ -24,7 +23,6 @@ export function CatalogGrid({
   hasLiveItems,
   openingChatId,
   onSelect,
-  onOpenDetail,
   onOpenChat,
   onPrevPage,
   onNextPage,
@@ -34,11 +32,10 @@ export function CatalogGrid({
       <ul className="flower-catalog-grid flower-catalog">
         {items.map((item) => (
           <FlowerCard
-            key={`${item.productId}-${item.kioskId}`}
+            key={`${item.productId}-${item.kioskId}-${item.slotZone ?? 'template'}`}
             item={item}
             openingChatId={openingChatId}
             onSelect={onSelect}
-            onOpenDetail={onOpenDetail}
             onOpenChat={onOpenChat}
           />
         ))}

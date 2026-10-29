@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import { ApiError, queryClient, request, sessionQuery } from '@/shared/lib/api';
 import type { CatalogItem } from '../catalog.types';
+import { canOrderOnWeb, isWalkIn } from '../catalog.utils';
 
 interface FlowerRequestFormProps {
   item: CatalogItem;
@@ -12,6 +13,7 @@ interface FlowerRequestFormProps {
 export function FlowerRequestForm({ item }: FlowerRequestFormProps) {
   const session = useQuery(sessionQuery);
   const [kind, setKind] = useState<'CUSTOM' | 'STOCK'>('CUSTOM');
+  const canBuyStock = canOrderOnWeb(item) && item.bouquets.length > 0;
   const [pickup, setPickup] = useState('');
   const [instructions, setInstructions] = useState('');
   const [confirmed, setConfirmed] = useState(false);
@@ -26,7 +28,8 @@ export function FlowerRequestForm({ item }: FlowerRequestFormProps) {
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
-    if (sending.current || !confirmed) return;
+    if (sending.current || !confirmed || !canOrderOnWeb(item) || (kind === 'STOCK' && !canBuyStock))
+      return;
     sending.current = true;
     setBusy(true);
 
@@ -70,6 +73,15 @@ export function FlowerRequestForm({ item }: FlowerRequestFormProps) {
     }
   }
 
+  if (!canOrderOnWeb(item)) {
+    return (
+      <p role="note">
+        {isWalkIn(item) ? 'Chỉ mua tại kiosk' : 'Chưa xác định hình thức mua'}: {item.kioskName} —{' '}
+        {item.address}
+      </p>
+    );
+  }
+
   if (done) {
     return (
       <div role="status">
@@ -108,32 +120,35 @@ export function FlowerRequestForm({ item }: FlowerRequestFormProps) {
   return (
     <form onSubmit={(event) => void submit(event)}>
       <fieldset disabled={busy || uncertain}>
-        <legend>Bạn muốn nhận bó hoa nào?</legend>
-        <label className="payout-checkbox">
-          <input
-            type="radio"
-            name={`kind-${item.productId}`}
-            checked={kind === 'CUSTOM'}
-            onChange={() => {
-              setKind('CUSTOM');
-              setConfirmed(false);
-            }}
-          />
-          Đặt mẫu riêng, shop chuẩn bị theo yêu cầu
-        </label>
-        <label className="payout-checkbox">
-          <input
-            type="radio"
-            name={`kind-${item.productId}`}
-            checked={kind === 'STOCK'}
-            disabled={!item.bouquets.length}
-            onChange={() => {
-              setKind('STOCK');
-              setConfirmed(false);
-            }}
-          />
-          Mua hoa có sẵn tại tủ ({item.bouquets.length} bó)
-        </label>
+        <legend>Đặt trước, shop chuẩn bị theo yêu cầu</legend>
+        {canBuyStock && (
+          <>
+            <label className="payout-checkbox">
+              <input
+                type="radio"
+                name={`kind-${item.productId}`}
+                checked={kind === 'CUSTOM'}
+                onChange={() => {
+                  setKind('CUSTOM');
+                  setConfirmed(false);
+                }}
+              />
+              Đặt mẫu riêng, shop chuẩn bị theo yêu cầu
+            </label>
+            <label className="payout-checkbox">
+              <input
+                type="radio"
+                name={`kind-${item.productId}`}
+                checked={kind === 'STOCK'}
+                onChange={() => {
+                  setKind('STOCK');
+                  setConfirmed(false);
+                }}
+              />
+              Mua bó PREORDER có sẵn ({item.bouquets.length} bó)
+            </label>
+          </>
+        )}
         {kind === 'CUSTOM' ? (
           <>
             <label htmlFor={`pickup-${item.productId}`}>Thời gian mong muốn nhận hoa</label>
@@ -165,7 +180,7 @@ export function FlowerRequestForm({ item }: FlowerRequestFormProps) {
           </>
         ) : (
           <p>
-            Bó có sẵn được giữ trong thời gian thanh toán. Sau khi thanh toán, đến tủ nhận trong
+            Bó PREORDER được giữ trong thời gian thanh toán. Sau khi thanh toán, đến tủ nhận trong
             thời hạn ghi trên đơn.
           </p>
         )}

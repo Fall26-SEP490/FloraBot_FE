@@ -1,28 +1,32 @@
 import { Button, MapPin, MessageSquare, Store } from '@florabot/ui';
+import Link from 'next/link';
 import type { CatalogItem } from '../catalog.types';
-import { formatPrice, getOccasionBadgeClass } from '../catalog.utils';
+import {
+  canOrderOnWeb,
+  formatPrice,
+  getOccasionBadgeClass,
+  isWalkIn,
+  purchaseLabel,
+} from '../catalog.utils';
 
 interface FlowerCardProps {
   item: CatalogItem;
   openingChatId: string | null;
   onSelect: (item: CatalogItem) => void;
-  onOpenDetail: (item: CatalogItem, triggerEl: HTMLElement) => void;
   onOpenChat: (item: CatalogItem) => void;
 }
 
-export function FlowerCard({
-  item,
-  openingChatId,
-  onSelect,
-  onOpenDetail,
-  onOpenChat,
-}: FlowerCardProps) {
-  const hasStock = Boolean(item.bouquets && item.bouquets.length > 0);
+export function FlowerCard({ item, openingChatId, onSelect, onOpenChat }: FlowerCardProps) {
+  const walkIn = isWalkIn(item);
   const occBadgeClass = getOccasionBadgeClass(item.occasion);
 
   return (
     <li className="flower-card">
-      <div className="flower-card-media">
+      <Link
+        className="flower-card-media"
+        href={`/dat-hoa/${encodeURIComponent(item.productId)}/${encodeURIComponent(item.kioskId)}${item.isDemoSample ? '?demo=1' : ''}`}
+        aria-label={`Xem chi tiết ${item.name}`}
+      >
         <img
           src={item.photo || '/images/floral-white-online.webp'}
           alt={`Mẫu ${item.name} từ ${item.shopName}`}
@@ -37,10 +41,8 @@ export function FlowerCard({
           }}
         />
         <div className="flower-card-badges">
-          <span
-            className={`flower-badge ${hasStock ? 'flower-badge-stock' : 'flower-badge-custom'}`}
-          >
-            {hasStock ? `Có sẵn ${item.bouquets.length} bó` : 'Đặt trước'}
+          <span className={`flower-badge ${walkIn ? 'flower-badge-stock' : 'flower-badge-custom'}`}>
+            {purchaseLabel(item)}
           </span>
           {item.occasion && (
             <span className={`flower-badge flower-badge-occasion ${occBadgeClass}`}>
@@ -48,7 +50,7 @@ export function FlowerCard({
             </span>
           )}
         </div>
-      </div>
+      </Link>
 
       <div className="flower-card-body">
         <h2 className="flower-card-title">{item.name}</h2>
@@ -65,6 +67,7 @@ export function FlowerCard({
             <MapPin size={14} aria-hidden="true" />
             <span>{item.kioskName}</span>
           </span>
+          {walkIn && item.address && <span className="flower-meta-item">{item.address}</span>}
         </div>
 
         <div className="flower-card-price-row">
@@ -75,35 +78,27 @@ export function FlowerCard({
         </div>
 
         <div className="flower-card-actions">
+          {canOrderOnWeb(item) && (
+            <Button
+              className="flower-card-select-btn"
+              aria-label="Đặt hoa"
+              onClick={() => onSelect(item)}
+            >
+              Đặt hoa
+            </Button>
+          )}
           <Button
-            className="flower-card-select-btn"
-            aria-label="Chọn mẫu và cách nhận"
-            onClick={() => onSelect(item)}
+            variant="outline"
+            type="button"
+            className="chat-open-btn flower-card-chat-btn"
+            disabled={openingChatId === item.productId}
+            title={`Nhắn tin với ${item.shopName}`}
+            aria-label="Nhắn tin với shop"
+            onClick={() => void onOpenChat(item)}
           >
-            Chọn mẫu
+            <MessageSquare size={14} aria-hidden="true" />
+            <span>{openingChatId === item.productId ? 'Đang mở…' : 'Chat'}</span>
           </Button>
-          <div className="flower-card-secondary-btns">
-            <Button
-              variant="outline"
-              className="flower-card-detail-btn"
-              aria-label="Xem chi tiết"
-              onClick={(e) => onOpenDetail(item, e.currentTarget)}
-            >
-              Chi tiết
-            </Button>
-            <Button
-              variant="outline"
-              type="button"
-              className="chat-open-btn flower-card-chat-btn"
-              disabled={openingChatId === item.productId}
-              title={`Nhắn tin với ${item.shopName}`}
-              aria-label="Nhắn tin với shop"
-              onClick={() => void onOpenChat(item)}
-            >
-              <MessageSquare size={14} aria-hidden="true" />
-              <span>{openingChatId === item.productId ? 'Đang mở…' : 'Chat'}</span>
-            </Button>
-          </div>
         </div>
       </div>
     </li>

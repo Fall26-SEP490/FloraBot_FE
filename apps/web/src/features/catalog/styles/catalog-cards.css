@@ -45,8 +45,189 @@
   width: 100%;
   padding: 0;
   border: none;
-  cursor: pointer;
   text-align: left;
+}
+
+.flower-detail-page {
+  max-width: 1120px;
+  margin: 2rem auto 4rem;
+}
+.flower-detail-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  color: #365d48;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.flower-detail-back:hover {
+  color: #123c28;
+  text-decoration: underline;
+}
+.flower-detail-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  align-items: start;
+}
+.flower-detail-media {
+  position: relative;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #f1f5ef;
+}
+.flower-detail-media img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+.flower-detail-media figcaption {
+  padding: 0.65rem 1rem;
+  color: #566d5c;
+  font-size: 0.8rem;
+}
+.flower-detail-content {
+  padding-block: 0.5rem;
+  min-width: 0;
+}
+.flower-detail-eyebrow {
+  margin: 0 0 0.75rem;
+  color: #597461;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.flower-detail-badge {
+  display: inline-flex;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: #eaf3e8;
+  color: #22583b;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.flower-detail-content h1 {
+  margin: 0.9rem 0 1.25rem;
+  color: #113421;
+  font-size: clamp(1.7rem, 3vw, 2.4rem);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.flower-detail-pricing {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.65rem;
+  padding: 1.1rem 0;
+  border-block: 1px solid #e5eee4;
+}
+.flower-detail-price {
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: #174b35;
+}
+.flower-detail-pricing > span:last-child,
+.flower-detail-note {
+  font-size: 0.84rem;
+  color: #617369;
+}
+.flower-detail-note {
+  line-height: 1.55;
+  margin: 0.85rem 0 0;
+}
+.flower-detail-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.65rem;
+  margin-top: 1.5rem;
+}
+.flower-detail-actions .button {
+  min-height: 48px;
+}
+.flower-detail-info {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 1.5rem;
+  margin-top: 2.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e5eee4;
+}
+.flower-detail-info h2 {
+  margin: 0 0 1rem;
+  color: #173f2b;
+  font-size: 1.1rem;
+}
+.flower-detail-description > p:last-child {
+  margin: 0;
+  color: #496052;
+  line-height: 1.7;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.flower-detail-location {
+  padding: 1.25rem;
+  border: 1px solid #e0eade;
+  border-radius: 12px;
+  background: #fbfdf9;
+}
+.flower-detail-info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  color: #315b43;
+}
+.flower-detail-info-row svg {
+  flex: none;
+  margin-top: 0.15rem;
+}
+.flower-detail-info-row div {
+  min-width: 0;
+}
+.flower-detail-info-row span {
+  display: block;
+  color: #6c7e70;
+  font-size: 0.78rem;
+}
+.flower-detail-info-row strong {
+  display: block;
+  color: #21452f;
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+.flower-detail-info-row p {
+  margin: 0.2rem 0 0;
+  color: #607367;
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 700px) {
+  .flower-detail-page {
+    padding-inline: 1rem;
+    margin-top: 1.25rem;
+  }
+  .flower-detail-layout,
+  .flower-detail-info {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  .flower-detail-media {
+    border-radius: 12px;
+  }
+  .flower-detail-info {
+    margin-top: 1.75rem;
+    padding-top: 1.5rem;
+  }
+}
+@media (max-width: 360px) {
+  .flower-detail-actions {
+    grid-template-columns: 1fr;
+  }
 }
 
 .flower-card-media:focus-visible {
@@ -264,14 +445,14 @@
 
 .flower-card-actions {
   display: flex;
-  flex-direction: column;
   gap: 0.4rem;
   margin-top: auto;
   padding-top: 0.45rem;
 }
 
 .flower-card-select-btn.button {
-  width: 100% !important;
+  flex: 1;
+  min-width: 0;
   min-height: 44px !important;
   height: auto !important;
   font-size: 0.84rem !important;
@@ -281,15 +462,8 @@
   white-space: normal !important;
 }
 
-.flower-card-secondary-btns {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.4rem;
-}
-
-.flower-card-detail-btn.button,
 .flower-card-chat-btn.button {
-  width: 100% !important;
+  flex: 0 0 auto;
   min-height: 44px !important;
   height: auto !important;
   font-size: 0.78rem !important;
@@ -306,7 +480,6 @@
   background: #ffffff !important;
 }
 
-.flower-card-detail-btn.button:hover,
 .flower-card-chat-btn.button:hover {
   background: #f2f8f0 !important;
   border-color: #174b35 !important;

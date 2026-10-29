@@ -254,7 +254,7 @@ test.describe('Account / Profile Page Redesign', () => {
 });
 
 test.describe('Flower Catalog (/dat-hoa) Redesign & Chat Integration', () => {
-  test('Catalog renders mock products with search, filter, and detail modal', async ({ page }) => {
+  test('Catalog renders mock products with search, filters and order action', async ({ page }) => {
     // Visit catalog with demo mode enabled
     await page.goto('/dat-hoa?demo=1');
 
@@ -279,18 +279,16 @@ test.describe('Flower Catalog (/dat-hoa) Redesign & Chat Integration', () => {
     await page.getByRole('button', { name: 'Đặt lại bộ lọc' }).click();
     await expect(page.locator('.flower-card')).toHaveCount(12);
 
-    // Open product detail modal
+    // Cards order directly, without a product detail modal.
     await page
       .locator('.flower-card')
       .first()
-      .getByRole('button', { name: 'Xem chi tiết' })
+      .getByRole('button', { name: 'Đặt hoa', exact: true })
       .click();
-    const modal = page.locator('.product-modal-content');
-    await expect(modal).toBeVisible();
-
-    // Close modal via Escape key
-    await page.keyboard.press('Escape');
-    await expect(modal).toBeHidden();
+    await expect(page.locator('.flower-request')).toBeVisible();
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await page.getByRole('button', { name: 'Đóng mẫu đang chọn' }).click();
+    await expect(page.locator('.flower-request')).toHaveCount(0);
   });
 
   test('Clicking Nhắn tin với shop when not logged in redirects to login with returnUrl', async ({

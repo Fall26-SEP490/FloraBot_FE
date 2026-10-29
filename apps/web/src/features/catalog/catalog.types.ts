@@ -10,6 +10,9 @@ export type CatalogItem = {
   address: string;
   photo: string | null;
   bouquets: string[];
+  // Optional FE extension; the current catalog API does not expose slot zones yet.
+  // BE must group entries by zone rather than mixing zones in one bouquets array.
+  slotZone?: string | null;
   occasion?: string;
   tags?: string[];
   isDemoSample?: boolean;

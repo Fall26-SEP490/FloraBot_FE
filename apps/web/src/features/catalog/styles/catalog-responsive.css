@@ -19,21 +19,6 @@
   display: none;
 }
 
-.catalog-filter-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 4px;
-  border-radius: 999px;
-  background: #174b35;
-  color: #ffffff;
-  font-size: 0.72rem;
-  font-weight: 700;
-  line-height: 1;
-}
-
 .catalog-sidebar-scroll-body {
   display: block;
 }
@@ -82,11 +67,6 @@
   .catalog-mobile-filter-btn.is-filtered {
     background: #174b35;
     color: #ffffff;
-  }
-
-  .catalog-mobile-filter-btn.is-filtered .catalog-filter-badge {
-    background: #ffffff;
-    color: #174b35;
   }
 
   /* Backdrop for Mobile Bottom Sheet */
@@ -262,21 +242,6 @@
   }
 }
 
-@media (max-width: 768px) {
-  .product-modal-content {
-    grid-template-columns: 1fr;
-    max-height: 85vh;
-  }
-  .product-modal-media {
-    max-height: 240px;
-  }
-  .product-modal-img {
-    min-height: 0;
-    max-height: 240px;
-    object-fit: contain;
-  }
-}
-
 @media (max-width: 580px) {
   .flower-shop-page {
     padding: 0 0.65rem;
@@ -322,7 +287,6 @@
 
   .flower-card-actions {
     display: flex;
-    flex-direction: column;
     gap: 0.35rem;
   }
 
@@ -333,13 +297,6 @@
     height: auto !important;
   }
 
-  .flower-card-secondary-btns {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.35rem;
-  }
-
-  .flower-card-detail-btn.button,
   .flower-card-chat-btn.button {
     padding: 0.35rem 0.45rem !important;
     min-height: 44px !important;
