@@ -1491,6 +1491,7 @@ function PersonalProfileContent() {
           title="Bạn có thay đổi chưa lưu"
           description="Rời trang sẽ bỏ phần thông tin bạn đang chỉnh sửa."
           onClose={draftGuard.cancel}
+          size="sm"
         >
           <div className="profile-leave-actions">
             <Button type="button" onClick={draftGuard.cancel}>

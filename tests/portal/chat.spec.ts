@@ -117,9 +117,7 @@ for (const width of [1440, 390]) {
   });
 }
 
-test('Unauthenticated user clicking "Nhắn tin với shop" is redirected to login with returnUrl', async ({
-  page,
-}) => {
+test('Unauthenticated user confirms login before opening shop chat', async ({ page }) => {
   await page.route('**/api/auth/me', (route) => route.fulfill({ status: 401 }));
   await page.route('**/api/shop/catalog?*', (route) =>
     route.fulfill({ json: { items: [mockFlower], page: 1, hasMore: false } }),
@@ -129,8 +127,47 @@ test('Unauthenticated user clicking "Nhắn tin với shop" is redirected to log
   const chatBtn = page.getByRole('button', { name: 'Nhắn tin với shop' }).first();
   await expect(chatBtn).toBeVisible();
   await chatBtn.click();
-
+  const notice = page.getByRole('dialog', { name: 'Đăng nhập để nhắn tin' });
+  await expect(notice).toBeVisible();
+  await expect(page).toHaveURL(/\/dat-hoa/);
+  await notice.getByRole('button', { name: 'Đăng nhập' }).click();
   await expect(page).toHaveURL(/\/dang-nhap\?returnUrl=%2Fdat-hoa/);
+});
+
+test('Seller sees a role notice instead of an inline catalog error when opening chat', async ({
+  page,
+}) => {
+  await page.route('**/api/auth/me', (route) => route.fulfill({ json: sellerUser }));
+  await page.route('**/api/shop/catalog?*', (route) =>
+    route.fulfill({ json: { items: [mockFlower], page: 1, hasMore: false } }),
+  );
+
+  await page.goto('/dat-hoa');
+  await page.getByRole('button', { name: 'Nhắn tin với shop' }).first().click();
+  const notice = page.getByRole('dialog', { name: 'Không thể nhắn tin bằng tài khoản này' });
+  await expect(notice).toContainText('Chỉ tài khoản khách hàng thành viên');
+  await expect(notice.locator('.management-modal-header')).toHaveCSS('border-bottom-width', '0px');
+  await expect(notice.locator('.catalog-chat-notice-actions')).toHaveCSS('border-top-width', '0px');
+  await notice.getByRole('button', { name: 'Đóng', exact: true }).click();
+  await expect(notice).not.toBeVisible();
+  await expect(page.locator('.flower-shop-page > .error')).toHaveCount(0);
+});
+
+test('Unauthenticated user sees the login notice from a flower detail page', async ({ page }) => {
+  await page.route('**/api/auth/me', (route) => route.fulfill({ status: 401 }));
+  await page.route('**/api/shop/catalog?*', (route) =>
+    route.fulfill({ json: { items: [mockFlower], page: 1, hasMore: false } }),
+  );
+
+  await page.goto(`/dat-hoa/${mockFlower.productId}/${mockFlower.kioskId}`);
+  await page.getByRole('button', { name: 'Chat với shop' }).click();
+  const notice = page.getByRole('dialog', { name: 'Đăng nhập để nhắn tin' });
+  await expect(notice).toBeVisible();
+  await notice.getByRole('button', { name: 'Để sau' }).click();
+  await expect(notice).not.toBeVisible();
+  await expect(page).toHaveURL(
+    new RegExp(`/dat-hoa/${mockFlower.productId}/${mockFlower.kioskId}`),
+  );
 });
 
 test('Customer opens chat from product and enters conversation in account area', async ({

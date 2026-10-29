@@ -12,6 +12,7 @@ import { CatalogGrid } from './components/CatalogGrid';
 import { CatalogSearchBar } from './components/CatalogSearchBar';
 import { CatalogSidebar } from './components/CatalogSidebar';
 import { CatalogToolbar } from './components/CatalogToolbar';
+import { ChatNoticeDialog, type ChatNotice } from './components/ChatNoticeDialog';
 import { FlowerRequestPanel } from './components/FlowerRequestPanel';
 import { useCatalogDialog } from './hooks/useCatalogDialog';
 import { useCatalogFilters } from './hooks/useCatalogFilters';
@@ -24,7 +25,7 @@ export default function FlowerShop() {
   const [draft, setDraft] = useState('');
   const [page, setPage] = useState(1);
   const [openingChatId, setOpeningChatId] = useState<string | null>(null);
-  const [chatError, setChatError] = useState<string | null>(null);
+  const [chatNotice, setChatNotice] = useState<ChatNotice | null>(null);
 
   const [demoEnabled] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
@@ -33,26 +34,30 @@ export default function FlowerShop() {
   });
 
   const dialog = useCatalogDialog();
+  const setSelected = dialog.setSelected;
 
   const handleOpenChat = useCallback(
     async (item: CatalogItem) => {
       if (item.isDemoSample) {
-        setChatError(
-          'Mẫu minh họa chưa gắn với shop thật. Hãy chọn sản phẩm từ danh mục API để nhắn tin.',
-        );
+        setChatNotice({
+          kind: 'error',
+          message:
+            'Mẫu minh họa chưa gắn với shop thật. Hãy chọn sản phẩm từ danh mục API để nhắn tin.',
+        });
         return;
       }
+      setSelected(null);
       if (!session.data) {
         const returnUrl = `/dat-hoa?action=chat&sellerId=${encodeURIComponent(item.sellerId)}&productId=${encodeURIComponent(item.productId)}&shopName=${encodeURIComponent(item.shopName)}&name=${encodeURIComponent(item.name)}`;
-        router.push(`/dang-nhap?returnUrl=${encodeURIComponent(returnUrl)}`);
+        setChatNotice({ kind: 'login', returnUrl });
         return;
       }
       if (session.data.role !== 'CUSTOMER') {
-        setChatError('Chỉ tài khoản khách hàng thành viên mới có thể nhắn tin với shop.');
+        setChatNotice({ kind: 'role' });
         return;
       }
       setOpeningChatId(item.productId);
-      setChatError(null);
+      setChatNotice(null);
       try {
         const chat = await openCustomerChat({
           sellerId: item.sellerId,
@@ -75,12 +80,12 @@ export default function FlowerShop() {
         }
         router.push(`/tai-khoan?chat=${encodeURIComponent(chat.id)}#member-chats`);
       } catch (err) {
-        setChatError(formatChatError(err));
+        setChatNotice({ kind: 'error', message: formatChatError(err) });
       } finally {
         setOpeningChatId(null);
       }
     },
-    [session.data, router],
+    [session.data, router, setSelected],
   );
 
   const catalog = useQuery({
@@ -171,11 +176,13 @@ export default function FlowerShop() {
         <p className="catalog-hero-desc">Chọn mẫu hoa yêu thích và đặt trước để nhận tại kiosk.</p>
       </header>
 
-      {chatError && (
-        <p role="alert" className="error" style={{ marginBlock: '1rem' }}>
-          {chatError}
-        </p>
-      )}
+      <ChatNoticeDialog
+        notice={chatNotice}
+        onClose={() => setChatNotice(null)}
+        onLogin={(returnUrl) =>
+          router.push(`/dang-nhap?returnUrl=${encodeURIComponent(returnUrl)}`)
+        }
+      />
 
       {/* Selected flower ordering form (preserves existing preorder test flow) */}
       <FlowerRequestPanel

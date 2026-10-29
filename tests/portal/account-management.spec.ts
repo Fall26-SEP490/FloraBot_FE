@@ -33,6 +33,14 @@ test('Status confirmation prevents duplicate requests and closing while pending'
     await page.goto('/admin/managers');
     await page.getByRole('button', { name: `Khóa ${account.fullName}`, exact: true }).click();
     const dialog = page.getByRole('dialog');
+    await expect(dialog).toHaveCSS('width', '480px');
+    const closeButton = dialog.getByRole('button', { name: 'Đóng hộp thoại' });
+    await expect(closeButton).toHaveCSS('width', '44px');
+    await expect(closeButton).toHaveCSS('height', '44px');
+    await expect(dialog.locator('.management-modal-header')).toHaveCSS(
+      'border-bottom-width',
+      '0px',
+    );
     await dialog.getByRole('button', { name: 'Xác nhận khóa', exact: true }).click();
     await expect(
       dialog.getByRole('button', { name: 'Đang cập nhật…', exact: true }),
@@ -207,6 +215,7 @@ test.describe('Account Management UI - Multi-Role, Hierarchy & Security', () => 
     await page.getByRole('button', { name: 'Chi tiết Nguyễn Văn Quản Lý' }).click();
     const detailDialog = page.getByRole('dialog', { name: 'Chi tiết Quản lý vận hành' });
     await expect(detailDialog).toBeVisible();
+    await expect(detailDialog).toHaveCSS('width', '560px');
     await expect(detailDialog.getByText('ops1@florabot.vn')).toBeVisible();
     await expect(detailDialog.getByText('0901234567')).toBeVisible();
     await expect(detailDialog.getByText(/password|mật khẩu/i)).toHaveCount(0);
@@ -562,6 +571,14 @@ test.describe('Account Management UI - Multi-Role, Hierarchy & Security', () => 
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
         true,
       );
+
+      await page.getByRole('button', { name: 'Khóa Võ Minh Trí' }).click();
+      const confirmDialog = page.getByRole('dialog', { name: 'Khóa tài khoản Võ Minh Trí?' });
+      await expect(confirmDialog).toBeVisible();
+      const closeButton = confirmDialog.getByRole('button', { name: 'Đóng hộp thoại' });
+      await expect(closeButton).toHaveCSS('width', '44px');
+      await expect(closeButton).toHaveCSS('height', '44px');
+      expect((await confirmDialog.boundingBox())?.width).toBeLessThanOrEqual(width);
     });
   }
 });

@@ -793,11 +793,91 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
     await page.getByRole('link', { name: 'Khu vực cá nhân', exact: true }).click();
     const dialog = page.getByRole('dialog', { name: 'Bạn có thay đổi chưa lưu' });
     await expect(dialog).toBeVisible();
+    await expect(dialog.locator('.management-modal-header')).toHaveCSS(
+      'border-bottom-width',
+      '0px',
+    );
+    await expect(dialog.locator('.profile-leave-actions')).toHaveCSS('border-top-width', '0px');
     await dialog.getByRole('button', { name: 'Tiếp tục chỉnh sửa', exact: true }).click();
     await expect(page.getByLabel('Họ và tên *')).toHaveValue('Bản nháp chưa lưu');
     await page.getByRole('link', { name: 'Khu vực cá nhân', exact: true }).click();
     await dialog.getByRole('button', { name: 'Rời trang', exact: true }).click();
     await expect(page).toHaveURL(/\/tai-khoan$/);
+  });
+
+  test('Catalog grid stays responsive after leaving a profile with an unsaved draft', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.route('**/api/auth/me', (route) => route.fulfill({ json: sessions.CUSTOMER }));
+    await page.route('**/api/account/profile', (route) =>
+      route.fulfill({ json: makeMockProfile() }),
+    );
+    await page.route('**/api/member/profile', (route) =>
+      route.fulfill({
+        json: { id: sessions.CUSTOMER.id, fullName: 'Khách hàng', loyaltyPoints: 0 },
+      }),
+    );
+    await page.route('**/api/shop/catalog?*', (route) =>
+      route.fulfill({
+        json: {
+          items: [
+            {
+              productId: 'p1',
+              sellerId: 's1',
+              kioskId: 'k1',
+              name: 'Hoa',
+              shopName: 'Shop',
+              kioskName: 'Tủ',
+              address: 'Địa chỉ',
+              description: '',
+              price: 100000,
+              photo: null,
+              bouquets: [],
+            },
+          ],
+          page: 1,
+          hasMore: false,
+        },
+      }),
+    );
+
+    await page.goto('/tai-khoan');
+    await expect(page.locator('.member-page')).toBeVisible();
+    await page
+      .getByRole('button', { name: `Mở menu người dùng của ${sessions.CUSTOMER.name}` })
+      .click();
+    await page.getByRole('link', { name: 'Hồ sơ cá nhân', exact: true }).click();
+    await page.getByLabel('Họ và tên *').fill('Bản nháp chưa lưu');
+    await page.getByRole('link', { name: 'Khu vực cá nhân', exact: true }).click();
+    await page
+      .getByRole('dialog', { name: 'Bạn có thay đổi chưa lưu' })
+      .getByRole('button', { name: 'Rời trang', exact: true })
+      .click();
+    await expect(page).toHaveURL(/\/tai-khoan$/);
+    await page.getByRole('link', { name: 'Sản phẩm hoa', exact: true }).first().click();
+    await expect(page).toHaveURL(/\/dat-hoa$/);
+    const grid = page.locator('.flower-catalog-grid');
+    await expect(grid.locator('.flower-card')).not.toHaveCount(0);
+    await expect
+      .poll(async () =>
+        grid.evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(' ').length),
+      )
+      .toBe(4);
+    for (const [width, columns] of [
+      [1024, 3],
+      [820, 2],
+      [390, 1],
+    ] as const) {
+      await page.setViewportSize({ width, height: 900 });
+      await expect
+        .poll(async () =>
+          grid.evaluate(
+            (element) => getComputedStyle(element).gridTemplateColumns.split(' ').length,
+          ),
+        )
+        .toBe(columns);
+    }
   });
 
   test('Reload warns about an unsaved draft and cancelling keeps the entered value', async ({

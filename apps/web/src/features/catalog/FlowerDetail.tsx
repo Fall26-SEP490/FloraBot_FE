@@ -5,11 +5,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Button, MapPin, MessageSquare, Store } from '@florabot/ui';
-import { request } from '@/shared/lib/api';
+import { request, sessionQuery } from '@/shared/lib/api';
 import { MOCK_CATALOG_ITEMS } from './mocks/mockCatalog';
 import type { CatalogItem, CatalogResponse } from './catalog.types';
 import { canOrderOnWeb, formatPrice, purchaseLabel } from './catalog.utils';
 import { FlowerRequestPanel } from './components/FlowerRequestPanel';
+import { ChatNoticeDialog, type ChatNotice } from './components/ChatNoticeDialog';
 import './styles/catalog.css';
 
 async function findItem(productId: string, kioskId: string): Promise<CatalogItem | null> {
@@ -32,7 +33,9 @@ export default function FlowerDetail({
   kioskId: string;
 }) {
   const router = useRouter();
+  const session = useQuery(sessionQuery);
   const [selected, setSelected] = useState<CatalogItem | null>(null);
+  const [chatNotice, setChatNotice] = useState<ChatNotice | null>(null);
   const [failedPhoto, setFailedPhoto] = useState<string | null>(null);
   const [demo] = useState(
     () =>
@@ -51,6 +54,7 @@ export default function FlowerDetail({
   const item = query.data;
   const openChat = (flower: CatalogItem) => {
     if (flower.isDemoSample) return;
+    setSelected(null);
     const params = new URLSearchParams({
       action: 'chat',
       sellerId: flower.sellerId,
@@ -58,7 +62,16 @@ export default function FlowerDetail({
       shopName: flower.shopName,
       name: flower.name,
     });
-    router.push(`/dat-hoa?${params}`);
+    const returnUrl = `/dat-hoa?${params}`;
+    if (!session.data) {
+      setChatNotice({ kind: 'login', returnUrl });
+      return;
+    }
+    if (session.data.role !== 'CUSTOMER') {
+      setChatNotice({ kind: 'role' });
+      return;
+    }
+    router.push(returnUrl);
   };
   return (
     <main id="main" className="flower-shop-page flower-detail-page">
@@ -95,18 +108,55 @@ export default function FlowerDetail({
               )}
             </figure>
             <div className="flower-detail-content">
-              <p className="flower-detail-eyebrow">Mẫu hoa · {item.shopName}</p>
-              <span className="flower-detail-badge">{purchaseLabel(item)}</span>
+              <div className="flower-detail-header-meta">
+                <span className="flower-detail-badge">{purchaseLabel(item)}</span>
+                {item.occasion && (
+                  <span className="flower-detail-badge flower-detail-badge-occasion">
+                    {item.occasion}
+                  </span>
+                )}
+              </div>
               <h1>{item.name}</h1>
               <div className="flower-detail-pricing">
                 <span className="flower-detail-price">{formatPrice(item.price)} đ</span>
-                <span>Giá mẫu tham khảo</span>
+                <span className="flower-detail-price-sub">Giá mẫu tham khảo</span>
               </div>
-              {canOrderOnWeb(item) && (
-                <p className="flower-detail-note">
-                  Giá và thời gian nhận sẽ được shop xác nhận sau khi bạn gửi yêu cầu.
-                </p>
-              )}
+
+              <div className="flower-detail-divider" aria-hidden="true" />
+
+              <section
+                className="flower-detail-description"
+                aria-labelledby="flower-description-title"
+              >
+                <h2 id="flower-description-title">Mô tả sản phẩm</h2>
+                <p>{item.description?.trim() || 'Shop chưa cung cấp mô tả cho mẫu hoa này.'}</p>
+              </section>
+
+              <section className="flower-detail-location" aria-labelledby="flower-location-title">
+                <h2 id="flower-location-title">Cửa hàng & kiosk</h2>
+                <div className="flower-detail-location-body">
+                  <div className="flower-detail-info-row">
+                    <div className="flower-detail-info-icon" aria-hidden="true">
+                      <Store size={18} />
+                    </div>
+                    <div className="flower-detail-info-content">
+                      <span>Cửa hàng</span>
+                      <strong>{item.shopName || 'Chưa có thông tin'}</strong>
+                    </div>
+                  </div>
+                  <div className="flower-detail-info-row">
+                    <div className="flower-detail-info-icon" aria-hidden="true">
+                      <MapPin size={18} />
+                    </div>
+                    <div className="flower-detail-info-content">
+                      <span>Kiosk nhận hoa</span>
+                      <strong>{item.kioskName || 'Chưa có thông tin'}</strong>
+                      <p>{item.address || 'Chưa có địa chỉ'}</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
               <div className="flower-detail-actions">
                 {canOrderOnWeb(item) && <Button onClick={() => setSelected(item)}>Đặt hoa</Button>}
                 <Button
@@ -117,39 +167,17 @@ export default function FlowerDetail({
                   <MessageSquare size={17} aria-hidden="true" /> Chat với shop
                 </Button>
               </div>
+
+              {canOrderOnWeb(item) && (
+                <p className="flower-detail-note">
+                  Giá và thời gian nhận sẽ được shop xác nhận sau khi bạn gửi yêu cầu.
+                </p>
+              )}
+
               {item.isDemoSample && (
-                <p className="flower-detail-note">Đây là mẫu minh họa, không tạo đơn thật.</p>
+                <p className="flower-detail-demo-note">Đây là mẫu minh họa, không tạo đơn thật.</p>
               )}
             </div>
-          </div>
-          <div className="flower-detail-info">
-            <section
-              className="flower-detail-description"
-              aria-labelledby="flower-description-title"
-            >
-              <p className="flower-detail-eyebrow">Về mẫu hoa</p>
-              <h2 id="flower-description-title">Mô tả sản phẩm</h2>
-              <p>{item.description?.trim() || 'Shop chưa cung cấp mô tả cho mẫu hoa này.'}</p>
-            </section>
-            <section className="flower-detail-location" aria-labelledby="flower-location-title">
-              <p className="flower-detail-eyebrow">Thông tin nhận hoa</p>
-              <h2 id="flower-location-title">Cửa hàng & kiosk</h2>
-              <div className="flower-detail-info-row">
-                <Store size={19} aria-hidden="true" />
-                <div>
-                  <span>Cửa hàng</span>
-                  <strong>{item.shopName || 'Chưa có thông tin'}</strong>
-                </div>
-              </div>
-              <div className="flower-detail-info-row">
-                <MapPin size={19} aria-hidden="true" />
-                <div>
-                  <span>Kiosk</span>
-                  <strong>{item.kioskName || 'Chưa có thông tin'}</strong>
-                  <p>{item.address || 'Chưa có địa chỉ'}</p>
-                </div>
-              </div>
-            </section>
           </div>
         </article>
       )}
@@ -158,6 +186,13 @@ export default function FlowerDetail({
         onClose={() => setSelected(null)}
         onOpenChat={openChat}
         openingChatId={null}
+      />
+      <ChatNoticeDialog
+        notice={chatNotice}
+        onClose={() => setChatNotice(null)}
+        onLogin={(returnUrl) =>
+          router.push(`/dang-nhap?returnUrl=${encodeURIComponent(returnUrl)}`)
+        }
       />
     </main>
   );

@@ -48,74 +48,105 @@
   text-align: left;
 }
 
+/* Flower Detail Page */
 .flower-detail-page {
-  max-width: 1120px;
-  margin: 2rem auto 4rem;
+  max-width: 980px;
+  margin: 1.25rem auto 3.5rem;
+  padding-inline: 1.25rem;
 }
 .flower-detail-back {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   margin-bottom: 1.5rem;
-  color: #365d48;
-  font-size: 0.9rem;
+  padding: 0.25rem 0;
+  color: var(--color-muted, #45654a);
+  font-size: 0.88rem;
   font-weight: 600;
   text-decoration: none;
+  background: transparent;
+  border: none;
+  transition: all 0.15s ease;
 }
 .flower-detail-back:hover {
-  color: #123c28;
+  color: var(--color-ink, #204b2e);
   text-decoration: underline;
+  transform: translateX(-2px);
+}
+.flower-detail {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
 }
 .flower-detail-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-  gap: clamp(1.5rem, 4vw, 3.5rem);
+  grid-template-columns: minmax(0, 44fr) minmax(0, 56fr);
+  gap: clamp(1.75rem, 4vw, 3rem);
   align-items: start;
 }
 .flower-detail-media {
   position: relative;
   margin: 0;
   overflow: hidden;
-  border-radius: 16px;
-  background: #f1f5ef;
+  border-radius: 12px;
+  background: #f4f7f2;
+  border: 1px solid #e2ece0;
+  box-shadow: 0 4px 16px -4px rgba(24, 62, 43, 0.05);
+  width: 100%;
 }
 .flower-detail-media img {
   display: block;
   width: 100%;
-  aspect-ratio: 1;
+  aspect-ratio: 1 / 1;
   object-fit: cover;
 }
 .flower-detail-media figcaption {
-  padding: 0.65rem 1rem;
-  color: #566d5c;
+  padding: 0.65rem 0.85rem;
+  color: var(--color-muted, #45654a);
+  background: #f7faf5;
   font-size: 0.8rem;
+  border-top: 1px solid #e8efe6;
+  text-align: center;
+  line-height: 1.4;
 }
 .flower-detail-content {
-  padding-block: 0.5rem;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
-.flower-detail-eyebrow {
-  margin: 0 0 0.75rem;
-  color: #597461;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+.flower-detail-header-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 0.4rem;
 }
 .flower-detail-badge {
   display: inline-flex;
-  padding: 0.35rem 0.7rem;
-  border-radius: 999px;
-  background: #eaf3e8;
-  color: #22583b;
-  font-size: 0.78rem;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  background: #eaf5e6;
+  color: #174b27;
+  font-size: 0.75rem;
   font-weight: 700;
+  border: 1px solid #c8ddc4;
+}
+.flower-detail-badge-occasion {
+  background: #fff8e6;
+  color: #7a5400;
+  border-color: #ffd666;
 }
 .flower-detail-content h1 {
-  margin: 0.9rem 0 1.25rem;
-  color: #113421;
-  font-size: clamp(1.7rem, 3vw, 2.4rem);
-  line-height: 1.2;
+  margin: 0.15rem 0 0.5rem;
+  color: var(--color-ink, #204b2e);
+  font-family: var(--font-display, 'Nunito', sans-serif);
+  font-size: clamp(1.6rem, 2.6vw, 2.15rem);
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
   overflow-wrap: anywhere;
 }
 .flower-detail-pricing {
@@ -123,110 +154,173 @@
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.65rem;
-  padding: 1.1rem 0;
-  border-block: 1px solid #e5eee4;
+  margin: 0.35rem 0 0.45rem;
+  padding: 0;
+  background: transparent;
+  border: none;
 }
 .flower-detail-price {
-  font-size: 1.55rem;
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #164624;
+  letter-spacing: -0.02em;
+}
+.flower-detail-price-sub {
+  font-size: 0.85rem;
+  color: #55775d;
+  font-weight: 600;
+}
+.flower-detail-divider {
+  border-top: 1px dashed #dce8d9;
+  margin: 0.75rem 0 1rem;
+}
+.flower-detail-description {
+  margin-bottom: 1rem;
+}
+.flower-detail-description h2 {
+  margin: 0 0 0.35rem;
+  color: #174b27;
+  font-size: 0.92rem;
   font-weight: 700;
-  color: #174b35;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
-.flower-detail-pricing > span:last-child,
-.flower-detail-note {
-  font-size: 0.84rem;
-  color: #617369;
-}
-.flower-detail-note {
-  line-height: 1.55;
-  margin: 0.85rem 0 0;
-}
-.flower-detail-actions {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.65rem;
-  margin-top: 1.5rem;
-}
-.flower-detail-actions .button {
-  min-height: 48px;
-}
-.flower-detail-info {
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-  gap: 1.5rem;
-  margin-top: 2.5rem;
-  padding-top: 2rem;
-  border-top: 1px solid #e5eee4;
-}
-.flower-detail-info h2 {
-  margin: 0 0 1rem;
-  color: #173f2b;
-  font-size: 1.1rem;
-}
-.flower-detail-description > p:last-child {
+.flower-detail-description > p {
   margin: 0;
-  color: #496052;
-  line-height: 1.7;
+  color: #3b5643;
+  line-height: 1.6;
+  font-size: 0.9rem;
   white-space: pre-line;
   overflow-wrap: anywhere;
 }
 .flower-detail-location {
-  padding: 1.25rem;
-  border: 1px solid #e0eade;
-  border-radius: 12px;
-  background: #fbfdf9;
+  margin: 0 0 1.25rem;
+  padding: 0.85rem 1rem;
+  background: #f9fbf8;
+  border-radius: 10px;
+  border: 1px solid #e5ede2;
+}
+.flower-detail-location h2 {
+  margin: 0 0 0.6rem;
+  color: #1b4928;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.flower-detail-location-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
 }
 .flower-detail-info-row {
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
-  margin-top: 1rem;
-  color: #315b43;
+  color: var(--color-ink, #204b2e);
 }
-.flower-detail-info-row svg {
-  flex: none;
-  margin-top: 0.15rem;
+.flower-detail-info-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #eef5e9;
+  color: #1c4b29;
+  flex: 0 0 36px;
+  border: 1px solid #d5e6cf;
 }
-.flower-detail-info-row div {
+.flower-detail-info-content,
+.flower-detail-info-row > div:not(.flower-detail-info-icon) {
   min-width: 0;
+  flex: 1;
 }
+.flower-detail-info-content span,
 .flower-detail-info-row span {
   display: block;
-  color: #6c7e70;
-  font-size: 0.78rem;
+  color: #55775d;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
+.flower-detail-info-content strong,
 .flower-detail-info-row strong {
   display: block;
-  color: #21452f;
-  font-size: 0.9rem;
+  color: #164624;
+  font-size: 0.92rem;
+  font-weight: 700;
+  margin-top: 0.1rem;
   overflow-wrap: anywhere;
 }
+.flower-detail-info-content p,
 .flower-detail-info-row p {
-  margin: 0.2rem 0 0;
-  color: #607367;
-  font-size: 0.85rem;
+  margin: 0.15rem 0 0;
+  color: #4b6b52;
+  font-size: 0.84rem;
+  line-height: 1.45;
   overflow-wrap: anywhere;
 }
-@media (max-width: 700px) {
+.flower-detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+}
+.flower-detail-actions .button {
+  flex: 1 1 0;
+  min-height: 44px;
+  height: 44px;
+  padding: 0 1.15rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  border-radius: 8px;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-sizing: border-box;
+}
+.flower-detail-note {
+  font-size: 0.82rem;
+  color: #55775d;
+  line-height: 1.45;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+.flower-detail-demo-note {
+  font-size: 0.82rem;
+  color: #708a76;
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+@media (max-width: 768px) {
   .flower-detail-page {
     padding-inline: 1rem;
-    margin-top: 1.25rem;
+    margin-top: 1rem;
+    margin-bottom: 2.5rem;
   }
-  .flower-detail-layout,
-  .flower-detail-info {
+  .flower-detail-layout {
     grid-template-columns: 1fr;
     gap: 1.25rem;
   }
   .flower-detail-media {
+    max-width: 100%;
     border-radius: 12px;
   }
-  .flower-detail-info {
-    margin-top: 1.75rem;
-    padding-top: 1.5rem;
-  }
 }
-@media (max-width: 360px) {
+@media (max-width: 480px) {
   .flower-detail-actions {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+    width: 100%;
+  }
+  .flower-detail-actions .button {
+    width: 100%;
+    flex: none;
   }
 }
 

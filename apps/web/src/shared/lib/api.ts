@@ -35,12 +35,16 @@ export async function request<T>(
   body?: unknown,
   retry = true,
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
+  extraHeaders?: Record<string, string>,
 ): Promise<T> {
   const resolvedMethod = method ?? (body === undefined ? 'GET' : 'POST');
   const response = await fetch(`/api${path}`, {
     method: resolvedMethod,
     credentials: 'include',
-    headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
+    headers: {
+      ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+      ...extraHeaders,
+    },
     body: body === undefined ? undefined : JSON.stringify(body),
     signal: AbortSignal.timeout(15_000),
   });
@@ -66,7 +70,7 @@ export async function request<T>(
       .finally(() => {
         refresh = undefined;
       });
-    if (await refresh) return request<T>(path, body, false, resolvedMethod);
+    if (await refresh) return request<T>(path, body, false, resolvedMethod, extraHeaders);
   }
   if (!response.ok) {
     const problem = (await response.json().catch(() => ({}))) as {

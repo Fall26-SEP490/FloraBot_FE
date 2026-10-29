@@ -22,46 +22,66 @@ const flower = {
   photo: null,
   bouquets: ['50000000-0000-0000-0000-000000000001'],
 };
-for (const role of ['CUSTOMER', 'SELLER'])
-  for (const kind of ['CUSTOM', 'STOCK'])
-    test(`${role} places ${kind} with explicit review and no door action`, async ({ page }) => {
-      await page.route('**/api/auth/me', (route) => route.fulfill({ json: { ...member, role } }));
-      await page.route('**/api/shop/catalog?*', (route) =>
-        route.fulfill({ json: { items: [flower], page: 1, hasMore: false } }),
-      );
-      let submitted = 0;
-      await page.route('**/api/member/preorders', async (route) => {
-        const input = route.request().postDataJSON();
-        expect(input.kind).toBe(kind);
-        expect(input.productId).toBe(flower.productId);
-        expect(input.kioskId).toBe(flower.kioskId);
-        expect(input.id).toMatch(/^[a-f0-9-]{36}$/);
-        submitted++;
-        await route.fulfill({ json: { result: input.id } });
-      });
-      await page.goto('/dat-hoa');
-      await page.getByRole('button', { name: 'Đặt hoa', exact: true }).click();
-      if (kind === 'CUSTOM') {
-        await page.getByLabel('Thời gian mong muốn nhận hoa').fill('2026-10-10T16:30');
-        await page
-          .getByLabel('Dịp tặng, màu hoa, ngân sách và lời nhắn')
-          .fill('Hoa sinh nhật màu hồng, ngân sách 400.000 đồng');
-      } else await page.getByRole('radio', { name: /Mua bó PREORDER có sẵn/ }).check();
-      await page.getByRole('checkbox').check();
-      const axe = await new AxeBuilder({ page })
-        .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
-        .analyze();
-      expect(axe.violations).toEqual([]);
-      await page
-        .getByRole('button', {
-          name:
-            kind === 'CUSTOM' ? 'Gửi yêu cầu để shop báo giá' : 'Giữ bó hoa và tiếp tục thanh toán',
-          exact: true,
-        })
-        .click();
-      await expect(page.getByRole('heading', { name: 'Đã nhận yêu cầu của bạn' })).toBeVisible();
-      expect(submitted).toBe(1);
-    });
+test('CUSTOMER places CUSTOM with selected kiosk and no door action', async ({ page }) => {
+  const role = 'CUSTOMER';
+  const otherKiosk = {
+    ...flower,
+    kioskId: '40000000-0000-0000-0000-000000000002',
+    kioskName: 'Tủ Quận 1',
+    address: 'Quận 1',
+  };
+  await page.route('**/api/auth/me', (route) => route.fulfill({ json: { ...member, role } }));
+  await page.route('**/api/shop/catalog?*', (route) =>
+    route.fulfill({ json: { items: [flower, otherKiosk], page: 1, hasMore: false } }),
+  );
+  let submitted = 0;
+  await page.route('**/api/member/preorders', async (route) => {
+    const input = route.request().postDataJSON();
+    expect(input.kind).toBe('CUSTOM');
+    expect(input.productId).toBe(flower.productId);
+    expect(input.kioskId).toBe(otherKiosk.kioskId);
+    expect(input).not.toHaveProperty('bouquetId');
+    expect(input.id).toMatch(/^[a-f0-9-]{36}$/);
+    submitted++;
+    await route.fulfill({ json: { result: input.id } });
+  });
+  await page.goto('/dat-hoa');
+  await page.getByRole('button', { name: 'Đặt hoa', exact: true }).first().click();
+  await page.getByLabel('Tủ nhận hoa').selectOption(otherKiosk.kioskId);
+  {
+    const date = new Date(Date.now() + 48 * 60 * 60 * 1000);
+    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 16);
+    await page.getByLabel('Thời gian mong muốn nhận hoa').fill(local);
+    await page
+      .getByLabel('Dịp tặng, màu hoa, ngân sách và lời nhắn')
+      .fill('Hoa sinh nhật màu hồng, ngân sách 400.000 đồng');
+  }
+  await page.getByRole('checkbox').check();
+  const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+  expect(axe.violations).toEqual([]);
+  await page
+    .getByRole('button', {
+      name: 'Gửi yêu cầu để shop báo giá',
+      exact: true,
+    })
+    .click();
+  await expect(page.getByRole('heading', { name: 'Đã nhận yêu cầu của bạn' })).toBeVisible();
+  expect(submitted).toBe(1);
+});
+
+test('SELLER cannot create a customer preorder in the FE', async ({ page }) => {
+  await page.route('**/api/auth/me', (route) =>
+    route.fulfill({ json: { ...member, role: 'SELLER' } }),
+  );
+  await page.route('**/api/shop/catalog?*', (route) =>
+    route.fulfill({ json: { items: [flower], page: 1, hasMore: false } }),
+  );
+  await page.goto('/dat-hoa');
+  await page.getByRole('button', { name: 'Đặt hoa', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Gửi yêu cầu để shop báo giá' })).toHaveCount(0);
+});
 
 for (const slotZone of ['WALK_IN', 'UNKNOWN']) {
   test(`stock with zone ${slotZone ?? 'missing'} cannot enter web ordering`, async ({ page }) => {
@@ -104,14 +124,18 @@ test('legacy API design templates still place CUSTOM requests without guessing s
     }),
   );
   await page.route('**/api/member/preorders', async (route) => {
-    expect(route.request().postDataJSON()).toMatchObject({ kind: 'CUSTOM', bouquetId: null });
+    expect(route.request().postDataJSON()).toMatchObject({ kind: 'CUSTOM' });
+    expect(route.request().postDataJSON()).not.toHaveProperty('bouquetId');
     // Server rejections must remain visible, with no success or checkout navigation.
     await route.fulfill({ status: 409, json: { detail: 'Kiosk không nhận đơn mới' } });
   });
   await page.goto('/dat-hoa');
   await page.getByRole('button', { name: 'Đặt hoa', exact: true }).click();
   await expect(page.getByRole('radio')).toHaveCount(0);
-  await page.getByLabel('Thời gian mong muốn nhận hoa').fill('2026-11-01T16:30');
+  const date = new Date(Date.now() + 48 * 60 * 60 * 1000);
+  await page
+    .getByLabel('Thời gian mong muốn nhận hoa')
+    .fill(new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16));
   await page
     .getByLabel('Dịp tặng, màu hoa, ngân sách và lời nhắn')
     .fill('Hoa sinh nhật màu hồng, ngân sách 400.000 đồng');

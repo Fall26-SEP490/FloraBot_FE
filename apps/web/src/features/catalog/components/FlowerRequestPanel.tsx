@@ -1,4 +1,5 @@
-import { Button, MessageSquare } from '@florabot/ui';
+import { useEffect, useRef } from 'react';
+import { Button, X } from '@florabot/ui';
 import type { CatalogItem } from '../catalog.types';
 import { canOrderOnWeb } from '../catalog.utils';
 import { FlowerRequestForm } from './FlowerRequestForm';
@@ -77,34 +78,32 @@ export function FlowerRequestPanel({
         aria-labelledby="selected-flower"
       >
         <div className="flower-request-heading">
-          <h2 id="selected-flower" className="flower-request-title">
-            Đặt {selected.name}
-          </h2>
-          <Button ref={closeRef} variant="outline" onClick={onClose}>
-            Đóng mẫu đang chọn
+          <div className="flower-request-header-content">
+            <h2 id="selected-flower" className="flower-request-title">
+              Đặt {selected.name}
+            </h2>
+            <p className="flower-request-meta">
+              {selected.shopName} · {selected.kioskName}
+            </p>
+          </div>
+          <Button
+            ref={closeRef}
+            variant="outline"
+            className="flower-request-close-btn"
+            onClick={onClose}
+            aria-label="Đóng mẫu đang chọn"
+          >
+            <X size={18} aria-hidden="true" />
+            <span className="sr-only">Đóng mẫu đang chọn</span>
           </Button>
         </div>
-        <p className="flower-request-meta">
-          {selected.shopName} · {selected.kioskName}
-        </p>
         <FlowerRequestForm
           key={`${selected.productId}-${selected.kioskId}-${selected.slotZone ?? 'template'}`}
           item={selected}
+          onOpenChat={() => onOpenChat(selected)}
+          openingChat={openingChatId === selected.productId}
         />
-        <div className="flower-request-actions">
-          <Button
-            variant="outline"
-            type="button"
-            className="chat-open-btn"
-            disabled={openingChatId === selected.productId}
-            onClick={() => onOpenChat(selected)}
-          >
-            <MessageSquare size={16} aria-hidden="true" />
-            {openingChatId === selected.productId ? 'Đang mở chat…' : 'Nhắn tin với shop'}
-          </Button>
-        </div>
       </section>
     </div>
   );
 }
-import { useEffect, useRef } from 'react';

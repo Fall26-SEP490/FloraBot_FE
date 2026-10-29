@@ -1,3 +1,5 @@
+@import './modal.css';
+
 /* Disable native Edge password reveal and clear buttons site-wide */
 input[type='password']::-ms-reveal,
 input[type='password']::-ms-clear {
