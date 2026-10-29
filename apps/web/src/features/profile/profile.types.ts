@@ -18,6 +18,8 @@ export interface BasicFormValues {
   fullName: string;
   phone: string;
   address: string;
+  gender: string;
+  dateOfBirth: string;
 }
 
 export interface BankFormValues {

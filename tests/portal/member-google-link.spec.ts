@@ -546,7 +546,7 @@ test.describe('Member Google Account Linking', () => {
     await expect(page.locator('#security')).toBeVisible();
   });
 
-  test('Non-member roles do NOT see #security section or member password/Google endpoints on /ho-so', async ({
+  test('Non-member roles see support guidance without member password or Google actions', async ({
     page,
   }) => {
     const adminSession = {
@@ -585,17 +585,18 @@ test.describe('Member Google Account Linking', () => {
     await page.goto('/ho-so');
     await expect(page.getByRole('heading', { level: 1, name: 'Quản Trị Viên' })).toBeVisible();
 
-    // Security section and Google link are not rendered
-    await expect(page.locator('#security')).toHaveCount(0);
+    // Explain the supported route instead of offering a forbidden member action.
+    await expect(page.locator('#security')).toContainText(
+      'vui lòng liên hệ quản trị viên FloraBot',
+    );
     await expect(page.locator('#member-google-link')).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Đổi mật khẩu và đăng nhập lại' })).toHaveCount(
       0,
     );
 
-    // Nav anchor for security is not present
     await expect(
       page.locator('.profile-quick-nav').getByRole('link', { name: 'Bảo mật' }),
-    ).toHaveCount(0);
+    ).toHaveCount(1);
 
     expect(memberEndpointCalled).toBe(false);
   });

@@ -2,7 +2,7 @@
 
 import './styles/profile.css';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -10,7 +10,7 @@ import { Button, CircleAlert, Check, Eye, EyeOff, ArrowRight, RotateCcw } from '
 import { ApiError, logoutSession, queryClient, sessionQuery, type Session } from '@/shared/lib/api';
 import { getRoleLabel } from '@/features/portal/config/roleRoutes';
 import { workspaceBase } from '@/features/portal/config/workspaceSections';
-import { ConfirmDialog } from '../../shared/components/Modal';
+import { ConfirmDialog, Modal } from '../../shared/components/Modal';
 import GoogleAccountLink from '../auth/GoogleAccountLink';
 import { passwordRule } from '../auth/auth.schemas';
 import { changeMemberPassword } from '../customer-account/customer-account.api';
@@ -31,6 +31,9 @@ import type {
   UpdateProfilePayload,
 } from './profile.types';
 import { phonePattern, emailPattern, asciiAlphanumeric, hasControlChars } from './profile.schemas';
+import { basicPayload, basicValues, validBirthDate, vietnamToday } from './profile.utils';
+import { profileSections, useProfileNavigation } from './useProfileNavigation';
+import { useProfileDraftGuard } from './useProfileDraftGuard';
 
 export default function PersonalProfile() {
   const session = useQuery(sessionQuery);
@@ -41,6 +44,16 @@ export default function PersonalProfile() {
 
 function PersonalProfileContent() {
   const session = useQuery(sessionQuery);
+  const active = useRef(true);
+  const revealVersion = useRef(0);
+  useEffect(() => {
+    active.current = true;
+    return () => {
+      active.current = false;
+    };
+  }, []);
+  const isCurrentIdentity = () =>
+    active.current && queryClient.getQueryData<Session>(['session'])?.id === session.data?.id;
 
   const isHumanRole =
     session.data &&
@@ -67,17 +80,15 @@ function PersonalProfileContent() {
       fullName: '',
       phone: '',
       address: '',
+      gender: '',
+      dateOfBirth: '',
     },
   });
 
   // Preserve unsaved draft: only populate from profile data when form is untouched / pristine
   useEffect(() => {
     if (profile.data && !basicForm.formState.isDirty) {
-      basicForm.reset({
-        fullName: profile.data.fullName ?? '',
-        phone: profile.data.phone ?? '',
-        address: profile.data.address ?? '',
-      });
+      basicForm.reset(basicValues(profile.data));
     }
   }, [profile.data, basicForm]);
 
@@ -90,6 +101,8 @@ function PersonalProfileContent() {
   const [otpVerifying, setOtpVerifying] = useState(false);
   const [contactResetting, setContactResetting] = useState(false);
   const [resendCountdown, setResendCountdown] = useState(0);
+  const [otpRemaining, setOtpRemaining] = useState(0);
+  const [otpTiming, setOtpTiming] = useState<{ expiresAt: number; resendAt: number } | null>(null);
   const [contactNotice, setContactNotice] = useState('');
   const [contactError, setContactError] = useState('');
 
@@ -110,6 +123,7 @@ function PersonalProfileContent() {
   } | null>(null);
   const [bankNotice, setBankNotice] = useState('');
   const [bankError, setBankError] = useState('');
+  const profileSaving = basicSaving || bankSaving || clearingBank;
 
   // Security section state (Customer & Seller only)
   const isMember = Boolean(session.data && ['CUSTOMER', 'SELLER'].includes(session.data.role));
@@ -118,6 +132,21 @@ function PersonalProfileContent() {
   });
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordError, setPasswordError] = useState('');
+  const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
+  const bankDirty =
+    bankMode === 'review' ||
+    (bankMode === 'edit' &&
+      (bankValues.accountNumber !== '' ||
+        bankValues.bankName !== (profile.data?.bank?.bankName ?? '') ||
+        bankValues.accountHolder !== (profile.data?.bank?.accountHolder ?? '')));
+  const draftGuard = useProfileDraftGuard(
+    basicForm.formState.isDirty ||
+      passwords.formState.isDirty ||
+      bankDirty ||
+      targetContactEmail.trim() !== '' ||
+      contactMode === 'otp',
+  );
+  const { activeSection, setActiveSection } = useProfileNavigation(profile.isSuccess);
 
   const handleChangePassword = async (values: {
     currentPassword: string;
@@ -132,10 +161,13 @@ function PersonalProfileContent() {
         currentPassword: values.currentPassword,
         newPassword: values.newPassword,
       });
+      if (!isCurrentIdentity()) return;
       passwords.reset();
+      draftGuard.allowLeave();
       queryClient.clear();
       window.location.replace('/dang-nhap');
     } catch (cause) {
+      if (!isCurrentIdentity()) return;
       setPasswordError(
         cause instanceof ApiError
           ? cause.message
@@ -156,26 +188,42 @@ function PersonalProfileContent() {
       ? revealedData.accountNumber
       : null;
 
-  // Resend cooldown timer for OTP
+  // Deadlines survive background-tab timer throttling and use BE-provided expiry.
   useEffect(() => {
-    if (contactMode !== 'otp' || resendCountdown <= 0) return;
-    const interval = setInterval(() => {
-      setResendCountdown((current) => (current <= 1 ? 0 : current - 1));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [contactMode, resendCountdown]);
+    if (contactMode !== 'otp' || !otpTiming) return;
+    const update = () => {
+      setResendCountdown(Math.max(0, Math.ceil((otpTiming.resendAt - Date.now()) / 1000)));
+      setOtpRemaining(Math.max(0, Math.ceil((otpTiming.expiresAt - Date.now()) / 1000)));
+    };
+    update();
+    const interval = setInterval(update, 1000);
+    document.addEventListener('visibilitychange', update);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', update);
+    };
+  }, [contactMode, otpTiming]);
+
+  useEffect(() => {
+    if (!revealedData) return;
+    const timer = setTimeout(() => {
+      revealVersion.current++;
+      setRevealedData(null);
+    }, 60_000);
+    return () => clearTimeout(timer);
+  }, [revealedData]);
 
   // Bank security: clear revealed account number on tab hiding or unmount
   useEffect(() => {
     const handleVisibility = () => {
       if (document.hidden) {
+        revealVersion.current++;
         setRevealedData(null);
       }
     };
     document.addEventListener('visibilitychange', handleVisibility);
     return () => {
       document.removeEventListener('visibilitychange', handleVisibility);
-      setRevealedData(null);
     };
   }, []);
 
@@ -320,7 +368,7 @@ function PersonalProfileContent() {
 
   // Basic Profile Form Submit
   const onSaveBasic = async (values: BasicFormValues) => {
-    if (basicSaving) return;
+    if (profileSaving) return;
     setBasicSaving(true);
     setBasicError('');
     setBasicNotice('');
@@ -358,14 +406,23 @@ function PersonalProfileContent() {
       return;
     }
 
-    const payload: UpdateProfilePayload = {
-      fullName: trimmedName,
-      phone: trimmedPhone || null,
-      address: trimmedAddress || null,
-    };
+    if (values.gender && !['MALE', 'FEMALE', 'OTHER', 'UNDISCLOSED'].includes(values.gender)) {
+      setBasicError('Vui lòng chọn giới tính trong danh sách.');
+      setBasicSaving(false);
+      return;
+    }
+    if (!validBirthDate(values.dateOfBirth)) {
+      setBasicError('Ngày sinh không hợp lệ hoặc sau ngày hiện tại theo giờ Việt Nam.');
+      basicForm.setFocus('dateOfBirth');
+      setBasicSaving(false);
+      return;
+    }
+
+    const payload = basicPayload(values);
 
     try {
       const updated = await updateAccountProfile(payload);
+      if (!isCurrentIdentity()) return;
       queryClient.setQueryData(['account-profile', session.data?.id], updated);
       queryClient.setQueryData(['session'], (old: Session | undefined) =>
         old ? { ...old, name: updated.fullName } : old,
@@ -373,13 +430,10 @@ function PersonalProfileContent() {
       void queryClient.invalidateQueries({ queryKey: ['account-profile'] });
       void queryClient.invalidateQueries({ queryKey: ['member-profile'] });
 
-      basicForm.reset({
-        fullName: updated.fullName,
-        phone: updated.phone ?? '',
-        address: updated.address ?? '',
-      });
+      basicForm.reset(basicValues(updated));
       setBasicNotice('Đã lưu thay đổi hồ sơ cá nhân.');
     } catch (cause) {
+      if (!isCurrentIdentity()) return;
       if (cause instanceof ApiError && cause.status === 409) {
         setBasicError('Số điện thoại này đã được sử dụng bởi một tài khoản khác.');
       } else if (cause instanceof ApiError) {
@@ -409,8 +463,12 @@ function PersonalProfileContent() {
 
     try {
       const challenge = await requestContactEmailChallenge(email);
+      if (!isCurrentIdentity()) return;
       setContactChallenge(challenge);
-      setResendCountdown(challenge.resendAfterSeconds || 60);
+      setOtpTiming({
+        expiresAt: Date.now() + challenge.expiresInSeconds * 1000,
+        resendAt: Date.now() + challenge.resendAfterSeconds * 1000,
+      });
       setContactMode('otp');
       setOtpCode('');
       setContactNotice(
@@ -418,6 +476,7 @@ function PersonalProfileContent() {
           `Đã gửi mã xác thực tới ${email}. Vui lòng kiểm tra hộp thư để lấy mã OTP.`,
       );
     } catch (cause) {
+      if (!isCurrentIdentity()) return;
       setContactError(
         cause instanceof ApiError ? cause.message : 'Chưa gửi được mã OTP. Vui lòng thử lại.',
       );
@@ -429,7 +488,7 @@ function PersonalProfileContent() {
   // Contact Email: Verify OTP challenge
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (otpVerifying || !contactChallenge) return;
+    if (otpVerifying || contactSending || !contactChallenge || otpRemaining <= 0) return;
     setOtpVerifying(true);
     setContactError('');
     setContactNotice('');
@@ -443,6 +502,7 @@ function PersonalProfileContent() {
 
     try {
       const updated = await verifyContactEmail(contactChallenge.challengeId, code);
+      if (!isCurrentIdentity()) return;
       queryClient.setQueryData(['account-profile', session.data?.id], updated);
       void queryClient.invalidateQueries({ queryKey: ['account-profile'] });
       setContactMode('idle');
@@ -451,6 +511,7 @@ function PersonalProfileContent() {
       setOtpCode('');
       setContactNotice('Email liên hệ mới đã được xác thực và áp dụng thành công.');
     } catch (cause) {
+      if (!isCurrentIdentity()) return;
       setContactError(
         cause instanceof ApiError
           ? cause.message
@@ -463,16 +524,22 @@ function PersonalProfileContent() {
 
   // Contact Email: Resend OTP
   const handleResendOtp = async () => {
-    if (contactSending || resendCountdown > 0 || !targetContactEmail) return;
+    if (contactSending || otpVerifying || resendCountdown > 0 || !targetContactEmail) return;
     setContactSending(true);
     setContactError('');
     setContactNotice('');
     try {
       const challenge = await requestContactEmailChallenge(targetContactEmail.trim());
+      if (!isCurrentIdentity()) return;
       setContactChallenge(challenge);
-      setResendCountdown(challenge.resendAfterSeconds || 60);
+      setOtpTiming({
+        expiresAt: Date.now() + challenge.expiresInSeconds * 1000,
+        resendAt: Date.now() + challenge.resendAfterSeconds * 1000,
+      });
+      setOtpCode('');
       setContactNotice(`Đã gửi lại mã xác thực mới tới ${targetContactEmail.trim()}.`);
     } catch (cause) {
+      if (!isCurrentIdentity()) return;
       setContactError(
         cause instanceof ApiError ? cause.message : 'Chưa gửi lại được mã. Hãy thử lại.',
       );
@@ -489,6 +556,7 @@ function PersonalProfileContent() {
     setContactNotice('');
     try {
       const updated = await resetContactEmail();
+      if (!isCurrentIdentity()) return;
       queryClient.setQueryData(['account-profile', session.data?.id], updated);
       void queryClient.invalidateQueries({ queryKey: ['account-profile'] });
       setContactMode('idle');
@@ -497,6 +565,7 @@ function PersonalProfileContent() {
       setOtpCode('');
       setContactNotice('Đã khôi phục email liên hệ về email đăng nhập mặc định.');
     } catch (cause) {
+      if (!isCurrentIdentity()) return;
       setContactError(
         cause instanceof ApiError ? cause.message : 'Chưa khôi phục được email mặc định.',
       );
@@ -510,10 +579,13 @@ function PersonalProfileContent() {
     if (revealingBank) return;
     setRevealingBank(true);
     setBankError('');
+    const version = ++revealVersion.current;
     try {
       const res = await revealBank();
+      if (!isCurrentIdentity() || version !== revealVersion.current || document.hidden) return;
       setRevealedData({ userId: session.data?.id ?? '', accountNumber: res.accountNumber });
     } catch (cause) {
+      if (!isCurrentIdentity() || version !== revealVersion.current) return;
       setBankError(
         cause instanceof ApiError ? cause.message : 'Chưa lấy được thông tin số tài khoản.',
       );
@@ -524,6 +596,8 @@ function PersonalProfileContent() {
 
   // Bank: Start editing
   const handleStartEditBank = () => {
+    revealVersion.current++;
+    setRevealedData(null);
     setBankValues({
       bankName: currentProfile.bank?.bankName ?? '',
       accountHolder: currentProfile.bank?.accountHolder ?? '',
@@ -569,7 +643,7 @@ function PersonalProfileContent() {
 
   // Bank: Confirm save bank bundle
   const handleSaveBank = async () => {
-    if (bankSaving) return;
+    if (profileSaving) return;
     setBankSaving(true);
     setBankError('');
     setBankNotice('');
@@ -587,6 +661,7 @@ function PersonalProfileContent() {
 
     try {
       const updated = await updateAccountProfile(payload);
+      if (!isCurrentIdentity()) return;
       queryClient.setQueryData(['account-profile', session.data?.id], updated);
       void queryClient.invalidateQueries({ queryKey: ['account-profile'] });
       setBankValues({ bankName: '', accountHolder: '', accountNumber: '' });
@@ -594,6 +669,7 @@ function PersonalProfileContent() {
       setRevealedData(null);
       setBankNotice('Đã lưu thông tin tài khoản ngân hàng cá nhân.');
     } catch (cause) {
+      if (!isCurrentIdentity()) return;
       setBankError(
         cause instanceof ApiError ? cause.message : 'Chưa lưu được thông tin ngân hàng.',
       );
@@ -605,7 +681,7 @@ function PersonalProfileContent() {
 
   // Bank: Confirm clear bank
   const handleConfirmClearBank = async () => {
-    if (clearingBank) return;
+    if (profileSaving) return;
     setClearingBank(true);
     setBankError('');
     setBankNotice('');
@@ -619,12 +695,14 @@ function PersonalProfileContent() {
 
     try {
       const updated = await updateAccountProfile(payload);
+      if (!isCurrentIdentity()) return;
       queryClient.setQueryData(['account-profile', session.data?.id], updated);
       void queryClient.invalidateQueries({ queryKey: ['account-profile'] });
       setBankMode('idle');
       setRevealedData(null);
       setBankNotice('Đã xóa thông tin tài khoản ngân hàng cá nhân.');
     } catch (cause) {
+      if (!isCurrentIdentity()) return;
       setBankError(
         cause instanceof ApiError ? cause.message : 'Chưa xóa được tài khoản ngân hàng.',
       );
@@ -638,7 +716,7 @@ function PersonalProfileContent() {
 
   return (
     <main id="main">
-      <div className="profile-page">
+      <div className="profile-page profile-refined">
         {/* Navigation Breadcrumb */}
         <nav aria-label="Đường dẫn điều hướng" className="profile-breadcrumb">
           <Link href={homeUrl}>
@@ -656,619 +734,773 @@ function PersonalProfileContent() {
               {initialAvatar}
             </span>
             <div className="profile-header-titles">
+              <span className="profile-eyebrow">HỒ SƠ CÁ NHÂN</span>
               <h1>{currentProfile.fullName || 'Hồ sơ người dùng'}</h1>
-              <p>Quản lý thông tin tài khoản, email liên hệ và phương thức nhận tiền cá nhân.</p>
+              <p>Thông tin của bạn, luôn trong tầm tay.</p>
             </div>
           </div>
           <span className="profile-badge profile-badge-neutral">{roleLabel}</span>
         </header>
 
         {/* Quick navigation anchor chips */}
-        <nav aria-label="Mục hồ sơ" className="profile-quick-nav member-tabs">
-          <a href="#identity-heading">Tài khoản</a>
-          <a href="#basic-info-heading">Thông tin cá nhân</a>
-          <a href="#contact-email-heading">Email liên hệ</a>
-          <a href="#personal-bank-heading">Tài khoản ngân hàng</a>
-          {isMember && <a href="#security">Bảo mật</a>}
-        </nav>
-
-        {/* Section 1: Read-only Login Identity & Role */}
-        <section aria-labelledby="identity-heading" className="profile-section">
-          <div className="profile-section-heading">
-            <h2 id="identity-heading">Định danh tài khoản đăng nhập</h2>
-            <p>
-              Email đăng nhập và vai trò được gán cố định theo tài khoản của bạn để bảo đảm an toàn
-              cho đăng nhập Google và mật khẩu. Không thể thay đổi các mục này tại đây.
+        <div className="profile-layout">
+          <nav aria-label="Mục hồ sơ" className="profile-quick-nav">
+            <span className="profile-nav-caption">QUẢN LÝ HỒ SƠ</span>
+            {profileSections.map(([id, label], index) => (
+              <a
+                key={id}
+                href={`#${id}`}
+                onClick={() => setActiveSection(id)}
+                aria-current={activeSection === id ? 'location' : undefined}
+              >
+                <span className="profile-nav-number" aria-hidden="true">
+                  0{index + 1}
+                </span>
+                {label}
+              </a>
+            ))}
+            <p className="profile-nav-note">
+              Chỉ bạn và người có thẩm quyền mới được truy cập hồ sơ này.
             </p>
-          </div>
-          <dl className="profile-summary-grid">
-            <div className="profile-summary-item">
-              <dt>Email đăng nhập</dt>
-              <dd>{currentProfile.loginEmail || 'Chưa thiết lập'}</dd>
-            </div>
-            <div className="profile-summary-item">
-              <dt>Vai trò người dùng</dt>
-              <dd>{roleLabel}</dd>
-            </div>
-          </dl>
-        </section>
-
-        {/* Section 2: Editable Basic Form (fullName, phone, address) */}
-        <section aria-labelledby="basic-info-heading" className="profile-section">
-          <div className="profile-section-heading">
-            <h2 id="basic-info-heading">Thông tin cá nhân</h2>
-            <p>Cập nhật họ tên, số điện thoại liên hệ và địa chỉ của bạn.</p>
-          </div>
-
-          {basicNotice && (
-            <p role="status" className="profile-status-message profile-status-success">
-              {basicNotice}
-            </p>
-          )}
-          {basicError && (
-            <p role="alert" className="profile-status-message profile-status-error">
-              {basicError}
-            </p>
-          )}
-
-          <form
-            noValidate
-            onSubmit={basicForm.handleSubmit(onSaveBasic)}
-            className="profile-form"
-            aria-busy={basicSaving}
-          >
-            <div className="profile-form-group">
-              <label htmlFor="profile-full-name">Họ và tên *</label>
-              <input
-                id="profile-full-name"
-                type="text"
-                autoComplete="name"
-                maxLength={100}
-                disabled={basicSaving}
-                {...basicForm.register('fullName')}
-                aria-invalid={!!basicError && basicError.includes('Họ và tên')}
-                aria-describedby="profile-full-name-hint"
-              />
-              <p id="profile-full-name-hint" className="profile-form-hint">
-                Nhập từ 2 đến 100 ký tự. Không chứa ký tự xuống dòng hay điều khiển.
-              </p>
-            </div>
-
-            <div className="profile-form-group">
-              <label htmlFor="profile-phone">Số điện thoại</label>
-              <input
-                id="profile-phone"
-                type="tel"
-                autoComplete="tel"
-                maxLength={15}
-                disabled={basicSaving}
-                {...basicForm.register('phone')}
-                aria-invalid={!!basicError && basicError.includes('Số điện thoại')}
-                aria-describedby="profile-phone-hint"
-              />
-              <p id="profile-phone-hint" className="profile-form-hint">
-                Số điện thoại Việt Nam (ví dụ: 0901234567 hoặc +84901234567).
-              </p>
-            </div>
-
-            <div className="profile-form-group">
-              <label htmlFor="profile-address">Địa chỉ</label>
-              <textarea
-                id="profile-address"
-                autoComplete="street-address"
-                maxLength={300}
-                rows={3}
-                disabled={basicSaving}
-                {...basicForm.register('address')}
-                aria-invalid={!!basicError && basicError.includes('Địa chỉ')}
-                aria-describedby="profile-address-hint"
-              />
-              <p id="profile-address-hint" className="profile-form-hint">
-                Địa chỉ tối đa 300 ký tự.
-              </p>
-            </div>
-
-            <div className="profile-actions">
-              <Button type="submit" disabled={basicSaving}>
-                {basicSaving ? 'Đang lưu…' : 'Lưu thông tin cá nhân'}
-              </Button>
-            </div>
-          </form>
-        </section>
-
-        {/* Section 3: Verified Contact Email Section */}
-        <section aria-labelledby="contact-email-heading" className="profile-section">
-          <div className="profile-section-heading">
-            <h2 id="contact-email-heading">Email liên hệ nhận thông báo</h2>
-            <p>
-              Email này dùng để nhận thông báo đơn hàng và dịch vụ từ hệ thống. Email này hoàn toàn
-              tách biệt với email đăng nhập và có thể dùng chung với người khác.
-            </p>
-          </div>
-
-          <div className="profile-disclaimer-card">
-            Email liên hệ khác với email đăng nhập tài khoản. Email đăng nhập dùng để xác thực an
-            toàn (mật khẩu, liên kết Google), còn email liên hệ là nơi gửi thông báo sau khi bạn đã
-            xác thực bằng mã OTP.
-          </div>
-
-          {contactNotice && (
-            <p role="status" className="profile-status-message profile-status-success">
-              {contactNotice}
-            </p>
-          )}
-          {contactError && (
-            <p role="alert" className="profile-status-message profile-status-error">
-              {contactError}
-            </p>
-          )}
-
-          <dl className="profile-summary-grid">
-            <div className="profile-summary-item">
-              <dt>Email liên hệ hiện tại</dt>
-              <dd>
-                {currentProfile.contactEmail || currentProfile.loginEmail || 'Chưa thiết lập'}
-              </dd>
-            </div>
-            <div className="profile-summary-item">
-              <dt>Trạng thái xác thực</dt>
-              <dd>
-                {currentProfile.contactEmailIsDefault ? (
-                  <span className="profile-badge profile-badge-neutral">
-                    Mặc định (Email đăng nhập)
-                  </span>
-                ) : currentProfile.contactEmailVerified ? (
-                  <span className="profile-badge profile-badge-success">
-                    <Check size={14} aria-hidden="true" /> Đã xác thực
-                  </span>
-                ) : (
-                  <span className="profile-badge profile-badge-warning">Chờ xác thực</span>
-                )}
-              </dd>
-            </div>
-          </dl>
-
-          {/* Idle Mode: Show Buttons */}
-          {contactMode === 'idle' && (
-            <div className="profile-actions">
-              <Button variant="outline" onClick={() => setContactMode('requesting')}>
-                Thay đổi email liên hệ
-              </Button>
-              {!currentProfile.contactEmailIsDefault && (
-                <Button
-                  variant="outline"
-                  disabled={contactResetting}
-                  onClick={() => void handleResetDefaultContact()}
-                >
-                  <RotateCcw size={16} aria-hidden="true" />
-                  {contactResetting ? 'Đang khôi phục…' : 'Khôi phục về email đăng nhập mặc định'}
-                </Button>
-              )}
-            </div>
-          )}
-
-          {/* Requesting Mode: Enter new email and send OTP */}
-          {contactMode === 'requesting' && (
-            <form onSubmit={handleRequestOtp} className="profile-form" noValidate>
-              <div className="profile-form-group">
-                <label htmlFor="target-contact-email">Địa chỉ email liên hệ mới *</label>
-                <input
-                  id="target-contact-email"
-                  type="email"
-                  autoComplete="email"
-                  maxLength={254}
-                  value={targetContactEmail}
-                  onChange={(e) => setTargetContactEmail(e.target.value)}
-                  disabled={contactSending}
-                  placeholder="vi-du@domain.vn"
-                  required
-                />
-                <p className="profile-form-hint">
-                  Hệ thống sẽ gửi mã xác thực 6 chữ số tới địa chỉ này.
-                </p>
+          </nav>
+          <div className="profile-content">
+            {/* Section 1: Read-only Login Identity & Role */}
+            <section
+              aria-labelledby="identity-heading"
+              className="profile-section profile-identity"
+            >
+              <div className="profile-section-heading">
+                <h2 id="identity-heading">Định danh tài khoản đăng nhập</h2>
+                <p>Email dùng để đăng nhập, chỉ xem tại đây.</p>
               </div>
-              <div className="profile-actions">
-                <Button type="submit" disabled={contactSending}>
-                  {contactSending ? 'Đang gửi mã…' : 'Gửi mã xác thực (OTP)'}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={contactSending}
-                  onClick={() => {
-                    setContactMode('idle');
-                    setContactError('');
-                    setTargetContactEmail('');
-                  }}
-                >
-                  Hủy
-                </Button>
-              </div>
-            </form>
-          )}
-
-          {/* OTP Mode: Enter code and submit verification */}
-          {contactMode === 'otp' && (
-            <div className="profile-otp-box">
-              <form onSubmit={handleVerifyOtp} noValidate>
-                <p>
-                  Nhập mã OTP gồm 6 chữ số đã được gửi tới <strong>{targetContactEmail}</strong>. Mã
-                  có hiệu lực trong vòng 10 phút.
-                </p>
-                <div className="profile-form-group">
-                  <label htmlFor="contact-otp-input">Mã xác thực OTP *</label>
-                  <input
-                    id="contact-otp-input"
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    maxLength={6}
-                    value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-                    disabled={otpVerifying}
-                    placeholder="••••••"
-                    className="profile-otp-input"
-                    required
-                  />
+              <dl className="profile-summary-grid">
+                <div className="profile-summary-item">
+                  <dt>Email đăng nhập</dt>
+                  <dd>{currentProfile.loginEmail || 'Chưa thiết lập'}</dd>
                 </div>
-                <div className="profile-actions">
-                  <Button type="submit" disabled={otpVerifying || otpCode.length !== 6}>
-                    {otpVerifying ? 'Đang xác thực…' : 'Xác nhận mã OTP'}
+              </dl>
+            </section>
+
+            {/* Section 2: Editable Basic Form (fullName, phone, address) */}
+            <section aria-labelledby="basic-info-heading" className="profile-section">
+              <div className="profile-section-heading">
+                <h2 id="basic-info-heading">Thông tin cá nhân</h2>
+                <p>Cập nhật thông tin để shop và đội ngũ FloraBot hỗ trợ bạn chính xác hơn.</p>
+              </div>
+
+              {basicNotice && !basicForm.formState.isDirty && (
+                <p role="status" className="profile-status-message profile-status-success">
+                  {basicNotice}
+                </p>
+              )}
+              {basicError && (
+                <p role="alert" className="profile-status-message profile-status-error">
+                  {basicError}
+                </p>
+              )}
+
+              <form
+                noValidate
+                onSubmit={(event) => void basicForm.handleSubmit(onSaveBasic)(event)}
+                className="profile-form profile-basic-form"
+                aria-busy={basicSaving}
+              >
+                <div className="profile-form-group">
+                  <label htmlFor="profile-full-name">Họ và tên *</label>
+                  <input
+                    id="profile-full-name"
+                    type="text"
+                    autoComplete="name"
+                    maxLength={100}
+                    disabled={profileSaving}
+                    {...basicForm.register('fullName')}
+                    aria-invalid={!!basicError && basicError.includes('Họ và tên')}
+                    aria-describedby="profile-full-name-hint"
+                  />
+                  <p id="profile-full-name-hint" className="profile-form-hint">
+                    Từ 2–100 ký tự.
+                  </p>
+                </div>
+
+                <div className="profile-form-group">
+                  <label htmlFor="profile-phone">Số điện thoại</label>
+                  <input
+                    id="profile-phone"
+                    type="tel"
+                    autoComplete="tel"
+                    maxLength={15}
+                    disabled={profileSaving}
+                    {...basicForm.register('phone')}
+                    aria-invalid={!!basicError && basicError.includes('Số điện thoại')}
+                    aria-describedby="profile-phone-hint"
+                  />
+                  <p id="profile-phone-hint" className="profile-form-hint">
+                    Ví dụ: 0901234567 hoặc +84901234567.
+                  </p>
+                </div>
+
+                <div className="profile-form-group profile-field-wide">
+                  <label htmlFor="profile-address">Địa chỉ</label>
+                  <textarea
+                    id="profile-address"
+                    autoComplete="street-address"
+                    maxLength={300}
+                    rows={2}
+                    disabled={profileSaving}
+                    {...basicForm.register('address')}
+                    aria-invalid={!!basicError && basicError.includes('Địa chỉ')}
+                    aria-describedby="profile-address-hint"
+                  />
+                  <p id="profile-address-hint" className="profile-form-hint">
+                    Địa chỉ tối đa 300 ký tự.
+                  </p>
+                </div>
+
+                <div className="profile-form-columns profile-field-wide">
+                  <div className="profile-form-group">
+                    <label htmlFor="profile-gender">Giới tính</label>
+                    <select
+                      id="profile-gender"
+                      disabled={profileSaving}
+                      {...basicForm.register('gender')}
+                    >
+                      <option value="">Chưa cung cấp</option>
+                      <option value="MALE">Nam</option>
+                      <option value="FEMALE">Nữ</option>
+                      <option value="OTHER">Khác</option>
+                      <option value="UNDISCLOSED">Không muốn chia sẻ</option>
+                    </select>
+                  </div>
+                  <div className="profile-form-group">
+                    <label htmlFor="profile-date-of-birth">Ngày sinh</label>
+                    <input
+                      id="profile-date-of-birth"
+                      type="date"
+                      autoComplete="bday"
+                      min="0001-01-01"
+                      max={vietnamToday()}
+                      disabled={profileSaving}
+                      {...basicForm.register('dateOfBirth')}
+                      aria-invalid={!!basicError && basicError.includes('Ngày sinh')}
+                      aria-describedby="profile-birth-hint"
+                    />
+                    <p id="profile-birth-hint" className="profile-form-hint">
+                      Không bắt buộc. Có thể để trống.
+                    </p>
+                  </div>
+                </div>
+                <div className="profile-actions profile-save-row profile-field-wide">
+                  <span className="profile-draft-status" role="status">
+                    {basicForm.formState.isDirty ? 'Có thay đổi chưa lưu' : 'Chưa có thay đổi mới'}
+                  </span>
+                  <Button type="submit" disabled={profileSaving}>
+                    {basicSaving ? 'Đang lưu…' : 'Lưu thông tin cá nhân'}
                   </Button>
                   <Button
                     type="button"
                     variant="outline"
-                    disabled={resendCountdown > 0 || contactSending}
-                    onClick={() => void handleResendOtp()}
-                  >
-                    {resendCountdown > 0 ? `Gửi lại sau ${resendCountdown}s` : 'Gửi lại mã OTP'}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={otpVerifying}
+                    disabled={profileSaving || !basicForm.formState.isDirty}
                     onClick={() => {
-                      setContactMode('idle');
-                      setContactChallenge(null);
-                      setOtpCode('');
-                      setContactError('');
+                      basicForm.reset(basicValues(currentProfile));
+                      setBasicError('');
+                      setBasicNotice('');
                     }}
                   >
-                    Hủy
+                    Hủy thay đổi
                   </Button>
                 </div>
               </form>
-            </div>
-          )}
-        </section>
+            </section>
 
-        {/* Section 4: Optional Personal Bank Section */}
-        <section aria-labelledby="personal-bank-heading" className="profile-section">
-          <div className="profile-section-heading">
-            <h2 id="personal-bank-heading">Tài khoản ngân hàng cá nhân</h2>
-            <p>
-              Tùy chọn lưu thông tin tài khoản ngân hàng của bạn để hỗ trợ hoàn tiền hoặc đối soát
-              khi cần thiết.
-            </p>
-          </div>
+            {/* Section 3: Verified Contact Email Section */}
+            <section aria-labelledby="contact-email-heading" className="profile-section">
+              <div className="profile-section-heading">
+                <h2 id="contact-email-heading">Email liên hệ nhận thông báo</h2>
+                <p>Nhận thông báo đơn hàng và dịch vụ tại địa chỉ bạn thường dùng.</p>
+              </div>
 
-          <div className="profile-disclaimer-card">
-            <strong>Phân biệt rõ ràng:</strong> Đối với chủ shop, tài khoản ngân hàng cá nhân tại
-            đây hoàn toàn độc lập với tài khoản nhận tiền bán hoa của shop (được quản lý riêng trong
-            mục Ví shop) và không làm ảnh hưởng tới các lệnh rút tiền lịch sử của cửa hàng.
-          </div>
+              <div className="profile-disclaimer-card">
+                Đổi email liên hệ cần xác thực OTP và không làm thay đổi email đăng nhập.
+              </div>
 
-          {bankNotice && (
-            <p role="status" className="profile-status-message profile-status-success">
-              {bankNotice}
-            </p>
-          )}
-          {bankError && (
-            <p role="alert" className="profile-status-message profile-status-error">
-              {bankError}
-            </p>
-          )}
+              {contactNotice && (
+                <p role="status" className="profile-status-message profile-status-success">
+                  {contactNotice}
+                </p>
+              )}
+              {contactError && (
+                <p role="alert" className="profile-status-message profile-status-error">
+                  {contactError}
+                </p>
+              )}
 
-          {/* Idle view: Bank exists or not */}
-          {bankMode === 'idle' && (
-            <>
-              {currentProfile.bank?.hasAccount ? (
-                <div className="profile-bank-details">
-                  <dl className="profile-summary-grid">
-                    <div className="profile-summary-item">
-                      <dt>Tên ngân hàng</dt>
-                      <dd>{currentProfile.bank.bankName}</dd>
-                    </div>
-                    <div className="profile-summary-item">
-                      <dt>Chủ tài khoản</dt>
-                      <dd>{currentProfile.bank.accountHolder}</dd>
-                    </div>
-                    <div className="profile-summary-item">
-                      <dt>Số tài khoản</dt>
-                      <dd>
-                        <div className="profile-account-number-row">
-                          <span
-                            className={
-                              revealedAccountNumber
-                                ? 'profile-account-number profile-revealed-number'
-                                : 'profile-account-number'
-                            }
-                          >
-                            {revealedAccountNumber ? (
-                              revealedAccountNumber
-                            ) : (
-                              <>•••• •••• •••• {currentProfile.bank.accountLast4}</>
-                            )}
-                          </span>
-                          {revealedAccountNumber ? (
-                            <Button
-                              variant="outline"
-                              onClick={() => setRevealedData(null)}
-                              aria-label="Ẩn số tài khoản"
-                            >
-                              <EyeOff size={16} aria-hidden="true" />
-                              Ẩn số tài khoản
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="outline"
-                              disabled={revealingBank}
-                              onClick={() => void handleRevealBank()}
-                              aria-label="Hiện đầy đủ số tài khoản ngân hàng"
-                            >
-                              <Eye size={16} aria-hidden="true" />
-                              {revealingBank ? 'Đang mở…' : 'Xem đầy đủ'}
-                            </Button>
-                          )}
-                        </div>
-                      </dd>
-                    </div>
-                  </dl>
-                  <div className="profile-actions">
-                    <Button variant="outline" onClick={handleStartEditBank}>
-                      Đổi tài khoản ngân hàng
+              <dl className="profile-summary-grid">
+                <div className="profile-summary-item">
+                  <dt>Email liên hệ hiện tại</dt>
+                  <dd>
+                    {currentProfile.contactEmail || currentProfile.loginEmail || 'Chưa thiết lập'}
+                  </dd>
+                </div>
+                <div className="profile-summary-item">
+                  <dt>Trạng thái xác thực</dt>
+                  <dd>
+                    {currentProfile.contactEmailIsDefault ? (
+                      <span className="profile-badge profile-badge-neutral">
+                        Mặc định (Email đăng nhập)
+                      </span>
+                    ) : currentProfile.contactEmailVerified ? (
+                      <span className="profile-badge profile-badge-success">
+                        <Check size={14} aria-hidden="true" /> Đã xác thực
+                      </span>
+                    ) : (
+                      <span className="profile-badge profile-badge-warning">Chờ xác thực</span>
+                    )}
+                  </dd>
+                </div>
+              </dl>
+
+              {/* Idle Mode: Show Buttons */}
+              {contactMode === 'idle' && (
+                <div className="profile-actions">
+                  <Button variant="outline" onClick={() => setContactMode('requesting')}>
+                    Thay đổi email liên hệ
+                  </Button>
+                  {!currentProfile.contactEmailIsDefault && (
+                    <Button
+                      variant="outline"
+                      disabled={contactResetting}
+                      onClick={() => void handleResetDefaultContact()}
+                    >
+                      <RotateCcw size={16} aria-hidden="true" />
+                      {contactResetting
+                        ? 'Đang khôi phục…'
+                        : 'Khôi phục về email đăng nhập mặc định'}
                     </Button>
-                    <Button variant="outline" onClick={() => setBankMode('clear-confirm')}>
-                      Xóa tài khoản ngân hàng
+                  )}
+                </div>
+              )}
+
+              {/* Requesting Mode: Enter new email and send OTP */}
+              {contactMode === 'requesting' && (
+                <form onSubmit={handleRequestOtp} className="profile-form" noValidate>
+                  <div className="profile-form-group">
+                    <label htmlFor="target-contact-email">Địa chỉ email liên hệ mới *</label>
+                    <input
+                      id="target-contact-email"
+                      type="email"
+                      autoComplete="email"
+                      maxLength={254}
+                      value={targetContactEmail}
+                      onChange={(e) => setTargetContactEmail(e.target.value)}
+                      disabled={contactSending}
+                      placeholder="vi-du@domain.vn"
+                      required
+                    />
+                    <p className="profile-form-hint">
+                      Hệ thống sẽ gửi mã xác thực 6 chữ số tới địa chỉ này.
+                    </p>
+                  </div>
+                  <div className="profile-actions">
+                    <Button type="submit" disabled={contactSending}>
+                      {contactSending ? 'Đang gửi mã…' : 'Gửi mã xác thực (OTP)'}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={contactSending}
+                      onClick={() => {
+                        setContactMode('idle');
+                        setContactError('');
+                        setTargetContactEmail('');
+                      }}
+                    >
+                      Hủy
                     </Button>
                   </div>
+                </form>
+              )}
+
+              {/* OTP Mode: Enter code and submit verification */}
+              {contactMode === 'otp' && (
+                <div className="profile-otp-box">
+                  <form onSubmit={handleVerifyOtp} noValidate>
+                    <p>
+                      Nhập mã OTP gồm 6 chữ số đã được gửi tới <strong>{targetContactEmail}</strong>
+                      .
+                    </p>
+                    {otpRemaining > 0 ? (
+                      <p>
+                        Mã còn hiệu lực {Math.floor(otpRemaining / 60)} phút {otpRemaining % 60}{' '}
+                        giây.
+                      </p>
+                    ) : (
+                      <p role="status" className="profile-status-message profile-status-error">
+                        Mã OTP đã hết hạn. Hãy gửi lại mã mới để tiếp tục.
+                      </p>
+                    )}
+                    <div className="profile-form-group">
+                      <label htmlFor="contact-otp-input">Mã xác thực OTP *</label>
+                      <input
+                        id="contact-otp-input"
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        maxLength={6}
+                        value={otpCode}
+                        onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                        disabled={otpVerifying || contactSending || otpRemaining <= 0}
+                        placeholder="••••••"
+                        className="profile-otp-input"
+                        required
+                      />
+                    </div>
+                    <div className="profile-actions">
+                      <Button
+                        type="submit"
+                        disabled={
+                          otpVerifying ||
+                          contactSending ||
+                          otpRemaining <= 0 ||
+                          otpCode.length !== 6
+                        }
+                      >
+                        {otpVerifying ? 'Đang xác thực…' : 'Xác nhận mã OTP'}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={resendCountdown > 0 || contactSending || otpVerifying}
+                        onClick={() => void handleResendOtp()}
+                      >
+                        {resendCountdown > 0 ? `Gửi lại sau ${resendCountdown}s` : 'Gửi lại mã OTP'}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={otpVerifying || contactSending}
+                        onClick={() => {
+                          setContactMode('idle');
+                          setContactChallenge(null);
+                          setOtpTiming(null);
+                          setTargetContactEmail('');
+                          setOtpCode('');
+                          setContactError('');
+                        }}
+                      >
+                        Hủy
+                      </Button>
+                    </div>
+                  </form>
                 </div>
-              ) : (
-                <div className="profile-bank-details">
-                  <p>Bạn chưa lưu thông tin tài khoản ngân hàng cá nhân.</p>
+              )}
+            </section>
+
+            {/* Section 4: Optional Personal Bank Section */}
+            <section aria-labelledby="personal-bank-heading" className="profile-section">
+              <div className="profile-section-heading">
+                <h2 id="personal-bank-heading">Tài khoản ngân hàng cá nhân</h2>
+                <p>Thêm tài khoản để hỗ trợ hoàn tiền hoặc đối soát khi cần.</p>
+              </div>
+
+              <div className="profile-disclaimer-card">
+                {role === 'SELLER'
+                  ? 'Tài khoản cá nhân này độc lập với tài khoản nhận tiền trong Ví shop.'
+                  : 'Thông tin được che khi hiển thị. Hãy kiểm tra chính xác trước khi lưu.'}
+              </div>
+
+              {bankNotice && (
+                <p role="status" className="profile-status-message profile-status-success">
+                  {bankNotice}
+                </p>
+              )}
+              {bankError && (
+                <p role="alert" className="profile-status-message profile-status-error">
+                  {bankError}
+                </p>
+              )}
+              {currentProfile.bank?.status === 'NEEDS_UPDATE' && (
+                <p role="status" className="profile-status-message profile-status-error">
+                  Thông tin ngân hàng đã lưu chưa đọc được. Vui lòng cập nhật lại tài khoản để sử
+                  dụng.
+                </p>
+              )}
+
+              {/* Idle view: Bank exists or not */}
+              {bankMode === 'idle' && (
+                <>
+                  {currentProfile.bank?.hasAccount ? (
+                    <div className="profile-bank-details">
+                      <dl className="profile-summary-grid">
+                        <div className="profile-summary-item">
+                          <dt>Tên ngân hàng</dt>
+                          <dd>{currentProfile.bank.bankName}</dd>
+                        </div>
+                        <div className="profile-summary-item">
+                          <dt>Chủ tài khoản</dt>
+                          <dd>{currentProfile.bank.accountHolder}</dd>
+                        </div>
+                        <div className="profile-summary-item">
+                          <dt>Số tài khoản</dt>
+                          <dd>
+                            <div className="profile-account-number-row">
+                              <span
+                                className={
+                                  revealedAccountNumber
+                                    ? 'profile-account-number profile-revealed-number'
+                                    : 'profile-account-number'
+                                }
+                              >
+                                {revealedAccountNumber ? (
+                                  revealedAccountNumber
+                                ) : (
+                                  <>•••• •••• •••• {currentProfile.bank.accountLast4}</>
+                                )}
+                              </span>
+                              {revealedAccountNumber ? (
+                                <Button
+                                  variant="outline"
+                                  onClick={() => {
+                                    revealVersion.current++;
+                                    setRevealedData(null);
+                                  }}
+                                  aria-label="Ẩn số tài khoản"
+                                >
+                                  <EyeOff size={16} aria-hidden="true" />
+                                  Ẩn số tài khoản
+                                </Button>
+                              ) : (
+                                <Button
+                                  variant="outline"
+                                  disabled={
+                                    revealingBank ||
+                                    profileSaving ||
+                                    currentProfile.bank.status === 'NEEDS_UPDATE'
+                                  }
+                                  onClick={() => void handleRevealBank()}
+                                  aria-label="Hiện đầy đủ số tài khoản ngân hàng"
+                                >
+                                  <Eye size={16} aria-hidden="true" />
+                                  {revealingBank ? 'Đang mở…' : 'Xem đầy đủ'}
+                                </Button>
+                              )}
+                            </div>
+                          </dd>
+                        </div>
+                      </dl>
+                      <div className="profile-actions">
+                        <Button
+                          variant="outline"
+                          disabled={profileSaving}
+                          onClick={handleStartEditBank}
+                        >
+                          Đổi tài khoản ngân hàng
+                        </Button>
+                        <Button
+                          variant="outline"
+                          disabled={profileSaving}
+                          onClick={() => {
+                            revealVersion.current++;
+                            setRevealedData(null);
+                            setBankMode('clear-confirm');
+                          }}
+                        >
+                          Xóa tài khoản ngân hàng
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="profile-bank-details">
+                      <p>Bạn chưa lưu thông tin tài khoản ngân hàng cá nhân.</p>
+                      <div className="profile-actions">
+                        <Button
+                          variant="outline"
+                          disabled={profileSaving}
+                          onClick={handleStartEditBank}
+                        >
+                          Khai báo tài khoản ngân hàng
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Edit form */}
+              {bankMode === 'edit' && (
+                <form onSubmit={handleReviewBank} className="profile-form" noValidate>
+                  <div className="profile-form-group">
+                    <label htmlFor="bank-name-input">Tên ngân hàng *</label>
+                    <input
+                      id="bank-name-input"
+                      type="text"
+                      autoComplete="off"
+                      maxLength={120}
+                      value={bankValues.bankName}
+                      onChange={(e) =>
+                        setBankValues((prev) => ({ ...prev, bankName: e.target.value }))
+                      }
+                      aria-invalid={!!bankErrors.bankName}
+                      aria-describedby="bank-name-error"
+                      required
+                    />
+                    {bankErrors.bankName && (
+                      <p id="bank-name-error" className="profile-field-error">
+                        {bankErrors.bankName}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="profile-form-group">
+                    <label htmlFor="bank-holder-input">Tên chủ tài khoản *</label>
+                    <input
+                      id="bank-holder-input"
+                      type="text"
+                      autoComplete="off"
+                      maxLength={120}
+                      value={bankValues.accountHolder}
+                      onChange={(e) =>
+                        setBankValues((prev) => ({ ...prev, accountHolder: e.target.value }))
+                      }
+                      aria-invalid={!!bankErrors.accountHolder}
+                      aria-describedby="bank-holder-error"
+                      required
+                    />
+                    {bankErrors.accountHolder && (
+                      <p id="bank-holder-error" className="profile-field-error">
+                        {bankErrors.accountHolder}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="profile-form-group">
+                    <label htmlFor="bank-number-input">Số tài khoản ngân hàng *</label>
+                    <input
+                      id="bank-number-input"
+                      type="text"
+                      autoComplete="off"
+                      spellCheck={false}
+                      maxLength={34}
+                      value={bankValues.accountNumber}
+                      onChange={(e) =>
+                        setBankValues((prev) => ({ ...prev, accountNumber: e.target.value }))
+                      }
+                      aria-invalid={!!bankErrors.accountNumber}
+                      aria-describedby="bank-number-hint bank-number-error"
+                      required
+                    />
+                    <p id="bank-number-hint" className="profile-form-hint">
+                      Từ 4–34 chữ cái hoặc số, không có khoảng trắng. Nhập đủ cả số 0 ở đầu nếu có.
+                    </p>
+                    {bankErrors.accountNumber && (
+                      <p id="bank-number-error" className="profile-field-error">
+                        {bankErrors.accountNumber}
+                      </p>
+                    )}
+                  </div>
+
                   <div className="profile-actions">
-                    <Button variant="outline" onClick={handleStartEditBank}>
-                      Khai báo tài khoản ngân hàng
+                    <Button type="submit">Kiểm tra thông tin tài khoản</Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setBankMode('idle');
+                        setBankValues({ bankName: '', accountHolder: '', accountNumber: '' });
+                        setBankErrors({});
+                      }}
+                    >
+                      Hủy
+                    </Button>
+                  </div>
+                </form>
+              )}
+
+              {/* Review step before saving bank */}
+              {bankMode === 'review' && (
+                <div className="profile-review-card">
+                  <h4>Kiểm tra thông tin tài khoản cá nhân</h4>
+                  <p>
+                    <strong>Ngân hàng:</strong> {bankValues.bankName}
+                  </p>
+                  <p>
+                    <strong>Chủ tài khoản:</strong> {bankValues.accountHolder}
+                  </p>
+                  <p>
+                    <strong>Số tài khoản:</strong> Đã che, kết thúc bằng{' '}
+                    {bankValues.accountNumber.slice(bankValues.accountNumber.length > 4 ? -4 : -2)}
+                  </p>
+                  <p className="profile-form-hint" style={{ marginTop: '0.75rem' }}>
+                    FloraBot chưa xác minh thông tin này với ngân hàng. Bạn cần kiểm tra chính xác
+                    trước khi lưu.
+                  </p>
+                  <div className="profile-actions">
+                    <Button disabled={profileSaving} onClick={() => void handleSaveBank()}>
+                      {bankSaving ? 'Đang lưu tài khoản…' : 'Xác nhận lưu tài khoản'}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={bankSaving}
+                      onClick={() => setBankMode('edit')}
+                    >
+                      Sửa lại thông tin
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={bankSaving}
+                      onClick={() => {
+                        setBankMode('idle');
+                        setBankValues({ bankName: '', accountHolder: '', accountNumber: '' });
+                      }}
+                    >
+                      Hủy
                     </Button>
                   </div>
                 </div>
               )}
-            </>
-          )}
 
-          {/* Edit form */}
-          {bankMode === 'edit' && (
-            <form onSubmit={handleReviewBank} className="profile-form" noValidate>
-              <div className="profile-form-group">
-                <label htmlFor="bank-name-input">Tên ngân hàng *</label>
-                <input
-                  id="bank-name-input"
-                  type="text"
-                  autoComplete="off"
-                  maxLength={120}
-                  value={bankValues.bankName}
-                  onChange={(e) => setBankValues((prev) => ({ ...prev, bankName: e.target.value }))}
-                  aria-invalid={!!bankErrors.bankName}
-                  aria-describedby="bank-name-error"
-                  required
-                />
-                {bankErrors.bankName && (
-                  <p id="bank-name-error" className="profile-field-error">
-                    {bankErrors.bankName}
-                  </p>
-                )}
-              </div>
+              {/* Clear Bank Confirmation Dialog */}
+              <ConfirmDialog
+                open={bankMode === 'clear-confirm'}
+                title="Xác nhận xóa tài khoản ngân hàng?"
+                description="Thông tin tài khoản ngân hàng cá nhân sẽ bị xóa khỏi hồ sơ của bạn. Thao tác này không thể hoàn tác."
+                confirmLabel="Xác nhận xóa"
+                pending={clearingBank}
+                onConfirm={() => void handleConfirmClearBank()}
+                onCancel={() => setBankMode('idle')}
+              />
+            </section>
 
-              <div className="profile-form-group">
-                <label htmlFor="bank-holder-input">Tên chủ tài khoản *</label>
-                <input
-                  id="bank-holder-input"
-                  type="text"
-                  autoComplete="off"
-                  maxLength={120}
-                  value={bankValues.accountHolder}
-                  onChange={(e) =>
-                    setBankValues((prev) => ({ ...prev, accountHolder: e.target.value }))
-                  }
-                  aria-invalid={!!bankErrors.accountHolder}
-                  aria-describedby="bank-holder-error"
-                  required
-                />
-                {bankErrors.accountHolder && (
-                  <p id="bank-holder-error" className="profile-field-error">
-                    {bankErrors.accountHolder}
-                  </p>
-                )}
-              </div>
-
-              <div className="profile-form-group">
-                <label htmlFor="bank-number-input">Số tài khoản ngân hàng *</label>
-                <input
-                  id="bank-number-input"
-                  type="text"
-                  autoComplete="off"
-                  spellCheck={false}
-                  maxLength={34}
-                  value={bankValues.accountNumber}
-                  onChange={(e) =>
-                    setBankValues((prev) => ({ ...prev, accountNumber: e.target.value }))
-                  }
-                  aria-invalid={!!bankErrors.accountNumber}
-                  aria-describedby="bank-number-hint bank-number-error"
-                  required
-                />
-                <p id="bank-number-hint" className="profile-form-hint">
-                  Từ 4–34 chữ cái hoặc số, không có khoảng trắng. Nhập đủ cả số 0 ở đầu nếu có.
-                </p>
-                {bankErrors.accountNumber && (
-                  <p id="bank-number-error" className="profile-field-error">
-                    {bankErrors.accountNumber}
-                  </p>
-                )}
-              </div>
-
-              <div className="profile-actions">
-                <Button type="submit">Kiểm tra thông tin tài khoản</Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setBankMode('idle');
-                    setBankValues({ bankName: '', accountHolder: '', accountNumber: '' });
-                    setBankErrors({});
-                  }}
-                >
-                  Hủy
-                </Button>
-              </div>
-            </form>
-          )}
-
-          {/* Review step before saving bank */}
-          {bankMode === 'review' && (
-            <div className="profile-review-card">
-              <h4>Kiểm tra thông tin tài khoản cá nhân</h4>
-              <p>
-                <strong>Ngân hàng:</strong> {bankValues.bankName}
-              </p>
-              <p>
-                <strong>Chủ tài khoản:</strong> {bankValues.accountHolder}
-              </p>
-              <p>
-                <strong>Số tài khoản:</strong> Đã che, kết thúc bằng{' '}
-                {bankValues.accountNumber.slice(bankValues.accountNumber.length > 4 ? -4 : -2)}
-              </p>
-              <p className="profile-form-hint" style={{ marginTop: '0.75rem' }}>
-                FloraBot chưa xác minh thông tin này với ngân hàng. Bạn cần kiểm tra chính xác trước
-                khi lưu.
-              </p>
-              <div className="profile-actions">
-                <Button disabled={bankSaving} onClick={() => void handleSaveBank()}>
-                  {bankSaving ? 'Đang lưu tài khoản…' : 'Xác nhận lưu tài khoản'}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={bankSaving}
-                  onClick={() => setBankMode('edit')}
-                >
-                  Sửa lại thông tin
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={bankSaving}
-                  onClick={() => {
-                    setBankMode('idle');
-                    setBankValues({ bankName: '', accountHolder: '', accountNumber: '' });
-                  }}
-                >
-                  Hủy
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Clear Bank Confirmation Dialog */}
-          <ConfirmDialog
-            open={bankMode === 'clear-confirm'}
-            title="Xác nhận xóa tài khoản ngân hàng?"
-            description="Thông tin tài khoản ngân hàng cá nhân sẽ bị xóa khỏi hồ sơ của bạn. Thao tác này không thể hoàn tác."
-            confirmLabel="Xác nhận xóa"
-            pending={clearingBank}
-            onConfirm={() => void handleConfirmClearBank()}
-            onCancel={() => setBankMode('idle')}
-          />
-        </section>
-
-        {/* Section 5: Security & Google Linking (Customer and Seller only) */}
-        {isMember && (
-          <section id="security" aria-labelledby="security-heading" className="profile-section">
-            <div className="profile-section-heading">
-              <h2 id="security-heading">Bảo mật tài khoản</h2>
-              <p>
-                Quản lý mật khẩu đăng nhập và liên kết tài khoản Google để bảo vệ quyền lợi thành
-                viên.
-              </p>
-            </div>
-
-            <div className="profile-disclaimer-card">
-              Sau khi đổi mật khẩu, bạn cần đăng nhập lại trên các thiết bị để đảm bảo tính an toàn.
-            </div>
-
-            {passwordError && (
-              <p role="alert" className="profile-status-message profile-status-error">
-                {passwordError}
-              </p>
-            )}
-
-            <form
-              noValidate
-              className="profile-form"
-              aria-busy={passwordSaving}
-              onSubmit={passwords.handleSubmit(handleChangePassword)}
-            >
-              {(['currentPassword', 'newPassword', 'confirm'] as const).map((field, index) => (
-                <div key={field} className="profile-form-group">
-                  <label htmlFor={`security-${field}`}>
-                    {['Mật khẩu hiện tại', 'Mật khẩu mới', 'Nhập lại mật khẩu mới'][index]}
-                  </label>
-                  <input
-                    id={`security-${field}`}
-                    type="password"
-                    autoComplete={index === 0 ? 'current-password' : 'new-password'}
-                    disabled={passwordSaving}
-                    {...passwords.register(field, {
-                      required: 'Nhập mật khẩu.',
-                      validate:
-                        index === 1
-                          ? passwordRule
-                          : index === 2
-                            ? (value) =>
-                                value === passwords.getValues('newPassword') ||
-                                'Hai mật khẩu chưa khớp.'
-                            : undefined,
-                    })}
-                    aria-describedby={
-                      passwords.formState.errors[field] ? `security-${field}-error` : undefined
-                    }
-                    aria-invalid={!!passwords.formState.errors[field]}
-                  />
-                  {passwords.formState.errors[field] && (
-                    <p id={`security-${field}-error`} className="profile-field-error">
-                      {passwords.formState.errors[field]?.message}
-                    </p>
-                  )}
+            {/* Section 5: Security & Google Linking (Customer and Seller only) */}
+            {isMember && (
+              <section id="security" aria-labelledby="security-heading" className="profile-section">
+                <div className="profile-section-heading">
+                  <h2 id="security-heading">Bảo mật tài khoản</h2>
+                  <p>Quản lý mật khẩu và phương thức đăng nhập.</p>
                 </div>
-              ))}
-              <div className="profile-actions">
-                <Button type="submit" disabled={passwordSaving}>
-                  {passwordSaving ? 'Đang cập nhật…' : 'Đổi mật khẩu và đăng nhập lại'}
-                </Button>
-              </div>
-            </form>
 
-            <div
-              style={{
-                marginTop: '2rem',
-                paddingTop: '1.5rem',
-                borderTop: '1px solid #e1ebe0',
-              }}
-            >
-              <GoogleAccountLink email={currentProfile.loginEmail || ''} />
-            </div>
-          </section>
-        )}
+                <div className="profile-disclaimer-card">
+                  Đổi mật khẩu sẽ đăng xuất các phiên hiện tại.
+                </div>
+                <p className="profile-form-hint">
+                  Mật khẩu mới cần ít nhất 12 ký tự và tối đa 72 byte UTF-8.
+                </p>
+
+                {passwordError && (
+                  <p role="alert" className="profile-status-message profile-status-error">
+                    {passwordError}
+                  </p>
+                )}
+
+                <form
+                  noValidate
+                  className="profile-form"
+                  aria-busy={passwordSaving}
+                  onSubmit={(event) => void passwords.handleSubmit(handleChangePassword)(event)}
+                >
+                  {(['currentPassword', 'newPassword', 'confirm'] as const).map((field, index) => (
+                    <div key={field} className="profile-form-group">
+                      <label htmlFor={`security-${field}`}>
+                        {['Mật khẩu hiện tại', 'Mật khẩu mới', 'Nhập lại mật khẩu mới'][index]}
+                      </label>
+                      <div className="profile-password-field">
+                        <input
+                          id={`security-${field}`}
+                          type={visiblePasswords[field] ? 'text' : 'password'}
+                          autoComplete={index === 0 ? 'current-password' : 'new-password'}
+                          disabled={passwordSaving}
+                          {...passwords.register(field, {
+                            required: 'Nhập mật khẩu.',
+                            validate:
+                              index === 1
+                                ? passwordRule
+                                : index === 2
+                                  ? (value) =>
+                                      value === passwords.getValues('newPassword') ||
+                                      'Hai mật khẩu chưa khớp.'
+                                  : undefined,
+                          })}
+                          aria-describedby={
+                            passwords.formState.errors[field]
+                              ? `security-${field}-error`
+                              : undefined
+                          }
+                          aria-invalid={!!passwords.formState.errors[field]}
+                        />
+                        <button
+                          type="button"
+                          className="profile-password-toggle"
+                          disabled={passwordSaving}
+                          aria-label={`${visiblePasswords[field] ? 'Ẩn' : 'Hiện'} ${['mật khẩu hiện tại', 'mật khẩu mới', 'nhập lại mật khẩu mới'][index]}`}
+                          aria-pressed={!!visiblePasswords[field]}
+                          onClick={() =>
+                            setVisiblePasswords((previous) => ({
+                              ...previous,
+                              [field]: !previous[field],
+                            }))
+                          }
+                        >
+                          {visiblePasswords[field] ? (
+                            <EyeOff size={18} aria-hidden="true" />
+                          ) : (
+                            <Eye size={18} aria-hidden="true" />
+                          )}
+                        </button>
+                      </div>
+                      {passwords.formState.errors[field] && (
+                        <p id={`security-${field}-error`} className="profile-field-error">
+                          {passwords.formState.errors[field]?.message}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                  <div className="profile-actions">
+                    <Button type="submit" disabled={passwordSaving}>
+                      {passwordSaving ? 'Đang cập nhật…' : 'Đổi mật khẩu và đăng nhập lại'}
+                    </Button>
+                  </div>
+                </form>
+
+                <div
+                  style={{
+                    marginTop: '2rem',
+                    paddingTop: '1.5rem',
+                    borderTop: '1px solid #e1ebe0',
+                  }}
+                >
+                  <GoogleAccountLink email={currentProfile.loginEmail || ''} />
+                </div>
+              </section>
+            )}
+            {!isMember && (
+              <section id="security" aria-labelledby="security-heading" className="profile-section">
+                <div className="profile-section-heading">
+                  <h2 id="security-heading">Bảo mật tài khoản</h2>
+                  <p>
+                    Để đổi mật khẩu tài khoản {roleLabel.toLowerCase()}, vui lòng liên hệ quản trị
+                    viên FloraBot.
+                  </p>
+                </div>
+              </section>
+            )}
+          </div>
+        </div>
+        <Modal
+          open={draftGuard.pending}
+          title="Bạn có thay đổi chưa lưu"
+          description="Rời trang sẽ bỏ phần thông tin bạn đang chỉnh sửa."
+          onClose={draftGuard.cancel}
+        >
+          <div className="profile-leave-actions">
+            <Button type="button" onClick={draftGuard.cancel}>
+              Tiếp tục chỉnh sửa
+            </Button>
+            <Button type="button" variant="outline" onClick={draftGuard.confirm}>
+              Rời trang
+            </Button>
+          </div>
+        </Modal>
       </div>
     </main>
   );
