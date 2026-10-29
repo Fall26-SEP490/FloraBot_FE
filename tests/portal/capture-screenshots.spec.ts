@@ -451,12 +451,8 @@ test.describe('Capture workspace UI repair inspection screenshots', () => {
     const memberNav = page.locator('.member-tabs');
     await expect(memberNav.getByRole('link', { name: 'Hồ sơ cá nhân' })).toHaveCount(0);
     await expect(memberNav.getByRole('link', { name: 'Bảo mật' })).toHaveCount(0);
-    await expect(page.getByRole('link', { name: 'Chỉnh sửa hồ sơ' })).toHaveAttribute(
-      'href',
-      '/ho-so',
-    );
-    await memberNav.getByRole('link', { name: 'Shop của bạn' }).click();
-    await expect(page.locator('#member-shop')).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Chỉnh sửa hồ sơ' })).toHaveCount(0);
+    await expect(memberNav.getByRole('link', { name: 'Shop của bạn' })).toHaveCount(0);
     await expect(memberNav.getByRole('link', { name: 'Đơn đặt trước' })).toBeVisible();
     await expect(memberNav.getByRole('link', { name: 'Lịch sử mua' })).toBeVisible();
   });

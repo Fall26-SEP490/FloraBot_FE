@@ -1,0 +1,778 @@
+/* Purchase dashboard: scoped so order, chat and profile layouts keep their own styles. */
+.workspace-portal-root.member-account-root {
+  background: #ffffff;
+}
+
+.workspace-portal-root.member-account-root .member-page {
+  max-width: 1160px;
+  margin: 1.25rem auto 3rem;
+  padding: clamp(1.4rem, 4vw, 3.5rem);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.workspace-portal-root .member-page .account-hero-card {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 1.75rem 2rem;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid #e4eddf;
+  border-radius: 20px;
+  background:
+    linear-gradient(rgba(253, 254, 252, 0.94), rgba(253, 254, 252, 0.94)),
+    url('/images/generated/florabot-pattern.webp') center / 620px repeat;
+  box-shadow: none;
+}
+
+.workspace-portal-root .member-page .account-avatar {
+  width: 62px;
+  height: 62px;
+  background: #1e5037;
+  box-shadow: 0 5px 14px rgba(30, 80, 55, 0.16);
+}
+
+.workspace-portal-root .member-page .member-eyebrow {
+  display: block;
+  margin-bottom: 0.45rem;
+  color: #648471;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.workspace-portal-root .member-page .account-hero-greeting {
+  max-width: none;
+  margin: 0 0 0.3rem;
+  color: #173e2c;
+  font-size: clamp(1.55rem, 2.5vw, 2.05rem);
+  line-height: 1.2;
+}
+
+.workspace-portal-root .member-page .account-hero-sub {
+  margin: 0 0 0.55rem;
+  color: #597164;
+  font-size: 0.9rem;
+}
+
+.workspace-portal-root .member-page .account-badge-pill {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #657b6c;
+  font-weight: 500;
+}
+
+.workspace-portal-root .member-page .member-points {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  min-width: 230px;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(108, 148, 106, 0.24);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 5px 18px rgba(55, 83, 47, 0.07);
+}
+
+.workspace-portal-root .member-page .member-points-icon,
+.workspace-portal-root .member-page .member-activity-icon,
+.workspace-portal-root .member-page .member-shop-icon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #e8f2e5;
+  color: #245a3c;
+}
+
+.workspace-portal-root .member-page .member-points-label,
+.workspace-portal-root .member-page .member-points-caption {
+  display: block;
+  color: #5a7763;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.workspace-portal-root .member-page .member-points-label {
+  font-weight: 700;
+}
+
+.workspace-portal-root .member-page .member-activity-icon-history {
+  background: #f1f2df;
+  color: #6c6d34;
+}
+
+.workspace-portal-root .member-page .member-activity-icon-chats {
+  background: #e7f2f0;
+  color: #286960;
+}
+
+.workspace-portal-root .member-page .member-points .overview-stat-value {
+  display: block;
+  margin: 0.1rem 0;
+  color: #173e2c;
+  font-size: 1.5rem;
+  line-height: 1.2;
+}
+
+.workspace-portal-root .member-page .member-tabs-container {
+  margin: 0.7rem 0 1.9rem;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid #e3ebe1;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.workspace-portal-root .member-page .member-tabs {
+  flex-wrap: nowrap;
+  gap: 1.7rem;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  overflow-x: auto;
+}
+
+.workspace-portal-root .member-page .member-tabs a {
+  min-height: 49px;
+  padding: 0.65rem 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #65776c;
+  font-size: 0.85rem;
+}
+
+.workspace-portal-root .member-page .member-tabs a:hover,
+.workspace-portal-root .member-page .member-tabs a.is-active {
+  border-bottom-color: #245b3d;
+  background: transparent;
+  color: #1e5037;
+}
+
+.workspace-portal-root .member-page .member-tabs a:focus-visible {
+  outline-offset: -2px;
+}
+
+.workspace-portal-root .member-page .member-overview-heading {
+  margin-bottom: 1.3rem;
+}
+
+.workspace-portal-root .member-page .member-overview-heading h2 {
+  margin: 0 0 0.35rem;
+  color: #173e2c;
+  font-size: 1.35rem;
+}
+
+.workspace-portal-root .member-page .member-activity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 1rem;
+}
+
+.workspace-portal-root .member-page .member-activity-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.workspace-portal-root .member-page .member-activity-group .member-activity-card {
+  flex: 1 1 auto;
+}
+
+.workspace-portal-root .member-page .member-activity-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  min-height: 205px;
+  padding: 1.35rem;
+  border: 1px solid #dfe9dd;
+  border-radius: 15px;
+  background: #fff;
+  color: #173e2c;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 3px 12px rgba(29, 64, 39, 0.04);
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.workspace-portal-root .member-page .member-activity-card:hover {
+  border-color: #afcdb0;
+  box-shadow: 0 8px 22px rgba(29, 64, 39, 0.09);
+  transform: translateY(-2px);
+}
+
+.workspace-portal-root .member-page .member-activity-card:focus-visible,
+.workspace-portal-root .member-page .member-shop-invitation a:focus-visible {
+  outline: 2px solid #245b3d;
+  outline-offset: 3px;
+}
+
+.workspace-portal-root .member-page .member-activity-title {
+  margin-top: 1rem;
+  font-size: 1rem;
+  font-weight: 750;
+}
+
+.workspace-portal-root .member-page .member-activity-description {
+  margin: 0.35rem 0 1rem;
+  color: #667c6c;
+  font-size: 0.83rem;
+  line-height: 1.55;
+}
+
+.workspace-portal-root .member-page .member-activity-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: auto;
+  color: #286343;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.workspace-portal-root .member-page .member-chat-error {
+  margin-top: 0.5rem;
+}
+
+.workspace-portal-root .member-page .member-shop-invitation {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding: 1.2rem 1.35rem;
+  border: 1px solid #e2ecdd;
+  border-radius: 14px;
+  background:
+    linear-gradient(rgba(253, 254, 252, 0.94), rgba(253, 254, 252, 0.94)),
+    url('/images/generated/florabot-pattern.webp') center / 620px repeat;
+}
+
+.workspace-portal-root .member-page .member-shop-invitation h2 {
+  margin: 0 0 0.2rem;
+  font-size: 0.98rem;
+}
+
+.workspace-portal-root .member-page .member-shop-invitation p {
+  margin: 0;
+  color: #667c6c;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.workspace-portal-root .member-page .member-shop-invitation a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 44px;
+  margin-left: auto;
+  color: #245b3d;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* Purchase tabs share a light surface without affecting seller/staff workspaces. */
+.workspace-portal-root.member-account-root .member-page #member-chats {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.workspace-portal-root.member-account-root .member-page #member-chats .chat-layout {
+  grid-template-columns: minmax(200px, 250px) minmax(0, 1fr);
+  height: clamp(540px, 72vh, 760px);
+  max-height: none;
+  margin: 0;
+  border: 1px solid #dfe8df;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(29, 64, 39, 0.08);
+}
+
+.workspace-portal-root.member-account-root .member-page #member-chats .chat-conversation {
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+}
+
+.workspace-portal-root.member-account-root .member-page #member-chats .chat-sidebar-header,
+.workspace-portal-root.member-account-root .member-page #member-chats .chat-conversation-header {
+  min-height: 72px;
+  padding: 0.85rem 1.15rem;
+  box-shadow: none;
+}
+
+.workspace-portal-root.member-account-root .member-page #member-chats .chat-sidebar-header {
+  min-height: 72px;
+  align-items: flex-start;
+  border-bottom-color: #e9eeea;
+}
+
+.workspace-portal-root.member-account-root .member-page #member-chats .chat-sidebar-subtitle {
+  display: none;
+}
+
+.workspace-portal-root.member-account-root .member-page #member-chats .chat-sidebar-title {
+  font-size: 1.05rem;
+}
+
+.workspace-portal-root.member-account-root .member-page #member-chats .chat-conversation-header {
+  min-height: 72px;
+  padding-inline: 1.5rem;
+}
+
+.workspace-portal-root.member-account-root .member-page #member-chats .chat-sidebar-title,
+.workspace-portal-root.member-account-root .member-page #member-chats .chat-conversation-name {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.workspace-portal-root.member-account-root .member-page #member-chats .chat-sidebar-subtitle,
+.workspace-portal-root.member-account-root .member-page #member-chats .chat-conversation-context {
+  margin: 0.3rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.workspace-portal-root.member-account-root .member-page #member-chats .chat-messages-scroll-area {
+  padding: 1.5rem 2rem;
+  background: linear-gradient(180deg, #fff 0%, #fcfdfb 100%);
+}
+
+/* A quiet messenger layout keeps the conversation as the focal point. */
+.workspace-portal-root.member-account-root .member-page #member-chats .chat-layout-sidebar,
+.workspace-portal-root.member-account-root .member-page #member-chats .chat-layout-main {
+  background: #fff;
+}
+
+.workspace-portal-root.member-account-root .member-page #member-chats .chat-list-row {
+  border-bottom: 0;
+}
+
+.workspace-portal-root.member-account-root .member-page #member-chats .chat-list-item {
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.8rem 0.9rem;
+  border-left: 3px solid transparent;
+}
+
+.workspace-portal-root.member-account-root .member-page #member-chats .chat-list-item.is-active {
+  border-left-color: #245b3d;
+  background: #f0f6ed;
+}
+
+.workspace-portal-root.member-account-root .member-page #member-chats .chat-list-item-avatar {
+  width: 36px;
+  height: 36px;
+  font-size: 0.85rem;
+}
+
+.workspace-portal-root.member-account-root .member-page #member-chats .chat-list-item-name {
+  font-size: 0.88rem;
+}
+
+.workspace-portal-root.member-account-root .member-page #member-chats .chat-list-item-context,
+.workspace-portal-root.member-account-root .member-page #member-chats .chat-list-item-preview {
+  font-size: 0.78rem;
+}
+
+.workspace-portal-root.member-account-root
+  .member-page
+  #member-chats
+  .chat-message-row.is-counterparty {
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.workspace-portal-root.member-account-root .member-page #member-chats .chat-message-avatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #dcebd6;
+  color: #245b3d;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.workspace-portal-root.member-account-root .member-page #member-chats .chat-message-sender {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.workspace-portal-root.member-account-root .member-page #member-chats .chat-image-wrapper {
+  max-width: 240px;
+}
+
+.workspace-portal-root.member-account-root .member-page #member-chats .chat-image {
+  max-height: 220px;
+  object-fit: contain;
+}
+
+.workspace-portal-root.member-account-root .member-page #member-chats .chat-message-bubble {
+  padding: 0.65rem 0.9rem;
+  border: 0;
+  border-radius: 18px;
+  box-shadow: none;
+}
+
+.workspace-portal-root.member-account-root
+  .member-page
+  #member-chats
+  .is-mine
+  .chat-message-bubble {
+  background: #e6f1e6;
+  border-bottom-right-radius: 6px;
+}
+
+.workspace-portal-root.member-account-root
+  .member-page
+  #member-chats
+  .is-counterparty
+  .chat-message-bubble {
+  background: #f1f3f1;
+  border-bottom-left-radius: 6px;
+}
+
+.workspace-portal-root.member-account-root .member-page #member-chats .chat-conversation-footer {
+  padding: 0.8rem 1.4rem 1.1rem;
+  background: #fff;
+}
+
+.workspace-portal-root.member-account-root .member-page #member-chats form.chat-composer {
+  width: 100%;
+  max-width: none;
+}
+
+.workspace-portal-root.member-account-root
+  .member-page
+  #member-chats
+  form.chat-composer
+  > .chat-composer-controls {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 0.3rem;
+  border: 1px solid #dce7dc;
+  border-radius: 24px;
+  background: #fff;
+}
+
+.workspace-portal-root.member-account-root
+  .member-page
+  #member-chats
+  .chat-composer-controls:focus-within {
+  border-color: #72967c;
+  box-shadow: 0 0 0 3px rgba(45, 107, 70, 0.1);
+}
+
+.workspace-portal-root.member-account-root .member-page #member-chats .chat-composer-image-btn {
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.workspace-portal-root.member-account-root
+  .member-page
+  #member-chats
+  .chat-composer-submit-btn.button {
+  border-radius: 20px;
+}
+
+.workspace-portal-root.member-account-root .member-page #member-chats .chat-composer-input-wrapper {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.workspace-portal-root.member-account-root
+  .member-page
+  #member-chats
+  textarea.chat-composer-textarea {
+  width: 100%;
+  min-height: 44px;
+  height: 44px;
+  padding: 0.65rem 0.8rem;
+  overflow-y: auto;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.workspace-portal-root.member-account-root
+  .member-page
+  #member-chats
+  textarea.chat-composer-textarea:focus {
+  background: transparent;
+  box-shadow: none;
+}
+
+.workspace-portal-root.member-account-root
+  .member-page
+  #member-chats
+  form.chat-composer
+  > .chat-composer-preview {
+  flex-direction: row;
+  margin: 0;
+}
+
+.workspace-portal-root.member-account-root .member-page #web-orders,
+.workspace-portal-root.member-account-root .member-page #member-orders {
+  margin: 0;
+  padding: clamp(1.2rem, 3vw, 2rem);
+  border: 1px solid #e1eade;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 4px 18px rgba(29, 64, 39, 0.04);
+}
+
+.workspace-portal-root.member-account-root .member-page #web-orders > h2,
+.workspace-portal-root.member-account-root .member-page #member-orders > h2 {
+  margin: 0 0 0.45rem;
+  font-size: 1.25rem;
+}
+
+.workspace-portal-root.member-account-root .member-page #web-orders > p {
+  margin: 0;
+}
+
+.workspace-portal-root.member-account-root .member-page #web-orders .order-summary-strip {
+  gap: 0.7rem;
+  margin: 1.5rem 0 0.75rem;
+  padding: 0;
+  border: 0;
+}
+
+.workspace-portal-root.member-account-root .member-page #web-orders .operations-metric {
+  gap: 0.3rem;
+  padding: 0.9rem;
+  border: 1px solid #e4ede1;
+  border-radius: 12px;
+  background: #f8fbf6;
+}
+
+.workspace-portal-root.member-account-root .member-page #web-orders .operations-metric svg {
+  width: 20px;
+  height: 20px;
+  color: #396a4a;
+}
+
+.workspace-portal-root.member-account-root .member-page #web-orders .operations-metric strong {
+  font-size: 1.5rem;
+}
+
+.workspace-portal-root.member-account-root .member-page #web-orders .operations-metric small {
+  color: #607568;
+  line-height: 1.4;
+}
+
+.workspace-portal-root.member-account-root .member-page #web-orders .order-filter-bar {
+  gap: 0.75rem;
+  margin: 1.25rem 0;
+}
+
+.workspace-portal-root.member-account-root .member-page #web-orders .operations-empty,
+.workspace-portal-root.member-account-root .member-page #member-orders .member-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 1.2rem 0 0;
+  padding: 2.5rem 1.25rem;
+  border: 1px dashed #d4e4d1;
+  border-radius: 14px;
+  background: #f9fcf8;
+  box-shadow: none;
+  text-align: center;
+}
+
+.workspace-portal-root.member-account-root .member-page #web-orders .operations-empty > svg,
+.workspace-portal-root.member-account-root .member-page #member-orders .member-empty-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 11px;
+  border-radius: 14px;
+  background: #eaf3e7;
+  color: #286143;
+}
+
+.workspace-portal-root.member-account-root .member-page #web-orders .operations-empty h3,
+.workspace-portal-root.member-account-root .member-page #member-orders .member-empty h3 {
+  margin: 0.2rem 0 0;
+  color: #173e2c;
+  font-size: 1rem;
+}
+
+.workspace-portal-root.member-account-root .member-page #web-orders .operations-empty p,
+.workspace-portal-root.member-account-root .member-page #member-orders .member-empty p {
+  max-width: 45ch;
+  margin: 0;
+  color: #607568;
+  font-size: 0.85rem;
+}
+
+.workspace-portal-root.member-account-root .member-page #web-orders .operations-empty .button,
+.workspace-portal-root.member-account-root .member-page #member-orders .member-empty .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  text-decoration: none;
+}
+
+.workspace-portal-root.member-account-root .member-page #member-orders .member-orders {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1.25rem 0 0;
+}
+
+.workspace-portal-root.member-account-root .member-page #member-orders .member-orders > li {
+  padding: 1rem 1.2rem;
+  border: 1px solid #e1eade;
+  border-radius: 12px;
+  background: #fbfdfa;
+}
+
+.workspace-portal-root.member-account-root .member-page #member-orders .member-orders h3 {
+  margin: 0 0 0.4rem;
+  color: #173e2c;
+  font-size: 1rem;
+}
+
+.workspace-portal-root.member-account-root .member-page #member-orders .member-orders p {
+  margin: 0.25rem 0;
+  color: #607568;
+}
+
+.workspace-portal-root.member-account-root .member-page #web-orders .order-pagination,
+.workspace-portal-root.member-account-root .member-page #member-orders .stock-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+@media (max-width: 700px) {
+  .workspace-portal-root .member-page {
+    width: calc(100% - 24px);
+    margin: 1rem auto 2.5rem;
+    padding: 1.35rem;
+  }
+
+  .workspace-portal-root .member-page .account-hero-card {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: 0.8rem;
+    padding: 1.25rem;
+  }
+
+  .workspace-portal-root .member-page .account-avatar {
+    width: 48px;
+    height: 48px;
+  }
+
+  .workspace-portal-root .member-page .member-points {
+    grid-column: 1 / -1;
+    min-width: 0;
+    margin-top: 0.5rem;
+  }
+
+  .workspace-portal-root .member-page .member-tabs {
+    flex-wrap: wrap;
+    gap: 0 1.2rem;
+  }
+
+  .workspace-portal-root .member-page .member-activity-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .workspace-portal-root .member-page .member-activity-card {
+    min-height: 180px;
+  }
+
+  .workspace-portal-root .member-page .member-shop-invitation {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .workspace-portal-root .member-page .member-shop-invitation div {
+    flex: 1 1 180px;
+  }
+
+  .workspace-portal-root .member-page .member-shop-invitation a {
+    margin-left: 58px;
+  }
+
+  .workspace-portal-root.member-account-root .member-page #web-orders .order-summary-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .workspace-portal-root.member-account-root .member-page #member-chats .chat-layout {
+    grid-template-columns: minmax(0, 1fr);
+    height: min(74vh, 680px);
+    min-height: 420px;
+  }
+
+  .workspace-portal-root.member-account-root .member-page #member-chats .chat-conversation-header {
+    gap: 0.5rem;
+    padding: 0.75rem;
+  }
+
+  .workspace-portal-root.member-account-root .member-page #member-chats .chat-conversation-footer {
+    padding: 0.75rem 0.65rem 1.1rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .workspace-portal-root.member-account-root
+    .member-page
+    #member-chats
+    .chat-composer-submit-btn.button {
+    padding-inline: 0.7rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workspace-portal-root .member-page .member-activity-card {
+    transition: none;
+  }
+}

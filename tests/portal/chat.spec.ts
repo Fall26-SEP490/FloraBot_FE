@@ -74,6 +74,49 @@ const mockMessages = [
   },
 ];
 
+for (const width of [1440, 390]) {
+  test(`Customer chat composer stays usable at ${width}px`, async ({ page }, testInfo) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.route('**/api/auth/me', (route) => route.fulfill({ json: customerUser }));
+    await page.route('**/api/member/profile', (route) =>
+      route.fulfill({
+        json: { id: customerUser.id, fullName: customerUser.name, loyaltyPoints: 100 },
+      }),
+    );
+    await page.route('**/api/member/chats?*', (route) =>
+      route.fulfill({ json: { items: [mockChat], page: 1, hasMore: false } }),
+    );
+    await page.route(`**/api/chats/${mockChat.id}/messages?*`, (route) =>
+      route.fulfill({ json: { items: mockMessages, page: 1, hasMore: false } }),
+    );
+    await page.route(`**/api/chats/${mockChat.id}/read`, (route) =>
+      route.fulfill({ json: { messagesMarkedRead: 0 } }),
+    );
+    await page.route('**/hub/**', (route) => route.fulfill({ status: 503 }));
+    await page.goto('/tai-khoan#member-chats');
+    if (width < 768)
+      await page.getByRole('button', { name: /Cuộc trò chuyện với Tiệm Hoa Nhỏ/ }).click();
+    const textarea = page.getByLabel('Nội dung tin nhắn');
+    const attach = page.getByRole('button', { name: 'Chọn ảnh đính kèm' });
+    const send = page.getByRole('button', { name: 'Gửi', exact: true });
+    await expect(textarea).toBeVisible();
+    await textarea.fill('Chào shop');
+    await expect(send).toBeEnabled();
+    const [a, b, c] = await Promise.all([
+      attach.boundingBox(),
+      textarea.boundingBox(),
+      send.boundingBox(),
+    ]);
+    expect(a && b && c && Math.abs(a.y - b.y) < 10 && Math.abs(c.y - b.y) < 10).toBeTruthy();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    await page
+      .locator('#member-chats .chat-layout')
+      .screenshot({ path: testInfo.outputPath('chat.png') });
+  });
+}
+
 test('Unauthenticated user clicking "Nhắn tin với shop" is redirected to login with returnUrl', async ({
   page,
 }) => {

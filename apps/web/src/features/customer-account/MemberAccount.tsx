@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import './styles/member.css';
+import './styles/member-dashboard.css';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import {
+  ArrowRight,
   Button,
   Flower2,
-  MapPin,
   MessageSquare,
   Package,
   RotateCcw,
@@ -16,9 +17,9 @@ import {
   User,
 } from '@florabot/ui';
 import WebRequests from '../orders/WebRequests';
-import MemberShop from '../orders/MemberShop';
 import { CustomerChatSection } from '@/features/chat/CustomerChatSection';
-import { getCustomerChats } from '@/features/chat/api';
+import { getCustomerUnreadCount } from '@/features/chat/api';
+import { sessionQuery } from '@/shared/lib/api';
 import { fetchMemberProfile, fetchMemberHistory } from './customer-account.api';
 import {
   type TabKey,
@@ -30,6 +31,8 @@ import {
 
 export default function MemberAccount() {
   const router = useRouter();
+  const session = useQuery(sessionQuery);
+  const isCustomer = session.data?.role === 'CUSTOMER';
   const [initialChatId] = useState<string | null>(() => {
     if (typeof window !== 'undefined') {
       return new URLSearchParams(window.location.search).get('chat');
@@ -57,10 +60,20 @@ export default function MemberAccount() {
         router.replace('/ho-so#security');
         return;
       }
+      if (hash === 'member-kiosks') {
+        router.replace('/tim-kiosk');
+        return;
+      }
+      if (hash === 'member-shop' && session.data) {
+        router.replace(session.data.role === 'SELLER' ? '/seller' : '/thue-kiosk');
+        return;
+      }
       if (hash && TAB_HASH_MAP[hash]) {
         setActiveTab(TAB_HASH_MAP[hash]);
       } else if (window.location.search.includes('chat=')) {
         setActiveTab('chats');
+      } else {
+        setActiveTab('overview');
       }
     };
     syncFromUrl();
@@ -70,7 +83,7 @@ export default function MemberAccount() {
       window.removeEventListener('hashchange', syncFromUrl);
       window.removeEventListener('popstate', syncFromUrl);
     };
-  }, [router]);
+  }, [router, session.data]);
 
   function switchTab(tab: TabKey) {
     setActiveTab(tab);
@@ -81,26 +94,26 @@ export default function MemberAccount() {
   }
 
   const profile = useQuery({
-    queryKey: ['member-profile'],
+    queryKey: ['member-profile', session.data?.id],
     queryFn: fetchMemberProfile,
   });
 
   const [page, setPage] = useState(1);
   const history = useQuery({
-    queryKey: ['member-history', page],
+    queryKey: ['member-history', session.data?.id, page],
     queryFn: () => fetchMemberHistory(page),
+    enabled: activeTab === 'history',
   });
 
   const chatsQuery = useQuery({
-    queryKey: ['member-chats-unread-count'],
-    queryFn: () => getCustomerChats(1),
+    queryKey: ['member-chats-unread-count', session.data?.id],
+    queryFn: ({ signal }) => getCustomerUnreadCount(signal),
+    enabled: isCustomer,
     refetchInterval: 15000,
   });
 
-  const unreadChatsCount = (chatsQuery.data?.items ?? []).reduce<number>(
-    (sum, c) => sum + Number(c.unreadCount ?? 0),
-    0,
-  );
+  const unreadChatsCount = chatsQuery.isSuccess ? chatsQuery.data : undefined;
+  const visibleTab = activeTab === 'chats' && !isCustomer ? 'overview' : activeTab;
 
   const initialLetter = (profile.data?.fullName || 'F').trim().charAt(0).toUpperCase();
 
@@ -108,18 +121,14 @@ export default function MemberAccount() {
     <main id="main" className="member-page">
       {/* Account Header */}
       <header className="account-hero-card">
-        <Link
-          href="/ho-so"
-          className="account-avatar"
-          aria-label="Xem hồ sơ cá nhân của bạn"
-          title="Xem hồ sơ cá nhân"
-        >
+        <span className="account-avatar" aria-hidden="true">
           {initialLetter}
-        </Link>
+        </span>
         <div className="account-hero-info">
+          <span className="member-eyebrow">KHÔNG GIAN CỦA BẠN</span>
           <h1 className="account-hero-greeting">Góc nhỏ của {profile.data?.fullName || 'bạn'}</h1>
           <p className="account-hero-sub">
-            Thông tin thành viên và những dịp bạn gửi trao yêu thương cùng FloraBot.
+            Theo dõi đơn đặt hoa, lịch sử mua và điểm tích lũy của bạn.
           </p>
           <div className="account-badges-row">
             {profile.data?.email && (
@@ -128,55 +137,66 @@ export default function MemberAccount() {
                 <span>{profile.data.email}</span>
               </span>
             )}
-            {profile.data?.loyaltyPoints !== undefined && (
-              <span className="account-badge-pill">
-                <Flower2 size={13} aria-hidden="true" />
-                <span>
-                  Điểm tích lũy: {profile.data.loyaltyPoints.toLocaleString('vi-VN')} điểm
-                </span>
-              </span>
-            )}
-            <span className="account-badge-pill">
-              <span>Thành viên FloraBot</span>
-            </span>
           </div>
         </div>
-        <div className="account-hero-action">
-          <Link href="/ho-so" className="button button-outline" style={{ fontSize: '0.85rem' }}>
-            Chỉnh sửa hồ sơ
-          </Link>
+        <div className="member-points">
+          <span className="member-points-icon">
+            <Flower2 size={20} aria-hidden="true" />
+          </span>
+          <div>
+            <span className="member-points-label">Điểm tích lũy</span>
+            <strong className="overview-stat-value">
+              {profile.isSuccess ? profile.data.loyaltyPoints.toLocaleString('vi-VN') : '—'}
+            </strong>
+            <span className="member-points-caption">Dùng cho đơn hoa tiếp theo</span>
+          </div>
         </div>
       </header>
+
+      {profile.isPending && <p role="status">Đang tải thông tin mua hoa…</p>}
+      {profile.isError && (
+        <div role="alert">
+          <p>Chưa tải được thông tin mua hoa và điểm tích lũy.</p>
+          <Button variant="outline" onClick={() => void profile.refetch()}>
+            Thử lại thông tin
+          </Button>
+        </div>
+      )}
 
       {/* Account Navigation Tabs */}
       <div className="member-tabs-container">
         <nav className="member-tabs" aria-label="Trong tài khoản">
           <a
             href="#overview"
-            className={`member-tab-btn ${activeTab === 'overview' ? 'is-active' : ''}`}
-            aria-current={activeTab === 'overview' ? 'page' : undefined}
+            className={`member-tab-btn ${visibleTab === 'overview' ? 'is-active' : ''}`}
+            aria-current={visibleTab === 'overview' ? 'page' : undefined}
             onClick={() => switchTab('overview')}
           >
             <span>Tổng quan</span>
           </a>
-          <a
-            href="#member-chats"
-            className={`member-tab-btn ${activeTab === 'chats' ? 'is-active' : ''}`}
-            aria-current={activeTab === 'chats' ? 'page' : undefined}
-            onClick={() => switchTab('chats')}
-          >
-            <MessageSquare size={15} aria-hidden="true" />
-            <span>Tin nhắn</span>
-            {unreadChatsCount > 0 && (
-              <span className="member-unread-pill" aria-label={`${unreadChatsCount} tin chưa đọc`}>
-                {unreadChatsCount}
-              </span>
-            )}
-          </a>
+          {isCustomer && (
+            <a
+              href="#member-chats"
+              className={`member-tab-btn ${visibleTab === 'chats' ? 'is-active' : ''}`}
+              aria-current={visibleTab === 'chats' ? 'page' : undefined}
+              onClick={() => switchTab('chats')}
+            >
+              <MessageSquare size={15} aria-hidden="true" />
+              <span>Tin nhắn</span>
+              {unreadChatsCount !== undefined && unreadChatsCount > 0 && (
+                <span
+                  className="member-unread-pill"
+                  aria-label={`${unreadChatsCount} tin chưa đọc`}
+                >
+                  {unreadChatsCount}
+                </span>
+              )}
+            </a>
+          )}
           <a
             href="#web-orders"
-            className={`member-tab-btn ${activeTab === 'orders' ? 'is-active' : ''}`}
-            aria-current={activeTab === 'orders' ? 'page' : undefined}
+            className={`member-tab-btn ${visibleTab === 'orders' ? 'is-active' : ''}`}
+            aria-current={visibleTab === 'orders' ? 'page' : undefined}
             onClick={() => switchTab('orders')}
           >
             <Package size={15} aria-hidden="true" />
@@ -184,116 +204,117 @@ export default function MemberAccount() {
           </a>
           <a
             href="#member-orders"
-            className={`member-tab-btn ${activeTab === 'history' ? 'is-active' : ''}`}
-            aria-current={activeTab === 'history' ? 'page' : undefined}
+            className={`member-tab-btn ${visibleTab === 'history' ? 'is-active' : ''}`}
+            aria-current={visibleTab === 'history' ? 'page' : undefined}
             onClick={() => switchTab('history')}
           >
             <RotateCcw size={15} aria-hidden="true" />
             <span>Lịch sử mua</span>
           </a>
-          <a
-            href="#member-kiosks"
-            className={`member-tab-btn ${activeTab === 'kiosks' ? 'is-active' : ''}`}
-            aria-current={activeTab === 'kiosks' ? 'page' : undefined}
-            onClick={() => switchTab('kiosks')}
-          >
-            <MapPin size={15} aria-hidden="true" />
-            <span>Điểm đặt kiosk</span>
-          </a>
-          <a
-            href="#member-shop"
-            className={`member-tab-btn ${activeTab === 'shop' ? 'is-active' : ''}`}
-            aria-current={activeTab === 'shop' ? 'page' : undefined}
-            onClick={() => switchTab('shop')}
-          >
-            <Store size={15} aria-hidden="true" />
-            <span>Shop của bạn</span>
-          </a>
         </nav>
       </div>
 
       {/* Tab 1: Overview */}
-      {activeTab === 'overview' && (
+      {visibleTab === 'overview' && (
         <div className="account-overview-panel">
-          <div className="overview-stats-grid">
-            <div className="overview-stat-card">
-              <span className="overview-stat-label">Điểm tích lũy</span>
-              <span className="overview-stat-value">
-                {profile.data?.loyaltyPoints?.toLocaleString('vi-VN') || 0}
+          <div className="member-overview-heading">
+            <h2>Hoạt động của bạn</h2>
+          </div>
+          <div className="member-activity-grid">
+            <button
+              type="button"
+              className="member-activity-card"
+              onClick={() => switchTab('orders')}
+            >
+              <span className="member-activity-icon member-activity-icon-orders">
+                <Package size={22} aria-hidden="true" />
               </span>
-              <span style={{ fontSize: '0.8rem', color: '#55725c' }}>
-                Điểm thưởng dùng cho các đơn hoa kế tiếp
+              <span className="member-activity-title">Đơn đặt trước</span>
+              <span className="member-activity-description">
+                Theo dõi yêu cầu, báo giá và lịch nhận hoa.
               </span>
-            </div>
-            <div className="overview-stat-card">
-              <span className="overview-stat-label">Tin nhắn với các shop</span>
-              <span className="overview-stat-value">{unreadChatsCount} chưa đọc</span>
-              <Button
-                variant="outline"
-                onClick={() => switchTab('chats')}
-                style={{ alignSelf: 'flex-start', marginTop: 'auto', fontSize: '0.8rem' }}
-              >
-                Mở hộp thư
-              </Button>
-            </div>
-            <div className="overview-stat-card">
-              <span className="overview-stat-label">Đơn đặt trước</span>
-              <span className="overview-stat-value">Quản lý</span>
-              <Button
-                variant="outline"
-                onClick={() => switchTab('orders')}
-                style={{ alignSelf: 'flex-start', marginTop: 'auto', fontSize: '0.8rem' }}
-              >
-                Xem đơn đặt trước
-              </Button>
-            </div>
+              <span className="member-activity-action">
+                Xem đơn đặt trước <ArrowRight size={16} aria-hidden="true" />
+              </span>
+            </button>
+            <button
+              type="button"
+              className="member-activity-card"
+              onClick={() => switchTab('history')}
+            >
+              <span className="member-activity-icon member-activity-icon-history">
+                <RotateCcw size={22} aria-hidden="true" />
+              </span>
+              <span className="member-activity-title">Lịch sử mua</span>
+              <span className="member-activity-description">
+                Xem lại những đơn hoa đã mua của bạn.
+              </span>
+              <span className="member-activity-action">
+                Xem lịch sử <ArrowRight size={16} aria-hidden="true" />
+              </span>
+            </button>
+            {isCustomer && (
+              <div className="member-activity-group">
+                <button
+                  type="button"
+                  className="member-activity-card"
+                  onClick={() => switchTab('chats')}
+                >
+                  <span className="member-activity-icon member-activity-icon-chats">
+                    <MessageSquare size={22} aria-hidden="true" />
+                  </span>
+                  <span className="member-activity-title">Tin nhắn với các shop</span>
+                  <span className="member-activity-description">
+                    {chatsQuery.isError
+                      ? 'Chưa tải được số tin chưa đọc.'
+                      : chatsQuery.isPending
+                        ? 'Đang tải số tin chưa đọc…'
+                        : `${unreadChatsCount} chưa đọc`}
+                  </span>
+                  <span className="member-activity-action">
+                    Mở hộp thư <ArrowRight size={16} aria-hidden="true" />
+                  </span>
+                </button>
+                {chatsQuery.isError ? (
+                  <div className="member-chat-error" role="alert">
+                    <Button variant="outline" onClick={() => void chatsQuery.refetch()}>
+                      Thử lại tin nhắn
+                    </Button>
+                  </div>
+                ) : null}
+              </div>
+            )}
           </div>
 
-          {/* Quick shortcuts grid on Overview */}
-          <div className="overview-shortcuts-grid">
-            <div className="overview-shortcut-card">
+          {isCustomer && (
+            <div className="member-shop-invitation">
+              <span className="member-shop-icon">
+                <Store size={21} aria-hidden="true" />
+              </span>
               <div>
-                <h3>Hồ sơ & Tài khoản Google</h3>
-                <p>Quản lý thông tin định danh và liên kết tài khoản đăng nhập nhanh.</p>
+                <h2>Đồng hành cùng FloraBot</h2>
+                <p>Muốn mở shop hoa? Tìm hiểu và theo dõi hồ sơ thuê kiosk của bạn.</p>
               </div>
-              <Link href="/ho-so" className="button button-outline">
-                Vào hồ sơ cá nhân
+              <Link href="/thue-kiosk">
+                Xem hồ sơ thuê kiosk <ArrowRight size={16} aria-hidden="true" />
               </Link>
             </div>
-            <div className="overview-shortcut-card">
-              <div>
-                <h3>Bảo mật tài khoản</h3>
-                <p>Cập nhật mật khẩu định kỳ để bảo vệ quyền lợi và điểm tích lũy.</p>
-              </div>
-              <Link href="/ho-so#security" className="button button-outline">
-                Đổi mật khẩu
-              </Link>
-            </div>
-            <div className="overview-shortcut-card">
-              <div>
-                <h3>Hợp tác mở shop hoa</h3>
-                <p>Trở thành đối tác kinh doanh hoa cùng FloraBot qua mạng lưới kiosk tự động.</p>
-              </div>
-              <Button variant="outline" onClick={() => switchTab('shop')}>
-                Khám phá mở shop
-              </Button>
-            </div>
-          </div>
+          )}
         </div>
       )}
 
       {/* Tab 2: Chats */}
-      {activeTab === 'chats' && (
+      {visibleTab === 'chats' && (
         <section id="member-chats">
           <CustomerChatSection initialChatId={initialChatId} />
         </section>
       )}
 
       {/* Tab 3: Preorders */}
-      {activeTab === 'orders' && <WebRequests mode="member" />}
+      {visibleTab === 'orders' && <WebRequests mode="member" />}
 
       {/* Tab 4: History */}
-      {activeTab === 'history' && (
+      {visibleTab === 'history' && (
         <section id="member-orders" className="account-section-card">
           <h2>Lịch sử mua hoa</h2>
           {history.isPending ? (
@@ -323,52 +344,41 @@ export default function MemberAccount() {
                 </ul>
               ) : (
                 <div className="member-empty">
-                  <h3>Một dịp tặng hoa đang đợi bạn</h3>
+                  <span className="member-empty-icon">
+                    <Flower2 size={24} aria-hidden="true" />
+                  </span>
+                  <h3>{page > 1 ? 'Chưa có đơn ở trang này' : 'Chưa có lịch sử mua hoa'}</h3>
                   <p>Các đơn mua bằng tài khoản này sẽ được lưu ở đây.</p>
-                  <Link href="/dat-hoa">Khám phá hoa và đặt theo yêu cầu</Link>
+                  {page === 1 && (
+                    <Link className="button button-outline" href="/dat-hoa">
+                      Khám phá hoa <ArrowRight size={16} aria-hidden="true" />
+                    </Link>
+                  )}
                 </div>
               )}
-              <nav className="stock-actions" aria-label="Phân trang lịch sử">
-                <Button
-                  variant="outline"
-                  disabled={page === 1 || history.isFetching}
-                  onClick={() => setPage((value) => value - 1)}
-                >
-                  Trang trước
-                </Button>
-                <span>Trang {page}</span>
-                <Button
-                  variant="outline"
-                  disabled={!history.data.hasMore || history.isFetching}
-                  onClick={() => setPage((value) => value + 1)}
-                >
-                  Trang sau
-                </Button>
-              </nav>
+              {(page > 1 || history.data.hasMore) && (
+                <nav className="stock-actions" aria-label="Phân trang lịch sử">
+                  <Button
+                    variant="outline"
+                    disabled={page === 1 || history.isFetching}
+                    onClick={() => setPage((value) => value - 1)}
+                  >
+                    Trang trước
+                  </Button>
+                  <span>Trang {page}</span>
+                  <Button
+                    variant="outline"
+                    disabled={!history.data.hasMore || history.isFetching}
+                    onClick={() => setPage((value) => value + 1)}
+                  >
+                    Trang sau
+                  </Button>
+                </nav>
+              )}
             </>
           )}
         </section>
       )}
-
-      {/* Tab 5: Kiosks */}
-      {activeTab === 'kiosks' && (
-        <section id="member-kiosks" className="account-section-card">
-          <h2>Điểm đặt tủ kiosk</h2>
-          <p>
-            Hệ thống tủ kiosk thông minh của FloraBot được đặt tại các địa điểm trung tâm, trường
-            đại học và khu dân cư cao cấp, giúp bạn chủ động nhận hoa tươi bất cứ lúc nào theo lịch
-            hẹn.
-          </p>
-          <div style={{ marginBlock: '1.25rem' }}>
-            <Link href="/tim-kiosk" className="button button-primary">
-              Tìm kiosk gần bạn nhất
-            </Link>
-          </div>
-        </section>
-      )}
-
-      {/* Tab 6: Shop */}
-      {activeTab === 'shop' && <MemberShop />}
     </main>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import {
   Button,
@@ -542,38 +543,44 @@ export default function WebRequests({
           ? 'Theo dõi báo giá, thanh toán và thời điểm hoa sẵn sàng tại tủ.'
           : 'Đơn mẫu riêng cần báo giá, xác nhận thanh toán rồi nạp đúng bó hoa vào ô của shop.'}
       </p>
-      <div
-        className="operations-metrics order-summary-strip"
-        aria-label="Tóm tắt trang đơn đang xem"
-      >
-        <div className="operations-metric">
-          <ClipboardList aria-hidden="true" />
-          <span>Yêu cầu trong trang</span>
-          <strong>{items.length}</strong>
-          <small>Toàn bộ đơn hiển thị</small>
+      {(mode !== 'member' || query.data) && (
+        <div
+          className="operations-metrics order-summary-strip"
+          aria-label="Tóm tắt trang đơn đang xem"
+        >
+          <div className="operations-metric">
+            <ClipboardList aria-hidden="true" />
+            <span>Yêu cầu trong trang</span>
+            <strong>{items.length}</strong>
+            <small>Toàn bộ đơn hiển thị</small>
+          </div>
+          <div className="operations-metric">
+            <CircleAlert aria-hidden="true" />
+            <span>Cần theo dõi</span>
+            <strong>{items.filter((row) => needsOrderAction(row, mode)).length}</strong>
+            <small>Chờ phản hồi / xử lý</small>
+          </div>
+          <div className="operations-metric">
+            <Package aria-hidden="true" />
+            <span>Đang chuẩn bị</span>
+            <strong>
+              {items.filter((row) => row.orderStatus === 'PAID' && !row.ready).length}
+            </strong>
+            <small>Đã thanh toán · cần nạp</small>
+          </div>
+          <div className="operations-metric">
+            <Boxes aria-hidden="true" />
+            <span>Sẵn sàng tại tủ</span>
+            <strong>{items.filter((row) => row.ready && row.orderStatus === 'PAID').length}</strong>
+            <small>Khách có thể nhận hoa</small>
+          </div>
         </div>
-        <div className="operations-metric">
-          <CircleAlert aria-hidden="true" />
-          <span>Cần theo dõi</span>
-          <strong>{items.filter((row) => needsOrderAction(row, mode)).length}</strong>
-          <small>Chờ phản hồi / xử lý</small>
-        </div>
-        <div className="operations-metric">
-          <Package aria-hidden="true" />
-          <span>Đang chuẩn bị</span>
-          <strong>{items.filter((row) => row.orderStatus === 'PAID' && !row.ready).length}</strong>
-          <small>Đã thanh toán · cần nạp</small>
-        </div>
-        <div className="operations-metric">
-          <Boxes aria-hidden="true" />
-          <span>Sẵn sàng tại tủ</span>
-          <strong>{items.filter((row) => row.ready && row.orderStatus === 'PAID').length}</strong>
-          <small>Khách có thể nhận hoa</small>
-        </div>
-      </div>
-      <p className="quiet">
-        Số lượng và bộ lọc áp dụng cho trang hiện tại, không phải tổng toàn bộ đơn hàng.
-      </p>
+      )}
+      {(mode !== 'member' || query.data) && (
+        <p className="quiet">
+          Số lượng và bộ lọc áp dụng cho trang hiện tại, không phải tổng toàn bộ đơn hàng.
+        </p>
+      )}
       <div className="queue-filter-bar order-filter-bar">
         <div className="filter-group">
           <label htmlFor={`order-filter-${mode}`} className="sr-only">
@@ -612,6 +619,11 @@ export default function WebRequests({
                   ? 'Không có yêu cầu phù hợp bộ lọc trong trang này.'
                   : 'Chưa có yêu cầu ở trang này.'}
               </p>
+              {mode === 'member' && items.length === 0 && page === 1 && (
+                <Link href="/dat-hoa" className="button button-outline">
+                  Khám phá hoa <ArrowRight size={16} aria-hidden="true" />
+                </Link>
+              )}
             </div>
           )}
           <ul className="member-orders">
@@ -641,25 +653,27 @@ export default function WebRequests({
               </li>
             ))}
           </ul>
-          <nav className="order-pagination" aria-label="Phân trang đơn đặt trước">
-            <Button
-              variant="outline"
-              disabled={page === 1 || query.isFetching}
-              onClick={() => setPage((value) => value - 1)}
-            >
-              <ArrowLeft size={15} aria-hidden="true" />
-              <span>Yêu cầu trước</span>
-            </Button>
-            <span className="order-page-indicator">Trang {page}</span>
-            <Button
-              variant="outline"
-              disabled={!query.data.hasMore || query.isFetching}
-              onClick={() => setPage((value) => value + 1)}
-            >
-              <span>Yêu cầu sau</span>
-              <ArrowRight size={15} aria-hidden="true" />
-            </Button>
-          </nav>
+          {(mode !== 'member' || page > 1 || query.data.hasMore) && (
+            <nav className="order-pagination" aria-label="Phân trang đơn đặt trước">
+              <Button
+                variant="outline"
+                disabled={page === 1 || query.isFetching}
+                onClick={() => setPage((value) => value - 1)}
+              >
+                <ArrowLeft size={15} aria-hidden="true" />
+                <span>Yêu cầu trước</span>
+              </Button>
+              <span className="order-page-indicator">Trang {page}</span>
+              <Button
+                variant="outline"
+                disabled={!query.data.hasMore || query.isFetching}
+                onClick={() => setPage((value) => value + 1)}
+              >
+                <span>Yêu cầu sau</span>
+                <ArrowRight size={15} aria-hidden="true" />
+              </Button>
+            </nav>
+          )}
         </>
       )}
     </section>

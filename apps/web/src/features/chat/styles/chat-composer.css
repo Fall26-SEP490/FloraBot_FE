@@ -137,6 +137,7 @@
   font-size: 0.92rem;
   line-height: 1.45;
   resize: none;
+  overflow-y: auto;
   box-sizing: border-box;
   transition:
     border-color 0.15s ease,

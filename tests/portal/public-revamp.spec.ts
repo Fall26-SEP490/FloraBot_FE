@@ -137,13 +137,9 @@ test.describe('Account / Profile Page Redesign', () => {
     await expect(hero).toBeVisible();
     await expect(hero.getByRole('heading', { name: 'Góc nhỏ của Nguyễn Mai Anh' })).toBeVisible();
     await expect(hero.getByText('maianh@example.com')).toBeVisible();
-    await expect(hero.getByText('Điểm tích lũy: 35.000')).toBeVisible();
+    await expect(page.locator('.overview-stat-value').filter({ hasText: '35.000' })).toBeVisible();
 
-    // Verify "Chỉnh sửa hồ sơ" links to /ho-so
-    await expect(hero.getByRole('link', { name: 'Chỉnh sửa hồ sơ' })).toHaveAttribute(
-      'href',
-      '/ho-so',
-    );
+    await expect(hero.getByRole('link', { name: 'Chỉnh sửa hồ sơ' })).toHaveCount(0);
 
     // Tab navigation is visible
     const nav = page.getByRole('navigation', { name: 'Trong tài khoản' });
