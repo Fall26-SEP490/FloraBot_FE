@@ -23,7 +23,7 @@ import type {
   GoogleCredentialResponse,
 } from './auth.types';
 import { passwordRule } from './auth.schemas';
-import { accountPath } from '@/features/portal/config/roleRoutes';
+import { postLoginPath } from './auth.utils';
 
 function formatTime(totalSeconds: number): string {
   const m = Math.floor(totalSeconds / 60);
@@ -178,7 +178,7 @@ export default function MemberAuth({ mode }: { mode: Mode }) {
         form.reset();
         queryClient.clear();
         queryClient.setQueryData(['session'], session);
-        router.push(accountPath(session.role));
+        router.push(postLoginPath(session.role, window.location.search));
       } catch (cause) {
         if (!mountedRef.current) return;
         setError(
@@ -409,7 +409,7 @@ export default function MemberAuth({ mode }: { mode: Mode }) {
         form.reset();
         queryClient.clear();
         queryClient.setQueryData(['session'], session);
-        router.push(accountPath(session.role));
+        router.push(postLoginPath(session.role, window.location.search));
       }
     } catch (cause) {
       setError(
@@ -449,7 +449,7 @@ export default function MemberAuth({ mode }: { mode: Mode }) {
       form.reset();
       queryClient.clear();
       queryClient.setQueryData(['session'], session);
-      router.push(accountPath(session.role));
+      router.push(postLoginPath(session.role, window.location.search));
     } catch (cause) {
       setError(
         cause instanceof ApiError ? cause.message : 'Mã xác thực không hợp lệ hoặc đã hết hạn.',

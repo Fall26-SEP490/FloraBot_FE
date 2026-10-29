@@ -107,7 +107,13 @@ export function UserMenu({
               );
             })}
           </div>
-          <button className="user-menu-logout" type="button" disabled={busy} onClick={onLogout}>
+          <button
+            className="user-menu-logout"
+            type="button"
+            data-session-exit
+            disabled={busy}
+            onClick={onLogout}
+          >
             <LogOut size={17} aria-hidden="true" />
             <span>{busy ? 'Đang đăng xuất…' : 'Đăng xuất'}</span>
           </button>

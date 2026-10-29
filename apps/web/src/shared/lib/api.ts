@@ -117,36 +117,11 @@ export function logoutSession(): Promise<void> {
 
   return logoutRequest;
 }
-export interface PersonalBankInfo {
-  bankName: string;
-  accountHolder: string;
-  accountLast4: string;
-  hasAccount: boolean;
-}
-
-export interface AccountProfile {
-  id: string;
-  fullName: string;
-  loginEmail: string | null;
-  phone: string | null;
-  address: string | null;
-  contactEmail: string | null;
-  contactEmailIsDefault: boolean;
-  contactEmailVerified: boolean;
+export type PersonalBankInfo = Omit<components['schemas']['PersonalBankInfo'], 'accountNumber'>;
+export type AccountProfile = Omit<components['schemas']['UserProfileResponse'], 'bank'> & {
   bank: PersonalBankInfo | null;
-}
-
-export interface UpdateProfilePayload {
-  fullName: string;
-  phone: string | null;
-  address: string | null;
-  bank?: {
-    bankName: string;
-    accountHolder: string;
-    accountNumber: string;
-  } | null;
-  clearBank?: boolean;
-}
+};
+export type UpdateProfilePayload = components['schemas']['UpdateUserProfileRequest'];
 
 export interface BankRevealResponse {
   accountNumber: string;
@@ -167,11 +142,5 @@ export interface VerifyContactEmailPayload {
 export const sessionQuery = {
   queryKey: ['session'],
   queryFn: () => request<Session>('/auth/me'),
-  staleTime: 30_000,
-};
-
-export const profileQuery = {
-  queryKey: ['account-profile'],
-  queryFn: () => request<AccountProfile>('/account/profile'),
   staleTime: 30_000,
 };

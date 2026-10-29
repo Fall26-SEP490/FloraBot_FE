@@ -11,7 +11,7 @@ import { z } from 'zod';
 import { Button, Eye, EyeOff } from '@florabot/ui';
 import { ApiError, queryClient, request, type Session } from '@/shared/lib/api';
 import AuthShell from '../../auth/components/AuthShell';
-import { accountPath } from '@/features/portal/config/roleRoutes';
+import { postLoginPath } from '@/features/auth/auth.utils';
 
 const loginSchema = z.object({
   email: z.email('Nhập địa chỉ email hợp lệ.'),
@@ -34,7 +34,7 @@ export default function AdminLoginScreen() {
     onSuccess: async (session) => {
       queryClient.clear();
       queryClient.setQueryData(['session'], session);
-      router.push(accountPath(session.role));
+      router.push(postLoginPath(session.role, window.location.search));
     },
   });
   useEffect(() => {

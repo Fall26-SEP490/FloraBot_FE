@@ -67,6 +67,8 @@ function makeMockProfile(overrides: Record<string, unknown> = {}) {
       accountHolder: 'NGUYEN VAN MAU',
       accountLast4: '5678',
       hasAccount: true,
+      accountNumber: '123456789012',
+      status: 'READY',
     },
     ...overrides,
   };
@@ -138,6 +140,44 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
     await expect(page.getByRole('button', { name: 'Thử lại' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Đăng nhập tài khoản' })).toHaveCount(0);
   });
+
+  for (const portal of ['member', 'platform'] as const) {
+    test(`Signing in through ${portal} profile link returns to the profile`, async ({ page }) => {
+      const session = portal === 'member' ? sessions.CUSTOMER : sessions.ADMIN;
+      let signedIn = false;
+      await page.route('**/api/auth/config', (route) =>
+        route.fulfill({
+          json: { googleEnabled: false, googleClientId: null, registrationEmailEnabled: false },
+        }),
+      );
+      await page.route('**/api/auth/me', (route) =>
+        signedIn ? route.fulfill({ json: session }) : route.fulfill({ status: 401 }),
+      );
+      await page.route('**/api/auth/refresh', (route) => route.fulfill({ status: 401 }));
+      await page.route(
+        portal === 'member' ? '**/api/auth/login' : '**/api/auth/admin/login',
+        (route) => {
+          signedIn = true;
+          return route.fulfill({ json: session });
+        },
+      );
+      await page.route('**/api/account/profile', (route) =>
+        route.fulfill({ json: makeMockProfile({ fullName: session.name }) }),
+      );
+      await page.goto('/ho-so');
+      await page
+        .getByRole('link', {
+          name: portal === 'member' ? 'Đăng nhập tài khoản' : 'Đăng nhập vận hành',
+          exact: true,
+        })
+        .click();
+      await page.getByLabel('Email', { exact: true }).fill('test@example.test');
+      await page.getByLabel('Mật khẩu', { exact: true }).fill('ExistingTest@1234');
+      await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
+      await expect(page).toHaveURL(/\/ho-so$/);
+      await expect(page.getByRole('heading', { level: 1, name: session.name })).toBeVisible();
+    });
+  }
 
   test('Retired STAFF role on /ho-so displays retired notice and handles logout error gracefully', async ({
     page,
@@ -253,6 +293,8 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
       fullName: 'Nguyễn Thành Viên Mới',
       phone: '0987654321',
       address: '456 Đường Mới, Quận 3',
+      clearGender: true,
+      clearDateOfBirth: true,
     });
 
     await expect(
@@ -293,11 +335,13 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
         accountHolder: 'TRAN VAN QUAN LY',
         accountLast4: '9876',
         hasAccount: true,
+        accountNumber: '00112233449876',
+        status: 'READY',
       },
     });
 
     let putPayload: unknown = null;
-    let revealed = false;
+    let profileReads = 0;
 
     await page.route('**/api/auth/me', (route) => route.fulfill({ json: manager }));
     await page.route('**/api/account/profile', async (route) => {
@@ -317,17 +361,15 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
               accountHolder: body.bank.accountHolder,
               accountLast4: body.bank.accountNumber.slice(-4),
               hasAccount: true,
+              accountNumber: body.bank.accountNumber,
+              status: 'READY',
             },
           };
         }
         return route.fulfill({ json: bankProfile });
       }
+      profileReads++;
       return route.fulfill({ json: bankProfile });
-    });
-
-    await page.route('**/api/account/profile/bank/reveal', async (route) => {
-      revealed = true;
-      return route.fulfill({ json: { accountNumber: '00112233449876' } });
     });
 
     await page.goto('/ho-so');
@@ -337,8 +379,8 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
 
     // 2. Explicit reveal
     await page.getByRole('button', { name: 'Hiện đầy đủ số tài khoản ngân hàng' }).click();
-    expect(revealed).toBe(true);
     await expect(page.getByText('00112233449876')).toBeVisible();
+    expect(profileReads).toBeGreaterThan(1);
 
     // Hide again
     await page.getByRole('button', { name: 'Ẩn số tài khoản' }).click();
@@ -505,9 +547,6 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
         }),
       }),
     );
-    await page.route('**/api/account/profile/bank/reveal', (route) =>
-      route.fulfill({ json: { accountNumber: '123456789012' } }),
-    );
     await page.goto('/ho-so');
     const name = page.locator('#profile-full-name');
     await expect(name).toHaveValue(sessions.ADMIN.name);
@@ -555,7 +594,265 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
     await expect(nameInput).toHaveValue('Bản Nháp Chưa Lưu Đang Soạn');
   });
 
-  for (const width of [390, 1440]) {
+  test('Demographics load, save, clear and cancel use backend clear flags', async ({ page }) => {
+    let current = makeMockProfile({ gender: 'FEMALE', dateOfBirth: '2004-02-29' });
+    let payload: Record<string, unknown> = {};
+    await page.route('**/api/auth/me', (route) => route.fulfill({ json: sessions.CUSTOMER }));
+    await page.route('**/api/account/profile', (route) => {
+      if (route.request().method() === 'PUT') {
+        payload = route.request().postDataJSON();
+        current = {
+          ...current,
+          ...payload,
+          gender: payload.clearGender ? null : payload.gender,
+          dateOfBirth: payload.clearDateOfBirth ? null : payload.dateOfBirth,
+        };
+      }
+      return route.fulfill({ json: current });
+    });
+    await page.goto('/ho-so');
+    await expect(page.getByLabel('Giới tính', { exact: true })).toHaveValue('FEMALE');
+    await expect(page.getByLabel('Ngày sinh', { exact: true })).toHaveValue('2004-02-29');
+    await page.getByLabel('Giới tính', { exact: true }).selectOption('UNDISCLOSED');
+    await page.getByRole('button', { name: 'Hủy thay đổi', exact: true }).click();
+    await expect(page.getByLabel('Giới tính', { exact: true })).toHaveValue('FEMALE');
+    await page.getByLabel('Giới tính', { exact: true }).selectOption('OTHER');
+    await page.getByLabel('Ngày sinh', { exact: true }).fill('2000-01-02');
+    await page.getByRole('button', { name: 'Lưu thông tin cá nhân', exact: true }).click();
+    await expect(page.getByRole('status').filter({ hasText: 'Đã lưu thay đổi' })).toBeVisible();
+    expect(payload).toMatchObject({ gender: 'OTHER', dateOfBirth: '2000-01-02' });
+    expect(payload).not.toHaveProperty('clearGender');
+    await page.getByLabel('Giới tính', { exact: true }).selectOption('');
+    await page.getByLabel('Ngày sinh', { exact: true }).fill('');
+    await page.getByRole('button', { name: 'Lưu thông tin cá nhân', exact: true }).click();
+    await expect.poll(() => payload.clearDateOfBirth).toBe(true);
+    expect(payload).toMatchObject({ clearGender: true, clearDateOfBirth: true });
+    expect(payload).not.toHaveProperty('dateOfBirth');
+  });
+
+  test('Future birth date is blocked before PUT', async ({ page }) => {
+    let writes = 0;
+    await page.route('**/api/auth/me', (route) => route.fulfill({ json: sessions.CUSTOMER }));
+    await page.route('**/api/account/profile', (route) => {
+      if (route.request().method() === 'PUT') writes++;
+      return route.fulfill({ json: makeMockProfile() });
+    });
+    await page.goto('/ho-so');
+    await page.getByLabel('Ngày sinh', { exact: true }).fill('2999-01-01');
+    await page.getByRole('button', { name: 'Lưu thông tin cá nhân', exact: true }).click();
+    await expect(
+      page.getByRole('alert').filter({ hasText: 'Ngày sinh không hợp lệ' }),
+    ).toBeVisible();
+    expect(writes).toBe(0);
+  });
+
+  test('Bank decryption failure shows repair state and blocks reveal', async ({ page }) => {
+    await page.route('**/api/auth/me', (route) => route.fulfill({ json: sessions.ADMIN }));
+    await page.route('**/api/account/profile', (route) =>
+      route.fulfill({
+        json: makeMockProfile({
+          bank: {
+            bankName: 'Test',
+            accountHolder: 'TEST',
+            hasAccount: true,
+            accountLast4: '5678',
+            accountNumber: null,
+            status: 'NEEDS_UPDATE',
+          },
+        }),
+      }),
+    );
+    await page.goto('/ho-so');
+    await expect(
+      page.getByText('Thông tin ngân hàng đã lưu chưa đọc được.', { exact: false }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Hiện đầy đủ số tài khoản ngân hàng' }),
+    ).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Đổi tài khoản ngân hàng' })).toBeEnabled();
+    await expect(page.getByText(/Để đổi mật khẩu tài khoản quản trị viên/)).toBeVisible();
+    await expect(page.getByLabel('Mật khẩu hiện tại', { exact: true })).toHaveCount(0);
+  });
+
+  test('OTP expiry uses server duration and a resend clears the old code', async ({ page }) => {
+    await page.clock.install();
+    let requests = 0;
+    await page.route('**/api/auth/me', (route) => route.fulfill({ json: sessions.TECHNICIAN }));
+    await page.route('**/api/account/profile', (route) =>
+      route.fulfill({ json: makeMockProfile() }),
+    );
+    await page.route('**/api/account/contact-email', (route) => {
+      requests++;
+      return route.fulfill({
+        json: { challengeId: `challenge-${requests}`, expiresInSeconds: 5, resendAfterSeconds: 1 },
+      });
+    });
+    await page.goto('/ho-so');
+    await page.getByRole('button', { name: 'Thay đổi email liên hệ' }).click();
+    await page.getByLabel('Địa chỉ email liên hệ mới *').fill('new@example.test');
+    await page.getByRole('button', { name: 'Gửi mã xác thực (OTP)' }).click();
+    await page.getByLabel('Mã xác thực OTP *').fill('123456');
+    await page.clock.fastForward(6000);
+    await expect(page.getByText(/Mã OTP đã hết hạn/)).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Xác nhận mã OTP' })).toBeDisabled();
+    await page.getByRole('button', { name: 'Gửi lại mã OTP', exact: true }).click();
+    await expect(page.getByLabel('Mã xác thực OTP *')).toHaveValue('');
+    await expect(page.getByLabel('Mã xác thực OTP *')).toBeEnabled();
+    expect(requests).toBe(2);
+  });
+
+  test('A bank read arriving after tab hiding cannot redisplay the number', async ({ page }) => {
+    let reads = 0;
+    let release: (() => void) | undefined;
+    const delayed = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await page.route('**/api/auth/me', (route) => route.fulfill({ json: sessions.ADMIN }));
+    await page.route('**/api/account/profile', async (route) => {
+      reads++;
+      if (reads === 2) await delayed;
+      return route.fulfill({ json: makeMockProfile() });
+    });
+    await page.goto('/ho-so');
+    await page.getByRole('button', { name: 'Hiện đầy đủ số tài khoản ngân hàng' }).click();
+    await expect.poll(() => reads).toBe(2);
+    await page.evaluate(() => {
+      Object.defineProperty(document, 'hidden', { value: true, configurable: true });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    release?.();
+    await expect(
+      page.getByRole('button', { name: 'Hiện đầy đủ số tài khoản ngân hàng' }),
+    ).toBeEnabled();
+    await expect(page.getByText('123456789012', { exact: true })).toHaveCount(0);
+  });
+
+  test('Desktop has two form columns and active navigation follows the selected section', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 950 });
+    await page.route('**/api/auth/me', (route) => route.fulfill({ json: sessions.CUSTOMER }));
+    await page.route('**/api/account/profile', (route) =>
+      route.fulfill({ json: makeMockProfile() }),
+    );
+    await page.goto('/ho-so');
+    const name = await page.getByLabel('Họ và tên *').boundingBox();
+    const phone = await page.getByLabel('Số điện thoại', { exact: true }).boundingBox();
+    expect(name && phone && Math.abs(name.y - phone.y) < 2 && phone.x > name.x).toBeTruthy();
+    const navigation = page.getByRole('navigation', { name: 'Mục hồ sơ' });
+    await navigation.getByRole('link', { name: 'Bảo mật', exact: true }).click();
+    await expect(navigation.getByRole('link', { name: 'Bảo mật', exact: true })).toHaveAttribute(
+      'aria-current',
+      'location',
+    );
+    const navBox = await navigation.boundingBox();
+    expect(navBox && navBox.y >= 60 && navBox.y < 180).toBeTruthy();
+    await page.setViewportSize({ width: 390, height: 850 });
+    await navigation.getByRole('link', { name: 'Thông tin cá nhân', exact: true }).click();
+    const mobileName = await page.getByLabel('Họ và tên *').boundingBox();
+    const mobilePhone = await page.getByLabel('Số điện thoại', { exact: true }).boundingBox();
+    expect(
+      mobileName && mobilePhone && mobilePhone.y > mobileName.y + mobileName.height,
+    ).toBeTruthy();
+  });
+
+  test('Password visibility toggles each field without changing its value or sending a request', async ({
+    page,
+  }) => {
+    let passwordWrites = 0;
+    await page.route('**/api/auth/me', (route) => route.fulfill({ json: sessions.CUSTOMER }));
+    await page.route('**/api/account/profile', (route) =>
+      route.fulfill({ json: makeMockProfile() }),
+    );
+    await page.route('**/api/member/password', (route) => {
+      passwordWrites++;
+      return route.fulfill({ status: 204 });
+    });
+    await page.goto('/ho-so#security');
+    const field = page.getByLabel('Mật khẩu hiện tại', { exact: true });
+    await field.fill('DraftOnly@1234');
+    await page.getByRole('button', { name: 'Hiện mật khẩu hiện tại', exact: true }).click();
+    await expect(field).toHaveAttribute('type', 'text');
+    await expect(field).toHaveValue('DraftOnly@1234');
+    await expect(page.getByLabel('Mật khẩu mới', { exact: true })).toHaveAttribute(
+      'type',
+      'password',
+    );
+    await page.getByRole('button', { name: 'Ẩn mật khẩu hiện tại', exact: true }).click();
+    await expect(field).toHaveAttribute('type', 'password');
+    expect(passwordWrites).toBe(0);
+  });
+
+  test('Unsaved draft warns before navigation, supports staying and leaving', async ({ page }) => {
+    await page.route('**/api/auth/me', (route) => route.fulfill({ json: sessions.CUSTOMER }));
+    await page.route('**/api/account/profile', (route) =>
+      route.fulfill({ json: makeMockProfile() }),
+    );
+    await page.goto('/ho-so');
+    await page.getByLabel('Họ và tên *').fill('Bản nháp chưa lưu');
+    await page.getByRole('link', { name: 'Khu vực cá nhân', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'Bạn có thay đổi chưa lưu' });
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole('button', { name: 'Tiếp tục chỉnh sửa', exact: true }).click();
+    await expect(page.getByLabel('Họ và tên *')).toHaveValue('Bản nháp chưa lưu');
+    await page.getByRole('link', { name: 'Khu vực cá nhân', exact: true }).click();
+    await dialog.getByRole('button', { name: 'Rời trang', exact: true }).click();
+    await expect(page).toHaveURL(/\/tai-khoan$/);
+  });
+
+  test('Reload warns about an unsaved draft and cancelling keeps the entered value', async ({
+    page,
+  }) => {
+    await page.route('**/api/auth/me', (route) => route.fulfill({ json: sessions.CUSTOMER }));
+    await page.route('**/api/account/profile', (route) =>
+      route.fulfill({ json: makeMockProfile() }),
+    );
+    await page.goto('/ho-so');
+    const input = page.getByLabel('Họ và tên *');
+    await input.click();
+    await input.fill('Bản nháp giữ khi tải lại');
+    const nativePrompt = page.waitForEvent('dialog');
+    const reload = page.reload({ waitUntil: 'commit', timeout: 3000 }).catch(() => null);
+    const dialog = await nativePrompt;
+    expect(dialog.type()).toBe('beforeunload');
+    await dialog.dismiss();
+    await reload;
+    // A cancelled native reload has no new navigation commit. Read the retained document.
+    expect(
+      await page.evaluate(
+        () => document.querySelector<HTMLInputElement>('#profile-full-name')?.value,
+      ),
+    ).toBe('Bản nháp giữ khi tải lại');
+  });
+
+  test('Cancel draft removes the navigation warning and logout is guarded while dirty', async ({
+    page,
+  }) => {
+    let logoutCalls = 0;
+    await page.route('**/api/auth/me', (route) => route.fulfill({ json: sessions.CUSTOMER }));
+    await page.route('**/api/account/profile', (route) =>
+      route.fulfill({ json: makeMockProfile() }),
+    );
+    await page.route('**/api/auth/logout', (route) => {
+      logoutCalls++;
+      return route.fulfill({ status: 204 });
+    });
+    await page.goto('/ho-so');
+    await page.getByLabel('Họ và tên *').fill('Bản nháp');
+    await page
+      .getByRole('button', { name: `Mở menu người dùng của ${sessions.CUSTOMER.name}` })
+      .click();
+    await page.getByRole('button', { name: 'Đăng xuất', exact: true }).click();
+    await expect(page.getByRole('dialog', { name: 'Bạn có thay đổi chưa lưu' })).toBeVisible();
+    expect(logoutCalls).toBe(0);
+    await page.getByRole('button', { name: 'Tiếp tục chỉnh sửa', exact: true }).click();
+    await page.getByRole('button', { name: 'Hủy thay đổi', exact: true }).click();
+    await page.getByRole('link', { name: 'Khu vực cá nhân', exact: true }).click();
+    await expect(page).toHaveURL(/\/tai-khoan$/);
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+  });
+
+  for (const width of [320, 390, 1440]) {
     test(`Personal profile page responsive reflow and accessibility at ${width}px`, async ({
       page,
     }) => {
