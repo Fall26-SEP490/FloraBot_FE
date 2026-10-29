@@ -61,6 +61,23 @@ export async function getCustomerChats(page = 1): Promise<CustomerSellerChatPage
   return request<CustomerSellerChatPage>(`/member/chats?page=${page}`, undefined, true, 'GET');
 }
 
+export async function getCustomerUnreadCount(signal?: AbortSignal): Promise<number> {
+  const unreadByChat = new Map<string, number>();
+  for (let page = 1; page <= 100000; page++) {
+    signal?.throwIfAborted();
+    const result = await getCustomerChats(page);
+    signal?.throwIfAborted();
+    for (const chat of result.items) {
+      unreadByChat.set(chat.id, Number(chat.unreadCount ?? 0));
+    }
+    if (!result.hasMore) {
+      return [...unreadByChat.values()].reduce((sum, count) => sum + count, 0);
+    }
+    if (!result.items.length) break;
+  }
+  throw new Error('Chưa tải đủ danh sách hội thoại.');
+}
+
 export async function getSellerChats(sellerId: string, page = 1): Promise<CustomerSellerChatPage> {
   return request<CustomerSellerChatPage>(
     `/sellers/${encodeURIComponent(sellerId)}/chats?page=${page}`,

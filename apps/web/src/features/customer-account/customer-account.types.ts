@@ -10,15 +10,13 @@ export type Profile = {
 export type CustomerHistoryItem = components['schemas']['CustomerHistoryItem'];
 export type CustomerHistoryPage = components['schemas']['CustomerHistoryPage'];
 
-export type TabKey = 'overview' | 'chats' | 'orders' | 'history' | 'kiosks' | 'shop';
+export type TabKey = 'overview' | 'chats' | 'orders' | 'history';
 
 export const TAB_HASH_MAP: Record<string, TabKey> = {
   overview: 'overview',
   'member-chats': 'chats',
   'web-orders': 'orders',
   'member-orders': 'history',
-  'member-kiosks': 'kiosks',
-  'member-shop': 'shop',
 };
 
 export const TAB_TO_HASH: Record<TabKey, string> = {
@@ -26,8 +24,6 @@ export const TAB_TO_HASH: Record<TabKey, string> = {
   chats: 'member-chats',
   orders: 'web-orders',
   history: 'member-orders',
-  kiosks: 'member-kiosks',
-  shop: 'member-shop',
 };
 
 export const ORDER_STATUS_LABELS: Record<string, string> = {
