@@ -125,7 +125,7 @@ export function PortalScreenRouter({
       return <MemberAuth mode="reset" />;
     case 'member':
       return (
-        <div className="workspace-portal-root">
+        <div className="workspace-portal-root member-account-root">
           <PortalGuard requiredRole="CUSTOMER">
             <CustomerWorkspace screen="member" />
           </PortalGuard>

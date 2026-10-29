@@ -2,10 +2,20 @@
 
 import { useEffect, useState } from 'react';
 import './styles/member.css';
+import './styles/member-dashboard.css';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { Button, MessageSquare, Package, RotateCcw, User } from '@florabot/ui';
+import {
+  ArrowRight,
+  Button,
+  Flower2,
+  MessageSquare,
+  Package,
+  RotateCcw,
+  Store,
+  User,
+} from '@florabot/ui';
 import WebRequests from '../orders/WebRequests';
 import { CustomerChatSection } from '@/features/chat/CustomerChatSection';
 import { getCustomerUnreadCount } from '@/features/chat/api';
@@ -115,6 +125,7 @@ export default function MemberAccount() {
           {initialLetter}
         </span>
         <div className="account-hero-info">
+          <span className="member-eyebrow">KHÔNG GIAN CỦA BẠN</span>
           <h1 className="account-hero-greeting">Góc nhỏ của {profile.data?.fullName || 'bạn'}</h1>
           <p className="account-hero-sub">
             Theo dõi đơn đặt hoa, lịch sử mua và điểm tích lũy của bạn.
@@ -126,6 +137,18 @@ export default function MemberAccount() {
                 <span>{profile.data.email}</span>
               </span>
             )}
+          </div>
+        </div>
+        <div className="member-points">
+          <span className="member-points-icon">
+            <Flower2 size={20} aria-hidden="true" />
+          </span>
+          <div>
+            <span className="member-points-label">Điểm tích lũy</span>
+            <strong className="overview-stat-value">
+              {profile.isSuccess ? profile.data.loyaltyPoints.toLocaleString('vi-VN') : '—'}
+            </strong>
+            <span className="member-points-caption">Dùng cho đơn hoa tiếp theo</span>
           </div>
         </div>
       </header>
@@ -194,59 +217,86 @@ export default function MemberAccount() {
       {/* Tab 1: Overview */}
       {visibleTab === 'overview' && (
         <div className="account-overview-panel">
-          <div className="overview-stats-grid">
-            <div className="overview-stat-card">
-              <span className="overview-stat-label">Điểm tích lũy</span>
-              <span className="overview-stat-value">
-                {profile.isSuccess ? profile.data.loyaltyPoints.toLocaleString('vi-VN') : '—'}
+          <div className="member-overview-heading">
+            <h2>Hoạt động của bạn</h2>
+          </div>
+          <div className="member-activity-grid">
+            <button
+              type="button"
+              className="member-activity-card"
+              onClick={() => switchTab('orders')}
+            >
+              <span className="member-activity-icon member-activity-icon-orders">
+                <Package size={22} aria-hidden="true" />
               </span>
-              <span style={{ fontSize: '0.8rem', color: '#55725c' }}>
-                Điểm thưởng dùng cho các đơn hoa kế tiếp
+              <span className="member-activity-title">Đơn đặt trước</span>
+              <span className="member-activity-description">
+                Theo dõi yêu cầu, báo giá và lịch nhận hoa.
               </span>
-            </div>
+              <span className="member-activity-action">
+                Xem đơn đặt trước <ArrowRight size={16} aria-hidden="true" />
+              </span>
+            </button>
+            <button
+              type="button"
+              className="member-activity-card"
+              onClick={() => switchTab('history')}
+            >
+              <span className="member-activity-icon member-activity-icon-history">
+                <RotateCcw size={22} aria-hidden="true" />
+              </span>
+              <span className="member-activity-title">Lịch sử mua</span>
+              <span className="member-activity-description">
+                Xem lại những đơn hoa đã mua của bạn.
+              </span>
+              <span className="member-activity-action">
+                Xem lịch sử <ArrowRight size={16} aria-hidden="true" />
+              </span>
+            </button>
             {isCustomer && (
-              <div className="overview-stat-card">
-                <span className="overview-stat-label">Tin nhắn với các shop</span>
+              <div className="member-activity-group">
+                <button
+                  type="button"
+                  className="member-activity-card"
+                  onClick={() => switchTab('chats')}
+                >
+                  <span className="member-activity-icon member-activity-icon-chats">
+                    <MessageSquare size={22} aria-hidden="true" />
+                  </span>
+                  <span className="member-activity-title">Tin nhắn với các shop</span>
+                  <span className="member-activity-description">
+                    {chatsQuery.isError
+                      ? 'Chưa tải được số tin chưa đọc.'
+                      : chatsQuery.isPending
+                        ? 'Đang tải số tin chưa đọc…'
+                        : `${unreadChatsCount} chưa đọc`}
+                  </span>
+                  <span className="member-activity-action">
+                    Mở hộp thư <ArrowRight size={16} aria-hidden="true" />
+                  </span>
+                </button>
                 {chatsQuery.isError ? (
-                  <div role="alert">
-                    <p>Chưa tải được số tin chưa đọc.</p>
+                  <div className="member-chat-error" role="alert">
                     <Button variant="outline" onClick={() => void chatsQuery.refetch()}>
                       Thử lại tin nhắn
                     </Button>
                   </div>
-                ) : chatsQuery.isPending ? (
-                  <p role="status">Đang tải số tin chưa đọc…</p>
-                ) : (
-                  <span className="overview-stat-value">{unreadChatsCount} chưa đọc</span>
-                )}
-                <Button
-                  variant="outline"
-                  onClick={() => switchTab('chats')}
-                  style={{ alignSelf: 'flex-start', marginTop: 'auto', fontSize: '0.8rem' }}
-                >
-                  Mở hộp thư
-                </Button>
+                ) : null}
               </div>
             )}
-            <div className="overview-stat-card">
-              <span className="overview-stat-label">Đơn đặt trước</span>
-              <span className="overview-stat-value">Quản lý</span>
-              <Button
-                variant="outline"
-                onClick={() => switchTab('orders')}
-                style={{ alignSelf: 'flex-start', marginTop: 'auto', fontSize: '0.8rem' }}
-              >
-                Xem đơn đặt trước
-              </Button>
-            </div>
           </div>
 
           {isCustomer && (
-            <div className="account-section-card">
-              <h2>Hồ sơ thuê kiosk / Mở shop</h2>
-              <p>Đăng ký mở shop hoặc theo dõi tiến độ hồ sơ thuê kiosk của bạn.</p>
-              <Link href="/thue-kiosk" className="button button-outline">
-                Xem hồ sơ thuê kiosk
+            <div className="member-shop-invitation">
+              <span className="member-shop-icon">
+                <Store size={21} aria-hidden="true" />
+              </span>
+              <div>
+                <h2>Đồng hành cùng FloraBot</h2>
+                <p>Muốn mở shop hoa? Tìm hiểu và theo dõi hồ sơ thuê kiosk của bạn.</p>
+              </div>
+              <Link href="/thue-kiosk">
+                Xem hồ sơ thuê kiosk <ArrowRight size={16} aria-hidden="true" />
               </Link>
             </div>
           )}
@@ -294,28 +344,37 @@ export default function MemberAccount() {
                 </ul>
               ) : (
                 <div className="member-empty">
-                  <h3>Một dịp tặng hoa đang đợi bạn</h3>
+                  <span className="member-empty-icon">
+                    <Flower2 size={24} aria-hidden="true" />
+                  </span>
+                  <h3>{page > 1 ? 'Chưa có đơn ở trang này' : 'Chưa có lịch sử mua hoa'}</h3>
                   <p>Các đơn mua bằng tài khoản này sẽ được lưu ở đây.</p>
-                  <Link href="/dat-hoa">Khám phá hoa và đặt theo yêu cầu</Link>
+                  {page === 1 && (
+                    <Link className="button button-outline" href="/dat-hoa">
+                      Khám phá hoa <ArrowRight size={16} aria-hidden="true" />
+                    </Link>
+                  )}
                 </div>
               )}
-              <nav className="stock-actions" aria-label="Phân trang lịch sử">
-                <Button
-                  variant="outline"
-                  disabled={page === 1 || history.isFetching}
-                  onClick={() => setPage((value) => value - 1)}
-                >
-                  Trang trước
-                </Button>
-                <span>Trang {page}</span>
-                <Button
-                  variant="outline"
-                  disabled={!history.data.hasMore || history.isFetching}
-                  onClick={() => setPage((value) => value + 1)}
-                >
-                  Trang sau
-                </Button>
-              </nav>
+              {(page > 1 || history.data.hasMore) && (
+                <nav className="stock-actions" aria-label="Phân trang lịch sử">
+                  <Button
+                    variant="outline"
+                    disabled={page === 1 || history.isFetching}
+                    onClick={() => setPage((value) => value - 1)}
+                  >
+                    Trang trước
+                  </Button>
+                  <span>Trang {page}</span>
+                  <Button
+                    variant="outline"
+                    disabled={!history.data.hasMore || history.isFetching}
+                    onClick={() => setPage((value) => value + 1)}
+                  >
+                    Trang sau
+                  </Button>
+                </nav>
+              )}
             </>
           )}
         </section>

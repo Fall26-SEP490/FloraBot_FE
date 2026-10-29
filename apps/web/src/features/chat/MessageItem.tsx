@@ -32,6 +32,11 @@ export function MessageItem({ message }: { message: CustomerSellerChatMessage })
       className={`chat-message-row ${isMine ? 'is-mine' : 'is-counterparty'}`}
       data-message-id={message.id}
     >
+      {!isMine && (
+        <span className="chat-message-avatar" aria-hidden="true">
+          {(message.senderName?.trim().charAt(0) || '?').toLocaleUpperCase('vi-VN')}
+        </span>
+      )}
       <div className="chat-message-bubble">
         {!isMine && (
           <span className="chat-message-sender" aria-label={`Người gửi: ${message.senderName}`}>

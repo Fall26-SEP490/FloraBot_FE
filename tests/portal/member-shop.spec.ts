@@ -16,7 +16,9 @@ async function mockMember(page: Page, role = 'CUSTOMER') {
   });
 }
 
-test('Customer uses the kiosk application route and keeps only purchase tabs', async ({ page }) => {
+test('Customer uses the kiosk application route and keeps only purchase tabs', async ({
+  page,
+}, testInfo) => {
   await mockMember(page);
   const retiredCalls: string[] = [];
   page.on('request', (request) => {
@@ -32,6 +34,24 @@ test('Customer uses the kiosk application route and keeps only purchase tabs', a
   await expect(main.getByText('Bảo mật tài khoản')).toHaveCount(0);
   await expect(main.getByText('Thành viên FloraBot', { exact: true })).toHaveCount(0);
   await expect(main.getByText('Điểm tích lũy', { exact: true })).toHaveCount(1);
+  await main.getByRole('button', { name: /Lịch sử mua/ }).click();
+  await expect(main.getByRole('heading', { name: 'Lịch sử mua hoa', exact: true })).toBeVisible();
+  await expect(main.getByRole('link', { name: 'Khám phá hoa' })).toHaveAttribute(
+    'href',
+    '/dat-hoa',
+  );
+  await expect(main.getByRole('navigation', { name: 'Phân trang lịch sử' })).toHaveCount(0);
+  await main.locator('#member-orders').screenshot({ path: testInfo.outputPath('history.png') });
+  await main.getByRole('link', { name: 'Tổng quan' }).click();
+  await main.getByRole('button', { name: /Đơn đặt trước/ }).click();
+  await expect(main.getByRole('heading', { name: 'Đơn đặt hoa của bạn' })).toBeVisible();
+  await expect(main.getByRole('link', { name: 'Khám phá hoa' })).toHaveAttribute(
+    'href',
+    '/dat-hoa',
+  );
+  await expect(main.getByRole('navigation', { name: 'Phân trang đơn đặt trước' })).toHaveCount(0);
+  await main.locator('#web-orders').screenshot({ path: testInfo.outputPath('orders.png') });
+  await main.getByRole('link', { name: 'Tổng quan' }).click();
   const application = main.getByRole('link', { name: 'Xem hồ sơ thuê kiosk' });
   await expect(application).toHaveAttribute('href', '/thue-kiosk');
   await application.click();
@@ -56,8 +76,8 @@ test('Seller has no shop registration or customer chat calls in the purchase are
   await expect(main.getByRole('link', { name: 'Xem hồ sơ thuê kiosk' })).toHaveCount(0);
   await expect(main.getByRole('link', { name: /Tin nhắn/ })).toHaveCount(0);
   await expect(main.getByText('12.000', { exact: true })).toBeVisible();
-  await main.getByRole('link', { name: 'Lịch sử mua', exact: true }).click();
-  await expect(main.getByRole('heading', { name: 'Lịch sử mua hoa' })).toBeVisible();
+  await main.getByRole('button', { name: /Lịch sử mua/ }).click();
+  await expect(main.getByRole('heading', { name: 'Lịch sử mua hoa', exact: true })).toBeVisible();
   expect(chatCalls).toEqual([]);
 });
 
@@ -93,6 +113,45 @@ test('Unread total includes later pages and failures do not display fake zero va
   await expect(page.getByText('2 chưa đọc', { exact: true })).toHaveCount(0);
 });
 
+test('Order errors do not show empty totals and history pagination remains available', async ({
+  page,
+}) => {
+  await mockMember(page);
+  await page.route('**/api/member/preorders?*', (route) =>
+    route.fulfill({ status: 503, json: {} }),
+  );
+  await page.route('**/api/member/history?*', (route) => {
+    const pageNumber = Number(new URL(route.request().url()).searchParams.get('page'));
+    return route.fulfill({
+      json: {
+        items: [
+          {
+            id: `order-${pageNumber}`,
+            orderCode: `CODE-${pageNumber}`,
+            createdAt: '2026-10-10T00:00:00Z',
+            status: 'COMPLETED',
+            totalAmount: 100000,
+            shopName: 'Shop hoa',
+            items: ['Hoa hồng'],
+          },
+        ],
+        page: pageNumber,
+        hasMore: pageNumber === 1,
+      },
+    });
+  });
+  await page.goto('/tai-khoan#web-orders');
+  await expect(page.getByRole('alert').filter({ hasText: 'Chưa tải được yêu cầu' })).toBeVisible();
+  await expect(page.getByLabel('Tóm tắt trang đơn đang xem')).toHaveCount(0);
+  await page.getByRole('link', { name: 'Lịch sử mua', exact: true }).click();
+  await expect(page.getByText('CODE-1', { exact: false })).toBeVisible();
+  const pagination = page.getByRole('navigation', { name: 'Phân trang lịch sử' });
+  await pagination.getByRole('button', { name: 'Trang sau' }).click();
+  await expect(page.getByText('CODE-2', { exact: false })).toBeVisible();
+  await pagination.getByRole('button', { name: 'Trang trước' }).click();
+  await expect(page.getByText('CODE-1', { exact: false })).toBeVisible();
+});
+
 for (const [role, hash, destination] of [
   ['CUSTOMER', 'member-shop', '/thue-kiosk'],
   ['SELLER', 'member-shop', '/seller'],
@@ -102,5 +161,29 @@ for (const [role, hash, destination] of [
     await mockMember(page, role);
     await page.goto('/tai-khoan#' + hash);
     await expect(page).toHaveURL(new RegExp(destination + '$'));
+  });
+}
+
+for (const [role, width] of [
+  ['CUSTOMER', 1440],
+  ['CUSTOMER', 390],
+  ['SELLER', 390],
+] as const) {
+  test(`${role} purchase dashboard is usable at ${width}px`, async ({ page }, testInfo) => {
+    await mockMember(page, role);
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/tai-khoan');
+    const main = page.locator('#main');
+    await expect(main.getByRole('button', { name: /Đơn đặt trước/ })).toBeVisible();
+    await expect(main.getByRole('button', { name: /Lịch sử mua/ })).toBeVisible();
+    if (role === 'CUSTOMER') {
+      await expect(main.getByRole('button', { name: /Tin nhắn với các shop/ })).toBeVisible();
+    }
+    const historyTab = main.getByRole('link', { name: 'Lịch sử mua', exact: true });
+    await expect(historyTab).toBeInViewport();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    await page.screenshot({ path: testInfo.outputPath('account.png'), fullPage: true });
   });
 }

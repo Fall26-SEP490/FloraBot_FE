@@ -167,6 +167,10 @@
   width: 100%;
 }
 
+.chat-message-avatar {
+  display: none;
+}
+
 .chat-message-row.is-mine {
   justify-content: flex-end;
 }
