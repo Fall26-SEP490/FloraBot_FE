@@ -258,5 +258,25 @@ describe('validateKioskApplicationDraft Unit Tests', () => {
       });
       expect(result.isValid).toBe(true);
     });
+
+    it('rejects bank account number exceeding 34 characters', () => {
+      const result = validateKioskApplicationDraft({
+        ...validDraft,
+        bankAccountNumber: '1'.repeat(35),
+      });
+      expect(result.isValid).toBe(false);
+      expect(result.errors.bankAccountNumber).toBe('Số tài khoản không được vượt quá 34 ký tự.');
+    });
+
+    it('rejects bank account number containing special characters or spaces', () => {
+      const result = validateKioskApplicationDraft({
+        ...validDraft,
+        bankAccountNumber: '0123-4567-89',
+      });
+      expect(result.isValid).toBe(false);
+      expect(result.errors.bankAccountNumber).toBe(
+        'Số tài khoản chỉ bao gồm chữ số hoặc chữ cái không dấu.',
+      );
+    });
   });
 });

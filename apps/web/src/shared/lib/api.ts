@@ -77,7 +77,12 @@ export async function request<T>(
       detail?: string;
       error?: string;
       message?: string;
+      errors?: Record<string, string[] | string>;
     };
+    const firstValidationError =
+      problem.errors && typeof problem.errors === 'object'
+        ? Object.values(problem.errors).flat().filter(Boolean)[0]
+        : undefined;
     const default401 =
       path === '/auth/google'
         ? 'Tài khoản Google không hợp lệ hoặc phiên ủy quyền bị từ chối. Vui lòng thử lại.'
@@ -90,6 +95,7 @@ export async function request<T>(
       response.status,
       problem.detail ||
         problem.error ||
+        firstValidationError ||
         problem.message ||
         (response.status === 401
           ? default401

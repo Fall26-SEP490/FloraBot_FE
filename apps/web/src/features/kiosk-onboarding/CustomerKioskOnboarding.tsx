@@ -201,8 +201,8 @@ function CustomerKioskContent({
         />
       )}
 
-      {/* Catalog & Registration Form (if no active application) */}
-      {!hasActiveApplication && (
+      {/* Catalog & Registration Form (only for CUSTOMER role when no active application) */}
+      {!hasActiveApplication && sessionData.role === 'CUSTOMER' && (
         <>
           <KioskPackageCatalog
             packages={packagesQuery.data}
@@ -283,6 +283,23 @@ function CustomerKioskContent({
             onSubmit={handleFormSubmit}
           />
         </>
+      )}
+
+      {/* Already SELLER notice (if no active onboarding in progress) */}
+      {!hasActiveApplication && sessionData.role === 'SELLER' && (
+        <div role="status" className="status-action-box active-success-banner" data-action="active">
+          <h3>Tài khoản đã là Chủ shop (SELLER)</h3>
+          <p>
+            Tài khoản của bạn hiện đã sở hữu vai trò Chủ shop. Quy trình đăng ký thuê kiosk mới chỉ
+            áp dụng cho tài khoản Khách hàng (CUSTOMER). Vui lòng chuyển sang Bảng điều khiển Chủ
+            shop để quản lý hoa và vận hành kiosk.
+          </p>
+          <div style={{ marginTop: '1rem' }}>
+            <Link href="/seller" className="button button-primary">
+              Đến Bảng điều khiển Chủ shop
+            </Link>
+          </div>
+        </div>
       )}
 
       {/* Cancel Confirmation Dialog */}
