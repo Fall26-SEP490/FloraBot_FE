@@ -66,7 +66,7 @@ async function setup(page: Page) {
 }
 async function open(page: Page) {
   await page.goto('/seller/stock');
-  await page.locator('.seller-stock summary').click();
+  await page.getByRole('button', { name: 'Xem chi tiết ô A01' }).click();
   await page.getByRole('button', { name: 'Báo sự cố ô A01' }).click();
 }
 async function fill(page: Page) {
@@ -137,7 +137,9 @@ for (const width of [390, 1440]) {
     await expect(page.locator('.fault-report').getByRole('status')).toContainText(
       'Đã ghi nhận báo cáo',
     );
-    await expect(page.locator('.seller-stock summary')).toContainText('Có sự cố');
+    await expect(page.getByRole('button', { name: 'Xem chi tiết ô A01' })).toContainText(
+      'Có sự cố',
+    );
     await expect(page.getByRole('button', { name: 'Báo sự cố ô A01' })).toHaveCount(0);
     expect(attempts).toBe(2);
   });
@@ -158,7 +160,7 @@ test('Unknown outcome survives reload and blocks another report until explicit r
   await page.getByRole('button', { name: 'Xác nhận báo sự cố' }).click();
   await expect(page.getByText(/Chưa xác nhận được kết quả lần gửi trước/)).toBeVisible();
   await page.reload();
-  await page.locator('.seller-stock summary').click();
+  await page.getByRole('button', { name: 'Xem chi tiết ô A01' }).click();
   await expect(page.getByText(/Chưa xác nhận được kết quả lần gửi trước/)).toBeVisible();
   await expect(page.getByRole('button', { name: 'Báo sự cố ô A01' })).toHaveCount(0);
   expect(attempts).toBe(1);
@@ -224,7 +226,7 @@ test('Pending flowers require private evidence and confirmation before return', 
     return route.fulfill({ json: { result: null } });
   });
   await page.goto('/seller/stock');
-  await page.locator('.seller-stock summary').click();
+  await page.getByRole('button', { name: 'Xem chi tiết ô A01' }).click();
   await page.getByLabel('Lý do nhận lại hoa').fill('Nhận lại hoa hết hạn');
   await page
     .getByLabel('Ảnh minh chứng', { exact: true })

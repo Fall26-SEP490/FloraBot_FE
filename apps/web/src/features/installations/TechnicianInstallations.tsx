@@ -65,7 +65,6 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
             nộp báo cáo hoàn thành.
           </p>
         </div>
-        <span className="dashboard-context">Kỹ thuật viên</span>
       </div>
 
       {jobsQuery.isLoading && (

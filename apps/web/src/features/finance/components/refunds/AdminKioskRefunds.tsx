@@ -405,7 +405,6 @@ export default function AdminKioskRefunds({ session }: AdminKioskRefundsProps) {
             thủ quy trình đối soát hai bước giữa người phê duyệt và người chi trả.
           </p>
         </div>
-        <span className="dashboard-context">Quản trị viên</span>
       </div>
 
       {completion?.actor === session.id && (

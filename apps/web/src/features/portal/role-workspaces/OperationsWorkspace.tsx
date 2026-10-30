@@ -120,9 +120,6 @@ export default function OperationsWorkspace({ section = 'overview' }: { section?
                           : `Chào ${session.data.name}, cùng theo dõi hoạt động kiosk hôm nay.`}
               </p>
             </div>
-            <span className="dashboard-context">
-              {section === 'technicians' ? 'Kỹ thuật viên' : 'Quản lý vận hành'}
-            </span>
           </div>
           {section === 'installations' ? (
             <OperationsInstallations
