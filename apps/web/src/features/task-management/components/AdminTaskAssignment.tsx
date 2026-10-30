@@ -69,7 +69,21 @@ export default function AdminTaskAssignment({
       sessionStorage.setItem(key, JSON.stringify(payload));
       saved = true;
       setAttempt(payload);
-      await request(apiBase, payload);
+      if (effectiveRole === 'SELLER') {
+        await request(
+          '/me/staff-tasks',
+          {
+            assigneeId: payload.assigneeId,
+            kioskId: payload.kioskId,
+            instructions: payload.instructions,
+          },
+          true,
+          'POST',
+          { 'Idempotency-Key': payload.id },
+        );
+      } else {
+        await request(apiBase, payload);
+      }
       sessionStorage.removeItem(key);
       setAttempt(null);
       form.reset();

@@ -30,6 +30,14 @@
     box-shadow 0.2s !important;
 }
 
+/* Keep our labeled clear button; hide the browser's extra search X. */
+.catalog-search-input::-webkit-search-cancel-button,
+.catalog-search-input::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
 .catalog-search-input:focus {
   outline: none !important;
   border-color: #174b35 !important;

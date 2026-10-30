@@ -121,7 +121,7 @@ test('Shop Owner assigns DELIVERY to own seller staff and recovers the same requ
           },
         ],
       });
-    if (path === '/api/sellers/shop-lan/staff-tasks' && route.request().method() === 'POST') {
+    if (path === '/api/me/staff-tasks' && route.request().method() === 'POST') {
       writes++;
       const body = route.request().postDataJSON();
       if (writes === 1) {
@@ -129,11 +129,10 @@ test('Shop Owner assigns DELIVERY to own seller staff and recovers the same requ
         return route.abort();
       }
       expect(body).toEqual(payload);
-      expect(body.kind).toBe('DELIVERY');
+      expect(Object.keys(body).sort()).toEqual(['assigneeId', 'instructions', 'kioskId']);
       expect(body.kioskId).toBe('kiosk-2');
-      expect(body.sellerId).toBe('shop-lan');
-      expect(body.incidentId).toBeNull();
-      return route.fulfill({ json: { id: body.id } });
+      expect(route.request().headers()['idempotency-key']).toMatch(/^[a-f0-9-]{36}$/);
+      return route.fulfill({ json: { id: 'task-1' } });
     }
     if (/staff-tasks|preorders|products|accessories|wallet|subscriptions/.test(path))
       return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
@@ -176,11 +175,11 @@ test('Shop Owner assigns DELIVERY to own seller staff and recovers the same requ
   ).toBeVisible();
   expect(writes).toBe(2);
 
-  // Exact API scope: owner only calls own seller API (/api/sellers/shop-lan/*)
+  // Reads are seller-scoped; task creation uses the token-scoped endpoint.
   expect(
     requestedUrls
       .filter((p) => p.startsWith('/api/') && !p.startsWith('/api/auth'))
-      .every((p) => p.startsWith('/api/sellers/shop-lan/')),
+      .every((p) => p.startsWith('/api/sellers/shop-lan/') || p === '/api/me/staff-tasks'),
   ).toBe(true);
 });
 

@@ -77,16 +77,17 @@ function OrderActions({
   const slots = useQuery({
     queryKey: ['seller-kiosk-slots', row.sellerId, row.kioskId],
     queryFn: () =>
-      request<components['schemas']['SellerSlotResponse'][]>(`/me/kiosks/${row.kioskId}/slots`),
+      request<(components['schemas']['SellerSlotResponse'] & { zone?: string | null })[]>(
+        `/me/kiosks/${row.kioskId}/slots`,
+      ),
     enabled: action === 'fulfill' && Boolean(row.kioskId),
   });
   const emptyKioskSlots =
     slots.data?.filter((item) => item.kioskId === row.kioskId && item.status === 'RENTED_EMPTY') ??
     [];
-  const preorderSlots = emptyKioskSlots.filter(
-    (item) => !item.slotCode.trim().toUpperCase().startsWith('W'),
+  const fulfillSlots = emptyKioskSlots.filter(
+    (item) => item.zone === 'PREORDER' || item.zone === null,
   );
-  const fulfillSlots = preorderSlots.length > 0 ? preorderSlots : emptyKioskSlots;
   async function copyText(value: string, field: 'orderId' | 'token') {
     try {
       await navigator.clipboard.writeText(value);

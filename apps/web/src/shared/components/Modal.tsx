@@ -1,9 +1,13 @@
 'use client';
 
 import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { X } from '@florabot/ui';
+// Modal foundation styles are provided globally via site.css (@import './modal.css')
 
 const focusableSelector =
   'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+export type ModalSize = 'sm' | 'md' | 'lg';
 
 export function Modal({
   open,
@@ -12,6 +16,8 @@ export function Modal({
   onClose,
   children,
   closeDisabled = false,
+  size = 'md',
+  className = '',
 }: {
   open: boolean;
   title: string;
@@ -19,6 +25,8 @@ export function Modal({
   onClose: () => void;
   children: ReactNode;
   closeDisabled?: boolean;
+  size?: ModalSize;
+  className?: string;
 }) {
   const titleId = useId();
   const descriptionId = useId();
@@ -37,6 +45,7 @@ export function Modal({
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && !closeDisabled) {
         event.preventDefault();
+        event.stopPropagation();
         onClose();
         return;
       }
@@ -61,7 +70,10 @@ export function Modal({
     document.body.classList.add('modal-open');
     return () => {
       document.removeEventListener('keydown', onKeyDown);
-      document.body.classList.remove('modal-open');
+      const remainingModals = document.querySelectorAll('.management-modal-backdrop').length;
+      if (remainingModals <= 1) {
+        document.body.classList.remove('modal-open');
+      }
       previousFocus?.focus();
     };
   }, [closeDisabled, onClose, open]);
@@ -79,7 +91,7 @@ export function Modal({
       />
       <div
         ref={panelRef}
-        className="management-modal"
+        className={`management-modal management-modal--${size}${className ? ` ${className}` : ''}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -87,7 +99,7 @@ export function Modal({
         tabIndex={-1}
       >
         <header className="management-modal-header">
-          <div>
+          <div className="management-modal-heading-text">
             <h2 id={titleId}>{title}</h2>
             {description && <p id={descriptionId}>{description}</p>}
           </div>
@@ -98,7 +110,8 @@ export function Modal({
             disabled={closeDisabled}
             aria-label="Đóng hộp thoại"
           >
-            ×
+            <X size={18} aria-hidden="true" />
+            <span className="sr-only">Đóng hộp thoại</span>
           </button>
         </header>
         {children}
@@ -115,6 +128,8 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
   pending = false,
+  variant = 'danger',
+  size = 'sm',
 }: {
   open: boolean;
   title: string;
@@ -123,6 +138,8 @@ export function ConfirmDialog({
   onConfirm: () => void;
   onCancel: () => void;
   pending?: boolean;
+  variant?: 'danger' | 'primary';
+  size?: ModalSize;
 }) {
   return (
     <Modal
@@ -131,6 +148,7 @@ export function ConfirmDialog({
       description={description}
       onClose={onCancel}
       closeDisabled={pending}
+      size={size}
     >
       <div className="management-modal-actions" aria-busy={pending}>
         <button
@@ -144,7 +162,7 @@ export function ConfirmDialog({
         </button>
         <button
           type="button"
-          className="button management-danger-button"
+          className={`button ${variant === 'danger' ? 'management-danger-button' : 'button-primary'}`}
           onClick={onConfirm}
           disabled={pending}
         >

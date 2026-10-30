@@ -629,9 +629,19 @@
 }
 .profile-leave-actions {
   display: flex;
-  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
   gap: 0.75rem;
-  padding: 1.25rem 1.5rem;
+  margin-top: 1.25rem;
+}
+
+.profile-leave-actions .button {
+  min-height: 42px;
+  height: 42px;
+  padding: 0 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: var(--radius-workspace-control, 8px);
 }
 
 @media (max-width: 899px) {
@@ -717,6 +727,13 @@
     padding-inline: 0.5rem;
   }
   .profile-leave-actions {
-    flex-direction: column;
+    flex-direction: column-reverse;
+    gap: 0.65rem;
+  }
+  .profile-leave-actions .button {
+    width: 100%;
+    min-height: 44px;
+    height: 44px;
+    justify-content: center;
   }
 }

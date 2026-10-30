@@ -1,0 +1,222 @@
+/* Base Shared Modal Architecture for FloraBot */
+
+/* Body scroll lock when modal is open */
+body.modal-open,
+.modal-open {
+  overflow: hidden;
+}
+
+/* Stacking & Backdrop */
+.management-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  padding: clamp(0.75rem, 3vw, 1.5rem);
+  background: rgba(10, 30, 18, 0.58);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: opacity 0.2s ease;
+}
+
+/* Dismiss click-catcher */
+.management-modal-dismiss {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: default;
+}
+
+/* Modal Card Surface */
+.management-modal {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 540px);
+  max-height: calc(100dvh - 2.5rem);
+  overflow-y: auto;
+  padding: clamp(1.2rem, 3vw, 1.65rem);
+  border: 1px solid var(--color-workspace-line, #c9d9c8);
+  border-radius: var(--radius-workspace-panel, 14px);
+  background: var(--color-workspace-surface, #ffffff);
+  box-shadow:
+    0 24px 54px -12px rgba(12, 38, 22, 0.22),
+    0 2px 6px rgba(24, 62, 43, 0.04);
+  color: var(--color-workspace-ink, #183e2b);
+  box-sizing: border-box;
+}
+
+/* Size Variants - Specific selectors to win over legacy un-scoped rules */
+div.management-modal.management-modal--sm {
+  width: min(100%, 480px);
+}
+
+div.management-modal.management-modal--md {
+  width: min(100%, 560px);
+}
+
+div.management-modal.management-modal--lg {
+  width: min(100%, 680px);
+}
+
+/* Header */
+.management-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.85rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--color-workspace-divider, #e8efe6);
+}
+
+/* Brief notices and confirmations don't need dividers around one line of copy. */
+div.management-modal.management-modal--sm > .management-modal-header {
+  padding-bottom: 0;
+  margin-bottom: 0;
+  border-bottom: 0;
+}
+
+.management-modal-heading-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.management-modal-header h2,
+.management-modal-header h3 {
+  margin: 0;
+  color: var(--color-workspace-ink, #183e2b);
+  font-family: var(--font-display, 'Nunito', sans-serif);
+  font-size: clamp(1.1rem, 2.2vw, 1.25rem);
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.015em;
+}
+
+.management-modal-header p {
+  margin: 0.4rem 0 0;
+  color: var(--color-workspace-muted, #476451);
+  font-family: var(--font-body, 'Be Vietnam Pro', sans-serif);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+/* Close Button - 44x44px touch area with 18px icon */
+button.management-modal-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border-radius: var(--radius-workspace-control, 8px);
+  background: var(--color-workspace-surface, #ffffff);
+  color: var(--color-workspace-muted, #476451);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+button.management-modal-close:hover:not(:disabled) {
+  color: var(--color-workspace-ink, #183e2b);
+  border-color: var(--color-divider, #b8cbb2);
+}
+
+button.management-modal-close:focus-visible {
+  outline: 2px solid var(--color-workspace-ink, #183e2b);
+  outline-offset: 2px;
+}
+
+button.management-modal-close:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.management-modal-close .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Actions / Footer */
+.management-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-workspace-divider, #e8efe6);
+}
+
+div.management-modal.management-modal--sm > .management-modal-actions {
+  margin-top: 1.5rem;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.management-modal-actions .button {
+  min-height: 42px;
+  height: 42px;
+  padding: 0 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: var(--radius-workspace-control, 8px);
+  white-space: nowrap;
+}
+
+/* Danger Action Button */
+.management-danger-button {
+  border-color: var(--color-status-danger-action, #922b25) !important;
+  background: var(--color-status-danger-action, #922b25) !important;
+  color: #ffffff !important;
+  transition: background-color 0.15s ease;
+}
+
+.management-danger-button:hover:not(:disabled) {
+  background: var(--color-status-danger-action-hover, #741f1a) !important;
+  border-color: var(--color-status-danger-action-hover, #741f1a) !important;
+}
+
+.management-danger-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Mobile Responsive */
+@media (max-width: 640px) {
+  .management-modal {
+    padding: 1.15rem 1rem;
+    max-height: calc(100dvh - 1.5rem);
+  }
+
+  .management-modal-header h2,
+  .management-modal-header h3 {
+    font-size: 1.1rem;
+  }
+
+  .management-modal-actions {
+    flex-direction: column-reverse;
+    gap: 0.65rem;
+  }
+
+  .management-modal-actions .button {
+    width: 100%;
+    min-height: 44px;
+    height: 44px;
+    justify-content: center;
+  }
+}

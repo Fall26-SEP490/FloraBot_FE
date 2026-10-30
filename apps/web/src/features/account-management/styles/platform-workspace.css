@@ -416,7 +416,6 @@
   border: 1px solid #d9e3d7;
   border-radius: 20px;
   box-shadow: 0 24px 90px rgb(19 38 27 / 22%);
-  width: min(680px, 100%);
   padding: 0 28px 26px;
   max-height: calc(100dvh - 48px);
 }
@@ -437,9 +436,6 @@
   letter-spacing: -0.025em;
 }
 .workspace-portal-root.platform-workspace .management-modal-close {
-  width: 36px;
-  height: 36px;
-  min-height: 36px;
   border: 1px solid #e2e9df;
   background: #f7faf4;
   color: #45644f;

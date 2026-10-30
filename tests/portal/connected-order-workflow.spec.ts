@@ -92,6 +92,7 @@ async function common(
                       id: slotId,
                       kioskId,
                       slotCode: 'P01',
+                      zone: 'PREORDER',
                       status: 'RENTED_EMPTY',
                       bouquetId: null,
                     },
@@ -292,6 +293,7 @@ test('Every sample catalog item is display-only, including items with illustrati
   await expect(
     page.getByRole('button', { name: 'Gửi yêu cầu để shop báo giá', exact: true }),
   ).toHaveCount(0);
+  await page.getByRole('button', { name: 'Đóng mẫu đang chọn' }).click();
   await page.getByRole('button', { name: 'Nhắn tin với shop', exact: true }).first().click();
   await expect(page.getByText(/Mẫu minh họa chưa gắn với shop thật/)).toBeVisible();
   expect(writes).toBe(0);

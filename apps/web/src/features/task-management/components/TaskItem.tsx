@@ -9,6 +9,7 @@ import type { ActiveTaskRole, Task } from '../task-management.types';
 import StaffEvidence from './StaffEvidence';
 import StaffReassignment from './StaffReassignment';
 import StaffTaskDetails from './StaffTaskDetails';
+import StaffPreorderFulfillment from './StaffPreorderFulfillment';
 
 export function TaskItem({
   task,
@@ -130,14 +131,17 @@ export function TaskItem({
         </p>
       )}
       {isWorker && role === 'SELLER_STAFF' && actorId && task.kind === 'DELIVERY' && (
-        <StaffStock
-          taskId={task.id}
-          actorId={actorId}
-          sellerId={sellerId}
-          role={role}
-          active={task.status === 'IN_PROGRESS'}
-          apiBase={apiBase}
-        />
+        <>
+          <StaffPreorderFulfillment taskId={task.id} active={task.status === 'IN_PROGRESS'} />
+          <StaffStock
+            taskId={task.id}
+            actorId={actorId}
+            sellerId={sellerId}
+            role={role}
+            active={task.status === 'IN_PROGRESS'}
+            apiBase={apiBase}
+          />
+        </>
       )}
       {isWorker && role === 'TECHNICIAN' && actorId && task.kind === 'INCIDENT' && (
         <StaffIncidentResolution
