@@ -17,9 +17,7 @@ function InstallationListItem({ item, isSelected, onSelect }: InstallationListIt
       </td>
       <td data-label="Gói thuê">
         <strong>{item.packageName}</strong>
-        <div className="table-sub-text">
-          {item.walkInSlots}W + {item.preorderSlots}P ({item.totalSlots} ô)
-        </div>
+        <div className="table-sub-text">Tổng số ô: {item.totalSlots}</div>
       </td>
       <td data-label="Địa chỉ lắp đặt">
         <span className="address-truncate" title={item.installationAddress}>

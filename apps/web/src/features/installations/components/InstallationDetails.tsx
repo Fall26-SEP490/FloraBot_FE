@@ -153,8 +153,7 @@ export function InstallationDetails({
                 <strong>{appDetail.packageName}</strong> (
                 {Number(appDetail.annualFee).toLocaleString('vi-VN')} đ/năm)
                 <br />
-                {appDetail.walkInSlots} ô vãng lai + {appDetail.preorderSlots} ô đặt trước (
-                {appDetail.totalSlots} ô tổng)
+                Tổng số ô: {appDetail.totalSlots}
               </dd>
             </div>
             <div>
