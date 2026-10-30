@@ -52,6 +52,8 @@ for (const width of [390, 1440]) {
     await page.getByRole('button', { name: 'Xem biên nhận', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Đơn FB-TEST-001' })).toBeFocused();
     await expect(page.getByText('Bó hoa cúc dành tặng mẹ')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Xóa thông tin', exact: true })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Hủy tra cứu', exact: true })).toHaveCount(0);
     expect(calls).toBe(1);
     expect(
       await page.evaluate(() => JSON.stringify({ ...localStorage, ...sessionStorage })),
@@ -73,7 +75,9 @@ for (const width of [390, 1440]) {
   });
 }
 
-test('Receipt validates input, handles denial and clears an in-flight lookup', async ({ page }) => {
+test('Receipt validates input, handles denial and cancels lookup without losing entered codes', async ({
+  page,
+}) => {
   await page.goto('/receipt');
   await page.getByRole('button', { name: 'Xem biên nhận', exact: true }).click();
   await expect(page.getByRole('main').getByRole('alert')).toContainText('Kiểm tra ID biên nhận');
@@ -93,9 +97,11 @@ test('Receipt validates input, handles denial and clears an in-flight lookup', a
   });
   await page.getByRole('button', { name: 'Xem biên nhận', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Đang tra cứu…' })).toBeDisabled();
-  await page.getByRole('button', { name: 'Xóa thông tin' }).click();
+  await page.getByRole('button', { name: 'Hủy tra cứu', exact: true }).click();
   release?.();
   await expect(page.getByLabel('ID biên nhận', { exact: true })).toBeFocused();
-  await expect(page.getByLabel('Mã tra cứu', { exact: true })).toHaveValue('');
+  await expect(page.getByLabel('ID biên nhận', { exact: true })).toHaveValue(id);
+  await expect(page.getByLabel('Mã tra cứu', { exact: true })).toHaveValue(token);
+  await expect(page.getByRole('button', { name: 'Hủy tra cứu', exact: true })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Đơn FB-TEST-001' })).toHaveCount(0);
 });
