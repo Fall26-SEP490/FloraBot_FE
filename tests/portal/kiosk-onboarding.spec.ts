@@ -238,8 +238,6 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
         packageId: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
         packageName: 'Trial',
         annualFee: 10000,
-        walkInSlots: 1,
-        preorderSlots: 1,
         totalSlots: 2,
         shopName: 'Hoa Tươi Sài Gòn',
         phone: '0909888777',
@@ -378,11 +376,21 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     await page.goto('/operations/installations');
 
     await expect(page.getByText('Hoa Tươi Sài Gòn')).toBeVisible();
+    // The deployed application DTO exposes totalSlots without a W/P breakdown.
+    const applicationRow = page.getByRole('row').filter({ hasText: 'Hoa Tươi Sài Gòn' });
+    await expect(applicationRow).toContainText('Tổng số ô: 2');
+    await expect(applicationRow).not.toContainText('W +');
     await page.getByRole('button', { name: 'Chi tiết' }).click();
 
     // Verify detail panel
     await expect(page.getByText('Chi tiết: Hoa Tươi Sài Gòn')).toBeVisible();
     await expect(page.getByText('MB Bank - ****9988')).toBeVisible();
+    const packageSummary = page
+      .locator('.detail-info-grid > div')
+      .filter({ hasText: 'Gói đăng ký' });
+    await expect(packageSummary).toContainText('Tổng số ô: 2');
+    await expect(packageSummary).not.toContainText('ô vãng lai');
+    await expect(packageSummary).not.toContainText('ô đặt trước');
 
     // Step 1: Confirm contact note
     await page
