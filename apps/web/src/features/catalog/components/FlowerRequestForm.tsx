@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Button, MapPin, MessageSquare } from '@florabot/ui';
 import { ApiError, queryClient, request, sessionQuery } from '@/shared/lib/api';
 import type { CatalogItem, CatalogResponse } from '../catalog.types';
-import { canOrderOnWeb, isWalkIn } from '../catalog.utils';
+import { canOrderOnWeb, formatPrice, isWalkIn } from '../catalog.utils';
 
 interface FlowerRequestFormProps {
   item: CatalogItem;
@@ -168,81 +168,101 @@ export function FlowerRequestForm({ item, onOpenChat, openingChat }: FlowerReque
   }
 
   return (
-    <form onSubmit={(event) => void submit(event)}>
-      <fieldset disabled={busy || uncertain}>
-        <legend>Đặt trước, shop chuẩn bị theo yêu cầu</legend>
-        <>
-          <label htmlFor={`pickup-${item.productId}`}>Thời gian mong muốn nhận hoa</label>
-          <input
-            id={`pickup-${item.productId}`}
-            type="datetime-local"
-            required
-            value={pickup}
-            onChange={(event) => setPickup(event.target.value)}
-          />
-          <p className="quiet">
-            Chọn từ 2 giờ đến 30 ngày tới. Lịch chính thức được shop xác nhận cùng báo giá.
-          </p>
-          <label htmlFor={`brief-${item.productId}`}>
-            Dịp tặng, màu hoa, ngân sách và lời nhắn
-          </label>
-          <textarea
-            id={`brief-${item.productId}`}
-            minLength={10}
-            maxLength={2000}
-            required
-            value={instructions}
-            onChange={(event) => setInstructions(event.target.value)}
-          />
-          <p className="quiet">
-            Giá trên mẫu là giá tham khảo. Bạn chỉ thanh toán sau khi đồng ý báo giá và lịch nhận
-            của shop.
-          </p>
-        </>
-        <label htmlFor={`kiosk-${item.productId}`}>Tủ nhận hoa</label>
-        <select
-          id={`kiosk-${item.productId}`}
-          value={kioskId}
-          disabled={kiosks.isPending || kiosks.isError}
-          onChange={(event) => {
-            setKioskId(event.target.value);
-            setConfirmed(false);
-          }}
-          required
-        >
-          {eligibleKiosks.map((entry) => (
-            <option key={entry.kioskId} value={entry.kioskId}>
-              {entry.kioskName} — {entry.address}
-            </option>
-          ))}
-        </select>
-        {kiosks.isPending && <p role="status">Đang tải tủ nhận phù hợp…</p>}
-        {kiosks.isError && <p role="alert">Chưa tải được danh sách tủ nhận. Vui lòng thử lại.</p>}
-        {kiosks.isError && (
-          <Button type="button" variant="outline" onClick={() => void kiosks.refetch()}>
-            Tải lại tủ nhận
-          </Button>
-        )}
-        <div className="flower-request-kiosk-box">
-          <MapPin size={16} className="flower-request-kiosk-icon" aria-hidden="true" />
-          <div className="flower-request-kiosk-content">
-            <strong>Tủ nhận:</strong> {selectedKiosk?.kioskName ?? item.kioskName} —{' '}
-            {selectedKiosk?.address ?? item.address}
+    <form className="flower-request-form" onSubmit={(event) => void submit(event)}>
+      <div className="flower-request-scroll">
+        <div className="flower-request-intro">
+          <div>
+            <strong>Gửi ý tưởng, shop chuẩn bị hoa</strong>
+            <p>Bạn duyệt báo giá và lịch nhận trước khi thanh toán.</p>
+          </div>
+          <div className="flower-request-reference-price">
+            <span>Giá mẫu</span>
+            <strong>{formatPrice(item.price)} đ</strong>
           </div>
         </div>
-        <label className="payout-checkbox flower-request-confirm-label">
-          <input
-            type="checkbox"
-            required
-            checked={confirmed}
-            onChange={(event) => setConfirmed(event.target.checked)}
-          />
-          <span>Tôi đã kiểm tra tủ nhận và thông tin yêu cầu.</span>
-        </label>
-      </fieldset>
-      <p role="alert" className="error">
-        {error}
-      </p>
+        <fieldset disabled={busy || uncertain}>
+          <legend className="sr-only">Đặt trước, shop chuẩn bị theo yêu cầu</legend>
+          <div className="flower-request-field">
+            <label htmlFor={`pickup-${item.productId}`}>Thời gian mong muốn nhận hoa</label>
+            <input
+              id={`pickup-${item.productId}`}
+              type="datetime-local"
+              required
+              value={pickup}
+              onChange={(event) => setPickup(event.target.value)}
+              aria-describedby={`pickup-hint-${item.productId}`}
+            />
+            <p className="quiet" id={`pickup-hint-${item.productId}`}>
+              Chọn từ 2 giờ đến 30 ngày tới. Lịch chính thức được shop xác nhận cùng báo giá.
+            </p>
+          </div>
+          <div className="flower-request-field">
+            <label htmlFor={`brief-${item.productId}`}>
+              Dịp tặng, màu hoa, ngân sách và lời nhắn
+            </label>
+            <textarea
+              id={`brief-${item.productId}`}
+              minLength={10}
+              maxLength={2000}
+              required
+              value={instructions}
+              onChange={(event) => setInstructions(event.target.value)}
+              placeholder="Ví dụ: Tặng sinh nhật, hoa hồng tông pastel, ngân sách 400.000 đ…"
+              aria-describedby={`brief-hint-${item.productId}`}
+            />
+            <p className="quiet" id={`brief-hint-${item.productId}`}>
+              Chia sẻ mong muốn của bạn trong 10–2.000 ký tự.
+            </p>
+          </div>
+          <div className="flower-request-field">
+            <label htmlFor={`kiosk-${item.productId}`}>Tủ nhận hoa</label>
+            <select
+              id={`kiosk-${item.productId}`}
+              value={kioskId}
+              disabled={kiosks.isPending || kiosks.isError}
+              onChange={(event) => {
+                setKioskId(event.target.value);
+                setConfirmed(false);
+              }}
+              required
+            >
+              {eligibleKiosks.map((entry) => (
+                <option key={entry.kioskId} value={entry.kioskId}>
+                  {entry.kioskName} — {entry.address}
+                </option>
+              ))}
+            </select>
+            {kiosks.isPending && <p role="status">Đang tải tủ nhận phù hợp…</p>}
+            {kiosks.isError && (
+              <p role="alert">Chưa tải được danh sách tủ nhận. Vui lòng thử lại.</p>
+            )}
+            {kiosks.isError && (
+              <Button type="button" variant="outline" onClick={() => void kiosks.refetch()}>
+                Tải lại tủ nhận
+              </Button>
+            )}
+            <div className="flower-request-kiosk-box">
+              <MapPin size={16} className="flower-request-kiosk-icon" aria-hidden="true" />
+              <div className="flower-request-kiosk-content">
+                <strong>Tủ nhận:</strong> {selectedKiosk?.kioskName ?? item.kioskName} —{' '}
+                {selectedKiosk?.address ?? item.address}
+              </div>
+            </div>
+          </div>
+          <label className="payout-checkbox flower-request-confirm-label">
+            <input
+              type="checkbox"
+              required
+              checked={confirmed}
+              onChange={(event) => setConfirmed(event.target.checked)}
+            />
+            <span>Tôi đã kiểm tra tủ nhận và thông tin yêu cầu.</span>
+          </label>
+        </fieldset>
+        <p role="alert" className="error">
+          {error}
+        </p>
+      </div>
       <div className="flower-request-footer">
         {onOpenChat && (
           <Button

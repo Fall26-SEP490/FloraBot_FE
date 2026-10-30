@@ -50,15 +50,19 @@
 
 /* Flower Detail Page */
 .flower-detail-page {
-  max-width: 980px;
-  margin: 1.25rem auto 3.5rem;
-  padding-inline: 1.25rem;
+  box-sizing: border-box;
+  max-width: var(--customer-page-width, 1160px);
+  margin: 1.5rem auto 3rem;
+  padding-inline: var(--customer-page-gutter, 1.5rem);
+  min-height: 0;
+  background: transparent;
 }
 .flower-detail-back {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  margin-bottom: 1.5rem;
+  min-height: 24px;
+  margin-bottom: 1rem;
   padding: 0.25rem 0;
   color: var(--color-muted, #45654a);
   font-size: 0.88rem;
@@ -74,11 +78,11 @@
   transform: translateX(-2px);
 }
 .flower-detail {
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  padding: 0;
-  box-shadow: none;
+  background: #fff;
+  border: 1px solid #dce6d7;
+  border-radius: 18px;
+  padding: clamp(1rem, 3vw, 2rem);
+  box-shadow: 0 3px 12px #183e2b04;
 }
 .flower-detail-layout {
   display: grid;
@@ -292,15 +296,45 @@
   background: transparent;
   border: none;
 }
+
+.flower-detail-guide {
+  display: grid;
+  gap: 0.65rem;
+  margin: 1.25rem 0 0;
+  padding: 1rem 0 0;
+  border-top: 1px solid #e3ebdf;
+  list-style: none;
+  color: #476451;
+  font-size: 0.8rem;
+}
+
+.flower-detail-guide li {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.flower-detail-guide span {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  border-radius: 50%;
+  background: #edf4e9;
+  color: #254d33;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
 .flower-detail-demo-note {
   font-size: 0.82rem;
   color: #708a76;
   margin-top: 0.5rem;
   font-style: italic;
 }
-@media (max-width: 768px) {
+@media (max-width: 899px) {
   .flower-detail-page {
-    padding-inline: 1rem;
+    padding-inline: var(--customer-page-gutter, 1rem);
     margin-top: 1rem;
     margin-bottom: 2.5rem;
   }
@@ -311,6 +345,10 @@
   .flower-detail-media {
     max-width: 100%;
     border-radius: 12px;
+  }
+  .flower-detail-media img {
+    aspect-ratio: 4 / 3;
+    max-height: 440px;
   }
 }
 @media (max-width: 480px) {

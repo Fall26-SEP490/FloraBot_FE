@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import './styles/catalog.css';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { request, sessionQuery } from '@/shared/lib/api';
-import { formatChatError, openCustomerChat } from '@/features/chat/api';
 import { MOCK_CATALOG_ITEMS } from '@/features/catalog/mocks/mockCatalog';
 import type { CatalogItem, CatalogResponse } from './catalog.types';
 import { canOrderOnWeb } from './catalog.utils';
@@ -12,10 +11,11 @@ import { CatalogGrid } from './components/CatalogGrid';
 import { CatalogSearchBar } from './components/CatalogSearchBar';
 import { CatalogSidebar } from './components/CatalogSidebar';
 import { CatalogToolbar } from './components/CatalogToolbar';
-import { ChatNoticeDialog, type ChatNotice } from './components/ChatNoticeDialog';
+import { ChatNoticeDialog } from './components/ChatNoticeDialog';
 import { FlowerRequestPanel } from './components/FlowerRequestPanel';
 import { useCatalogDialog } from './hooks/useCatalogDialog';
 import { useCatalogFilters } from './hooks/useCatalogFilters';
+import { useCustomerChat } from './hooks/useCustomerChat';
 
 export default function FlowerShop() {
   const router = useRouter();
@@ -24,8 +24,6 @@ export default function FlowerShop() {
   const [search, setSearch] = useState('');
   const [draft, setDraft] = useState('');
   const [page, setPage] = useState(1);
-  const [openingChatId, setOpeningChatId] = useState<string | null>(null);
-  const [chatNotice, setChatNotice] = useState<ChatNotice | null>(null);
 
   const [demoEnabled] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
@@ -36,57 +34,7 @@ export default function FlowerShop() {
   const dialog = useCatalogDialog();
   const setSelected = dialog.setSelected;
 
-  const handleOpenChat = useCallback(
-    async (item: CatalogItem) => {
-      if (item.isDemoSample) {
-        setChatNotice({
-          kind: 'error',
-          message:
-            'Mẫu minh họa chưa gắn với shop thật. Hãy chọn sản phẩm từ danh mục API để nhắn tin.',
-        });
-        return;
-      }
-      setSelected(null);
-      if (!session.data) {
-        const returnUrl = `/dat-hoa?action=chat&sellerId=${encodeURIComponent(item.sellerId)}&productId=${encodeURIComponent(item.productId)}&shopName=${encodeURIComponent(item.shopName)}&name=${encodeURIComponent(item.name)}`;
-        setChatNotice({ kind: 'login', returnUrl });
-        return;
-      }
-      if (session.data.role !== 'CUSTOMER') {
-        setChatNotice({ kind: 'role' });
-        return;
-      }
-      setOpeningChatId(item.productId);
-      setChatNotice(null);
-      try {
-        const chat = await openCustomerChat({
-          sellerId: item.sellerId,
-          productId: item.productId,
-        });
-        if (typeof window !== 'undefined') {
-          try {
-            sessionStorage.setItem(
-              'florabot_opened_chat',
-              JSON.stringify({
-                id: chat.id,
-                otherPartyName: item.shopName,
-                productContext: item.name,
-                createdAt: new Date().toISOString(),
-              }),
-            );
-          } catch {
-            // ignore storage error
-          }
-        }
-        router.push(`/tai-khoan?chat=${encodeURIComponent(chat.id)}#member-chats`);
-      } catch (err) {
-        setChatNotice({ kind: 'error', message: formatChatError(err) });
-      } finally {
-        setOpeningChatId(null);
-      }
-    },
-    [session.data, router, setSelected],
-  );
+  const { handleOpenChat, openingChatId, chatNotice, setChatNotice } = useCustomerChat(setSelected);
 
   const catalog = useQuery({
     queryKey: ['web-catalog', search, page],
@@ -145,10 +93,7 @@ export default function FlowerShop() {
         bouquets: [],
       };
 
-      const timer = setTimeout(() => {
-        void handleOpenChat(targetItem);
-      }, 0);
-      return () => clearTimeout(timer);
+      void handleOpenChat(targetItem);
     }
   }, [session.data, rawItems, handleOpenChat]);
 

@@ -32,7 +32,7 @@ test.describe('FloraBot Role Workflows Integration', () => {
       email: customerEmail,
       password: customerPassword,
     });
-    await expect(page.getByRole('heading', { name: 'Đơn đặt hoa của bạn' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Đơn đặt trước', exact: true })).toBeVisible();
 
     // Compute future pickup date (3 days ahead within valid 2h-30d range)
     const pickupDate = new Date(Date.now() + 3 * 86_400_000);

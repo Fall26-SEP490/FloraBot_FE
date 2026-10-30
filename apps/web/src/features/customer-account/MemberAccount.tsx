@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type MouseEvent } from 'react';
 import './styles/member.css';
 import './styles/member-dashboard.css';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import {
   ArrowRight,
@@ -31,15 +31,10 @@ import {
 
 export default function MemberAccount() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialChatId = searchParams.get('chat') || null;
   const session = useQuery(sessionQuery);
   const isCustomer = session.data?.role === 'CUSTOMER';
-  const [initialChatId] = useState<string | null>(() => {
-    if (typeof window !== 'undefined') {
-      return new URLSearchParams(window.location.search).get('chat');
-    }
-    return null;
-  });
-
   const [activeTab, setActiveTab] = useState<TabKey>(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace(/^#/, '');
@@ -68,10 +63,15 @@ export default function MemberAccount() {
         router.replace(session.data.role === 'SELLER' ? '/seller' : '/thue-kiosk');
         return;
       }
-      if (hash && TAB_HASH_MAP[hash]) {
-        setActiveTab(TAB_HASH_MAP[hash]);
-      } else if (window.location.search.includes('chat=')) {
+      if (new URLSearchParams(window.location.search).get('chat')) {
         setActiveTab('chats');
+        if (window.location.hash !== '#member-chats') {
+          const url = new URL(window.location.href);
+          url.hash = 'member-chats';
+          window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+        }
+      } else if (hash && TAB_HASH_MAP[hash]) {
+        setActiveTab(TAB_HASH_MAP[hash]);
       } else {
         setActiveTab('overview');
       }
@@ -83,13 +83,18 @@ export default function MemberAccount() {
       window.removeEventListener('hashchange', syncFromUrl);
       window.removeEventListener('popstate', syncFromUrl);
     };
-  }, [router, session.data]);
+  }, [router, session.data, initialChatId]);
 
-  function switchTab(tab: TabKey) {
+  function switchTab(tab: TabKey, event?: MouseEvent<HTMLAnchorElement>) {
+    if (event?.metaKey || event?.ctrlKey || event?.shiftKey || event?.altKey) return;
+    event?.preventDefault();
     setActiveTab(tab);
     const hash = TAB_TO_HASH[tab];
     if (typeof window !== 'undefined') {
-      window.history.replaceState(null, '', `#${hash}`);
+      const url = new URL(window.location.href);
+      if (tab !== 'chats') url.searchParams.delete('chat');
+      url.hash = hash;
+      window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
     }
   }
 
@@ -113,23 +118,29 @@ export default function MemberAccount() {
   });
 
   const unreadChatsCount = chatsQuery.isSuccess ? chatsQuery.data : undefined;
-  const visibleTab = activeTab === 'chats' && !isCustomer ? 'overview' : activeTab;
+  // A conversation link takes precedence immediately, including same-route navigation.
+  const requestedTab = initialChatId ? 'chats' : activeTab;
+  const visibleTab = requestedTab === 'chats' && !isCustomer ? 'overview' : requestedTab;
 
   const initialLetter = (profile.data?.fullName || 'F').trim().charAt(0).toUpperCase();
 
   return (
     <main id="main" className="member-page">
+      <nav className="member-breadcrumb" aria-label="Đường dẫn điều hướng">
+        <span>Hoạt động mua hoa</span>
+        <Link href="/ho-so">
+          <User size={15} aria-hidden="true" /> Hồ sơ cá nhân
+        </Link>
+      </nav>
       {/* Account Header */}
       <header className="account-hero-card">
         <span className="account-avatar" aria-hidden="true">
           {initialLetter}
         </span>
         <div className="account-hero-info">
-          <span className="member-eyebrow">KHÔNG GIAN CỦA BẠN</span>
-          <h1 className="account-hero-greeting">Góc nhỏ của {profile.data?.fullName || 'bạn'}</h1>
-          <p className="account-hero-sub">
-            Theo dõi đơn đặt hoa, lịch sử mua và điểm tích lũy của bạn.
-          </p>
+          <span className="member-eyebrow">TÀI KHOẢN CỦA BẠN</span>
+          <h1 className="account-hero-greeting">Xin chào, {profile.data?.fullName || 'bạn'}</h1>
+          <p className="account-hero-sub">Quản lý đơn hoa và trao đổi với shop tại đây.</p>
           <div className="account-badges-row">
             {profile.data?.email && (
               <span className="account-badge-pill">
@@ -148,7 +159,7 @@ export default function MemberAccount() {
             <strong className="overview-stat-value">
               {profile.isSuccess ? profile.data.loyaltyPoints.toLocaleString('vi-VN') : '—'}
             </strong>
-            <span className="member-points-caption">Dùng cho đơn hoa tiếp theo</span>
+            <span className="member-points-caption">Số điểm hiện có</span>
           </div>
         </div>
       </header>
@@ -167,19 +178,19 @@ export default function MemberAccount() {
       <div className="member-tabs-container">
         <nav className="member-tabs" aria-label="Trong tài khoản">
           <a
-            href="#overview"
+            href="/tai-khoan#overview"
             className={`member-tab-btn ${visibleTab === 'overview' ? 'is-active' : ''}`}
             aria-current={visibleTab === 'overview' ? 'page' : undefined}
-            onClick={() => switchTab('overview')}
+            onClick={(event) => switchTab('overview', event)}
           >
             <span>Tổng quan</span>
           </a>
           {isCustomer && (
             <a
-              href="#member-chats"
+              href="/tai-khoan#member-chats"
               className={`member-tab-btn ${visibleTab === 'chats' ? 'is-active' : ''}`}
               aria-current={visibleTab === 'chats' ? 'page' : undefined}
-              onClick={() => switchTab('chats')}
+              onClick={(event) => switchTab('chats', event)}
             >
               <MessageSquare size={15} aria-hidden="true" />
               <span>Tin nhắn</span>
@@ -194,19 +205,19 @@ export default function MemberAccount() {
             </a>
           )}
           <a
-            href="#web-orders"
+            href="/tai-khoan#web-orders"
             className={`member-tab-btn ${visibleTab === 'orders' ? 'is-active' : ''}`}
             aria-current={visibleTab === 'orders' ? 'page' : undefined}
-            onClick={() => switchTab('orders')}
+            onClick={(event) => switchTab('orders', event)}
           >
             <Package size={15} aria-hidden="true" />
             <span>Đơn đặt trước</span>
           </a>
           <a
-            href="#member-orders"
+            href="/tai-khoan#member-orders"
             className={`member-tab-btn ${visibleTab === 'history' ? 'is-active' : ''}`}
             aria-current={visibleTab === 'history' ? 'page' : undefined}
-            onClick={() => switchTab('history')}
+            onClick={(event) => switchTab('history', event)}
           >
             <RotateCcw size={15} aria-hidden="true" />
             <span>Lịch sử mua</span>
@@ -306,7 +317,7 @@ export default function MemberAccount() {
       {/* Tab 2: Chats */}
       {visibleTab === 'chats' && (
         <section id="member-chats">
-          <CustomerChatSection initialChatId={initialChatId} />
+          <CustomerChatSection key={initialChatId ?? 'inbox'} initialChatId={initialChatId} />
         </section>
       )}
 

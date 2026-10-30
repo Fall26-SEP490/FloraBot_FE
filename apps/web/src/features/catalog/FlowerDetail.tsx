@@ -5,12 +5,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Button, MapPin, MessageSquare, Store } from '@florabot/ui';
-import { request, sessionQuery } from '@/shared/lib/api';
+import { request } from '@/shared/lib/api';
 import { MOCK_CATALOG_ITEMS } from './mocks/mockCatalog';
 import type { CatalogItem, CatalogResponse } from './catalog.types';
 import { canOrderOnWeb, formatPrice, purchaseLabel } from './catalog.utils';
 import { FlowerRequestPanel } from './components/FlowerRequestPanel';
-import { ChatNoticeDialog, type ChatNotice } from './components/ChatNoticeDialog';
+import { ChatNoticeDialog } from './components/ChatNoticeDialog';
+import { useCustomerChat } from './hooks/useCustomerChat';
 import './styles/catalog.css';
 
 async function findItem(productId: string, kioskId: string): Promise<CatalogItem | null> {
@@ -33,9 +34,7 @@ export default function FlowerDetail({
   kioskId: string;
 }) {
   const router = useRouter();
-  const session = useQuery(sessionQuery);
   const [selected, setSelected] = useState<CatalogItem | null>(null);
-  const [chatNotice, setChatNotice] = useState<ChatNotice | null>(null);
   const [failedPhoto, setFailedPhoto] = useState<string | null>(null);
   const [demo] = useState(
     () =>
@@ -52,27 +51,12 @@ export default function FlowerDetail({
         : findItem(productId, kioskId),
   });
   const item = query.data;
-  const openChat = (flower: CatalogItem) => {
-    if (flower.isDemoSample) return;
-    setSelected(null);
-    const params = new URLSearchParams({
-      action: 'chat',
-      sellerId: flower.sellerId,
-      productId: flower.productId,
-      shopName: flower.shopName,
-      name: flower.name,
-    });
-    const returnUrl = `/dat-hoa?${params}`;
-    if (!session.data) {
-      setChatNotice({ kind: 'login', returnUrl });
-      return;
-    }
-    if (session.data.role !== 'CUSTOMER') {
-      setChatNotice({ kind: 'role' });
-      return;
-    }
-    router.push(returnUrl);
-  };
+  const {
+    handleOpenChat: openChat,
+    openingChatId,
+    chatNotice,
+    setChatNotice,
+  } = useCustomerChat(setSelected);
   return (
     <main id="main" className="flower-shop-page flower-detail-page">
       <Link className="flower-detail-back" href={demo ? '/dat-hoa?demo=1' : '/dat-hoa'}>
@@ -162,16 +146,30 @@ export default function FlowerDetail({
                 <Button
                   variant="outline"
                   onClick={() => openChat(item)}
-                  disabled={item.isDemoSample}
+                  disabled={item.isDemoSample || openingChatId !== null}
                 >
-                  <MessageSquare size={17} aria-hidden="true" /> Chat với shop
+                  <MessageSquare size={17} aria-hidden="true" />{' '}
+                  {openingChatId ? 'Đang mở chat…' : 'Chat với shop'}
                 </Button>
               </div>
 
               {canOrderOnWeb(item) && (
-                <p className="flower-detail-note">
-                  Giá và thời gian nhận sẽ được shop xác nhận sau khi bạn gửi yêu cầu.
-                </p>
+                <>
+                  <p className="flower-detail-note">
+                    Giá và thời gian nhận sẽ được shop xác nhận sau khi bạn gửi yêu cầu.
+                  </p>
+                  <ol className="flower-detail-guide" aria-label="Các bước đặt và nhận hoa">
+                    <li>
+                      <span aria-hidden="true">01</span>Gửi mong muốn và chọn tủ nhận hoa
+                    </li>
+                    <li>
+                      <span aria-hidden="true">02</span>Duyệt báo giá, xác nhận rồi thanh toán
+                    </li>
+                    <li>
+                      <span aria-hidden="true">03</span>Theo dõi đơn và ghé tủ theo lịch hẹn
+                    </li>
+                  </ol>
+                </>
               )}
 
               {item.isDemoSample && (
@@ -185,7 +183,7 @@ export default function FlowerDetail({
         selected={selected}
         onClose={() => setSelected(null)}
         onOpenChat={openChat}
-        openingChatId={null}
+        openingChatId={openingChatId}
       />
       <ChatNoticeDialog
         notice={chatNotice}

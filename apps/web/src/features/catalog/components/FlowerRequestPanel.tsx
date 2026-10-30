@@ -30,7 +30,7 @@ export function FlowerRequestPanel({
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    closeRef.current?.focus();
+    closeRef.current?.focus({ preventScroll: true });
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault();
@@ -55,7 +55,7 @@ export function FlowerRequestPanel({
     return () => {
       window.removeEventListener('keydown', onKeyDown);
       document.body.style.overflow = previousOverflow;
-      previousFocus?.focus();
+      previousFocus?.focus({ preventScroll: true });
     };
   }, [selected]);
 
@@ -97,12 +97,14 @@ export function FlowerRequestPanel({
             <span className="sr-only">Đóng mẫu đang chọn</span>
           </Button>
         </div>
-        <FlowerRequestForm
-          key={`${selected.productId}-${selected.kioskId}-${selected.slotZone ?? 'template'}`}
-          item={selected}
-          onOpenChat={() => onOpenChat(selected)}
-          openingChat={openingChatId === selected.productId}
-        />
+        <div className="flower-request-body">
+          <FlowerRequestForm
+            key={`${selected.productId}-${selected.kioskId}-${selected.slotZone ?? 'template'}`}
+            item={selected}
+            onOpenChat={() => onOpenChat(selected)}
+            openingChat={openingChatId === selected.productId}
+          />
+        </div>
       </section>
     </div>
   );
