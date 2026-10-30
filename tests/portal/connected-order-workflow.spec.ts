@@ -168,7 +168,13 @@ test('Customer request → seller quote → customer acceptance/payment → sell
   await expect(page.getByRole('heading', { name: 'Đã nhận yêu cầu của bạn' })).toBeVisible();
   role = 'SELLER';
   await page.goto('/seller/orders');
-  await page.locator('.member-orders summary').click();
+  const sellerSummary = page.locator('.seller-order-summary');
+  await expect(sellerSummary).toContainText(flower.name);
+  await expect(sellerSummary).toContainText(flower.kioskName);
+  await expect(page.getByText('Thống kê và bộ lọc chỉ áp dụng cho 1 đơn ở trang 1.')).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Phân trang đơn đặt trước' })).toHaveCount(0);
+  await page.locator('.member-orders > li > details > summary').click();
+  await expect(page.getByText(row.instructions)).toBeVisible();
   await page.getByRole('button', { name: 'Báo giá hoặc từ chối' }).click();
   await page.getByLabel('Giá trọn gói (đồng)').fill('380000');
   await page
@@ -181,7 +187,7 @@ test('Customer request → seller quote → customer acceptance/payment → sell
   await expect(page.getByText('Đã có báo giá', { exact: true })).toBeVisible();
   role = 'CUSTOMER';
   await page.goto('/tai-khoan#web-orders');
-  await page.locator('.member-orders summary').click();
+  await page.locator('.member-orders > li > details > summary').click();
   await page.getByRole('button', { name: 'Kiểm tra báo giá' }).click();
   await page
     .getByRole('checkbox', { name: 'Tôi đã đối chiếu và xác nhận thông tin trên.' })
@@ -196,10 +202,17 @@ test('Customer request → seller quote → customer acceptance/payment → sell
   row.orderStatus = 'PAID';
   role = 'SELLER';
   await page.goto('/seller/orders');
-  await page.locator('.member-orders summary').click();
+  await page.locator('.member-orders > li > details > summary').click();
   await page.getByRole('button', { name: 'Nạp hoa cho đơn này' }).click();
+  await expect(page.getByRole('button', { name: 'Tiếp tục kiểm tra' })).toBeDisabled();
   await page.getByLabel('Ô trống tại tủ nhận').selectOption(slotId);
   await page.getByLabel('Mã QR của bó hoa').fill('TEST-BOUQUET-01');
+  await page.getByRole('button', { name: 'Tiếp tục kiểm tra' }).click();
+  await expect(page.locator('.fulfill-review')).toContainText('P01');
+  await expect(page.locator('.fulfill-review')).toContainText('TEST-BOUQUET-01');
+  await page.getByRole('button', { name: 'Quay lại', exact: true }).click();
+  await expect(page.getByLabel('Mã QR của bó hoa')).toHaveValue('TEST-BOUQUET-01');
+  await page.getByRole('button', { name: 'Tiếp tục kiểm tra' }).click();
   await page
     .getByRole('checkbox', { name: 'Tôi đã đối chiếu và xác nhận thông tin trên.' })
     .check();
@@ -230,7 +243,7 @@ test('Unknown write outcome remains locked across reload until an explicit succe
     await route.abort('failed');
   });
   await page.goto('/seller/orders');
-  await page.locator('.member-orders summary').click();
+  await page.locator('.member-orders > li > details > summary').click();
   await page.getByRole('button', { name: 'Hủy yêu cầu', exact: true }).click();
   await page.getByLabel('Lý do hủy').fill('Khách yêu cầu đối chiếu và hủy đơn.');
   await page
@@ -239,7 +252,7 @@ test('Unknown write outcome remains locked across reload until an explicit succe
   await page.getByRole('button', { name: 'Xác nhận gửi', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Kiểm tra kết quả từ máy chủ' })).toBeVisible();
   await page.reload();
-  await page.locator('.member-orders summary').click();
+  await page.locator('.member-orders > li > details > summary').click();
   await expect(page.getByRole('button', { name: 'Hủy yêu cầu', exact: true })).toBeDisabled();
   await page.getByRole('button', { name: 'Kiểm tra kết quả từ máy chủ' }).click();
   await expect(page.getByRole('button', { name: 'Hủy yêu cầu', exact: true })).toBeEnabled();
@@ -255,8 +268,14 @@ for (const width of [390, 1440])
       () => [{ ...order(), state: 'ORDERED', orderStatus: 'PAID' }],
     );
     await page.goto('/seller/orders');
-    await page.locator('.member-orders summary').click();
+    await page.locator('.member-orders > li > details > summary').click();
     await expect(page.getByRole('list', { name: 'Tiến độ đơn đặt hoa' })).toBeVisible();
+    await expect(
+      page.getByRole('list', { name: 'Tiến độ đơn đặt hoa' }).locator('[aria-current="step"]'),
+    ).toContainText('Chuẩn bị');
+    await expect(
+      page.getByRole('list', { name: 'Tiến độ đơn đặt hoa' }).locator('[data-complete="true"]'),
+    ).toHaveCount(2);
     await page.screenshot({ path: `artifacts/connected-orders-${width}.png`, fullPage: true });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
@@ -266,6 +285,31 @@ for (const width of [390, 1440])
         .violations,
     ).toEqual([]);
   });
+
+test('Completed and cancelled orders show their status without implying cancelled orders were fulfilled', async ({
+  page,
+}) => {
+  await common(
+    page,
+    () => 'SELLER',
+    () => [
+      { ...order(), id: 'completed-order', state: 'ORDERED', orderStatus: 'COMPLETED' },
+      { ...order(), id: 'cancelled-order', state: 'CANCELLED', orderStatus: 'CANCELLED' },
+    ],
+  );
+  await page.goto('/seller/orders');
+  const rows = page.locator('.member-orders > li');
+  await rows.nth(0).locator(':scope > details > summary').click();
+  await rows.nth(1).locator(':scope > details > summary').click();
+  await expect(
+    rows
+      .nth(0)
+      .getByRole('list', { name: 'Tiến độ đơn đặt hoa' })
+      .locator('[data-complete="true"]'),
+  ).toHaveCount(5);
+  await expect(rows.nth(1).getByRole('list', { name: 'Tiến độ đơn đặt hoa' })).toHaveCount(0);
+  await expect(rows.nth(1)).toContainText('Đã hủy');
+});
 
 test('Every sample catalog item is display-only, including items with illustrative bouquet IDs', async ({
   page,

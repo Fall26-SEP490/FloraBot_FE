@@ -77,7 +77,6 @@ export default function TechnicianWorkspace({ section = 'tasks' }: { section?: s
                   <h1>Chào {session.data.name}</h1>
                   <p>Nhận việc kiểm tra sự cố, cập nhật tiến độ và gửi báo cáo tại tủ.</p>
                 </div>
-                <span className="dashboard-context">Kỹ thuật viên</span>
               </div>
               <WorkspaceWelcome workspaceRole="technician" />
               <StaffTasks
