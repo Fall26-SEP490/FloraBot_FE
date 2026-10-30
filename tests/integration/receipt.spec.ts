@@ -81,7 +81,7 @@ test('Public receipt stores a refund account through gateway/API without exposin
   const body = await lookup.text();
   expect(body).not.toContain('001234567890');
   expect(body).not.toContain('NGUYEN VAN A');
-  await page.getByRole('button', { name: 'Xóa thông tin', exact: true }).click();
+  await page.getByLabel('Mã tra cứu', { exact: true }).fill('');
   await expect(page.getByLabel('Mã tra cứu', { exact: true })).toHaveValue('');
 
   const payer = randomUUID();

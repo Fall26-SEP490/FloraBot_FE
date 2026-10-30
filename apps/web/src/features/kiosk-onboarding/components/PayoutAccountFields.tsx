@@ -37,7 +37,7 @@ export function PayoutAccountFields({
           <input
             id="bank-name-input"
             type="text"
-            maxLength={100}
+            maxLength={120}
             value={bankName}
             onChange={(e) => onBankNameChange(e.target.value)}
             placeholder="Ví dụ: Vietcombank, MB Bank, v.v."
@@ -54,7 +54,7 @@ export function PayoutAccountFields({
           <input
             id="bank-holder-input"
             type="text"
-            maxLength={100}
+            maxLength={120}
             value={bankHolder}
             onChange={(e) => onBankHolderChange(e.target.value.toUpperCase())}
             placeholder="NGUYEN VAN A"
@@ -72,7 +72,7 @@ export function PayoutAccountFields({
         <input
           id="bank-account-number-input"
           type="text"
-          maxLength={30}
+          maxLength={34}
           value={bankAccountNumber}
           onChange={(e) => onBankAccountNumberChange(e.target.value)}
           placeholder="Số tài khoản ngân hàng thụ hưởng"

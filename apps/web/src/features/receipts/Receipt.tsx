@@ -162,23 +162,25 @@ export default function Receipt() {
           <Button type="submit" disabled={pending}>
             {pending ? 'Đang tra cứu…' : 'Xem biên nhận'}
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              controller.current?.abort();
-              setPending(false);
-              setReceipt(null);
-              setOrderId('');
-              setToken('');
-              setError('');
-              document.getElementById('receipt-order')?.focus();
-            }}
-          >
-            Xóa thông tin
-          </Button>
+          {pending && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                controller.current?.abort();
+                setPending(false);
+                setError('');
+                document.getElementById('receipt-order')?.focus();
+              }}
+            >
+              Hủy tra cứu
+            </Button>
+          )}
         </div>
       </form>
+      <p className="quiet">
+        Việc tra cứu không xóa biên nhận hoặc giao dịch thanh toán trong hệ thống.
+      </p>
       {receipt && (
         <section aria-labelledby="receipt-result">
           <h2 id="receipt-result" ref={heading} tabIndex={-1}>

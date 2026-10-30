@@ -80,6 +80,10 @@ export function validateKioskApplicationDraft(
     errors.bankAccountNumber = 'Vui lòng nhập số tài khoản ngân hàng.';
   } else if (trimmedAccountNumber.length < 4) {
     errors.bankAccountNumber = 'Số tài khoản cần ít nhất 4 ký tự.';
+  } else if (trimmedAccountNumber.length > 34) {
+    errors.bankAccountNumber = 'Số tài khoản không được vượt quá 34 ký tự.';
+  } else if (!/^[A-Za-z0-9]+$/.test(trimmedAccountNumber)) {
+    errors.bankAccountNumber = 'Số tài khoản chỉ bao gồm chữ số hoặc chữ cái không dấu.';
   }
 
   const isValid = Object.keys(errors).length === 0;
