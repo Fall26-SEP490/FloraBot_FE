@@ -84,11 +84,10 @@ function OrderActions({
     enabled: action === 'fulfill' && Boolean(row.kioskId),
   });
   const emptyKioskSlots =
-    slots.data?.filter((item) => item.kioskId === row.kioskId && item.status === 'RENTED_EMPTY') ??
-    [];
-  const fulfillSlots = emptyKioskSlots.filter(
-    (item) => item.zone === 'PREORDER' || item.zone === null,
-  );
+    slots.data?.filter(
+      (item) => item.kioskId === row.kioskId && item.status === 'RENTED_EMPTY' && !item.bouquetId,
+    ) ?? [];
+  const fulfillSlots = emptyKioskSlots.filter((item) => item.zone === 'PREORDER');
   async function copyText(value: string, field: 'orderId' | 'token') {
     try {
       await navigator.clipboard.writeText(value);

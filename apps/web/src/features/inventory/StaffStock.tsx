@@ -9,7 +9,7 @@ import type { ActiveTaskRole } from '../task-management/task-management.types';
 type Payload = { id: string; productId: string; slotId: string; qrCode: string };
 type Options = {
   products: { id: string; name: string }[];
-  slots: { id: string; code: string }[];
+  slots: { id: string; code: string; zone?: string | null }[];
   actions: { id: string; qrCode: string; createdAt: string }[];
 };
 type Fields = Omit<Payload, 'id'> & { confirm: boolean };
@@ -56,6 +56,7 @@ export default function StaffStock({
     queryFn: () => request<Options>(path),
     enabled: open,
   });
+  const walkInSlots = options.data?.slots.filter((slot) => slot.zone === 'WALK_IN') ?? [];
   async function send(payload: Payload) {
     if (busy) return;
     setBusy(true);
@@ -107,17 +108,21 @@ export default function StaffStock({
           <p role="alert">Chưa tải được thông tin nạp hoa.</p>
           <Button onClick={() => void options.refetch()}>Tải lại thông tin nạp hoa</Button>
         </>
-      ) : active && options.data.products.length > 0 && options.data.slots.length > 0 ? (
+      ) : active && options.data.products.length > 0 && walkInSlots.length > 0 ? (
         <form
           noValidate
-          onSubmit={form.handleSubmit((values) =>
-            send({
+          onSubmit={form.handleSubmit((values) => {
+            if (!walkInSlots.some((slot) => slot.id === values.slotId)) {
+              form.setError('slotId', { message: 'Chọn ô Walk-in còn trống.' });
+              return;
+            }
+            return send({
               id: crypto.randomUUID(),
               productId: values.productId,
               slotId: values.slotId,
               qrCode: values.qrCode.trim(),
-            }),
-          )}
+            });
+          })}
         >
           <p>Ghi nhận sau khi đã đặt bó hoa đúng ô. Thao tác này không gửi lệnh mở cửa.</p>
           <label htmlFor={`stock-product-${taskId}`}>Mẫu hoa cần nạp</label>
@@ -137,7 +142,7 @@ export default function StaffStock({
           <p id={`stock-product-error-${taskId}`} className="error">
             {form.formState.errors.productId?.message}
           </p>
-          <label htmlFor={`stock-slot-${taskId}`}>Ô tủ trống</label>
+          <label htmlFor={`stock-slot-${taskId}`}>Ô Walk-in trống</label>
           <select
             id={`stock-slot-${taskId}`}
             {...form.register('slotId', { required: 'Chọn ô tủ.' })}
@@ -145,7 +150,7 @@ export default function StaffStock({
             aria-describedby={`stock-slot-error-${taskId}`}
           >
             <option value="">Chọn ô tủ</option>
-            {options.data.slots.map((item) => (
+            {walkInSlots.map((item) => (
               <option key={item.id} value={item.id}>
                 {item.code}
               </option>

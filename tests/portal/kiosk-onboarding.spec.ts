@@ -327,13 +327,17 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
 
       if (path === '/api/operations/kiosks/enroll' && route.request().method() === 'POST') {
         const body = route.request().postDataJSON();
+        expect(body.slotCount).toBeGreaterThanOrEqual(1);
+        expect(body.slotCount).toBeLessThanOrEqual(50);
+        expect(body).not.toHaveProperty('walkInSlots');
+        expect(body).not.toHaveProperty('preorderSlots');
         const newKiosk = {
           id: 'kiosk-02',
           code: body.code,
           name: body.name,
-          walkInSlots: body.walkInSlots,
-          preorderSlots: body.preorderSlots,
-          totalSlots: body.walkInSlots + body.preorderSlots,
+          walkInSlots: 0,
+          preorderSlots: 0,
+          totalSlots: body.slotCount,
           status: 'OFFLINE',
           apiKey: 'kiosk-device-api-key-xyz',
         };
@@ -522,9 +526,9 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
             id: 'kiosk-' + enrollCount,
             code: body.code,
             name: body.name,
-            walkInSlots: body.walkInSlots,
-            preorderSlots: body.preorderSlots,
-            totalSlots: body.walkInSlots + body.preorderSlots,
+            walkInSlots: 0,
+            preorderSlots: 0,
+            totalSlots: body.slotCount,
             status: 'OFFLINE',
             apiKey:
               enrollCount === 1 ? 'kiosk-device-api-key-FIRST' : 'kiosk-device-api-key-SECOND',

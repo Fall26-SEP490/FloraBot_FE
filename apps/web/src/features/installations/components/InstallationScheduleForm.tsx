@@ -18,7 +18,7 @@ interface InstallationScheduleFormProps {
   techniciansQuery: UseQueryResult<AccountDirectoryItem[], Error>;
   eligibleKiosks: EligibleKioskResponse[];
   eligibleKiosksQuery: UseQueryResult<EligibleKioskResponse[], Error>;
-  onOpenEnroll: (walkIn: number, preorder: number) => void;
+  onOpenEnroll: (slotCount: number) => void;
   onSubmit: () => void;
   isPending: boolean;
 }
@@ -50,8 +50,8 @@ export function InstallationScheduleForm({
     <div className="operations-action-card">
       <h3>Bước 2: Phân công Kỹ thuật viên & Cấp phát Tủ Kiosk</h3>
       <p>
-        Chọn một kỹ thuật viên đang hoạt động và một tủ kiosk trống có đúng cấu hình{' '}
-        {appDetail.walkInSlots} ô vãng lai + {appDetail.preorderSlots} ô đặt trước.
+        Chọn một kỹ thuật viên đang hoạt động và một tủ kiosk trống có đủ {appDetail.totalSlots} ô.
+        Chủ shop phân loại hình thức bán sau khi được cấp kiosk.
       </p>
 
       <div className="form-fields-grid-2">
@@ -91,9 +91,7 @@ export function InstallationScheduleForm({
             <button
               type="button"
               className="link-inline-btn"
-              onClick={() =>
-                onOpenEnroll(Number(appDetail.walkInSlots), Number(appDetail.preorderSlots))
-              }
+              onClick={() => onOpenEnroll(Number(appDetail.totalSlots))}
             >
               + Thêm tủ mới (Asset Enrollment)
             </button>
@@ -113,7 +111,7 @@ export function InstallationScheduleForm({
               )}
             {eligibleKiosks.map((k) => (
               <option key={k.id} value={k.id}>
-                {k.code} - {k.name} ({k.walkInSlots}W + {k.preorderSlots}P) [{k.status}]
+                {k.code} - {k.name} ({k.totalSlots} ô) [{k.status}]
               </option>
             ))}
           </select>
@@ -130,8 +128,8 @@ export function InstallationScheduleForm({
             eligibleKiosks.length === 0 &&
             !appDetail.assignedKioskId && (
               <small className="kiosk-field-error">
-                Chưa có tủ kiosk nào khả dụng với {appDetail.walkInSlots} ô W và{' '}
-                {appDetail.preorderSlots} ô P. Nhấn Thêm tủ mới để đăng ký thiết bị.
+                Chưa có tủ kiosk nào khả dụng với {appDetail.totalSlots} ô. Nhấn Thêm tủ mới để đăng
+                ký thiết bị.
               </small>
             )}
         </div>

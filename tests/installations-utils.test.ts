@@ -45,12 +45,13 @@ describe('installations.utils unit tests', () => {
       code: 'K-HCM-01',
       name: 'Kiosk District 1',
       hardwareId: 'ESP32-12345',
-      walkInSlots: 2,
-      preorderSlots: 2,
+      slotCount: 4,
     };
 
     it('accepts valid kiosk enrollment data', () => {
       expect(validateEnrollKioskForm(validData).valid).toBe(true);
+      expect(validateEnrollKioskForm({ ...validData, slotCount: 1 }).valid).toBe(true);
+      expect(validateEnrollKioskForm({ ...validData, slotCount: 50 }).valid).toBe(true);
     });
 
     it('rejects missing or empty fields', () => {
@@ -72,14 +73,14 @@ describe('installations.utils unit tests', () => {
     });
 
     it('rejects slots less than 1 or non-integer', () => {
-      expect(validateEnrollKioskForm({ ...validData, walkInSlots: 0 }).valid).toBe(false);
-      expect(validateEnrollKioskForm({ ...validData, preorderSlots: 1.5 }).valid).toBe(false);
+      expect(validateEnrollKioskForm({ ...validData, slotCount: 0 }).valid).toBe(false);
+      expect(validateEnrollKioskForm({ ...validData, slotCount: 1.5 }).valid).toBe(false);
     });
 
     it('rejects total slots exceeding 50', () => {
-      const res = validateEnrollKioskForm({ ...validData, walkInSlots: 30, preorderSlots: 21 });
+      const res = validateEnrollKioskForm({ ...validData, slotCount: 51 });
       expect(res.valid).toBe(false);
-      expect(res.error).toContain('tổng số ô không vượt quá 50');
+      expect(res.error).toContain('từ 1 đến 50');
     });
   });
 

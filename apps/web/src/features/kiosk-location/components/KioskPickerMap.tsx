@@ -2,8 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { CircleMarker, Map as LeafletMap } from 'leaflet';
+import type { Map as MapLibreMap, Marker as MapLibreMarker } from 'maplibre-gl';
 import 'leaflet/dist/leaflet.css';
-import { isValidLatitude, isValidLongitude } from '../kiosk-location.utils';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import { getMapTileConfig, isValidLatitude, isValidLongitude } from '../kiosk-location.utils';
 
 interface KioskPickerMapProps {
   latitude: number | null;
@@ -25,7 +27,10 @@ export default function KioskPickerMap({
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const markerRef = useRef<CircleMarker | null>(null);
+  const goongMapRef = useRef<MapLibreMap | null>(null);
+  const goongMarkerRef = useRef<MapLibreMarker | null>(null);
   const [tileError, setTileError] = useState(false);
+  const tileConfig = getMapTileConfig();
 
   const onLocationSelectRef = useRef(onLocationSelect);
   const interactiveRef = useRef(interactive);
@@ -42,6 +47,66 @@ export default function KioskPickerMap({
     let cancelled = false;
     const element = containerRef.current;
     if (!element) return;
+
+    if (tileConfig.isGoong) {
+      let resizeObserver: ResizeObserver | null = null;
+      void import('maplibre-gl')
+        .then((maplibregl) => {
+          if (cancelled || !containerRef.current) return;
+          if (typeof maplibregl.setWorkerUrl === 'function') {
+            maplibregl.setWorkerUrl('/maplibre-gl-worker.mjs');
+          }
+          const hasCoords =
+            isValidLatitude(initialLatRef.current) && isValidLongitude(initialLonRef.current);
+          const lat = hasCoords ? (initialLatRef.current as number) : 10.7822;
+          const lon = hasCoords ? (initialLonRef.current as number) : 106.6955;
+          const map = new maplibregl.Map({
+            container: containerRef.current,
+            style: tileConfig.styleUrl,
+            center: [lon, lat],
+            zoom: initialZoomRef.current ?? (hasCoords ? 15 : 12),
+            attributionControl: false,
+          });
+          goongMapRef.current = map;
+          map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+          if (hasCoords) {
+            goongMarkerRef.current = new maplibregl.Marker({ color: '#e11d48' })
+              .setLngLat([lon, lat])
+              .addTo(map);
+          }
+          map.on('click', (event) => {
+            if (!interactiveRef.current || !onLocationSelectRef.current) return;
+            const clickLat = Number(event.lngLat.lat.toFixed(6));
+            const clickLon = Number(event.lngLat.lng.toFixed(6));
+            if (!goongMarkerRef.current) {
+              goongMarkerRef.current = new maplibregl.Marker({ color: '#e11d48' })
+                .setLngLat([clickLon, clickLat])
+                .addTo(map);
+            } else {
+              goongMarkerRef.current.setLngLat([clickLon, clickLat]);
+            }
+            onLocationSelectRef.current(clickLat, clickLon);
+          });
+          map.on('error', (event) => {
+            const status = (event as { error?: { status?: number } }).error?.status;
+            if (!cancelled && (status === 401 || status === 403 || status === 404))
+              setTileError(true);
+          });
+          resizeObserver = new ResizeObserver(() => map.resize());
+          resizeObserver.observe(element);
+        })
+        .catch(() => {
+          if (!cancelled) setTileError(true);
+        });
+      return () => {
+        cancelled = true;
+        resizeObserver?.disconnect();
+        goongMarkerRef.current?.remove();
+        goongMarkerRef.current = null;
+        goongMapRef.current?.remove();
+        goongMapRef.current = null;
+      };
+    }
 
     if ((element as unknown as { _leaflet_id?: number })._leaflet_id) {
       return;
@@ -83,8 +148,8 @@ export default function KioskPickerMap({
         if (initHasCoords) {
           markerRef.current = L.circleMarker([initLat as number, initLon as number], {
             radius: 8,
-            color: '#174b35',
-            fillColor: '#ffcf24',
+            color: '#ffffff',
+            fillColor: '#e11d48',
             fillOpacity: 1,
             weight: 3,
           }).addTo(map);
@@ -97,8 +162,8 @@ export default function KioskPickerMap({
           if (!markerRef.current) {
             markerRef.current = L.circleMarker([clickLat, clickLon], {
               radius: 8,
-              color: '#174b35',
-              fillColor: '#ffcf24',
+              color: '#ffffff',
+              fillColor: '#e11d48',
               fillOpacity: 1,
               weight: 3,
             }).addTo(map);
@@ -120,10 +185,32 @@ export default function KioskPickerMap({
         markerRef.current = null;
       }
     };
-  }, []); // Run once on mount
+  }, [tileConfig.isGoong, tileConfig.styleUrl]);
 
   // Sync coords from props to map/marker
   useEffect(() => {
+    if (goongMapRef.current) {
+      if (isValidLatitude(latitude) && isValidLongitude(longitude)) {
+        if (!goongMarkerRef.current) {
+          void import('maplibre-gl').then((maplibregl) => {
+            if (!goongMapRef.current || goongMarkerRef.current) return;
+            goongMarkerRef.current = new maplibregl.Marker({ color: '#e11d48' })
+              .setLngLat([longitude, latitude])
+              .addTo(goongMapRef.current);
+          });
+        } else {
+          goongMarkerRef.current.setLngLat([longitude, latitude]);
+        }
+        goongMapRef.current.easeTo({
+          center: [longitude, latitude],
+          zoom: Math.max(goongMapRef.current.getZoom(), 14),
+        });
+      } else if (goongMarkerRef.current) {
+        goongMarkerRef.current.remove();
+        goongMarkerRef.current = null;
+      }
+      return;
+    }
     if (!mapRef.current) return;
     void import('leaflet').then((L) => {
       if (!mapRef.current) return;
@@ -131,8 +218,8 @@ export default function KioskPickerMap({
         if (!markerRef.current) {
           markerRef.current = L.circleMarker([latitude, longitude], {
             radius: 8,
-            color: '#174b35',
-            fillColor: '#ffcf24',
+            color: '#ffffff',
+            fillColor: '#e11d48',
             fillOpacity: 1,
             weight: 3,
           }).addTo(mapRef.current);
@@ -152,26 +239,38 @@ export default function KioskPickerMap({
       <div ref={containerRef} className="kiosk-picker-map" role="region" aria-label={ariaLabel} />
       <div className="kiosk-map-footer">
         <p className="kiosk-map-attribution">
-          Dữ liệu bản đồ ©{' '}
-          <a
-            href="https://www.openstreetmap.org/copyright"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            OpenStreetMap
-          </a>{' '}
-          ·{' '}
-          <a href="https://leafletjs.com" target="_blank" rel="noopener noreferrer">
-            Leaflet
-          </a>
+          {tileConfig.isGoong ? (
+            <>
+              Dữ liệu bản đồ ©{' '}
+              <a href="https://www.goong.io" target="_blank" rel="noopener noreferrer">
+                Goong Maps
+              </a>{' '}
+              · MapLibre
+            </>
+          ) : (
+            <>
+              Dữ liệu bản đồ ©{' '}
+              <a
+                href="https://www.openstreetmap.org/copyright"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                OpenStreetMap
+              </a>{' '}
+              · Leaflet
+            </>
+          )}
         </p>
         {interactive && (
-          <span className="kiosk-map-hint">Bấm vào bản đồ để chọn tọa độ ghim vị trí.</span>
+          <span className="kiosk-map-hint">Bấm vào bản đồ để đặt hoặc chỉnh ghim vị trí.</span>
         )}
       </div>
       {tileError && (
         <p className="kiosk-map-tile-warning" role="status">
-          Bản đồ chưa tải được đầy đủ ô hình ảnh. Bạn vẫn có thể nhập địa chỉ và tọa độ bằng tay.
+          Bản đồ chưa tải được đầy đủ hình ảnh.{' '}
+          {process.env.NEXT_PUBLIC_GOONG_API_KEY?.trim()
+            ? 'Bạn vẫn có thể tìm và chọn địa chỉ gợi ý.'
+            : 'Vui lòng tải lại trang trước khi chọn vị trí.'}
         </p>
       )}
     </div>

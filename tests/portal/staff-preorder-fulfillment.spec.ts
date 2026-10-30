@@ -44,6 +44,7 @@ test('Seller staff fulfills only paid preorder into a PREORDER slot', async ({ p
         slots: [
           { id: 'slot-p', slotCode: 'P01', zone: 'PREORDER' },
           { id: 'slot-w', slotCode: 'W01', zone: 'WALK_IN' },
+          { id: 'slot-null', slotCode: 'U01', zone: null },
         ],
       },
     }),
@@ -56,6 +57,9 @@ test('Seller staff fulfills only paid preorder into a PREORDER slot', async ({ p
   await page.goto('/staff');
   await page.getByText('Nạp đơn đặt trước đã thanh toán', { exact: true }).click();
   await expect(page.getByLabel('Đơn đặt trước')).toBeVisible();
+  await expect(
+    page.getByLabel('Ô PREORDER trống').locator('option[value="slot-null"]'),
+  ).toHaveCount(0);
   await expect(page.getByLabel('Ô PREORDER trống').locator('option[value="slot-w"]')).toHaveCount(
     0,
   );

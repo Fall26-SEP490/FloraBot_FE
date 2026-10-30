@@ -32,8 +32,7 @@ export default function StaffPreorderFulfillment({
     queryFn: () => request<Options>(`/staff/tasks/${taskId}/preorders`),
     enabled: open && active,
   });
-  const validSlots =
-    options.data?.slots.filter((slot) => slot.zone === 'PREORDER' || slot.zone === null) ?? [];
+  const validSlots = options.data?.slots.filter((slot) => slot.zone === 'PREORDER') ?? [];
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -125,7 +124,6 @@ export default function StaffPreorderFulfillment({
             {validSlots.map((slot) => (
               <option key={slot.id} value={slot.id}>
                 {slot.slotCode}
-                {slot.zone === null ? ' · ô cũ chưa phân loại' : ''}
               </option>
             ))}
           </select>

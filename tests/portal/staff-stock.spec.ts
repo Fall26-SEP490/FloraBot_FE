@@ -41,7 +41,7 @@ for (const width of [390, 1440])
         return route.fulfill({
           json: {
             products: [{ id: 'product-1', name: 'Hoa hồng pastel' }],
-            slots: actions.length ? [] : [{ id: 'slot-1', code: 'A01' }],
+            slots: actions.length ? [] : [{ id: 'slot-1', code: 'A01', zone: 'WALK_IN' }],
             actions,
           },
         });
@@ -64,7 +64,7 @@ for (const width of [390, 1440])
     await expect(page.getByText('Chọn mẫu hoa.', { exact: true })).toBeVisible();
     expect(writes).toBe(0);
     await page.getByLabel('Mẫu hoa cần nạp').selectOption('product-1');
-    await page.getByLabel('Ô tủ trống').selectOption('slot-1');
+    await page.getByLabel('Ô Walk-in trống').selectOption('slot-1');
     await page.getByLabel('Mã QR trên bó hoa').fill('FLOWER-001');
     await page.getByRole('button', { name: 'Ghi nhận đã nạp hoa' }).click();
     await expect(page.getByText('Xác nhận đã đặt hoa đúng ô.', { exact: true })).toBeVisible();

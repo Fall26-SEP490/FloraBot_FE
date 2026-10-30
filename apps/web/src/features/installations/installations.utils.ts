@@ -90,8 +90,7 @@ export interface EnrollKioskFormData {
   code: string;
   name: string;
   hardwareId: string;
-  walkInSlots: number;
-  preorderSlots: number;
+  slotCount: number;
 }
 
 export function validateEnrollKioskForm(data: EnrollKioskFormData): {
@@ -111,16 +110,10 @@ export function validateEnrollKioskForm(data: EnrollKioskFormData): {
       error: 'Mã tủ và Hardware ID cần ít nhất 2 ký tự; tên tủ từ 2 đến 120 ký tự.',
     };
   }
-  if (
-    !Number.isInteger(data.walkInSlots) ||
-    !Number.isInteger(data.preorderSlots) ||
-    data.walkInSlots < 1 ||
-    data.preorderSlots < 1 ||
-    data.walkInSlots + data.preorderSlots > 50
-  ) {
+  if (!Number.isInteger(data.slotCount) || data.slotCount < 1 || data.slotCount > 50) {
     return {
       valid: false,
-      error: 'Mỗi loại ô cần ít nhất 1 ô; tổng số ô không vượt quá 50.',
+      error: 'Tổng số ô phải là số nguyên từ 1 đến 50.',
     };
   }
   return { valid: true };

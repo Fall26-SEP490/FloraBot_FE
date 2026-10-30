@@ -9939,6 +9939,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/me/kiosks/{kioskId}/slots/{slotId}/zone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Seller chọn zone cho ô trống của kiosk mình */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kioskId: string;
+                    slotId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        zone: "WALK_IN" | "PREORDER";
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Ô không còn trống hoặc đang bị giữ */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -10522,9 +10573,7 @@ export interface components {
             mqttClientId: null | string;
             region: null | string;
             /** Format: int32 */
-            walkInSlots: number | string;
-            /** Format: int32 */
-            preorderSlots: number | string;
+            slotCount: number;
         };
         EnrollKioskResponse: {
             /** Format: uuid */

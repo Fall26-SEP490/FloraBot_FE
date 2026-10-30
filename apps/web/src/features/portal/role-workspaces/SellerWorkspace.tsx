@@ -192,9 +192,10 @@ export default function SellerWorkspace({ section = 'overview' }: { section?: st
               </p>
             </div>
             <span className="dashboard-context">
-              {section === 'overview'
+              {section === 'overview' ||
+              workspaceSections['SELLER']?.find(([key]) => key === section)?.[1] === 'Vị trí kiosk'
                 ? 'Chủ shop'
-                : workspaceSections['SELLER']?.find(([key]) => key === section)?.[1] || 'Cửa hàng'}
+                : workspaceSections['SELLER']?.find(([key]) => key === section)?.[1] || 'Chủ shop'}
             </span>
           </div>
           <SubscriptionBanner session={session.data} />

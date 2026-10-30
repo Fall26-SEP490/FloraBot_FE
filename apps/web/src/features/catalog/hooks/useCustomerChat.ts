@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { sessionQuery } from '@/shared/lib/api';
+import { queryClient, sessionQuery } from '@/shared/lib/api';
 import { formatChatError, openCustomerChat } from '@/features/chat/api';
 import type { CatalogItem } from '../catalog.types';
 import type { ChatNotice } from '../components/ChatNoticeDialog';
@@ -45,13 +45,15 @@ export function useCustomerChat(onBeforeOpen: (item: CatalogItem | null) => void
       setChatNotice(null);
       try {
         const chat = await openCustomerChat({ sellerId: item.sellerId, productId: item.productId });
+        // Reopening an existing chat can change its product context on the backend.
+        queryClient.removeQueries({ queryKey: ['member-chats'] });
         try {
           sessionStorage.setItem(
             'florabot_opened_chat',
             JSON.stringify({
               id: chat.id,
-              otherPartyName: item.shopName,
-              productContext: item.name,
+              otherPartyName: chat.otherPartyName,
+              productContext: chat.productContext,
               createdAt: new Date().toISOString(),
             }),
           );

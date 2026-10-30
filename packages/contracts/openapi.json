@@ -10475,6 +10475,65 @@
           }
         }
       }
+    },
+    "/api/me/kiosks/{kioskId}/slots/{slotId}/zone": {
+      "put": {
+        "tags": [
+          "KioskOps"
+        ],
+        "summary": "Seller chọn zone cho ô trống của kiosk mình",
+        "parameters": [
+          {
+            "name": "kioskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "slotId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "zone"
+                ],
+                "properties": {
+                  "zone": {
+                    "type": "string",
+                    "enum": [
+                      "WALK_IN",
+                      "PREORDER"
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "409": {
+            "description": "Ô không còn trống hoặc đang bị giữ"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -12820,8 +12879,7 @@
           "hardwareId",
           "mqttClientId",
           "region",
-          "walkInSlots",
-          "preorderSlots"
+          "slotCount"
         ],
         "type": "object",
         "properties": {
@@ -12846,21 +12904,11 @@
               "string"
             ]
           },
-          "walkInSlots": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "preorderSlots": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
+          "slotCount": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1,
+            "maximum": 50
           }
         },
         "additionalProperties": false
@@ -13179,7 +13227,7 @@
         },
         "additionalProperties": false
       },
-      "JsonElement": { },
+      "JsonElement": {},
       "KioskAccessoryResponse": {
         "required": [
           "id",
@@ -13553,7 +13601,7 @@
               "format": "uuid"
             }
           },
-          "p_accessories": { },
+          "p_accessories": {},
           "p_points": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
@@ -14898,7 +14946,7 @@
             "type": "string",
             "format": "date"
           },
-          "p_statement": { }
+          "p_statement": {}
         },
         "additionalProperties": false
       },

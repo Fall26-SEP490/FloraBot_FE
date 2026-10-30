@@ -28,8 +28,7 @@ export default function OperationsInstallations({ session }: OperationsInstallat
 
   // Enroll modal state
   const [enrollModalOpen, setEnrollModalOpen] = useState(false);
-  const [enrollWalkIn, setEnrollWalkIn] = useState(1);
-  const [enrollPreorder, setEnrollPreorder] = useState(1);
+  const [enrollSlotCount, setEnrollSlotCount] = useState(1);
   const [enrollSuccess, setEnrollSuccess] = useState<string | null>(null);
 
   // Once-only Provisioned Key Modal State (Memory only, never persisted)
@@ -50,9 +49,8 @@ export default function OperationsInstallations({ session }: OperationsInstallat
     }
   };
 
-  const handleOpenEnroll = (walkIn = 1, preorder = 1) => {
-    setEnrollWalkIn(walkIn);
-    setEnrollPreorder(preorder);
+  const handleOpenEnroll = (slotCount = 1) => {
+    setEnrollSlotCount(slotCount);
     setEnrollSuccess(null);
     setEnrollModalOpen(true);
   };
@@ -115,7 +113,7 @@ export default function OperationsInstallations({ session }: OperationsInstallat
         selectedAppId={selectedAppId}
         onSelectApp={handleSelectApp}
         onRefresh={handleRefresh}
-        onOpenEnroll={() => handleOpenEnroll(1, 1)}
+        onOpenEnroll={() => handleOpenEnroll(1)}
       />
 
       {selectedAppId && (
@@ -135,8 +133,7 @@ export default function OperationsInstallations({ session }: OperationsInstallat
         open={enrollModalOpen}
         onClose={closeEnroll}
         session={session}
-        initialWalkInSlots={enrollWalkIn}
-        initialPreorderSlots={enrollPreorder}
+        initialSlotCount={enrollSlotCount}
         onSuccess={handleEnrollSuccess}
       />
 
