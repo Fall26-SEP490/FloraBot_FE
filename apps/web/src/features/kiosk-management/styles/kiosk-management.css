@@ -129,7 +129,7 @@
 .seller-kiosks-page .kiosk-map-inactive {
   display: grid;
   place-items: center;
-  min-height: 280px;
+  min-height: 350px;
   background: #f4f8f2;
   border: 2px dashed #cfe0ca;
   border-radius: var(--radius-workspace-control, 8px);
@@ -424,16 +424,57 @@
   cursor: not-allowed;
 }
 
-.seller-kiosks-page .kiosk-coords-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
+.seller-kiosks-page .kiosk-address-search {
+  position: relative;
 }
 
-@media (max-width: 480px) {
-  .seller-kiosks-page .kiosk-coords-row {
-    grid-template-columns: 1fr;
-  }
+.seller-kiosks-page .kiosk-suggestion-panel {
+  position: absolute;
+  z-index: 20;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 240px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid var(--color-workspace-line, #c9d9c8);
+  border-radius: var(--radius-workspace-control, 8px);
+  box-shadow: 0 12px 28px rgb(24 62 43 / 12%);
+}
+
+.seller-kiosks-page .kiosk-suggestion-panel [role='listbox'] {
+  margin: 0;
+  padding: 0.25rem;
+}
+
+.seller-kiosks-page .kiosk-suggestion-panel button {
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-workspace-ink, #183e2b);
+  text-align: left;
+  cursor: pointer;
+}
+
+.seller-kiosks-page .kiosk-suggestion-panel button:hover,
+.seller-kiosks-page .kiosk-suggestion-panel button:focus-visible,
+.seller-kiosks-page .kiosk-suggestion-panel button[aria-selected='true'] {
+  background: #edf5eb;
+}
+
+.seller-kiosks-page .kiosk-suggestion-panel p,
+.seller-kiosks-page .kiosk-address-hint,
+.seller-kiosks-page .kiosk-location-selection {
+  margin: 0;
+  color: var(--color-workspace-muted, #476451);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.seller-kiosks-page .kiosk-suggestion-panel p {
+  padding: 0.8rem;
 }
 
 .seller-kiosks-page .kiosk-geo-actions {
@@ -491,7 +532,7 @@
 
 .seller-kiosks-page .kiosk-picker-map {
   width: 100%;
-  height: 280px;
+  height: 350px;
   border-radius: var(--radius-workspace-control, 8px);
   border: 1px solid var(--color-workspace-line, #c9d9c8);
   background: #eaf0e8;
@@ -546,4 +587,94 @@
 .seller-kiosks-page .kiosk-btn-reset {
   min-height: 44px;
   padding: 0.55rem 1.25rem;
+}
+
+/* Meta address and region under kiosk name */
+.seller-kiosks-page .kiosk-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.35rem;
+  font-size: 0.88rem;
+}
+
+.seller-kiosks-page .kiosk-meta-address {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  color: var(--color-workspace-ink, #183e2b);
+  font-weight: 500;
+}
+
+.seller-kiosks-page .kiosk-meta-address.kiosk-address-empty {
+  color: #8c8266;
+  font-style: italic;
+  font-weight: 400;
+}
+
+.seller-kiosks-page .kiosk-region-badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  background: #edf5eb;
+  border: 1px solid #d4e5d2;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--color-workspace-ink, #183e2b);
+}
+
+/* Coordinates Summary Box */
+.seller-kiosks-page .kiosk-coords-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #f7faf6;
+  border: 1px solid #d8e5d5;
+  border-radius: var(--radius-workspace-control, 8px);
+}
+
+.seller-kiosks-page .kiosk-coord-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.84rem;
+}
+
+.seller-kiosks-page .kiosk-coord-label {
+  color: var(--color-workspace-muted, #476451);
+  font-weight: 500;
+}
+
+.seller-kiosks-page .kiosk-coord-val {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 600;
+  color: var(--color-workspace-ink, #183e2b);
+  background: #eaf2e8;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+}
+
+/* Enhanced Disclaimer Note */
+.seller-kiosks-page .kiosk-disclaimer {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: #556c5c;
+  background: #f4f7f3;
+  border-left: 3px solid #8ca893;
+  border-radius: 0 6px 6px 0;
+  padding: 0.65rem 0.85rem;
+  margin: 0.5rem 0 0 0;
+}
+
+.seller-kiosks-page .kiosk-disclaimer-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #4b6653;
 }

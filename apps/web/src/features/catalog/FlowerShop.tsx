@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import './styles/catalog.css';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { request, sessionQuery } from '@/shared/lib/api';
+import { queryClient, request, sessionQuery } from '@/shared/lib/api';
 import { formatChatError, openCustomerChat } from '@/features/chat/api';
 import { MOCK_CATALOG_ITEMS } from '@/features/catalog/mocks/mockCatalog';
 import type { CatalogItem, CatalogResponse } from './catalog.types';
@@ -63,14 +63,17 @@ export default function FlowerShop() {
           sellerId: item.sellerId,
           productId: item.productId,
         });
+        // A chat is shared by the customer and shop; reopening a product changes its context.
+        // Drop the previous list so the account page reads the context just returned by BE.
+        queryClient.removeQueries({ queryKey: ['member-chats'] });
         if (typeof window !== 'undefined') {
           try {
             sessionStorage.setItem(
               'florabot_opened_chat',
               JSON.stringify({
                 id: chat.id,
-                otherPartyName: item.shopName,
-                productContext: item.name,
+                otherPartyName: chat.otherPartyName,
+                productContext: chat.productContext,
                 createdAt: new Date().toISOString(),
               }),
             );

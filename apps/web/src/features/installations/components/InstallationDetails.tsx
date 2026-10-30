@@ -13,7 +13,7 @@ interface InstallationDetailsProps {
   session: Session;
   isManager: boolean;
   onClose: () => void;
-  onOpenEnroll: (walkIn: number, preorder: number) => void;
+  onOpenEnroll: (slotCount: number) => void;
   onShowProvisionedKey: (info: ProvisionedKeyInfo) => void;
   onInvalidateQueue: () => void;
 }

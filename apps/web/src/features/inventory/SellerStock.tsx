@@ -8,14 +8,15 @@ import type { components } from '../../../../../packages/contracts/src/generated
 import { queryClient, request, type Session } from '@/shared/lib/api';
 import ReportFault from '../incidents/ReportFault';
 import ReturnFlowers from '../orders/ReturnFlowers';
+import SlotZoneSelector from './SlotZoneSelector';
 
-// The current seller slots response omits zone. Never infer it from slotCode.
+// Never infer the selling zone from the slot code.
 type Slot = components['schemas']['SellerSlotResponse'] & { zone?: string | null };
 type StockZone = 'WALK_IN' | 'PREORDER' | 'UNKNOWN';
 const zoneLabels: Record<StockZone, string> = {
-  WALK_IN: 'Bán trực tiếp tại kiosk (Walk-in)',
-  PREORDER: 'Đặt và thanh toán trên web (Pre-order)',
-  UNKNOWN: 'Chưa xác định hình thức bán',
+  WALK_IN: 'Walk-in',
+  PREORDER: 'Pre-order',
+  UNKNOWN: 'Chưa phân loại',
 };
 function slotZone(slot: Slot): StockZone {
   return slot.zone === 'WALK_IN' || slot.zone === 'PREORDER' ? slot.zone : 'UNKNOWN';
@@ -25,7 +26,7 @@ type SellerKiosk = components['schemas']['SellerKioskDto'];
 
 const statuses: Record<string, string> = {
   FREE: 'Chưa cho thuê',
-  RENTED_EMPTY: 'Sẵn sàng nạp hoa',
+  RENTED_EMPTY: 'Ô trống',
   STOCKED: 'Đã nạp hoa',
   HELD: 'Khách đang thanh toán',
   PENDING_REMOVAL: 'Chờ lấy hoa hết hạn',
@@ -37,7 +38,6 @@ const statuses: Record<string, string> = {
 const guidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const schema = z.object({
-  zone: z.enum(['WALK_IN', 'PREORDER', 'UNKNOWN'], { message: 'Chọn hình thức bán của ô tủ.' }),
   slotId: z.string().regex(guidPattern, 'Chọn ô trống để nạp hoa.'),
   productId: z.string().regex(guidPattern, 'Chọn sản phẩm đang bật bán.'),
 });
@@ -57,7 +57,6 @@ export default function SellerStock({ session }: { session: Session }) {
     defaultValues: { slotId: '', productId: '' },
   });
   const selectedProductId = useWatch({ control: form.control, name: 'productId' });
-  const selectedZone = useWatch({ control: form.control, name: 'zone' });
   const selectedSlotId = useWatch({ control: form.control, name: 'slotId' });
   const kiosks = useQuery({
     queryKey: ['seller-kiosks', sellerId],
@@ -90,7 +89,7 @@ export default function SellerStock({ session }: { session: Session }) {
       setMessage(
         `Đã ghi nhận ${product?.name || 'bó hoa'} vào ô ${slot?.slotCode || ''} tại ${slot?.kioskName || 'kiosk đã chọn'}. ${zoneLabels[slot ? slotZone(slot) : 'UNKNOWN']}. Mã bó hoa được hệ thống tạo tự động.`,
       );
-      form.reset({ slotId: '', productId: values.productId, zone: values.zone });
+      form.reset({ slotId: '', productId: values.productId });
       notice.current?.focus();
     },
     onSettled: () =>
@@ -103,13 +102,22 @@ export default function SellerStock({ session }: { session: Session }) {
 
   const selectedKiosk = kiosks.data?.find((kiosk) => kiosk.id === selectedKioskId);
   const canStock = session.sellerStatus === 'ACTIVE';
-  const empty = slots.data?.filter((slot) => slot.status === 'RENTED_EMPTY') || [];
-  const matchingEmpty = empty.filter((slot) => slotZone(slot) === selectedZone);
+  const empty =
+    slots.data?.filter((slot) => slot.status === 'RENTED_EMPTY' && !slot.bouquetId) || [];
+  const matchingEmpty = empty.filter((slot) => slotZone(slot) === 'WALK_IN');
   const selectedSlot = matchingEmpty.find((slot) => slot.id === selectedSlotId);
-  const hasUnknownZones = slots.data?.some((slot) => slotZone(slot) === 'UNKNOWN');
+  const unclassifiedEmpty = empty.filter((slot) => slotZone(slot) === 'UNKNOWN');
   const available = products.data?.filter((product) => product.status === 'ACTIVE') || [];
   const selectedProduct = available.find((product) => product.id === selectedProductId);
   const slotsLoading = !!selectedKioskId && (slots.isPending || slots.isFetching);
+  const slotSelectDisabled =
+    !selectedKioskId || stock.isPending || slotsLoading || slots.isError || !matchingEmpty.length;
+  const productSelectDisabled =
+    stock.isPending ||
+    products.isPending ||
+    products.isFetching ||
+    products.isError ||
+    !available.length;
   const blocked =
     !canStock ||
     !selectedKioskId ||
@@ -118,20 +126,14 @@ export default function SellerStock({ session }: { session: Session }) {
     products.isFetching ||
     slots.isError ||
     products.isError ||
-    !empty.length ||
+    !matchingEmpty.length ||
     !available.length;
 
   return (
     <section className="seller-stock" aria-labelledby="stock-title">
-      <h2 id="stock-title">Hoa tại kiosk</h2>
-      <p>
-        Chọn kiosk → hình thức bán của ô → ô trống → mẫu hoa cần nạp. Mỗi lần nạp tạo một bó hoa
-        thực tế; tạo mẫu hoa trong danh mục chưa phải là nạp hoa vào tủ.
-      </p>
-      <p className="quiet">
-        Ô Walk-in dành cho khách mua trực tiếp tại kiosk. Ô Pre-order dành cho đặt và thanh toán
-        trên web, sau đó nhận hoa tại kiosk. Hình thức bán được quyết định bởi vùng ô đã cấu hình.
-      </p>
+      <h2 id="stock-title" className="sr-only">
+        Quản lý hoa tại tủ
+      </h2>
       {!canStock && (
         <p className="quiet">
           Shop cần có gói đang hoạt động để nạp hoa. Bạn vẫn có thể xem các ô đang quản lý.
@@ -148,7 +150,6 @@ export default function SellerStock({ session }: { session: Session }) {
             onChange={(event) => {
               setSelectedKioskChoice(event.target.value);
               form.setValue('slotId', '');
-              form.resetField('zone');
               setMessage('');
             }}
           >
@@ -178,7 +179,7 @@ export default function SellerStock({ session }: { session: Session }) {
               aria-hidden="true"
               className={kiosks.isFetching || slots.isFetching || products.isFetching ? 'spin' : ''}
             />
-            Làm mới kiosk, ô và sản phẩm
+            Làm mới
           </Button>
         </div>
       </div>
@@ -188,7 +189,7 @@ export default function SellerStock({ session }: { session: Session }) {
       )}
       {(kiosks.isError || slots.isError || products.isError) && (
         <p role="alert" className="error">
-          Chưa tải đủ dữ liệu quản lý kiosk. Chọn “Làm mới kiosk, ô và sản phẩm” để thử lại.
+          Chưa tải đủ dữ liệu quản lý kiosk. Chọn “Làm mới” để thử lại.
         </p>
       )}
       {!kiosks.isPending && !kiosks.isError && kiosks.data?.length === 0 && (
@@ -204,13 +205,14 @@ export default function SellerStock({ session }: { session: Session }) {
             <Store aria-hidden="true" />
             <span>Tổng số ô quản lý</span>
             <strong>{slots.data.length}</strong>
-            <small>Tại {selectedKiosk?.name || 'kiosk đã chọn'}</small>
           </div>
           <div className="operations-metric">
             <Package aria-hidden="true" style={{ color: '#0369a1' }} />
-            <span>Sẵn sàng nạp hoa</span>
-            <strong style={{ color: '#0369a1' }}>{empty.length}</strong>
-            <small>Ô còn trống</small>
+            <span>Ô Walk-in sẵn sàng</span>
+            <strong style={{ color: '#0369a1' }}>{matchingEmpty.length}</strong>
+            <small>
+              {empty.length} ô trống · {unclassifiedEmpty.length} ô chưa phân loại
+            </small>
           </div>
           <div className="operations-metric">
             <Flower2 aria-hidden="true" style={{ color: '#16a34a' }} />
@@ -247,7 +249,8 @@ export default function SellerStock({ session }: { session: Session }) {
               !slot ||
               slot.kioskId !== selectedKioskId ||
               slot.status !== 'RENTED_EMPTY' ||
-              slotZone(slot) !== values.zone
+              !!slot.bouquetId ||
+              slot.zone !== 'WALK_IN'
             ) {
               form.setError(
                 'slotId',
@@ -259,47 +262,24 @@ export default function SellerStock({ session }: { session: Session }) {
             stock.mutate(values);
           })}
         >
-          <div>
-            <label htmlFor="stock-zone">Hình thức bán của ô tủ</label>
-            <select
-              id="stock-zone"
-              {...form.register('zone', {
-                onChange: () => {
-                  form.setValue('slotId', '');
-                  setMessage('');
-                },
-              })}
-              disabled={blocked}
-              aria-invalid={!!form.formState.errors.zone}
-              aria-describedby="stock-zone-help stock-zone-error"
-            >
-              <option value="">Chọn hình thức bán</option>
-              {(['WALK_IN', 'PREORDER', 'UNKNOWN'] as const).map((zone) => (
-                <option
-                  key={zone}
-                  value={zone}
-                  disabled={!empty.some((slot) => slotZone(slot) === zone)}
-                >
-                  {zoneLabels[zone]} ({empty.filter((slot) => slotZone(slot) === zone).length} ô
-                  trống)
-                </option>
-              ))}
-            </select>
-            <p id="stock-zone-help" className="quiet">
-              Chỉ lọc các ô đã có trong kiosk; lựa chọn này không thay đổi vùng ô hay kênh bán của
-              bó hoa.
-            </p>
-            {form.formState.errors.zone && (
-              <p className="error" id="stock-zone-error">
-                {form.formState.errors.zone.message}
-              </p>
-            )}
+          <div className="stock-form-heading">
+            <div>
+              <span className="stock-eyebrow">BÁN TRỰC TIẾP</span>
+              <h3>Nạp hoa vào tủ</h3>
+              <p>Chọn ô Walk-in trống và mẫu hoa để ghi nhận một bó hoa.</p>
+            </div>
+            <span className="stock-form-badge">Walk-in</span>
           </div>
-          {hasUnknownZones && (
-            <p className="quiet" role="note">
-              Một số ô chưa có thông tin vùng bán từ hệ thống. Không thể xác nhận bán tại kiosk hay
-              trên web. Có thể chọn “Chưa xác định hình thức bán” để ghi nhận nạp vào các ô này; hãy
-              xác nhận vùng ô với quản lý trước khi bán.
+          {!slotsLoading && !slots.isError && !matchingEmpty.length && (
+            <p className="stock-empty-notice" role="note">
+              Chưa có ô Walk-in trống để nạp hoa bán sẵn.
+              {unclassifiedEmpty.length > 0 && (
+                <>
+                  {' '}
+                  Có {unclassifiedEmpty.length} ô trống chưa phân loại.{' '}
+                  <a href="#stock-slot-list">Chọn hình thức bán cho ô bên dưới</a> trước khi nạp.
+                </>
+              )}
             </p>
           )}
           <div className="stock-fields">
@@ -310,20 +290,16 @@ export default function SellerStock({ session }: { session: Session }) {
               <select
                 id="stock-slot"
                 {...form.register('slotId')}
-                disabled={blocked || !selectedZone}
+                disabled={slotSelectDisabled}
                 aria-invalid={!!form.formState.errors.slotId}
                 aria-describedby="stock-slot-error"
               >
                 <option value="">Chọn ô trống</option>
-                {matchingEmpty.map((slot) => {
-                  const zone = zoneLabels[slotZone(slot)];
-                  return (
-                    <option key={slot.id} value={slot.id}>
-                      Ô {slot.slotCode}
-                      {zone ? ` — ${zone}` : ''}
-                    </option>
-                  );
-                })}
+                {matchingEmpty.map((slot) => (
+                  <option key={slot.id} value={slot.id}>
+                    Ô {slot.slotCode}
+                  </option>
+                ))}
               </select>
               {form.formState.errors.slotId && (
                 <p className="error" id="stock-slot-error">
@@ -336,7 +312,7 @@ export default function SellerStock({ session }: { session: Session }) {
               <select
                 id="stock-product"
                 {...form.register('productId')}
-                disabled={blocked}
+                disabled={productSelectDisabled}
                 aria-invalid={!!form.formState.errors.productId}
                 aria-describedby="stock-product-error stock-product-info"
               >
@@ -385,10 +361,14 @@ export default function SellerStock({ session }: { session: Session }) {
             <p>Bật bán ít nhất một sản phẩm trong danh mục trước khi nạp hoa.</p>
           )}
           <div className="stock-actions">
-            <Button type="submit" disabled={blocked || (!!selectedZone && !matchingEmpty.length)}>
+            <Button type="submit" disabled={blocked || !selectedSlot || !selectedProduct}>
               {stock.isPending ? 'Đang ghi nhận…' : 'Nạp hoa vào ô'}
             </Button>
           </div>
+          <p className="stock-preorder-hint">
+            Đơn đặt trước đã thanh toán được giao tại mục Đơn đặt trước hoặc công việc giao hoa của
+            nhân viên.
+          </p>
           {stock.isError && (
             <div role="alert" className="error">
               <p>{stock.error.message}</p>
@@ -398,7 +378,9 @@ export default function SellerStock({ session }: { session: Session }) {
         </form>
       )}
 
-      {selectedKioskId && <h3>Các ô tại {selectedKiosk?.name || 'kiosk đã chọn'}</h3>}
+      {selectedKioskId && (
+        <h3 id="stock-slot-list">Các ô tại {selectedKiosk?.name || 'kiosk đã chọn'}</h3>
+      )}
       {selectedKioskId && !slotsLoading && slots.data?.length === 0 && (
         <p>Kiosk chưa có ô nào để quản lý.</p>
       )}
@@ -414,6 +396,7 @@ export default function SellerStock({ session }: { session: Session }) {
                   <span className="slot-status-pill" data-status={slot.status}>
                     {statuses[slot.status] || slot.status}
                   </span>
+                  <span className="stock-slot-disclosure" aria-hidden="true" />
                 </summary>
                 <div className="shop-profile">
                   <p>
@@ -456,6 +439,19 @@ export default function SellerStock({ session }: { session: Session }) {
                   <ReportFault slot={slot} sellerId={sellerId} />
                 </div>
               </details>
+              <SlotZoneSelector
+                kioskId={selectedKioskId}
+                slotId={slot.id}
+                slotCode={slot.slotCode}
+                zone={slot.zone}
+                canEdit={
+                  session.role === 'SELLER' &&
+                  slot.status === 'RENTED_EMPTY' &&
+                  !slot.bouquetId &&
+                  !slotsLoading &&
+                  !stock.isPending
+                }
+              />
             </li>
           );
         })}

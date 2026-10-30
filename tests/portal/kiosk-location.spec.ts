@@ -163,13 +163,14 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
     const maintenanceCard = page.locator('.kiosk-card').filter({ hasText: 'Kiosk Shared Central' });
     await expect(maintenanceCard.locator('.kiosk-status-badge')).toHaveText('Bảo trì');
 
-    // Shared / uneditable kiosk has notice and disabled inputs
+    // Shared / uneditable kiosk has notice and disabled address search
     await expect(maintenanceCard.locator('.kiosk-permission-notice')).toContainText(
       'Tủ kiosk này dùng chung hoặc chưa được gán toàn quyền cho shop',
     );
     await expect(maintenanceCard.locator('input[name="address"]')).toBeDisabled();
-    await expect(maintenanceCard.locator('input[name="latitude"]')).toBeDisabled();
-    await expect(maintenanceCard.locator('input[name="longitude"]')).toBeDisabled();
+    await expect(
+      maintenanceCard.locator('input[name="latitude"], input[name="longitude"]'),
+    ).toHaveCount(0);
   });
 
   test('SELLER_STAFF is restricted from writing/updating kiosk locations', async ({ page }) => {
@@ -189,14 +190,12 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
 
     // Role guard in Workspace redirects non-SELLER to their assigned workspace (/staff)
     await expect(page).toHaveURL('/staff');
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Chào Nhân viên giao nhận');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Công việc giao hoa');
     // Staff navigation does not expose /seller/kiosks
     await expect(page.getByRole('link', { name: 'Vị trí kiosk' })).toBeHidden();
   });
 
-  test('Validates inputs, differentiates 0 from blank, and handles out-of-range coords', async ({
-    page,
-  }) => {
+  test('Requires address and selected map pin before saving', async ({ page }) => {
     let savedPayload: unknown = null;
     await page.route('**/api/auth/me', (route) =>
       route.fulfill({
@@ -220,8 +219,8 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
       return route.fulfill({
         json: {
           ...sampleSellerKiosks[1],
-          latitude: 0,
-          longitude: 0,
+          latitude: 10.8414,
+          longitude: 106.8098,
           locationComplete: true,
         },
       });
@@ -231,8 +230,6 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
 
     const card = page.locator('.kiosk-card').filter({ hasText: 'Kiosk FPT University' });
     const addressInput = card.locator('input[name="address"]');
-    const latInput = card.locator('input[name="latitude"]');
-    const lonInput = card.locator('input[name="longitude"]');
     const submitBtn = card.locator('button[type="submit"]');
 
     // 1. Submit with empty address
@@ -241,44 +238,26 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
       'Vui lòng nhập địa chỉ cụ thể của kiosk.',
     );
 
-    // 2. Fill address but leave coordinates blank (must NOT coerce blank to 0)
+    // Address text alone must not reuse stale coordinates.
     await addressInput.fill('Khu Công Nghệ Cao, TP. Thủ Đức');
-    await latInput.fill('');
-    await lonInput.fill('');
     await submitBtn.click();
     await expect(card.locator('.kiosk-feedback-error')).toContainText(
-      'Cả vĩ độ và kinh độ đều phải được cung cấp cùng nhau.',
+      'Chọn địa chỉ gợi ý hoặc ghim vị trí trên bản đồ trước khi lưu.',
     );
 
-    // 3. Invalid latitude bounds (>90)
-    await latInput.fill('95.5');
-    await lonInput.fill('106.8098');
-    await submitBtn.click();
-    await expect(card.locator('.kiosk-feedback-error')).toContainText(
-      'Vĩ độ phải là số hợp lệ trong khoảng từ -90 đến 90.',
-    );
-
-    // 4. Invalid longitude bounds (>180)
-    await latInput.fill('10.8414');
-    await lonInput.fill('190.5');
-    await submitBtn.click();
-    await expect(card.locator('.kiosk-feedback-error')).toContainText(
-      'Kinh độ phải là số hợp lệ trong khoảng từ -180 đến 180.',
-    );
-
-    // 5. Valid coordinate 0 (equator/prime meridian) MUST be accepted as numeric 0, not rejected
-    await latInput.fill('0');
-    await lonInput.fill('0');
+    await card
+      .locator('.kiosk-picker-map.maplibregl-map, .kiosk-picker-map.leaflet-container')
+      .waitFor();
+    await card.locator('.kiosk-picker-map').click({ position: { x: 35, y: 35 } });
+    await expect(card.locator('.kiosk-location-selection')).toContainText('Đã chọn vị trí ghim');
     await submitBtn.click();
     await expect(card.locator('.kiosk-feedback-success')).toContainText('thành công');
-    expect(savedPayload).toEqual({
-      address: 'Khu Công Nghệ Cao, TP. Thủ Đức',
-      latitude: 0,
-      longitude: 0,
-    });
+    expect(savedPayload).toMatchObject({ address: 'Khu Công Nghệ Cao, TP. Thủ Đức' });
+    expect((savedPayload as { latitude: number }).latitude).toBeGreaterThan(-90);
+    expect((savedPayload as { longitude: number }).longitude).toBeGreaterThan(-180);
   });
 
-  test('Successfully updates location via PUT and shows preview link without API key', async ({
+  test('Selects an address suggestion and saves its coordinates with a map preview', async ({
     page,
   }) => {
     let putPayload: unknown = null;
@@ -299,6 +278,28 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
       route.fulfill({ json: [sampleSellerKiosks[1]] }),
     );
 
+    await page.route(/rsapi\.goong\.io\/Place\/AutoComplete/, (route) =>
+      route.fulfill({
+        json: {
+          status: 'OK',
+          predictions: [{ place_id: 'fpt-place', description: 'Khu Công Nghệ Cao, TP. Thủ Đức' }],
+        },
+      }),
+    );
+    await page.route(/rsapi\.goong\.io\/Place\/Detail/, (route) =>
+      route.fulfill({
+        json: {
+          status: 'OK',
+          result: {
+            place_id: 'fpt-place',
+            name: 'Khu Công Nghệ Cao',
+            formatted_address: 'Khu Công Nghệ Cao, TP. Thủ Đức',
+            geometry: { location: { lat: 10.8414, lng: 106.8098 } },
+          },
+        },
+      }),
+    );
+
     await page.route(`**/api/sellers/${sellerId}/kiosks/kiosk-02/location`, (route) => {
       putPayload = route.request().postDataJSON();
       return route.fulfill({
@@ -315,15 +316,27 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
     await page.goto('/seller/kiosks');
 
     const card = page.locator('.kiosk-card').filter({ hasText: 'Kiosk FPT University' });
-    await card.locator('input[name="address"]').fill('Khu Công Nghệ Cao, TP. Thủ Đức');
-    await card.locator('input[name="latitude"]').fill('10.8414');
-    await card.locator('input[name="longitude"]').fill('106.8098');
+    await card.locator('input[name="address"]').fill('Khu Công Nghệ Cao');
+    const hasGoongSuggestions = (await card.locator('.kiosk-address-hint').count()) === 0;
+    if (hasGoongSuggestions) {
+      await card.getByRole('option', { name: 'Khu Công Nghệ Cao, TP. Thủ Đức' }).click();
+      await expect(card.locator('input[name="address"]')).toHaveValue(
+        'Khu Công Nghệ Cao, TP. Thủ Đức',
+      );
+    } else {
+      await card.locator('input[name="address"]').fill('Khu Công Nghệ Cao, TP. Thủ Đức');
+      await card
+        .locator('.kiosk-picker-map.maplibregl-map, .kiosk-picker-map.leaflet-container')
+        .waitFor();
+      await card.locator('.kiosk-picker-map').click({ position: { x: 35, y: 35 } });
+    }
 
     // Google Maps preview link check: no key, destination coords only, target="_blank", rel="noopener noreferrer"
     const previewLink = card.locator('.kiosk-external-link');
     await expect(previewLink).toBeVisible();
     const href = await previewLink.getAttribute('href');
-    expect(href).toContain('google.com/maps/search/?api=1&query=10.8414%2C106.8098');
+    expect(href).toContain('google.com/maps/search/?api=1&query=');
+    if (hasGoongSuggestions) expect(href).toContain('10.8414%2C106.8098');
     expect(href).not.toContain('key=');
     await expect(previewLink).toHaveAttribute('target', '_blank');
     await expect(previewLink).toHaveAttribute('rel', 'noopener noreferrer');
@@ -335,11 +348,10 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
       'Đã lưu vị trí cho kiosk Kiosk FPT University thành công.',
     );
 
-    expect(putPayload).toEqual({
-      address: 'Khu Công Nghệ Cao, TP. Thủ Đức',
-      latitude: 10.8414,
-      longitude: 106.8098,
-    });
+    expect(putPayload).toMatchObject({ address: 'Khu Công Nghệ Cao, TP. Thủ Đức' });
+    if (hasGoongSuggestions) {
+      expect(putPayload).toMatchObject({ latitude: 10.8414, longitude: 106.8098 });
+    }
   });
 
   test('Handles empty and error states in Seller Kiosks', async ({ page }) => {
@@ -372,7 +384,7 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
     await expect(page.locator('.kiosk-error-state')).toContainText('Máy chủ gặp lỗi');
   });
 
-  test('Kiosk picker map sets strict-origin-when-cross-origin referrerPolicy on tile images', async ({
+  test('Kiosk picker map uses Goong when configured or OSM with safe tile referrer policy', async ({
     page,
   }) => {
     await page.route('**/api/auth/me', (route) =>
@@ -393,10 +405,31 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
 
     await page.goto('/seller/kiosks');
 
-    // Meaningful assertion that map tile images enforce strict-origin-when-cross-origin referrerPolicy
-    const tile = page.locator('.kiosk-picker-map img.leaflet-tile').first();
-    await expect(tile).toBeVisible();
-    await expect(tile).toHaveAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+    await page
+      .locator('.kiosk-picker-map.maplibregl-map, .kiosk-picker-map.leaflet-container')
+      .first()
+      .waitFor();
+    const goongMap = page.locator('.kiosk-picker-map.maplibregl-map');
+    if (await goongMap.count()) {
+      await expect(page.locator('.kiosk-map-attribution')).toContainText('Goong Maps');
+      await expect(goongMap.locator('canvas.maplibregl-canvas')).toBeVisible();
+    } else {
+      const tile = page.locator('.kiosk-picker-map img.leaflet-tile').first();
+      await expect(tile).toBeVisible();
+      await expect(tile).toHaveAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+    }
+
+    const card = page.locator('.kiosk-card').filter({ hasText: 'Kiosk Landmark 81' });
+    const originalHref = await card.locator('.kiosk-external-link').getAttribute('href');
+    await card.locator('.kiosk-picker-map').click({ position: { x: 35, y: 35 } });
+    await expect(card.locator('.kiosk-location-selection')).toContainText('Đã chọn vị trí ghim');
+    await expect
+      .poll(() => card.locator('.kiosk-external-link').getAttribute('href'))
+      .not.toBe(originalHref);
+    await card.locator('input[name="address"]').fill('Địa chỉ mới');
+    await expect(card.locator('.kiosk-external-link')).toHaveCount(0);
+    await card.locator('button[type="submit"]').click();
+    await expect(card.locator('.kiosk-feedback-error')).toContainText('Chọn địa chỉ gợi ý');
   });
 
   test('Kiosk picker map shows fallback warning on tileerror and protects manual inputs', async ({
@@ -409,6 +442,9 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
         contentType: 'text/plain',
         body: '403 Forbidden: OSM policy',
       }),
+    );
+    await page.route('https://tiles.goong.io/**', (route) =>
+      route.fulfill({ status: 403, contentType: 'text/plain', body: '403 Forbidden' }),
     );
 
     await page.route('**/api/auth/me', (route) =>
@@ -432,14 +468,10 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
     const card = page.locator('.kiosk-card').filter({ hasText: 'Kiosk Landmark 81' });
     const tileWarning = card.locator('.kiosk-map-tile-warning');
     await expect(tileWarning).toBeVisible();
-    await expect(tileWarning).toContainText(
-      'Bản đồ chưa tải được đầy đủ ô hình ảnh. Bạn vẫn có thể nhập địa chỉ và tọa độ bằng tay.',
-    );
+    await expect(tileWarning).toContainText('Bản đồ chưa tải được đầy đủ hình ảnh.');
 
-    // Manual fallback remains interactive even when tiles fail
+    // Address search and saving remain available even when map tiles fail.
     await expect(card.locator('input[name="address"]')).toBeEnabled();
-    await expect(card.locator('input[name="latitude"]')).toBeEnabled();
-    await expect(card.locator('input[name="longitude"]')).toBeEnabled();
     await expect(card.locator('button[type="submit"]')).toBeEnabled();
   });
 });

@@ -20,7 +20,7 @@ interface InstallationActionCardsProps {
   eligibleKiosks: EligibleKioskResponse[];
   eligibleKiosksQuery: UseQueryResult<EligibleKioskResponse[], Error>;
   evidencePhotos: IncidentPhoto[];
-  onOpenEnroll: (walkIn: number, preorder: number) => void;
+  onOpenEnroll: (slotCount: number) => void;
   onSubmitConfirm: (note: string, onSuccess: () => void) => void;
   onSubmitReject: (reason: string, onSuccess: () => void) => void;
   onSubmitSchedule: (payload: {

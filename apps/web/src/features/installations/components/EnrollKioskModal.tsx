@@ -11,33 +11,24 @@ interface EnrollKioskModalProps {
   open: boolean;
   onClose: () => void;
   session: Session;
-  initialWalkInSlots?: number;
-  initialPreorderSlots?: number;
+  initialSlotCount?: number;
   onSuccess: (created: EnrollKioskResponse) => void;
 }
 
 interface EnrollKioskFormProps {
   session: Session;
   onClose: () => void;
-  initialWalkInSlots: number;
-  initialPreorderSlots: number;
+  initialSlotCount: number;
   onSuccess: (created: EnrollKioskResponse) => void;
 }
 
-function EnrollKioskForm({
-  session,
-  onClose,
-  initialWalkInSlots,
-  initialPreorderSlots,
-  onSuccess,
-}: EnrollKioskFormProps) {
+function EnrollKioskForm({ session, onClose, initialSlotCount, onSuccess }: EnrollKioskFormProps) {
   const [newKioskCode, setNewKioskCode] = useState('');
   const [newKioskName, setNewKioskName] = useState('');
   const [newHardwareId, setNewHardwareId] = useState('');
   const [newMqttClientId, setNewMqttClientId] = useState('');
   const [newRegion, setNewRegion] = useState('HCM');
-  const [newWalkInSlots, setNewWalkInSlots] = useState(initialWalkInSlots);
-  const [newPreorderSlots, setNewPreorderSlots] = useState(initialPreorderSlots);
+  const [slotCount, setSlotCount] = useState(initialSlotCount);
   const [enrollError, setEnrollError] = useState('');
 
   const enrollKioskMutation = useMutation({
@@ -63,8 +54,7 @@ function EnrollKioskForm({
       code: newKioskCode,
       name: newKioskName,
       hardwareId: newHardwareId,
-      walkInSlots: newWalkInSlots,
-      preorderSlots: newPreorderSlots,
+      slotCount,
     });
     if (!validation.valid) {
       setEnrollError(validation.error || 'Dữ liệu không hợp lệ.');
@@ -77,8 +67,7 @@ function EnrollKioskForm({
       hardwareId: newHardwareId.trim(),
       mqttClientId: newMqttClientId.trim() || `kiosk-${newKioskCode.trim().toLowerCase()}`,
       region: newRegion,
-      walkInSlots: newWalkInSlots,
-      preorderSlots: newPreorderSlots,
+      slotCount,
     });
   };
 
@@ -151,31 +140,21 @@ function EnrollKioskForm({
         </div>
       </div>
 
-      <div className="form-fields-grid-2">
-        <div className="kiosk-form-field">
-          <label htmlFor="new-walkin-slots">Số ô vãng lai (Walk-in)</label>
-          <input
-            id="new-walkin-slots"
-            type="number"
-            min={1}
-            max={49}
-            value={newWalkInSlots}
-            onChange={(e) => setNewWalkInSlots(Number(e.target.value))}
-            required
-          />
-        </div>
-        <div className="kiosk-form-field">
-          <label htmlFor="new-preorder-slots">Số ô đặt trước (Pre-order)</label>
-          <input
-            id="new-preorder-slots"
-            type="number"
-            min={1}
-            max={49}
-            value={newPreorderSlots}
-            onChange={(e) => setNewPreorderSlots(Number(e.target.value))}
-            required
-          />
-        </div>
+      <div className="kiosk-form-field">
+        <label htmlFor="new-slot-count">Tổng số ô tủ (1–50)</label>
+        <input
+          id="new-slot-count"
+          type="number"
+          min={1}
+          max={50}
+          step={1}
+          value={slotCount}
+          onChange={(e) => setSlotCount(Number(e.target.value))}
+          required
+        />
+        <p className="quiet">
+          Chủ shop chọn hình thức bán cho từng ô trống sau khi được cấp kiosk.
+        </p>
       </div>
 
       <div className="kiosk-modal-actions">
@@ -199,8 +178,7 @@ export function EnrollKioskModal({
   open,
   onClose,
   session,
-  initialWalkInSlots = 1,
-  initialPreorderSlots = 1,
+  initialSlotCount = 1,
   onSuccess,
 }: EnrollKioskModalProps) {
   return (
@@ -209,8 +187,7 @@ export function EnrollKioskModal({
         <EnrollKioskForm
           session={session}
           onClose={onClose}
-          initialWalkInSlots={initialWalkInSlots}
-          initialPreorderSlots={initialPreorderSlots}
+          initialSlotCount={initialSlotCount}
           onSuccess={onSuccess}
         />
       )}
