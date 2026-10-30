@@ -38,7 +38,7 @@ test('Member registers, edits profile, sees own orders and cannot enter staff wo
     expect(registerResponse.status()).toBeLessThan(400);
   }
   await expect(page).toHaveURL(/\/tai-khoan$/);
-  await expect(page.getByRole('heading', { name: 'Đơn đặt hoa của bạn' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Đơn đặt trước', exact: true })).toBeVisible();
   await expect(page.getByText(email, { exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'Xem và cập nhật hồ sơ cá nhân' }).click();
   await expect(page).toHaveURL(/\/ho-so$/);
@@ -54,7 +54,7 @@ test('Member registers, edits profile, sees own orders and cannot enter staff wo
     await expect(page).toHaveURL(/\/tai-khoan$/);
   }
   expect((await page.request.get('/api/admin/preorders')).status()).toBe(403);
-  await expect(page.getByRole('heading', { name: 'Góc nhỏ của Tên đã cập nhật' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Xin chào, Tên đã cập nhật' })).toBeVisible();
   const accessibility = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
     .analyze();

@@ -44,7 +44,7 @@ test('Customer uses the kiosk application route and keeps only purchase tabs', a
   await main.locator('#member-orders').screenshot({ path: testInfo.outputPath('history.png') });
   await main.getByRole('link', { name: 'Tổng quan' }).click();
   await main.getByRole('button', { name: /Đơn đặt trước/ }).click();
-  await expect(main.getByRole('heading', { name: 'Đơn đặt hoa của bạn' })).toBeVisible();
+  await expect(main.getByRole('heading', { name: 'Đơn đặt trước', exact: true })).toBeVisible();
   await expect(main.getByRole('link', { name: 'Khám phá hoa' })).toHaveAttribute(
     'href',
     '/dat-hoa',

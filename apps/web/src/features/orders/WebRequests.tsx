@@ -12,6 +12,7 @@ import {
   RefreshCw,
   ArrowLeft,
   ArrowRight,
+  Flower2,
 } from '@florabot/ui';
 import { ApiError, queryClient, request } from '@/shared/lib/api';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
@@ -537,29 +538,29 @@ export default function WebRequests({
   return (
     <section id="web-orders" className="web-orders" aria-labelledby="web-orders-title">
       <h2 id="web-orders-title">
-        {mode === 'member' ? 'Đơn đặt hoa của bạn' : 'Đơn đặt trước từ website'}
+        {mode === 'member' ? 'Đơn đặt trước' : 'Đơn đặt trước từ website'}
       </h2>
       <p>
         {mode === 'member'
-          ? 'Theo dõi báo giá, thanh toán và thời điểm hoa sẵn sàng tại tủ.'
+          ? 'Theo dõi yêu cầu, duyệt báo giá và xem lịch nhận hoa của bạn.'
           : 'Đơn mẫu riêng cần báo giá, xác nhận thanh toán rồi nạp đúng bó hoa vào ô của shop.'}
       </p>
-      {(mode !== 'member' || query.data) && (
+      {(mode !== 'member' || (query.data && items.length > 0)) && (
         <div
           className="operations-metrics order-summary-strip"
           aria-label="Tóm tắt trang đơn đang xem"
         >
           <div className="operations-metric">
             <ClipboardList aria-hidden="true" />
-            <span>Yêu cầu trong trang</span>
+            <span>{mode === 'member' ? 'Đơn đang xem' : 'Yêu cầu trong trang'}</span>
             <strong>{items.length}</strong>
-            <small>Toàn bộ đơn hiển thị</small>
+            <small>{mode === 'member' ? `Trang ${page}` : 'Toàn bộ đơn hiển thị'}</small>
           </div>
           <div className="operations-metric">
             <CircleAlert aria-hidden="true" />
-            <span>Cần theo dõi</span>
+            <span>{mode === 'member' ? 'Cần phản hồi' : 'Cần theo dõi'}</span>
             <strong>{items.filter((row) => needsOrderAction(row, mode)).length}</strong>
-            <small>Chờ phản hồi / xử lý</small>
+            <small>{mode === 'member' ? 'Kiểm tra bước tiếp theo' : 'Chờ phản hồi / xử lý'}</small>
           </div>
           <div className="operations-metric">
             <Package aria-hidden="true" />
@@ -567,19 +568,23 @@ export default function WebRequests({
             <strong>
               {items.filter((row) => row.orderStatus === 'PAID' && !row.ready).length}
             </strong>
-            <small>Đã thanh toán · cần nạp</small>
+            <small>
+              {mode === 'member' ? 'Shop đang chuẩn bị hoa' : 'Đã thanh toán · cần nạp'}
+            </small>
           </div>
           <div className="operations-metric">
             <Boxes aria-hidden="true" />
             <span>Sẵn sàng tại tủ</span>
             <strong>{items.filter((row) => row.ready && row.orderStatus === 'PAID').length}</strong>
-            <small>Khách có thể nhận hoa</small>
+            <small>{mode === 'member' ? 'Bạn có thể đến nhận' : 'Khách có thể nhận hoa'}</small>
           </div>
         </div>
       )}
-      {(mode !== 'member' || query.data) && (
-        <p className="quiet">
-          Số lượng và bộ lọc áp dụng cho trang hiện tại, không phải tổng toàn bộ đơn hàng.
+      {(mode !== 'member' || (query.data && items.length > 0)) && (
+        <p className="quiet order-page-note">
+          {mode === 'member'
+            ? `Thống kê và bộ lọc tính trên ${items.length} đơn ở trang ${page}.`
+            : 'Số lượng và bộ lọc áp dụng cho trang hiện tại, không phải tổng toàn bộ đơn hàng.'}
         </p>
       )}
       <div className="queue-filter-bar order-filter-bar">
@@ -602,7 +607,11 @@ export default function WebRequests({
         </div>
         <Button variant="outline" disabled={query.isFetching} onClick={() => void query.refetch()}>
           <RefreshCw size={16} aria-hidden="true" className={query.isFetching ? 'spin' : ''} />
-          {query.isFetching ? 'Đang cập nhật…' : 'Cập nhật đơn đặt trước'}
+          {query.isFetching
+            ? 'Đang cập nhật…'
+            : mode === 'member'
+              ? 'Làm mới'
+              : 'Cập nhật đơn đặt trước'}
         </Button>
       </div>
       {query.isPending ? (
@@ -613,12 +622,18 @@ export default function WebRequests({
         <>
           {!filtered.length && (
             <div className="operations-empty" role="status">
-              <ClipboardList size={32} aria-hidden="true" />
+              {mode === 'member' ? (
+                <Flower2 size={32} aria-hidden="true" />
+              ) : (
+                <ClipboardList size={32} aria-hidden="true" />
+              )}
               <h3>Chưa có đơn đặt trước</h3>
               <p>
                 {items.length
                   ? 'Không có yêu cầu phù hợp bộ lọc trong trang này.'
-                  : 'Chưa có yêu cầu ở trang này.'}
+                  : mode === 'member' && page === 1
+                    ? 'Chọn một mẫu hoa bạn thích và gửi mong muốn cho shop. Đơn của bạn sẽ xuất hiện tại đây.'
+                    : 'Chưa có yêu cầu ở trang này.'}
               </p>
               {mode === 'member' && items.length === 0 && page === 1 && (
                 <Link href="/dat-hoa" className="button button-outline">
