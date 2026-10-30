@@ -75,7 +75,6 @@ export default function StaffWorkspace({ section = 'tasks' }: { section?: string
                   : `Chào ${session.data.name}, theo dõi việc được giao, nạp hoa và gửi báo cáo cho shop.`}
               </p>
             </div>
-            <span className="dashboard-context">Nhân viên shop</span>
           </div>
           {section === 'chats' ? (
             <StaffChatSection

@@ -146,11 +146,6 @@ export default function AdminWorkspace({ section = 'overview' }: { section?: str
                   : workspaceSections['ADMIN'].find(([key]) => key === section)?.[2]}
               </p>
             </div>
-            <span className="dashboard-context">
-              {section === 'overview'
-                ? 'Tổng quan'
-                : workspaceSections['ADMIN']?.find(([key]) => key === section)?.[1] || 'Hệ thống'}
-            </span>
           </div>
           {section === 'overview' && (
             <>

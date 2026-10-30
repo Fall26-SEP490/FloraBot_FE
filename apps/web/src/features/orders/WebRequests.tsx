@@ -69,6 +69,7 @@ function OrderActions({
   });
   const [slot, setSlot] = useState('');
   const [qr, setQr] = useState('');
+  const [fulfillStep, setFulfillStep] = useState<1 | 2>(1);
   const [confirm, setConfirm] = useState(false);
   const [reviewedQuote, setReviewedQuote] = useState<{
     price: number | null;
@@ -143,51 +144,88 @@ function OrderActions({
   const canCancel = !row.orderStatus
     ? ['REQUESTED', 'QUOTED'].includes(row.state)
     : row.orderStatus === 'AWAITING_PAYMENT' || (mode !== 'member' && row.orderStatus === 'PAID');
+  const progress = (
+    <ol className="order-progress" aria-label="Tiến độ đơn đặt hoa">
+      {['Yêu cầu', 'Báo giá & thanh toán', 'Chuẩn bị', 'Sẵn sàng nhận', 'Hoàn tất'].map(
+        (label, index) => (
+          <li
+            key={label}
+            data-complete={
+              index < orderStage(row) || (mode === 'seller' && row.orderStatus === 'COMPLETED')
+            }
+            aria-current={index === orderStage(row) ? 'step' : undefined}
+          >
+            <span aria-hidden="true">
+              {mode === 'seller' && (index < orderStage(row) || row.orderStatus === 'COMPLETED')
+                ? '✓'
+                : index + 1}
+            </span>
+            <div>
+              {label}
+              {mode === 'seller' && (
+                <span className="sr-only">
+                  {index < orderStage(row) || row.orderStatus === 'COMPLETED'
+                    ? ' — đã hoàn thành'
+                    : index === orderStage(row)
+                      ? ' — hiện tại'
+                      : ' — chưa đến'}
+                </span>
+              )}
+            </div>
+          </li>
+        ),
+      )}
+    </ol>
+  );
   return (
     <div className="web-order-actions">
-      <div className="order-next-step" role="note">
-        <strong>Bước tiếp theo</strong>
+      {mode === 'seller' &&
+        (!orderClosed(row) || row.orderStatus === 'COMPLETED') &&
+        !['DISPUTED', 'DISPENSE_FAILED'].includes(row.orderStatus ?? '') &&
+        progress}
+      <div
+        className={mode === 'seller' && orderClosed(row) ? 'order-closed-note' : 'order-next-step'}
+        role="note"
+      >
+        {!(mode === 'seller' && orderClosed(row)) && <strong>Bước tiếp theo</strong>}
         <p>{orderNextStep(row, mode)}</p>
       </div>
-      {!orderClosed(row) && !['DISPUTED', 'DISPENSE_FAILED'].includes(row.orderStatus ?? '') && (
-        <ol className="order-progress" aria-label="Tiến độ đơn đặt hoa">
-          {['Yêu cầu', 'Báo giá & thanh toán', 'Chuẩn bị', 'Sẵn sàng nhận', 'Hoàn tất'].map(
-            (label, index) => (
-              <li
-                key={label}
-                data-complete={index < orderStage(row)}
-                aria-current={index === orderStage(row) ? 'step' : undefined}
-              >
-                <span aria-hidden="true">{index + 1}</span>
-                {label}
-              </li>
-            ),
-          )}
-        </ol>
+      {mode !== 'seller' &&
+        !orderClosed(row) &&
+        !['DISPUTED', 'DISPENSE_FAILED'].includes(row.orderStatus ?? '') &&
+        progress}
+      {mode !== 'seller' && (
+        <>
+          <p>
+            <strong>{row.productName}</strong> · {row.shopName}
+          </p>
+          <p>
+            Tủ nhận: {row.kioskName || row.kioskId} · {row.address}
+          </p>
+          <p>{row.instructions || 'Mua bó hoa có sẵn tại tủ.'}</p>
+          <dl className="bank-summary">
+            <div>
+              <dt>Nhận từ</dt>
+              <dd>{when(row.pickupAt)}</dd>
+            </div>
+            <div>
+              <dt>Hạn nhận</dt>
+              <dd>{when(row.pickupBefore)}</dd>
+            </div>
+            {row.quotedPrice != null && (
+              <div>
+                <dt>{row.kind === 'CUSTOM' ? 'Giá shop xác nhận' : 'Giá đơn hàng'}</dt>
+                <dd>{money(row.quotedPrice)}</dd>
+              </div>
+            )}
+          </dl>
+        </>
       )}
-      <p>
-        <strong>{row.productName}</strong> · {row.shopName}
-      </p>
-      <p>
-        Tủ nhận: {row.kioskName || row.kioskId} · {row.address}
-      </p>
-      <p>{row.instructions || 'Mua bó hoa có sẵn tại tủ.'}</p>
-      <dl className="bank-summary">
-        <div>
-          <dt>Nhận từ</dt>
-          <dd>{when(row.pickupAt)}</dd>
-        </div>
-        <div>
-          <dt>Hạn nhận</dt>
-          <dd>{when(row.pickupBefore)}</dd>
-        </div>
-        {row.quotedPrice != null && (
-          <div>
-            <dt>{row.kind === 'CUSTOM' ? 'Giá shop xác nhận' : 'Giá đơn hàng'}</dt>
-            <dd>{money(row.quotedPrice)}</dd>
-          </div>
-        )}
-      </dl>
+      {mode === 'seller' && row.instructions && (
+        <p className="order-instructions">
+          <strong>Yêu cầu của khách:</strong> {row.instructions}
+        </p>
+      )}
       {row.quoteNote && <p className="incident-text">Shop ghi chú: {row.quoteNote}</p>}
       {mode === 'member' && row.orderStatus === 'PAID' && row.ready && (
         <p>
@@ -232,73 +270,80 @@ function OrderActions({
           </a>
         </div>
       )}
-      <div className="stock-actions">
-        {mode === 'member' && row.state === 'QUOTED' && !row.orderId && (
-          <Button
-            disabled={
-              busy ||
-              uncertain ||
-              (!!row.quoteExpiresAt && new Date(row.quoteExpiresAt).getTime() <= now)
-            }
-            onClick={() => {
-              setReviewedQuote({
-                price: row.quotedPrice,
-                pickupAt: row.pickupAt,
-                note: row.quoteNote,
-              });
-              setAction('accept');
-              setConfirm(false);
-            }}
-          >
-            Kiểm tra báo giá
-          </Button>
-        )}
-        {mode === 'member' && row.orderStatus === 'AWAITING_PAYMENT' && (
-          <Button
-            disabled={
-              busy || uncertain || (!!row.payBefore && new Date(row.payBefore).getTime() <= now)
-            }
-            onClick={() => void send('payment-link', {})}
-          >
-            Tạo liên kết thanh toán
-          </Button>
-        )}
-        {mode === 'seller' && ['REQUESTED', 'QUOTED'].includes(row.state) && (
-          <Button
-            disabled={busy || uncertain}
-            onClick={() => {
-              setAction('quote');
-              setConfirm(false);
-            }}
-          >
-            Báo giá hoặc từ chối
-          </Button>
-        )}
-        {mode === 'seller' && row.kind === 'CUSTOM' && row.orderStatus === 'PAID' && !row.ready && (
-          <Button
-            disabled={busy || uncertain}
-            onClick={() => {
-              setAction('fulfill');
-              setConfirm(false);
-            }}
-          >
-            Nạp hoa cho đơn này
-          </Button>
-        )}
-        {canCancel && (
-          <Button
-            variant="outline"
-            disabled={busy || uncertain}
-            onClick={() => {
-              setAction('cancel');
-              setConfirm(false);
-              setNote('');
-            }}
-          >
-            Hủy yêu cầu
-          </Button>
-        )}
-      </div>
+      {action !== 'fulfill' && (
+        <div className="stock-actions">
+          {mode === 'member' && row.state === 'QUOTED' && !row.orderId && (
+            <Button
+              disabled={
+                busy ||
+                uncertain ||
+                (!!row.quoteExpiresAt && new Date(row.quoteExpiresAt).getTime() <= now)
+              }
+              onClick={() => {
+                setReviewedQuote({
+                  price: row.quotedPrice,
+                  pickupAt: row.pickupAt,
+                  note: row.quoteNote,
+                });
+                setAction('accept');
+                setConfirm(false);
+              }}
+            >
+              Kiểm tra báo giá
+            </Button>
+          )}
+          {mode === 'member' && row.orderStatus === 'AWAITING_PAYMENT' && (
+            <Button
+              disabled={
+                busy || uncertain || (!!row.payBefore && new Date(row.payBefore).getTime() <= now)
+              }
+              onClick={() => void send('payment-link', {})}
+            >
+              Tạo liên kết thanh toán
+            </Button>
+          )}
+          {mode === 'seller' && ['REQUESTED', 'QUOTED'].includes(row.state) && (
+            <Button
+              disabled={busy || uncertain}
+              onClick={() => {
+                setAction('quote');
+                setConfirm(false);
+              }}
+            >
+              Báo giá hoặc từ chối
+            </Button>
+          )}
+          {mode === 'seller' &&
+            row.kind === 'CUSTOM' &&
+            row.orderStatus === 'PAID' &&
+            !row.ready && (
+              <Button
+                disabled={busy || uncertain}
+                onClick={() => {
+                  setAction('fulfill');
+                  setConfirm(false);
+                  setFulfillStep(1);
+                  setError('');
+                }}
+              >
+                Nạp hoa cho đơn này
+              </Button>
+            )}
+          {canCancel && (
+            <Button
+              variant="outline"
+              disabled={busy || uncertain}
+              onClick={() => {
+                setAction('cancel');
+                setConfirm(false);
+                setNote('');
+              }}
+            >
+              Hủy yêu cầu
+            </Button>
+          )}
+        </div>
+      )}
       {row.payBefore && row.orderStatus === 'AWAITING_PAYMENT' && (
         <p>
           Thanh toán trước {when(row.payBefore)}. Hết hạn, yêu cầu thanh toán không còn hiệu lực.
@@ -311,8 +356,17 @@ function OrderActions({
       )}
       {action && (
         <form
+          className={action === 'fulfill' ? 'fulfill-wizard' : undefined}
           onSubmit={(event) => {
             event.preventDefault();
+            if (
+              action === 'fulfill' &&
+              (fulfillStep !== 2 || !fulfillSlots.some((item) => item.id === slot) || !qr.trim())
+            ) {
+              setError('Chọn ô Pre-order trống và nhập mã QR trước khi xác nhận.');
+              setFulfillStep(1);
+              return;
+            }
             if (!confirm) {
               setError('Đọc lại thông tin và đánh dấu xác nhận trước khi gửi.');
               return;
@@ -330,13 +384,36 @@ function OrderActions({
           }}
         >
           <fieldset className="order-action-fields" disabled={busy || uncertain}>
+            {action === 'fulfill' && (
+              <ol className="fulfill-steps" aria-label="Các bước nạp hoa">
+                <li
+                  aria-current={fulfillStep === 1 ? 'step' : undefined}
+                  data-complete={fulfillStep > 1}
+                >
+                  <span>1</span>
+                  <div>
+                    <strong>Chọn ô và mã hoa</strong>
+                    <small>Thông tin bó hoa</small>
+                  </div>
+                </li>
+                <li aria-current={fulfillStep === 2 ? 'step' : undefined}>
+                  <span>2</span>
+                  <div>
+                    <strong>Kiểm tra và xác nhận</strong>
+                    <small>Hoàn tất nạp hoa</small>
+                  </div>
+                </li>
+              </ol>
+            )}
             <h3>
               {action === 'accept'
                 ? 'Xác nhận mẫu, giá và lịch nhận'
                 : action === 'quote'
                   ? 'Phản hồi yêu cầu đặt hoa'
                   : action === 'fulfill'
-                    ? 'Xác nhận hoa đã nằm đúng ô'
+                    ? fulfillStep === 1
+                      ? 'Chọn ô nhận hoa'
+                      : 'Kiểm tra trước khi xác nhận'
                     : 'Kiểm tra trước khi hủy'}
             </h3>
             {action === 'accept' && reviewedQuote && (
@@ -398,7 +475,7 @@ function OrderActions({
                 />
               </>
             )}
-            {action === 'fulfill' && (
+            {action === 'fulfill' && fulfillStep === 1 && (
               <>
                 <p>
                   Chỉ xác nhận sau khi đã nạp bó hoa theo yêu cầu. Thao tác này giữ ô riêng cho
@@ -411,7 +488,7 @@ function OrderActions({
                   value={slot}
                   onChange={(event) => setSlot(event.target.value)}
                 >
-                  <option value="">Chọn ô đã nạp</option>
+                  <option value="">Chọn ô Pre-order trống</option>
                   {fulfillSlots.map((item) => (
                     <option key={item.id} value={item.id}>
                       {item.slotCode}
@@ -419,6 +496,9 @@ function OrderActions({
                   ))}
                 </select>
                 {slots.isError && <p role="alert">Chưa tải được ô. Đóng biểu mẫu rồi mở lại.</p>}
+                {!slots.isPending && !slots.isError && fulfillSlots.length === 0 && (
+                  <p className="quiet">Chưa có ô Pre-order trống phù hợp tại tủ nhận.</p>
+                )}
                 <label htmlFor={`order-qr-${row.id}`}>Mã QR của bó hoa</label>
                 <div className="field-action">
                   <input
@@ -440,27 +520,83 @@ function OrderActions({
                 </div>
               </>
             )}
+            {action === 'fulfill' && fulfillStep === 2 && (
+              <div className="fulfill-review">
+                <p>
+                  Chỉ xác nhận sau khi đã đặt đúng bó hoa vào ô. Thao tác này giữ ô cho khách, chưa
+                  mở cửa nhận hoa.
+                </p>
+                <dl>
+                  <div>
+                    <dt>Tủ nhận</dt>
+                    <dd>{row.kioskName || row.kioskId}</dd>
+                  </div>
+                  <div>
+                    <dt>Ô Pre-order</dt>
+                    <dd>
+                      {fulfillSlots.find((item) => item.id === slot)?.slotCode ||
+                        'Không còn phù hợp'}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Mã QR bó hoa</dt>
+                    <dd>{qr}</dd>
+                  </div>
+                </dl>
+              </div>
+            )}
             {action === 'cancel' && row.orderStatus === 'PAID' && (
               <p>
                 Đơn đã thanh toán sẽ tạo yêu cầu hoàn tiền để ADMIN xử lý; đây không phải hoàn tiền
                 ngân hàng tự động.
               </p>
             )}
-            <label className="payout-checkbox">
-              <input
-                type="checkbox"
-                checked={confirm}
-                onChange={(event) => setConfirm(event.target.checked)}
-                disabled={busy}
-              />
-              Tôi đã đối chiếu và xác nhận thông tin trên.
-            </label>
+            {(action !== 'fulfill' || fulfillStep === 2) && (
+              <label className="payout-checkbox">
+                <input
+                  type="checkbox"
+                  checked={confirm}
+                  onChange={(event) => setConfirm(event.target.checked)}
+                  disabled={busy}
+                />
+                Tôi đã đối chiếu và xác nhận thông tin trên.
+              </label>
+            )}
             <div className="stock-actions">
-              <Button type="submit" disabled={busy}>
-                {busy ? 'Đang gửi…' : 'Xác nhận gửi'}
-              </Button>
-              <Button variant="outline" disabled={busy} onClick={() => setAction(null)}>
-                Quay lại hồ sơ
+              {action === 'fulfill' && fulfillStep === 1 ? (
+                <Button
+                  type="button"
+                  disabled={
+                    !fulfillSlots.some((item) => item.id === slot) || !qr.trim() || slots.isFetching
+                  }
+                  onClick={() => {
+                    setError('');
+                    setConfirm(false);
+                    setFulfillStep(2);
+                  }}
+                >
+                  Tiếp tục kiểm tra
+                </Button>
+              ) : (
+                <Button type="submit" disabled={busy}>
+                  {busy ? 'Đang gửi…' : 'Xác nhận gửi'}
+                </Button>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                disabled={busy}
+                onClick={() => {
+                  if (action === 'fulfill' && fulfillStep === 2) {
+                    setFulfillStep(1);
+                    setConfirm(false);
+                  } else {
+                    setAction(null);
+                  }
+                  setError('');
+                }}
+              >
+                {action === 'fulfill' && fulfillStep === 2 ? 'Quay lại' : 'Đóng'}
               </Button>
             </div>
           </fieldset>
@@ -536,15 +672,17 @@ export default function WebRequests({
   const filtered = items.filter((row) => matchesOrderFilter(row, filter, mode));
   return (
     <section id="web-orders" className="web-orders" aria-labelledby="web-orders-title">
-      <h2 id="web-orders-title">
+      <h2 id="web-orders-title" className={mode === 'seller' ? 'sr-only' : undefined}>
         {mode === 'member' ? 'Đơn đặt trước' : 'Đơn đặt trước từ website'}
       </h2>
-      <p>
-        {mode === 'member'
-          ? 'Theo dõi yêu cầu, duyệt báo giá và xem lịch nhận hoa của bạn.'
-          : 'Đơn mẫu riêng cần báo giá, xác nhận thanh toán rồi nạp đúng bó hoa vào ô của shop.'}
-      </p>
-      {(mode !== 'member' || (query.data && items.length > 0)) && (
+      {mode !== 'seller' && (
+        <p>
+          {mode === 'member'
+            ? 'Theo dõi yêu cầu, duyệt báo giá và xem lịch nhận hoa của bạn.'
+            : 'Đơn mẫu riêng cần báo giá, xác nhận thanh toán rồi nạp đúng bó hoa vào ô của shop.'}
+        </p>
+      )}
+      {query.data && (mode !== 'member' || items.length > 0) && (
         <div
           className="operations-metrics order-summary-strip"
           aria-label="Tóm tắt trang đơn đang xem"
@@ -579,11 +717,11 @@ export default function WebRequests({
           </div>
         </div>
       )}
-      {(mode !== 'member' || (query.data && items.length > 0)) && (
+      {query.data && (mode !== 'member' || items.length > 0) && (
         <p className="quiet order-page-note">
           {mode === 'member'
             ? `Thống kê và bộ lọc tính trên ${items.length} đơn ở trang ${page}.`
-            : 'Số lượng và bộ lọc áp dụng cho trang hiện tại, không phải tổng toàn bộ đơn hàng.'}
+            : `Thống kê và bộ lọc chỉ áp dụng cho ${items.length} đơn ở trang ${page}.`}
         </p>
       )}
       <div className="queue-filter-bar order-filter-bar">
@@ -597,7 +735,7 @@ export default function WebRequests({
             value={filter}
             onChange={(event) => setFilter(event.target.value as OrderFilter)}
           >
-            <option value="all">Tất cả yêu cầu</option>
+            <option value="all">Tất cả yêu cầu trong trang</option>
             <option value="attention">Cần theo dõi</option>
             <option value="preparing">Đang chuẩn bị</option>
             <option value="ready">Sẵn sàng tại tủ</option>
@@ -606,11 +744,7 @@ export default function WebRequests({
         </div>
         <Button variant="outline" disabled={query.isFetching} onClick={() => void query.refetch()}>
           <RefreshCw size={16} aria-hidden="true" className={query.isFetching ? 'spin' : ''} />
-          {query.isFetching
-            ? 'Đang cập nhật…'
-            : mode === 'member'
-              ? 'Làm mới'
-              : 'Cập nhật đơn đặt trước'}
+          {query.isFetching ? 'Đang cập nhật…' : mode === 'member' ? 'Làm mới' : 'Làm mới'}
         </Button>
       </div>
       {query.isPending ? (
@@ -645,14 +779,53 @@ export default function WebRequests({
             {filtered.map((row) => (
               <li key={row.id}>
                 <details>
-                  <summary>
-                    <strong>
-                      {row.orderCode || `Yêu cầu ${row.id.slice(0, 8)}`} ·{' '}
-                      {row.kind === 'CUSTOM' ? 'Hoa theo yêu cầu' : 'Hoa có sẵn'}
-                    </strong>
-                    <span className="order-status-pill" data-status={row.orderStatus || row.state}>
-                      {statusName(row)}
-                    </span>
+                  <summary className={mode === 'seller' ? 'seller-order-summary' : undefined}>
+                    {mode === 'seller' ? (
+                      <span className="order-summary-heading">
+                        <strong>
+                          {row.orderCode || `Yêu cầu ${row.id.slice(0, 8)}`} ·{' '}
+                          {row.kind === 'CUSTOM' ? 'Hoa theo yêu cầu' : 'Hoa có sẵn'}
+                        </strong>
+                        <span
+                          className="order-status-pill"
+                          data-status={row.orderStatus || row.state}
+                        >
+                          {statusName(row)}
+                        </span>
+                      </span>
+                    ) : (
+                      <>
+                        <strong>
+                          {row.orderCode || `Yêu cầu ${row.id.slice(0, 8)}`} ·{' '}
+                          {row.kind === 'CUSTOM' ? 'Hoa theo yêu cầu' : 'Hoa có sẵn'}
+                        </strong>
+                        <span
+                          className="order-status-pill"
+                          data-status={row.orderStatus || row.state}
+                        >
+                          {statusName(row)}
+                        </span>
+                      </>
+                    )}
+                    {mode === 'seller' && (
+                      <span className="seller-order-overview">
+                        <span>
+                          <strong>Hoa:</strong> {row.productName || 'Chưa có tên sản phẩm'}
+                        </span>
+                        <span>
+                          <strong>Tủ nhận:</strong> {row.kioskName || row.kioskId}
+                          {row.address ? ` · ${row.address}` : ''}
+                        </span>
+                        <span>
+                          <strong>Nhận:</strong> {when(row.pickupAt)} – {when(row.pickupBefore)}
+                        </span>
+                        {row.quotedPrice != null && (
+                          <span>
+                            <strong>Giá:</strong> {money(row.quotedPrice)}
+                          </span>
+                        )}
+                      </span>
+                    )}
                   </summary>
                   <OrderActions
                     row={row}
@@ -668,7 +841,7 @@ export default function WebRequests({
               </li>
             ))}
           </ul>
-          {(mode !== 'member' || page > 1 || query.data.hasMore) && (
+          {(page > 1 || query.data.hasMore) && (
             <nav className="order-pagination" aria-label="Phân trang đơn đặt trước">
               <Button
                 variant="outline"

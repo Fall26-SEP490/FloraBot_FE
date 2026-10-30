@@ -128,7 +128,7 @@ for (const width of [390, 1440]) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
-    const slotTitle = await section.locator('summary strong').first().boundingBox();
+    const slotTitle = await section.locator('.stock-slot-card strong').first().boundingBox();
     expect(slotTitle!.height).toBeLessThan(40);
     await section.screenshot({ path: `.impeccable/review/portal-stock-${width}.png` });
 
@@ -136,15 +136,19 @@ for (const width of [390, 1440]) {
     await expect(
       section.getByRole('status').filter({ hasText: 'Đã ghi nhận Hoa hồng dịu dàng vào ô A01' }),
     ).toBeFocused();
-    await section.locator('summary').first().click();
+    const firstCard = section.getByRole('button', { name: 'Xem chi tiết ô A01' });
+    await firstCard.click();
+    await expect(page.getByRole('dialog', { name: 'Chi tiết ô A01' })).toBeVisible();
     await expect(section.getByText('FB-AUTO-2', { exact: true })).toBeVisible();
     await expect(section.getByLabel('Hình thức bán cho ô A01')).toHaveCount(0);
+    await page.keyboard.press('Escape');
+    await expect(firstCard).toBeFocused();
 
     await section.getByLabel(/Ô trống tại/).selectOption(slots[1].id);
     await section.getByRole('button', { name: 'Nạp hoa vào ô' }).click();
     await expect(section.getByRole('alert')).toContainText('Làm mới kiosk');
     await expect(section.getByRole('button', { name: 'Nạp hoa vào ô' })).toBeDisabled();
-    await section.locator('summary').last().click();
+    await section.getByRole('button', { name: 'Xem chi tiết ô A02' }).click();
     await expect(section.getByText('FB-AUTO-3', { exact: true })).toBeVisible();
     expect(attempts).toBe(3);
   });
@@ -284,25 +288,21 @@ test('Seller classifies empty slots, blocks held slots and stocks only WALK_IN',
   await section.getByRole('button', { name: 'Nạp hoa vào ô' }).click();
   await expect.poll(() => writes.length).toBe(1);
   expect(writes[0]).toEqual({ productId, slotId: slots[0].id });
+  await section.getByRole('button', { name: 'Xem chi tiết ô W03' }).click();
   const zoneChoice = section.getByLabel('Hình thức bán cho ô W03');
   await zoneChoice.selectOption('PREORDER');
-  await section
-    .locator('.admin-shop-list > li')
-    .nth(2)
-    .getByRole('button', { name: 'Lưu hình thức bán' })
-    .click();
+  await section.getByRole('button', { name: 'Lưu hình thức bán' }).click();
   await expect.poll(() => zoneWrites.length).toBe(1);
   expect(zoneWrites[0]).toEqual({ zone: 'PREORDER' });
   await expect(zoneChoice).toHaveValue('PREORDER');
+  await page.keyboard.press('Escape');
+  await section.getByRole('button', { name: 'Xem chi tiết ô P04' }).click();
   const heldChoice = section.getByLabel('Hình thức bán cho ô P04');
   await heldChoice.selectOption('WALK_IN');
-  await section
-    .locator('.admin-shop-list > li')
-    .nth(3)
-    .getByRole('button', { name: 'Lưu hình thức bán' })
-    .click();
+  await section.getByRole('button', { name: 'Lưu hình thức bán' }).click();
   await expect(heldChoice).toHaveCount(0);
   await expect(section.getByRole('alert')).toContainText('Ô đang bị giữ.');
+  await page.keyboard.press('Escape');
   slots[0].zone = undefined;
   await section.getByRole('button', { name: 'Làm mới', exact: true }).click();
   await expect(
@@ -312,13 +312,11 @@ test('Seller classifies empty slots, blocks held slots and stocks only WALK_IN',
   await expect(section.getByRole('note')).toContainText('Chưa có ô Walk-in trống');
   await expect(slot).toBeDisabled();
   await expect(section.getByLabel('Sản phẩm nạp vào ô')).toBeEnabled();
+  await section.getByRole('button', { name: 'Xem chi tiết ô A01' }).click();
   const firstZone = section.getByLabel('Hình thức bán cho ô A01');
   await firstZone.selectOption('WALK_IN');
-  await section
-    .locator('.admin-shop-list > li')
-    .nth(0)
-    .getByRole('button', { name: 'Lưu hình thức bán' })
-    .click();
+  await section.getByRole('button', { name: 'Lưu hình thức bán' }).click();
+  await page.keyboard.press('Escape');
   await expect(slot).toBeEnabled();
   await slot.selectOption(slots[0].id);
   await expect(section.getByRole('button', { name: 'Nạp hoa vào ô' })).toBeEnabled();
