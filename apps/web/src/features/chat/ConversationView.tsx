@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/no-noninteractive-tabindex */
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Button, RefreshCw } from '@florabot/ui';
+import { ArrowLeft, Button, RefreshCw, User } from '@florabot/ui';
 import { customerChatTransport, formatChatError } from './api';
 import type {
   ChatMessageReceivedEvent,
@@ -23,6 +23,8 @@ export function ConversationView({
   cacheScope = '',
   disabled = false,
   isActive = true,
+  onToggleDetails,
+  showDetails = false,
 }: {
   chatId: string;
   otherPartyName: string;
@@ -33,6 +35,8 @@ export function ConversationView({
   cacheScope?: string;
   disabled?: boolean;
   isActive?: boolean;
+  onToggleDetails?: () => void;
+  showDetails?: boolean;
   registerRealtimeHandlers?: (
     onMessage: (msg: ChatMessageReceivedEvent) => void,
     onRead: (event: ChatMessagesReadEvent) => void,
@@ -280,14 +284,37 @@ export function ConversationView({
           </button>
         )}
 
+        <div className="chat-conversation-avatar" aria-hidden="true">
+          {otherPartyName.slice(0, 1).toLocaleUpperCase('vi-VN')}
+        </div>
+
         <div className="chat-conversation-title-area">
-          <h2 className="chat-conversation-name">{otherPartyName}</h2>
+          <div className="chat-conversation-title-row">
+            <h2 className="chat-conversation-name">{otherPartyName}</h2>
+            <span className="chat-conversation-status">
+              <span className="chat-status-dot online" aria-hidden="true" />
+              Trực tuyến
+            </span>
+          </div>
           {productContext && (
             <p className="chat-conversation-context" title={productContext}>
               <strong>Mẫu hoa quan tâm:</strong> {productContext}
             </p>
           )}
         </div>
+
+        {onToggleDetails && (
+          <button
+            type="button"
+            className={`chat-details-toggle-btn ${showDetails ? 'is-active' : ''}`}
+            onClick={onToggleDetails}
+            aria-label={showDetails ? 'Thu gọn thông tin khách hàng' : 'Xem thông tin khách hàng'}
+            title="Xem thông tin chi tiết & Ghi chú"
+          >
+            <User size={16} aria-hidden="true" />
+            <span>Thông tin</span>
+          </button>
+        )}
       </header>
 
       <div

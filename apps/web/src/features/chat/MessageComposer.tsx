@@ -11,6 +11,22 @@ import type { ChatTransport, CustomerSellerChatMessage } from './types';
 
 const GATEWAY_SAFE_IMAGE_BYTES = 58 * 1024;
 
+const QUICK_TEMPLATES = [
+  { label: 'Chào bạn', text: 'Dạ chào bạn, shop có thể hỗ trợ gì cho bạn về mẫu hoa này ạ?' },
+  {
+    label: 'Hoa tươi có sẵn',
+    text: 'Dạ mẫu hoa này shop đang có sẵn hoa tươi hôm nay, chuẩn bị trong khoảng 30-45 phút ạ.',
+  },
+  {
+    label: 'Đã nạp vào Kiosk',
+    text: 'Dạ shop đã chuẩn bị xong và đưa hoa vào ô tủ Kiosk rồi, bạn kiểm tra mã nhận trên ứng dụng giúp shop nhé!',
+  },
+  {
+    label: 'Cảm ơn bạn',
+    text: 'Dạ shop cảm ơn bạn đã quan tâm và ủng hộ cửa hàng, chúc bạn một ngày thật vui vẻ nhé!',
+  },
+];
+
 async function compressChatImageIfNeeded(file: File): Promise<File> {
   if (file.size <= GATEWAY_SAFE_IMAGE_BYTES || typeof document === 'undefined') {
     return file;
@@ -218,6 +234,26 @@ export function MessageComposer({
           {error}
         </p>
       )}
+
+      <div className="chat-composer-templates" aria-label="Mẫu tin nhắn nhanh">
+        <span className="chat-composer-templates-label">Gợi ý nhanh:</span>
+        <div className="chat-composer-templates-list">
+          {QUICK_TEMPLATES.map((tmpl) => (
+            <button
+              key={tmpl.label}
+              type="button"
+              className="chat-template-chip"
+              onClick={() => {
+                setContent((prev) => (prev ? `${prev} ${tmpl.text}` : tmpl.text));
+                textareaRef.current?.focus();
+              }}
+              title={tmpl.text}
+            >
+              {tmpl.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div className="chat-composer-controls">
         <input

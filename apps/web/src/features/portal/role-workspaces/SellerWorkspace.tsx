@@ -17,6 +17,8 @@ import '../styles/seller.css';
 import '../../account-management/styles/platform-workspace.css';
 import '../../account-management/styles/platform-refresh.css';
 import '../styles/workspace-role-parity.css';
+import '../../dashboard/styles/seller-overview.module.css';
+import '../../orders/seller-orders.module.css';
 
 const DashboardOverview = dynamic(() => import('../../dashboard/DashboardOverview'), {
   loading: () => <p role="status">Đang tải tổng quan cửa hàng…</p>,
@@ -206,14 +208,6 @@ export default function SellerWorkspace({ section = 'overview' }: { section?: st
                   <div>
                     <dt>Vai trò</dt>
                     <dd>Chủ shop</dd>
-                  </div>
-                  <div>
-                    <dt>Trạng thái shop</dt>
-                    <dd>
-                      {t(`status.${session.data.sellerStatus}`, {
-                        defaultValue: 'Chưa xác định',
-                      })}
-                    </dd>
                   </div>
                   <div>
                     <dt>Ngày hết hạn gói</dt>

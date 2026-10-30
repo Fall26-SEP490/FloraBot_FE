@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import {
   Button,
@@ -27,6 +28,34 @@ import {
   when,
 } from './orders.utils';
 import type { OrderFilter, Page, WebOrder } from './orders.types';
+import styles from './seller-orders.module.css';
+
+const sellerFilters: { value: OrderFilter; label: string }[] = [
+  { value: 'all', label: 'Tất cả' },
+  { value: 'attention', label: 'Cần xử lý' },
+  { value: 'requested', label: 'Chờ báo giá' },
+  { value: 'quoted', label: 'Chờ xác nhận' },
+  { value: 'preparing', label: 'Đang chuẩn bị' },
+  { value: 'ready', label: 'Sẵn sàng' },
+  { value: 'closed', label: 'Đã kết thúc' },
+];
+const pickupDate = (value: string) =>
+  new Date(value).toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+const pickupClock = (value: string) =>
+  new Date(value).toLocaleTimeString('vi-VN', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+const pickupDayKey = (value: string) =>
+  new Date(value).toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
+const searchable = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLocaleLowerCase('vi-VN');
 
 function OrderActions({
   row,
@@ -221,12 +250,20 @@ function OrderActions({
           </dl>
         </>
       )}
-      {mode === 'seller' && row.instructions && (
-        <p className="order-instructions">
-          <strong>Yêu cầu của khách:</strong> {row.instructions}
-        </p>
+      {mode === 'seller' && (row.instructions || row.quoteNote) && (
+        <div className="order-notes-box">
+          {row.instructions && (
+            <p className="order-instructions">
+              <strong>Yêu cầu của khách:</strong> {row.instructions}
+            </p>
+          )}
+          {row.quoteNote && (
+            <p className="incident-text">
+              <strong>Shop ghi chú:</strong> {row.quoteNote}
+            </p>
+          )}
+        </div>
       )}
-      {row.quoteNote && <p className="incident-text">Shop ghi chú: {row.quoteNote}</p>}
       {mode === 'member' && row.orderStatus === 'PAID' && row.ready && (
         <p>
           Hoa đã ở trong tủ. Đến đúng tủ trong khung giờ hẹn và dùng mã trên biên nhận để nhận hoa.
@@ -270,7 +307,7 @@ function OrderActions({
           </a>
         </div>
       )}
-      {action !== 'fulfill' && (
+      {!action && (
         <div className="stock-actions">
           {mode === 'member' && row.state === 'QUOTED' && !row.orderId && (
             <Button
@@ -356,7 +393,7 @@ function OrderActions({
       )}
       {action && (
         <form
-          className={action === 'fulfill' ? 'fulfill-wizard' : undefined}
+          className={`order-action-card ${action === 'fulfill' ? 'fulfill-wizard' : ''}`}
           onSubmit={(event) => {
             event.preventDefault();
             if (
@@ -431,7 +468,7 @@ function OrderActions({
                     checked={reject}
                     onChange={(event) => setReject(event.target.checked)}
                   />
-                  Shop chưa thể nhận đơn này
+                  <span>Shop chưa thể nhận đơn này</span>
                 </label>
                 {!reject && (
                   <>
@@ -546,10 +583,10 @@ function OrderActions({
               </div>
             )}
             {action === 'cancel' && row.orderStatus === 'PAID' && (
-              <p>
+              <div className="order-action-warning" role="alert">
                 Đơn đã thanh toán sẽ tạo yêu cầu hoàn tiền để ADMIN xử lý; đây không phải hoàn tiền
                 ngân hàng tự động.
-              </p>
+              </div>
             )}
             {(action !== 'fulfill' || fulfillStep === 2) && (
               <label className="payout-checkbox">
@@ -559,7 +596,7 @@ function OrderActions({
                   onChange={(event) => setConfirm(event.target.checked)}
                   disabled={busy}
                 />
-                Tôi đã đối chiếu và xác nhận thông tin trên.
+                <span>Tôi đã đối chiếu và xác nhận thông tin trên.</span>
               </label>
             )}
             <div className="stock-actions">
@@ -578,8 +615,24 @@ function OrderActions({
                   Tiếp tục kiểm tra
                 </Button>
               ) : (
-                <Button type="submit" disabled={busy}>
-                  {busy ? 'Đang gửi…' : 'Xác nhận gửi'}
+                <Button
+                  type="submit"
+                  disabled={busy}
+                  className={
+                    action === 'cancel' || (action === 'quote' && reject)
+                      ? 'management-danger-button'
+                      : undefined
+                  }
+                >
+                  {busy
+                    ? 'Đang gửi…'
+                    : action === 'cancel'
+                      ? 'Xác nhận hủy đơn'
+                      : action === 'quote' && reject
+                        ? 'Xác nhận từ chối'
+                        : action === 'fulfill'
+                          ? 'Xác nhận nạp hoa'
+                          : 'Xác nhận gửi'}
                 </Button>
               )}
               <Button
@@ -653,8 +706,26 @@ export default function WebRequests({
   mode: 'member' | 'seller' | 'admin';
   sellerId?: string;
 }) {
-  const [page, setPage] = useState(1);
-  const [filter, setFilter] = useState<OrderFilter>('all');
+  const params = useSearchParams();
+  const initialPage = Number(params.get('page'));
+  const initialFilter = params.get('filter');
+  const filters: OrderFilter[] = [
+    'all',
+    'attention',
+    'requested',
+    'quoted',
+    'preparing',
+    'ready',
+    'closed',
+  ];
+  const [page, setPage] = useState(
+    Number.isSafeInteger(initialPage) && initialPage > 0 ? initialPage : 1,
+  );
+  const [filter, setFilter] = useState<OrderFilter>(
+    filters.find((value) => value === initialFilter) ?? 'all',
+  );
+  const [search, setSearch] = useState('');
+  const [pickupDay, setPickupDay] = useState('');
   const base =
     mode === 'member'
       ? '/member/preorders'
@@ -669,9 +740,25 @@ export default function WebRequests({
     enabled: mode !== 'seller' || Boolean(sellerId),
   });
   const items = query.data?.items ?? [];
-  const filtered = items.filter((row) => matchesOrderFilter(row, filter, mode));
+  const Container = mode === 'seller' ? 'div' : 'section';
+  const filtered = items.filter(
+    (row) =>
+      matchesOrderFilter(row, filter, mode) &&
+      (mode !== 'seller' ||
+        ((!search.trim() ||
+          searchable(
+            [row.orderCode, row.id, row.productName, row.kioskName, row.address]
+              .filter(Boolean)
+              .join(' '),
+          ).includes(searchable(search.trim()))) &&
+          (!pickupDay || pickupDayKey(row.pickupAt) === pickupDay))),
+  );
   return (
-    <section id="web-orders" className="web-orders" aria-labelledby="web-orders-title">
+    <Container
+      id="web-orders"
+      className={`web-orders ${mode === 'seller' ? styles.sellerOrders : ''}`}
+      aria-labelledby="web-orders-title"
+    >
       <h2 id="web-orders-title" className={mode === 'seller' ? 'sr-only' : undefined}>
         {mode === 'member' ? 'Đơn đặt trước' : 'Đơn đặt trước từ website'}
       </h2>
@@ -682,7 +769,98 @@ export default function WebRequests({
             : 'Đơn mẫu riêng cần báo giá, xác nhận thanh toán rồi nạp đúng bó hoa vào ô của shop.'}
         </p>
       )}
-      {query.data && (mode !== 'member' || items.length > 0) && (
+      {mode === 'seller' && (
+        <>
+          <div className={styles.summary} aria-label={`Thống kê đơn ở trang ${page}`}>
+            {[
+              { label: 'Yêu cầu trong trang', value: 'all' as OrderFilter, icon: ClipboardList },
+              { label: 'Cần xử lý', value: 'attention' as OrderFilter, icon: CircleAlert },
+              { label: 'Đang chuẩn bị', value: 'preparing' as OrderFilter, icon: Package },
+              { label: 'Sẵn sàng tại tủ', value: 'ready' as OrderFilter, icon: Boxes },
+            ].map(({ label, value, icon: Icon }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setFilter(value)}
+                aria-pressed={filter === value}
+              >
+                <span className={styles.statIcon}>
+                  <Icon size={20} aria-hidden="true" />
+                </span>
+                <span>
+                  <small>{label}</small>
+                  <strong>
+                    {query.isError
+                      ? '—'
+                      : query.isPending
+                        ? '…'
+                        : items.filter((row) => matchesOrderFilter(row, value, mode)).length}
+                  </strong>
+                </span>
+              </button>
+            ))}
+          </div>
+          <div className={styles.filters}>
+            <div className={styles.filterHeading}>
+              <div>
+                <h3>Danh sách yêu cầu</h3>
+                <p>Thống kê, tìm kiếm và bộ lọc áp dụng trong trang {page}.</p>
+              </div>
+              <Button
+                variant="outline"
+                disabled={query.isFetching}
+                onClick={() => void query.refetch()}
+              >
+                <RefreshCw size={15} aria-hidden="true" />
+                {query.isFetching ? 'Đang cập nhật…' : 'Làm mới'}
+              </Button>
+            </div>
+            <div className={styles.tabs} aria-label="Lọc trạng thái đơn">
+              {sellerFilters.map(({ value, label }) => (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={filter === value}
+                  onClick={() => setFilter(value)}
+                >
+                  {label}
+                  {value === 'attention' && query.isSuccess && (
+                    <span>
+                      {items.filter((row) => matchesOrderFilter(row, value, mode)).length}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+            <div className={styles.searchBar}>
+              <label className={styles.searchField}>
+                <span>Tìm yêu cầu</span>
+                <input
+                  type="search"
+                  value={search}
+                  placeholder="Mã đơn, tên hoa hoặc kiosk…"
+                  onChange={(event) => setSearch(event.target.value)}
+                />
+              </label>
+              <label className={styles.dateField}>
+                <span>Ngày bắt đầu nhận</span>
+                <input
+                  type="date"
+                  value={pickupDay}
+                  onInput={(event) => setPickupDay(event.currentTarget.value)}
+                  onChange={(event) => setPickupDay(event.target.value)}
+                />
+              </label>
+            </div>
+          </div>
+          {query.isSuccess && (
+            <p className={styles.resultCount} role="status">
+              Hiển thị {filtered.length} / {items.length} yêu cầu · Trang {page}
+            </p>
+          )}
+        </>
+      )}
+      {mode !== 'seller' && query.data && (mode !== 'member' || items.length > 0) && (
         <div
           className="operations-metrics order-summary-strip"
           aria-label="Tóm tắt trang đơn đang xem"
@@ -717,36 +895,44 @@ export default function WebRequests({
           </div>
         </div>
       )}
-      {query.data && (mode !== 'member' || items.length > 0) && (
+      {mode !== 'seller' && query.data && (mode !== 'member' || items.length > 0) && (
         <p className="quiet order-page-note">
           {mode === 'member'
             ? `Thống kê và bộ lọc tính trên ${items.length} đơn ở trang ${page}.`
             : `Thống kê và bộ lọc chỉ áp dụng cho ${items.length} đơn ở trang ${page}.`}
         </p>
       )}
-      <div className="queue-filter-bar order-filter-bar">
-        <div className="filter-group">
-          <label htmlFor={`order-filter-${mode}`} className="sr-only">
-            Lọc yêu cầu trong trang
-          </label>
-          <select
-            id={`order-filter-${mode}`}
-            aria-label="Lọc yêu cầu trong trang"
-            value={filter}
-            onChange={(event) => setFilter(event.target.value as OrderFilter)}
+      {mode !== 'seller' && (
+        <div className="queue-filter-bar order-filter-bar">
+          <div className="filter-group">
+            <label htmlFor={`order-filter-${mode}`} className="sr-only">
+              Lọc yêu cầu trong trang
+            </label>
+            <select
+              id={`order-filter-${mode}`}
+              aria-label="Lọc yêu cầu trong trang"
+              value={filter}
+              onChange={(event) => setFilter(event.target.value as OrderFilter)}
+            >
+              <option value="all">Tất cả yêu cầu trong trang</option>
+              <option value="attention">Cần theo dõi</option>
+              <option value="requested">Chờ báo giá</option>
+              <option value="quoted">Chờ khách xác nhận</option>
+              <option value="preparing">Đang chuẩn bị</option>
+              <option value="ready">Sẵn sàng tại tủ</option>
+              <option value="closed">Đã kết thúc</option>
+            </select>
+          </div>
+          <Button
+            variant="outline"
+            disabled={query.isFetching}
+            onClick={() => void query.refetch()}
           >
-            <option value="all">Tất cả yêu cầu trong trang</option>
-            <option value="attention">Cần theo dõi</option>
-            <option value="preparing">Đang chuẩn bị</option>
-            <option value="ready">Sẵn sàng tại tủ</option>
-            <option value="closed">Đã kết thúc</option>
-          </select>
+            <RefreshCw size={16} aria-hidden="true" className={query.isFetching ? 'spin' : ''} />
+            {query.isFetching ? 'Đang cập nhật…' : mode === 'member' ? 'Làm mới' : 'Làm mới'}
+          </Button>
         </div>
-        <Button variant="outline" disabled={query.isFetching} onClick={() => void query.refetch()}>
-          <RefreshCw size={16} aria-hidden="true" className={query.isFetching ? 'spin' : ''} />
-          {query.isFetching ? 'Đang cập nhật…' : mode === 'member' ? 'Làm mới' : 'Làm mới'}
-        </Button>
-      </div>
+      )}
       {query.isPending ? (
         <p role="status">Đang tải yêu cầu…</p>
       ) : query.isError ? (
@@ -760,7 +946,7 @@ export default function WebRequests({
               ) : (
                 <ClipboardList size={32} aria-hidden="true" />
               )}
-              <h3>Chưa có đơn đặt trước</h3>
+              <h3>{items.length ? 'Không tìm thấy yêu cầu phù hợp' : 'Chưa có đơn đặt trước'}</h3>
               <p>
                 {items.length
                   ? 'Không có yêu cầu phù hợp bộ lọc trong trang này.'
@@ -775,20 +961,24 @@ export default function WebRequests({
               )}
             </div>
           )}
-          <ul className="member-orders">
+          <ul className={mode === 'seller' ? styles.orderList : 'member-orders'}>
             {filtered.map((row) => (
               <li key={row.id}>
                 <details>
-                  <summary className={mode === 'seller' ? 'seller-order-summary' : undefined}>
+                  <summary className={mode === 'seller' ? styles.orderSummary : undefined}>
                     {mode === 'seller' ? (
-                      <span className="order-summary-heading">
-                        <strong>
-                          {row.orderCode || `Yêu cầu ${row.id.slice(0, 8)}`} ·{' '}
+                      <span className={styles.orderHeading}>
+                        <strong>{row.orderCode || `Yêu cầu ${row.id.slice(0, 8)}`}</strong>
+                        <span className={styles.kind}>
                           {row.kind === 'CUSTOM' ? 'Hoa theo yêu cầu' : 'Hoa có sẵn'}
-                        </strong>
+                        </span>
                         <span
-                          className="order-status-pill"
-                          data-status={row.orderStatus || row.state}
+                          className={styles.status}
+                          data-status={
+                            row.ready && row.orderStatus === 'PAID'
+                              ? 'READY'
+                              : row.orderStatus || row.state
+                          }
                         >
                           {statusName(row)}
                         </span>
@@ -808,23 +998,46 @@ export default function WebRequests({
                       </>
                     )}
                     {mode === 'seller' && (
-                      <span className="seller-order-overview">
-                        <span>
-                          <strong>Hoa:</strong> {row.productName || 'Chưa có tên sản phẩm'}
-                        </span>
-                        <span>
-                          <strong>Tủ nhận:</strong> {row.kioskName || row.kioskId}
-                          {row.address ? ` · ${row.address}` : ''}
-                        </span>
-                        <span>
-                          <strong>Nhận:</strong> {when(row.pickupAt)} – {when(row.pickupBefore)}
-                        </span>
-                        {row.quotedPrice != null && (
-                          <span>
-                            <strong>Giá:</strong> {money(row.quotedPrice)}
+                      <>
+                        <span className={styles.orderBody}>
+                          <span className={styles.product}>
+                            <span className={styles.flowerIcon}>
+                              <Flower2 size={24} aria-hidden="true" />
+                            </span>
+                            <span>
+                              <small>Mẫu hoa</small>
+                              <strong>{row.productName || 'Hoa theo yêu cầu'}</strong>
+                            </span>
                           </span>
-                        )}
-                      </span>
+                          <span>
+                            <small>Tủ nhận hoa</small>
+                            <strong>{row.kioskName || row.kioskId}</strong>
+                            {row.address && <span className={styles.address}>{row.address}</span>}
+                          </span>
+                          <span>
+                            <small>Thời gian nhận</small>
+                            <strong>{pickupDate(row.pickupAt)}</strong>
+                            <span className={styles.address}>
+                              {pickupClock(row.pickupAt)} –{' '}
+                              {pickupDayKey(row.pickupAt) !== pickupDayKey(row.pickupBefore)
+                                ? `${pickupDate(row.pickupBefore)} · `
+                                : ''}
+                              {pickupClock(row.pickupBefore)}
+                            </span>
+                          </span>
+                          <span className={styles.price}>
+                            <small>Giá xác nhận</small>
+                            <strong>
+                              {row.quotedPrice == null ? 'Chưa báo giá' : money(row.quotedPrice)}
+                            </strong>
+                          </span>
+                        </span>
+                        <span className={styles.disclosure}>
+                          <span className={styles.showDetails}>Xem chi tiết & thao tác</span>
+                          <span className={styles.hideDetails}>Thu gọn chi tiết</span>
+                          <ArrowRight size={15} aria-hidden="true" />
+                        </span>
+                      </>
                     )}
                   </summary>
                   <OrderActions
@@ -864,6 +1077,6 @@ export default function WebRequests({
           )}
         </>
       )}
-    </section>
+    </Container>
   );
 }

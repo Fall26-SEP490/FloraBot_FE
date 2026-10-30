@@ -1,12 +1,13 @@
 import { useCallback, useRef, useState } from 'react';
 import './chat.css';
 import { useQuery } from '@tanstack/react-query';
-import { Button, RefreshCw } from '@florabot/ui';
+import { RefreshCw } from '@florabot/ui';
 import { queryClient, type Session } from '@/shared/lib/api';
 import { getSellerChats } from './api';
 import { useChatRealtime } from './useChatRealtime';
 import { ChatList } from './ChatList';
 import { ConversationView } from './ConversationView';
+import { ChatCustomerDetails } from './ChatCustomerDetails';
 import type {
   ChatMessageReceivedEvent,
   ChatMessagesReadEvent,
@@ -19,6 +20,7 @@ export function SellerChatSection({ session }: { session: Session }) {
   const [page, setPage] = useState(1);
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'conversation'>('list');
+  const [showDetailsPanel, setShowDetailsPanel] = useState(true);
 
   const onRealtimeMessageRef = useRef<((msg: ChatMessageReceivedEvent) => void) | null>(null);
   const onRealtimeReadRef = useRef<((event: ChatMessagesReadEvent) => void) | null>(null);
@@ -106,23 +108,30 @@ export function SellerChatSection({ session }: { session: Session }) {
 
   return (
     <section className="staff-chat-section" aria-label="Tin nhắn khách hàng">
-      <div className="staff-chat-intro">
-        <div>
-          <h2>Trao đổi với khách hàng</h2>
-          <p>Tư vấn mẫu hoa, gửi ảnh thực tế và phản hồi thắc mắc trực tiếp.</p>
-        </div>
-        <Button variant="outline" disabled={chatsQuery.isFetching} onClick={handleRefreshAll}>
-          <RefreshCw size={16} aria-hidden="true" />
-          Làm mới hội thoại
-        </Button>
-      </div>
-      <div className={`chat-layout mode-${viewMode}`}>
+      <div
+        className={`chat-layout mode-${viewMode} ${
+          showDetailsPanel && activeChat ? 'with-details' : ''
+        }`}
+      >
         <div className="chat-layout-sidebar">
           <div className="chat-sidebar-header">
-            <h2 className="chat-sidebar-title">Khách hàng nhắn tin</h2>
-            <p className="chat-sidebar-subtitle quiet">
-              Tư vấn sản phẩm và giải đáp thắc mắc từ khách hàng
-            </p>
+            <div className="chat-sidebar-header-row">
+              <h2 className="chat-sidebar-title">Khách hàng nhắn tin</h2>
+              <button
+                type="button"
+                className="chat-sidebar-refresh-btn"
+                disabled={chatsQuery.isFetching}
+                onClick={handleRefreshAll}
+                title="Làm mới danh sách tin nhắn"
+                aria-label="Làm mới danh sách tin nhắn"
+              >
+                <RefreshCw
+                  size={15}
+                  aria-hidden="true"
+                  className={chatsQuery.isFetching ? 'is-spinning' : ''}
+                />
+              </button>
+            </div>
           </div>
 
           <ChatList
@@ -153,6 +162,8 @@ export function SellerChatSection({ session }: { session: Session }) {
                 onRealtimeMessageRef.current = handleMessage;
                 onRealtimeReadRef.current = handleRead;
               }}
+              onToggleDetails={() => setShowDetailsPanel((prev) => !prev)}
+              showDetails={showDetailsPanel}
             />
           ) : (
             <div className="chat-empty-selection">
@@ -163,6 +174,14 @@ export function SellerChatSection({ session }: { session: Session }) {
             </div>
           )}
         </div>
+
+        {activeChat && showDetailsPanel && (
+          <ChatCustomerDetails
+            key={activeChat.id}
+            chat={activeChat}
+            onClose={() => setShowDetailsPanel(false)}
+          />
+        )}
       </div>
     </section>
   );

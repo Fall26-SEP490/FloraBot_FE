@@ -1,4 +1,5 @@
-import { Button, ImageIcon, RefreshCw } from '@florabot/ui';
+import { useState } from 'react';
+import { Button, ImageIcon, RefreshCw, Search, X } from '@florabot/ui';
 import type { CustomerSellerChatItem } from './types';
 import { formatChatError } from './api';
 
@@ -29,6 +30,9 @@ export function ChatList({
   userRole: 'CUSTOMER' | 'SELLER';
   internal?: boolean;
 }) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterTab, setFilterTab] = useState<'all' | 'unread'>('all');
+
   const formatTime = (isoString?: string | null) => {
     if (!isoString) return '';
     const date = new Date(isoString);
@@ -44,6 +48,23 @@ export function ChatList({
     }
     return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
   };
+
+  const totalUnreadCount = items.reduce(
+    (acc, cur) => acc + (Number(cur.unreadCount) > 0 ? 1 : 0),
+    0,
+  );
+
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const filteredItems = items.filter((item) => {
+    if (filterTab === 'unread' && Number(item.unreadCount) <= 0) {
+      return false;
+    }
+    if (!normalizedQuery) return true;
+    const matchName = item.otherPartyName.toLowerCase().includes(normalizedQuery);
+    const matchContext = item.productContext?.toLowerCase().includes(normalizedQuery);
+    const matchMsg = item.lastMessage?.toLowerCase().includes(normalizedQuery);
+    return matchName || matchContext || matchMsg;
+  });
 
   if (isLoading) {
     return (
@@ -82,69 +103,131 @@ export function ChatList({
 
   return (
     <div className="chat-list-container">
-      <ul className="chat-list" aria-label="Danh sách cuộc trò chuyện">
-        {items.map((item) => {
-          const isActive = item.id === activeChatId;
-          const unread = Number(item.unreadCount) || 0;
-          const displayTime = formatTime(item.lastMessageAt || item.createdAt);
+      <div className="chat-list-toolbar">
+        <div className="chat-list-search-wrapper">
+          <Search size={15} className="chat-list-search-icon" aria-hidden="true" />
+          <input
+            type="search"
+            className="chat-list-search-input"
+            placeholder="Tìm theo tên khách, mẫu hoa..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Tìm kiếm cuộc trò chuyện"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              className="chat-list-search-clear"
+              onClick={() => setSearchQuery('')}
+              aria-label="Xóa từ khóa tìm kiếm"
+            >
+              <X size={14} aria-hidden="true" />
+            </button>
+          )}
+        </div>
 
-          return (
-            <li key={item.id} className="chat-list-row">
-              <button
-                type="button"
-                className={`chat-list-item ${isActive ? 'is-active' : ''}`}
-                onClick={() => onSelectChat(item)}
-                aria-current={isActive ? 'true' : undefined}
-                aria-label={`Cuộc trò chuyện với ${item.otherPartyName}${
-                  unread > 0 ? `, ${unread} tin chưa đọc` : ''
-                }`}
-              >
-                <div className="chat-list-item-avatar" aria-hidden="true">
-                  {item.otherPartyName.slice(0, 1).toLocaleUpperCase('vi-VN')}
-                </div>
+        <div className="chat-list-tabs" role="tablist" aria-label="Bộ lọc tin nhắn">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={filterTab === 'all'}
+            className={`chat-list-tab ${filterTab === 'all' ? 'is-active' : ''}`}
+            onClick={() => setFilterTab('all')}
+          >
+            <span>Tất cả</span>
+            <span className="chat-list-tab-count">{items.length}</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={filterTab === 'unread'}
+            className={`chat-list-tab ${filterTab === 'unread' ? 'is-active' : ''}`}
+            onClick={() => setFilterTab('unread')}
+          >
+            <span>Chưa đọc</span>
+            {totalUnreadCount > 0 ? (
+              <span className="chat-list-tab-badge">{totalUnreadCount}</span>
+            ) : (
+              <span className="chat-list-tab-count">0</span>
+            )}
+          </button>
+        </div>
+      </div>
 
-                <div className="chat-list-item-content">
-                  <div className="chat-list-item-top">
-                    <span className="chat-list-item-name">{item.otherPartyName}</span>
-                    <span className="chat-list-item-time">{displayTime}</span>
+      {filteredItems.length === 0 ? (
+        <div className="chat-list-empty-search">
+          <p className="chat-list-empty-title">Không tìm thấy cuộc trò chuyện nào</p>
+          <p className="quiet">
+            {filterTab === 'unread'
+              ? 'Bạn đã đọc hết tất cả các tin nhắn mới.'
+              : 'Thử tìm với tên khách hoặc từ khóa khác.'}
+          </p>
+        </div>
+      ) : (
+        <ul className="chat-list" aria-label="Danh sách cuộc trò chuyện">
+          {filteredItems.map((item) => {
+            const isActive = item.id === activeChatId;
+            const unread = Number(item.unreadCount) || 0;
+            const displayTime = formatTime(item.lastMessageAt || item.createdAt);
+
+            return (
+              <li key={item.id} className="chat-list-row">
+                <button
+                  type="button"
+                  className={`chat-list-item ${isActive ? 'is-active' : ''}`}
+                  onClick={() => onSelectChat(item)}
+                  aria-current={isActive ? 'true' : undefined}
+                  aria-label={`Cuộc trò chuyện với ${item.otherPartyName}${
+                    unread > 0 ? `, ${unread} tin chưa đọc` : ''
+                  }`}
+                >
+                  <div className="chat-list-item-avatar" aria-hidden="true">
+                    {item.otherPartyName.slice(0, 1).toLocaleUpperCase('vi-VN')}
                   </div>
 
-                  {item.productContext && (
-                    <span className="chat-list-item-context" title={item.productContext}>
-                      Hoa: {item.productContext}
-                    </span>
-                  )}
+                  <div className="chat-list-item-content">
+                    <div className="chat-list-item-top">
+                      <span className="chat-list-item-name">{item.otherPartyName}</span>
+                      <span className="chat-list-item-time">{displayTime}</span>
+                    </div>
 
-                  <div className="chat-list-item-bottom">
-                    <span className="chat-list-item-preview">
-                      {item.lastMessageHasImage && (
-                        <span className="chat-list-item-has-image">
-                          <ImageIcon size={14} aria-hidden="true" />
-                          <span>[Hình ảnh]</span>
-                        </span>
-                      )}
-                      {item.lastMessage ? (
-                        <span>{item.lastMessage}</span>
-                      ) : !item.lastMessageHasImage ? (
-                        <span className="chat-list-item-empty-preview">Chưa có tin nhắn nào</span>
-                      ) : null}
-                    </span>
-
-                    {unread > 0 && (
-                      <span
-                        className="chat-unread-badge"
-                        aria-label={`${unread} tin nhắn chưa đọc`}
-                      >
-                        {unread > 99 ? '99+' : unread}
+                    {item.productContext && (
+                      <span className="chat-list-item-context" title={item.productContext}>
+                        Hoa: {item.productContext}
                       </span>
                     )}
+
+                    <div className="chat-list-item-bottom">
+                      <span className="chat-list-item-preview">
+                        {item.lastMessageHasImage && (
+                          <span className="chat-list-item-has-image">
+                            <ImageIcon size={14} aria-hidden="true" />
+                            <span>[Hình ảnh]</span>
+                          </span>
+                        )}
+                        {item.lastMessage ? (
+                          <span>{item.lastMessage}</span>
+                        ) : !item.lastMessageHasImage ? (
+                          <span className="chat-list-item-empty-preview">Chưa có tin nhắn nào</span>
+                        ) : null}
+                      </span>
+
+                      {unread > 0 && (
+                        <span
+                          className="chat-unread-badge"
+                          aria-label={`${unread} tin nhắn chưa đọc`}
+                        >
+                          {unread > 99 ? '99+' : unread}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
 
       {(page > 1 || hasMore) && (
         <nav className="chat-list-pagination" aria-label="Phân trang cuộc trò chuyện">
