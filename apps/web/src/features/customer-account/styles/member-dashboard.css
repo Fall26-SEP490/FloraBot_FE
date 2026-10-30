@@ -1,12 +1,31 @@
 /* Purchase dashboard: scoped so order, chat and profile layouts keep their own styles. */
+.member-breadcrumb {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+  color: #476451;
+  font-size: 0.85rem;
+}
+
+.member-breadcrumb a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #1b4d36;
+  text-underline-offset: 3px;
+}
+
 .workspace-portal-root.member-account-root {
-  background: #ffffff;
+  background: transparent;
 }
 
 .workspace-portal-root.member-account-root .member-page {
-  max-width: 1160px;
-  margin: 1.25rem auto 3rem;
-  padding: clamp(1.4rem, 4vw, 3.5rem);
+  max-width: var(--customer-page-width, 1160px);
+  margin: 1.5rem auto 3rem;
+  padding: 0 var(--customer-page-gutter, 1.5rem);
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -19,22 +38,20 @@
   display: flex;
   align-items: center;
   gap: 1.2rem;
-  padding: 1.75rem 2rem;
+  padding: 1.25rem 1.5rem;
   margin: 0;
   overflow: hidden;
   border: 1px solid #e4eddf;
-  border-radius: 20px;
-  background:
-    linear-gradient(rgba(253, 254, 252, 0.94), rgba(253, 254, 252, 0.94)),
-    url('/images/generated/florabot-pattern.webp') center / 620px repeat;
+  border-radius: 18px;
+  background: linear-gradient(110deg, #edf4e9, #fff 75%);
   box-shadow: none;
 }
 
 .workspace-portal-root .member-page .account-avatar {
-  width: 62px;
-  height: 62px;
+  width: 56px;
+  height: 56px;
   background: #1e5037;
-  box-shadow: 0 5px 14px rgba(30, 80, 55, 0.16);
+  box-shadow: none;
 }
 
 .workspace-portal-root .member-page .member-eyebrow {
@@ -42,16 +59,18 @@
   margin-bottom: 0.45rem;
   color: #648471;
   font-size: 0.66rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
+  font-weight: 600;
+  letter-spacing: 0.06em;
 }
 
 .workspace-portal-root .member-page .account-hero-greeting {
   max-width: none;
   margin: 0 0 0.3rem;
   color: #173e2c;
-  font-size: clamp(1.55rem, 2.5vw, 2.05rem);
-  line-height: 1.2;
+  font-family: var(--font-body);
+  font-size: clamp(1.25rem, 2vw, 1.65rem);
+  font-weight: 600;
+  line-height: 1.4;
 }
 
 .workspace-portal-root .member-page .account-hero-sub {
@@ -73,12 +92,13 @@
   display: flex;
   align-items: flex-start;
   gap: 0.8rem;
-  min-width: 230px;
-  padding: 1rem 1.1rem;
-  border: 1px solid rgba(108, 148, 106, 0.24);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.84);
-  box-shadow: 0 5px 18px rgba(55, 83, 47, 0.07);
+  min-width: 190px;
+  padding: 0.75rem 0 0.75rem 1.25rem;
+  border: 0;
+  border-left: 1px solid #dce6d7;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .workspace-portal-root .member-page .member-points-icon,
@@ -125,18 +145,17 @@
 }
 
 .workspace-portal-root .member-page .member-tabs-container {
-  margin: 0.7rem 0 1.9rem;
-  padding: 0;
-  border: 0;
-  border-bottom: 1px solid #e3ebe1;
-  border-radius: 0;
-  background: transparent;
+  margin: 1.25rem 0 1.5rem;
+  padding: 0.4rem;
+  border: 1px solid #dce6d7;
+  border-radius: 12px;
+  background: #fff;
   box-shadow: none;
 }
 
 .workspace-portal-root .member-page .member-tabs {
   flex-wrap: nowrap;
-  gap: 1.7rem;
+  gap: 0.35rem;
   padding: 0;
   margin: 0;
   border: 0;
@@ -144,11 +163,10 @@
 }
 
 .workspace-portal-root .member-page .member-tabs a {
-  min-height: 49px;
-  padding: 0.65rem 0;
+  min-height: 44px;
+  padding: 0.65rem 0.9rem;
   border: 0;
-  border-bottom: 2px solid transparent;
-  border-radius: 0;
+  border-radius: 8px;
   background: transparent;
   box-shadow: none;
   color: #65776c;
@@ -156,10 +174,14 @@
 }
 
 .workspace-portal-root .member-page .member-tabs a:hover,
-.workspace-portal-root .member-page .member-tabs a.is-active {
-  border-bottom-color: #245b3d;
-  background: transparent;
+.workspace-portal-root .member-page .member-tabs a:focus-visible {
+  background: #edf4e9;
   color: #1e5037;
+}
+
+.workspace-portal-root .member-page .member-tabs a.is-active {
+  background: #1b4d36;
+  color: #fff;
 }
 
 .workspace-portal-root .member-page .member-tabs a:focus-visible {
@@ -376,11 +398,11 @@
   align-items: center;
   gap: 0.7rem;
   padding: 0.8rem 0.9rem;
-  border-left: 3px solid transparent;
+  border-left: 2px solid transparent;
 }
 
 .workspace-portal-root.member-account-root .member-page #member-chats .chat-list-item.is-active {
-  border-left-color: #245b3d;
+  border-left-color: #86a992;
   background: #f0f6ed;
 }
 
@@ -495,8 +517,8 @@
   .member-page
   #member-chats
   .chat-composer-controls:focus-within {
-  border-color: #72967c;
-  box-shadow: 0 0 0 3px rgba(45, 107, 70, 0.1);
+  border-color: #7e9c88;
+  box-shadow: 0 0 0 1px #7e9c8826;
 }
 
 .workspace-portal-root.member-account-root .member-page #member-chats .chat-composer-image-btn {
@@ -524,8 +546,11 @@
   width: 100%;
   min-height: 44px;
   height: 44px;
-  padding: 0.65rem 0.8rem;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
   overflow-y: auto;
+  scrollbar-width: thin;
   border: 0;
   background: transparent;
   box-shadow: none;
@@ -535,8 +560,18 @@
   .member-page
   #member-chats
   textarea.chat-composer-textarea:focus {
+  /* The composer shell owns focus, avoiding a second ring on the textarea. */
+  outline: 0 !important;
   background: transparent;
-  box-shadow: none;
+  box-shadow: none !important;
+}
+
+.workspace-portal-root.member-account-root
+  .member-page
+  #member-chats
+  .chat-composer-controls:has(textarea:focus-visible) {
+  border-color: #567f62;
+  box-shadow: 0 0 0 2px #39764b26;
 }
 
 .workspace-portal-root.member-account-root
@@ -561,11 +596,17 @@
 .workspace-portal-root.member-account-root .member-page #web-orders > h2,
 .workspace-portal-root.member-account-root .member-page #member-orders > h2 {
   margin: 0 0 0.45rem;
-  font-size: 1.25rem;
+  font-family: var(--font-body);
+  font-size: 1.2rem;
+  font-weight: 600;
+  line-height: 1.5;
 }
 
 .workspace-portal-root.member-account-root .member-page #web-orders > p {
   margin: 0;
+  color: #5b7163;
+  font-size: 0.87rem;
+  line-height: 1.7;
 }
 
 .workspace-portal-root.member-account-root .member-page #web-orders .order-summary-strip {
@@ -576,8 +617,10 @@
 }
 
 .workspace-portal-root.member-account-root .member-page #web-orders .operations-metric {
-  gap: 0.3rem;
-  padding: 0.9rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.3rem 0.75rem;
+  padding: 1rem;
   border: 1px solid #e4ede1;
   border-radius: 12px;
   background: #f8fbf6;
@@ -587,13 +630,28 @@
   width: 20px;
   height: 20px;
   color: #396a4a;
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.workspace-portal-root.member-account-root .member-page #web-orders .operations-metric span {
+  grid-column: 1;
+  grid-row: 1;
+  font-size: 0.8rem;
+  font-weight: 500;
 }
 
 .workspace-portal-root.member-account-root .member-page #web-orders .operations-metric strong {
+  grid-column: 1 / -1;
+  font-family: var(--font-body);
   font-size: 1.5rem;
+  font-weight: 600;
 }
 
 .workspace-portal-root.member-account-root .member-page #web-orders .operations-metric small {
+  grid-column: 1 / -1;
+  font-size: 0.72rem;
+  font-weight: 400;
   color: #607568;
   line-height: 1.4;
 }
@@ -601,6 +659,22 @@
 .workspace-portal-root.member-account-root .member-page #web-orders .order-filter-bar {
   gap: 0.75rem;
   margin: 1.25rem 0;
+}
+
+.workspace-portal-root.member-account-root .member-page #web-orders .order-filter-bar .button {
+  margin-left: auto;
+  border-color: #dce6d7;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+.workspace-portal-root.member-account-root .member-page #web-orders .order-filter-bar select {
+  font-size: 0.85rem;
+  border-color: #dce6d7;
+}
+
+.workspace-portal-root.member-account-root .member-page #web-orders .order-page-note {
+  font-size: 0.75rem;
 }
 
 .workspace-portal-root.member-account-root .member-page #web-orders .operations-empty,
@@ -611,7 +685,7 @@
   gap: 0.55rem;
   margin: 1.2rem 0 0;
   padding: 2.5rem 1.25rem;
-  border: 1px dashed #d4e4d1;
+  border: 1px solid #e3ebdf;
   border-radius: 14px;
   background: #f9fcf8;
   box-shadow: none;
@@ -690,10 +764,10 @@
 }
 
 @media (max-width: 700px) {
-  .workspace-portal-root .member-page {
-    width: calc(100% - 24px);
+  .workspace-portal-root.member-account-root .member-page {
+    width: 100%;
     margin: 1rem auto 2.5rem;
-    padding: 1.35rem;
+    padding: 0 var(--customer-page-gutter, 1rem);
   }
 
   .workspace-portal-root .member-page .account-hero-card {
@@ -715,8 +789,8 @@
   }
 
   .workspace-portal-root .member-page .member-tabs {
-    flex-wrap: wrap;
-    gap: 0 1.2rem;
+    flex-wrap: nowrap;
+    gap: 0.35rem;
   }
 
   .workspace-portal-root .member-page .member-activity-grid {
@@ -774,5 +848,36 @@
 @media (prefers-reduced-motion: reduce) {
   .workspace-portal-root .member-page .member-activity-card {
     transition: none;
+  }
+}
+
+@media (max-width: 899px) {
+  .workspace-portal-root .member-page .account-hero-card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.8rem;
+  }
+
+  .workspace-portal-root .member-page .member-points {
+    grid-column: 1 / -1;
+    min-width: 0;
+    padding: 0.75rem 0 0;
+    border-left: 0;
+    border-top: 1px solid #dce6d7;
+  }
+}
+
+@media (max-width: 640px) {
+  .workspace-portal-root .member-page .member-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
+  }
+
+  .workspace-portal-root .member-page .member-tabs a {
+    justify-content: center;
+    min-width: 0;
+    padding: 0.6rem 0.35rem;
+    font-size: 0.78rem;
   }
 }

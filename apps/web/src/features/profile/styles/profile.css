@@ -384,9 +384,9 @@
 
 /* Profile owns this surface; keep portal card defaults from adding nested spacing. */
 .workspace-portal-root .profile-page.profile-refined {
-  max-width: 1160px;
+  max-width: var(--customer-page-width, 1160px);
   margin: 1.5rem auto 3rem;
-  padding: 0 clamp(0.75rem, 2vw, 1.5rem);
+  padding: 0 var(--customer-page-gutter, 1.5rem);
   background: transparent;
   border: 0;
   box-shadow: none;
@@ -679,7 +679,7 @@
 @media (max-width: 640px) {
   .workspace-portal-root .profile-page.profile-refined {
     margin-top: 1rem;
-    padding-inline: 0.75rem;
+    padding-inline: var(--customer-page-gutter, 1rem);
   }
   .workspace-portal-root .profile-refined .profile-header {
     padding: 1.1rem;

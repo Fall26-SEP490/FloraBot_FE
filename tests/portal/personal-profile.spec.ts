@@ -847,7 +847,10 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
     await page
       .getByRole('button', { name: `Mở menu người dùng của ${sessions.CUSTOMER.name}` })
       .click();
-    await page.getByRole('link', { name: 'Hồ sơ cá nhân', exact: true }).click();
+    await page
+      .getByLabel('Menu người dùng', { exact: true })
+      .getByRole('link', { name: 'Hồ sơ cá nhân', exact: true })
+      .click();
     await page.getByLabel('Họ và tên *').fill('Bản nháp chưa lưu');
     await page.getByRole('link', { name: 'Khu vực cá nhân', exact: true }).click();
     await page

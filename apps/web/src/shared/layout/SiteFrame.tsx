@@ -274,7 +274,13 @@ function Frame({ children }: { children: ReactNode }) {
   const workspace =
     /^\/(admin|seller|staff|operations|technician|workspace)(\/|$)/.test(pathname) &&
     pathname !== '/admin/login';
-  const frameClassName = ['site-frame', workspace ? 'site-frame-workspace' : '']
+  const customerSurface =
+    pathname === '/ho-so' || pathname === '/tai-khoan' || pathname.startsWith('/dat-hoa/');
+  const frameClassName = [
+    'site-frame',
+    workspace ? 'site-frame-workspace' : '',
+    customerSurface ? 'site-frame-customer' : '',
+  ]
     .filter(Boolean)
     .join(' ');
   return (

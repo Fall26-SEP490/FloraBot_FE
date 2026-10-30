@@ -22,6 +22,23 @@ html {
   min-width: 0;
 }
 
+/* Contain page margins so the customer surface begins directly below the header. */
+.site-frame-customer {
+  --customer-page-width: 1160px;
+  --customer-page-gutter: clamp(1rem, 3vw, 2rem);
+}
+
+.site-frame-customer .site-content {
+  display: flow-root;
+  background: #f5f8f2;
+}
+
+.site-frame-customer .workspace-portal-root {
+  display: flow-root;
+  min-height: calc(100dvh - var(--header-height, 76px));
+  background: transparent;
+}
+
 .site-header.florabot-header {
   position: sticky;
   top: 0;

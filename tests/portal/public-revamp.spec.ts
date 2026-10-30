@@ -135,7 +135,7 @@ test.describe('Account / Profile Page Redesign', () => {
     // Header info
     const hero = page.locator('.account-hero-card');
     await expect(hero).toBeVisible();
-    await expect(hero.getByRole('heading', { name: 'Góc nhỏ của Nguyễn Mai Anh' })).toBeVisible();
+    await expect(hero.getByRole('heading', { name: 'Xin chào, Nguyễn Mai Anh' })).toBeVisible();
     await expect(hero.getByText('maianh@example.com')).toBeVisible();
     await expect(page.locator('.overview-stat-value').filter({ hasText: '35.000' })).toBeVisible();
 
@@ -192,9 +192,9 @@ test.describe('Account / Profile Page Redesign', () => {
       page.getByRole('navigation', { name: 'Mục hồ sơ' }).getByRole('link', { name: 'Bảo mật' }),
     ).toHaveAttribute('href', '#security');
 
-    const currentPwd = page.getByLabel('Mật khẩu hiện tại');
+    const currentPwd = page.getByLabel('Mật khẩu hiện tại', { exact: true });
     const newPwd = page.getByLabel('Mật khẩu mới', { exact: true });
-    const confirmPwd = page.getByLabel('Nhập lại mật khẩu mới');
+    const confirmPwd = page.getByLabel('Nhập lại mật khẩu mới', { exact: true });
 
     // Trigger blur validation
     await currentPwd.focus();
@@ -240,9 +240,9 @@ test.describe('Account / Profile Page Redesign', () => {
     });
 
     await page.goto('/ho-so#security');
-    await page.getByLabel('Mật khẩu hiện tại').fill('OldPassword123!');
+    await page.getByLabel('Mật khẩu hiện tại', { exact: true }).fill('OldPassword123!');
     await page.getByLabel('Mật khẩu mới', { exact: true }).fill('NewPassword456!');
-    await page.getByLabel('Nhập lại mật khẩu mới').fill('NewPassword456!');
+    await page.getByLabel('Nhập lại mật khẩu mới', { exact: true }).fill('NewPassword456!');
     await page.getByRole('button', { name: 'Đổi mật khẩu và đăng nhập lại', exact: true }).click();
 
     await expect(page).toHaveURL(/\/dang-nhap$/);
@@ -325,6 +325,7 @@ test.describe('Flower Catalog (/dat-hoa) Redesign & Chat Integration', () => {
       .first()
       .getByRole('button', { name: 'Nhắn tin với shop' })
       .click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Đăng nhập', exact: true }).click();
     await expect(page).toHaveURL(/\/dang-nhap\?returnUrl=%2Fdat-hoa/);
   });
 

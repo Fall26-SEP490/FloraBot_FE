@@ -1,9 +1,9 @@
 /* Scoped styling for FloraBot Flower Catalog (/dat-hoa) - Shell & Layout */
-:root:has(.flower-shop-page),
-:root:has(.flower-shop-page) body,
-:root:has(.flower-shop-page) .site-frame,
-:root:has(.flower-shop-page) .site-content,
-body:has(.flower-shop-page) {
+:root:has(.flower-shop-page:not(.flower-detail-page)),
+:root:has(.flower-shop-page:not(.flower-detail-page)) body,
+:root:has(.flower-shop-page:not(.flower-detail-page)) .site-frame,
+:root:has(.flower-shop-page:not(.flower-detail-page)) .site-content,
+body:has(.flower-shop-page:not(.flower-detail-page)) {
   background: #ffffff !important;
   background-image: none !important;
 }
