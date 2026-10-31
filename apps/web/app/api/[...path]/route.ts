@@ -1,6 +1,9 @@
 import type { NextRequest } from 'next/server';
 
-const apiOrigin = (process.env.API_PROXY_TARGET || 'http://127.0.0.1:5080').replace(/\/$/, '');
+const apiOrigin = (
+  process.env.API_PROXY_TARGET ||
+  (process.env.VERCEL ? 'https://api.florabot.site' : 'http://127.0.0.1:5080')
+).replace(/\/$/, '');
 
 const STRIP_REQUEST_HEADERS = new Set([
   'connection',

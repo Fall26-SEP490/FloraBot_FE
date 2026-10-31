@@ -1,4 +1,4 @@
-import { Boxes, Button, CircleAlert, RefreshCw, Store } from '@florabot/ui';
+import { Boxes, Button, CircleAlert, RefreshCw } from '@florabot/ui';
 import type { KioskPackageResponse } from '../../installations/installations.types';
 
 interface KioskPackageCatalogProps {
@@ -86,15 +86,10 @@ export function KioskPackageCatalog({
                   <div className="slot-item">
                     <Boxes size={18} aria-hidden="true" />
                     <span>
-                      <strong>{pkg.walkInSlots}</strong> ô vãng lai (Walk-in)
+                      <strong>{pkg.totalSlots}</strong> ô tủ
                     </span>
                   </div>
-                  <div className="slot-item">
-                    <Store size={18} aria-hidden="true" />
-                    <span>
-                      <strong>{pkg.preorderSlots}</strong> ô đặt trước (Pre-order)
-                    </span>
-                  </div>
+                  <p>Shop tự cấu hình ô mua tại chỗ và ô đặt trước sau khi bàn giao.</p>
                   <div className="slot-total">
                     Tổng sức chứa: <strong>{pkg.totalSlots} ô tủ</strong>
                   </div>

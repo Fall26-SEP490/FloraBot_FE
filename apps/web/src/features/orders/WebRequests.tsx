@@ -266,14 +266,16 @@ function OrderActions({
       )}
       {mode === 'member' && row.orderStatus === 'PAID' && row.ready && (
         <p>
-          Hoa đã ở trong tủ. Đến đúng tủ trong khung giờ hẹn và dùng mã trên biên nhận để nhận hoa.
+          Hoa đã ở trong tủ. Đến đúng tủ trong khung giờ hẹn, chọn “Nhận đơn đặt trước” và xác thực
+          OTP qua SMS bằng số điện thoại đã lưu trong hồ sơ tài khoản đặt đơn. Giữ biên nhận để tra
+          cứu hoặc dùng chức năng nhận bằng biên nhận khi cần.
         </p>
       )}
       {mode === 'member' && row.orderId && row.trackingToken && (
         <div className="order-pickup-credentials" aria-label="Thông tin nhận hoa tại Kiosk">
           <dl className="bank-summary">
             <div>
-              <dt>ID biên nhận (nhập tại Kiosk)</dt>
+              <dt>ID biên nhận (nhận bằng biên nhận)</dt>
               <dd>
                 <code>{row.orderId}</code>{' '}
                 <Button

@@ -398,9 +398,7 @@
   white-space: normal;
   flex: 1 1 auto;
   min-width: 0;
-  transition:
-    background-color 0.15s ease,
-    opacity 0.15s ease;
+  transition: background-color 0.15s ease;
 }
 
 .flower-request-footer .flower-request-submit-btn:hover:not(:disabled) {
@@ -408,7 +406,7 @@
 }
 
 .flower-request-footer .flower-request-submit-btn:disabled {
-  opacity: 0.65;
+  opacity: 1;
   background: #395b46 !important;
   color: #e5f0e8 !important;
   cursor: not-allowed;

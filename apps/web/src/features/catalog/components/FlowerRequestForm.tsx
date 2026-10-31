@@ -180,6 +180,11 @@ export function FlowerRequestForm({ item, onOpenChat, openingChat }: FlowerReque
             <strong>{formatPrice(item.price)} đ</strong>
           </div>
         </div>
+        <p className="flower-request-notice">
+          Nhận hoa tại tủ bằng OTP gửi qua SMS. Trước khi đến nhận, hãy lưu số điện thoại đang dùng
+          trong <Link href="/ho-so">hồ sơ của tài khoản đặt đơn</Link>. Khi hoa sẵn sàng, chọn “Nhận
+          đơn đặt trước” trên màn hình tủ và nhập số này.
+        </p>
         <fieldset disabled={busy || uncertain}>
           <legend className="sr-only">Đặt trước, shop chuẩn bị theo yêu cầu</legend>
           <div className="flower-request-field">
