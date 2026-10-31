@@ -7,14 +7,14 @@
 
 .technician-workspace-layout {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.5rem;
   margin-top: 1rem;
 }
 
 @media (min-width: 900px) {
   .technician-workspace-layout {
-    grid-template-columns: 360px 1fr;
+    grid-template-columns: 360px minmax(0, 1fr);
   }
 }
 
@@ -121,7 +121,7 @@
 
 .tech-contact-box {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
   gap: 1rem;
   background: #f9fbf8;
   border: 1px solid #e1ebe0;
@@ -194,4 +194,27 @@
 
 .report-submit-block {
   margin-top: 1.25rem;
+}
+
+.technician-workspace-layout > *,
+.tech-job-card,
+.job-detail-top > div {
+  min-width: 0;
+}
+
+.tech-contact-box p,
+.job-card-header h4,
+.tech-job-detail-card h2 {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .job-detail-top {
+    flex-direction: column;
+  }
+
+  .job-directions-action,
+  .job-directions-action .directions-btn {
+    width: 100%;
+  }
 }

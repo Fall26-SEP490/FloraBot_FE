@@ -230,3 +230,33 @@
   margin-bottom: 0.65rem;
   font-size: 0.95rem;
 }
+
+/* Shared by Manager operations and Admin oversight. */
+.operations-installations-view .operations-queue-section {
+  background: white;
+  border: 1px solid var(--ops-line, #dbe5da);
+  border-radius: 16px;
+  padding: 1.25rem;
+}
+.operations-stage-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+.operations-stage-tabs button {
+  border: 1px solid var(--ops-line, #dbe5da);
+  background: white;
+  padding: 0.6rem 0.9rem;
+  min-height: 44px;
+  border-radius: 8px;
+  color: var(--ops-ink, #183e2b);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.operations-stage-tabs button[aria-pressed='true'] {
+  background: #194e37;
+  border-color: #194e37;
+  color: white;
+}

@@ -14,7 +14,12 @@ import AuthShell from '../../auth/components/AuthShell';
 import { postLoginPath } from '@/features/auth/auth.utils';
 
 const loginSchema = z.object({
-  email: z.email('Nhập địa chỉ email hợp lệ.'),
+  // Existing staff identifiers are validated by BE; some issued accounts use legacy email formats.
+  email: z
+    .string()
+    .trim()
+    .min(1, 'Nhập email do quản trị viên cấp.')
+    .max(320, 'Email tối đa 320 ký tự.'),
   password: z.string().min(1, 'Nhập mật khẩu của bạn.').max(128, 'Mật khẩu tối đa 128 ký tự.'),
 });
 
@@ -63,7 +68,7 @@ export default function AdminLoginScreen() {
           <label htmlFor="email">{t('email')}</label>
           <input
             id="email"
-            type="email"
+            type="text"
             inputMode="email"
             autoComplete="username"
             autoCapitalize="none"

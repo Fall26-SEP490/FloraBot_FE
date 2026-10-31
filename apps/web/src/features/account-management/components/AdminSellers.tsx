@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@florabot/ui';
+import Link from 'next/link';
 import type { components } from '../../../../../../packages/contracts/src/generated/api';
 import { queryClient, request } from '@/shared/lib/api';
 import { TablePagination } from '../../../shared/components/DataTable';
@@ -44,7 +45,7 @@ function Approval({
       noValidate
       onSubmit={form.handleSubmit((values) => approve.mutate(values))}
     >
-      <h4>Phê duyệt gói thuê cho shop</h4>
+      <h4>Phê duyệt shop theo luồng cũ</h4>
       <label htmlFor={`package-${seller.id}`}>Gói thuê cho {seller.shopName}</label>
       <select
         id={`package-${seller.id}`}
@@ -81,7 +82,7 @@ function Approval({
 
 export default function AdminSellers() {
   const { t } = useTranslation();
-  const [status, setStatus] = useState('PENDING');
+  const [status, setStatus] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [approved, setApproved] = useState('');
@@ -104,7 +105,14 @@ export default function AdminSellers() {
   return (
     <section className="admin-sellers" aria-labelledby="admin-sellers-title">
       <h2 id="admin-sellers-title">Hồ sơ các shop hoa</h2>
-      <p>Kiểm tra thông tin liên hệ và chọn gói đã trao đổi với shop trước khi duyệt.</p>
+      <div className="status-notice notice-info">
+        <p>
+          Hồ sơ Customer đăng ký mở shop và thuê kiosk nằm ở mục{' '}
+          <Link href="/admin/installations">Hồ sơ thuê kiosk</Link>. Admin theo dõi; Manager xác
+          nhận liên hệ, phân công Technician và bàn giao. Danh sách bên dưới là các shop đã có trong
+          hệ thống.
+        </p>
+      </div>
       <div className="product-filters">
         <div>
           <label htmlFor="shop-search">Tìm tên shop hoặc số điện thoại</label>

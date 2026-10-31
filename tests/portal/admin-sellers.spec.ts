@@ -105,6 +105,7 @@ for (const width of [390, 1440]) {
       return route.fulfill({ status: 204 });
     });
     await page.goto('/admin/shops');
+    await page.getByLabel('Lọc trạng thái shop').selectOption('PENDING');
     await page.getByLabel('Tìm tên shop hoặc số điện thoại').fill('không tìm thấy');
     await expect(page.getByText('Không có hồ sơ phù hợp với bộ lọc hiện tại.')).toBeVisible();
     await page.getByLabel('Tìm tên shop hoặc số điện thoại').fill('0901234567');

@@ -65,7 +65,7 @@ function EnrollKioskForm({ session, onClose, initialSlotCount, onSuccess }: Enro
       code: newKioskCode.trim(),
       name: newKioskName.trim(),
       hardwareId: newHardwareId.trim(),
-      mqttClientId: newMqttClientId.trim() || `kiosk-${newKioskCode.trim().toLowerCase()}`,
+      mqttClientId: newMqttClientId.trim() || null,
       region: newRegion,
       slotCount,
     });
@@ -138,6 +138,18 @@ function EnrollKioskForm({ session, onClose, initialSlotCount, onSuccess }: Enro
             ))}
           </select>
         </div>
+      </div>
+
+      <div className="kiosk-form-field">
+        <label htmlFor="new-mqtt-client-id">MQTT Client ID (nếu có)</label>
+        <input
+          id="new-mqtt-client-id"
+          type="text"
+          value={newMqttClientId}
+          onChange={(e) => setNewMqttClientId(e.target.value)}
+          placeholder="Để trống nếu chưa dùng MQTT"
+        />
+        <p className="quiet">Nhập Client ID thật của thiết bị nếu đã cấu hình MQTT.</p>
       </div>
 
       <div className="kiosk-form-field">

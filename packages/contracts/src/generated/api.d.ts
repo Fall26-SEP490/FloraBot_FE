@@ -10236,6 +10236,7 @@ export interface components {
             kioskId: string;
             slotCode: string;
             status: string;
+            zone: null | string;
             /** Format: uuid */
             currentSellerId: null | string;
             /** Format: uuid */
@@ -10559,11 +10560,7 @@ export interface components {
             code: string;
             name: string;
             /** Format: int32 */
-            walkInSlots: number | string;
-            /** Format: int32 */
-            preorderSlots: number | string;
-            /** Format: int32 */
-            totalSlots: number | string;
+            slotCount: number | string;
             status: string;
         };
         EnrollKioskRequest: {
@@ -10581,9 +10578,7 @@ export interface components {
             code: string;
             name: string;
             /** Format: int32 */
-            walkInSlots: number | string;
-            /** Format: int32 */
-            preorderSlots: number | string;
+            slotCount: number | string;
             status: string;
             apiKey: string;
         };

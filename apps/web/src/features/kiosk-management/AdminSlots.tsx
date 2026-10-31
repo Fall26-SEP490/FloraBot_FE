@@ -7,6 +7,7 @@ import { Button } from '@florabot/ui';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
 import { queryClient, request } from '@/shared/lib/api';
 import { ConfirmDialog } from '../../shared/components/Modal';
+import { AdminKioskSlotDetails } from './AdminKioskSlotDetails';
 
 type Kiosk = components['schemas']['AdminKioskResponse'];
 type Seller = components['schemas']['AdminSellerResponse'];
@@ -246,6 +247,7 @@ export default function AdminSlots() {
                     <dd>{kioskStatuses[kiosk.status] || kiosk.status}</dd>
                   </div>
                 </dl>
+                <AdminKioskSlotDetails kioskId={kiosk.id} kioskCode={kiosk.code} />
                 {sellers.isPending ? (
                   <p role="status">Đang tải shop…</p>
                 ) : sellers.data?.length ? (

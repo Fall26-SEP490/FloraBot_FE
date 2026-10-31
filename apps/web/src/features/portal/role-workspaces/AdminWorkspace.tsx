@@ -32,6 +32,20 @@ const AdminAccounts = dynamic(() => import('../../account-management/components/
   loading: () => <p role="status">Đang tải tài khoản quản trị…</p>,
 });
 
+const AdminApprovalCenter = dynamic(
+  () => import('../../dashboard/components/AdminApprovalCenter'),
+  {
+    loading: () => <p role="status">Đang tải trung tâm duyệt…</p>,
+  },
+);
+
+const OperationsInstallations = dynamic(
+  () => import('../../installations/OperationsInstallations'),
+  {
+    loading: () => <p role="status">Đang tải hồ sơ thuê kiosk…</p>,
+  },
+);
+
 const AdminSellers = dynamic(() => import('../../account-management/components/AdminSellers'), {
   loading: () => <p role="status">Đang tải danh sách shop hoa…</p>,
 });
@@ -149,6 +163,12 @@ export default function AdminWorkspace({ section = 'overview' }: { section?: str
           </div>
           {section === 'overview' && (
             <>
+              <div className="status-notice notice-info">
+                <p>
+                  Kiểm tra hồ sơ chờ xử lý tại <Link href="/admin/approvals">Trung tâm duyệt</Link>.
+                  Hồ sơ thuê kiosk mới do Manager xác nhận và bàn giao.
+                </p>
+              </div>
               <DashboardOverview session={session.data} />
               <details className="workspace-profile">
                 <summary>Thông tin tài khoản và quyền truy cập</summary>
@@ -165,6 +185,7 @@ export default function AdminWorkspace({ section = 'overview' }: { section?: str
               </details>
             </>
           )}
+          {section === 'approvals' && <AdminApprovalCenter actorId={session.data.id} />}
           {section === 'orders' && <WebRequests mode="admin" />}
           {section === 'managers' && (
             <AccountManagement
@@ -179,6 +200,7 @@ export default function AdminWorkspace({ section = 'overview' }: { section?: str
             />
           )}
           {section === 'accounts' && <AdminAccounts key={session.data.id} session={session.data} />}
+          {section === 'installations' && <OperationsInstallations session={session.data} />}
           {section === 'shops' && <AdminSellers />}
           {section === 'tasks' && (
             <StaffTasks

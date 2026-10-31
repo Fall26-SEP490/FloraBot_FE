@@ -5,7 +5,7 @@ import { request, type Session } from '@/shared/lib/api';
 import { buildGoogleMapsDirectionsUrl } from '../../kiosk-location/kiosk-location.utils';
 import { KIOSK_STATUS_LABELS, TECHNICIAN_PROGRESS_STEPS } from '../installations.constants';
 import type { StaffEvidenceItem, TechnicianInstallationDetail } from '../installations.types';
-import { getTechnicianStepIndex, validateReportText } from '../installations.utils';
+import { formatDateVN, getTechnicianStepIndex, validateReportText } from '../installations.utils';
 import { useTechnicianActions } from '../hooks/useTechnicianActions';
 import { TechnicianEvidenceSection } from './TechnicianEvidenceSection';
 
@@ -57,7 +57,14 @@ export function TechnicianJobDetailCard({
   const currentStep = getTechnicianStepIndex(selectedJob.status);
 
   const handleSubmitReport = () => {
-    if (uploading || evidenceQuery.isError || evidenceQuery.isPending) return;
+    if (
+      selectedJob.status !== 'INSTALLING' ||
+      uploading ||
+      submitReportMutation.isPending ||
+      evidenceQuery.isError ||
+      evidenceQuery.isPending
+    )
+      return;
 
     const validation = validateReportText(reportText);
     if (!validation.valid) {
@@ -163,7 +170,7 @@ export function TechnicianJobDetailCard({
         <div>
           <strong>Thời gian hẹn:</strong>
           <p>
-            {selectedJob.scheduledDate} ({selectedJob.timeWindow})
+            {formatDateVN(selectedJob.scheduledDate)} ({selectedJob.timeWindow})
           </p>
         </div>
       </div>
@@ -218,12 +225,17 @@ export function TechnicianJobDetailCard({
             <div className="kiosk-form-field">
               <label htmlFor={reportInputId}>Nội dung báo cáo chi tiết:</label>
               <textarea
+                disabled={submitReportMutation.isPending}
+                aria-describedby={`${reportInputId}-hint`}
                 id={reportInputId}
                 rows={3}
                 value={reportText}
                 onChange={(e) => setReportText(e.target.value)}
                 placeholder="Mô tả công việc: đã kết nối nguồn điện ổn định, cảm biến cửa hoạt động tốt, khóa cơ hoạt động trơn tru..."
               />
+              <p id={`${reportInputId}-hint`} className="kiosk-help-text">
+                Viết ít nhất 10 ký tự. Cần đính kèm thành công ít nhất 1 ảnh trước khi gửi.
+              </p>
             </div>
 
             <Button
@@ -233,7 +245,8 @@ export function TechnicianJobDetailCard({
                 uploading ||
                 evidenceQuery.isError ||
                 evidenceQuery.isPending ||
-                evidenceItems.length === 0
+                evidenceItems.length === 0 ||
+                !validateReportText(reportText).valid
               }
             >
               <Check size={18} aria-hidden="true" />
@@ -242,6 +255,14 @@ export function TechnicianJobDetailCard({
           </div>
         </div>
       )}
+
+      {(selectedJob.status === 'AWAITING_HANDOVER' || selectedJob.status === 'ACTIVE') &&
+        selectedJob.technicianReport && (
+          <div className="report-display-box">
+            <strong>Báo cáo đã gửi</strong>
+            <p>{selectedJob.technicianReport}</p>
+          </div>
+        )}
 
       {/* STEP 3: AWAITING HANDOVER NOTICE */}
       {selectedJob.status === 'AWAITING_HANDOVER' && (

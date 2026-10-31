@@ -89,6 +89,10 @@ export function InstallationHandoverPanel({
 
       {isManager && (
         <>
+          <p className="kiosk-help-text">
+            Sau khi bạn kiểm tra ảnh và báo cáo, bàn giao sẽ gán kiosk cho shop và chuyển tài khoản
+            khách hàng thành Seller.
+          </p>
           <div className="action-buttons-row">
             <Button
               onClick={onHandover}
