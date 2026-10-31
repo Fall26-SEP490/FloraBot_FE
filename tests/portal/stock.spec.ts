@@ -18,6 +18,115 @@ test.beforeEach(async ({ page }) => {
 });
 
 for (const width of [390, 1440]) {
+  test(`Seller sees bouquet sale states and slot warnings together at ${width}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 950 });
+    const sellerId = '20000000-0000-0000-0000-000000000099';
+    const kioskId = '50000000-0000-0000-0000-000000000099';
+    const productId = '30000000-0000-0000-0000-000000000099';
+    const base = {
+      kioskId,
+      zone: 'WALK_IN',
+      status: 'HELD',
+      bouquetId: 'bouquet',
+      bouquetStatus: 'SOLD',
+      productId,
+      orderId: 'order',
+      orderCode: 'FB-PAID',
+      orderStatus: 'PAID',
+      paymentStatus: 'SUCCEEDED',
+      kioskName: 'Tủ kiểm thử',
+      priceSnapshot: 350000,
+    };
+    const slots = [
+      {
+        ...base,
+        status: 'STOCKED',
+        bouquetStatus: 'STOCKED',
+        orderId: null,
+        orderCode: null,
+        orderStatus: null,
+        paymentStatus: null,
+      },
+      { ...base, bouquetStatus: 'HELD', orderStatus: 'AWAITING_PAYMENT', paymentStatus: 'PENDING' },
+      base,
+      { ...base, orderStatus: 'DISPENSING' },
+      {
+        ...base,
+        status: 'RENTED_EMPTY',
+        bouquetId: null,
+        bouquetStatus: null,
+        productId: null,
+        orderId: null,
+        orderCode: null,
+        orderStatus: null,
+        paymentStatus: null,
+      },
+      { ...base, status: 'STOCKED', orderStatus: 'DISPENSE_FAILED' },
+      { ...base, status: 'FAULT' },
+      { ...base, status: 'LOCKED' },
+      { ...base, status: 'PENDING_REMOVAL' },
+    ].map((slot, index) => ({ ...slot, id: `slot-${index}`, slotCode: `A0${index + 1}` }));
+    await page.route('**/api/**', (route) => {
+      const path = new URL(route.request().url()).pathname;
+      const data =
+        path === '/api/auth/me'
+          ? {
+              id: 'seller-user',
+              role: 'SELLER',
+              name: 'Shop kiểm thử',
+              sellerId,
+              sellerStatus: 'ACTIVE',
+            }
+          : path === `/api/sellers/${sellerId}/kiosks`
+            ? [{ id: kioskId, name: 'Tủ kiểm thử', code: 'K01' }]
+            : path === `/api/me/kiosks/${kioskId}/slots`
+              ? slots
+              : path === '/api/me/products'
+                ? [{ id: productId, name: 'Mẫu đang ACTIVE', status: 'ACTIVE', price: 350000 }]
+                : { items: [] };
+      return route.fulfill({ json: data });
+    });
+    await page.goto('/seller/stock');
+    const card = (code: string) =>
+      page.getByRole('button', { name: `Xem chi tiết ô ${code}`, exact: true });
+    for (const [code, label] of [
+      ['A01', 'Đang bán'],
+      ['A02', 'Khách đang thanh toán'],
+      ['A03', 'Đã bán — chờ khách nhận'],
+      ['A04', 'Đã bán — đang xử lý nhận hoa'],
+      ['A05', 'Ô trống'],
+      ['A06', 'Nhận hoa thất bại — cần xử lý'],
+    ])
+      await expect(card(code)).toContainText(label);
+    for (const [code, warning] of [
+      ['A07', 'Có sự cố'],
+      ['A08', 'Đang khóa'],
+      ['A09', 'Chờ lấy hoa hết hạn'],
+    ]) {
+      await expect(card(code)).toContainText('Đã bán — chờ khách nhận');
+      await expect(card(code)).toContainText(warning);
+    }
+    await card('A07').click();
+    const modal = page.getByRole('dialog', { name: 'Chi tiết ô A07' });
+    await expect(modal).toContainText('Đã bán — chờ khách nhận');
+    await expect(modal).toContainText('Có sự cố');
+    await expect(modal).toContainText('FB-PAID');
+    await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: /^Đang có hoa/ }).click();
+    await expect(page.locator('.stock-slot-card')).toHaveCount(8);
+    await expect(card('A03')).toBeVisible();
+    await page.getByRole('button', { name: /^Cần xử lý/ }).click();
+    await expect(card('A06')).toBeVisible();
+    await expect(card('A07')).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+  });
+}
+
+for (const width of [390, 1440]) {
   test(`Seller selects a kiosk, stocks flowers and reads its inventory ${width}`, async ({
     page,
   }) => {
@@ -114,8 +223,8 @@ for (const width of [390, 1440]) {
     await expect(section.getByRole('button', { name: 'Nạp hoa vào ô' })).toBeDisabled();
     expect(attempts).toBe(0);
 
-    await section.getByLabel(/Ô trống tại/).selectOption(slots[0].id);
-    await section.getByLabel('Sản phẩm nạp vào ô').selectOption(product.id);
+    await section.getByLabel(/Chọn ô Walk-in trống/).selectOption(slots[0].id);
+    await section.getByLabel('2. Chọn mẫu hoa').selectOption(product.id);
     await section.getByRole('button', { name: 'Nạp hoa vào ô' }).click();
     await expect(section.getByRole('alert')).toContainText('Ô đang được cập nhật');
     expect(
@@ -144,10 +253,10 @@ for (const width of [390, 1440]) {
     await page.keyboard.press('Escape');
     await expect(firstCard).toBeFocused();
 
-    await section.getByLabel(/Ô trống tại/).selectOption(slots[1].id);
+    await section.getByLabel(/Chọn ô Walk-in trống/).selectOption(slots[1].id);
     await section.getByRole('button', { name: 'Nạp hoa vào ô' }).click();
     await expect(section.getByRole('alert')).toContainText('Làm mới kiosk');
-    await expect(section.getByRole('button', { name: 'Nạp hoa vào ô' })).toBeDisabled();
+    await expect(section.getByRole('button', { name: 'Nạp hoa vào ô' })).toHaveCount(0);
     await section.getByRole('button', { name: 'Xem chi tiết ô A02' }).click();
     await expect(section.getByText('FB-AUTO-3', { exact: true })).toBeVisible();
     expect(attempts).toBe(3);
@@ -274,10 +383,10 @@ test('Seller classifies empty slots, blocks held slots and stocks only WALK_IN',
   });
   await page.goto('/seller/stock');
   const section = page.locator('.seller-stock');
-  const slot = section.getByLabel(/Ô trống tại/);
+  const slot = section.getByLabel(/Chọn ô Walk-in trống/);
   await expect(slot.locator('option')).toHaveCount(2);
   await slot.selectOption(slots[0].id);
-  await section.getByLabel('Sản phẩm nạp vào ô').selectOption(productId);
+  await section.getByLabel('2. Chọn mẫu hoa').selectOption(productId);
   const review = section.getByRole('note', { name: 'Kiểm tra trước khi nạp hoa' });
   await expect(review).toContainText('Bó này chỉ mua trực tiếp tại kiosk');
 
@@ -308,10 +417,10 @@ test('Seller classifies empty slots, blocks held slots and stocks only WALK_IN',
   await expect(
     section.getByLabel('Thống kê ô tủ').locator('.operations-metric').nth(1).locator('strong'),
   ).toHaveText('0');
-  await expect(section.getByRole('button', { name: 'Nạp hoa vào ô' })).toBeDisabled();
-  await expect(section.getByRole('note')).toContainText('Chưa có ô Walk-in trống');
-  await expect(slot).toBeDisabled();
-  await expect(section.getByLabel('Sản phẩm nạp vào ô')).toBeEnabled();
+  await expect(section.getByRole('button', { name: 'Nạp hoa vào ô' })).toHaveCount(0);
+  await expect(section.getByRole('note')).toContainText('Không có ô Walk-in trống');
+  await expect(slot).toHaveCount(0);
+  await expect(section.getByLabel('2. Chọn mẫu hoa')).toHaveCount(0);
   await section.getByRole('button', { name: 'Xem chi tiết ô A01' }).click();
   const firstZone = section.getByLabel('Hình thức bán cho ô A01');
   await firstZone.selectOption('WALK_IN');

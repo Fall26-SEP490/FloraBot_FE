@@ -141,6 +141,7 @@ test('Customer request → seller quote → customer acceptance/payment → sell
         row.orderStatus = 'AWAITING_PAYMENT';
         row.orderId = '80000000-0000-0000-0000-000000000001';
         row.orderCode = 'TEST-ORDER-01';
+        row.trackingToken = 'ABCD2345';
         return { result: row.id };
       }
       if (path.endsWith('/payment-link'))
@@ -150,6 +151,17 @@ test('Customer request → seller quote → customer acceptance/payment → sell
         expect(body.qrCode).toBe('TEST-BOUQUET-01');
         row.ready = true;
         return { result: row.id };
+      }
+      if (path === `/me/preorders/${row.id}/pickup-otp`) {
+        expect(role).toBe('SELLER');
+        expect(body).toEqual({});
+        return {
+          requestId: row.id,
+          orderId: row.orderId,
+          recipientMasked: 'c***@gmail.com',
+          expiresAt: row.pickupBefore,
+          resendAfterSeconds: 60,
+        };
       }
       return undefined;
     },
@@ -168,12 +180,12 @@ test('Customer request → seller quote → customer acceptance/payment → sell
   await expect(page.getByRole('heading', { name: 'Đã nhận yêu cầu của bạn' })).toBeVisible();
   role = 'SELLER';
   await page.goto('/seller/orders');
-  const sellerSummary = page.locator('main li > details > summary');
+  const sellerSummary = page.locator('details[id^="preorder-"] > summary');
   await expect(sellerSummary).toContainText(flower.name);
   await expect(sellerSummary).toContainText(flower.kioskName);
-  await expect(page.getByText('Thống kê, tìm kiếm và bộ lọc áp dụng trong trang 1.')).toBeVisible();
+  await expect(page.getByLabel('Thống kê đơn ở trang 1')).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Phân trang đơn đặt trước' })).toHaveCount(0);
-  await page.locator('main li > details > summary').click();
+  await page.locator('details[id^="preorder-"] > summary').click();
   await expect(page.getByText(row.instructions)).toBeVisible();
   await page.getByRole('button', { name: 'Báo giá hoặc từ chối' }).click();
   await page.getByLabel('Giá trọn gói (đồng)').fill('380000');
@@ -187,13 +199,14 @@ test('Customer request → seller quote → customer acceptance/payment → sell
   await expect(page.getByText('Đã có báo giá', { exact: true })).toBeVisible();
   role = 'CUSTOMER';
   await page.goto('/tai-khoan#web-orders');
-  await page.locator('main li > details > summary').click();
+  await page.locator('details[id^="preorder-"] > summary').click();
   await page.getByRole('button', { name: 'Kiểm tra báo giá' }).click();
   await page
     .getByRole('checkbox', { name: 'Tôi đã đối chiếu và xác nhận thông tin trên.' })
     .check();
   await page.getByRole('button', { name: 'Xác nhận gửi', exact: true }).click();
   await page.getByRole('button', { name: 'Tạo liên kết thanh toán' }).click();
+  await expect(page.getByLabel('Thông tin nhận hoa tại Kiosk')).toHaveCount(0);
   await expect(page.getByRole('link', { name: /Mở trang thanh toán payOS/ })).toHaveAttribute(
     'href',
     'https://pay.payos.vn/web/test-order',
@@ -202,18 +215,14 @@ test('Customer request → seller quote → customer acceptance/payment → sell
   row.orderStatus = 'PAID';
   role = 'SELLER';
   await page.goto('/seller/orders');
-  await page.locator('main li > details > summary').click();
+  await page.locator('details[id^="preorder-"] > summary').click();
   await page.getByRole('button', { name: 'Nạp hoa cho đơn này' }).click();
   await expect(page.getByRole('button', { name: 'Tiếp tục kiểm tra' })).toBeDisabled();
   await page.getByLabel('Ô trống tại tủ nhận').selectOption(slotId);
   await page.getByLabel('Mã QR của bó hoa').fill('TEST-BOUQUET-01');
   await page.getByRole('button', { name: 'Tiếp tục kiểm tra' }).click();
-  await expect(page.getByRole('main').locator('form:has(button[type=submit])')).toContainText(
-    'P01',
-  );
-  await expect(page.getByRole('main').locator('form:has(button[type=submit])')).toContainText(
-    'TEST-BOUQUET-01',
-  );
+  await expect(page.locator('.fulfill-review')).toContainText('P01');
+  await expect(page.locator('.fulfill-review')).toContainText('TEST-BOUQUET-01');
   await page.getByRole('button', { name: 'Quay lại', exact: true }).click();
   await expect(page.getByLabel('Mã QR của bó hoa')).toHaveValue('TEST-BOUQUET-01');
   await page.getByRole('button', { name: 'Tiếp tục kiểm tra' }).click();
@@ -222,14 +231,66 @@ test('Customer request → seller quote → customer acceptance/payment → sell
     .check();
   await page.getByRole('button', { name: 'Xác nhận nạp hoa', exact: true }).click();
   await expect(page.getByText('Hoa đã sẵn sàng tại tủ', { exact: true })).toBeVisible();
+  const sendOtpBtn = page.getByRole('button', { name: 'Gửi mã nhận hoa', exact: true });
+  await expect(sendOtpBtn).toBeVisible();
+  await sendOtpBtn.click();
+  await expect(
+    page.getByText(
+      'Đã gửi mã nhận hoa tới c***@gmail.com. Khách vui lòng kiểm tra hộp thư và thư rác.',
+    ),
+  ).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Gửi lại mã/ })).toBeDisabled();
+  await expect(page.getByText('Hoa đã sẵn sàng tại tủ', { exact: true })).toBeVisible();
   expect(
     writes.filter((path) => path.includes('device_event') || path.includes('request_pickup')),
   ).toEqual([]);
+  role = 'CUSTOMER';
+  await page.goto('/tai-khoan#web-orders');
+  await page.locator('details[id^="preorder-"] > summary').click();
+  await expect(
+    page.getByText(
+      'Đến đúng kiosk trong khung giờ nhận, chọn “Nhận đơn đặt trước” và nhập OTP 8 chữ số được gửi qua email.',
+    ),
+  ).toBeVisible();
+  await expect(page.getByLabel('Thông tin nhận hoa tại Kiosk')).toContainText('ABCD2345');
+  await expect(page.getByLabel('Thông tin nhận hoa tại Kiosk')).toContainText(
+    'Đã thanh toán nhưng chưa nhận hoa?',
+  );
   role = 'ADMIN';
   await page.goto('/admin/reports');
   await expect(page.getByRole('cell', { name: 'Sự cố thiết bị đang mở' })).toBeVisible();
   await page.getByLabel('Chọn báo cáo').selectOption('v_platform_revenue');
   await expect(page.getByText(/Chưa có dữ liệu cho báo cáo này/)).toBeVisible();
+});
+
+test('payOS return opens the saved request and trusts server status instead of callback status', async ({
+  page,
+}) => {
+  const row = {
+    ...order(),
+    state: 'ORDERED',
+    orderStatus: 'AWAITING_PAYMENT',
+    orderId: '80000000-0000-0000-0000-000000000001',
+    trackingToken: 'ABCD2345',
+  };
+  await common(
+    page,
+    () => 'CUSTOMER',
+    () => [row],
+  );
+  await page.addInitScript(
+    ({ requestId }) =>
+      sessionStorage.setItem(
+        'florabot-preorder-payment',
+        JSON.stringify({ requestId, page: 1, orderCode: 123456, savedAt: Date.now() }),
+      ),
+    { requestId: row.id },
+  );
+  await page.goto('/tai-khoan?orderCode=123456&status=PAID&cancel=false');
+  await expect(page).toHaveURL(/requestId=.*paymentReturn=1#web-orders/);
+  await expect(page.getByText('Đã trở về từ payOS.', { exact: false })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Tạo liên kết thanh toán' })).toBeVisible();
+  await expect(page.getByLabel('Thông tin nhận hoa tại Kiosk')).toHaveCount(0);
 });
 
 test('Unknown write outcome remains locked across reload until an explicit successful read', async ({
@@ -247,7 +308,7 @@ test('Unknown write outcome remains locked across reload until an explicit succe
     await route.abort('failed');
   });
   await page.goto('/seller/orders');
-  await page.locator('main li > details > summary').click();
+  await page.locator('details[id^="preorder-"] > summary').click();
   await page.getByRole('button', { name: 'Hủy yêu cầu', exact: true }).click();
   await page.getByLabel('Lý do hủy').fill('Khách yêu cầu đối chiếu và hủy đơn.');
   await page
@@ -256,7 +317,7 @@ test('Unknown write outcome remains locked across reload until an explicit succe
   await page.getByRole('button', { name: 'Xác nhận hủy đơn', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Kiểm tra kết quả từ máy chủ' })).toBeVisible();
   await page.reload();
-  await page.locator('main li > details > summary').click();
+  await page.locator('details[id^="preorder-"] > summary').click();
   await expect(page.getByRole('button', { name: 'Hủy yêu cầu', exact: true })).toBeDisabled();
   await page.getByRole('button', { name: 'Kiểm tra kết quả từ máy chủ' }).click();
   await expect(page.getByRole('button', { name: 'Hủy yêu cầu', exact: true })).toBeEnabled();
@@ -272,7 +333,7 @@ for (const width of [390, 1440])
       () => [{ ...order(), state: 'ORDERED', orderStatus: 'PAID' }],
     );
     await page.goto('/seller/orders');
-    await page.locator('main li > details > summary').click();
+    await page.locator('details[id^="preorder-"] > summary').click();
     await expect(page.getByRole('list', { name: 'Tiến độ đơn đặt hoa' })).toBeVisible();
     await expect(
       page.getByRole('list', { name: 'Tiến độ đơn đặt hoa' }).locator('[aria-current="step"]'),
@@ -302,7 +363,7 @@ test('Completed and cancelled orders show their status without implying cancelle
     ],
   );
   await page.goto('/seller/orders');
-  const rows = page.locator('main li:has(> details)');
+  const rows = page.locator('li:has(> details[id^="preorder-"])');
   await rows.nth(0).locator(':scope > details > summary').click();
   await rows.nth(1).locator(':scope > details > summary').click();
   await expect(
@@ -345,4 +406,125 @@ test('Every sample catalog item is display-only, including items with illustrati
   await page.getByRole('button', { name: 'Nhắn tin với shop', exact: true }).first().click();
   await expect(page.getByText(/Mẫu minh họa chưa gắn với shop thật/)).toBeVisible();
   expect(writes).toBe(0);
+});
+
+test('Seller pickup OTP button enforces eligibility, handles 409/429/503 without auto-retry, and counts down resendAfterSeconds', async ({
+  page,
+}) => {
+  const readyOrder = {
+    ...order(),
+    id: '70000000-0000-0000-0000-000000000077',
+    state: 'ORDERED',
+    orderStatus: 'PAID',
+    orderId: '80000000-0000-0000-0000-000000000077',
+    orderCode: 'PRE-OTP-77',
+    ready: true,
+    pickupBefore: new Date(Date.now() + 2 * 3600000).toISOString(),
+  };
+  const expiredPickupOrder = {
+    ...order(),
+    id: '70000000-0000-0000-0000-000000000078',
+    state: 'ORDERED',
+    orderStatus: 'PAID',
+    orderId: '80000000-0000-0000-0000-000000000078',
+    orderCode: 'PRE-EXP-78',
+    ready: true,
+    pickupBefore: new Date(Date.now() - 60000).toISOString(),
+  };
+  const dispensingOrder = {
+    ...order(),
+    id: '70000000-0000-0000-0000-000000000079',
+    state: 'ORDERED',
+    orderStatus: 'DISPENSING',
+    orderId: '80000000-0000-0000-0000-000000000079',
+    orderCode: 'PRE-DISP-79',
+    ready: true,
+    pickupBefore: new Date(Date.now() + 2 * 3600000).toISOString(),
+  };
+
+  let otpMode: '503' | '409' | '429' | '200' = '503';
+  let otpCallCount = 0;
+
+  await common(
+    page,
+    () => 'SELLER',
+    () => [readyOrder, expiredPickupOrder, dispensingOrder],
+  );
+
+  await page.route(`**/api/me/preorders/${readyOrder.id}/pickup-otp`, async (route) => {
+    otpCallCount++;
+    expect(route.request().method()).toBe('POST');
+    expect(route.request().postData()).toBeNull();
+    if (otpMode === '503') {
+      return route.fulfill({ status: 503, json: { detail: 'Dịch vụ gửi email đang bận (503).' } });
+    }
+    if (otpMode === '409') {
+      return route.fulfill({
+        status: 409,
+        json: { detail: 'Đơn chưa sẵn sàng hoặc đã hết hạn nhận.' },
+      });
+    }
+    if (otpMode === '429') {
+      return route.fulfill({
+        status: 429,
+        json: { detail: 'Vui lòng chờ trước khi gửi lại mã nhận hoa.', resendAfterSeconds: 2 },
+      });
+    }
+    return route.fulfill({
+      status: 200,
+      json: {
+        requestId: readyOrder.id,
+        orderId: readyOrder.orderId,
+        recipientMasked: 'c***@gmail.com',
+        expiresAt: readyOrder.pickupBefore,
+        resendAfterSeconds: 2,
+      },
+    });
+  });
+
+  await page.goto('/seller/orders');
+
+  // Expired pickupBefore and DISPENSING orders must NOT show the Send OTP button
+  const expiredDetails = page.locator(`#preorder-${expiredPickupOrder.id}`);
+  await expiredDetails.locator(':scope > summary').click();
+  await expect(
+    expiredDetails.getByRole('button', { name: /Gửi mã nhận hoa|Gửi lại mã/ }),
+  ).toHaveCount(0);
+
+  const dispensingDetails = page.locator(`#preorder-${dispensingOrder.id}`);
+  await dispensingDetails.locator(':scope > summary').click();
+  await expect(
+    dispensingDetails.getByRole('button', { name: /Gửi mã nhận hoa|Gửi lại mã/ }),
+  ).toHaveCount(0);
+
+  // Ready order within pickupBefore shows the Send OTP button
+  const readyDetails = page.locator(`#preorder-${readyOrder.id}`);
+  await readyDetails.locator(':scope > summary').click();
+  const sendBtn = readyDetails.getByRole('button', { name: 'Gửi mã nhận hoa', exact: true });
+  await expect(sendBtn).toBeVisible();
+
+  // 1. 503 error does NOT auto-retry
+  await sendBtn.click();
+  await expect(readyDetails.getByText('Dịch vụ gửi email đang bận (503).')).toBeVisible();
+  expect(otpCallCount).toBe(1);
+
+  // 2. 409 error displays detail and reloads order state
+  otpMode = '409';
+  await sendBtn.click();
+  await expect(readyDetails.getByText('Đơn chưa sẵn sàng hoặc đã hết hạn nhận.')).toBeVisible();
+  expect(otpCallCount).toBe(2);
+
+  // 3. 200 success displays masked email, switches to "Gửi lại mã", locks and counts down
+  otpMode = '200';
+  await sendBtn.click();
+  await expect(
+    readyDetails.getByText(
+      'Đã gửi mã nhận hoa tới c***@gmail.com. Khách vui lòng kiểm tra hộp thư và thư rác.',
+    ),
+  ).toBeVisible();
+  const resendBtn = readyDetails.getByRole('button', { name: /Gửi lại mã/ });
+  await expect(resendBtn).toBeDisabled();
+  await expect(readyDetails.getByRole('button', { name: 'Gửi lại mã', exact: true })).toBeEnabled({
+    timeout: 4000,
+  });
 });

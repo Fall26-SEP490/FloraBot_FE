@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { Crosshair, RefreshCw } from '@florabot/ui';
 import type { CircleMarker, Map as LeafletMap } from 'leaflet';
 import type { Map as MapLibreMap, Marker as MapLibreMarker } from 'maplibre-gl';
 import 'leaflet/dist/leaflet.css';
@@ -11,6 +12,8 @@ interface KioskPickerMapProps {
   latitude: number | null;
   longitude: number | null;
   onLocationSelect?: (lat: number, lon: number) => void;
+  onRequestGps?: () => void;
+  gpsLoading?: boolean;
   interactive?: boolean;
   ariaLabel?: string;
   zoom?: number;
@@ -20,6 +23,8 @@ export default function KioskPickerMap({
   latitude,
   longitude,
   onLocationSelect,
+  onRequestGps,
+  gpsLoading = false,
   interactive = true,
   ariaLabel = 'Bản đồ định vị kiosk',
   zoom,
@@ -42,6 +47,11 @@ export default function KioskPickerMap({
     onLocationSelectRef.current = onLocationSelect;
     interactiveRef.current = interactive;
   }, [onLocationSelect, interactive]);
+
+  useEffect(() => {
+    initialLatRef.current = latitude;
+    initialLonRef.current = longitude;
+  }, [latitude, longitude]);
 
   useEffect(() => {
     let cancelled = false;
@@ -234,9 +244,37 @@ export default function KioskPickerMap({
     });
   }, [latitude, longitude]);
 
+  const hasValidCoords = isValidLatitude(latitude) && isValidLongitude(longitude);
+
   return (
     <div className="kiosk-map-wrapper">
-      <div ref={containerRef} className="kiosk-picker-map" role="region" aria-label={ariaLabel} />
+      <div className="kiosk-map-canvas-wrap">
+        <div
+          ref={containerRef}
+          className="kiosk-picker-map"
+          role="region"
+          aria-label={ariaLabel}
+          data-has-pin={hasValidCoords ? 'true' : 'false'}
+          data-pin-lat={hasValidCoords ? latitude.toFixed(6) : ''}
+          data-pin-lon={hasValidCoords ? longitude.toFixed(6) : ''}
+        />
+        {onRequestGps && (
+          <button
+            type="button"
+            className={`kiosk-map-gps-btn ${gpsLoading ? 'is-loading' : ''}`}
+            onClick={onRequestGps}
+            disabled={gpsLoading}
+            title="Dùng vị trí hiện tại"
+            aria-label={gpsLoading ? 'Đang lấy vị trí hiện tại' : 'Dùng vị trí hiện tại'}
+          >
+            {gpsLoading ? (
+              <RefreshCw size={18} className="spin" aria-hidden="true" />
+            ) : (
+              <Crosshair size={18} aria-hidden="true" />
+            )}
+          </button>
+        )}
+      </div>
       <div className="kiosk-map-footer">
         <p className="kiosk-map-attribution">
           {tileConfig.isGoong ? (

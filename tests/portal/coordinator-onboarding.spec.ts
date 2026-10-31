@@ -44,6 +44,54 @@ const application = {
   canVoluntaryCancel: true,
 };
 
+async function mockGoongPlaces(page: Page, lat = 10.8, lng = 106.8) {
+  await page.route(/rsapi\.goong\.io\/Place\/AutoComplete/, async (route) => {
+    const input = new URL(route.request().url()).searchParams.get('input') || 'Địa chỉ gợi ý';
+    return route.fulfill({
+      status: 200,
+      json: {
+        status: 'OK',
+        predictions: [
+          {
+            place_id: 'mock-place-id',
+            description: input,
+            structured_formatting: {
+              main_text: input,
+              secondary_text: 'TP.HCM',
+            },
+          },
+        ],
+      },
+    });
+  });
+
+  await page.route(/rsapi\.goong\.io\/Place\/Detail/, async (route) =>
+    route.fulfill({
+      status: 200,
+      json: {
+        status: 'OK',
+        result: {
+          place_id: 'mock-place-id',
+          name: 'Địa điểm kiểm thử',
+          formatted_address: 'Địa điểm kiểm thử, TP.HCM',
+          geometry: { location: { lat, lng } },
+        },
+      },
+    }),
+  );
+}
+
+async function selectAddressSuggestion(page: Page, addressText: string) {
+  const input = page.getByLabel('Địa chỉ lắp đặt cụ thể');
+  await input.fill(addressText);
+  const option = page
+    .getByRole('listbox', { name: 'Gợi ý địa chỉ Goong' })
+    .getByRole('option')
+    .first();
+  await expect(option).toBeVisible();
+  await option.click();
+}
+
 async function mockCustomer(
   page: Page,
   options: { checkoutUrl?: string; hasApplication?: boolean } = {},
@@ -114,12 +162,13 @@ test.describe('Coordinator onboarding acceptance boundaries', () => {
         name: 'Bản đồ chọn tọa độ lắp đặt kiosk',
         exact: true,
       });
-      await expect(map).toHaveClass(/leaflet-container/);
-      await expect(map.locator('.leaflet-control-zoom-in')).toBeVisible();
+      await expect(map).toHaveClass(/(leaflet-container|maplibregl-map)/);
+      await expect(map.locator('.leaflet-control-zoom-in, .maplibregl-ctrl-zoom-in')).toBeVisible();
       expect((await map.boundingBox())?.height).toBeGreaterThanOrEqual(280);
+      await expect(page.getByLabel('Vĩ độ (Latitude)')).toHaveCount(0);
+      await expect(page.getByLabel('Kinh độ (Longitude)')).toHaveCount(0);
       await map.click({ position: { x: 130, y: 140 } });
-      await expect(page.getByLabel('Vĩ độ (Latitude)')).not.toHaveValue('');
-      await expect(page.getByLabel('Kinh độ (Longitude)')).not.toHaveValue('');
+      await expect(map).toHaveAttribute('data-has-pin', 'true');
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth),
       ).toBe(false);
@@ -201,24 +250,22 @@ test.describe('Coordinator onboarding acceptance boundaries', () => {
     page,
   }) => {
     const calls = await mockCustomer(page, { hasApplication: false });
+    await mockGoongPlaces(page, 0, 0);
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/thue-kiosk');
     await page.getByRole('radio').click();
     await page.getByLabel('Tên shop hoa').fill('Shop kiểm thử');
     await page.getByLabel('Số điện thoại kinh doanh').fill('0901234567');
     await page.getByLabel('Email liên hệ công việc').fill('shop@example.invalid');
-    await page.getByLabel('Địa chỉ lắp đặt cụ thể').fill('Địa chỉ kiểm thử không có thiết bị thật');
+    await selectAddressSuggestion(page, 'Địa chỉ kiểm thử không có thiết bị thật');
     await page.getByLabel('Tên ngân hàng').fill('Ngân hàng kiểm thử');
     await page.getByLabel('Tên chủ tài khoản').fill('NGUOI KIEM THU');
     await page.getByLabel('Số tài khoản ngân hàng').fill('00123456');
-    await page.getByLabel('Vĩ độ (Latitude)').fill('10.8');
-    await page.getByLabel('Kinh độ (Longitude)').fill('106.8');
-    await page.getByLabel('Vĩ độ (Latitude)').fill('91');
+    // Editing address after selecting suggestion invalidates coordinates and blocks submit
+    await page.getByLabel('Địa chỉ lắp đặt cụ thể').fill('Địa chỉ đã sửa tay chưa chọn lại');
     await page.getByRole('button', { name: 'Nộp hồ sơ thuê kiosk', exact: true }).click();
-    await expect(page.getByLabel('Vĩ độ (Latitude)')).toHaveValue('91');
     expect(calls.create).toBe(0);
-    await page.getByLabel('Vĩ độ (Latitude)').fill('0');
-    await page.getByLabel('Kinh độ (Longitude)').fill('0');
+    await selectAddressSuggestion(page, 'Địa chỉ kiểm thử tọa độ 0');
     await page.getByRole('button', { name: 'Nộp hồ sơ thuê kiosk', exact: true }).click();
     await expect(page.getByRole('heading', { name: /Hồ sơ thuê: Shop kiểm thử/ })).toBeVisible();
     expect(calls.create).toBe(1);
@@ -289,6 +336,7 @@ test.describe('Coordinator onboarding acceptance boundaries', () => {
       return route.fulfill({ json: [] });
     });
 
+    await mockGoongPlaces(page, 10.775, 106.7);
     await page.goto('/thue-kiosk');
     await expect(page.getByText(/Hồ sơ trước \(Shop Đã Hoàn Tiền\): Đã hoàn tiền/)).toBeVisible();
     await expect(
@@ -301,9 +349,7 @@ test.describe('Coordinator onboarding acceptance boundaries', () => {
     await page.getByLabel('Tên shop hoa').fill('Shop Tái Đăng Ký Sau Hoàn Tiền');
     await page.getByLabel('Số điện thoại kinh doanh').fill('0908889999');
     await page.getByLabel('Email liên hệ công việc').fill('reapply@example.invalid');
-    await page.getByLabel('Địa chỉ lắp đặt cụ thể').fill('999 Đường Lê Lợi, Quận 1');
-    await page.getByLabel('Vĩ độ (Latitude)').fill('10.775');
-    await page.getByLabel('Kinh độ (Longitude)').fill('106.700');
+    await selectAddressSuggestion(page, '999 Đường Lê Lợi, Quận 1');
     await page.getByLabel('Tên ngân hàng').fill('Vietcombank');
     await page.getByLabel('Tên chủ tài khoản').fill('NGUYEN HOAN TIEN');
     await page.getByLabel('Số tài khoản ngân hàng').fill('001122334455');
@@ -400,14 +446,13 @@ test.describe('Coordinator onboarding acceptance boundaries', () => {
       return route.fulfill({ json: [] });
     });
 
+    await mockGoongPlaces(page, 10.771, 106.701);
     await page.goto('/thue-kiosk');
     await page.getByRole('radio').click();
     await page.getByLabel('Tên shop hoa').fill('Shop Riêng Của User A');
     await page.getByLabel('Số điện thoại kinh doanh').fill('0901112222');
     await page.getByLabel('Email liên hệ công việc').fill('usera@example.invalid');
-    await page.getByLabel('Địa chỉ lắp đặt cụ thể').fill('111 Đường A, Phường 1, Quận 1');
-    await page.getByLabel('Vĩ độ (Latitude)').fill('10.771');
-    await page.getByLabel('Kinh độ (Longitude)').fill('106.701');
+    await selectAddressSuggestion(page, '111 Đường A, Phường 1, Quận 1');
     await page.getByLabel('Tên ngân hàng').fill('VCB');
     await page.getByLabel('Tên chủ tài khoản').fill('USER A');
     await page.getByLabel('Số tài khoản ngân hàng').fill('111222333');

@@ -26,7 +26,7 @@ function CustomerKioskContent({
     useKioskApplication(sessionData);
 
   const form = useKioskApplicationForm();
-  const geo = useKioskGeolocation(form.handleLocationSelect);
+  const geo = useKioskGeolocation(form.handleGpsLocationSelect, form.installationAddress);
   const actions = useKioskApplicationActions(sessionData);
 
   const handleFormSubmit = (e: React.FormEvent) => {
@@ -161,12 +161,18 @@ function CustomerKioskContent({
           <span aria-hidden="true">/</span>
           <span aria-current="page">Thuê Kiosk</span>
         </nav>
-        <h1>Đăng ký thuê Kiosk hoa thông minh</h1>
-        <p className="kiosk-onboarding-lead">
-          FloraBot cung cấp mô hình kiosk hoa giả với 2 phân vùng ô riêng biệt: ô vãng lai (khách
-          mua trực tiếp) và ô đặt trước (khách nhận hoa hẹn trước). Phí thuê tính theo năm bắt đầu
-          từ ngày nghiệm thu bàn giao thực tế.
-        </p>
+        <div className="kiosk-lease-heading">
+          <div>
+            <span className="kiosk-lease-eyebrow">ĐỒNG HÀNH CÙNG FLORABOT</span>
+            <h1>Mở điểm bán hoa của bạn</h1>
+            <p className="kiosk-onboarding-lead">
+              Chọn gói thuê, đề xuất vị trí và gửi hồ sơ để bắt đầu kinh doanh cùng FloraBot.
+            </p>
+          </div>
+          <p className="kiosk-lease-term">
+            Thuê theo năm<span>Tính từ ngày bàn giao thực tế</span>
+          </p>
+        </div>
       </header>
 
       {/* Active Application Status Panel */}
@@ -217,71 +223,93 @@ function CustomerKioskContent({
             error={form.formErrors.package}
           />
 
-          <KioskApplicationForm
-            shopInfo={{
-              shopName: form.shopName,
-              onShopNameChange: (val) => {
-                form.setShopName(val);
-                form.clearFieldError('shopName');
-              },
-              shopNameError: form.formErrors.shopName,
-              phone: form.phone,
-              onPhoneChange: (val) => {
-                form.setPhone(val);
-                form.clearFieldError('phone');
-              },
-              phoneError: form.formErrors.phone,
-              contactEmail: form.contactEmail,
-              onContactEmailChange: (val) => {
-                form.setContactEmail(val);
-                form.clearFieldError('contactEmail');
-              },
-              contactEmailError: form.formErrors.contactEmail,
-            }}
-            location={{
-              installationAddress: form.installationAddress,
-              onAddressChange: (val) => {
-                form.setInstallationAddress(val);
-                form.clearFieldError('installationAddress');
-              },
-              addressError: form.formErrors.installationAddress,
-              latitude: form.latitude,
-              longitude: form.longitude,
-              latInput: form.latInput,
-              lonInput: form.lonInput,
-              onLocationSelect: form.handleLocationSelect,
-              onLatInputChange: form.handleLatInputChange,
-              onLonInputChange: form.handleLonInputChange,
-              coordinatesError: form.formErrors.coordinates,
-              gpsLoading: geo.gpsLoading,
-              gpsMessage: geo.gpsMessage,
-              onRequestGps: geo.requestGps,
-            }}
-            payout={{
-              bankName: form.bankName,
-              onBankNameChange: (val) => {
-                form.setBankName(val);
-                form.clearFieldError('bankName');
-              },
-              bankNameError: form.formErrors.bankName,
-              bankHolder: form.bankHolder,
-              onBankHolderChange: (val) => {
-                form.setBankHolder(val);
-                form.clearFieldError('bankHolder');
-              },
-              bankHolderError: form.formErrors.bankHolder,
-              bankAccountNumber: form.bankAccountNumber,
-              onBankAccountNumberChange: (val) => {
-                form.setBankAccountNumber(val);
-                form.clearFieldError('bankAccountNumber');
-              },
-              bankAccountNumberError: form.formErrors.bankAccountNumber,
-            }}
-            submitError={actions.submitError}
-            errorBannerRef={actions.errorBannerRef}
-            isPending={actions.applyMutation.isPending}
-            onSubmit={handleFormSubmit}
-          />
+          <div className="kiosk-registration-layout">
+            <aside className="kiosk-registration-guide" aria-label="Hướng dẫn đăng ký">
+              <span className="kiosk-lease-eyebrow">BƯỚC TIẾP THEO</span>
+              <h2>Chuẩn bị điểm bán của bạn</h2>
+              <p>Hoàn thiện thông tin để FloraBot xem xét vị trí và liên hệ với bạn.</p>
+              <ol>
+                <li>
+                  <strong>Thông tin cửa hàng</strong>
+                  <span>Tên shop và kênh liên hệ.</span>
+                </li>
+                <li>
+                  <strong>Vị trí lắp đặt</strong>
+                  <span>Địa chỉ cụ thể và ghim bản đồ.</span>
+                </li>
+                <li>
+                  <strong>Tài khoản nhận tiền</strong>
+                  <span>Thông tin ngân hàng của shop.</span>
+                </li>
+              </ol>
+              <p className="kiosk-guide-note">
+                Sau khi nộp, bạn có thể theo dõi thanh toán và tiến độ lắp đặt ngay tại đây.
+              </p>
+            </aside>
+            <KioskApplicationForm
+              shopInfo={{
+                shopName: form.shopName,
+                onShopNameChange: (val) => {
+                  form.setShopName(val);
+                  form.clearFieldError('shopName');
+                },
+                shopNameError: form.formErrors.shopName,
+                phone: form.phone,
+                onPhoneChange: (val) => {
+                  form.setPhone(val);
+                  form.clearFieldError('phone');
+                },
+                phoneError: form.formErrors.phone,
+                contactEmail: form.contactEmail,
+                onContactEmailChange: (val) => {
+                  form.setContactEmail(val);
+                  form.clearFieldError('contactEmail');
+                },
+                contactEmailError: form.formErrors.contactEmail,
+              }}
+              location={{
+                installationAddress: form.installationAddress,
+                addressSelected: form.addressSelected,
+                addressEditedAfterSelect: form.addressEditedAfterSelect,
+                locationSource: form.locationSource,
+                onAddressChange: form.handleAddressChange,
+                onSuggestionSelect: form.handleSuggestionSelect,
+                addressError: form.formErrors.installationAddress,
+                latitude: form.latitude,
+                longitude: form.longitude,
+                onLocationSelect: form.handleLocationSelect,
+                coordinatesError: form.formErrors.coordinates,
+                gpsLoading: geo.gpsLoading,
+                gpsMessage: geo.gpsMessage,
+                gpsError: geo.gpsError,
+                onRequestGps: geo.requestGps,
+              }}
+              payout={{
+                bankName: form.bankName,
+                onBankNameChange: (val) => {
+                  form.setBankName(val);
+                  form.clearFieldError('bankName');
+                },
+                bankNameError: form.formErrors.bankName,
+                bankHolder: form.bankHolder,
+                onBankHolderChange: (val) => {
+                  form.setBankHolder(val);
+                  form.clearFieldError('bankHolder');
+                },
+                bankHolderError: form.formErrors.bankHolder,
+                bankAccountNumber: form.bankAccountNumber,
+                onBankAccountNumberChange: (val) => {
+                  form.setBankAccountNumber(val);
+                  form.clearFieldError('bankAccountNumber');
+                },
+                bankAccountNumberError: form.formErrors.bankAccountNumber,
+              }}
+              submitError={actions.submitError}
+              errorBannerRef={actions.errorBannerRef}
+              isPending={actions.applyMutation.isPending}
+              onSubmit={handleFormSubmit}
+            />
+          </div>
         </>
       )}
 

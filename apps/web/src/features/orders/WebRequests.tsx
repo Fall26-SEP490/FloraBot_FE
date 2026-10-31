@@ -15,9 +15,10 @@ import {
   ArrowRight,
   Flower2,
 } from '@florabot/ui';
-import { ApiError, queryClient, request } from '@/shared/lib/api';
+import { ApiError, queryClient, request, sessionQuery } from '@/shared/lib/api';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
 import {
+  canSendPreorderPickupOtp,
   matchesOrderFilter,
   needsOrderAction,
   orderClosed,
@@ -27,8 +28,9 @@ import {
   money,
   when,
 } from './orders.utils';
-import type { OrderFilter, Page, WebOrder } from './orders.types';
+import type { OrderFilter, Page, SendPreorderPickupOtpResponse, WebOrder } from './orders.types';
 import styles from './seller-orders.module.css';
+import { rememberPreorderPayment } from './payment-return';
 
 const sellerFilters: { value: OrderFilter; label: string }[] = [
   { value: 'all', label: 'Tất cả' },
@@ -61,11 +63,15 @@ function OrderActions({
   row,
   base,
   mode,
+  role,
+  page,
   onReload,
 }: {
   row: WebOrder;
   base: string;
   mode: 'member' | 'seller' | 'admin';
+  role?: string;
+  page: number;
   onReload: () => Promise<void>;
 }) {
   const [now, setNow] = useState(() => Date.now());
@@ -89,6 +95,7 @@ function OrderActions({
   const [notice, setNotice] = useState('');
   const [copiedField, setCopiedField] = useState<'' | 'orderId' | 'token'>('');
   const [link, setLink] = useState<string | null>(null);
+  const [paymentCode, setPaymentCode] = useState<number | null>(null);
   const [price, setPrice] = useState(String(row.quotedPrice || ''));
   const [note, setNote] = useState('');
   const [reject, setReject] = useState(false);
@@ -105,6 +112,88 @@ function OrderActions({
     pickupAt: string;
     note: string | null;
   } | null>(null);
+  const [otpSending, setOtpSending] = useState(false);
+  const otpSendingRef = useRef(false);
+  const [otpHasSent, setOtpHasSent] = useState(false);
+  const [otpCooldownUntil, setOtpCooldownUntil] = useState<number | null>(null);
+  const otpRemainingSeconds =
+    otpCooldownUntil && otpCooldownUntil > now ? Math.ceil((otpCooldownUntil - now) / 1000) : 0;
+
+  async function sendPickupOtp() {
+    if (otpSendingRef.current || busy || uncertain || otpRemainingSeconds > 0) return;
+    otpSendingRef.current = true;
+    setOtpSending(true);
+    setError('');
+    setNotice('');
+    try {
+      const response = await fetch(`/api/me/preorders/${encodeURIComponent(row.id)}/pickup-otp`, {
+        method: 'POST',
+        credentials: 'include',
+        signal: AbortSignal.timeout(15_000),
+      });
+      const data = (await response.json().catch(() => ({}))) as Partial<
+        SendPreorderPickupOtpResponse & {
+          detail?: string;
+          title?: string;
+          message?: string;
+        }
+      >;
+
+      if (!response.ok) {
+        const serverDetail = data.detail || data.title || data.message;
+        if (response.status === 401) {
+          setError(
+            serverDetail ||
+              'Phiên đăng nhập đã hết hạn hoặc không hợp lệ. Vui lòng kiểm tra phiên đăng nhập và đăng nhập lại.',
+          );
+        } else if (response.status === 403) {
+          setError(
+            serverDetail ||
+              'Chỉ Chủ shop (Seller) sở hữu đơn mới được gửi mã nhận hoa. Vui lòng kiểm tra quyền truy cập và phiên đăng nhập.',
+          );
+        } else if (response.status === 404) {
+          setError(serverDetail || 'Không tìm thấy đơn đặt trước thuộc shop của bạn.');
+        } else if (response.status === 409) {
+          setError(
+            serverDetail ||
+              'Trạng thái đơn đặt trước đã thay đổi. Đang tải lại trạng thái mới nhất từ máy chủ.',
+          );
+          await queryClient.invalidateQueries({ queryKey: ['web-orders'] });
+        } else if (response.status === 429) {
+          if (typeof data.resendAfterSeconds === 'number' && data.resendAfterSeconds > 0) {
+            setOtpCooldownUntil(Date.now() + data.resendAfterSeconds * 1000);
+          }
+          setError(
+            serverDetail || 'Bạn đã gửi mã quá giới hạn cho phép. Vui lòng chờ trước khi gửi lại.',
+          );
+        } else if (response.status === 503 || response.status >= 500) {
+          setError(
+            serverDetail ||
+              'Chưa xác nhận gửi mã thành công do dịch vụ tạm thời gián đoạn. Hệ thống không tự gửi lại; vui lòng kiểm tra trước khi bấm gửi lại.',
+          );
+        } else {
+          setError(serverDetail || `Gửi mã thất bại (${response.status}).`);
+        }
+        return;
+      }
+
+      const masked = data.recipientMasked || 'email đăng nhập của khách';
+      const cooldownSec =
+        typeof data.resendAfterSeconds === 'number' && data.resendAfterSeconds > 0
+          ? data.resendAfterSeconds
+          : 60;
+      setOtpHasSent(true);
+      setOtpCooldownUntil(Date.now() + cooldownSec * 1000);
+      setNotice(`Đã gửi mã nhận hoa tới ${masked}. Khách vui lòng kiểm tra hộp thư và thư rác.`);
+    } catch {
+      setError(
+        'Chưa xác nhận gửi mã thành công do lỗi kết nối mạng. Hệ thống không tự gửi lại; vui lòng kiểm tra trước khi thử lại.',
+      );
+    } finally {
+      otpSendingRef.current = false;
+      setOtpSending(false);
+    }
+  }
   const slots = useQuery({
     queryKey: ['seller-kiosk-slots', row.sellerId, row.kioskId],
     queryFn: () =>
@@ -134,7 +223,10 @@ function OrderActions({
     setError('');
     setNotice('');
     try {
-      const result = await request<{ checkoutUrl?: string }>(`${base}/${row.id}/${kind}`, body);
+      const result = await request<{ checkoutUrl?: string; orderCode?: number }>(
+        `${base}/${row.id}/${kind}`,
+        body,
+      );
       if (kind === 'payment-link') {
         const url = new URL(result.checkoutUrl || '');
         if (
@@ -145,6 +237,7 @@ function OrderActions({
         )
           throw new Error('Liên kết thanh toán không hợp lệ.');
         setLink(url.href);
+        setPaymentCode(result.orderCode ?? null);
       } else {
         setAction(null);
         setConfirm(false);
@@ -266,48 +359,57 @@ function OrderActions({
       )}
       {mode === 'member' && row.orderStatus === 'PAID' && row.ready && (
         <p>
-          Hoa đã ở trong tủ. Đến đúng tủ trong khung giờ hẹn, chọn “Nhận đơn đặt trước” và xác thực
-          OTP qua SMS bằng số điện thoại đã lưu trong hồ sơ tài khoản đặt đơn. Giữ biên nhận để tra
-          cứu hoặc dùng chức năng nhận bằng biên nhận khi cần.
+          Đến đúng kiosk trong khung giờ nhận, chọn “Nhận đơn đặt trước” và nhập OTP 8 chữ số được
+          gửi qua email.
         </p>
       )}
+      {mode === 'member' &&
+        row.orderId &&
+        row.trackingToken &&
+        row.ready &&
+        ['PAID', 'DISPENSING'].includes(row.orderStatus ?? '') && (
+          <div className="order-pickup-credentials" aria-label="Thông tin nhận hoa tại Kiosk">
+            <p>
+              Giữ riêng hai mã này. Tại đúng kiosk, chọn “Đã thanh toán nhưng chưa nhận hoa?”, nhập
+              ID biên nhận và mã 8 ký tự bên dưới, rồi xác nhận mở ô trong giờ hẹn.
+            </p>
+            <dl className="bank-summary">
+              <div>
+                <dt>ID biên nhận (nhập tại Kiosk)</dt>
+                <dd>
+                  <code>{row.orderId}</code>{' '}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => void copyText(row.orderId!, 'orderId')}
+                  >
+                    {copiedField === 'orderId' ? 'Đã chép ID' : 'Sao chép ID'}
+                  </Button>
+                </dd>
+              </div>
+              <div>
+                <dt>Mã biên nhận 8 ký tự</dt>
+                <dd>
+                  <code>{row.trackingToken}</code>{' '}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => void copyText(row.trackingToken!, 'token')}
+                  >
+                    {copiedField === 'token' ? 'Đã chép mã' : 'Sao chép mã'}
+                  </Button>
+                </dd>
+              </div>
+            </dl>
+          </div>
+        )}
       {mode === 'member' && row.orderId && row.trackingToken && (
-        <div className="order-pickup-credentials" aria-label="Thông tin nhận hoa tại Kiosk">
-          <dl className="bank-summary">
-            <div>
-              <dt>ID biên nhận (nhận bằng biên nhận)</dt>
-              <dd>
-                <code>{row.orderId}</code>{' '}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => void copyText(row.orderId!, 'orderId')}
-                >
-                  {copiedField === 'orderId' ? 'Đã chép ID' : 'Sao chép ID'}
-                </Button>
-              </dd>
-            </div>
-            <div>
-              <dt>Mã biên nhận 8 ký tự</dt>
-              <dd>
-                <code>{row.trackingToken}</code>{' '}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => void copyText(row.trackingToken!, 'token')}
-                >
-                  {copiedField === 'token' ? 'Đã chép mã' : 'Sao chép mã'}
-                </Button>
-              </dd>
-            </div>
-          </dl>
-          <a
-            href={`/receipt#order=${encodeURIComponent(row.orderId)}&token=${encodeURIComponent(row.trackingToken)}`}
-            referrerPolicy="no-referrer"
-          >
-            Xem biên nhận, mã nhận hoa và hỗ trợ hoàn tiền
-          </a>
-        </div>
+        <a
+          href={`/receipt#order=${encodeURIComponent(row.orderId)}&token=${encodeURIComponent(row.trackingToken)}`}
+          referrerPolicy="no-referrer"
+        >
+          Xem biên nhận và hỗ trợ hoàn tiền
+        </a>
       )}
       {!action && (
         <div className="stock-actions">
@@ -368,6 +470,21 @@ function OrderActions({
                 Nạp hoa cho đơn này
               </Button>
             )}
+          {mode === 'seller' && canSendPreorderPickupOtp(row, role, now) && (
+            <Button
+              type="button"
+              disabled={busy || uncertain || otpSending || otpRemainingSeconds > 0}
+              onClick={() => void sendPickupOtp()}
+            >
+              {otpSending
+                ? 'Đang gửi mã…'
+                : otpRemainingSeconds > 0
+                  ? `Gửi lại mã (${otpRemainingSeconds}s)`
+                  : otpHasSent
+                    ? 'Gửi lại mã'
+                    : 'Gửi mã nhận hoa'}
+            </Button>
+          )}
           {canCancel && (
             <Button
               variant="outline"
@@ -389,8 +506,15 @@ function OrderActions({
         </p>
       )}
       {link && row.orderStatus === 'AWAITING_PAYMENT' && (
-        <a className="button button-primary" href={link} target="_blank" rel="noopener noreferrer">
-          Mở trang thanh toán payOS (tab mới)
+        <a
+          className="button button-primary"
+          href={link}
+          rel="noreferrer"
+          onClick={() => {
+            if (paymentCode !== null) rememberPreorderPayment(row.id, page, paymentCode);
+          }}
+        >
+          Mở trang thanh toán payOS
         </a>
       )}
       {action && (
@@ -708,6 +832,7 @@ export default function WebRequests({
   mode: 'member' | 'seller' | 'admin';
   sellerId?: string;
 }) {
+  const session = useQuery(sessionQuery);
   const params = useSearchParams();
   const initialPage = Number(params.get('page'));
   const initialFilter = params.get('filter');
@@ -742,6 +867,31 @@ export default function WebRequests({
     enabled: mode !== 'seller' || Boolean(sellerId),
   });
   const items = query.data?.items ?? [];
+  const returnedRequest = mode === 'member' ? params.get('requestId') : null;
+  const [readyNotice, setReadyNotice] = useState('');
+  const previousReady = useRef<Map<string, boolean>>(new Map());
+  const scrolledRequest = useRef<string | null>(null);
+  useEffect(() => {
+    if (mode !== 'member' || !query.data) return;
+    for (const row of query.data.items) {
+      const ready = row.orderStatus === 'PAID' && row.ready;
+      if (ready && previousReady.current.get(row.id) === false) {
+        setReadyNotice(
+          `Đơn ${row.orderCode || row.id}: hoa đã sẵn sàng tại ${row.kioskName || 'tủ nhận'}. Nhận từ ${when(row.pickupAt)} đến ${when(row.pickupBefore)}.`,
+        );
+      }
+      previousReady.current.set(row.id, ready);
+    }
+  }, [query.data, mode]);
+  useEffect(() => {
+    if (returnedRequest && query.data && scrolledRequest.current !== returnedRequest) {
+      const target = document.getElementById(`preorder-${returnedRequest}`);
+      if (target) {
+        target.scrollIntoView({ block: 'center' });
+        scrolledRequest.current = returnedRequest;
+      }
+    }
+  }, [returnedRequest, query.data]);
   const Container = mode === 'seller' ? 'div' : 'section';
   const filtered = items.filter(
     (row) =>
@@ -764,6 +914,17 @@ export default function WebRequests({
       <h2 id="web-orders-title" className={mode === 'seller' ? 'sr-only' : undefined}>
         {mode === 'member' ? 'Đơn đặt trước' : 'Đơn đặt trước từ website'}
       </h2>
+      {mode === 'member' && params.get('paymentReturn') === '1' && (
+        <p role="status">
+          Đã trở về từ payOS. Trạng thái đơn bên dưới được đối chiếu với máy chủ; nếu còn chờ thanh
+          toán, vui lòng chờ cập nhật. Mã nhận hoa xuất hiện khi shop đã nạp hoa vào tủ.
+        </p>
+      )}
+      {mode === 'member' && (
+        <p role="status" aria-live="polite">
+          {readyNotice}
+        </p>
+      )}
       {mode !== 'seller' && (
         <p>
           {mode === 'member'
@@ -966,7 +1127,7 @@ export default function WebRequests({
           <ul className={mode === 'seller' ? styles.orderList : 'member-orders'}>
             {filtered.map((row) => (
               <li key={row.id}>
-                <details>
+                <details id={`preorder-${row.id}`} open={row.id === returnedRequest || undefined}>
                   <summary className={mode === 'seller' ? styles.orderSummary : undefined}>
                     {mode === 'seller' ? (
                       <span className={styles.orderHeading}>
@@ -1046,6 +1207,8 @@ export default function WebRequests({
                     row={row}
                     base={base}
                     mode={mode}
+                    role={session.data?.role}
+                    page={page}
                     onReload={async () => {
                       const fresh = await query.refetch();
                       if (fresh.isError || !fresh.data?.items.some((item) => item.id === row.id))
