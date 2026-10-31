@@ -3,11 +3,18 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { registrationSchema, packages, type RegistrationInput } from '@florabot/contracts';
+import {
+  createRegistrationSchema,
+  resolvePackageId,
+  priceVnd,
+  type LandingRegistrationInput as RegistrationInput,
+} from './landing-data';
+import { PackageStatus, useLandingPackages } from './LandingPackages';
 import { ArrowUpRight, Button, useHydrated } from '@florabot/ui';
 
 export default function Registration() {
   const ready = useHydrated();
+  const { query, plans, selectedId, select } = useLandingPackages();
   const [status, setStatus] = useState('');
   const [sent, setSent] = useState(false);
   const {
@@ -17,28 +24,25 @@ export default function Registration() {
     setError,
     formState: { errors, isSubmitting },
   } = useForm<RegistrationInput>({
-    resolver: zodResolver(registrationSchema),
-    defaultValues: { packageId: packages[0].id, website: '' },
+    resolver: zodResolver(createRegistrationSchema(plans)),
+    defaultValues: { packageId: '', website: '' },
   });
   useEffect(() => {
-    const choose = (event: Event) => {
-      if (sent) return;
-      const id: unknown =
-        (event as CustomEvent).detail || document.documentElement.dataset.selectedPackage;
-      const selected = packages.find((p) => p.id === id);
-      if (selected) {
-        setValue('packageId', selected.id);
-        setStatus(`Đã chọn gói ${selected.name}.`);
-      }
-    };
-    window.addEventListener('florabot:package', choose);
-    choose(new Event('initial-package'));
-    return () => window.removeEventListener('florabot:package', choose);
-  }, [setValue, sent]);
+    if (sent) return;
+    setValue('packageId', selectedId);
+  }, [selectedId, setValue, sent]);
   async function submit(values: RegistrationInput) {
+    if (!query.isSuccess || !resolvePackageId(plans, values.packageId)) {
+      setError(
+        'packageId',
+        { message: 'Chọn một gói đang hoạt động trước khi gửi.' },
+        { shouldFocus: true },
+      );
+      return;
+    }
     setStatus('Đang gửi đăng ký…');
     try {
-      const response = await fetch(`${'/api'}/sellers`, {
+      const response = await fetch('/api/sellers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
@@ -143,13 +147,22 @@ export default function Registration() {
           <select
             id="package"
             {...register('packageId')}
-            disabled={sent}
+            value={selectedId}
+            onChange={(event) => {
+              setValue('packageId', event.target.value, {
+                shouldDirty: true,
+                shouldValidate: true,
+              });
+              select(event.target.value);
+            }}
+            disabled={sent || !query.isSuccess || !plans.length}
             aria-invalid={!!errors.packageId}
             aria-describedby={errors.packageId ? 'package-error' : undefined}
           >
-            {packages.map((p) => (
+            <option value="">Chọn gói đang hoạt động</option>
+            {plans.map((p) => (
               <option value={p.id} key={p.id}>
-                {p.name} · {p.slots} ô
+                {p.name} · {p.totalSlots} ô · {priceVnd(p.annualFee)}/năm
               </option>
             ))}
           </select>
@@ -160,6 +173,7 @@ export default function Registration() {
           )}
         </div>
       </div>
+      <PackageStatus form />
       <div className="honeypot" aria-hidden="true">
         <label htmlFor="website">Website</label>
         <input id="website" tabIndex={-1} autoComplete="off" {...register('website')} />
@@ -168,12 +182,18 @@ export default function Registration() {
         FloraBot sẽ liên hệ để tư vấn gói thuê.{' '}
         <a href="/chinh-sach-rieng-tu">Chính sách riêng tư</a>.
       </p>
-      <Button type="submit" disabled={!ready || isSubmitting || sent}>
+      <Button
+        type="submit"
+        disabled={!ready || isSubmitting || sent || !query.isSuccess || !plans.length}
+      >
         {isSubmitting ? 'Đang gửi…' : sent ? 'Đã gửi đăng ký' : 'Đăng ký tư vấn'}
         <ArrowUpRight size={20} aria-hidden="true" />
       </Button>
       <p role="status" aria-live="polite" className="form-status">
-        {status}
+        {status ||
+          (selectedId && !sent
+            ? `Đã chọn gói ${plans.find((plan) => plan.id === selectedId)?.name}.`
+            : '')}
       </p>
     </form>
   );

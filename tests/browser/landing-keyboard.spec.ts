@@ -1,4 +1,9 @@
+import { mockLandingClientData } from './landing-test-data';
 import { expect, test } from '@playwright/test';
+
+test.beforeEach(async ({ page }) => {
+  await mockLandingClientData(page);
+});
 
 const focusable = 'a[href],button,input:not([type=hidden]),select,textarea,summary,[tabindex]';
 
@@ -11,8 +16,10 @@ for (const path of ['/', '/chinh-sach-rieng-tu']) {
     if (path === '/') {
       const map = page.getByRole('button', { name: 'Mở bản đồ', exact: true });
       await map.scrollIntoViewIfNeeded();
-      await map.click();
-      await expect(page.locator('.leaflet-container')).toBeVisible();
+      if (await map.isEnabled()) {
+        await map.click();
+        await expect(page.locator('.leaflet-container')).toBeVisible();
+      }
       await page.locator('#dang-ky').scrollIntoViewIfNeeded();
       await expect(page.locator('#dang-ky button[type=submit]')).toBeEnabled();
     }

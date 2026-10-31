@@ -68,20 +68,11 @@ export default function MarketingEffects() {
       { threshold: 0.15 },
     );
     motionTargets.forEach((target) => motionObserver.observe(target));
-    const choosePackage = (event: MouseEvent) => {
-      const link = (event.target as Element).closest<HTMLAnchorElement>('.choose-package');
-      if (!link) return;
-      document.documentElement.dataset.selectedPackage = link.dataset.package;
-      window.dispatchEvent(new CustomEvent('florabot:package', { detail: link.dataset.package }));
-      document.querySelector<HTMLElement>('#dang-ky')?.focus({ preventScroll: true });
-    };
-    document.addEventListener('click', choosePackage);
     return () => {
       entranceObserver.disconnect();
       motionObserver.disconnect();
       entranceAnimations.forEach((animation) => animation.cancel());
       reducedMotion.removeEventListener('change', onMotionChange);
-      document.removeEventListener('click', choosePackage);
     };
   }, []);
   return null;

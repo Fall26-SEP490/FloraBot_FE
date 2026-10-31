@@ -1,17 +1,18 @@
 'use client';
-
 import { useEffect, useRef, useState } from 'react';
-import type { Map } from 'leaflet';
+import type { Map, LatLngTuple } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Button, useHydrated } from '@florabot/ui';
-export default function KioskMap() {
+import { kioskDirections, type LandingLocation } from './landing-data';
+export default function KioskMap({ kiosks }: { kiosks: LandingLocation[] }) {
   const ready = useHydrated();
   const container = useRef<HTMLDivElement>(null);
   const [error, setError] = useState(false);
   const [enabled, setEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [revision, setRevision] = useState(0);
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || !kiosks.length) return;
     let map: Map | undefined;
     let cancelled = false;
     void import('leaflet')
@@ -23,38 +24,44 @@ export default function KioskMap() {
           zoomAnimation: false,
           fadeAnimation: false,
           markerZoomAnimation: false,
-          maxBounds: [
-            [5, 100],
-            [24, 118],
-          ],
-          maxBoundsViscosity: 1,
-        }).setView([15.5, 109], 5);
-        tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 18,
-          minZoom: 4,
-        })
+        });
+        const points = kiosks.map((item): LatLngTuple => [item.latitude, item.longitude]);
+        map.fitBounds(points, { padding: [32, 32], maxZoom: 13 });
+        tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 })
           .addTo(map)
-          .on('tileerror', () => setError(true));
-        const points: [number, number, string][] = [
-          [10.7822, 106.6955, 'Nhà Văn hóa Thanh Niên · vị trí demo'],
-          [10.8414, 106.8098, 'Đại học FPT, Thủ Đức · vị trí demo'],
-          [16.5, 112, 'Quần đảo Hoàng Sa (Việt Nam)'],
-          [9.5, 114, 'Quần đảo Trường Sa (Việt Nam)'],
-        ];
-        for (const [lat, lng, name] of points)
-          circleMarker([lat, lng], {
-            radius: 6,
-            color: '#252525',
-            fillColor: '#ffcf24',
+          .on('tileerror', () => {
+            if (!cancelled) {
+              setError(true);
+              setLoading(false);
+            }
+          });
+        for (const item of kiosks) {
+          const label = document.createElement('span');
+          label.textContent = `${item.name} · ${item.code}`;
+          const link = document.createElement('a');
+          link.href = kioskDirections(item);
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          link.textContent = `Chỉ đường đến ${item.name}`;
+          const marker = circleMarker([item.latitude, item.longitude], {
+            radius: 7,
+            color: '#174b35',
+            fillColor: '#d6e9c5',
             fillOpacity: 1,
             weight: 2,
           })
             .addTo(map)
-            .bindTooltip(name, {
+            .bindTooltip(label, {
               permanent: true,
-              direction: lng > 111 ? 'left' : 'top',
+              direction: 'top',
               className: 'florabot-map-label',
-            });
+            })
+            .bindPopup(link);
+          const path = marker.getElement();
+          path?.setAttribute('data-kiosk-id', item.id);
+          path?.setAttribute('aria-label', `${item.name} · ${item.code}`);
+          path?.setAttribute('role', 'img');
+        }
         setLoading(false);
       })
       .catch(() => {
@@ -67,42 +74,45 @@ export default function KioskMap() {
       cancelled = true;
       map?.remove();
     };
-  }, [enabled]);
+  }, [enabled, kiosks, revision]);
+  function openMap() {
+    setError(false);
+    setLoading(true);
+    setEnabled(true);
+    setRevision((value) => value + 1);
+  }
   return (
     <div className="map-panel">
       {!enabled && (
         <div className="map-placeholder">
           <h3>Xem vị trí trên bản đồ</h3>
-          <Button
-            variant="outline"
-            disabled={!ready}
-            onClick={() => {
-              setLoading(true);
-              setEnabled(true);
-            }}
-          >
+          <Button variant="outline" disabled={!ready || !kiosks.length} onClick={openMap}>
             Mở bản đồ
           </Button>
         </div>
       )}
-      {enabled && (
+      {enabled && kiosks.length > 0 && (
         <>
           <div
             ref={container}
             className="kiosk-map"
             role="region"
-            aria-label="Bản đồ hai vị trí kiosk minh họa, Hoàng Sa và Trường Sa của Việt Nam"
+            aria-label="Bản đồ các kiosk công khai"
           />
           <p className="map-attribution">
-            Dữ liệu bản đồ © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>
-            <span>·</span>
+            Dữ liệu bản đồ © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> ·{' '}
             <a href="https://leafletjs.com">Leaflet</a>
           </p>
         </>
       )}
       {loading && <p role="status">Đang tải bản đồ…</p>}
       {error && (
-        <p role="status">Bản đồ chưa tải đầy đủ. Bạn có thể xem địa chỉ trong danh sách.</p>
+        <div role="status">
+          <p>Bản đồ chưa tải đầy đủ. Danh sách địa chỉ và liên kết chỉ đường vẫn dùng được.</p>
+          <Button variant="outline" onClick={openMap}>
+            Thử lại bản đồ
+          </Button>
+        </div>
       )}
     </div>
   );
