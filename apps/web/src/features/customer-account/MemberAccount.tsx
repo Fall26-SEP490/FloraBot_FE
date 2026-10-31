@@ -17,6 +17,7 @@ import {
   User,
 } from '@florabot/ui';
 import WebRequests from '../orders/WebRequests';
+import { preorderPaymentReturn } from '../orders/payment-return';
 import { CustomerChatSection } from '@/features/chat/CustomerChatSection';
 import { getCustomerUnreadCount } from '@/features/chat/api';
 import { sessionQuery } from '@/shared/lib/api';
@@ -46,6 +47,12 @@ export default function MemberAccount() {
 
   useEffect(() => {
     const syncFromUrl = () => {
+      const paymentReturn = preorderPaymentReturn(window.location.search);
+      if (paymentReturn) {
+        setActiveTab('orders');
+        router.replace(paymentReturn);
+        return;
+      }
       const hash = window.location.hash.replace(/^#/, '');
       if (hash === 'member-profile' || hash === 'profile') {
         router.replace('/ho-so');

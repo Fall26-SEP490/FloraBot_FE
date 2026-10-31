@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@florabot/ui';
+import { QRCodeSVG } from 'qrcode.react';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
 import '../portal/styles/portal.css';
 import './styles/receipt.css';
@@ -188,20 +189,34 @@ export default function Receipt() {
           </h2>
           <p className="receipt-status">{statuses[receipt.status] || 'Đang cập nhật trạng thái'}</p>
           <p>Đặt lúc {date(receipt.createdAt)}</p>
-          <dl className="receipt-totals" aria-label="Mã nhận hoa tại Kiosk">
+          {['PAID', 'DISPENSING'].includes(receipt.status) && receipt.items.length > 0 && (
             <div>
-              <dt>ID biên nhận (nhập tại Kiosk)</dt>
-              <dd>
-                <code>{receipt.orderId}</code>
-              </dd>
+              <QRCodeSVG
+                size={160}
+                marginSize={2}
+                title="QR biên nhận để nhận hoa tại kiosk"
+                value={`${window.location.origin}/receipt#order=${encodeURIComponent(receipt.orderId)}&token=${encodeURIComponent(token.trim().toUpperCase())}`}
+              />
+              <p>
+                Tại đúng kiosk, chọn “Nhận hoa đã đặt”, quét QR hoặc nhập hai mã bên dưới trong giờ
+                hẹn.
+              </p>
+              <dl className="receipt-totals" aria-label="Mã nhận hoa tại Kiosk">
+                <div>
+                  <dt>ID biên nhận (nhập tại Kiosk)</dt>
+                  <dd>
+                    <code>{receipt.orderId}</code>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Mã biên nhận 8 ký tự</dt>
+                  <dd>
+                    <strong>{token.trim().toUpperCase()}</strong>
+                  </dd>
+                </div>
+              </dl>
             </div>
-            <div>
-              <dt>Mã biên nhận 8 ký tự</dt>
-              <dd>
-                <strong>{token.trim().toUpperCase()}</strong>
-              </dd>
-            </div>
-          </dl>
+          )}
           <ul className="receipt-items">
             {receipt.items.map((item, index) => (
               <li key={index}>

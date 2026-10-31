@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { QRCodeSVG } from 'qrcode.react';
 import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -29,6 +30,7 @@ import {
 } from './orders.utils';
 import type { OrderFilter, Page, WebOrder } from './orders.types';
 import styles from './seller-orders.module.css';
+import { rememberPreorderPayment } from './payment-return';
 
 const sellerFilters: { value: OrderFilter; label: string }[] = [
   { value: 'all', label: 'Tất cả' },
@@ -61,11 +63,13 @@ function OrderActions({
   row,
   base,
   mode,
+  page,
   onReload,
 }: {
   row: WebOrder;
   base: string;
   mode: 'member' | 'seller' | 'admin';
+  page: number;
   onReload: () => Promise<void>;
 }) {
   const [now, setNow] = useState(() => Date.now());
@@ -89,6 +93,7 @@ function OrderActions({
   const [notice, setNotice] = useState('');
   const [copiedField, setCopiedField] = useState<'' | 'orderId' | 'token'>('');
   const [link, setLink] = useState<string | null>(null);
+  const [paymentCode, setPaymentCode] = useState<number | null>(null);
   const [price, setPrice] = useState(String(row.quotedPrice || ''));
   const [note, setNote] = useState('');
   const [reject, setReject] = useState(false);
@@ -134,7 +139,10 @@ function OrderActions({
     setError('');
     setNotice('');
     try {
-      const result = await request<{ checkoutUrl?: string }>(`${base}/${row.id}/${kind}`, body);
+      const result = await request<{ checkoutUrl?: string; orderCode?: number }>(
+        `${base}/${row.id}/${kind}`,
+        body,
+      );
       if (kind === 'payment-link') {
         const url = new URL(result.checkoutUrl || '');
         if (
@@ -145,6 +153,7 @@ function OrderActions({
         )
           throw new Error('Liên kết thanh toán không hợp lệ.');
         setLink(url.href);
+        setPaymentCode(result.orderCode ?? null);
       } else {
         setAction(null);
         setConfirm(false);
@@ -269,43 +278,59 @@ function OrderActions({
           Hoa đã ở trong tủ. Đến đúng tủ trong khung giờ hẹn và dùng mã trên biên nhận để nhận hoa.
         </p>
       )}
+      {mode === 'member' &&
+        row.orderId &&
+        row.trackingToken &&
+        row.ready &&
+        ['PAID', 'DISPENSING'].includes(row.orderStatus ?? '') && (
+          <div className="order-pickup-credentials" aria-label="Thông tin nhận hoa tại Kiosk">
+            <QRCodeSVG
+              size={160}
+              marginSize={2}
+              title="QR biên nhận để nhận hoa tại kiosk"
+              value={`${typeof window !== 'undefined' ? window.location.origin : ''}/receipt#order=${encodeURIComponent(row.orderId)}&token=${encodeURIComponent(row.trackingToken)}`}
+            />
+            <p>
+              Giữ riêng QR này. Tại đúng kiosk, chọn “Nhận hoa đã đặt”, quét QR hoặc nhập hai mã bên
+              dưới, rồi xác nhận mở ô trong giờ hẹn.
+            </p>
+            <dl className="bank-summary">
+              <div>
+                <dt>ID biên nhận (nhập tại Kiosk)</dt>
+                <dd>
+                  <code>{row.orderId}</code>{' '}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => void copyText(row.orderId!, 'orderId')}
+                  >
+                    {copiedField === 'orderId' ? 'Đã chép ID' : 'Sao chép ID'}
+                  </Button>
+                </dd>
+              </div>
+              <div>
+                <dt>Mã biên nhận 8 ký tự</dt>
+                <dd>
+                  <code>{row.trackingToken}</code>{' '}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => void copyText(row.trackingToken!, 'token')}
+                  >
+                    {copiedField === 'token' ? 'Đã chép mã' : 'Sao chép mã'}
+                  </Button>
+                </dd>
+              </div>
+            </dl>
+          </div>
+        )}
       {mode === 'member' && row.orderId && row.trackingToken && (
-        <div className="order-pickup-credentials" aria-label="Thông tin nhận hoa tại Kiosk">
-          <dl className="bank-summary">
-            <div>
-              <dt>ID biên nhận (nhập tại Kiosk)</dt>
-              <dd>
-                <code>{row.orderId}</code>{' '}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => void copyText(row.orderId!, 'orderId')}
-                >
-                  {copiedField === 'orderId' ? 'Đã chép ID' : 'Sao chép ID'}
-                </Button>
-              </dd>
-            </div>
-            <div>
-              <dt>Mã biên nhận 8 ký tự</dt>
-              <dd>
-                <code>{row.trackingToken}</code>{' '}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => void copyText(row.trackingToken!, 'token')}
-                >
-                  {copiedField === 'token' ? 'Đã chép mã' : 'Sao chép mã'}
-                </Button>
-              </dd>
-            </div>
-          </dl>
-          <a
-            href={`/receipt#order=${encodeURIComponent(row.orderId)}&token=${encodeURIComponent(row.trackingToken)}`}
-            referrerPolicy="no-referrer"
-          >
-            Xem biên nhận, mã nhận hoa và hỗ trợ hoàn tiền
-          </a>
-        </div>
+        <a
+          href={`/receipt#order=${encodeURIComponent(row.orderId)}&token=${encodeURIComponent(row.trackingToken)}`}
+          referrerPolicy="no-referrer"
+        >
+          Xem biên nhận và hỗ trợ hoàn tiền
+        </a>
       )}
       {!action && (
         <div className="stock-actions">
@@ -387,8 +412,15 @@ function OrderActions({
         </p>
       )}
       {link && row.orderStatus === 'AWAITING_PAYMENT' && (
-        <a className="button button-primary" href={link} target="_blank" rel="noopener noreferrer">
-          Mở trang thanh toán payOS (tab mới)
+        <a
+          className="button button-primary"
+          href={link}
+          rel="noreferrer"
+          onClick={() => {
+            if (paymentCode !== null) rememberPreorderPayment(row.id, page, paymentCode);
+          }}
+        >
+          Mở trang thanh toán payOS
         </a>
       )}
       {action && (
@@ -740,6 +772,31 @@ export default function WebRequests({
     enabled: mode !== 'seller' || Boolean(sellerId),
   });
   const items = query.data?.items ?? [];
+  const returnedRequest = mode === 'member' ? params.get('requestId') : null;
+  const [readyNotice, setReadyNotice] = useState('');
+  const previousReady = useRef<Map<string, boolean>>(new Map());
+  const scrolledRequest = useRef<string | null>(null);
+  useEffect(() => {
+    if (mode !== 'member' || !query.data) return;
+    for (const row of query.data.items) {
+      const ready = row.orderStatus === 'PAID' && row.ready;
+      if (ready && previousReady.current.get(row.id) === false) {
+        setReadyNotice(
+          `Đơn ${row.orderCode || row.id}: hoa đã sẵn sàng tại ${row.kioskName || 'tủ nhận'}. Nhận từ ${when(row.pickupAt)} đến ${when(row.pickupBefore)}.`,
+        );
+      }
+      previousReady.current.set(row.id, ready);
+    }
+  }, [query.data, mode]);
+  useEffect(() => {
+    if (returnedRequest && query.data && scrolledRequest.current !== returnedRequest) {
+      const target = document.getElementById(`preorder-${returnedRequest}`);
+      if (target) {
+        target.scrollIntoView({ block: 'center' });
+        scrolledRequest.current = returnedRequest;
+      }
+    }
+  }, [returnedRequest, query.data]);
   const Container = mode === 'seller' ? 'div' : 'section';
   const filtered = items.filter(
     (row) =>
@@ -762,6 +819,17 @@ export default function WebRequests({
       <h2 id="web-orders-title" className={mode === 'seller' ? 'sr-only' : undefined}>
         {mode === 'member' ? 'Đơn đặt trước' : 'Đơn đặt trước từ website'}
       </h2>
+      {mode === 'member' && params.get('paymentReturn') === '1' && (
+        <p role="status">
+          Đã trở về từ payOS. Trạng thái đơn bên dưới được đối chiếu với máy chủ; nếu còn chờ thanh
+          toán, vui lòng chờ cập nhật. Mã nhận hoa xuất hiện khi shop đã nạp hoa vào tủ.
+        </p>
+      )}
+      {mode === 'member' && (
+        <p role="status" aria-live="polite">
+          {readyNotice}
+        </p>
+      )}
       {mode !== 'seller' && (
         <p>
           {mode === 'member'
@@ -964,7 +1032,7 @@ export default function WebRequests({
           <ul className={mode === 'seller' ? styles.orderList : 'member-orders'}>
             {filtered.map((row) => (
               <li key={row.id}>
-                <details>
+                <details id={`preorder-${row.id}`} open={row.id === returnedRequest || undefined}>
                   <summary className={mode === 'seller' ? styles.orderSummary : undefined}>
                     {mode === 'seller' ? (
                       <span className={styles.orderHeading}>
@@ -1044,6 +1112,7 @@ export default function WebRequests({
                     row={row}
                     base={base}
                     mode={mode}
+                    page={page}
                     onReload={async () => {
                       const fresh = await query.refetch();
                       if (fresh.isError || !fresh.data?.items.some((item) => item.id === row.id))

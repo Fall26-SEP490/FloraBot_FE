@@ -141,6 +141,7 @@ test('Customer request → seller quote → customer acceptance/payment → sell
         row.orderStatus = 'AWAITING_PAYMENT';
         row.orderId = '80000000-0000-0000-0000-000000000001';
         row.orderCode = 'TEST-ORDER-01';
+        row.trackingToken = 'ABCD2345';
         return { result: row.id };
       }
       if (path.endsWith('/payment-link'))
@@ -168,12 +169,12 @@ test('Customer request → seller quote → customer acceptance/payment → sell
   await expect(page.getByRole('heading', { name: 'Đã nhận yêu cầu của bạn' })).toBeVisible();
   role = 'SELLER';
   await page.goto('/seller/orders');
-  const sellerSummary = page.locator('.seller-order-summary');
+  const sellerSummary = page.locator('details[id^="preorder-"] > summary');
   await expect(sellerSummary).toContainText(flower.name);
   await expect(sellerSummary).toContainText(flower.kioskName);
-  await expect(page.getByText('Thống kê và bộ lọc chỉ áp dụng cho 1 đơn ở trang 1.')).toBeVisible();
+  await expect(page.getByLabel('Thống kê đơn ở trang 1')).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Phân trang đơn đặt trước' })).toHaveCount(0);
-  await page.locator('.member-orders > li > details > summary').click();
+  await page.locator('details[id^="preorder-"] > summary').click();
   await expect(page.getByText(row.instructions)).toBeVisible();
   await page.getByRole('button', { name: 'Báo giá hoặc từ chối' }).click();
   await page.getByLabel('Giá trọn gói (đồng)').fill('380000');
@@ -187,13 +188,14 @@ test('Customer request → seller quote → customer acceptance/payment → sell
   await expect(page.getByText('Đã có báo giá', { exact: true })).toBeVisible();
   role = 'CUSTOMER';
   await page.goto('/tai-khoan#web-orders');
-  await page.locator('.member-orders > li > details > summary').click();
+  await page.locator('details[id^="preorder-"] > summary').click();
   await page.getByRole('button', { name: 'Kiểm tra báo giá' }).click();
   await page
     .getByRole('checkbox', { name: 'Tôi đã đối chiếu và xác nhận thông tin trên.' })
     .check();
   await page.getByRole('button', { name: 'Xác nhận gửi', exact: true }).click();
   await page.getByRole('button', { name: 'Tạo liên kết thanh toán' }).click();
+  await expect(page.getByLabel('Thông tin nhận hoa tại Kiosk')).toHaveCount(0);
   await expect(page.getByRole('link', { name: /Mở trang thanh toán payOS/ })).toHaveAttribute(
     'href',
     'https://pay.payos.vn/web/test-order',
@@ -202,7 +204,7 @@ test('Customer request → seller quote → customer acceptance/payment → sell
   row.orderStatus = 'PAID';
   role = 'SELLER';
   await page.goto('/seller/orders');
-  await page.locator('.member-orders > li > details > summary').click();
+  await page.locator('details[id^="preorder-"] > summary').click();
   await page.getByRole('button', { name: 'Nạp hoa cho đơn này' }).click();
   await expect(page.getByRole('button', { name: 'Tiếp tục kiểm tra' })).toBeDisabled();
   await page.getByLabel('Ô trống tại tủ nhận').selectOption(slotId);
@@ -216,16 +218,51 @@ test('Customer request → seller quote → customer acceptance/payment → sell
   await page
     .getByRole('checkbox', { name: 'Tôi đã đối chiếu và xác nhận thông tin trên.' })
     .check();
-  await page.getByRole('button', { name: 'Xác nhận gửi', exact: true }).click();
+  await page.getByRole('button', { name: 'Xác nhận nạp hoa', exact: true }).click();
   await expect(page.getByText('Hoa đã sẵn sàng tại tủ', { exact: true })).toBeVisible();
   expect(
     writes.filter((path) => path.includes('device_event') || path.includes('request_pickup')),
   ).toEqual([]);
+  role = 'CUSTOMER';
+  await page.goto('/tai-khoan#web-orders');
+  await page.locator('details[id^="preorder-"] > summary').click();
+  await expect(page.getByLabel('Thông tin nhận hoa tại Kiosk')).toContainText('ABCD2345');
+  await expect(page.getByRole('img', { name: 'QR biên nhận để nhận hoa tại kiosk' })).toBeVisible();
   role = 'ADMIN';
   await page.goto('/admin/reports');
   await expect(page.getByRole('cell', { name: 'Sự cố thiết bị đang mở' })).toBeVisible();
   await page.getByLabel('Chọn báo cáo').selectOption('v_platform_revenue');
   await expect(page.getByText(/Chưa có dữ liệu cho báo cáo này/)).toBeVisible();
+});
+
+test('payOS return opens the saved request and trusts server status instead of callback status', async ({
+  page,
+}) => {
+  const row = {
+    ...order(),
+    state: 'ORDERED',
+    orderStatus: 'AWAITING_PAYMENT',
+    orderId: '80000000-0000-0000-0000-000000000001',
+    trackingToken: 'ABCD2345',
+  };
+  await common(
+    page,
+    () => 'CUSTOMER',
+    () => [row],
+  );
+  await page.addInitScript(
+    ({ requestId }) =>
+      sessionStorage.setItem(
+        'florabot-preorder-payment',
+        JSON.stringify({ requestId, page: 1, orderCode: 123456, savedAt: Date.now() }),
+      ),
+    { requestId: row.id },
+  );
+  await page.goto('/tai-khoan?orderCode=123456&status=PAID&cancel=false');
+  await expect(page).toHaveURL(/requestId=.*paymentReturn=1#web-orders/);
+  await expect(page.getByText('Đã trở về từ payOS.', { exact: false })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Tạo liên kết thanh toán' })).toBeVisible();
+  await expect(page.getByLabel('Thông tin nhận hoa tại Kiosk')).toHaveCount(0);
 });
 
 test('Unknown write outcome remains locked across reload until an explicit successful read', async ({
@@ -243,16 +280,16 @@ test('Unknown write outcome remains locked across reload until an explicit succe
     await route.abort('failed');
   });
   await page.goto('/seller/orders');
-  await page.locator('.member-orders > li > details > summary').click();
+  await page.locator('details[id^="preorder-"] > summary').click();
   await page.getByRole('button', { name: 'Hủy yêu cầu', exact: true }).click();
   await page.getByLabel('Lý do hủy').fill('Khách yêu cầu đối chiếu và hủy đơn.');
   await page
     .getByRole('checkbox', { name: 'Tôi đã đối chiếu và xác nhận thông tin trên.' })
     .check();
-  await page.getByRole('button', { name: 'Xác nhận gửi', exact: true }).click();
+  await page.getByRole('button', { name: 'Xác nhận hủy đơn', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Kiểm tra kết quả từ máy chủ' })).toBeVisible();
   await page.reload();
-  await page.locator('.member-orders > li > details > summary').click();
+  await page.locator('details[id^="preorder-"] > summary').click();
   await expect(page.getByRole('button', { name: 'Hủy yêu cầu', exact: true })).toBeDisabled();
   await page.getByRole('button', { name: 'Kiểm tra kết quả từ máy chủ' }).click();
   await expect(page.getByRole('button', { name: 'Hủy yêu cầu', exact: true })).toBeEnabled();
@@ -268,7 +305,7 @@ for (const width of [390, 1440])
       () => [{ ...order(), state: 'ORDERED', orderStatus: 'PAID' }],
     );
     await page.goto('/seller/orders');
-    await page.locator('.member-orders > li > details > summary').click();
+    await page.locator('details[id^="preorder-"] > summary').click();
     await expect(page.getByRole('list', { name: 'Tiến độ đơn đặt hoa' })).toBeVisible();
     await expect(
       page.getByRole('list', { name: 'Tiến độ đơn đặt hoa' }).locator('[aria-current="step"]'),
@@ -298,7 +335,7 @@ test('Completed and cancelled orders show their status without implying cancelle
     ],
   );
   await page.goto('/seller/orders');
-  const rows = page.locator('.member-orders > li');
+  const rows = page.locator('li:has(> details[id^="preorder-"])');
   await rows.nth(0).locator(':scope > details > summary').click();
   await rows.nth(1).locator(':scope > details > summary').click();
   await expect(
