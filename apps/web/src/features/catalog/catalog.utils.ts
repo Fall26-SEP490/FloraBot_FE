@@ -9,13 +9,13 @@ import type {
 } from './catalog.types';
 
 export function isWalkIn(item: CatalogItem): boolean {
-  return item.slotZone === 'WALK_IN';
+  return item.zone === 'WALK_IN';
 }
 
 export function canOrderOnWeb(item: CatalogItem): boolean {
   // /shop/catalog reads v_web_catalog: its bouquet IDs already exclude WALK_IN.
-  // An explicit zone takes precedence if the API later includes kiosk-only entries.
-  return item.slotZone == null || item.slotZone === 'PREORDER';
+  // An explicit zone takes precedence if the API includes kiosk-only entries.
+  return item.zone == null || item.zone === 'PREORDER';
 }
 
 export function purchaseLabel(item: CatalogItem): string {

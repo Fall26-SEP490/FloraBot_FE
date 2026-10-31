@@ -32,7 +32,7 @@ export function CatalogGrid({
       <ul className="flower-catalog-grid flower-catalog">
         {items.map((item) => (
           <FlowerCard
-            key={`${item.productId}-${item.kioskId}-${item.slotZone ?? 'template'}`}
+            key={`${item.productId}-${item.kioskId}-${item.zone ?? 'template'}`}
             item={item}
             openingChatId={openingChatId}
             onSelect={onSelect}

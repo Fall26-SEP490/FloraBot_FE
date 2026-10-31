@@ -14,14 +14,26 @@ import { ChatNoticeDialog } from './components/ChatNoticeDialog';
 import { useCustomerChat } from './hooks/useCustomerChat';
 import './styles/catalog.css';
 
-async function findItem(productId: string, kioskId: string): Promise<CatalogItem | null> {
+async function findItem(
+  productId: string,
+  kioskId: string,
+  zone?: string,
+): Promise<CatalogItem | null> {
+  let walkInFallback: CatalogItem | null = null;
   for (let page = 1; page <= 100000; page++) {
     const response = await request<CatalogResponse>(`/shop/catalog?page=${page}&search=`);
-    const item = response.items.find(
+    const matches = response.items.filter(
       (entry) => entry.productId === productId && entry.kioskId === kioskId,
     );
-    if (item) return item;
-    if (!response.hasMore) return null;
+    if (zone !== undefined) {
+      const item = matches.find((entry) => entry.zone === zone);
+      if (item) return item;
+    } else {
+      const webItem = matches.find((entry) => entry.zone == null || entry.zone === 'PREORDER');
+      if (webItem) return webItem;
+      walkInFallback ??= matches[0] ?? null;
+    }
+    if (!response.hasMore) return walkInFallback;
   }
   throw new Error('Không thể tải thêm sản phẩm. Vui lòng thử lại.');
 }
@@ -29,9 +41,11 @@ async function findItem(productId: string, kioskId: string): Promise<CatalogItem
 export default function FlowerDetail({
   productId,
   kioskId,
+  zone,
 }: {
   productId: string;
   kioskId: string;
+  zone?: string;
 }) {
   const router = useRouter();
   const [selected, setSelected] = useState<CatalogItem | null>(null);
@@ -42,13 +56,13 @@ export default function FlowerDetail({
       new URLSearchParams(window.location.search).get('demo') === '1',
   );
   const query = useQuery({
-    queryKey: ['web-catalog-detail', productId, kioskId, demo],
+    queryKey: ['web-catalog-detail', productId, kioskId, zone, demo],
     queryFn: async () =>
       demo
         ? (MOCK_CATALOG_ITEMS.filter(
             (item) => item.productId === productId && item.kioskId === kioskId,
           ).map((item) => ({ ...item, isDemoSample: true }))[0] ?? null)
-        : findItem(productId, kioskId),
+        : findItem(productId, kioskId, zone),
   });
   const item = query.data;
   const {

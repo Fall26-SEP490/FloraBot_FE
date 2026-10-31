@@ -83,11 +83,49 @@ test('SELLER cannot create a customer preorder in the FE', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Gửi yêu cầu để shop báo giá' })).toHaveCount(0);
 });
 
-for (const slotZone of ['WALK_IN', 'UNKNOWN']) {
-  test(`stock with zone ${slotZone ?? 'missing'} cannot enter web ordering`, async ({ page }) => {
+test('same flower at one kiosk keeps Walk-in view separate from Pre-order', async ({ page }) => {
+  await page.route('**/api/auth/me', (route) => route.fulfill({ json: member }));
+  await page.route('**/api/shop/catalog?*', (route) =>
+    route.fulfill({
+      json: {
+        items: [
+          { ...flower, zone: 'WALK_IN', bouquets: ['walk-in-bouquet'] },
+          { ...flower, zone: 'PREORDER', bouquets: [] },
+        ],
+        page: 1,
+        hasMore: false,
+      },
+    }),
+  );
+  await page.goto('/dat-hoa');
+  const cards = page.locator('.flower-card');
+  await expect(cards).toHaveCount(2);
+  await expect(cards.first().getByRole('button', { name: 'Đặt hoa' })).toHaveCount(0);
+  await cards
+    .first()
+    .getByRole('link', { name: `Xem chi tiết ${flower.name}` })
+    .click();
+  await expect(page).toHaveURL(/zone=WALK_IN/);
+  await expect(page.getByText('Chỉ mua tại kiosk', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Đặt hoa', exact: true })).toHaveCount(0);
+
+  await page.goto('/dat-hoa');
+  await cards
+    .nth(1)
+    .getByRole('link', { name: `Xem chi tiết ${flower.name}` })
+    .click();
+  await expect(page).toHaveURL(/zone=PREORDER/);
+  await expect(page.getByRole('button', { name: 'Đặt hoa', exact: true })).toBeVisible();
+
+  await page.goto(`/dat-hoa/${flower.productId}/${flower.kioskId}`);
+  await expect(page.getByRole('button', { name: 'Đặt hoa', exact: true })).toBeVisible();
+});
+
+for (const zone of ['WALK_IN', 'UNKNOWN']) {
+  test(`stock with zone ${zone} cannot enter web ordering`, async ({ page }) => {
     await page.route('**/api/auth/me', (route) => route.fulfill({ json: member }));
     await page.route('**/api/shop/catalog?*', (route) =>
-      route.fulfill({ json: { items: [{ ...flower, slotZone }], page: 1, hasMore: false } }),
+      route.fulfill({ json: { items: [{ ...flower, zone }], page: 1, hasMore: false } }),
     );
     const writes: string[] = [];
     page.on('request', (request) => {
@@ -99,7 +137,7 @@ for (const slotZone of ['WALK_IN', 'UNKNOWN']) {
     const card = page.locator('.flower-card');
     await expect(card).toHaveCount(1);
     await expect(card.getByRole('button', { name: 'Đặt hoa', exact: true })).toHaveCount(0);
-    if (slotZone === 'WALK_IN') {
+    if (zone === 'WALK_IN') {
       await expect(card.getByText('Chỉ mua tại kiosk', { exact: true })).toBeVisible();
       await expect(card.getByText(flower.kioskName, { exact: true })).toBeVisible();
       await expect(card.getByText(flower.address, { exact: true })).toBeVisible();
@@ -120,7 +158,7 @@ test('legacy API design templates still place CUSTOM requests without guessing s
   await page.route('**/api/auth/me', (route) => route.fulfill({ json: member }));
   await page.route('**/api/shop/catalog?*', (route) =>
     route.fulfill({
-      json: { items: [{ ...flower, slotZone: undefined, bouquets: [] }], page: 1, hasMore: false },
+      json: { items: [{ ...flower, zone: undefined, bouquets: [] }], page: 1, hasMore: false },
     }),
   );
   await page.route('**/api/member/preorders', async (route) => {

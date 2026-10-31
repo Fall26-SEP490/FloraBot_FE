@@ -99,7 +99,7 @@ export function FlowerRequestPanel({
         </div>
         <div className="flower-request-body">
           <FlowerRequestForm
-            key={`${selected.productId}-${selected.kioskId}-${selected.slotZone ?? 'template'}`}
+            key={`${selected.productId}-${selected.kioskId}-${selected.zone ?? 'template'}`}
             item={selected}
             onOpenChat={() => onOpenChat(selected)}
             openingChat={openingChatId === selected.productId}
