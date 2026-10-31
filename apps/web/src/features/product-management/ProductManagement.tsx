@@ -10,22 +10,62 @@ import {
   Flower2,
   Plus,
   RefreshCw,
-  Search,
   Store,
-  X,
 } from '@florabot/ui';
 import { money } from '@florabot/contracts';
-import type { Session } from '@/shared/lib/api';
+import { queryClient, type Session } from '@/shared/lib/api';
 import { TablePagination } from '../../shared/components/DataTable';
 import { Modal } from '../../shared/components/Modal';
 import { clampPage, paginate } from '../../shared/pagination';
-import { fetchProducts, fetchSellerKiosks } from './product.api';
-import type { Product, SellerKiosk } from './product.types';
+import { fetchProductPhotos, fetchProducts, fetchSellerKiosks } from './product.api';
+import type { PhotoPage, Product, SellerKiosk } from './product.types';
 import { PAGE_SIZE, statusNames } from './product.types';
-import { errorText } from './product.utils';
+import { errorText, safeImage } from './product.utils';
 import ProductEditor from './components/ProductEditor';
 import { ProductCreateForm } from './components/ProductCatalogForm';
 import './styles/products.css';
+
+function ProductThumbnail({
+  sellerId,
+  productId,
+  productName,
+}: {
+  sellerId: string;
+  productId: string;
+  productName: string;
+}) {
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const photos = useQuery<PhotoPage>({
+    queryKey: ['product-photos', sellerId, productId, 1],
+    queryFn: () => fetchProductPhotos(productId, 1),
+    staleTime: 60_000,
+  });
+
+  const firstUrl = photos.data?.items?.[0]?.url;
+  const showImage = Boolean(firstUrl && safeImage(firstUrl) && failedUrl !== firstUrl);
+
+  return (
+    <span
+      className={`product-flower-icon${showImage ? 'has-thumb' : ''}`}
+      aria-hidden={showImage ? undefined : 'true'}
+    >
+      {showImage && firstUrl ? (
+        <img
+          src={firstUrl}
+          alt={`Ảnh ${productName}`}
+          className="product-flower-thumb"
+          width="48"
+          height="52"
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={() => setFailedUrl(firstUrl)}
+        />
+      ) : (
+        <Flower2 size={22} aria-hidden="true" />
+      )}
+    </span>
+  );
+}
 
 export default function ProductManagement({ session }: { session: Session }) {
   const [search, setSearch] = useState('');
@@ -61,7 +101,7 @@ export default function ProductManagement({ session }: { session: Session }) {
   const canEdit = session.sellerStatus === 'ACTIVE';
   const allProducts = query.data ?? [];
 
-  // Metrics
+  // Metrics for summary cards & tabs
   const totalCount = allProducts.length;
   const activeCount = allProducts.filter((p) => p.status === 'ACTIVE').length;
   const draftCount = allProducts.filter((p) => p.status === 'DRAFT').length;
@@ -81,35 +121,14 @@ export default function ProductManagement({ session }: { session: Session }) {
   const pageItems = paginate(filteredProducts, safePage, PAGE_SIZE);
 
   return (
-    <section className="products" aria-labelledby="products-title">
-      <div className="product-page-header">
-        <div>
-          <h2 id="products-title">Danh mục mẫu hoa</h2>
-          <p>
-            Quản lý mẫu hoa của shop, điều chỉnh giá bán, kích thước đóng gói và cập nhật hình ảnh.
-          </p>
-        </div>
-        <div className="product-header-actions">
-          <Button
-            type="button"
-            className="product-create-btn"
-            onClick={() => {
-              setCreateNotice('');
-              setShowCreateForm(true);
-            }}
-            disabled={!canEdit || kiosks.isPending || !kiosks.data?.length}
-            aria-expanded={showCreateForm}
-            aria-controls="product-create-section"
-          >
-            <Plus size={18} aria-hidden="true" />
-            <span>Thêm bó hoa mới</span>
-          </Button>
-        </div>
-      </div>
+    <div id="seller-products" className="seller-products" aria-labelledby="products-title">
+      <h2 id="products-title" className="sr-only">
+        Quản lý mẫu hoa
+      </h2>
 
       {!canEdit && (
         <div className="product-alert warning" role="alert">
-          <CircleAlert size={18} aria-hidden="true" />
+          <CircleAlert size={16} aria-hidden="true" />
           <p>
             Shop cần có gói đang hoạt động để chỉnh sửa hoặc tạo mới sản phẩm. Bạn hiện tại chỉ có
             quyền xem danh mục.
@@ -117,178 +136,124 @@ export default function ProductManagement({ session }: { session: Session }) {
         </div>
       )}
 
-      {/* Metric Cards strip */}
-      <div className="product-stats-grid" role="region" aria-label="Thống kê mẫu hoa">
-        <button
-          type="button"
-          className={`product-stat-card ${filter === 'ALL' ? 'is-active' : ''}`}
-          onClick={() => {
-            setFilter('ALL');
-            setPage(1);
-          }}
-        >
-          <div className="product-stat-icon all" aria-hidden="true">
-            <Flower2 size={22} />
-          </div>
-          <div className="product-stat-content">
-            <span className="product-stat-label">Tổng mẫu hoa</span>
-            <strong className="product-stat-value">{totalCount}</strong>
-          </div>
-        </button>
-
-        <button
-          type="button"
-          className={`product-stat-card ${filter === 'ACTIVE' ? 'is-active' : ''}`}
-          onClick={() => {
-            setFilter('ACTIVE');
-            setPage(1);
-          }}
-        >
-          <div className="product-stat-icon active" aria-hidden="true">
-            <Store size={22} />
-          </div>
-          <div className="product-stat-content">
-            <span className="product-stat-label">Đang kinh doanh</span>
-            <strong className="product-stat-value">{activeCount}</strong>
-          </div>
-        </button>
-
-        <button
-          type="button"
-          className={`product-stat-card ${filter === 'DRAFT' ? 'is-active' : ''}`}
-          onClick={() => {
-            setFilter('DRAFT');
-            setPage(1);
-          }}
-        >
-          <div className="product-stat-icon draft" aria-hidden="true">
-            <Boxes size={22} />
-          </div>
-          <div className="product-stat-content">
-            <span className="product-stat-label">Bản nháp</span>
-            <strong className="product-stat-value">{draftCount}</strong>
-          </div>
-        </button>
-
-        <button
-          type="button"
-          className={`product-stat-card ${filter === 'INACTIVE' ? 'is-active' : ''}`}
-          onClick={() => {
-            setFilter('INACTIVE');
-            setPage(1);
-          }}
-        >
-          <div className="product-stat-icon inactive" aria-hidden="true">
-            <CircleAlert size={22} />
-          </div>
-          <div className="product-stat-content">
-            <span className="product-stat-label">Tạm ngừng bán</span>
-            <strong className="product-stat-value">{inactiveCount}</strong>
-          </div>
-        </button>
-      </div>
-
-      {/* Shopee-style Status Tabs */}
-      <div className="product-status-tabs" role="tablist" aria-label="Bộ lọc trạng thái mẫu hoa">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={filter === 'ALL'}
-          className={`product-status-tab ${filter === 'ALL' ? 'is-active' : ''}`}
-          onClick={() => {
-            setFilter('ALL');
-            setPage(1);
-          }}
-        >
-          <span>Tất cả</span>
-          <span className="product-tab-count">{totalCount}</span>
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={filter === 'ACTIVE'}
-          className={`product-status-tab ${filter === 'ACTIVE' ? 'is-active' : ''}`}
-          onClick={() => {
-            setFilter('ACTIVE');
-            setPage(1);
-          }}
-        >
-          <span>Đang bán</span>
-          <span className="product-tab-count">{activeCount}</span>
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={filter === 'DRAFT'}
-          className={`product-status-tab ${filter === 'DRAFT' ? 'is-active' : ''}`}
-          onClick={() => {
-            setFilter('DRAFT');
-            setPage(1);
-          }}
-        >
-          <span>Bản nháp</span>
-          <span className="product-tab-count">{draftCount}</span>
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={filter === 'INACTIVE'}
-          className={`product-status-tab ${filter === 'INACTIVE' ? 'is-active' : ''}`}
-          onClick={() => {
-            setFilter('INACTIVE');
-            setPage(1);
-          }}
-        >
-          <span>Tạm ngừng</span>
-          <span className="product-tab-count">{inactiveCount}</span>
-        </button>
-      </div>
-
-      {/* Toolbar: Search input + refresh button */}
-      <div className="product-toolbar">
-        <div className="product-search-box">
-          <Search size={16} className="product-search-icon" aria-hidden="true" />
-          <input
-            id="product-search"
-            type="search"
-            aria-label="Tìm tên mẫu hoa hoặc tag"
-            placeholder="Tìm theo tên mẫu hoa hoặc từ khóa (#tag)..."
-            value={search}
-            onChange={(event) => {
-              setSearch(event.target.value);
+      {/* Summary Stat Strip - Harmonized with .summary in seller-orders */}
+      <div className="product-summary" aria-label="Thống kê mẫu hoa">
+        {[
+          { label: 'Tổng mẫu hoa', value: 'ALL' as const, count: totalCount, icon: Flower2 },
+          { label: 'Đang kinh doanh', value: 'ACTIVE' as const, count: activeCount, icon: Store },
+          { label: 'Bản nháp', value: 'DRAFT' as const, count: draftCount, icon: Boxes },
+          {
+            label: 'Tạm ngừng bán',
+            value: 'INACTIVE' as const,
+            count: inactiveCount,
+            icon: CircleAlert,
+          },
+        ].map(({ label, value, count, icon: Icon }) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => {
+              setFilter(value);
               setPage(1);
             }}
-          />
-          {search && (
-            <button
-              type="button"
-              className="product-search-clear"
+            aria-pressed={filter === value}
+          >
+            <span className="product-stat-icon">
+              <Icon size={20} aria-hidden="true" />
+            </span>
+            <span>
+              <small>{label}</small>
+              <strong>{query.isError ? '—' : query.isPending ? '…' : count}</strong>
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* Main Filter Container - Harmonized with .filters in seller-orders */}
+      <div className="product-filters-card">
+        <div className="product-filter-heading">
+          <div>
+            <h3>Danh mục mẫu hoa</h3>
+            <p>
+              Quản lý mẫu hoa của shop, điều chỉnh giá bán, kích thước đóng gói và cập nhật hình
+              ảnh.
+            </p>
+          </div>
+          <div className="product-filter-actions">
+            <Button
+              variant="outline"
+              className="product-refresh-btn"
+              disabled={query.isFetching}
               onClick={() => {
-                setSearch('');
-                setPage(1);
+                void query.refetch();
+                void queryClient.invalidateQueries({ queryKey: ['product-photos', sellerId] });
               }}
-              aria-label="Xóa từ khóa tìm kiếm"
+              title="Tải lại danh sách mẫu hoa"
             >
-              <X size={15} aria-hidden="true" />
-            </button>
-          )}
+              <RefreshCw
+                size={15}
+                aria-hidden="true"
+                className={query.isFetching ? 'is-spinning' : ''}
+              />
+              <span>{query.isFetching ? 'Đang cập nhật…' : 'Làm mới'}</span>
+            </Button>
+            {canEdit && (
+              <Button
+                type="button"
+                className="product-create-btn"
+                onClick={() => {
+                  setCreateNotice('');
+                  setShowCreateForm(true);
+                }}
+                disabled={kiosks.isPending || !kiosks.data?.length}
+                aria-expanded={showCreateForm}
+                aria-controls="product-create-section"
+              >
+                <Plus size={15} aria-hidden="true" />
+                <span>Thêm bó hoa mới</span>
+              </Button>
+            )}
+          </div>
         </div>
 
-        <div className="product-toolbar-actions">
-          <Button
-            variant="outline"
-            className="product-refresh-btn"
-            disabled={query.isFetching}
-            onClick={() => void query.refetch()}
-            title="Tải lại danh sách mẫu hoa"
-          >
-            <RefreshCw
-              size={15}
-              aria-hidden="true"
-              className={query.isFetching ? 'is-spinning' : ''}
+        {/* Status Tabs - identical underline style to seller-orders */}
+        <div className="product-tabs" aria-label="Bộ lọc trạng thái mẫu hoa">
+          {[
+            { label: 'Tất cả', value: 'ALL' as const, count: totalCount },
+            { label: 'Đang bán', value: 'ACTIVE' as const, count: activeCount },
+            { label: 'Bản nháp', value: 'DRAFT' as const, count: draftCount },
+            { label: 'Tạm ngừng', value: 'INACTIVE' as const, count: inactiveCount },
+          ].map(({ label, value, count }) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={filter === value}
+              onClick={() => {
+                setFilter(value);
+                setPage(1);
+              }}
+            >
+              {label}
+              {query.isSuccess && <span>{count}</span>}
+            </button>
+          ))}
+        </div>
+
+        {/* Search Bar - identical to seller-orders */}
+        <div className="product-search-bar">
+          <label className="product-search-field">
+            <span>Tìm mẫu hoa</span>
+            <input
+              id="product-search"
+              type="search"
+              placeholder="Tên mẫu hoa hoặc từ khóa (#tag)…"
+              value={search}
+              onChange={(event) => {
+                setSearch(event.target.value);
+                setPage(1);
+              }}
             />
-            <span>Làm mới</span>
-          </Button>
+          </label>
         </div>
       </div>
 
@@ -301,6 +266,8 @@ export default function ProductManagement({ session }: { session: Session }) {
       {showCreateForm && (
         <Modal
           open
+          size="lg"
+          className="product-form-modal"
           title="Thêm bó hoa giả mới"
           description="Nhập thông tin mẫu hoa trước khi đưa vào danh mục của shop."
           onClose={() => setShowCreateForm(false)}
@@ -325,14 +292,14 @@ export default function ProductManagement({ session }: { session: Session }) {
 
       {kiosks.isError && (
         <div className="product-alert error" role="alert">
-          <CircleAlert size={18} aria-hidden="true" />
+          <CircleAlert size={16} aria-hidden="true" />
           <p>Chưa tải được kiosk của shop nên chưa thể tạo sản phẩm mới.</p>
         </div>
       )}
 
       {!kiosks.isPending && !kiosks.isError && kiosks.data?.length === 0 && (
         <div className="product-alert warning">
-          <CircleAlert size={18} aria-hidden="true" />
+          <CircleAlert size={16} aria-hidden="true" />
           <p>Shop cần được phân bổ ít nhất một kiosk trước khi tạo sản phẩm mới.</p>
         </div>
       )}
@@ -354,7 +321,7 @@ export default function ProductManagement({ session }: { session: Session }) {
 
       {!query.isPending && filteredProducts.length === 0 && (
         <div className="product-empty-state" role="status">
-          <Flower2 size={40} className="product-empty-icon" aria-hidden="true" />
+          <Flower2 size={32} className="product-empty-icon" aria-hidden="true" />
           <h3>Không tìm thấy mẫu hoa nào</h3>
           <p>
             {allProducts.length
@@ -364,75 +331,100 @@ export default function ProductManagement({ session }: { session: Session }) {
         </div>
       )}
 
-      <ul className="product-list">
-        {pageItems.map((product) => (
-          <li key={product.id} className="product-list-card">
-            <details
-              open={expandedProductId === product.id ? true : undefined}
-              onToggle={(event) => {
-                if (!event.currentTarget.open && expandedProductId === product.id) {
-                  setExpandedProductId(null);
-                }
-              }}
-            >
-              <summary className="product-card-summary">
-                <div className="product-card-left">
-                  <div className="product-card-avatar" aria-hidden="true">
-                    <Flower2 size={24} />
+      {/* Result Count */}
+      {filteredProducts.length > 0 && (
+        <p className="product-result-count" role="status">
+          Hiển thị {pageItems.length} / {filteredProducts.length} mẫu hoa · Trang {safePage}
+        </p>
+      )}
+
+      {/* Product List - Harmonized with seller-orders */}
+      {filteredProducts.length > 0 && (
+        <ul className="product-order-list">
+          {pageItems.map((product) => (
+            <li key={product.id}>
+              <details
+                open={expandedProductId === product.id ? true : undefined}
+                onToggle={(event) => {
+                  if (!event.currentTarget.open && expandedProductId === product.id) {
+                    setExpandedProductId(null);
+                  }
+                }}
+              >
+                <summary className="product-order-summary">
+                  <div className="product-order-heading">
+                    <strong>{product.name}</strong>
+                    <span className="product-kind">
+                      {product.inventoryKind === 'LEGACY_FRESH' ? 'Dữ liệu cũ' : 'Hoa giả cao cấp'}
+                    </span>
+                    <span className="product-status" data-status={product.status}>
+                      {statusNames[product.status] || product.status}
+                    </span>
                   </div>
-                  <div className="product-card-heading">
-                    <div className="product-card-title-row">
-                      <strong className="product-card-name">{product.name}</strong>
-                      {product.inventoryKind === 'ARTIFICIAL' && (
-                        <span className="product-kind-badge">Hoa giả cao cấp</span>
-                      )}
-                      {product.inventoryKind === 'LEGACY_FRESH' && (
-                        <span className="product-kind-badge legacy">Dữ liệu cũ</span>
-                      )}
-                      <span className="product-status" data-status={product.status}>
-                        {statusNames[product.status] || product.status}
-                      </span>
-                    </div>
-                    <div className="product-card-specs">
-                      {product.lengthCm && product.widthCm && product.heightCm ? (
-                        <span className="product-card-dim">
-                          Kích thước: {product.lengthCm} × {product.widthCm} × {product.heightCm} cm
-                        </span>
-                      ) : (
-                        <span className="product-card-dim quiet">Chưa cập nhật kích thước</span>
-                      )}
-                      {product.tags && product.tags.length > 0 && (
-                        <span className="product-card-tags">
-                          {product.tags.slice(0, 3).map((tag) => (
-                            <span key={tag} className="product-tag-chip">
-                              #{tag}
-                            </span>
-                          ))}
-                          {product.tags.length > 3 && (
-                            <span className="product-tag-more">+{product.tags.length - 3}</span>
+
+                  <div className="product-order-body">
+                    {/* Col 1: Product avatar & tags */}
+                    <span className="product-col-main">
+                      <ProductThumbnail
+                        sellerId={sellerId}
+                        productId={product.id}
+                        productName={product.name}
+                      />
+                      <span>
+                        <small>Từ khóa phân loại</small>
+                        <span className="product-tags-wrap">
+                          {product.tags && product.tags.length > 0 ? (
+                            product.tags.map((tag) => (
+                              <span key={tag} className="product-tag-chip">
+                                #{tag}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="product-quiet-text">Chưa gắn từ khóa</span>
                           )}
                         </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
+                      </span>
+                    </span>
 
-                <div className="product-card-right">
-                  <div className="product-card-price-block">
-                    <span className="product-card-price-label">Giá niêm yết</span>
-                    <strong className="product-card-price">{money(Number(product.price))}</strong>
+                    {/* Col 2: Kích thước */}
+                    <span className="product-col-specs">
+                      <small>Kích thước đóng gói (D × R × C)</small>
+                      <strong>
+                        {product.lengthCm && product.widthCm && product.heightCm
+                          ? `${product.lengthCm} × ${product.widthCm} × ${product.heightCm} cm`
+                          : 'Chưa cập nhật'}
+                      </strong>
+                    </span>
+
+                    {/* Col 3: Giá bán */}
+                    <span className="product-col-price">
+                      <small>Giá niêm yết</small>
+                      <strong className="product-price-strong">
+                        {money(Number(product.price))}
+                      </strong>
+                    </span>
                   </div>
-                  <span className="product-card-expand-action">
-                    <span className="product-card-expand-text">Chi tiết &amp; Ảnh</span>
-                    <ChevronDown className="product-card-chevron" size={18} aria-hidden="true" />
-                  </span>
+
+                  <div className="product-disclosure">
+                    <span className="product-show-details">Chi tiết mẫu hoa</span>
+                    <span className="product-hide-details">Thu gọn chi tiết</span>
+                    <ChevronDown
+                      size={14}
+                      className="product-disclosure-chevron"
+                      aria-hidden="true"
+                    />
+                  </div>
+                </summary>
+
+                {/* Expanded Actions/Editor */}
+                <div className="product-expanded-actions">
+                  <ProductEditor product={product} sellerId={sellerId} canEdit={canEdit} />
                 </div>
-              </summary>
-              <ProductEditor product={product} sellerId={sellerId} canEdit={canEdit} />
-            </details>
-          </li>
-        ))}
-      </ul>
+              </details>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {filteredProducts.length > 0 && (
         <div className="product-pagination-wrapper">
@@ -445,6 +437,6 @@ export default function ProductManagement({ session }: { session: Session }) {
           />
         </div>
       )}
-    </section>
+    </div>
   );
 }

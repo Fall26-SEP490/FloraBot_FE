@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Button } from '@florabot/ui';
-import { ApiError } from '@/shared/lib/api';
+import { Button, Flower2, ImageIcon, Plus, RefreshCw } from '@florabot/ui';
+import { ApiError, queryClient } from '@/shared/lib/api';
 import { fetchProductPhotos } from '../product.api';
 import type { PhotoPage, PhotoItem } from '../product.types';
 import { safeImage } from '../product.utils';
@@ -13,13 +13,15 @@ const maximumBytes = 5 * 1024 * 1024;
 function StoredPhoto({ url, label }: { url: string; label: string }) {
   const [failed, setFailed] = useState(false);
   return failed || !safeImage(url) ? (
-    <p>Không hiển thị được {label.toLocaleLowerCase('vi')}.</p>
+    <div className="product-photo-fallback" title={`Không hiển thị được ${label}`}>
+      <Flower2 size={20} aria-hidden="true" />
+    </div>
   ) : (
     <img
       src={url}
       alt={label}
-      width="240"
-      height="180"
+      width="96"
+      height="96"
       loading="lazy"
       referrerPolicy="no-referrer"
       onError={() => setFailed(true)}
@@ -39,7 +41,6 @@ export default function ProductPhotos({
   canEdit: boolean;
 }) {
   const base = `/me/products/${productId}/photos`;
-  const [loaded, setLoaded] = useState(false);
   const [page, setPage] = useState(1);
   const [file, setFile] = useState<File>();
   const [preview, setPreview] = useState('');
@@ -61,7 +62,7 @@ export default function ProductPhotos({
   const photos = useQuery<PhotoPage>({
     queryKey: ['product-photos', sellerId, productId, page],
     queryFn: () => fetchProductPhotos(productId, page),
-    enabled: loaded,
+    staleTime: 60_000,
   });
 
   useEffect(
@@ -182,7 +183,6 @@ export default function ProductPhotos({
     setMessage('');
     setError('');
     try {
-      // Raw bytes match the image endpoint; never replay a possibly committed upload automatically.
       const response = await fetch(`/api${base}`, {
         method: 'POST',
         credentials: 'include',
@@ -200,9 +200,8 @@ export default function ProductPhotos({
       select();
       if (input.current) input.current.value = '';
       setMessage('Đã thêm ảnh cho sản phẩm.');
-      setLoaded(true);
       setPage(1);
-      if (page === 1 && loaded) await photos.refetch();
+      await queryClient.invalidateQueries({ queryKey: ['product-photos', sellerId, productId] });
     } catch (cause) {
       const rejected =
         cause instanceof ApiError &&
@@ -213,7 +212,6 @@ export default function ProductPhotos({
           ? cause.message
           : 'Chưa xác định được ảnh đã lưu hay chưa. Làm mới danh sách ảnh và liên hệ đội ngũ kiểm tra trước khi tải lại.',
       );
-      setLoaded(true);
     } finally {
       sending.current = false;
       setPending(false);
@@ -221,48 +219,110 @@ export default function ProductPhotos({
     }
   }
 
+  const items = photos.data?.items ?? [];
+
   return (
-    <section className="product-photos" aria-labelledby={`photos-title-${productId}`}>
-      <h3 id={`photos-title-${productId}`}>Để bó hoa lên hình thật xinh</h3>
-      <p>
-        Thêm ảnh rõ nét của {productName}. Ảnh sản phẩm được lưu công khai; không tải chứng từ hay
-        thông tin cá nhân tại đây.
-      </p>
-      <Button
-        variant="outline"
-        disabled={photos.isFetching || pending}
-        onClick={() => {
-          if (loaded) void photos.refetch();
-          else setLoaded(true);
-        }}
-      >
-        {loaded ? 'Làm mới danh sách ảnh' : 'Xem ảnh sản phẩm'}
-      </Button>
-      {photos.isFetching && <p role="status">Đang tải danh sách ảnh…</p>}
-      {photos.isError && (
-        <p role="alert" className="error">
-          Chưa tải được danh sách ảnh. Bạn chọn “Làm mới danh sách ảnh” để thử lại.
+    <div className="product-photos-inline" aria-labelledby={`photos-title-${productId}`}>
+      <div className="product-photos-header">
+        <span id={`photos-title-${productId}`} className="product-photos-title">
+          Hình ảnh mẫu hoa {photos.isSuccess ? `(${items.length})` : ''}
+        </span>
+
+        <div className="product-photo-source-actions">
+          {canEdit && (
+            <>
+              <label
+                className={`button button-outline product-photo-file-button${
+                  !canEdit || pending || uncertain ? 'is-disabled' : ''
+                }`}
+              >
+                <Plus size={13} aria-hidden="true" />
+                <span>Chọn ảnh</span>
+                <input
+                  id={`photo-file-${productId}`}
+                  ref={input}
+                  className="product-photo-file-input"
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  disabled={!canEdit || pending || uncertain}
+                  aria-label={`Chọn ảnh cho ${productName}`}
+                  aria-describedby={`photo-help-${productId} photo-notice-${productId}`}
+                  onChange={(event) => {
+                    stopCamera();
+                    select(event.target.files?.[0]);
+                  }}
+                />
+              </label>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={!canEdit || pending || uncertain || cameraStarting || cameraOpen}
+                onClick={() => void startCamera()}
+              >
+                <ImageIcon size={13} aria-hidden="true" />
+                <span>{cameraStarting ? 'Đang mở…' : 'Chụp ảnh'}</span>
+              </Button>
+            </>
+          )}
+          <Button
+            type="button"
+            variant="outline"
+            disabled={photos.isFetching || pending}
+            onClick={() => void photos.refetch()}
+            title="Làm mới danh sách ảnh"
+          >
+            <RefreshCw
+              size={13}
+              aria-hidden="true"
+              className={photos.isFetching ? 'is-spinning' : ''}
+            />
+            <span>Làm mới</span>
+          </Button>
+        </div>
+      </div>
+
+      {photos.isPending && (
+        <p role="status" className="product-photos-status">
+          Đang tải ảnh…
         </p>
       )}
-      {loaded && photos.data?.items.length === 0 && <p>Chưa có ảnh trên trang này.</p>}
-      <ul className="product-photo-gallery">
-        {photos.data?.items.map((photo: PhotoItem, index: number) => (
-          <li key={photo.id}>
-            <StoredPhoto
-              url={photo.url}
-              label={`Ảnh ${(page - 1) * 20 + index + 1} của ${productName}`}
-            />
-          </li>
-        ))}
-      </ul>
-      {loaded && (page > 1 || photos.data?.hasMore) && (
-        <div className="stock-actions">
+
+      {photos.isError && (
+        <p role="alert" className="error">
+          Chưa tải được danh sách ảnh. Hãy bấm “Làm mới” để thử lại.
+        </p>
+      )}
+
+      {photos.isSuccess && items.length === 0 && (
+        <div className="product-photo-empty-inline">
+          <span className="product-photo-default-badge" aria-hidden="true">
+            <Flower2 size={18} />
+          </span>
+          <span>Chưa có ảnh riêng — đang hiển thị ảnh mặc định của hệ thống.</span>
+        </div>
+      )}
+
+      {items.length > 0 && (
+        <ul className="product-photo-gallery">
+          {items.map((photo: PhotoItem, index: number) => (
+            <li key={photo.id}>
+              <StoredPhoto
+                url={photo.url}
+                label={`Ảnh ${(page - 1) * 20 + index + 1} của ${productName}`}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {(page > 1 || photos.data?.hasMore) && (
+        <div className="product-photo-pagination">
           <Button
             variant="outline"
             disabled={page === 1 || photos.isFetching || pending}
             onClick={() => setPage((value) => value - 1)}
           >
-            Trang ảnh trước
+            Trang trước
           </Button>
           <span>Trang {page}</span>
           <Button
@@ -270,101 +330,86 @@ export default function ProductPhotos({
             disabled={!photos.data?.hasMore || photos.isError || photos.isFetching || pending}
             onClick={() => setPage((value) => value + 1)}
           >
-            Trang ảnh sau
+            Trang sau
           </Button>
         </div>
       )}
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          void upload();
-        }}
-      >
-        <label htmlFor={`photo-file-${productId}`}>Ảnh cho {productName}</label>
-        <div className="product-photo-source-actions">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={!canEdit || pending || uncertain || cameraStarting || cameraOpen}
-            onClick={() => void startCamera()}
-          >
-            {cameraStarting ? 'Đang mở camera…' : 'Chụp ảnh bằng camera'}
-          </Button>
-          <span aria-hidden="true">hoặc</span>
-          <label
-            className={`button button-outline product-photo-file-button${
-              !canEdit || pending || uncertain ? 'is-disabled' : ''
-            }`}
-          >
-            Chọn ảnh từ thiết bị
-            <input
-              id={`photo-file-${productId}`}
-              ref={input}
-              className="product-photo-file-input"
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              disabled={!canEdit || pending || uncertain}
-              aria-label={`Chọn ảnh cho ${productName}`}
-              aria-describedby={`photo-help-${productId} photo-notice-${productId}`}
-              onChange={(event) => {
-                stopCamera();
-                select(event.target.files?.[0]);
-              }}
-            />
-          </label>
-        </div>
-        {cameraOpen && (
-          <div className="product-camera" aria-label={`Camera chụp ảnh cho ${productName}`}>
-            <video
-              ref={video}
-              muted
-              playsInline
-              autoPlay
-              aria-label={`Hình ảnh trực tiếp từ camera cho ${productName}`}
-              onLoadedMetadata={() => setCameraReady(true)}
-            />
-            <div className="product-photo-source-actions">
-              <Button type="button" disabled={!cameraReady} onClick={() => void capturePhoto()}>
-                Chụp ảnh
-              </Button>
-              <Button type="button" variant="outline" onClick={stopCamera}>
-                Đóng camera
-              </Button>
-            </div>
+
+      {cameraOpen && (
+        <div className="product-camera" aria-label={`Camera chụp ảnh cho ${productName}`}>
+          <video
+            ref={video}
+            muted
+            playsInline
+            autoPlay
+            aria-label={`Hình ảnh trực tiếp từ camera cho ${productName}`}
+            onLoadedMetadata={() => setCameraReady(true)}
+          />
+          <div className="product-photo-source-actions">
+            <Button type="button" disabled={!cameraReady} onClick={() => void capturePhoto()}>
+              Chụp ảnh
+            </Button>
+            <Button type="button" variant="outline" onClick={stopCamera}>
+              Đóng camera
+            </Button>
           </div>
-        )}
-        {cameraError && (
-          <p role="alert" className="error">
-            {cameraError}
-          </p>
-        )}
-        <p id={`photo-help-${productId}`} className="quiet">
-          Chụp trực tiếp hoặc chọn PNG, JPEG, WebP từ thiết bị · Tối đa 5 MB mỗi ảnh.
+        </div>
+      )}
+
+      {cameraError && (
+        <p role="alert" className="error">
+          {cameraError}
         </p>
-        {preview && (
+      )}
+
+      {preview && file && (
+        <form
+          className="product-photo-upload-bar"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void upload();
+          }}
+        >
           <figure className="product-photo-preview">
             <img
               src={preview}
               alt={`Xem trước ảnh đã chọn cho ${productName}`}
-              width="320"
-              height="240"
+              width="56"
+              height="56"
             />
-            <figcaption>{file?.name}</figcaption>
+            <figcaption>
+              <strong>{file.name}</strong>
+              <small id={`photo-help-${productId}`}>PNG, JPEG, WebP · Tối đa 5 MB</small>
+            </figcaption>
           </figure>
-        )}
-        <Button type="submit" disabled={!canEdit || !file || pending || uncertain}>
-          {pending ? 'Đang tải và kiểm tra ảnh…' : 'Tải ảnh sản phẩm'}
-        </Button>
-        <p
-          ref={notice}
-          tabIndex={-1}
-          id={`photo-notice-${productId}`}
-          role={error ? 'alert' : 'status'}
-          className={error ? 'error' : undefined}
-        >
-          {error || message}
-        </p>
-      </form>
-    </section>
+          <div className="product-photo-upload-actions">
+            <Button type="submit" disabled={!canEdit || pending || uncertain}>
+              {pending ? 'Đang tải…' : 'Tải ảnh lên'}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={pending}
+              onClick={() => {
+                select();
+                if (input.current) input.current.value = '';
+              }}
+            >
+              Hủy
+            </Button>
+          </div>
+        </form>
+      )}
+
+      <p
+        ref={notice}
+        tabIndex={-1}
+        id={`photo-notice-${productId}`}
+        role={error ? 'alert' : 'status'}
+        className={error ? 'error' : 'product-form-success'}
+      >
+        {error || message}
+      </p>
+    </div>
   );
 }

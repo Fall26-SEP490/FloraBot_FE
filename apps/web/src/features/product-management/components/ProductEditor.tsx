@@ -53,7 +53,7 @@ export default function ProductEditor({
           aria-label={`Tổng quan ${product.name}`}
         >
           <div className="product-editor-card-header">
-            <h4>Thông tin &amp; Kích thước</h4>
+            <h4>Thông tin, Kích thước &amp; Hình ảnh</h4>
             <Button
               type="button"
               variant="outline"
@@ -103,6 +103,13 @@ export default function ProductEditor({
               </div>
             </div>
           )}
+
+          <ProductPhotos
+            sellerId={sellerId}
+            productId={product.id}
+            productName={product.name}
+            canEdit={canEdit}
+          />
         </section>
 
         <section
@@ -205,22 +212,23 @@ export default function ProductEditor({
       {showMetadataEditor && (
         <Modal
           open
+          size="lg"
+          className="product-form-modal"
           title={`Chỉnh sửa ${product.name}`}
-          description="Cập nhật thông tin và kích thước của mẫu hoa."
+          description="Cập nhật thông tin, giá niêm yết và kích thước đóng gói của mẫu hoa."
           onClose={() => setShowMetadataEditor(false)}
         >
           <div id={`edit-section-${product.id}`} className="product-edit-section">
-            <ProductMetadataEditor product={product} sellerId={sellerId} canEdit={canEdit} />
+            <ProductMetadataEditor
+              product={product}
+              sellerId={sellerId}
+              canEdit={canEdit}
+              onSuccess={() => setShowMetadataEditor(false)}
+              onCancel={() => setShowMetadataEditor(false)}
+            />
           </div>
         </Modal>
       )}
-
-      <ProductPhotos
-        sellerId={sellerId}
-        productId={product.id}
-        productName={product.name}
-        canEdit={canEdit}
-      />
     </div>
   );
 }
