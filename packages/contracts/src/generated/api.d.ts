@@ -2964,6 +2964,87 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/staff/tasks/{taskId}/preorders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Đơn đặt trước đã thanh toán có thể giao từ công việc này */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    taskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StaffPreorderOptions"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/tasks/{taskId}/preorders/{requestId}/fulfill": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Giao đơn preorder đã thanh toán vào ô PREORDER trong công việc được phân công */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    taskId: string;
+                    requestId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["StaffPreorderFulfillInput"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StaffPreorderFulfillResult"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/member/chats/open": {
         parameters: {
             query?: never;
@@ -4281,6 +4362,197 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/kiosk-support/{kioskId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kioskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["KioskHomeInfo"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/kiosk-support/{kioskId}/device": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kioskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DeviceSupportInput"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DeviceSupportResult"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/kiosks/{kioskId}/pickup/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kioskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["KioskPickupOrder"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/kiosks/{kioskId}/pickup/orders/{orderId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kioskId: string;
+                    orderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["KioskPickupOrder"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/kiosks/{kioskId}/pickup/orders/{orderId}/open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kioskId: string;
+                    orderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FlowResult"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/packages": {
         parameters: {
             query?: never;
@@ -5386,32 +5658,7 @@ export interface paths {
             };
         };
         put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    sellerId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["AssignStaffTask"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["StaffTaskResult"];
-                    };
-                };
-            };
-        };
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -5450,6 +5697,47 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/staff-tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    "Idempotency-Key"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateSellerDeliveryTask"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StaffTaskResult"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -7024,6 +7312,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/me/kiosks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Danh sách kiosk của seller đang đăng nhập (seller_id lấy từ token) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SellerKioskDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sellers/{sellerId}/kiosks": {
         parameters: {
             query?: never;
@@ -7031,7 +7355,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Danh sách kiosk thuộc quyền của Seller và trạng thái vị trí */
+        /** Tương thích cũ: danh sách kiosk thuộc seller; dùng GET /api/me/kiosks cho route tự nhận seller từ token */
         get: {
             parameters: {
                 query?: never;
@@ -7851,6 +8175,45 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": components["schemas"]["CreateKioskApplicationRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["KioskApplicationResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/kiosk-applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateAdditionalKioskApplicationRequest"];
                 };
             };
             responses: {
@@ -9148,6 +9511,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/me/kiosks/{kioskId}/slots/{slotId}/zone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Seller phân loại ô trống thuộc kiosk mình quản lý */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kioskId: string;
+                    slotId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SellerSetSlotZoneRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SellerSlotZoneResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/payments/webhook": {
         parameters: {
             query?: never;
@@ -9939,57 +10345,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/me/kiosks/{kioskId}/slots/{slotId}/zone": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Seller chọn zone cho ô trống của kiosk mình */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    kioskId: string;
-                    slotId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        /** @enum {string} */
-                        zone: "WALK_IN" | "PREORDER";
-                    };
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Ô không còn trống hoặc đang bị giữ */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -10397,6 +10752,15 @@ export interface components {
             password: string;
             phone?: null | string;
         };
+        CreateAdditionalKioskApplicationRequest: {
+            /** Format: uuid */
+            packageId: string;
+            installationAddress: string;
+            /** Format: double */
+            latitude: null | number | string;
+            /** Format: double */
+            longitude: null | number | string;
+        };
         CreateKioskApplicationRequest: {
             /** Format: uuid */
             packageId: string;
@@ -10434,6 +10798,13 @@ export interface components {
             p_amount: number | string;
             p_reason: string;
             p_gateway?: null | string;
+        };
+        CreateSellerDeliveryTask: {
+            /** Format: uuid */
+            assigneeId: string;
+            /** Format: uuid */
+            kioskId: string;
+            instructions: string;
         };
         CustomerHistoryItem: {
             /** Format: uuid */
@@ -10554,6 +10925,13 @@ export interface components {
             p_cmd: string;
             p_event: string;
         };
+        DeviceSupportInput: {
+            reason: string;
+        };
+        DeviceSupportResult: {
+            /** Format: uuid */
+            id: string;
+        };
         EligibleKioskResponse: {
             /** Format: uuid */
             id: string;
@@ -10570,7 +10948,7 @@ export interface components {
             mqttClientId: null | string;
             region: null | string;
             /** Format: int32 */
-            slotCount: number;
+            slotCount: number | string;
         };
         EnrollKioskResponse: {
             /** Format: uuid */
@@ -10681,10 +11059,6 @@ export interface components {
             /** Format: int64 */
             annualFee: number | string;
             /** Format: int32 */
-            walkInSlots: number | string;
-            /** Format: int32 */
-            preorderSlots: number | string;
-            /** Format: int32 */
             totalSlots: number | string;
             shopName: string;
             phone: string;
@@ -10735,6 +11109,7 @@ export interface components {
             price: number | string;
             slotCode: string;
             shopName: string;
+            imageUrl?: null | string;
         };
         KioskCheckoutRequest: {
             p_bouquets: string[];
@@ -10750,6 +11125,17 @@ export interface components {
             longitude: number | string;
         };
         KioskHeartbeatRequest: Record<string, never>;
+        KioskHomeInfo: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            address: string;
+            status: string;
+            /** Format: uuid */
+            sellerId: null | string;
+            shopName: null | string;
+        };
         KioskLocationItem: {
             /** Format: uuid */
             id: string;
@@ -10775,15 +11161,20 @@ export interface components {
             /** Format: int64 */
             annualFee: number | string;
             /** Format: int32 */
-            walkInSlots: number | string;
-            /** Format: int32 */
-            preorderSlots: number | string;
-            /** Format: int32 */
             totalSlots: number | string;
             /** Format: int32 */
             termMonths: number | string;
             status: string;
             description: string;
+        };
+        KioskPickupOrder: {
+            /** Format: uuid */
+            id: string;
+            orderCode: string;
+            name: string;
+            status: string;
+            /** Format: date-time */
+            pickupBefore: string;
         };
         KioskRefundBankResponse: {
             bankName: string;
@@ -10915,6 +11306,7 @@ export interface components {
             /** Format: int64 */
             amount: number | string;
             checkoutUrl: string;
+            qrCode?: null | string;
         };
         PayOsWebhook: {
             data: components["schemas"]["JsonElement"];
@@ -11228,6 +11620,9 @@ export interface components {
             maxSlots: number | string;
             status: string;
         };
+        SellerSetSlotZoneRequest: {
+            zone: string;
+        };
         SellerSlotResponse: {
             /** Format: uuid */
             id: string;
@@ -11235,6 +11630,7 @@ export interface components {
             kioskId: string;
             slotCode: string;
             status: string;
+            zone: null | string;
             /** Format: uuid */
             bouquetId: null | string;
             kioskCode: string;
@@ -11247,6 +11643,13 @@ export interface components {
             priceSnapshot: null | number | string;
             /** Format: date-time */
             sellableUntil: null | string;
+        };
+        SellerSlotZoneResponse: {
+            /** Format: uuid */
+            kioskId: string;
+            /** Format: uuid */
+            slotId: string;
+            zone: string;
         };
         SellerStaffChatItem: {
             /** Format: uuid */
@@ -11418,6 +11821,43 @@ export interface components {
             /** Format: int32 */
             version: number | string;
         };
+        StaffPreorderCandidate: {
+            /** Format: uuid */
+            requestId: string;
+            /** Format: uuid */
+            orderId: string;
+            orderCode: string;
+            /** Format: uuid */
+            productId: string;
+            productName: string;
+            /** Format: int64 */
+            amount: number | string;
+            /** Format: date-time */
+            pickupAt: string;
+            /** Format: date-time */
+            pickupBefore: string;
+        };
+        StaffPreorderFulfillInput: {
+            /** Format: uuid */
+            slotId: string;
+            qrCode: string;
+        };
+        StaffPreorderFulfillResult: {
+            /** Format: uuid */
+            requestId: string;
+            /** Format: uuid */
+            bouquetId: string;
+        };
+        StaffPreorderOptions: {
+            preorders: components["schemas"]["StaffPreorderCandidate"][];
+            slots: components["schemas"]["StaffPreorderSlot"][];
+        };
+        StaffPreorderSlot: {
+            /** Format: uuid */
+            id: string;
+            slotCode: string;
+            zone: null | string;
+        };
         StaffStockAction: {
             /** Format: uuid */
             id: string;
@@ -11460,6 +11900,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             code: string;
+            zone: null | string;
         };
         StaffTaskDetail: {
             kioskStatus: string;
@@ -11559,6 +12000,8 @@ export interface components {
             /** Format: int64 */
             price: number | string;
             status: string;
+            /** Format: uuid */
+            kioskId: null | string;
         };
         TechnicianInstallationDetail: {
             /** Format: uuid */
@@ -11739,6 +12182,7 @@ export interface components {
             kioskId: string;
             kioskName: string;
             address: string;
+            zone: null | string;
             photo: null | string;
             bouquets: string[];
         };
@@ -11763,18 +12207,18 @@ export interface components {
             reject: boolean;
         };
         WebRequestInput: {
-            /** Format: uuid */
-            id: string;
             kind: string;
             /** Format: uuid */
             productId: string;
             /** Format: uuid */
             kioskId: string;
-            /** Format: uuid */
-            bouquetId: null | string;
             /** Format: date-time */
             pickupAt: string;
             instructions: string;
+            /** Format: uuid */
+            bouquetId?: null | string;
+            /** Format: uuid */
+            id?: null | string;
         };
         WebRequestPage: {
             items: components["schemas"]["WebRequestRow"][];

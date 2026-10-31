@@ -135,10 +135,9 @@ export function ApplicationStatusPanel({
             <small>Chỉ dùng để nhận tiền bán hoa, không ủy quyền trích nợ.</small>
           </div>
           <div>
-            <strong>Phân vùng ô tủ:</strong>
+            <strong>Sức chứa tủ:</strong>
             <p>
-              {appData.walkInSlots} ô vãng lai + {appData.preorderSlots} ô đặt trước (
-              {appData.totalSlots} ô tổng cộng)
+              {appData.totalSlots} ô tủ. Shop cấu hình ô mua tại chỗ và đặt trước sau khi bàn giao.
             </p>
           </div>
         </div>
