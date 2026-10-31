@@ -1,0 +1,595 @@
+/* Shared installation controls: the same surface for Manager, Admin and Technician. */
+:is(.operations-installations-view, .technician-installations-view, .installation-modal) {
+  --install-ink: #1d4034;
+  --install-muted: #5b7167;
+  --install-line: #dce6df;
+  --install-soft: #f5f8f5;
+  color: var(--install-ink);
+  min-width: 0;
+  line-height: 1.6;
+}
+:is(.operations-installations-view, .technician-installations-view, .installation-modal) * {
+  box-sizing: border-box;
+}
+:is(.operations-installations-view, .technician-installations-view, .installation-modal)
+  .installation-eyebrow {
+  display: block;
+  color: #5a7666;
+  font-size: 0.69rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 0.4rem;
+}
+:is(.operations-installations-view, .technician-installations-view, .installation-modal)
+  .kiosk-form-field {
+  display: grid;
+  align-content: start;
+  gap: 0.45rem;
+  min-width: 0;
+  margin: 0 0 1rem;
+}
+:is(.operations-installations-view, .technician-installations-view, .installation-modal)
+  .kiosk-form-field
+  label {
+  color: var(--install-ink);
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0;
+}
+:is(.operations-installations-view, .technician-installations-view, .installation-modal)
+  :is(input:not([type='file']), select, textarea) {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 46px;
+  border: 1px solid #c7d6cc;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--install-ink);
+  font: inherit;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  padding: 0.7rem 0.85rem;
+}
+:is(.operations-installations-view, .technician-installations-view, .installation-modal) textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+:is(.operations-installations-view, .technician-installations-view, .installation-modal)
+  :is(input, select, textarea):focus-visible {
+  outline: 2px solid #3e7960;
+  outline-offset: 2px;
+  border-color: #3e7960;
+}
+:is(.operations-installations-view, .technician-installations-view, .installation-modal)
+  :is(small, .quiet, .kiosk-help-text, .installation-field-note) {
+  color: var(--install-muted);
+  font-size: 0.79rem;
+  line-height: 1.65;
+}
+:is(.operations-installations-view, .technician-installations-view, .installation-modal)
+  .form-fields-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 1rem;
+}
+:is(.operations-installations-view, .technician-installations-view, .installation-modal) .button {
+  min-height: 44px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  border-radius: 10px;
+  gap: 0.5rem;
+  padding: 0.65rem 1rem;
+  line-height: 1.5;
+  white-space: normal;
+  max-width: 100%;
+}
+:is(.operations-installations-view, .technician-installations-view, .installation-modal) svg {
+  flex-shrink: 0;
+}
+:is(.operations-installations-view, .technician-installations-view, .installation-modal)
+  .action-buttons-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+:is(.operations-installations-view, .technician-installations-view, .installation-modal)
+  .status-notice {
+  border-radius: 12px;
+  margin: 1rem 0;
+  font-size: 0.84rem;
+  line-height: 1.7;
+}
+:is(.operations-installations-view, .technician-installations-view, .installation-modal)
+  .status-notice
+  p {
+  margin: 0;
+}
+:is(.operations-installations-view, .technician-installations-view, .installation-modal)
+  .notice-info {
+  color: #345d4c;
+  background: #f0f6f1;
+  border-color: #d6e5da;
+}
+:is(.operations-installations-view, .technician-installations-view) .kiosk-status-pill {
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0;
+  padding: 0.3rem 0.65rem;
+  white-space: normal;
+  max-width: 100%;
+  border-color: transparent;
+}
+:is(.operations-installations-view, .technician-installations-view)
+  .kiosk-status-pill[data-status='SCHEDULED'],
+:is(.operations-installations-view, .technician-installations-view)
+  .kiosk-status-pill[data-status='CONFIRMED'] {
+  background: #edf3fa;
+  color: #355d86;
+}
+:is(.operations-installations-view, .technician-installations-view)
+  .kiosk-status-pill[data-status='INSTALLING'] {
+  background: #fff4de;
+  color: #805917;
+}
+:is(.operations-installations-view, .technician-installations-view)
+  .kiosk-status-pill[data-status='AWAITING_HANDOVER'] {
+  background: #f2edfa;
+  color: #66508c;
+}
+:is(.operations-installations-view, .technician-installations-view)
+  .kiosk-status-pill[data-status='ACTIVE'] {
+  background: #eaf4ed;
+  color: #2e6545;
+}
+:is(.operations-installations-view, .technician-installations-view) .installation-progress {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem;
+  background: none;
+}
+:is(.operations-installations-view, .technician-installations-view) .installation-progress li {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.85rem 0.65rem;
+  border-radius: 10px;
+  background: #f6f8f6;
+  color: #63746c;
+  min-width: 0;
+}
+:is(.operations-installations-view, .technician-installations-view)
+  .installation-progress
+  li
+  > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  border: 1px solid #d7e0d9;
+  border-radius: 50%;
+  font-size: 0.73rem;
+  background: white;
+}
+:is(.operations-installations-view, .technician-installations-view) .installation-progress strong {
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+:is(.operations-installations-view, .technician-installations-view)
+  .installation-progress
+  li[aria-current='step'] {
+  background: #eaf2eb;
+  color: #204e38;
+}
+:is(.operations-installations-view, .technician-installations-view)
+  .installation-progress
+  li[aria-current='step']
+  > span {
+  background: #20563d;
+  border-color: #20563d;
+  color: white;
+}
+:is(.operations-installations-view, .technician-installations-view)
+  .installation-progress
+  li[data-complete]
+  > span {
+  background: #e6f0e8;
+  color: #315f41;
+  border-color: #c7dacc;
+}
+:is(.operations-installations-view, .technician-installations-view) .report-display-box {
+  background: #f5f8f5;
+  border: 1px solid var(--install-line);
+  padding: 1rem 1.15rem;
+  border-radius: 12px;
+  margin: 1rem 0;
+}
+:is(.operations-installations-view, .technician-installations-view) .report-display-box p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 0.4rem 0 0;
+}
+:is(.operations-installations-view, .technician-installations-view) .evidence-thumbnails-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
+  gap: 0.85rem;
+  margin: 1rem 0;
+}
+:is(.operations-installations-view, .technician-installations-view) .evidence-thumb-card {
+  min-width: 0;
+  padding: 0.65rem;
+  border: 1px solid var(--install-line);
+  border-radius: 12px;
+  background: white;
+}
+:is(.operations-installations-view, .technician-installations-view) .evidence-actual-img {
+  display: block;
+  width: 100%;
+  height: 180px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #f4f7f3;
+  margin: 0.4rem 0;
+}
+:is(.operations-installations-view, .technician-installations-view) .thumb-ref {
+  display: none;
+}
+:is(.operations-installations-view, .technician-installations-view) .evidence-fallback-box {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--install-muted);
+}
+.installation-modal .kiosk-modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  border-top: 1px solid var(--install-line);
+  padding-top: 1.2rem;
+  margin-top: 1rem;
+}
+.installation-modal .kiosk-provision-panel {
+  min-width: 0;
+}
+.installation-modal .provision-field-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.installation-modal .provision-field-row code {
+  overflow-wrap: anywhere;
+}
+div.management-modal.installation-modal {
+  border-radius: 20px;
+}
+div.management-modal.installation-inventory-modal {
+  width: min(100%, 860px);
+  max-width: 860px;
+}
+.installation-modal .inventory-overview {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: #f1f6f0;
+  border: 1px solid #deeadc;
+  border-radius: 14px;
+  padding: 1.1rem;
+  margin-bottom: 1.3rem;
+}
+.installation-feature-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 46px;
+  height: 46px;
+  border-radius: 12px;
+  color: #315f41;
+  background: #e2eddf;
+}
+.installation-modal .inventory-overview > div {
+  flex: 1;
+  min-width: 0;
+}
+.installation-modal .inventory-overview p {
+  font-size: 0.78rem;
+  margin: 0.2rem 0 0;
+  color: var(--install-muted);
+}
+.installation-modal .inventory-filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 160px auto;
+  gap: 0.75rem;
+  align-items: end;
+}
+.installation-modal .inventory-filters .kiosk-form-field {
+  margin: 0;
+}
+.installation-modal .inventory-filters > button {
+  min-height: 46px;
+}
+.installation-modal .installation-search {
+  position: relative;
+}
+.installation-modal .installation-search svg {
+  position: absolute;
+  left: 0.8rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--install-muted);
+}
+.installation-modal .installation-search input {
+  padding-left: 2.4rem;
+}
+.installation-modal .inventory-result-count {
+  font-size: 0.78rem;
+  color: var(--install-muted);
+  margin: 1rem 0 0.65rem;
+}
+.installation-modal .inventory-table-wrap {
+  border: 1px solid var(--install-line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.installation-modal .inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.84rem;
+}
+.installation-modal .inventory-table th {
+  background: #f6f8f5;
+  color: var(--install-muted);
+  font-size: 0.73rem;
+  font-weight: 600;
+  padding: 0.8rem 1rem;
+}
+.installation-modal .inventory-table td {
+  padding: 0.9rem 1rem;
+  border-top: 1px solid #e9efea;
+  overflow-wrap: anywhere;
+}
+.installation-modal .inventory-table td strong,
+.installation-modal .inventory-table code {
+  display: block;
+}
+.installation-modal .inventory-table code {
+  font-size: 0.73rem;
+  margin-top: 0.25rem;
+  color: var(--install-muted);
+}
+.installation-modal .inventory-slot-count {
+  background: #edf3ec;
+  padding: 0.25rem 0.6rem;
+  border-radius: 7px;
+  white-space: nowrap;
+  font-size: 0.78rem;
+}
+.installation-modal .inventory-connection {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.73rem;
+  color: #657369;
+}
+.installation-modal .inventory-connection > span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #8d9991;
+}
+.installation-modal .inventory-connection[data-online='true'] {
+  color: #2d7049;
+}
+.installation-modal .inventory-connection[data-online='true'] > span {
+  background: #3e8555;
+}
+.installation-modal .installation-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.8rem;
+  margin-top: 1.4rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--install-line);
+}
+.installation-modal .installation-modal-footer p {
+  color: var(--install-muted);
+  font-size: 0.78rem;
+  margin: 0;
+}
+:is(.operations-installations-view, .installation-modal) .installation-empty {
+  padding: 2.5rem 1rem;
+  text-align: center;
+  background: #f7f9f5;
+  border: 1px dashed #d6e2d5;
+  border-radius: 12px;
+  margin-top: 1rem;
+}
+:is(.operations-installations-view, .installation-modal) .installation-empty svg {
+  margin: auto;
+  color: #6b8873;
+}
+:is(.operations-installations-view, .installation-modal) .installation-empty h3 {
+  margin: 0.75rem 0 0.4rem;
+  font-size: 1.05rem;
+}
+:is(.operations-installations-view, .installation-modal) .installation-empty p {
+  color: var(--install-muted);
+  font-size: 0.84rem;
+}
+@media (max-width: 700px) {
+  :is(.operations-installations-view, .technician-installations-view, .installation-modal)
+    .form-fields-grid-2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  :is(.operations-installations-view, .technician-installations-view) .installation-progress {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .installation-modal .inventory-overview {
+    flex-wrap: wrap;
+  }
+  .installation-modal .inventory-overview > button {
+    width: 100%;
+  }
+  .installation-modal .inventory-filters {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .installation-modal .inventory-filters > .kiosk-form-field:first-child {
+    grid-column: 1 / -1;
+  }
+  .installation-modal .inventory-table th,
+  .installation-modal .inventory-table td {
+    padding: 0.75rem 0.6rem;
+  }
+  .installation-modal .inventory-table th:first-child {
+    width: 50%;
+  }
+  .installation-modal .installation-modal-footer {
+    align-items: flex-start;
+  }
+  .installation-modal .kiosk-modal-actions > button {
+    flex: 1 1 120px;
+  }
+}
+
+/* Keep a single, visible focus ring instead of stacking legacy workspace shadows. */
+body
+  :is(.operations-installations-view, .technician-installations-view, .installation-modal)
+  .kiosk-form-field
+  :is(input, select, textarea):focus {
+  outline: 2px solid #497a5a;
+  outline-offset: 2px;
+  border-color: #8eac95;
+  box-shadow: none;
+}
+:is(.operations-installations-view, .technician-installations-view, .installation-modal)
+  .notice-success {
+  color: #2c6041;
+  border-color: #cfe1ce;
+  background: #f0f7ed;
+}
+
+.management-modal.installation-modal .button.inventory-delete-button {
+  color: #9b4238;
+  border-color: #e4c8c2;
+  background: #fff;
+  min-width: 56px;
+}
+.management-modal.installation-modal .button.inventory-delete-button:disabled {
+  color: #768078;
+  border-color: #dce3dd;
+  cursor: default;
+}
+.management-modal.installation-delete-modal .button.inventory-delete-confirm {
+  background: #a43f34;
+  color: #fff;
+  border-color: #a43f34;
+}
+.management-modal.installation-delete-modal .button.inventory-delete-confirm:hover:not(:disabled) {
+  background: #8d332a;
+}
+.installation-modal .inventory-delete-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-top: 1.1rem;
+  color: #82463a;
+}
+.installation-modal .inventory-delete-warning p {
+  margin: 0;
+  font-size: 0.85rem;
+}
+.installation-modal .inventory-delete-summary {
+  display: grid;
+  gap: 0.65rem;
+  padding: 1rem;
+  margin: 1.2rem 0;
+  background: #f5f8f4;
+  border: 1px solid #dce6df;
+  border-radius: 12px;
+}
+.installation-modal .inventory-delete-summary > div {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr);
+  gap: 0.75rem;
+  font-size: 0.83rem;
+}
+.installation-modal .inventory-delete-summary dt {
+  color: #5b7167;
+}
+.installation-modal .inventory-delete-summary dd {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.installation-modal .inventory-delete-policy {
+  color: #5b7167;
+  font-size: 0.79rem;
+  line-height: 1.7;
+}
+.installation-modal .inventory-delete-error {
+  background: #fff1ed;
+  color: #92392f;
+  padding: 0.85rem 1rem;
+  border: 1px solid #edcec7;
+  border-radius: 10px;
+  font-size: 0.83rem;
+}
+.installation-modal .inventory-delete-success {
+  background: #eef6ec;
+  border: 1px solid #d3e3cc;
+  color: #2c6041;
+  padding: 0.8rem 1rem;
+  border-radius: 10px;
+  font-size: 0.83rem;
+}
+.installation-modal .inventory-table .inventory-row-actions {
+  text-align: right;
+}
+@media (max-width: 700px) {
+  .installation-modal .inventory-table tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 0.6rem;
+    border-top: 1px solid #e9efea;
+  }
+  .installation-modal .inventory-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .installation-modal .inventory-table td {
+    border: 0;
+    min-width: 0;
+    padding: 0.4rem;
+  }
+  .installation-modal .inventory-table td:first-child {
+    grid-column: 1 / -1;
+  }
+  .installation-modal .inventory-table td:nth-child(3) {
+    grid-column: 1;
+  }
+  .installation-modal .inventory-table .inventory-row-actions {
+    grid-column: 2;
+    grid-row: 2 / 4;
+    align-self: center;
+  }
+}
+
+.installation-delete-modal .button:disabled {
+  cursor: default;
+}
+.installation-delete-modal [aria-busy='true'] .button:disabled {
+  cursor: wait;
+}

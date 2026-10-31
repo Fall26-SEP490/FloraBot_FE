@@ -45,10 +45,16 @@ export function InstallationScheduleForm({
   const kioskSelectId = useId();
   const scheduleDateId = useId();
   const timeWindowId = useId();
+  const kioskStillAvailable =
+    eligibleKiosks.some((kiosk) => kiosk.id === selectedKioskId) ||
+    (appDetail.status === 'SCHEDULED' &&
+      !!appDetail.assignedKioskId &&
+      appDetail.assignedKioskId === selectedKioskId);
 
   return (
     <div className="operations-action-card">
-      <h3>Bước 2: Phân công Kỹ thuật viên & Cấp phát Tủ Kiosk</h3>
+      <span className="installation-eyebrow">Bước 02 · Phân công</span>
+      <h3>Xếp lịch lắp đặt</h3>
       <p>
         Chọn một kỹ thuật viên đang hoạt động và một tủ kiosk trống có đủ {appDetail.totalSlots} ô.
         Chủ shop phân loại hình thức bán sau khi được cấp kiosk.
@@ -56,7 +62,7 @@ export function InstallationScheduleForm({
 
       <div className="form-fields-grid-2">
         <div className="kiosk-form-field">
-          <label htmlFor={techSelectId}>Kỹ thuật viên phụ trách (ACTIVE):</label>
+          <label htmlFor={techSelectId}>Kỹ thuật viên phụ trách</label>
           <select
             id={techSelectId}
             value={selectedTechId}
@@ -87,18 +93,18 @@ export function InstallationScheduleForm({
 
         <div className="kiosk-form-field">
           <div className="field-label-with-action">
-            <label htmlFor={kioskSelectId}>Tủ Kiosk cấp phát:</label>
+            <label htmlFor={kioskSelectId}>Tủ kiosk cấp phát</label>
             <button
               type="button"
               className="link-inline-btn"
               onClick={() => onOpenEnroll(Number(appDetail.totalSlots))}
             >
-              + Thêm tủ mới (Asset Enrollment)
+              + Thêm tủ mới
             </button>
           </div>
           <select
             id={kioskSelectId}
-            value={selectedKioskId}
+            value={kioskStillAvailable ? selectedKioskId : ''}
             onChange={(e) => onSelectKioskId(e.target.value)}
           >
             <option value="">-- Chọn tủ kiosk phù hợp --</option>
@@ -115,6 +121,11 @@ export function InstallationScheduleForm({
               </option>
             ))}
           </select>
+          {selectedKioskId && !kioskStillAvailable && eligibleKiosksQuery.isSuccess && (
+            <small role="status">
+              Tủ đã chọn không còn khả dụng. Vui lòng chọn lại tủ trước khi lưu.
+            </small>
+          )}
           {eligibleKiosksQuery.isError && (
             <p role="alert" className="kiosk-field-error">
               Không tải được tủ khả dụng.{' '}
@@ -137,7 +148,7 @@ export function InstallationScheduleForm({
 
       <div className="form-fields-grid-2">
         <div className="kiosk-form-field">
-          <label htmlFor={scheduleDateId}>Ngày dự kiến lắp đặt:</label>
+          <label htmlFor={scheduleDateId}>Ngày dự kiến lắp đặt</label>
           <input
             id={scheduleDateId}
             type="date"
@@ -146,22 +157,28 @@ export function InstallationScheduleForm({
           />
         </div>
         <div className="kiosk-form-field">
-          <label htmlFor={timeWindowId}>Khung giờ:</label>
+          <label htmlFor={timeWindowId}>Khung giờ</label>
           <input
             id={timeWindowId}
             type="text"
             value={timeWindow}
             onChange={(e) => onTimeWindowChange(e.target.value)}
             placeholder="09:00 - 12:00"
+            aria-describedby={`${timeWindowId}-hint`}
           />
+          <small id={`${timeWindowId}-hint`}>Giờ Việt Nam · Ví dụ: 09:00 - 12:00</small>
         </div>
       </div>
 
+      <p className="installation-field-note">
+        Tủ OFFLINE vẫn có thể được phân công trước khi lắp đặt và kết nối.
+      </p>
       <div className="action-buttons-row">
         <Button
           onClick={onSubmit}
           disabled={
             isPending ||
+            !kioskStillAvailable ||
             techniciansQuery.isPending ||
             techniciansQuery.isError ||
             eligibleKiosksQuery.isPending ||

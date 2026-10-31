@@ -132,13 +132,13 @@ test('Rescheduling preserves the reserved kiosk and validates the time window be
 }) => {
   const writes = await setup(page);
   await page.goto(`/operations/installations?application=${application.id}`);
-  await expect(page.locator('.operations-detail-progress li[aria-current="step"]')).toHaveText(
-    '2. Xếp lịch lắp đặt',
+  await expect(page.locator('.operations-detail-progress li[aria-current="step"]')).toContainText(
+    'Xếp lịch lắp đặt',
   );
-  await expect(page.getByLabel('Tủ Kiosk cấp phát:')).toHaveValue('kiosk-1');
-  await expect(page.getByLabel('Kỹ thuật viên phụ trách (ACTIVE):')).toHaveValue('tech-1');
-  await expect(page.getByLabel('Ngày dự kiến lắp đặt:')).toHaveValue('2026-11-10');
-  const time = page.getByLabel('Khung giờ:');
+  await expect(page.getByLabel('Tủ kiosk cấp phát')).toHaveValue('kiosk-1');
+  await expect(page.getByLabel('Kỹ thuật viên phụ trách')).toHaveValue('tech-1');
+  await expect(page.getByLabel('Ngày dự kiến lắp đặt')).toHaveValue('2026-11-10');
+  const time = page.getByLabel('Khung giờ');
   await expect(time).toHaveValue('10:00 - 12:00');
   await time.fill('12:00 - 09:00');
   await page.getByRole('button', { name: 'Lưu lịch & Phân công' }).click();
@@ -188,9 +188,9 @@ test('Admin can inspect applications without manager mutations or directory quer
   });
   const writes = await setup(page, { role: 'ADMIN' });
   await page.goto(`/operations/installations?application=${application.id}`);
-  await expect(page.getByText('Chế độ giám sát (Admin):')).toBeVisible();
+  await expect(page.getByText('Chế độ giám sát (Admin)')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Lưu lịch & Phân công' })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: '+ Thêm tủ mới', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Thêm tủ mới', exact: true })).toHaveCount(0);
   expect(requests).not.toContain('/api/operations/technicians');
   expect(requests).not.toContain('/api/operations/eligible-kiosks');
   expect(writes).toEqual([]);
@@ -206,7 +206,7 @@ for (const width of [390, 1440]) {
       await page.goto(path);
       await expect(page.locator('h1')).toHaveCount(1);
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-      if (path.includes('installations')) await expect(page.getByLabel('Khung giờ:')).toBeVisible();
+      if (path.includes('installations')) await expect(page.getByLabel('Khung giờ')).toBeVisible();
       else await expect(page.getByText('Hoa Nhà Mình')).toBeVisible();
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
         true,
@@ -226,7 +226,7 @@ test('Enrollment modal traps focus and restores it on Escape without writing dat
 }) => {
   const writes = await setup(page);
   await page.goto('/operations/installations');
-  const trigger = page.getByRole('button', { name: '+ Thêm tủ mới', exact: true });
+  const trigger = page.getByRole('button', { name: 'Thêm tủ mới', exact: true });
   await trigger.click();
   const dialog = page.getByRole('dialog', { name: 'Đăng ký thiết bị kiosk mới' });
   await expect(dialog).toBeVisible();
@@ -235,3 +235,59 @@ test('Enrollment modal traps focus and restores it on Escape without writing dat
   await expect(trigger).toBeFocused();
   expect(writes).toEqual([]);
 });
+
+for (const width of [390, 1440]) {
+  test(`Kiosk inventory filters, reflows and returns focus without writes at ${width}px`, async ({
+    page,
+  }) => {
+    const writes = await setup(page);
+    await page.route('**/api/operations/eligible-kiosks', (route) =>
+      route.fulfill({
+        json: [
+          {
+            id: 'stock-1',
+            code: 'K-TRIAL-01',
+            name: 'Tủ thử nghiệm',
+            slotCount: 2,
+            status: 'OFFLINE',
+          },
+          {
+            id: 'stock-2',
+            code: 'K-PRO-01',
+            name: 'Tủ cửa hàng trung tâm',
+            slotCount: 8,
+            status: 'ONLINE',
+          },
+        ],
+      }),
+    );
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/operations/installations');
+    const trigger = page.getByRole('button', { name: 'Kho tủ khả dụng' });
+    await trigger.click();
+    const dialog = page.getByRole('dialog', { name: 'Kho thiết bị Kiosk khả dụng' });
+    await expect(dialog.getByText('2 tủ khả dụng', { exact: true })).toBeVisible();
+    await expect(dialog.getByText('OFFLINE', { exact: true })).toBeVisible();
+    await dialog.getByLabel('Quy mô ô', { exact: true }).selectOption('8');
+    await expect(dialog.getByText('K-PRO-01', { exact: true })).toBeVisible();
+    await expect(dialog.getByText('K-TRIAL-01', { exact: true })).toHaveCount(0);
+    await dialog.getByLabel('Tìm thiết bị').fill('không có thiết bị này');
+    await expect(dialog.getByRole('heading', { name: 'Không tìm thấy tủ phù hợp' })).toBeVisible();
+    await dialog.getByRole('button', { name: 'Xóa bộ lọc' }).click();
+    await expect(dialog.getByText('K-TRIAL-01', { exact: true })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    const bounds = await dialog.boundingBox();
+    expect(bounds && bounds.x >= 0 && bounds.x + bounds.width <= width).toBe(true);
+    expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+    await page.screenshot({
+      path: `artifacts/installation-inventory-${width}.png`,
+      fullPage: true,
+    });
+    await page.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0);
+    await expect(trigger).toBeFocused();
+    expect(writes).toEqual([]);
+  });
+}

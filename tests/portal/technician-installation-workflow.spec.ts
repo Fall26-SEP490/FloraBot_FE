@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
 const appId = 'test-installation-101';
@@ -173,6 +174,11 @@ for (const width of [390, 1440]) {
     await page.getByRole('button', { name: /Bắt đầu khảo sát/ }).click();
     const report = page.getByLabel('Nội dung báo cáo chi tiết:');
     await report.fill('Đã kiểm tra nguồn điện và hoàn thành lắp đặt tại hiện trường.');
+    expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+    await page.screenshot({
+      path: `artifacts/installation-technician-${width}.png`,
+      fullPage: true,
+    });
     const submit = page.getByRole('button', { name: 'Nộp báo cáo hoàn thành', exact: true });
     await expect(submit).toBeDisabled();
     await page.locator('input[type=file]').setInputFiles(photo);

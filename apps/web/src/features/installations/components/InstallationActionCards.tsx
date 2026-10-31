@@ -98,10 +98,7 @@ export function InstallationActionCards({
 
       {/* Provision Key Option for assigned kiosk */}
       {appDetail.assignedKioskId && isManager && (
-        <div
-          className="status-notice notice-info operations-kiosk-assignment"
-          style={{ justifyContent: 'space-between' }}
-        >
+        <div className="operations-kiosk-assignment">
           <div>
             <strong>Tủ đã phân bổ: {appDetail.assignedKioskCode}</strong>
             <p>Bạn có thể cấp lại khóa API thiết bị nếu cần nạp lại cấu hình phần cứng.</p>
@@ -154,25 +151,18 @@ export function InstallationActionCards({
 
       {appDetail.status === 'PAID_REVIEW' && isManager && (
         <div className="operations-action-card">
-          <h3>Bước 1: Xác nhận liên hệ với chủ shop</h3>
+          <span className="installation-eyebrow">Bước 01 · Xác nhận</span>
+          <h3>Xác nhận liên hệ với chủ shop</h3>
           <p>
             Quản lý vận hành gọi điện xác nhận địa chỉ lắp đặt và vị trí nguồn điện. Sau bước này,
             khách không thể tự ý hủy hồ sơ.
           </p>
           <div className="kiosk-form-field">
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '0.25rem',
-              }}
-            >
+            <div className="field-label-with-action">
               <label htmlFor={confirmNoteId}>Ghi chú xác nhận liên hệ (bắt buộc):</label>
               <button
                 type="button"
                 className="link-inline-btn"
-                style={{ fontSize: '0.85rem' }}
                 onClick={() => setConfirmNote('Đã gọi điện xác nhận vị trí mặt bằng và nguồn điện')}
               >
                 + Điền mẫu nhanh
@@ -183,7 +173,7 @@ export function InstallationActionCards({
               rows={2}
               value={confirmNote}
               onChange={(e) => setConfirmNote(e.target.value)}
-              placeholder="Nhập ghi chú hoặc để trống để dùng mẫu: Đã gọi điện xác nhận vị trí mặt bằng và nguồn điện..."
+              placeholder="Ghi lại kết quả trao đổi về mặt bằng, vị trí và nguồn điện..."
             />
           </div>
           <div className="action-buttons-row">
@@ -201,15 +191,9 @@ export function InstallationActionCards({
             </Button>
           </div>
 
-          <details
-            style={{ marginTop: '1.25rem', paddingTop: '0.75rem', borderTop: '1px dashed #dbe5da' }}
-          >
-            <summary
-              style={{ cursor: 'pointer', color: '#64748b', fontSize: '0.9rem', fontWeight: 500 }}
-            >
-              Từ chối hồ sơ nếu vị trí không đủ điều kiện (Mở rộng)
-            </summary>
-            <div className="kiosk-form-field" style={{ marginTop: '0.75rem' }}>
+          <details className="installation-secondary-action">
+            <summary>Từ chối nếu vị trí không đủ điều kiện</summary>
+            <div className="kiosk-form-field">
               <label htmlFor={rejectReasonId}>Lý do từ chối (tối thiểu 5 ký tự):</label>
               <textarea
                 id={rejectReasonId}
@@ -219,7 +203,7 @@ export function InstallationActionCards({
                 placeholder="Lý do từ chối nếu vị trí không đủ điều kiện an toàn nguồn điện..."
               />
             </div>
-            <div style={{ marginTop: '0.5rem' }}>
+            <div className="action-buttons-row">
               <Button
                 variant="outline"
                 onClick={() => onSubmitReject(rejectReason, () => setRejectReason(''))}

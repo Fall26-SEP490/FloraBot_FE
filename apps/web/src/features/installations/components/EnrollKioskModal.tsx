@@ -41,6 +41,7 @@ function EnrollKioskForm({ session, onClose, initialSlotCount, onSuccess }: Enro
       setNewMqttClientId('');
       setEnrollError('');
       void queryClient.invalidateQueries({ queryKey: ['eligible-kiosks', session.id] });
+      void queryClient.invalidateQueries({ queryKey: ['available-kiosks-inventory', session.id] });
       onSuccess(created);
     },
     onError: (err) => {
@@ -72,12 +73,12 @@ function EnrollKioskForm({ session, onClose, initialSlotCount, onSuccess }: Enro
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form className="installation-enroll-form" onSubmit={handleSubmit}>
       <div className="status-notice notice-info">
         <CircleAlert size={16} aria-hidden="true" />
         <p>
-          Thiết bị được tạo với trạng thái ban đầu là <strong>OFFLINE</strong>. Hệ thống không tạo
-          cảm biến hay nhịp tim giả lập. Khóa API thiết bị sẽ được cấp một lần duy nhất sau khi lưu.
+          Tủ mới có trạng thái <strong>OFFLINE</strong> và có thể được phân công lắp đặt. Khóa thiết
+          bị chỉ hiển thị một lần sau khi lưu; hãy giữ lại để cấu hình phần cứng.
         </p>
       </div>
 
@@ -194,7 +195,14 @@ export function EnrollKioskModal({
   onSuccess,
 }: EnrollKioskModalProps) {
   return (
-    <Modal open={open} title="Đăng ký thiết bị kiosk mới" onClose={onClose}>
+    <Modal
+      open={open}
+      title="Đăng ký thiết bị kiosk mới"
+      onClose={onClose}
+      description="Nhập thông tin trên thiết bị để đưa tủ vào kho khả dụng."
+      className="installation-modal"
+      size="lg"
+    >
       {open && (
         <EnrollKioskForm
           session={session}

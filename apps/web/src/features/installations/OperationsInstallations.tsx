@@ -12,6 +12,7 @@ import { EnrollKioskModal } from './components/EnrollKioskModal';
 import { ProvisionedKeyModal } from './components/ProvisionedKeyModal';
 import { AvailableKiosksModal } from './components/AvailableKiosksModal';
 import '../../shared/styles/kiosk-shared.css';
+import './styles/installation-ui.css';
 import './styles/operations-installations.css';
 
 interface OperationsInstallationsProps {
@@ -85,12 +86,11 @@ export default function OperationsInstallations({ session }: OperationsInstallat
   return (
     <div className="operations-installations-view">
       {!isManager && (
-        <div role="status" className="status-notice notice-info">
+        <div role="status" className="installation-readonly-notice">
           <CircleAlert size={18} aria-hidden="true" />
           <p>
-            <strong>Chế độ giám sát (Admin):</strong> Bạn có thể theo dõi hàng đợi và xem chi tiết
-            hồ sơ. Theo phân quyền hệ thống, các thao tác nghiệp vụ (xác nhận, xếp lịch, nghiệm thu)
-            chỉ dành cho Quản lý vận hành.
+            <strong>Chế độ giám sát (Admin)</strong>
+            <span>Xem hồ sơ và tiến độ. Manager phụ trách xác nhận, phân công và bàn giao.</span>
           </p>
         </div>
       )}

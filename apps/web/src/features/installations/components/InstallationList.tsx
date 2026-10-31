@@ -1,4 +1,4 @@
-import { Button, CircleAlert, ClipboardList, Eye, RefreshCw } from '@florabot/ui';
+import { Button, Boxes, CircleAlert, ClipboardList, Eye, Plus, RefreshCw } from '@florabot/ui';
 import type { KioskApplicationPage, KioskApplicationResponse } from '../installations.types';
 import { KIOSK_STATUS_LABELS, OPERATIONS_STAGE_TABS } from '../installations.constants';
 
@@ -31,7 +31,12 @@ function InstallationListItem({ item, isSelected, onSelect }: InstallationListIt
         </span>
       </td>
       <td data-label="">
-        <Button variant={isSelected ? 'default' : 'outline'} onClick={onSelect}>
+        <Button
+          variant={isSelected ? 'default' : 'outline'}
+          onClick={onSelect}
+          aria-expanded={isSelected}
+          aria-controls={isSelected ? 'installation-detail' : undefined}
+        >
           <Eye size={16} aria-hidden="true" />
           {isSelected ? 'Đang xem' : 'Chi tiết'}
         </Button>
@@ -79,18 +84,19 @@ export function InstallationList({
     <section className="operations-queue-section" aria-labelledby="queue-heading">
       <div className="operations-section-heading">
         <div>
+          <span className="installation-eyebrow">Tiếp nhận & triển khai</span>
           <h2 id="queue-heading">Hàng đợi hồ sơ</h2>
-          <p>Chọn một hồ sơ để kiểm tra thông tin và thực hiện bước tiếp theo.</p>
+          <p>Theo dõi từ xác nhận liên hệ đến bàn giao kiosk cho shop.</p>
         </div>
         {isManager && (
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className="installation-header-actions">
             {onOpenInventory && (
               <Button variant="outline" onClick={onOpenInventory}>
-                📦 Kho tủ khả dụng
+                <Boxes size={17} aria-hidden="true" /> Kho tủ khả dụng
               </Button>
             )}
             <Button variant="outline" onClick={onOpenEnroll} disabled={enrollPending}>
-              + Thêm tủ mới
+              <Plus size={17} aria-hidden="true" /> Thêm tủ mới
             </Button>
           </div>
         )}
@@ -109,7 +115,7 @@ export function InstallationList({
         ))}
       </div>
 
-      <div className="queue-filter-bar">
+      <div className="queue-filter-bar installation-filter-bar">
         <div className="filter-group">
           <label htmlFor="status-filter-select">Lọc theo trạng thái:</label>
           <select
@@ -154,61 +160,74 @@ export function InstallationList({
       )}
 
       {applicationsPage && !isError && (
-        <div className="table-responsive">
-          <table className="kiosk-data-table" aria-label="Danh sách hồ sơ thuê kiosk">
-            <thead>
-              <tr>
-                <th scope="col">Shop & Liên hệ</th>
-                <th scope="col">Gói thuê</th>
-                <th scope="col">Địa chỉ lắp đặt</th>
-                <th scope="col">Ngày tạo</th>
-                <th scope="col">Trạng thái</th>
-                <th scope="col">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              {applicationsPage.items.length === 0 ? (
+        <div className="installation-results">
+          <p className="installation-results-caption" role="status">
+            <span>
+              <strong>{applicationsPage.items.length} hồ sơ</strong> trong trang {page}
+            </span>
+            <span>Chọn Chi tiết để xem tiến độ và bước xử lý.</span>
+          </p>
+          <div className="table-responsive">
+            <table className="kiosk-data-table" aria-label="Danh sách hồ sơ thuê kiosk">
+              <thead>
                 <tr>
-                  <td colSpan={6} className="table-empty-cell">
-                    <div className="operations-empty">
-                      <ClipboardList size={32} aria-hidden="true" />
-                      <h3>Chưa có hồ sơ phù hợp</h3>
-                      <p>Thử chọn trạng thái khác hoặc làm mới để kiểm tra hồ sơ vừa tiếp nhận.</p>
-                    </div>
-                  </td>
+                  <th scope="col">Shop & Liên hệ</th>
+                  <th scope="col">Gói thuê</th>
+                  <th scope="col">Địa chỉ lắp đặt</th>
+                  <th scope="col">Ngày tạo</th>
+                  <th scope="col">Trạng thái</th>
+                  <th scope="col">Thao tác</th>
                 </tr>
-              ) : (
-                applicationsPage.items.map((item) => (
-                  <InstallationListItem
-                    key={item.id}
-                    item={item}
-                    isSelected={selectedAppId === item.id}
-                    onSelect={(event) => {
-                      onSelectApp(selectedAppId === item.id ? null : item.id, event.currentTarget);
-                    }}
-                  />
-                ))
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {applicationsPage.items.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="table-empty-cell">
+                      <div className="operations-empty">
+                        <ClipboardList size={32} aria-hidden="true" />
+                        <h3>Chưa có hồ sơ phù hợp</h3>
+                        <p>
+                          Thử chọn trạng thái khác hoặc làm mới để kiểm tra hồ sơ vừa tiếp nhận.
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  applicationsPage.items.map((item) => (
+                    <InstallationListItem
+                      key={item.id}
+                      item={item}
+                      isSelected={selectedAppId === item.id}
+                      onSelect={(event) => {
+                        onSelectApp(
+                          selectedAppId === item.id ? null : item.id,
+                          event.currentTarget,
+                        );
+                      }}
+                    />
+                  ))
+                )}
+              </tbody>
+            </table>
 
-          {/* Pagination */}
-          <div className="table-pagination-row">
-            <Button
-              variant="outline"
-              disabled={page <= 1 || isFetching}
-              onClick={() => onPageChange((p) => p - 1)}
-            >
-              Trang trước
-            </Button>
-            <span>Trang {page}</span>
-            <Button
-              variant="outline"
-              disabled={!applicationsPage.hasMore || isFetching}
-              onClick={() => onPageChange((p) => p + 1)}
-            >
-              Trang sau
-            </Button>
+            {/* Pagination */}
+            <div className="table-pagination-row" aria-busy={isFetching}>
+              <Button
+                variant="outline"
+                disabled={page <= 1 || isFetching}
+                onClick={() => onPageChange((p) => p - 1)}
+              >
+                Trang trước
+              </Button>
+              <span aria-live="polite">Trang {page}</span>
+              <Button
+                variant="outline"
+                disabled={!applicationsPage.hasMore || isFetching}
+                onClick={() => onPageChange((p) => p + 1)}
+              >
+                Trang sau
+              </Button>
+            </div>
           </div>
         </div>
       )}

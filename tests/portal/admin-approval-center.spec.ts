@@ -158,7 +158,7 @@ for (const width of [390, 1440]) {
     );
     await leases.getByRole('link', { name: 'Xem giám sát hồ sơ thuê' }).click();
     await expect(page).toHaveURL(/\/admin\/installations$/);
-    await expect(page.getByText('Chế độ giám sát (Admin):', { exact: true })).toBeVisible();
+    await expect(page.getByText('Chế độ giám sát (Admin)', { exact: true })).toBeVisible();
     expect(
       await page
         .getByRole('button', { name: 'Chờ xác nhận', exact: true })

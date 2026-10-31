@@ -406,7 +406,7 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     await expect(page.getByText('Đã xác nhận liên hệ cho shop Hoa Tươi Sài Gòn')).toBeVisible();
 
     // Enroll a new Kiosk and verify once-only key delivery panel
-    await page.getByRole('button', { name: '+ Thêm tủ mới (Asset Enrollment)' }).click();
+    await page.getByRole('button', { name: '+ Thêm tủ mới' }).click();
     await page.getByLabel('Mã tủ (Code) *').fill('K-NEW-02');
     await page.getByLabel('Tên tủ *').fill('Kiosk Phú Nhuận');
     await page.getByLabel('Hardware ID (Serial) *').fill('ESP32-SN-998811');
@@ -423,9 +423,9 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     ).toHaveCount(1);
 
     // Step 2: Schedule Tech and Kiosk
-    await page.getByLabel('Kỹ thuật viên phụ trách (ACTIVE):').selectOption('tech-01');
-    await page.getByLabel('Tủ Kiosk cấp phát:').selectOption('kiosk-01');
-    await page.getByLabel('Ngày dự kiến lắp đặt:').fill('2026-10-18');
+    await page.getByLabel('Kỹ thuật viên phụ trách').selectOption('tech-01');
+    await page.getByLabel('Tủ kiosk cấp phát').selectOption('kiosk-01');
+    await page.getByLabel('Ngày dự kiến lắp đặt').fill('2026-10-18');
     await page.getByRole('button', { name: /Lưu lịch & Phân công/ }).click();
     await expect(page.getByText('Đã phân công KTV và lên lịch')).toBeVisible();
     await expect(
@@ -566,7 +566,7 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     await page.getByRole('button', { name: 'Chi tiết' }).click();
 
     // 1. First Enrollment
-    await page.getByRole('button', { name: '+ Thêm tủ mới (Asset Enrollment)' }).click();
+    await page.getByRole('button', { name: '+ Thêm tủ mới' }).click();
     await page.getByLabel('Mã tủ (Code) *').fill('K-CYCLE-01');
     await page.getByLabel('Tên tủ *').fill('Kiosk Chu Kỳ 1');
     await page.getByLabel('Hardware ID (Serial) *').fill('SN-CYCLE-001');
@@ -588,7 +588,7 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     await expect(page.getByText('Cấu hình khóa thiết bị Kiosk (API Key)')).not.toBeVisible();
 
     // 2. Second Enrollment
-    await page.getByRole('button', { name: '+ Thêm tủ mới (Asset Enrollment)' }).click();
+    await page.getByRole('button', { name: '+ Thêm tủ mới' }).click();
     await page.getByLabel('Mã tủ (Code) *').fill('K-CYCLE-02');
     await page.getByLabel('Tên tủ *').fill('Kiosk Chu Kỳ 2');
     await page.getByLabel('Hardware ID (Serial) *').fill('SN-CYCLE-002');
