@@ -5,7 +5,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@florabot/ui';
+import { ArrowRight, Button } from '@florabot/ui';
 import { ApiError, logoutSession, sessionQuery } from '@/shared/lib/api';
 import { accountPath } from '@/features/portal/config/roleRoutes';
 import WorkspaceNavigation, { WorkspaceHeader } from '../components/WorkspaceNavigation';
@@ -15,6 +15,8 @@ import '../workspace-styles.css';
 import '../../dashboard/styles/dashboard-overview.css';
 import '../../account-management/styles/platform-workspace.css';
 import '../../account-management/styles/platform-refresh.css';
+import '../styles/admin-workspace.css';
+import '../styles/admin-surfaces.css';
 
 const DashboardOverview = dynamic(() => import('../../dashboard/DashboardOverview'), {
   loading: () => <p role="status">Đang tải tổng quan hệ thống…</p>,
@@ -145,30 +147,45 @@ export default function AdminWorkspace({ section = 'overview' }: { section?: str
       />
       <div className="dashboard-shell">
         <WorkspaceNavigation key={section} workspaceRole="ADMIN" section={section} />
-        <main id="main" className="workspace dashboard-content">
+        <main id="main" className="workspace dashboard-content admin-content">
           <PortalUpdates />
+          <nav className="admin-breadcrumb" aria-label="Vị trí hiện tại">
+            {section === 'overview' ? (
+              <span>Quản trị hệ thống</span>
+            ) : (
+              <>
+                <Link href="/admin">Tổng quan</Link>
+                <span aria-hidden="true">/</span>
+                <span aria-current="page">
+                  {workspaceSections.ADMIN.find(([key]) => key === section)?.[1]}
+                </span>
+              </>
+            )}
+          </nav>
           <div className="dashboard-page-heading">
             <div>
               <h1>
                 {section === 'overview'
-                  ? t('welcome', { name: session.data.name })
+                  ? 'Tổng quan quản trị'
                   : workspaceSections['ADMIN'].find(([key]) => key === section)?.[1]}
               </h1>
               <p>
                 {section === 'overview'
-                  ? 'Tình hình vận hành và các việc cần bạn xử lý.'
+                  ? 'Chào ' +
+                    session.data.name +
+                    '. Xem yêu cầu cần xử lý và theo dõi vận hành tại đây.'
                   : workspaceSections['ADMIN'].find(([key]) => key === section)?.[2]}
               </p>
             </div>
+            {section === 'overview' && (
+              <Link className="button button-primary" href="/admin/approvals">
+                Mở trung tâm duyệt
+                <ArrowRight size={17} aria-hidden="true" />
+              </Link>
+            )}
           </div>
           {section === 'overview' && (
             <>
-              <div className="status-notice notice-info">
-                <p>
-                  Kiểm tra hồ sơ chờ xử lý tại <Link href="/admin/approvals">Trung tâm duyệt</Link>.
-                  Hồ sơ thuê kiosk mới do Manager xác nhận và bàn giao.
-                </p>
-              </div>
               <DashboardOverview session={session.data} />
               <details className="workspace-profile">
                 <summary>Thông tin tài khoản và quyền truy cập</summary>

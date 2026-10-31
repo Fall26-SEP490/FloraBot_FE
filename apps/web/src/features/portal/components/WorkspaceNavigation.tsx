@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import AdminNavigation from './AdminNavigation';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -31,7 +32,7 @@ type Role = 'ADMIN' | 'SELLER' | 'OPERATIONS_MANAGER' | 'TECHNICIAN' | 'SELLER_S
 
 function workspaceRoleLabel(role: string) {
   return role === 'ADMIN'
-    ? 'Quản trị vận hành'
+    ? 'Quản trị viên'
     : role === 'OPERATIONS_MANAGER'
       ? 'Quản lý vận hành'
       : getRoleLabel(role);
@@ -68,14 +69,6 @@ const icons = {
   wallet: Wallet,
 };
 const groups = {
-  ADMIN: [
-    ['Vận hành', ['approvals', 'accounts', 'managers', 'orders', 'incidents', 'tasks']],
-    ['Mạng lưới', ['installations', 'shops', 'slots']],
-    [
-      'Giao dịch',
-      ['complaints', 'refunds', 'kiosk-refunds', 'withdrawals', 'reconciliation', 'reports'],
-    ],
-  ],
   SELLER: [
     ['Bán hoa', ['orders', 'chats', 'products', 'stock', 'accessories', 'tasks']],
     ['Cửa hàng', ['staff', 'staff-chats', 'kiosks', 'subscriptions', 'wallet']],
@@ -223,7 +216,9 @@ export default function WorkspaceNavigation({
         className={expanded ? 'is-expanded' : ''}
         aria-label="Điều hướng quản lý"
       >
-        {role === 'TECHNICIAN' ? (
+        {role === 'ADMIN' ? (
+          <AdminNavigation section={section} closeMenu={closeMenu} onEscape={handleEscape} />
+        ) : role === 'TECHNICIAN' ? (
           <>
             <Link
               onKeyDown={handleEscape}
@@ -339,7 +334,7 @@ export default function WorkspaceNavigation({
               <LayoutDashboard size={19} aria-hidden="true" />
               {role === 'SELLER' ? 'Tổng quan cửa hàng' : 'Tổng quan'}
             </Link>
-            {groups[role as 'ADMIN' | 'SELLER']?.map(([label, keys]) => (
+            {groups[role as 'SELLER']?.map(([label, keys]) => (
               <div className="workspace-nav-group" key={label}>
                 <p>{label}</p>
                 {keys.map((key) => {

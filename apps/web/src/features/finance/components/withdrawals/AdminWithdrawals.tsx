@@ -1,3 +1,4 @@
+import { AdminFilterBar, AdminDisclosureSummary } from '@/features/portal/components/AdminUi';
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Controller, useForm } from 'react-hook-form';
@@ -426,14 +427,16 @@ function WithdrawalItem({ item, onNotice }: { item: Item; onNotice: (message: st
   return (
     <li>
       <details onToggle={(event) => setOpen(event.currentTarget.open)}>
-        <summary>
-          <strong>
-            {item.shopName || item.sellerId} · {money(item.amount)}
-          </strong>
-          <span>
-            {names[item.status]} · {new Date(item.createdAt).toLocaleString('vi-VN')}
-          </span>
-        </summary>
+        <AdminDisclosureSummary
+          statusCode={item.status}
+          title={
+            <>
+              {item.shopName || item.sellerId} · {money(item.amount)}
+            </>
+          }
+          meta={new Date(item.createdAt).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}
+          status={names[item.status] || item.status}
+        />
         {open && <WithdrawalDetails id={item.id} onNotice={onNotice} />}
       </details>
     </li>
@@ -455,34 +458,41 @@ export default function AdminWithdrawals() {
       <p>
         Duyệt và chi bằng hai tài khoản admin khác nhau. Mỗi khoản chi cần chứng từ để đối chiếu.
       </p>
-      <label htmlFor="withdrawal-status">Trạng thái yêu cầu rút tiền</label>
-      <select
-        id="withdrawal-status"
-        value={status}
-        onChange={(event) => {
-          setStatus(event.target.value);
-          setPage(1);
-        }}
+      <AdminFilterBar
+        actions={
+          <>
+            <Button
+              variant="outline"
+              disabled={queue.isFetching}
+              onClick={() => {
+                setPage(1);
+                void queryClient.invalidateQueries({ queryKey: ['admin-withdrawals'] });
+                void queryClient.invalidateQueries({ queryKey: ['admin-withdrawal'] });
+              }}
+            >
+              Cập nhật yêu cầu rút tiền
+            </Button>
+          </>
+        }
       >
-        {Object.entries(names).map(([value, name]) => (
-          <option key={value} value={value}>
-            {name}
-          </option>
-        ))}
-      </select>
-      <div className="stock-actions">
-        <Button
-          variant="outline"
-          disabled={queue.isFetching}
-          onClick={() => {
-            setPage(1);
-            void queryClient.invalidateQueries({ queryKey: ['admin-withdrawals'] });
-            void queryClient.invalidateQueries({ queryKey: ['admin-withdrawal'] });
-          }}
-        >
-          Cập nhật yêu cầu rút tiền
-        </Button>
-      </div>
+        <div>
+          <label htmlFor="withdrawal-status">Trạng thái yêu cầu rút tiền</label>
+          <select
+            id="withdrawal-status"
+            value={status}
+            onChange={(event) => {
+              setStatus(event.target.value);
+              setPage(1);
+            }}
+          >
+            {Object.entries(names).map(([value, name]) => (
+              <option key={value} value={value}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </AdminFilterBar>
       <p role="status" ref={noticeRef} tabIndex={-1}>
         {notice}
       </p>

@@ -1,0 +1,1364 @@
+/* Completion pass for Admin detail surfaces only. */
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(.admin-content > section:not(.admin-approval-center), .operations-queue-section) {
+  padding: 24px;
+  margin-top: 0;
+  border: 1px solid var(--admin-line);
+  border-radius: 14px;
+  background: var(--admin-surface);
+  box-shadow: none;
+  min-width: 0;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  > section
+  > h2 {
+  margin: 0 0 10px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  > section
+  > p {
+  max-width: 70ch;
+  line-height: 1.75;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(.management-eyebrow, .installation-eyebrow) {
+  display: none;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-filterbar {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 22px 0;
+  padding: 18px;
+  background: #f4f7f2;
+  border: 1px solid var(--admin-line);
+  border-radius: 12px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-filter-fields {
+  display: flex;
+  flex: 1 1 260px;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 14px;
+  min-width: 0;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-filter-fields
+  > div {
+  flex: 1 1 170px;
+  min-width: 0;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-filter-fields
+  label {
+  display: block;
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-filter-fields
+  :is(input, select) {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  min-height: 46px;
+  background: white;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(.admin-content .stock-actions, .admin-content .order-pagination) {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-block: 18px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(input, select, textarea) {
+  border-color: #91a595;
+  box-shadow: none;
+  color: var(--admin-ink);
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(input, textarea)::placeholder {
+  color: #627367;
+  opacity: 1;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(label, legend) {
+  line-height: 1.5;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin'] main.admin-content textarea {
+  width: 100%;
+  min-width: 0;
+  line-height: 1.7;
+  resize: vertical;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(.admin-shop-list, .member-orders) {
+  display: grid;
+  gap: 14px;
+  padding: 0;
+  list-style: none;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-shop-list
+  > li {
+  padding: 0;
+  margin: 0;
+  border: 1px solid var(--admin-line);
+  border-radius: 12px;
+  background: white;
+  box-shadow: none;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-disclosure-summary {
+  display: flex;
+  align-items: center;
+  gap: 14px 22px;
+  flex-wrap: wrap;
+  min-height: 82px;
+  padding: 18px 20px;
+  cursor: pointer;
+  border-radius: 12px;
+  list-style: none;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-disclosure-summary::-webkit-details-marker {
+  display: none;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-disclosure-summary:hover {
+  background: #f7faf5;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-disclosure-main {
+  display: block;
+  flex: 1 1 200px;
+  min-width: 0;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-disclosure-main
+  > strong {
+  display: block;
+  color: var(--admin-ink);
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-disclosure-meta {
+  display: block;
+  margin-top: 5px;
+  color: var(--admin-muted);
+  font-size: 0.76rem;
+  font-weight: 400;
+  line-height: 1.6;
+  font-variant-numeric: tabular-nums;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-disclosure-status {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 4px 9px;
+  border-radius: 7px;
+  background: var(--admin-soft);
+  color: #345542;
+  font-size: 0.73rem;
+  line-height: 1.6;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-disclosure-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #235d42;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-disclosure-toggle
+  .when-open {
+  display: none;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  details[open]
+  > .admin-disclosure-summary {
+  border-bottom: 1px solid var(--admin-line);
+  border-radius: 12px 12px 0 0;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  details[open]
+  > summary
+  .admin-disclosure-toggle
+  .when-open {
+  display: inline;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  details[open]
+  > summary
+  .admin-disclosure-toggle
+  .when-closed {
+  display: none;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  details[open]
+  > summary
+  .admin-disclosure-toggle
+  svg {
+  transform: rotate(180deg);
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(.shop-profile, .incident-detail, .withdrawal-detail) {
+  padding: 22px;
+  margin: 0;
+  border-top: 0;
+  background: transparent;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(.shop-profile, .incident-detail, .withdrawal-detail)
+  :is(h3, h4) {
+  margin-block: 22px 10px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(.shop-profile, .incident-detail, .withdrawal-detail)
+  > :first-child {
+  margin-top: 0;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(.shop-profile dl, .bank-summary, .management-details) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 24px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(.shop-profile dl, .bank-summary, .management-details)
+  > div {
+  display: block;
+  min-width: 0;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--admin-line);
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(.shop-profile dl, .bank-summary, .management-details)
+  dt {
+  margin: 0 0 6px;
+  font-size: 0.74rem;
+  color: var(--admin-muted);
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(.shop-profile dl, .bank-summary, .management-details)
+  dd {
+  margin: 0;
+  color: var(--admin-ink);
+  font-size: 0.86rem;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(.incident-detail, .withdrawal-detail)
+  form {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--admin-line);
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(.error, [role='alert']):not(:empty) {
+  line-height: 1.7;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-empty-state {
+  padding: 20px;
+  border: 1px solid var(--admin-line);
+  border-radius: 12px;
+  background: #f6f9f3;
+  color: var(--admin-muted);
+  line-height: 1.75;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(.management-table, .kiosk-data-table, .reports-table-wrap table) {
+  width: 100%;
+  min-width: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.82rem;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(.management-table, .kiosk-data-table, .reports-table-wrap table)
+  th {
+  padding: 14px 16px;
+  background: #f3f7f1;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  color: #455e4e;
+  line-height: 1.5;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(.management-table, .kiosk-data-table, .reports-table-wrap table)
+  td {
+  padding: 16px;
+  font-size: 0.82rem;
+  line-height: 1.7;
+  vertical-align: top;
+  border-bottom: 1px solid var(--admin-line);
+  overflow-wrap: anywhere;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(.management-table-wrap, .reports-table-wrap, .table-responsive) {
+  max-width: 100%;
+  border: 1px solid var(--admin-line);
+  border-radius: 12px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #8ca58e #eef4eb;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(.management-row-actions, .management-heading-actions, .platform-directory-actions) {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .management-row-actions
+  :is(button, a) {
+  min-height: 44px;
+  padding: 7px 10px;
+  border: 1px solid #cbd9cb;
+  border-radius: 7px;
+  background: white;
+  color: #235d42;
+  font-size: 0.76rem;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .management-row-actions
+  .management-row-danger {
+  border-color: #e7c4c1;
+  color: #a23229;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .account-directory-card {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .management-stats {
+  margin: 0 0 24px;
+  gap: 18px;
+  padding: 0 0 20px;
+  border-bottom: 1px solid var(--admin-line);
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .management-stats
+  article {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .management-stats
+  .account-stat-icon {
+  display: none;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .management-stats
+  strong {
+  font-size: 1.45rem;
+  margin-block: 7px;
+  color: var(--admin-ink);
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .management-stats
+  small {
+  font-size: 0.72rem;
+  color: var(--admin-muted);
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(.management-heading, .platform-directory-heading) {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(.management-heading, .platform-directory-heading)
+  h2 {
+  margin: 0 0 8px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(.platform-tools, .management-toolbar) {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 18px;
+  margin: 20px 0;
+  border: 1px solid var(--admin-line);
+  border-radius: 12px;
+  background: #f4f7f2;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .platform-tools
+  > div {
+  flex: 1 1 140px;
+  min-width: 0;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .platform-tools
+  .platform-search-field {
+  flex: 2 1 220px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .platform-tools
+  .platform-filter-actions {
+  display: flex;
+  flex: 1 1 100%;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(.platform-tools, .management-toolbar)
+  label {
+  margin: 0 0 8px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(.platform-tools, .management-toolbar)
+  :is(input, select) {
+  margin: 0;
+  min-height: 46px;
+  width: 100%;
+  background: white;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .platform-search-input {
+  background: white;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .management-search {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .management-filter-select {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(.management-pagination, .platform-pagination, .table-pagination-row, .order-pagination) {
+  padding: 16px 0;
+  margin: 12px 0 0;
+  border: 0;
+  gap: 12px;
+  align-items: center;
+  font-size: 0.78rem;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .management-modal {
+  width: min(920px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 40px);
+  padding: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-padding-block: 100px;
+  border: 1px solid #ccd9cd;
+  border-radius: 16px;
+  box-shadow: 0 18px 60px rgb(15 40 28 / 20%);
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .management-modal--sm {
+  width: min(480px, calc(100vw - 32px));
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .management-modal--md {
+  width: min(560px, calc(100vw - 32px));
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .management-modal--lg {
+  width: min(680px, calc(100vw - 32px));
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .management-modal--sm
+  > .management-modal-header {
+  border-bottom: 0;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .management-modal--sm
+  > .management-modal-actions {
+  border-top: 0;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .management-modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  padding: 22px 24px;
+  margin: 0;
+  border-bottom: 1px solid var(--admin-line);
+  background: #fff;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .management-modal
+  > :not(.management-modal-header) {
+  margin: 22px 24px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .management-modal
+  .management-modal-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  padding: 16px 0;
+  margin-block: 20px 0;
+  border-top: 1px solid var(--admin-line);
+  background: white;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .management-modal
+  :is(input, select, textarea, button) {
+  scroll-margin-block: 105px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .management-modal
+  :is(.platform-profile-hero, .account-profile-hero) {
+  padding: 16px;
+  border: 1px solid var(--admin-line);
+  border-radius: 12px;
+  background: #f4f7ef;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .operations-installations-view {
+  min-width: 0;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .installation-readonly-notice {
+  margin-bottom: 20px;
+  padding: 15px 18px;
+  background: #edf4ef;
+  border: 1px solid #c7dacc;
+  border-radius: 10px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .operations-section-heading {
+  margin-bottom: 22px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .operations-stage-tabs {
+  margin-bottom: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  background: #eef3eb;
+  padding: 5px;
+  border-radius: 10px;
+  width: fit-content;
+  max-width: 100%;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .operations-stage-tabs
+  button {
+  min-height: 44px;
+  padding: 9px 14px;
+  font-size: 0.78rem;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .installation-filter-bar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 18px;
+  margin-block: 20px;
+  border: 1px solid var(--admin-line);
+  border-radius: 12px;
+  background: #f4f7f2;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .installation-filter-bar
+  .filter-group {
+  flex: 1 1 240px;
+  max-width: 380px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .installation-results-caption {
+  max-width: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px 16px;
+  padding: 0;
+  margin: 0 0 16px;
+  border: 0;
+  font-size: 0.77rem;
+  line-height: 1.65;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .address-truncate {
+  display: block;
+  max-width: none;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .platform-task-panel
+  > .member-empty {
+  padding: 20px;
+  border: 1px solid var(--admin-line);
+  border-radius: 12px;
+  background: #fff;
+  margin-top: 16px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .staff-task-toolbar {
+  padding: 18px;
+  border: 1px solid var(--admin-line);
+  border-radius: 12px;
+  background: #f4f7f2;
+  gap: 14px;
+  align-items: end;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(.staff-task-toolbar, .order-filter-bar)
+  label.sr-only {
+  position: static;
+  display: block;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+  margin: 0 0 8px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(.platform-task-panel, .web-orders)
+  .operations-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0;
+  padding: 14px 0;
+  border-block: 1px solid var(--admin-line);
+  background: transparent;
+  margin-block: 20px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(.platform-task-panel, .web-orders)
+  .operations-metric {
+  padding: 6px 16px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(.platform-task-panel, .web-orders)
+  .operations-metric
+  > svg {
+  display: none;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(.platform-task-panel, .web-orders)
+  .operations-metric
+  > strong {
+  font-size: 1.35rem;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .order-filter-bar {
+  padding: 18px;
+  background: #f4f7f2;
+  border: 1px solid var(--admin-line);
+  border-radius: 12px;
+  align-items: end;
+  gap: 14px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .web-orders
+  .member-orders
+  > li {
+  border: 1px solid var(--admin-line);
+  border-radius: 12px;
+  background: #fff;
+  padding: 0;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .web-orders
+  .member-orders
+  summary {
+  padding: 18px 20px;
+  min-height: 72px;
+  cursor: pointer;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .web-orders
+  .web-order-actions {
+  padding: 20px;
+  border-top: 1px solid var(--admin-line);
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-kiosk-refunds-view
+  .dashboard-page-heading {
+  margin-bottom: 18px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-kiosk-refunds-view
+  .status-notice {
+  border: 1px solid var(--admin-line);
+  border-radius: 10px;
+  background: #f5f8f1;
+  padding: 16px 18px;
+  margin-block: 18px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-kiosk-refunds-view
+  .queue-filter-bar {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  margin-block: 20px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-statement-form {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--admin-line);
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-statement-form
+  > h3 {
+  margin: 0 0 10px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-statement-form
+  .admin-segmented {
+  margin-block: 18px;
+  flex-wrap: wrap;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .statement-editor
+  > p {
+  max-width: 70ch;
+  color: var(--admin-muted);
+  font-size: 0.8rem;
+  line-height: 1.8;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .statement-entry-list {
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .statement-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: end;
+  min-width: 0;
+  padding: 16px;
+  margin: 0;
+  border: 1px solid var(--admin-line);
+  border-radius: 12px;
+  background: #f8faf6;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .statement-entry
+  legend {
+  padding-inline: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--admin-muted);
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .statement-entry
+  > div {
+  min-width: 0;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .statement-entry
+  label {
+  display: block;
+  font-size: 0.76rem;
+  margin: 0 0 8px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .statement-entry
+  input {
+  width: 100%;
+  min-width: 0;
+  background: white;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .statement-entry
+  .button {
+  margin: 0;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-reconciliation
+  .admin-filterbar
+  input[type='date'] {
+  max-width: none;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-reconciliation
+  :is(.reconciliation-review, .reconciliation-report) {
+  margin-top: 24px;
+  padding: 20px;
+  border: 1px solid var(--admin-line);
+  border-radius: 12px;
+  background: #f7faf4;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-reconciliation
+  :is(.reconciliation-review, .reconciliation-report)
+  h3 {
+  margin-top: 0;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .reconciliation-rows {
+  display: grid;
+  gap: 0;
+  padding: 0;
+  margin: 20px 0 0;
+  list-style: none;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .reconciliation-rows
+  > li {
+  padding: 18px 0;
+  border: 0;
+  border-top: 1px solid var(--admin-line);
+  border-radius: 0;
+  background: transparent;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .reconciliation-rows
+  dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 16px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .reconciliation-rows
+  dt {
+  font-size: 0.75rem;
+  color: var(--admin-muted);
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .reconciliation-rows
+  dd {
+  margin: 7px 0 0;
+  font-variant-numeric: tabular-nums;
+  font-size: 1rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .reports-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .api-reports
+  .reports-table-wrap {
+  margin-top: 20px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .reports-table-wrap
+  caption {
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 0.78rem;
+  color: var(--admin-muted);
+  background: #f8faf5;
+}
+@media (max-width: 1250px) {
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    :is(.kiosk-data-table, .management-table, .reports-table-wrap table)
+    thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    :is(.kiosk-data-table, .management-table, .reports-table-wrap table)
+    tbody {
+    display: grid;
+    gap: 14px;
+    padding: 12px;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    :is(.kiosk-data-table, .management-table, .reports-table-wrap table)
+    tbody
+    tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 20px;
+    padding: 4px 14px;
+    border: 1px solid var(--admin-line);
+    border-radius: 10px;
+    background: white;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    :is(.kiosk-data-table, .management-table, .reports-table-wrap table)
+    td {
+    display: block;
+    width: auto;
+    min-width: 0;
+    padding: 12px 0;
+    border: 0;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    :is(.kiosk-data-table, .management-table, .reports-table-wrap table)
+    td::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.71rem;
+    color: var(--admin-muted);
+    font-weight: 500;
+    line-height: 1.5;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    :is(.kiosk-data-table, .management-table, .reports-table-wrap table)
+    td[data-label='Thao tác'] {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    border-top: 1px solid var(--admin-line);
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    :is(.kiosk-data-table, .management-table, .reports-table-wrap table)
+    td[colspan] {
+    grid-column: 1 / -1;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    :is(.kiosk-data-table, .management-table, .reports-table-wrap table)
+    td[colspan]::before {
+    display: none;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    .statement-entry {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    .statement-entry
+    > .button {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+@media (max-width: 600px) {
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    :is(.admin-content > section:not(.admin-approval-center), .operations-queue-section) {
+    padding: 18px;
+    border-radius: 12px;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    .admin-filterbar {
+    padding: 14px;
+    gap: 14px;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    .admin-filter-fields {
+    flex-basis: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    .admin-filter-fields
+    > div {
+    flex: auto;
+    width: 100%;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    .admin-filter-actions {
+    width: 100%;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    .admin-filter-actions
+    .button {
+    flex: 1 1 140px;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    .admin-disclosure-summary {
+    padding: 16px;
+    gap: 10px 14px;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    .admin-disclosure-main {
+    flex-basis: 100%;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    .admin-disclosure-toggle {
+    margin-left: auto;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    :is(.shop-profile, .incident-detail, .withdrawal-detail) {
+    padding: 16px;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    :is(.shop-profile dl, .bank-summary, .management-details) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    .management-modal {
+    width: calc(100vw - 24px);
+    max-width: calc(100vw - 24px);
+    max-height: calc(100dvh - 24px);
+    border-radius: 12px;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    .management-modal-header {
+    padding: 18px;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    .management-modal
+    > :not(.management-modal-header) {
+    margin: 18px;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    .management-stats {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    .management-stats
+    article {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    .management-stats
+    small {
+    grid-column: 1 / -1;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    .platform-tools
+    > div {
+    flex-basis: 100%;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    :is(.kiosk-data-table, .management-table, .reports-table-wrap table)
+    tbody
+    tr {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 6px 14px;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    :is(.kiosk-data-table, .management-table, .reports-table-wrap table)
+    td {
+    padding: 10px 0;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    .installation-filter-bar
+    .filter-group {
+    max-width: none;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    .installation-filter-bar
+    > .button {
+    width: 100%;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    .statement-entry {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    .statement-entry
+    > .button {
+    grid-column: auto;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    .admin-reconciliation
+    :is(.reconciliation-review, .reconciliation-report) {
+    padding: 16px;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    .reconciliation-rows
+    dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workspace-portal-root.platform-workspace[data-platform-role='admin'] main.admin-content .spin {
+    animation: none;
+  }
+}
+
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .platform-task-panel
+  :is(.staff-task-details, .staff-evidence)
+  > summary {
+  display: list-item;
+  list-style: disclosure-closed inside;
+  min-height: 44px;
+  padding: 12px 0;
+  cursor: pointer;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .platform-task-panel
+  details[open]
+  > summary {
+  list-style-type: disclosure-open;
+}
+
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-disclosure-status {
+  background: #f0f3ef;
+  color: #43554a;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-disclosure-status:is(
+    [data-status='OPEN'],
+    [data-status='PENDING'],
+    [data-status='LOCKED']
+  ) {
+  background: #fff5df;
+  color: #78501a;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-disclosure-status:is(
+    [data-status='ACTIVE'],
+    [data-status='APPROVED'],
+    [data-status='RESOLVED_FIXED'],
+    [data-status='PAID']
+  ) {
+  background: #eaf3e6;
+  color: #2b5b3e;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .web-orders
+  .member-orders
+  summary {
+  display: list-item;
+  list-style: disclosure-closed inside;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .web-orders
+  .member-orders
+  details[open]
+  > summary {
+  list-style-type: disclosure-open;
+}
+
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  :is(input, select, textarea)[aria-invalid='true'] {
+  border-color: #ac3b32;
+}
+
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .kiosk-status-pill[data-status='REFUND_PENDING'] {
+  color: #78501a;
+  background: #fff5df;
+  border-color: #e1c892;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .kiosk-status-pill[data-status='REFUNDED'] {
+  color: #2b5b3e;
+  background: #eaf3e6;
+  border-color: #c6dbc9;
+}

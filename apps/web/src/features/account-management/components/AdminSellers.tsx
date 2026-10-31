@@ -1,3 +1,4 @@
+import { AdminFilterBar, AdminDisclosureSummary } from '@/features/portal/components/AdminUi';
 import { useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -107,13 +108,37 @@ export default function AdminSellers() {
       <h2 id="admin-sellers-title">Hồ sơ các shop hoa</h2>
       <div className="status-notice notice-info">
         <p>
-          Hồ sơ Customer đăng ký mở shop và thuê kiosk nằm ở mục{' '}
-          <Link href="/admin/installations">Hồ sơ thuê kiosk</Link>. Admin theo dõi; Manager xác
-          nhận liên hệ, phân công Technician và bàn giao. Danh sách bên dưới là các shop đã có trong
-          hệ thống.
+          Hồ sơ khách hàng đăng ký mở shop và thuê kiosk nằm ở mục{' '}
+          <Link href="/admin/installations">Hồ sơ thuê kiosk</Link>. Admin theo dõi; Quản lý vận
+          hành xác nhận liên hệ, phân công kỹ thuật viên và bàn giao. Danh sách bên dưới là các shop
+          đã có trong hệ thống.
         </p>
       </div>
-      <div className="product-filters">
+      <AdminFilterBar
+        actions={
+          <>
+            <Button
+              variant="outline"
+              disabled={sellers.isFetching}
+              onClick={() => void sellers.refetch()}
+            >
+              Cập nhật danh sách
+            </Button>
+            {(search || status) && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSearch('');
+                  setStatus('');
+                  setPage(1);
+                }}
+              >
+                Xóa bộ lọc
+              </Button>
+            )}
+          </>
+        }
+      >
         <div>
           <label htmlFor="shop-search">Tìm tên shop hoặc số điện thoại</label>
           <input
@@ -145,7 +170,7 @@ export default function AdminSellers() {
             ))}
           </select>
         </div>
-      </div>
+      </AdminFilterBar>
       <p className="quiet">
         Hiển thị tối đa 100 hồ sơ mới nhất, chia thành từng trang để dễ theo dõi.
       </p>
@@ -174,12 +199,12 @@ export default function AdminSellers() {
         {pageItems.map((seller) => (
           <li key={seller.id}>
             <details>
-              <summary>
-                <strong>{seller.shopName}</strong>
-                <span className={`status-pill status-${seller.status}`}>
-                  {t(`status.${seller.status}`, { defaultValue: seller.status })}
-                </span>
-              </summary>
+              <AdminDisclosureSummary
+                statusCode={seller.status}
+                title={seller.shopName}
+                meta={seller.phone || 'Chưa có số điện thoại'}
+                status={t(`status.${seller.status}`)}
+              />
               <div className="shop-profile">
                 <dl>
                   <div>

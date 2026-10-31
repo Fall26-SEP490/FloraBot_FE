@@ -100,6 +100,8 @@ for (const role of ['ADMIN', 'SELLER', 'SELLER_STAFF'] as const) {
       if (role === 'SELLER') {
         await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tổng quan cửa hàng');
         await expect(page.getByText('Chào Ngọc Anh')).toBeVisible();
+      } else if (role === 'ADMIN') {
+        await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tổng quan quản trị');
       } else {
         await expect(page.getByRole('heading', { level: 1 })).toContainText('Ngọc Anh');
       }

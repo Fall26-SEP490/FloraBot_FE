@@ -30,7 +30,7 @@ function InstallationListItem({ item, isSelected, onSelect }: InstallationListIt
           {KIOSK_STATUS_LABELS[item.status] || item.status}
         </span>
       </td>
-      <td data-label="">
+      <td data-label="Thao tác">
         <Button
           variant={isSelected ? 'default' : 'outline'}
           onClick={onSelect}
@@ -85,8 +85,8 @@ export function InstallationList({
       <div className="operations-section-heading">
         <div>
           <span className="installation-eyebrow">Tiếp nhận & triển khai</span>
-          <h2 id="queue-heading">Hàng đợi hồ sơ</h2>
-          <p>Theo dõi từ xác nhận liên hệ đến bàn giao kiosk cho shop.</p>
+          <h2 id="queue-heading">{isManager ? 'Hàng đợi hồ sơ' : 'Danh sách hồ sơ'}</h2>
+          {isManager && <p>Theo dõi từ xác nhận liên hệ đến bàn giao kiosk cho shop.</p>}
         </div>
         {isManager && (
           <div className="installation-header-actions">

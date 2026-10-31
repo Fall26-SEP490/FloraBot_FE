@@ -1,3 +1,4 @@
+import { AdminFilterBar, AdminDisclosureSummary } from '@/features/portal/components/AdminUi';
 import { useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -156,7 +157,34 @@ export default function AdminSlots() {
         Mỗi kiosk chỉ thuộc một shop. Khi gán thành công, shop được quản lý toàn bộ các ô trong
         kiosk thay vì nhận từng ô riêng lẻ.
       </p>
-      <div className="product-filters">
+      <AdminFilterBar
+        actions={
+          <>
+            {' '}
+            <Button
+              onClick={() => {
+                void kiosks.refetch();
+                void sellers.refetch();
+              }}
+              disabled={kiosks.isFetching || sellers.isFetching}
+            >
+              Làm mới danh sách kiosk
+            </Button>
+            {(search || status || ownership !== 'UNASSIGNED') && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSearch('');
+                  setStatus('');
+                  setOwnership('UNASSIGNED');
+                }}
+              >
+                Đặt lại bộ lọc
+              </Button>
+            )}
+          </>
+        }
+      >
         <div>
           <label htmlFor="kiosk-search">Tìm mã kiosk, tên kiosk hoặc shop</label>
           <input
@@ -193,18 +221,9 @@ export default function AdminSlots() {
             ))}
           </select>
         </div>
-      </div>
-      <Button
-        onClick={() => {
-          void kiosks.refetch();
-          void sellers.refetch();
-        }}
-        disabled={kiosks.isFetching || sellers.isFetching}
-      >
-        Làm mới danh sách kiosk
-      </Button>
+      </AdminFilterBar>
       <p className="quiet">
-        Chỉ shop đang hoạt động và có gói hợp lệ mới được nhận kiosk. BE sẽ kiểm tra hạn mức số ô
+        Chỉ shop đang hoạt động và có gói hợp lệ mới được nhận kiosk. Hệ thống kiểm tra hạn mức số ô
         trước khi xác nhận.
       </p>
       <p role="status" ref={notice} tabIndex={-1}>
@@ -226,12 +245,12 @@ export default function AdminSlots() {
         {visible?.map((kiosk) => (
           <li key={kiosk.id}>
             <details>
-              <summary>
-                <strong>
-                  {kiosk.name} · {kiosk.code}
-                </strong>
-                <span>{kioskStatuses[kiosk.status] || kiosk.status}</span>
-              </summary>
+              <AdminDisclosureSummary
+                statusCode={kiosk.status}
+                title={kiosk.name}
+                meta={kiosk.code}
+                status={kioskStatuses[kiosk.status] || kiosk.status}
+              />
               <div className="shop-profile">
                 <dl>
                   <div>

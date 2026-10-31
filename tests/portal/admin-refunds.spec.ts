@@ -16,6 +16,10 @@ const row = {
 };
 const bank = { bankName: 'Test Bank', holder: 'TEST HOLDER', account: '001234567890' };
 async function setup(page: Page) {
+  await page.route('**/hub/**', (route) => route.fulfill({ status: 503 }));
+  await page.route('**/api/**', (route) =>
+    route.fulfill({ status: 501, json: { detail: 'API not mocked in this test' } }),
+  );
   await page.route('**/api/admin/evidence/*/*', (route) =>
     route.fulfill({
       json:
