@@ -38,6 +38,22 @@ export const statusName = (row: WebOrder) =>
       ? ORDER_STATES[row.orderStatus] || row.orderStatus
       : REQUEST_STATES[row.state] || row.state;
 
+export function canSendPreorderPickupOtp(
+  row: Pick<WebOrder, 'kind' | 'state' | 'orderStatus' | 'ready' | 'pickupBefore'>,
+  role: string | null | undefined,
+  nowMs: number = Date.now(),
+): boolean {
+  if (role !== 'SELLER') return false;
+  if (row.kind !== 'CUSTOM') return false;
+  if (row.state !== 'ORDERED') return false;
+  if (row.orderStatus !== 'PAID') return false;
+  if (!row.ready) return false;
+  if (!row.pickupBefore) return false;
+  const pickupBeforeTime = new Date(row.pickupBefore).getTime();
+  if (Number.isNaN(pickupBeforeTime) || pickupBeforeTime <= nowMs) return false;
+  return true;
+}
+
 export function orderStage(row: OrderPhase): number {
   if (row.orderStatus === 'COMPLETED') return 4;
   if (row.ready || row.orderStatus === 'DISPENSING') return 3;

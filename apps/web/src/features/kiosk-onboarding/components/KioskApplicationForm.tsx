@@ -38,11 +38,8 @@ export function KioskApplicationForm({
   return (
     <section className="kiosk-form-section" aria-labelledby="application-form-heading">
       <div className="section-title-wrap">
-        <h2 id="application-form-heading">2. Điền thông tin đăng ký mặt bằng & shop</h2>
-        <p>
-          FloraBot sẽ sử dụng thông tin này để thẩm định vị trí lắp đặt và chuyển doanh thu bán hoa
-          cho shop của bạn.
-        </p>
+        <h2 id="application-form-heading">2. Thông tin đăng ký</h2>
+        <p>Các mục có dấu * là bắt buộc. Kiểm tra thông tin trước khi gửi hồ sơ.</p>
       </div>
 
       {submitError && (

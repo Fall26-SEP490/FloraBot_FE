@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,11 +9,13 @@ import { queryClient, request, type Session } from '@/shared/lib/api';
 import ReportFault from '../incidents/ReportFault';
 import ReturnFlowers from '../orders/ReturnFlowers';
 import SlotZoneSelector from './SlotZoneSelector';
+import RemoveSlotBouquet from './RemoveSlotBouquet';
 import { Modal } from '@/shared/components/Modal';
 import './styles/seller-stock.css';
+import { slotNeedsAttention, slotSaleState, slotWarning, type SellerSlot } from './slot-state';
 
 // Never infer the selling zone from the slot code.
-type Slot = components['schemas']['SellerSlotResponse'] & { zone?: string | null };
+type Slot = SellerSlot;
 type StockZone = 'WALK_IN' | 'PREORDER' | 'UNKNOWN';
 type SlotFilter = 'ALL' | 'WALK_IN_EMPTY' | 'STOCKED' | 'PREORDER' | 'UNKNOWN' | 'ATTENTION';
 
@@ -31,24 +33,22 @@ type Product = components['schemas']['ProductResponse'];
 type SellerKiosk = components['schemas']['SellerKioskDto'];
 type ProductPhotoPage = components['schemas']['ProductPhotoPage'];
 
-const statuses: Record<string, string> = {
-  FREE: 'Chưa cho thuê',
-  RENTED_EMPTY: 'Ô trống',
-  STOCKED: 'Đã nạp hoa',
-  HELD: 'Khách đang thanh toán',
-  PENDING_REMOVAL: 'Chờ lấy hoa hết hạn',
-  PENDING_RELEASE: 'Chờ lấy hoa về để trả ô',
-  FAULT: 'Có sự cố',
-  LOCKED: 'Đang khóa',
-};
-
-const attentionStatuses = new Set([
-  'FAULT',
-  'PENDING_REMOVAL',
-  'PENDING_RELEASE',
-  'LOCKED',
-  'HELD',
-]);
+function SlotStatus({ slot }: { slot: Slot }) {
+  const state = slotSaleState(slot);
+  const warning = slotWarning(slot);
+  return (
+    <span className="stock-slot-statuses">
+      <span className="slot-status-pill" data-status={state.key}>
+        {state.label}
+      </span>
+      {warning && warning !== state.label && (
+        <span className="slot-status-pill" data-status={slot.status}>
+          {warning}
+        </span>
+      )}
+    </span>
+  );
+}
 
 const guidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -103,6 +103,9 @@ export default function SellerStock({ session }: { session: Session }) {
   const [detailSlotId, setDetailSlotId] = useState<string | null>(null);
   const closeSlotDetails = useCallback(() => setDetailSlotId(null), []);
   const notice = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (message) notice.current?.focus();
+  }, [message]);
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     mode: 'onSubmit',
@@ -143,7 +146,6 @@ export default function SellerStock({ session }: { session: Session }) {
         `Đã ghi nhận ${product?.name || 'bó hoa'} vào ô ${slot?.slotCode || ''} tại ${slot?.kioskName || 'kiosk đã chọn'}. ${zoneLabels[slot ? slotZone(slot) : 'UNKNOWN']}. Mã bó hoa được hệ thống tạo tự động.`,
       );
       form.reset({ slotId: '', productId: values.productId });
-      notice.current?.focus();
     },
     onSettled: () =>
       queryClient.invalidateQueries({
@@ -159,10 +161,10 @@ export default function SellerStock({ session }: { session: Session }) {
   const empty = allSlots.filter((slot) => slot.status === 'RENTED_EMPTY' && !slot.bouquetId);
   const walkInSlots = allSlots.filter((slot) => slotZone(slot) === 'WALK_IN');
   const matchingEmpty = empty.filter((slot) => slotZone(slot) === 'WALK_IN');
-  const stockedSlots = allSlots.filter((slot) => slot.status === 'STOCKED');
+  const stockedSlots = allSlots.filter((slot) => !!slot.bouquetId);
   const preorderSlots = allSlots.filter((slot) => slotZone(slot) === 'PREORDER');
   const unclassifiedSlots = allSlots.filter((slot) => slotZone(slot) === 'UNKNOWN');
-  const attentionSlots = allSlots.filter((slot) => attentionStatuses.has(slot.status));
+  const attentionSlots = allSlots.filter(slotNeedsAttention);
 
   const selectedSlot = matchingEmpty.find((slot) => slot.id === selectedSlotId);
   const detailSlot = allSlots.find((slot) => slot.id === detailSlotId);
@@ -194,10 +196,10 @@ export default function SellerStock({ session }: { session: Session }) {
     if (slotFilter === 'WALK_IN_EMPTY') {
       return slot.status === 'RENTED_EMPTY' && !slot.bouquetId && slotZone(slot) === 'WALK_IN';
     }
-    if (slotFilter === 'STOCKED') return slot.status === 'STOCKED';
+    if (slotFilter === 'STOCKED') return !!slot.bouquetId;
     if (slotFilter === 'PREORDER') return slotZone(slot) === 'PREORDER';
     if (slotFilter === 'UNKNOWN') return slotZone(slot) === 'UNKNOWN';
-    if (slotFilter === 'ATTENTION') return attentionStatuses.has(slot.status);
+    if (slotFilter === 'ATTENTION') return slotNeedsAttention(slot);
     return true;
   });
 
@@ -239,7 +241,7 @@ export default function SellerStock({ session }: { session: Session }) {
           </div>
           <div className="operations-metric">
             <div className="stock-stat-top">
-              <span>Đã nạp hoa</span>
+              <span>Ô đang có hoa</span>
               <div className="stock-stat-icon stock-stat-icon--green">
                 <Flower2 size={18} aria-hidden="true" />
               </div>
@@ -573,9 +575,7 @@ export default function SellerStock({ session }: { session: Session }) {
                           <strong>Ô {slot.slotCode}</strong>
                           <span className="quiet slot-zone-label">{zone}</span>
                         </div>
-                        <span className="slot-status-pill" data-status={slot.status}>
-                          {statuses[slot.status] || slot.status}
-                        </span>
+                        <SlotStatus slot={slot} />
                       </div>
 
                       <div className="stock-slot-card-body">
@@ -625,11 +625,14 @@ export default function SellerStock({ session }: { session: Session }) {
               {detailSlot && (
                 <div className="stock-slot-modal-body" key={detailSlot.id}>
                   <div className="stock-slot-modal-status">
-                    <span className="slot-status-pill" data-status={detailSlot.status}>
-                      {statuses[detailSlot.status] || detailSlot.status}
-                    </span>
+                    <SlotStatus slot={detailSlot} />
                     <span>{zoneLabels[slotZone(detailSlot)]}</span>
                   </div>
+                  {(detailSlot.orderCode || detailSlot.orderId) && (
+                    <p>
+                      Đơn liên quan: <strong>{detailSlot.orderCode || detailSlot.orderId}</strong>
+                    </p>
+                  )}
                   {detailSlot.bouquetId && (
                     <div className="stock-slot-modal-bouquet">
                       <div className="stock-slot-modal-bouquet-head">
@@ -686,6 +689,7 @@ export default function SellerStock({ session }: { session: Session }) {
                       !stock.isPending
                     }
                   />
+                  <RemoveSlotBouquet kioskId={selectedKioskId} slot={detailSlot} />
                   <ReturnFlowers slot={detailSlot} sellerId={sellerId} />
                   <ReportFault slot={detailSlot} sellerId={sellerId} />
                 </div>

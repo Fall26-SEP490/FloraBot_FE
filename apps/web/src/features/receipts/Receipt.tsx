@@ -188,20 +188,28 @@ export default function Receipt() {
           </h2>
           <p className="receipt-status">{statuses[receipt.status] || 'Đang cập nhật trạng thái'}</p>
           <p>Đặt lúc {date(receipt.createdAt)}</p>
-          <dl className="receipt-totals" aria-label="Mã nhận hoa tại Kiosk">
+          {['PAID', 'DISPENSING'].includes(receipt.status) && receipt.items.length > 0 && (
             <div>
-              <dt>ID biên nhận (nhập tại Kiosk)</dt>
-              <dd>
-                <code>{receipt.orderId}</code>
-              </dd>
+              <p>
+                Tại đúng kiosk, chọn “Đã thanh toán nhưng chưa nhận hoa?” và nhập hai mã bên dưới
+                trong giờ hẹn.
+              </p>
+              <dl className="receipt-totals" aria-label="Mã nhận hoa tại Kiosk">
+                <div>
+                  <dt>ID biên nhận (nhập tại Kiosk)</dt>
+                  <dd>
+                    <code>{receipt.orderId}</code>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Mã biên nhận 8 ký tự</dt>
+                  <dd>
+                    <strong>{token.trim().toUpperCase()}</strong>
+                  </dd>
+                </div>
+              </dl>
             </div>
-            <div>
-              <dt>Mã biên nhận 8 ký tự</dt>
-              <dd>
-                <strong>{token.trim().toUpperCase()}</strong>
-              </dd>
-            </div>
-          </dl>
+          )}
           <ul className="receipt-items">
             {receipt.items.map((item, index) => (
               <li key={index}>

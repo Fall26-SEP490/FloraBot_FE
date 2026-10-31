@@ -67,6 +67,18 @@ export function buildGoogleMapsSearchUrl(lat: number, lon: number): string {
 }
 
 /**
+ * Returns the configured Goong REST API key for Places Autocomplete / Detail,
+ * or null when not configured.
+ */
+export function getGoongApiKey(): string | null {
+  const goongApiKey = process.env.NEXT_PUBLIC_GOONG_API_KEY?.trim();
+  if (goongApiKey && goongApiKey.length >= 5 && !goongApiKey.startsWith('YOUR_')) {
+    return goongApiKey;
+  }
+  return null;
+}
+
+/**
  * Returns the active map tile configuration.
  * Uses Goong Maps if NEXT_PUBLIC_GOONG_MAPTILES_KEY is configured in .env.local;
  * otherwise safely falls back to OpenStreetMap.

@@ -76,6 +76,137 @@
   margin: 0 0 1rem 0;
 }
 
+/* Goong Address Combobox */
+.kiosk-address-combobox-wrap {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.kiosk-address-input-shell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.kiosk-address-search-icon {
+  position: absolute;
+  left: 0.85rem;
+  color: #55725e;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.kiosk-address-input-shell input {
+  width: 100%;
+  padding-left: 2.35rem !important;
+  padding-right: 2.35rem !important;
+}
+
+.kiosk-address-spinner {
+  position: absolute;
+  right: 0.85rem;
+  color: #234e36;
+  pointer-events: none;
+}
+
+.kiosk-address-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 500;
+  background: #ffffff;
+  border: 1px solid #c9d9c8;
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(24, 62, 43, 0.14);
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.kiosk-address-dropdown-state {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  font-size: 0.88rem;
+  color: #476451;
+}
+
+.kiosk-address-dropdown-state.is-error {
+  color: #cf1322;
+  background: #fff1f0;
+}
+
+.kiosk-address-listbox {
+  list-style: none;
+  margin: 0;
+  padding: 0.35rem 0;
+}
+
+.kiosk-address-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.65rem 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+
+.kiosk-address-option:hover,
+.kiosk-address-option.is-active {
+  background: #f0f6ee;
+}
+
+.kiosk-address-option-icon {
+  color: #285c40;
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+}
+
+.kiosk-address-option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.kiosk-address-main {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #183e2b;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.kiosk-address-secondary {
+  font-size: 0.8rem;
+  color: #55725e;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.kiosk-address-detail-status {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0.25rem 0 0;
+  font-size: 0.82rem;
+  color: #234e36;
+}
+
+.kiosk-address-reselect-notice {
+  margin: 0.25rem 0 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  background: #fff8e6;
+  border: 1px solid #ffe08a;
+  color: #8c5d00;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
 /* Map Picker Block */
 .kiosk-map-picker-block {
   margin-top: 1rem;
@@ -91,7 +222,7 @@
   align-items: flex-start;
   flex-wrap: wrap;
   gap: 0.75rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.65rem;
 }
 
 .map-picker-title {
@@ -99,6 +230,45 @@
   font-weight: 700;
   display: block;
   color: #183e2b;
+}
+
+.kiosk-location-pin-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  margin-bottom: 0.65rem;
+}
+
+.kiosk-location-pin-status.is-ready {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+}
+
+.kiosk-location-pin-status.is-pending {
+  background: #f4f7f3;
+  border: 1px solid #dbe5da;
+  color: #476451;
+}
+
+.kiosk-gps-notice {
+  margin: 0 0 0.65rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.84rem;
+  background: #f0f7ff;
+  border: 1px solid #bae0ff;
+  color: #003a8c;
+}
+
+.kiosk-gps-notice.is-error {
+  background: #fff1f0;
+  border-color: #ffa39e;
+  color: #cf1322;
 }
 
 .kiosk-onboarding-container .kiosk-picker-embed {
@@ -109,9 +279,54 @@
   border: 1px solid #c9d9c8;
 }
 
+.kiosk-map-canvas-wrap {
+  position: relative;
+  width: 100%;
+}
+
 .kiosk-onboarding-container .kiosk-picker-map {
   height: 280px;
   width: 100%;
+}
+
+.kiosk-map-gps-btn {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  z-index: 450;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 10px;
+  border: 1px solid #c9d9c8;
+  background: #ffffff;
+  color: #183e2b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.16);
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.1s ease;
+}
+
+.kiosk-map-gps-btn:hover:not(:disabled) {
+  background: #f4f8f3;
+  border-color: #285c40;
+  color: #174b35;
+}
+
+.kiosk-map-gps-btn:focus-visible {
+  outline: 3px solid #285c40;
+  outline-offset: 2px;
+}
+
+.kiosk-map-gps-btn:disabled {
+  cursor: wait;
+  opacity: 0.85;
 }
 
 .kiosk-onboarding-container .kiosk-map-footer {
@@ -124,13 +339,6 @@
 
 .kiosk-onboarding-container .kiosk-map-attribution {
   margin: 0;
-}
-
-.manual-coords-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  margin-top: 1rem;
 }
 
 .kiosk-form-actions {
