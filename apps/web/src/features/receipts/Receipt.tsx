@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@florabot/ui';
-import { QRCodeSVG } from 'qrcode.react';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
 import '../portal/styles/portal.css';
 import './styles/receipt.css';
@@ -191,15 +190,9 @@ export default function Receipt() {
           <p>Đặt lúc {date(receipt.createdAt)}</p>
           {['PAID', 'DISPENSING'].includes(receipt.status) && receipt.items.length > 0 && (
             <div>
-              <QRCodeSVG
-                size={160}
-                marginSize={2}
-                title="QR biên nhận để nhận hoa tại kiosk"
-                value={`${window.location.origin}/receipt#order=${encodeURIComponent(receipt.orderId)}&token=${encodeURIComponent(token.trim().toUpperCase())}`}
-              />
               <p>
-                Tại đúng kiosk, chọn “Nhận hoa đã đặt”, quét QR hoặc nhập hai mã bên dưới trong giờ
-                hẹn.
+                Tại đúng kiosk, chọn “Đã thanh toán nhưng chưa nhận hoa?” và nhập hai mã bên dưới
+                trong giờ hẹn.
               </p>
               <dl className="receipt-totals" aria-label="Mã nhận hoa tại Kiosk">
                 <div>

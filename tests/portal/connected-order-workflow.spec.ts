@@ -227,7 +227,9 @@ test('Customer request → seller quote → customer acceptance/payment → sell
   await page.goto('/tai-khoan#web-orders');
   await page.locator('details[id^="preorder-"] > summary').click();
   await expect(page.getByLabel('Thông tin nhận hoa tại Kiosk')).toContainText('ABCD2345');
-  await expect(page.getByRole('img', { name: 'QR biên nhận để nhận hoa tại kiosk' })).toBeVisible();
+  await expect(page.getByLabel('Thông tin nhận hoa tại Kiosk')).toContainText(
+    'Đã thanh toán nhưng chưa nhận hoa?',
+  );
   role = 'ADMIN';
   await page.goto('/admin/reports');
   await expect(page.getByRole('cell', { name: 'Sự cố thiết bị đang mở' })).toBeVisible();

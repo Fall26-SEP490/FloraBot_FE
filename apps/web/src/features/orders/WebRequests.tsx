@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { QRCodeSVG } from 'qrcode.react';
 import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -284,15 +283,9 @@ function OrderActions({
         row.ready &&
         ['PAID', 'DISPENSING'].includes(row.orderStatus ?? '') && (
           <div className="order-pickup-credentials" aria-label="Thông tin nhận hoa tại Kiosk">
-            <QRCodeSVG
-              size={160}
-              marginSize={2}
-              title="QR biên nhận để nhận hoa tại kiosk"
-              value={`${typeof window !== 'undefined' ? window.location.origin : ''}/receipt#order=${encodeURIComponent(row.orderId)}&token=${encodeURIComponent(row.trackingToken)}`}
-            />
             <p>
-              Giữ riêng QR này. Tại đúng kiosk, chọn “Nhận hoa đã đặt”, quét QR hoặc nhập hai mã bên
-              dưới, rồi xác nhận mở ô trong giờ hẹn.
+              Giữ riêng hai mã này. Tại đúng kiosk, chọn “Đã thanh toán nhưng chưa nhận hoa?”, nhập
+              ID biên nhận và mã 8 ký tự bên dưới, rồi xác nhận mở ô trong giờ hẹn.
             </p>
             <dl className="bank-summary">
               <div>
