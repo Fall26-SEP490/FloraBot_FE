@@ -160,41 +160,75 @@ export function InstallationActionCards({
             khách không thể tự ý hủy hồ sơ.
           </p>
           <div className="kiosk-form-field">
-            <label htmlFor={confirmNoteId}>Ghi chú xác nhận liên hệ (bắt buộc):</label>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '0.25rem',
+              }}
+            >
+              <label htmlFor={confirmNoteId}>Ghi chú xác nhận liên hệ (bắt buộc):</label>
+              <button
+                type="button"
+                className="link-inline-btn"
+                style={{ fontSize: '0.85rem' }}
+                onClick={() => setConfirmNote('Đã gọi điện xác nhận vị trí mặt bằng và nguồn điện')}
+              >
+                + Điền mẫu nhanh
+              </button>
+            </div>
             <textarea
               id={confirmNoteId}
               rows={2}
               value={confirmNote}
               onChange={(e) => setConfirmNote(e.target.value)}
-              placeholder="Ví dụ: Đã gọi điện xác nhận địa chỉ và vị trí đặt kiosk với chủ shop..."
+              placeholder="Nhập ghi chú hoặc để trống để dùng mẫu: Đã gọi điện xác nhận vị trí mặt bằng và nguồn điện..."
             />
           </div>
           <div className="action-buttons-row">
             <Button
-              onClick={() => onSubmitConfirm(confirmNote, () => setConfirmNote(''))}
+              onClick={() =>
+                onSubmitConfirm(
+                  confirmNote.trim() || 'Đã gọi điện xác nhận vị trí mặt bằng và nguồn điện',
+                  () => setConfirmNote(''),
+                )
+              }
               disabled={confirmPending}
             >
               <Check size={18} aria-hidden="true" />
               {confirmPending ? 'Đang xác nhận...' : 'Xác nhận liên hệ'}
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => onSubmitReject(rejectReason, () => setRejectReason(''))}
-              disabled={rejectPending}
+          </div>
+
+          <details
+            style={{ marginTop: '1.25rem', paddingTop: '0.75rem', borderTop: '1px dashed #dbe5da' }}
+          >
+            <summary
+              style={{ cursor: 'pointer', color: '#64748b', fontSize: '0.9rem', fontWeight: 500 }}
             >
-              Từ chối hồ sơ
-            </Button>
-          </div>
-          <div className="kiosk-form-field" style={{ marginTop: '0.75rem' }}>
-            <label htmlFor={rejectReasonId}>Lý do từ chối (nếu không đạt):</label>
-            <input
-              id={rejectReasonId}
-              type="text"
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-              placeholder="Lý do từ chối nếu vị trí không đủ điều kiện an toàn..."
-            />
-          </div>
+              Từ chối hồ sơ nếu vị trí không đủ điều kiện (Mở rộng)
+            </summary>
+            <div className="kiosk-form-field" style={{ marginTop: '0.75rem' }}>
+              <label htmlFor={rejectReasonId}>Lý do từ chối (tối thiểu 5 ký tự):</label>
+              <textarea
+                id={rejectReasonId}
+                rows={2}
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                placeholder="Lý do từ chối nếu vị trí không đủ điều kiện an toàn nguồn điện..."
+              />
+            </div>
+            <div style={{ marginTop: '0.5rem' }}>
+              <Button
+                variant="outline"
+                onClick={() => onSubmitReject(rejectReason, () => setRejectReason(''))}
+                disabled={rejectPending}
+              >
+                Từ chối hồ sơ
+              </Button>
+            </div>
+          </details>
         </div>
       )}
 
