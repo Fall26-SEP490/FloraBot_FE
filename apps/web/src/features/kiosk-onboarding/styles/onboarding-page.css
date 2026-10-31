@@ -1,0 +1,393 @@
+/* Public lease page: scoped so workspace forms keep their existing layout. */
+.kiosk-onboarding-container {
+  max-width: 1200px;
+  padding: 36px 24px 72px;
+  color: #193d2d;
+}
+.kiosk-onboarding-container .kiosk-onboarding-header {
+  margin-bottom: 36px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid #e2e9e3;
+}
+.kiosk-onboarding-container .kiosk-breadcrumb {
+  font-size: 13px;
+  margin-bottom: 28px;
+}
+.kiosk-lease-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+}
+.kiosk-lease-eyebrow {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #617c69;
+  margin-bottom: 12px;
+}
+.kiosk-onboarding-container .kiosk-onboarding-header h1 {
+  font-size: clamp(26px, 3vw, 38px);
+  letter-spacing: -0.035em;
+  margin-bottom: 12px;
+}
+.kiosk-onboarding-container .kiosk-onboarding-lead {
+  max-width: 620px;
+  font-size: 15px;
+  color: #617267;
+}
+.kiosk-lease-term {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 18px 22px;
+  border-left: 3px solid #285c40;
+  background: #f4f7f1;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: 0 12px 12px 0;
+}
+.kiosk-lease-term span {
+  display: block;
+  font-size: 12px;
+  font-weight: 400;
+  color: #617267;
+  margin-top: 6px;
+}
+.kiosk-onboarding-container .section-title-wrap {
+  margin-bottom: 20px;
+}
+.kiosk-onboarding-container .section-title-wrap h2 {
+  font-size: 21px;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+.kiosk-onboarding-container .section-title-wrap p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #617267;
+}
+.kiosk-onboarding-container .kiosk-packages-section {
+  margin-bottom: 40px;
+}
+.kiosk-onboarding-container .kiosk-packages-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 16px;
+}
+.kiosk-onboarding-container .kiosk-package-card {
+  position: relative;
+  margin: 0;
+  padding: 24px;
+  border: 1px solid #dce5dd;
+  border-radius: 16px;
+  min-height: 0;
+  gap: 4px;
+  font-weight: 400;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+.kiosk-onboarding-container .kiosk-package-card.is-selected {
+  background: #f5f9f3;
+  border-color: #285c40;
+  box-shadow: inset 0 0 0 1px #285c40;
+}
+.kiosk-onboarding-container .kiosk-package-card:focus-within {
+  outline: 3px solid #729784;
+  outline-offset: 4px;
+}
+.kiosk-onboarding-container input.kiosk-package-radio {
+  position: absolute;
+  top: 24px;
+  right: 22px;
+  width: 19px;
+  height: 19px;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  accent-color: #285c40;
+}
+.kiosk-onboarding-container .package-card-header {
+  flex-direction: column;
+  gap: 22px;
+  margin: 0 0 16px;
+  padding-right: 24px;
+}
+.kiosk-onboarding-container .package-tier-badge {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: 0;
+  font-size: 16px;
+}
+.kiosk-onboarding-container .package-price {
+  text-align: left;
+}
+.kiosk-onboarding-container .package-price .price-number {
+  font-size: 30px;
+  letter-spacing: -0.04em;
+}
+.kiosk-onboarding-container .package-price .price-unit {
+  display: inline;
+  margin-left: 6px;
+  font-size: 13px;
+}
+.kiosk-onboarding-container .package-slots-breakdown {
+  border: 0;
+  border-top: 1px solid #e2e9e3;
+  padding: 16px 0 0;
+  margin: 0;
+}
+.kiosk-onboarding-container .package-desc {
+  font-size: 13px;
+  color: #617267;
+  margin: 12px 0 20px;
+}
+.kiosk-onboarding-container .select-indicator {
+  border: 0;
+  background: #f0f4ef;
+  padding: 10px;
+  min-height: 42px;
+  font-size: 13px;
+}
+.kiosk-onboarding-container .select-indicator.is-active {
+  background: #234e36;
+  color: white;
+}
+.kiosk-registration-layout {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  gap: 40px;
+  align-items: start;
+}
+.kiosk-registration-guide {
+  position: sticky;
+  top: 108px;
+  padding: 24px 0;
+}
+.kiosk-registration-guide h2 {
+  font-size: 23px;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  margin: 0 0 12px;
+}
+.kiosk-registration-guide p {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #617267;
+  margin: 0;
+}
+.kiosk-registration-guide ol {
+  counter-reset: lease-step;
+  padding: 0;
+  margin: 28px 0;
+  list-style: none;
+  display: grid;
+  gap: 24px;
+}
+.kiosk-registration-guide li {
+  counter-increment: lease-step;
+  position: relative;
+  padding-left: 40px;
+}
+.kiosk-registration-guide li::before {
+  content: counter(lease-step, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #63826b;
+  font-size: 12px;
+  font-weight: 700;
+  padding-top: 3px;
+}
+.kiosk-registration-guide li strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+.kiosk-registration-guide li span {
+  display: block;
+  font-size: 13px;
+  color: #617267;
+  line-height: 1.5;
+}
+.kiosk-registration-guide .kiosk-guide-note {
+  padding-top: 20px;
+  border-top: 1px solid #e2e9e3;
+  font-size: 12px;
+}
+.kiosk-onboarding-container .kiosk-form-section {
+  min-width: 0;
+  padding: 28px;
+  border: 1px solid #e0e7e1;
+  border-radius: 18px;
+  background: white;
+}
+.kiosk-onboarding-container .kiosk-application-form {
+  gap: 28px;
+}
+.kiosk-onboarding-container .kiosk-form-group {
+  min-width: 0;
+  border: 0;
+  border-top: 1px solid #e5ebe6;
+  padding: 22px 0 0;
+  border-radius: 0;
+  background: transparent;
+}
+.kiosk-onboarding-container .kiosk-form-group legend {
+  font-size: 16px;
+  padding: 0 12px 0 0;
+}
+.kiosk-onboarding-container .kiosk-form-field label {
+  font-size: 13px;
+}
+.kiosk-onboarding-container .kiosk-form-field input {
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  border-color: #d5dfd6;
+  font-size: 14px;
+  border-radius: 8px;
+}
+.kiosk-onboarding-container .form-fields-grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.kiosk-onboarding-container .kiosk-field-hint,
+.kiosk-onboarding-container .kiosk-group-note {
+  font-size: 12px;
+  line-height: 1.65;
+  color: #617267;
+}
+.kiosk-onboarding-container .kiosk-map-picker-block {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.kiosk-onboarding-container .map-picker-title {
+  font-size: 14px;
+}
+.kiosk-onboarding-container .manual-coords-row {
+  gap: 16px;
+}
+.kiosk-onboarding-container .kiosk-form-actions {
+  border-top: 1px solid #e5ebe6;
+  padding-top: 22px;
+  margin: 0;
+  align-items: center;
+  gap: 12px;
+}
+.kiosk-onboarding-container .kiosk-form-actions .button {
+  font-size: 14px;
+}
+.kiosk-onboarding-container .kiosk-application-status-panel {
+  padding: 28px;
+  border: 1px solid #e0e7e1;
+  border-radius: 18px;
+  box-shadow: none;
+}
+.kiosk-onboarding-container .timeline-steps {
+  gap: 0;
+  padding: 10px 0;
+}
+.kiosk-onboarding-container .timeline-step {
+  flex-direction: column;
+  min-width: 0;
+  padding: 0 12px 0 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.kiosk-onboarding-container .timeline-step::before {
+  content: '';
+  position: absolute;
+  left: 36px;
+  right: 8px;
+  top: 15px;
+  height: 2px;
+  background: #dce5dd;
+}
+.kiosk-onboarding-container .timeline-step:last-child::before {
+  display: none;
+}
+.kiosk-onboarding-container .timeline-step.is-done::before {
+  background: #4b795c;
+}
+.kiosk-onboarding-container .step-marker {
+  height: 32px;
+  width: 32px;
+  margin-bottom: 8px;
+  background: #edf1ec;
+  color: #617267;
+}
+.kiosk-onboarding-container .is-current .step-marker {
+  background: #234e36;
+  color: white;
+  box-shadow: 0 0 0 4px #e7efe4;
+}
+.kiosk-onboarding-container .is-done .step-marker {
+  background: #4b795c;
+  color: white;
+}
+.kiosk-onboarding-container .step-title {
+  font-size: 13px;
+}
+.kiosk-onboarding-container .step-sub {
+  font-size: 12px;
+  margin-top: 5px;
+}
+@media (max-width: 800px) {
+  .kiosk-lease-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .kiosk-lease-term {
+    padding: 12px 18px;
+  }
+  .kiosk-registration-layout {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .kiosk-registration-guide {
+    position: static;
+    padding: 0 0 12px;
+  }
+  .kiosk-registration-guide ol,
+  .kiosk-registration-guide .kiosk-guide-note {
+    display: none;
+  }
+  .kiosk-registration-guide h2 {
+    font-size: 20px;
+  }
+}
+@media (max-width: 540px) {
+  .kiosk-onboarding-container {
+    padding: 24px 16px 48px;
+  }
+  .kiosk-onboarding-container .kiosk-form-section,
+  .kiosk-onboarding-container .kiosk-application-status-panel {
+    padding: 20px 16px;
+  }
+  .kiosk-onboarding-container .form-fields-grid-2 {
+    grid-template-columns: 1fr;
+  }
+  .kiosk-onboarding-container .timeline-steps {
+    flex-direction: column;
+    gap: 24px;
+  }
+  .kiosk-onboarding-container .timeline-step {
+    flex-direction: row;
+    gap: 14px;
+  }
+  .kiosk-onboarding-container .timeline-step::before {
+    left: 15px;
+    top: 36px;
+    width: 2px;
+    height: calc(100% - 12px);
+  }
+  .kiosk-onboarding-container .kiosk-form-actions > * {
+    width: 100%;
+    justify-content: center;
+  }
+}

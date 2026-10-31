@@ -23,10 +23,10 @@ export function PayoutAccountFields({
 }: PayoutAccountFieldsProps) {
   return (
     <fieldset className="kiosk-form-group">
-      <legend>Tài khoản nhận doanh thu bán hoa (Payout)</legend>
+      <legend>Tài khoản nhận doanh thu</legend>
       <p className="kiosk-group-note">
-        Đây là tài khoản để FloraBot chuyển tiền doanh thu bán hoa cho shop của bạn khi đối soát
-        hàng kỳ. Chúng tôi tuyệt đối không ủy quyền trích nợ tự động hay thu phí từ tài khoản này.
+        Dùng để nhận doanh thu bán hoa sau đối soát. Thông tin này không cấp quyền trích nợ tài
+        khoản.
       </p>
 
       <div className="form-fields-grid-2">

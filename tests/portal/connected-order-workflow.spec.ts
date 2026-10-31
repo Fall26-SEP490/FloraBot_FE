@@ -152,6 +152,17 @@ test('Customer request → seller quote → customer acceptance/payment → sell
         row.ready = true;
         return { result: row.id };
       }
+      if (path === `/me/preorders/${row.id}/pickup-otp`) {
+        expect(role).toBe('SELLER');
+        expect(body).toEqual({});
+        return {
+          requestId: row.id,
+          orderId: row.orderId,
+          recipientMasked: 'c***@gmail.com',
+          expiresAt: row.pickupBefore,
+          resendAfterSeconds: 60,
+        };
+      }
       return undefined;
     },
   );
@@ -220,12 +231,27 @@ test('Customer request → seller quote → customer acceptance/payment → sell
     .check();
   await page.getByRole('button', { name: 'Xác nhận nạp hoa', exact: true }).click();
   await expect(page.getByText('Hoa đã sẵn sàng tại tủ', { exact: true })).toBeVisible();
+  const sendOtpBtn = page.getByRole('button', { name: 'Gửi mã nhận hoa', exact: true });
+  await expect(sendOtpBtn).toBeVisible();
+  await sendOtpBtn.click();
+  await expect(
+    page.getByText(
+      'Đã gửi mã nhận hoa tới c***@gmail.com. Khách vui lòng kiểm tra hộp thư và thư rác.',
+    ),
+  ).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Gửi lại mã/ })).toBeDisabled();
+  await expect(page.getByText('Hoa đã sẵn sàng tại tủ', { exact: true })).toBeVisible();
   expect(
     writes.filter((path) => path.includes('device_event') || path.includes('request_pickup')),
   ).toEqual([]);
   role = 'CUSTOMER';
   await page.goto('/tai-khoan#web-orders');
   await page.locator('details[id^="preorder-"] > summary').click();
+  await expect(
+    page.getByText(
+      'Đến đúng kiosk trong khung giờ nhận, chọn “Nhận đơn đặt trước” và nhập OTP 8 chữ số được gửi qua email.',
+    ),
+  ).toBeVisible();
   await expect(page.getByLabel('Thông tin nhận hoa tại Kiosk')).toContainText('ABCD2345');
   await expect(page.getByLabel('Thông tin nhận hoa tại Kiosk')).toContainText(
     'Đã thanh toán nhưng chưa nhận hoa?',
@@ -380,4 +406,125 @@ test('Every sample catalog item is display-only, including items with illustrati
   await page.getByRole('button', { name: 'Nhắn tin với shop', exact: true }).first().click();
   await expect(page.getByText(/Mẫu minh họa chưa gắn với shop thật/)).toBeVisible();
   expect(writes).toBe(0);
+});
+
+test('Seller pickup OTP button enforces eligibility, handles 409/429/503 without auto-retry, and counts down resendAfterSeconds', async ({
+  page,
+}) => {
+  const readyOrder = {
+    ...order(),
+    id: '70000000-0000-0000-0000-000000000077',
+    state: 'ORDERED',
+    orderStatus: 'PAID',
+    orderId: '80000000-0000-0000-0000-000000000077',
+    orderCode: 'PRE-OTP-77',
+    ready: true,
+    pickupBefore: new Date(Date.now() + 2 * 3600000).toISOString(),
+  };
+  const expiredPickupOrder = {
+    ...order(),
+    id: '70000000-0000-0000-0000-000000000078',
+    state: 'ORDERED',
+    orderStatus: 'PAID',
+    orderId: '80000000-0000-0000-0000-000000000078',
+    orderCode: 'PRE-EXP-78',
+    ready: true,
+    pickupBefore: new Date(Date.now() - 60000).toISOString(),
+  };
+  const dispensingOrder = {
+    ...order(),
+    id: '70000000-0000-0000-0000-000000000079',
+    state: 'ORDERED',
+    orderStatus: 'DISPENSING',
+    orderId: '80000000-0000-0000-0000-000000000079',
+    orderCode: 'PRE-DISP-79',
+    ready: true,
+    pickupBefore: new Date(Date.now() + 2 * 3600000).toISOString(),
+  };
+
+  let otpMode: '503' | '409' | '429' | '200' = '503';
+  let otpCallCount = 0;
+
+  await common(
+    page,
+    () => 'SELLER',
+    () => [readyOrder, expiredPickupOrder, dispensingOrder],
+  );
+
+  await page.route(`**/api/me/preorders/${readyOrder.id}/pickup-otp`, async (route) => {
+    otpCallCount++;
+    expect(route.request().method()).toBe('POST');
+    expect(route.request().postData()).toBeNull();
+    if (otpMode === '503') {
+      return route.fulfill({ status: 503, json: { detail: 'Dịch vụ gửi email đang bận (503).' } });
+    }
+    if (otpMode === '409') {
+      return route.fulfill({
+        status: 409,
+        json: { detail: 'Đơn chưa sẵn sàng hoặc đã hết hạn nhận.' },
+      });
+    }
+    if (otpMode === '429') {
+      return route.fulfill({
+        status: 429,
+        json: { detail: 'Vui lòng chờ trước khi gửi lại mã nhận hoa.', resendAfterSeconds: 2 },
+      });
+    }
+    return route.fulfill({
+      status: 200,
+      json: {
+        requestId: readyOrder.id,
+        orderId: readyOrder.orderId,
+        recipientMasked: 'c***@gmail.com',
+        expiresAt: readyOrder.pickupBefore,
+        resendAfterSeconds: 2,
+      },
+    });
+  });
+
+  await page.goto('/seller/orders');
+
+  // Expired pickupBefore and DISPENSING orders must NOT show the Send OTP button
+  const expiredDetails = page.locator(`#preorder-${expiredPickupOrder.id}`);
+  await expiredDetails.locator(':scope > summary').click();
+  await expect(
+    expiredDetails.getByRole('button', { name: /Gửi mã nhận hoa|Gửi lại mã/ }),
+  ).toHaveCount(0);
+
+  const dispensingDetails = page.locator(`#preorder-${dispensingOrder.id}`);
+  await dispensingDetails.locator(':scope > summary').click();
+  await expect(
+    dispensingDetails.getByRole('button', { name: /Gửi mã nhận hoa|Gửi lại mã/ }),
+  ).toHaveCount(0);
+
+  // Ready order within pickupBefore shows the Send OTP button
+  const readyDetails = page.locator(`#preorder-${readyOrder.id}`);
+  await readyDetails.locator(':scope > summary').click();
+  const sendBtn = readyDetails.getByRole('button', { name: 'Gửi mã nhận hoa', exact: true });
+  await expect(sendBtn).toBeVisible();
+
+  // 1. 503 error does NOT auto-retry
+  await sendBtn.click();
+  await expect(readyDetails.getByText('Dịch vụ gửi email đang bận (503).')).toBeVisible();
+  expect(otpCallCount).toBe(1);
+
+  // 2. 409 error displays detail and reloads order state
+  otpMode = '409';
+  await sendBtn.click();
+  await expect(readyDetails.getByText('Đơn chưa sẵn sàng hoặc đã hết hạn nhận.')).toBeVisible();
+  expect(otpCallCount).toBe(2);
+
+  // 3. 200 success displays masked email, switches to "Gửi lại mã", locks and counts down
+  otpMode = '200';
+  await sendBtn.click();
+  await expect(
+    readyDetails.getByText(
+      'Đã gửi mã nhận hoa tới c***@gmail.com. Khách vui lòng kiểm tra hộp thư và thư rác.',
+    ),
+  ).toBeVisible();
+  const resendBtn = readyDetails.getByRole('button', { name: /Gửi lại mã/ });
+  await expect(resendBtn).toBeDisabled();
+  await expect(readyDetails.getByRole('button', { name: 'Gửi lại mã', exact: true })).toBeEnabled({
+    timeout: 4000,
+  });
 });

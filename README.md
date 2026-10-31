@@ -13,6 +13,11 @@ pnpm dev
 
 Web: http://127.0.0.1:3010. API requests proxy to http://127.0.0.1:8088 by default; override API_PROXY_TARGET when running BE elsewhere. Customer/shop login is /dang-nhap; Admin/Staff login is /admin/login.
 
+Configure Goong Maps in `.env.local` (or environment variables) using `.env.example` as a template:
+
+- `NEXT_PUBLIC_GOONG_API_KEY`: Goong REST API key for Places Autocomplete (`Place/AutoComplete`) and Place Detail (`Place/Detail`) on `/thue-kiosk` and `/tim-kiosk`.
+- `NEXT_PUBLIC_GOONG_MAPTILES_KEY`: Goong MapTiles key for vector map tiles (automatically falls back to OpenStreetMap/Leaflet if omitted).
+
 Admin /admin and shop /seller open an overview with links to dedicated Next routes. Each business page loads its own data. Desktop navigation uses a sidebar and mobile navigation uses an expandable menu. Staff assignments are at /staff. All APIs enforce authorization independently of client navigation.
 
 ## Kiosk

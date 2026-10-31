@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  canSendPreorderPickupOtp,
   matchesOrderFilter,
   needsOrderAction,
   orderClosed,
@@ -31,5 +32,34 @@ describe('Order guidance follows backend state', () => {
     expect(orderClosed(row)).toBe(true);
     expect(needsOrderAction(row, 'member')).toBe(false);
     expect(matchesOrderFilter(row, 'closed', 'admin')).toBe(true);
+  });
+  it('enforces Seller pickup OTP eligibility strictly', () => {
+    const now = Date.parse('2026-10-31T10:00:00Z');
+    const validRow = {
+      kind: 'CUSTOM' as const,
+      state: 'ORDERED',
+      orderStatus: 'PAID',
+      ready: true,
+      pickupBefore: '2026-10-31T12:00:00Z',
+    };
+    expect(canSendPreorderPickupOtp(validRow, 'SELLER', now)).toBe(true);
+    expect(canSendPreorderPickupOtp(validRow, 'SELLER_STAFF', now)).toBe(false);
+    expect(canSendPreorderPickupOtp(validRow, 'CUSTOMER', now)).toBe(false);
+    expect(canSendPreorderPickupOtp({ ...validRow, kind: 'STOCK' }, 'SELLER', now)).toBe(false);
+    expect(canSendPreorderPickupOtp({ ...validRow, state: 'QUOTED' }, 'SELLER', now)).toBe(false);
+    expect(
+      canSendPreorderPickupOtp({ ...validRow, orderStatus: 'DISPENSING' }, 'SELLER', now),
+    ).toBe(false);
+    expect(canSendPreorderPickupOtp({ ...validRow, orderStatus: 'COMPLETED' }, 'SELLER', now)).toBe(
+      false,
+    );
+    expect(canSendPreorderPickupOtp({ ...validRow, ready: false }, 'SELLER', now)).toBe(false);
+    expect(
+      canSendPreorderPickupOtp(
+        { ...validRow, pickupBefore: '2026-10-31T09:59:59Z' },
+        'SELLER',
+        now,
+      ),
+    ).toBe(false);
   });
 });

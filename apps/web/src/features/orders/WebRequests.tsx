@@ -15,9 +15,10 @@ import {
   ArrowRight,
   Flower2,
 } from '@florabot/ui';
-import { ApiError, queryClient, request } from '@/shared/lib/api';
+import { ApiError, queryClient, request, sessionQuery } from '@/shared/lib/api';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
 import {
+  canSendPreorderPickupOtp,
   matchesOrderFilter,
   needsOrderAction,
   orderClosed,
@@ -27,7 +28,7 @@ import {
   money,
   when,
 } from './orders.utils';
-import type { OrderFilter, Page, WebOrder } from './orders.types';
+import type { OrderFilter, Page, SendPreorderPickupOtpResponse, WebOrder } from './orders.types';
 import styles from './seller-orders.module.css';
 import { rememberPreorderPayment } from './payment-return';
 
@@ -62,12 +63,14 @@ function OrderActions({
   row,
   base,
   mode,
+  role,
   page,
   onReload,
 }: {
   row: WebOrder;
   base: string;
   mode: 'member' | 'seller' | 'admin';
+  role?: string;
   page: number;
   onReload: () => Promise<void>;
 }) {
@@ -109,6 +112,88 @@ function OrderActions({
     pickupAt: string;
     note: string | null;
   } | null>(null);
+  const [otpSending, setOtpSending] = useState(false);
+  const otpSendingRef = useRef(false);
+  const [otpHasSent, setOtpHasSent] = useState(false);
+  const [otpCooldownUntil, setOtpCooldownUntil] = useState<number | null>(null);
+  const otpRemainingSeconds =
+    otpCooldownUntil && otpCooldownUntil > now ? Math.ceil((otpCooldownUntil - now) / 1000) : 0;
+
+  async function sendPickupOtp() {
+    if (otpSendingRef.current || busy || uncertain || otpRemainingSeconds > 0) return;
+    otpSendingRef.current = true;
+    setOtpSending(true);
+    setError('');
+    setNotice('');
+    try {
+      const response = await fetch(`/api/me/preorders/${encodeURIComponent(row.id)}/pickup-otp`, {
+        method: 'POST',
+        credentials: 'include',
+        signal: AbortSignal.timeout(15_000),
+      });
+      const data = (await response.json().catch(() => ({}))) as Partial<
+        SendPreorderPickupOtpResponse & {
+          detail?: string;
+          title?: string;
+          message?: string;
+        }
+      >;
+
+      if (!response.ok) {
+        const serverDetail = data.detail || data.title || data.message;
+        if (response.status === 401) {
+          setError(
+            serverDetail ||
+              'Phiên đăng nhập đã hết hạn hoặc không hợp lệ. Vui lòng kiểm tra phiên đăng nhập và đăng nhập lại.',
+          );
+        } else if (response.status === 403) {
+          setError(
+            serverDetail ||
+              'Chỉ Chủ shop (Seller) sở hữu đơn mới được gửi mã nhận hoa. Vui lòng kiểm tra quyền truy cập và phiên đăng nhập.',
+          );
+        } else if (response.status === 404) {
+          setError(serverDetail || 'Không tìm thấy đơn đặt trước thuộc shop của bạn.');
+        } else if (response.status === 409) {
+          setError(
+            serverDetail ||
+              'Trạng thái đơn đặt trước đã thay đổi. Đang tải lại trạng thái mới nhất từ máy chủ.',
+          );
+          await queryClient.invalidateQueries({ queryKey: ['web-orders'] });
+        } else if (response.status === 429) {
+          if (typeof data.resendAfterSeconds === 'number' && data.resendAfterSeconds > 0) {
+            setOtpCooldownUntil(Date.now() + data.resendAfterSeconds * 1000);
+          }
+          setError(
+            serverDetail || 'Bạn đã gửi mã quá giới hạn cho phép. Vui lòng chờ trước khi gửi lại.',
+          );
+        } else if (response.status === 503 || response.status >= 500) {
+          setError(
+            serverDetail ||
+              'Chưa xác nhận gửi mã thành công do dịch vụ tạm thời gián đoạn. Hệ thống không tự gửi lại; vui lòng kiểm tra trước khi bấm gửi lại.',
+          );
+        } else {
+          setError(serverDetail || `Gửi mã thất bại (${response.status}).`);
+        }
+        return;
+      }
+
+      const masked = data.recipientMasked || 'email đăng nhập của khách';
+      const cooldownSec =
+        typeof data.resendAfterSeconds === 'number' && data.resendAfterSeconds > 0
+          ? data.resendAfterSeconds
+          : 60;
+      setOtpHasSent(true);
+      setOtpCooldownUntil(Date.now() + cooldownSec * 1000);
+      setNotice(`Đã gửi mã nhận hoa tới ${masked}. Khách vui lòng kiểm tra hộp thư và thư rác.`);
+    } catch {
+      setError(
+        'Chưa xác nhận gửi mã thành công do lỗi kết nối mạng. Hệ thống không tự gửi lại; vui lòng kiểm tra trước khi thử lại.',
+      );
+    } finally {
+      otpSendingRef.current = false;
+      setOtpSending(false);
+    }
+  }
   const slots = useQuery({
     queryKey: ['seller-kiosk-slots', row.sellerId, row.kioskId],
     queryFn: () =>
@@ -274,7 +359,8 @@ function OrderActions({
       )}
       {mode === 'member' && row.orderStatus === 'PAID' && row.ready && (
         <p>
-          Hoa đã ở trong tủ. Đến đúng tủ trong khung giờ hẹn và dùng mã trên biên nhận để nhận hoa.
+          Đến đúng kiosk trong khung giờ nhận, chọn “Nhận đơn đặt trước” và nhập OTP 8 chữ số được
+          gửi qua email.
         </p>
       )}
       {mode === 'member' &&
@@ -384,6 +470,21 @@ function OrderActions({
                 Nạp hoa cho đơn này
               </Button>
             )}
+          {mode === 'seller' && canSendPreorderPickupOtp(row, role, now) && (
+            <Button
+              type="button"
+              disabled={busy || uncertain || otpSending || otpRemainingSeconds > 0}
+              onClick={() => void sendPickupOtp()}
+            >
+              {otpSending
+                ? 'Đang gửi mã…'
+                : otpRemainingSeconds > 0
+                  ? `Gửi lại mã (${otpRemainingSeconds}s)`
+                  : otpHasSent
+                    ? 'Gửi lại mã'
+                    : 'Gửi mã nhận hoa'}
+            </Button>
+          )}
           {canCancel && (
             <Button
               variant="outline"
@@ -731,6 +832,7 @@ export default function WebRequests({
   mode: 'member' | 'seller' | 'admin';
   sellerId?: string;
 }) {
+  const session = useQuery(sessionQuery);
   const params = useSearchParams();
   const initialPage = Number(params.get('page'));
   const initialFilter = params.get('filter');
@@ -1105,6 +1207,7 @@ export default function WebRequests({
                     row={row}
                     base={base}
                     mode={mode}
+                    role={session.data?.role}
                     page={page}
                     onReload={async () => {
                       const fresh = await query.refetch();

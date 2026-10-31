@@ -42,3 +42,11 @@ export type OrderMode = 'member' | 'seller' | 'admin';
 
 export type OrderFilter =
   'all' | 'attention' | 'requested' | 'quoted' | 'preparing' | 'ready' | 'closed';
+
+export type SendPreorderPickupOtpResponse = {
+  requestId: string;
+  orderId: string;
+  recipientMasked: string;
+  expiresAt: string;
+  resendAfterSeconds: number;
+};

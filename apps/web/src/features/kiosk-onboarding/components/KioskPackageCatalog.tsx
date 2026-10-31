@@ -1,4 +1,4 @@
-import { Boxes, Button, CircleAlert, RefreshCw, Store } from '@florabot/ui';
+import { Boxes, Button, CircleAlert, RefreshCw } from '@florabot/ui';
 import type { KioskPackageResponse } from '../../installations/installations.types';
 
 interface KioskPackageCatalogProps {
@@ -25,8 +25,8 @@ export function KioskPackageCatalog({
       <div className="section-title-wrap">
         <h2 id="packages-catalog-heading">1. Chọn gói thuê kiosk hàng năm</h2>
         <p>
-          Mỗi gói tương ứng với một tủ vật lý nguyên chiếc được cấu hình số lượng ô đặt trước và ô
-          vãng lai cố định.
+          Thuê trọn kiosk theo sức chứa phù hợp. Bạn chọn hình thức bán cho từng ô trống khi vận
+          hành.
         </p>
       </div>
 
@@ -58,20 +58,19 @@ export function KioskPackageCatalog({
           {packages.map((pkg) => {
             const isSelected = selectedPackageId === pkg.id;
             return (
-              <div
+              <label
                 key={pkg.id}
                 className={`kiosk-package-card ${isSelected ? 'is-selected' : ''}`}
-                onClick={() => onSelectPackage(pkg.id)}
-                tabIndex={0}
-                role="radio"
-                aria-checked={isSelected}
-                onKeyDown={(e) => {
-                  if (e.key === ' ' || e.key === 'Enter') {
-                    e.preventDefault();
-                    onSelectPackage(pkg.id);
-                  }
-                }}
               >
+                <input
+                  type="radio"
+                  name="kiosk-lease-package"
+                  value={pkg.id}
+                  checked={isSelected}
+                  onChange={() => onSelectPackage(pkg.id)}
+                  aria-label={pkg.name}
+                  className="kiosk-package-radio"
+                />
                 <div className="package-card-header">
                   <span className="package-tier-badge">{pkg.name}</span>
                   <div className="package-price">
@@ -86,31 +85,30 @@ export function KioskPackageCatalog({
                   <div className="slot-item">
                     <Boxes size={18} aria-hidden="true" />
                     <span>
-                      <strong>{pkg.walkInSlots}</strong> ô vãng lai (Walk-in)
+                      <strong>{pkg.totalSlots}</strong> ô tủ · Thuê nguyên kiosk
                     </span>
-                  </div>
-                  <div className="slot-item">
-                    <Store size={18} aria-hidden="true" />
-                    <span>
-                      <strong>{pkg.preorderSlots}</strong> ô đặt trước (Pre-order)
-                    </span>
-                  </div>
-                  <div className="slot-total">
-                    Tổng sức chứa: <strong>{pkg.totalSlots} ô tủ</strong>
                   </div>
                 </div>
 
-                <p className="package-desc">{pkg.description}</p>
+                <p className="package-desc">
+                  Kinh doanh hoa bán sẵn và nhận đơn đặt trước tại cùng một điểm bán.
+                </p>
 
                 <div className="package-select-action">
                   <span className={`select-indicator ${isSelected ? 'is-active' : ''}`}>
                     {isSelected ? '✓ Đã chọn gói này' : 'Chọn gói này'}
                   </span>
                 </div>
-              </div>
+              </label>
             );
           })}
         </div>
+      )}
+
+      {!isLoading && !isError && packages?.length === 0 && (
+        <p role="status" className="kiosk-packages-error">
+          Hiện chưa có gói thuê. Vui lòng quay lại sau.
+        </p>
       )}
 
       {error && (

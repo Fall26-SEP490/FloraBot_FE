@@ -162,7 +162,16 @@ describe('validateKioskApplicationDraft Unit Tests', () => {
       ).toBe('Địa chỉ lắp đặt quá ngắn, vui lòng ghi rõ số nhà, đường, phường/xã.');
     });
 
-    it('accepts addresses with 5 or more characters', () => {
+    it('accepts addresses with 5 or more characters and rejects unselected Goong address', () => {
+      expect(
+        validateKioskApplicationDraft({
+          ...validDraft,
+          addressSelected: false,
+        }).errors.installationAddress,
+      ).toBe('Vui lòng chọn một địa chỉ từ danh sách gợi ý của Goong.');
+      expect(
+        validateKioskApplicationDraft({ ...validDraft, installationAddress: '12345' }).isValid,
+      ).toBe(true);
       expect(
         validateKioskApplicationDraft({ ...validDraft, installationAddress: '12345' }).isValid,
       ).toBe(true);

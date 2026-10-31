@@ -62,12 +62,7 @@ export default function ReturnFlowers({
       ]);
     },
   });
-  if (
-    !['PENDING_REMOVAL', 'PENDING_RELEASE'].includes(slot.status) &&
-    !mutation.isSuccess &&
-    !uncertain
-  )
-    return null;
+  if (slot.status !== 'PENDING_RELEASE' && !mutation.isSuccess && !uncertain) return null;
   const id = `return-${slot.id}`;
   return (
     <div>

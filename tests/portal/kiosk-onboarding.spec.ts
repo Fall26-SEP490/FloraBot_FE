@@ -38,11 +38,80 @@ const packagesMock = [
 ];
 
 test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
-  test('Customer application: package catalog, coordinate validation (blank != 0), submit, and status timeline', async ({
+  test('Customer application: package catalog, Goong address suggestions, GPS overlay, coordinate validation, submit, and status timeline', async ({
     page,
   }) => {
     let currentApp: Record<string, unknown> | null = null;
     let paymentLinkAttempts = 0;
+    let submittedPayload: Record<string, unknown> | null = null;
+    let autocompleteMode: 'ok' | 'empty' | 'error' = 'ok';
+    let autocompleteDelayMs = 0;
+
+    await page.route(/rsapi\.goong\.io\/Place\/AutoComplete/, async (route) => {
+      if (autocompleteDelayMs > 0) {
+        await new Promise((resolve) => setTimeout(resolve, autocompleteDelayMs));
+      }
+      if (autocompleteMode === 'error') {
+        return route.fulfill({ status: 500, json: { status: 'UNKNOWN_ERROR' } });
+      }
+      if (autocompleteMode === 'empty') {
+        return route.fulfill({ status: 200, json: { status: 'ZERO_RESULTS', predictions: [] } });
+      }
+      return route.fulfill({
+        status: 200,
+        json: {
+          status: 'OK',
+          predictions: [
+            {
+              place_id: 'goong-place-1',
+              description: '123 Nguyễn Huệ, Bến Nghé, Quận 1, TP.HCM',
+              structured_formatting: {
+                main_text: '123 Nguyễn Huệ',
+                secondary_text: 'Bến Nghé, Quận 1, TP.HCM',
+              },
+            },
+            {
+              place_id: 'goong-place-2',
+              description: '125 Nguyễn Huệ, Bến Nghé, Quận 1, TP.HCM',
+              structured_formatting: {
+                main_text: '125 Nguyễn Huệ',
+                secondary_text: 'Bến Nghé, Quận 1, TP.HCM',
+              },
+            },
+          ],
+        },
+      });
+    });
+
+    await page.route(/rsapi\.goong\.io\/Place\/Detail/, async (route) => {
+      const placeId = new URL(route.request().url()).searchParams.get('place_id');
+      if (placeId === 'goong-place-2') {
+        return route.fulfill({
+          status: 200,
+          json: {
+            status: 'OK',
+            result: {
+              place_id: 'goong-place-2',
+              name: '125 Nguyễn Huệ',
+              formatted_address: '125 Nguyễn Huệ, Bến Nghé, Quận 1, TP.HCM',
+              geometry: { location: { lat: 10.775123, lng: 106.701456 } },
+            },
+          },
+        });
+      }
+      return route.fulfill({
+        status: 200,
+        json: {
+          status: 'OK',
+          result: {
+            place_id: 'goong-place-1',
+            name: '123 Nguyễn Huệ',
+            formatted_address: '123 Nguyễn Huệ, Bến Nghé, Quận 1, TP.HCM',
+            geometry: { location: { lat: 10.776889, lng: 106.700806 } },
+          },
+        },
+      });
+    });
 
     await page.route('**/api/**', async (route) => {
       const url = new URL(route.request().url());
@@ -74,6 +143,7 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
 
       if (path === '/api/member/kiosk-applications' && route.request().method() === 'POST') {
         const body = route.request().postDataJSON();
+        submittedPayload = body;
         currentApp = {
           id: 'app-999',
           customerId: 'cust-101',
@@ -163,28 +233,119 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     // Select Trial package
     await page.getByText('Trial').click();
 
-    // Test Coordinate Blank != 0 validation:
-    // Leaving lat blank and typing 0 for lon
+    // Verify manual Latitude & Longitude inputs are removed from UI
+    await expect(page.getByLabel('Vĩ độ (Latitude)')).toHaveCount(0);
+    await expect(page.getByLabel('Kinh độ (Longitude)')).toHaveCount(0);
+
     await page.getByLabel('Tên shop hoa').fill('Tiệm Hoa Xinh');
     await page.getByLabel('Số điện thoại kinh doanh').fill('0901234567');
     await page.getByLabel('Email liên hệ công việc').fill('contact@tiemhoaxinh.vn');
-    await page
-      .getByLabel('Địa chỉ lắp đặt cụ thể')
-      .fill('123 Nguyễn Huệ, Bến Nghé, Quận 1, TP.HCM');
     await page.getByLabel('Tên ngân hàng').fill('Vietcombank');
     await page.getByLabel('Tên chủ tài khoản').fill('NGUYEN VAN A');
     await page.getByLabel('Số tài khoản ngân hàng').fill('0071001234567');
 
-    // Click submit with blank coordinates
+    const addressInput = page.getByRole('combobox', { name: /Địa chỉ lắp đặt cụ thể/ });
+    const mapRegion = page.getByRole('region', { name: 'Bản đồ chọn tọa độ lắp đặt kiosk' });
+
+    // 1. Loading & Error states on Goong Autocomplete
+    autocompleteMode = 'error';
+    autocompleteDelayMs = 150;
+    await addressInput.fill('123 Nguyễn');
+    await expect(page.getByText('Đang tìm địa chỉ gợi ý...')).toBeVisible();
+    await expect(page.getByText('Không thể tải gợi ý địa chỉ lúc này.')).toBeVisible();
+
+    // 2. Empty (no-result) state
+    autocompleteMode = 'empty';
+    autocompleteDelayMs = 0;
+    await addressInput.fill('Địa chỉ không tồn tại xyz');
+    await expect(
+      page.getByText('Không tìm thấy địa chỉ phù hợp. Vui lòng thử từ khóa chi tiết hơn.'),
+    ).toBeVisible();
+
+    // Click submit with unselected address & blank coordinates
     await page.getByRole('button', { name: 'Nộp hồ sơ thuê kiosk' }).click();
+    await expect(
+      page.getByText('Vui lòng chọn một địa chỉ từ danh sách gợi ý của Goong.'),
+    ).toBeVisible();
     await expect(page.getByText('ô trống không đồng nghĩa với 0')).toBeVisible();
 
-    // Now test entering valid coordinates:
-    await page.getByLabel('Vĩ độ (Latitude)').fill('10.776889');
-    await page.getByLabel('Kinh độ (Longitude)').fill('106.700806');
+    // 3. Keyboard navigation (ArrowDown, Escape, Enter) & Suggestion Selection
+    autocompleteMode = 'ok';
+    await addressInput.fill('123 Nguyễn Huệ');
+    const listbox = page.getByRole('listbox', { name: 'Gợi ý địa chỉ Goong' });
+    await expect(listbox).toBeVisible();
+
+    await addressInput.press('Escape');
+    await expect(listbox).toHaveCount(0);
+
+    await addressInput.press('ArrowDown');
+    await expect(listbox).toBeVisible();
+    await addressInput.press('ArrowDown');
+    await addressInput.press('Enter');
+
+    await expect(addressInput).toHaveValue('125 Nguyễn Huệ, Bến Nghé, Quận 1, TP.HCM');
+    await expect(mapRegion).toHaveAttribute('data-has-pin', 'true');
+    await expect(mapRegion).toHaveAttribute('data-pin-lat', '10.775123');
+    await expect(mapRegion).toHaveAttribute('data-pin-lon', '106.701456');
+    await expect(
+      page.getByText('Đã chọn địa chỉ gợi ý và cập nhật ghim vị trí trên bản đồ.'),
+    ).toBeVisible();
+
+    // 4. Editing address after selecting suggestion clears coordinates & pin and requires re-selecting
+    await addressInput.fill('123 Nguyễn Huệ sửa tay');
+    await expect(mapRegion).toHaveAttribute('data-has-pin', 'false');
+    await expect(
+      page.getByText(
+        'Bạn vừa chỉnh sửa địa chỉ. Vui lòng chọn lại một gợi ý từ danh sách để xác nhận tọa độ.',
+      ),
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Nộp hồ sơ thuê kiosk' }).click();
+    await expect(
+      page.getByText('Vui lòng chọn một địa chỉ từ danh sách gợi ý của Goong.'),
+    ).toBeVisible();
+    expect(submittedPayload).toBeNull();
+
+    // Re-select first suggestion ("123 Nguyễn Huệ, Bến Nghé, Quận 1, TP.HCM")
+    await addressInput.fill('123 Nguyễn');
+    await expect(listbox).toBeVisible();
+    await listbox.getByRole('option').first().click();
+    await expect(addressInput).toHaveValue('123 Nguyễn Huệ, Bến Nghé, Quận 1, TP.HCM');
+    await expect(mapRegion).toHaveAttribute('data-pin-lat', '10.776889');
+    await expect(mapRegion).toHaveAttribute('data-pin-lon', '106.700806');
+
+    // 5. Overlaid GPS button updates marker while keeping current selected address
+    await page.context().grantPermissions(['geolocation']);
+    await page.context().setGeolocation({ latitude: 10.779999, longitude: 106.699888 });
+    const gpsBtn = page.getByRole('button', { name: 'Dùng vị trí hiện tại' });
+    await expect(gpsBtn).toBeVisible();
+    await gpsBtn.click();
+    await expect(mapRegion).toHaveAttribute('data-pin-lat', '10.779999');
+    await expect(mapRegion).toHaveAttribute('data-pin-lon', '106.699888');
+    await expect(addressInput).toHaveValue('123 Nguyễn Huệ, Bến Nghé, Quận 1, TP.HCM');
+    await expect(
+      page.getByText(
+        'Đã cập nhật ghim bản đồ theo vị trí hiện tại. Địa chỉ đang chọn được giữ nguyên.',
+      ),
+    ).toBeVisible();
+
+    // Check responsive layout has no horizontal overflow at 390px and 1280px
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    ).toBe(true);
+    await page.setViewportSize({ width: 1280, height: 900 });
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    ).toBe(true);
+    await expect(page.getByLabel('Vĩ độ (Latitude)')).toHaveCount(0);
+    await expect(page.getByLabel('Kinh độ (Longitude)')).toHaveCount(0);
 
     // Submit form successfully
     await page.getByRole('button', { name: 'Nộp hồ sơ thuê kiosk' }).click();
+    expect(submittedPayload).toMatchObject({
+      installationAddress: '123 Nguyễn Huệ, Bến Nghé, Quận 1, TP.HCM',
+      latitude: 10.779999,
+      longitude: 106.699888,
+    });
 
     // Verify Application Status Timeline rendered
     await expect(page.getByText('Hồ sơ thuê: Tiệm Hoa Xinh')).toBeVisible();
