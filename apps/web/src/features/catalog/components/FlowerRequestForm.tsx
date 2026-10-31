@@ -65,8 +65,8 @@ export function FlowerRequestForm({ item, onOpenChat, openingChat }: FlowerReque
     }
     const pickupDate = new Date(pickup);
     const delay = pickupDate.getTime() - Date.now();
-    if (!Number.isFinite(delay) || delay < 2 * 60 * 60 * 1000 || delay > 30 * 24 * 60 * 60 * 1000) {
-      setError('Chọn thời gian nhận từ 2 giờ đến 30 ngày tới.');
+    if (!Number.isFinite(delay) || delay <= 0 || delay > 30 * 24 * 60 * 60 * 1000) {
+      setError('Chọn thời gian nhận trong tương lai, tối đa 30 ngày tới.');
       return;
     }
     const brief = instructions.trim();
@@ -198,7 +198,8 @@ export function FlowerRequestForm({ item, onOpenChat, openingChat }: FlowerReque
               aria-describedby={`pickup-hint-${item.productId}`}
             />
             <p className="quiet" id={`pickup-hint-${item.productId}`}>
-              Chọn từ 2 giờ đến 30 ngày tới. Lịch chính thức được shop xác nhận cùng báo giá.
+              Chọn thời gian trong tương lai, tối đa 30 ngày tới. Lịch chính thức được shop xác nhận
+              cùng báo giá.
             </p>
           </div>
           <div className="flower-request-field">
