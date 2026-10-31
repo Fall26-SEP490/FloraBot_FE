@@ -111,7 +111,7 @@ export function InstallationScheduleForm({
               )}
             {eligibleKiosks.map((k) => (
               <option key={k.id} value={k.id}>
-                {k.code} - {k.name} ({k.totalSlots} ô) [{k.status}]
+                {k.code} - {k.name} ({k.slotCount} ô) [{k.status}]
               </option>
             ))}
           </select>

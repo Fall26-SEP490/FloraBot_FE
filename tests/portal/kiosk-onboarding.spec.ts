@@ -224,9 +224,7 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
         id: 'kiosk-01',
         code: 'K-HCM-01',
         name: 'Kiosk Quận 1',
-        walkInSlots: 1,
-        preorderSlots: 1,
-        totalSlots: 2,
+        slotCount: 2,
         status: 'OFFLINE',
       },
     ];
@@ -254,6 +252,7 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
         reviewNote: appStatus !== 'PAID_REVIEW' ? 'Đã gọi điện xác nhận vị trí mặt bằng' : null,
         assignedTechnicianName: 'Nguyễn Kỹ Thuật',
         assignedKioskCode: assignedKiosk,
+        assignedKioskId: enrolledKiosks.find((kiosk) => kiosk.code === assignedKiosk)?.id ?? null,
         scheduledDate: '2026-10-18',
         timeWindow: '09:00 - 12:00',
         technicianReport:
@@ -320,12 +319,15 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
       }
 
       if (path === '/api/operations/eligible-kiosks') {
-        return route.fulfill({ json: enrolledKiosks });
+        return route.fulfill({
+          json: enrolledKiosks.filter((kiosk) => kiosk.code !== assignedKiosk),
+        });
       }
 
       if (path === '/api/operations/kiosks/enroll' && route.request().method() === 'POST') {
         const body = route.request().postDataJSON();
-        expect(body.slotCount).toBeGreaterThanOrEqual(1);
+        expect(body.slotCount).toBe(2);
+        expect(body.mqttClientId).toBeNull();
         expect(body.slotCount).toBeLessThanOrEqual(50);
         expect(body).not.toHaveProperty('walkInSlots');
         expect(body).not.toHaveProperty('preorderSlots');
@@ -333,9 +335,7 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
           id: 'kiosk-02',
           code: body.code,
           name: body.name,
-          walkInSlots: 0,
-          preorderSlots: 0,
-          totalSlots: body.slotCount,
+          slotCount: body.slotCount,
           status: 'OFFLINE',
           apiKey: 'kiosk-device-api-key-xyz',
         };
@@ -349,6 +349,12 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
       }
 
       if (path.endsWith('/schedule') && route.request().method() === 'POST') {
+        expect(route.request().postDataJSON()).toEqual({
+          technicianId: 'tech-01',
+          kioskId: 'kiosk-01',
+          scheduledDate: '2026-10-18',
+          timeWindow: '09:00 - 12:00',
+        });
         appStatus = 'SCHEDULED';
         assignedKiosk = 'K-HCM-01';
         return route.fulfill({ json: currentAppDetail().application });
@@ -411,12 +417,20 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     await expect(page.locator('#device-api-key-input')).toHaveValue('kiosk-device-api-key-xyz');
     await page.getByRole('button', { name: 'Tôi đã sao chép khóa - Đóng bảng này' }).click();
 
+    // OFFLINE kiosks with a matching slotCount are selectable before installation.
+    await expect(
+      page.getByRole('option', { name: 'K-HCM-01 - Kiosk Quận 1 (2 ô) [OFFLINE]', exact: true }),
+    ).toHaveCount(1);
+
     // Step 2: Schedule Tech and Kiosk
     await page.getByLabel('Kỹ thuật viên phụ trách (ACTIVE):').selectOption('tech-01');
     await page.getByLabel('Tủ Kiosk cấp phát:').selectOption('kiosk-01');
     await page.getByLabel('Ngày dự kiến lắp đặt:').fill('2026-10-18');
     await page.getByRole('button', { name: /Lưu lịch & Phân công/ }).click();
     await expect(page.getByText('Đã phân công KTV và lên lịch')).toBeVisible();
+    await expect(
+      page.getByRole('option', { name: 'K-HCM-01 · Tủ đang phân công cho hồ sơ này' }),
+    ).toHaveCount(1);
 
     // Advance to AWAITING_HANDOVER
     appStatus = 'AWAITING_HANDOVER';
@@ -528,15 +542,14 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
       if (path === '/api/operations/kiosks/enroll' && route.request().method() === 'POST') {
         enrollCount += 1;
         const body = route.request().postDataJSON();
+        expect(body.mqttClientId).toBe(enrollCount === 1 ? 'mqtt-cycle-001' : null);
         return route.fulfill({
           status: 201,
           json: {
             id: 'kiosk-' + enrollCount,
             code: body.code,
             name: body.name,
-            walkInSlots: 0,
-            preorderSlots: 0,
-            totalSlots: body.slotCount,
+            slotCount: body.slotCount,
             status: 'OFFLINE',
             apiKey:
               enrollCount === 1 ? 'kiosk-device-api-key-FIRST' : 'kiosk-device-api-key-SECOND',
@@ -557,6 +570,7 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     await page.getByLabel('Mã tủ (Code) *').fill('K-CYCLE-01');
     await page.getByLabel('Tên tủ *').fill('Kiosk Chu Kỳ 1');
     await page.getByLabel('Hardware ID (Serial) *').fill('SN-CYCLE-001');
+    await page.getByLabel('MQTT Client ID (nếu có)').fill('mqtt-cycle-001');
     await page.getByRole('button', { name: 'Đăng ký thiết bị (OFFLINE)' }).click();
 
     // Verify Modal 1 is visible
@@ -578,6 +592,7 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     await page.getByLabel('Mã tủ (Code) *').fill('K-CYCLE-02');
     await page.getByLabel('Tên tủ *').fill('Kiosk Chu Kỳ 2');
     await page.getByLabel('Hardware ID (Serial) *').fill('SN-CYCLE-002');
+    await expect(page.getByLabel('MQTT Client ID (nếu có)')).toHaveValue('');
     await page.getByRole('button', { name: 'Đăng ký thiết bị (OFFLINE)' }).click();
 
     // Verify Modal 2 opens with NEW key and copySuccess is reset

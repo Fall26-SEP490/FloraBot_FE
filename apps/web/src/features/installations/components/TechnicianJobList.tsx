@@ -1,6 +1,7 @@
 import { ClipboardList, ListChecks, MapPin } from '@florabot/ui';
 import { KIOSK_STATUS_LABELS } from '../installations.constants';
 import type { TechnicianInstallationSummary } from '../installations.types';
+import { formatDateVN } from '../installations.utils';
 
 interface TechnicianInstallationCardProps {
   job: TechnicianInstallationSummary;
@@ -41,7 +42,7 @@ function TechnicianInstallationCard({
 
       <div className="job-meta-row">
         <span>
-          <ClipboardList size={14} aria-hidden="true" /> {job.scheduledDate}
+          <ClipboardList size={14} aria-hidden="true" /> {formatDateVN(job.scheduledDate)}
         </span>
         <span>
           <ListChecks size={14} aria-hidden="true" /> {job.timeWindow}

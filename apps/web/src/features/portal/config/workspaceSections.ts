@@ -1,5 +1,6 @@
 export const workspaceSections = {
   ADMIN: [
+    ['approvals', 'Trung tâm duyệt', 'Các hàng đợi cần kiểm tra, xử lý và hướng dẫn đúng vai trò.'],
     [
       'accounts',
       'Tài khoản hệ thống',
@@ -13,7 +14,12 @@ export const workspaceSections = {
       'Giám sát công việc',
       'Theo dõi trạng thái sự cố và giao hoa trên toàn hệ thống ở chế độ chỉ đọc.',
     ],
-    ['shops', 'Shop hoa', 'Duyệt hồ sơ và theo dõi trạng thái hoạt động.'],
+    [
+      'installations',
+      'Hồ sơ thuê kiosk',
+      'Giám sát hồ sơ thuê và lắp đặt; Manager xác nhận, phân công và bàn giao.',
+    ],
+    ['shops', 'Shop hoa', 'Theo dõi shop đang có và các hồ sơ phê duyệt theo luồng cũ.'],
     ['slots', 'Phân bổ kiosk', 'Gán toàn bộ kiosk cho một shop và theo dõi trạng thái phân bổ.'],
     ['complaints', 'Phản ánh', 'Xem bằng chứng và xử lý phản ánh của khách.'],
     ['refunds', 'Hoàn tiền', 'Kiểm tra khoản hoàn và xác nhận chi trả.'],

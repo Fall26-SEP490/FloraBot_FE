@@ -39,6 +39,7 @@ function workspaceRoleLabel(role: string) {
 
 const icons = {
   overview: LayoutDashboard,
+  approvals: ClipboardList,
   managers: Users,
   accounts: Users,
   customers: Users,
@@ -68,8 +69,8 @@ const icons = {
 };
 const groups = {
   ADMIN: [
-    ['Vận hành', ['accounts', 'managers', 'orders', 'incidents', 'tasks']],
-    ['Mạng lưới', ['shops', 'slots']],
+    ['Vận hành', ['approvals', 'accounts', 'managers', 'orders', 'incidents', 'tasks']],
+    ['Mạng lưới', ['installations', 'shops', 'slots']],
     [
       'Giao dịch',
       ['complaints', 'refunds', 'kiosk-refunds', 'withdrawals', 'reconciliation', 'reports'],

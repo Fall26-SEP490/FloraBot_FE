@@ -11521,6 +11521,7 @@
           "kioskId",
           "slotCode",
           "status",
+          "zone",
           "currentSellerId",
           "bouquetId",
           "kioskCode",
@@ -11543,6 +11544,12 @@
           },
           "status": {
             "type": "string"
+          },
+          "zone": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "currentSellerId": {
             "type": [
@@ -12825,9 +12832,7 @@
           "id",
           "code",
           "name",
-          "walkInSlots",
-          "preorderSlots",
-          "totalSlots",
+          "slotCount",
           "status"
         ],
         "type": "object",
@@ -12842,23 +12847,7 @@
           "name": {
             "type": "string"
           },
-          "walkInSlots": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "preorderSlots": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "totalSlots": {
+          "slotCount": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -12918,8 +12907,7 @@
           "id",
           "code",
           "name",
-          "walkInSlots",
-          "preorderSlots",
+          "slotCount",
           "status",
           "apiKey"
         ],
@@ -12935,15 +12923,7 @@
           "name": {
             "type": "string"
           },
-          "walkInSlots": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "preorderSlots": {
+          "slotCount": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",

@@ -8,6 +8,7 @@ import type {
   TechnicianInstallationDetail,
   TechnicianInstallationSummary,
 } from './installations.types';
+import { technicianErrorMessage } from './technician-errors';
 import { TechnicianJobList } from './components/TechnicianJobList';
 import { TechnicianJobDetailCard } from './components/TechnicianJobDetailCard';
 import '../../shared/styles/kiosk-shared.css';
@@ -28,7 +29,9 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
 
   const jobs = jobsQuery.data || [];
   const initialJobId = jobs.length > 0 ? jobs[0].id : null;
-  const effectiveJobId = selectedJobId ?? initialJobId;
+  const effectiveJobId = jobs.some((job) => job.id === selectedJobId)
+    ? selectedJobId
+    : initialJobId;
 
   // Query: Specific Job Detail (fetch actual detail)
   const jobDetailQuery = useQuery({
@@ -65,6 +68,9 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
             nộp báo cáo hoàn thành.
           </p>
         </div>
+        <Button variant="outline" disabled={jobsQuery.isFetching} onClick={invalidate}>
+          <RefreshCw size={16} aria-hidden="true" /> Làm mới công việc lắp đặt
+        </Button>
       </div>
 
       {jobsQuery.isLoading && (
@@ -77,7 +83,12 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
       {jobsQuery.isError && (
         <div role="alert" className="kiosk-field-error-banner">
           <CircleAlert size={18} aria-hidden="true" />
-          <span>Không thể tải danh sách công việc. Vui lòng thử lại.</span>
+          <span>
+            {technicianErrorMessage(
+              jobsQuery.error,
+              'Không thể tải danh sách công việc. Vui lòng thử lại.',
+            )}
+          </span>
           <Button variant="outline" onClick={() => void jobsQuery.refetch()}>
             Tải lại công việc
           </Button>
@@ -114,7 +125,12 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
 
           {jobDetailQuery.isError && (
             <div role="alert">
-              <p>Chưa đọc được chi tiết. Hãy tải lại trước khi thao tác.</p>
+              <p>
+                {technicianErrorMessage(
+                  jobDetailQuery.error,
+                  'Chưa đọc được chi tiết. Hãy tải lại trước khi thao tác.',
+                )}
+              </p>
               <Button variant="outline" onClick={() => void jobDetailQuery.refetch()}>
                 Tải lại chi tiết lắp đặt
               </Button>
