@@ -10,6 +10,7 @@ import { InstallationList } from './components/InstallationList';
 import { InstallationDetails } from './components/InstallationDetails';
 import { EnrollKioskModal } from './components/EnrollKioskModal';
 import { ProvisionedKeyModal } from './components/ProvisionedKeyModal';
+import { AvailableKiosksModal } from './components/AvailableKiosksModal';
 import '../../shared/styles/kiosk-shared.css';
 import './styles/operations-installations.css';
 
@@ -26,8 +27,9 @@ export default function OperationsInstallations({ session }: OperationsInstallat
   const selectedAppId =
     selectedAppDraft === undefined ? searchParams.get('application') : selectedAppDraft;
 
-  // Enroll modal state
+  // Enroll & Inventory modal state
   const [enrollModalOpen, setEnrollModalOpen] = useState(false);
+  const [inventoryModalOpen, setInventoryModalOpen] = useState(false);
   const [enrollSlotCount, setEnrollSlotCount] = useState(1);
   const [enrollSuccess, setEnrollSuccess] = useState<string | null>(null);
 
@@ -114,6 +116,7 @@ export default function OperationsInstallations({ session }: OperationsInstallat
         onSelectApp={handleSelectApp}
         onRefresh={handleRefresh}
         onOpenEnroll={() => handleOpenEnroll(1)}
+        onOpenInventory={() => setInventoryModalOpen(true)}
       />
 
       {selectedAppId && (
@@ -135,6 +138,13 @@ export default function OperationsInstallations({ session }: OperationsInstallat
         session={session}
         initialSlotCount={enrollSlotCount}
         onSuccess={handleEnrollSuccess}
+      />
+
+      <AvailableKiosksModal
+        open={inventoryModalOpen}
+        onClose={() => setInventoryModalOpen(false)}
+        session={session}
+        onOpenEnroll={handleOpenEnroll}
       />
 
       {provisionedKeyInfo && <ProvisionedKeyModal info={provisionedKeyInfo} onClose={closeKey} />}
