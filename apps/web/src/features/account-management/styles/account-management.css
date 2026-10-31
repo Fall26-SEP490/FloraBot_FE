@@ -1,0 +1,598 @@
+/* Harmonized Account & Staff Management Workspace (/seller/staff, /operations/technicians, /admin/managers) */
+
+.workspace-portal-root.platform-workspace
+  .dashboard-content
+  > section.management-panel.account-management-workspace,
+.seller-workspace .management-panel.account-management-workspace,
+.management-panel.account-management-workspace {
+  margin-top: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+  display: grid;
+  gap: 16px;
+  color: #16241b;
+  font-family: var(--font-sans, 'Plus Jakarta Sans', system-ui, sans-serif);
+}
+
+/* 3-Card Summary Strip */
+.account-management-workspace .management-stats.order-summary-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 13px;
+  margin: 0 !important;
+}
+
+.account-management-workspace .management-stats.order-summary-strip article.operations-metric {
+  display: grid;
+  gap: 6px;
+  padding: 18px 19px !important;
+  border-radius: 9px !important;
+  border: 1px solid #e1e8e2 !important;
+  background: #ffffff !important;
+  box-shadow: 0 1px 2px rgba(16, 28, 20, 0.03) !important;
+  align-content: start;
+}
+
+.account-management-workspace
+  .management-stats.order-summary-strip
+  article.operations-metric:first-child {
+  background: #eff6f0 !important;
+  border-color: #c7d9cb !important;
+}
+
+.account-management-workspace .account-stat-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.account-management-workspace .account-stat-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #e3f1e7;
+  color: #164628;
+  flex-shrink: 0;
+}
+
+.account-management-workspace .account-stat-icon--green {
+  background: #dcfce7;
+  color: #14532d;
+}
+
+.account-management-workspace .account-stat-icon--amber {
+  background: #fef3c7;
+  color: #78350f;
+}
+
+.account-management-workspace .management-stats.order-summary-strip article.operations-metric span {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #4a5a50 !important;
+  line-height: 1.3;
+}
+
+.account-management-workspace
+  .management-stats.order-summary-strip
+  article.operations-metric
+  strong {
+  margin: 0 !important;
+  font-family: var(--font-sans, 'Plus Jakarta Sans', system-ui, sans-serif);
+  font-size: 26px !important;
+  font-weight: 800 !important;
+  line-height: 1.05 !important;
+  letter-spacing: -0.03em !important;
+  color: #16241b !important;
+}
+
+.account-management-workspace
+  .management-stats.order-summary-strip
+  article.operations-metric
+  > small {
+  display: block !important;
+  margin-top: 2px;
+  font-size: 11.5px !important;
+  font-weight: 500;
+  color: #4a5a50 !important;
+  line-height: 1.35;
+}
+
+/* Main Directory Surface Card */
+.account-management-workspace .account-directory-card {
+  display: grid;
+  gap: 14px;
+  padding: 18px 20px;
+  border-radius: 9px;
+  border: 1px solid #e1e8e2;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(16, 28, 20, 0.03);
+}
+
+.account-management-workspace .management-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.account-management-workspace .management-eyebrow {
+  margin: 0 0 2px;
+  font-size: 10.5px !important;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #164628 !important;
+}
+
+.account-management-workspace .management-heading h2 {
+  margin: 0;
+  font-family: var(--font-sans, 'Plus Jakarta Sans', system-ui, sans-serif);
+  font-size: 15px !important;
+  font-weight: 700;
+  color: #16241b;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
+.account-management-workspace .management-heading > div > p:last-child {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  color: #4a5a50;
+  line-height: 1.45;
+}
+
+.account-management-workspace .management-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.account-management-workspace .management-heading-actions .button {
+  height: 38px !important;
+  min-height: 38px !important;
+  padding: 0 13px !important;
+  border-radius: 6px !important;
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Alerts */
+.account-management-workspace .management-alert {
+  margin: 0 !important;
+  padding: 10px 13px;
+  border-radius: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+/* Status Filter Tabs */
+.account-management-workspace .account-status-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  border-top: 1px solid #edf2ee;
+  padding-top: 12px;
+}
+
+.account-management-workspace .account-status-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #4a5a50;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+
+.account-management-workspace .account-status-tab:hover {
+  background: #f4f8f5;
+  color: #16241b;
+}
+
+.account-management-workspace .account-status-tab.is-active {
+  background: #eff6f0;
+  border-color: #c7d9cb;
+  color: #164628;
+  font-weight: 700;
+}
+
+.account-management-workspace .account-status-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #e9efea;
+  color: #36453b;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.account-management-workspace .account-status-tab.is-active .account-status-tab-count {
+  background: #164628;
+  color: #ffffff;
+}
+
+/* Search & Filter Toolbar */
+.account-management-workspace .management-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0 !important;
+}
+
+.account-management-workspace .management-search {
+  flex: 1 1 260px;
+  max-width: 380px;
+}
+
+.account-management-workspace .management-search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.account-management-workspace .management-search-icon {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #5c6e62;
+  pointer-events: none;
+}
+
+.account-management-workspace .management-search input {
+  width: 100%;
+  height: 38px !important;
+  min-height: 38px !important;
+  padding: 0 11px 0 34px !important;
+  border-radius: 6px !important;
+  border: 1px solid #cfd9d0 !important;
+  background: #ffffff !important;
+  color: #16241b !important;
+  font-size: 13px !important;
+  transition:
+    border-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.account-management-workspace .management-filter-select {
+  height: 38px !important;
+  min-height: 38px !important;
+  padding: 0 11px !important;
+  border-radius: 6px !important;
+  border: 1px solid #cfd9d0 !important;
+  background: #ffffff !important;
+  color: #16241b !important;
+  font-size: 13px !important;
+  font-weight: 500;
+}
+
+.account-management-workspace .management-search input:focus,
+.account-management-workspace .management-filter-select:focus {
+  outline: none;
+  border-color: #164628 !important;
+  box-shadow: 0 0 0 3px rgba(22, 70, 40, 0.12);
+}
+
+/* Table Refinement */
+.account-management-workspace .management-table-wrap {
+  border: 1px solid #e1e8e2 !important;
+  border-radius: 8px !important;
+  background: #ffffff;
+}
+
+.account-management-workspace .management-table {
+  font-size: 13px !important;
+}
+
+.account-management-workspace .management-table th {
+  padding: 11px 14px !important;
+  background: #f6f9f6 !important;
+  border-bottom: 1px solid #e1e8e2 !important;
+  color: #4a5a50 !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase;
+}
+
+.account-management-workspace .management-table td {
+  padding: 12px 14px !important;
+  border-bottom: 1px solid #edf2ee !important;
+  color: #16241b;
+  font-size: 13px !important;
+  vertical-align: middle;
+}
+
+.account-management-workspace .management-table tbody tr:hover {
+  background: #f9fbf9 !important;
+}
+
+/* Identity Cell inside Table */
+.account-management-workspace .account-identity-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.account-management-workspace .account-identity-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #e3f1e7;
+  border: 1px solid #cde2d3;
+  color: #164628;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12.5px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.account-management-workspace .account-identity-meta {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.account-management-workspace .account-identity-meta strong {
+  font-size: 13px;
+  font-weight: 700;
+  color: #16241b;
+  line-height: 1.3;
+}
+
+.account-management-workspace .account-identity-meta small {
+  font-size: 11.5px;
+  color: #4a5a50;
+  line-height: 1.3;
+}
+
+/* Status Pill */
+.account-management-workspace .management-status,
+.account-detail-view .management-status {
+  min-height: 24px !important;
+  padding: 2px 9px !important;
+  border-radius: 999px !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  line-height: 1.35;
+}
+
+/* Action Buttons inside Table */
+.account-management-workspace .management-actions-cell {
+  width: auto !important;
+  white-space: nowrap;
+}
+
+.account-management-workspace .management-row-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.account-management-workspace .management-row-actions > a,
+.account-management-workspace .management-row-actions > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  min-height: 30px !important;
+  padding: 0 10px !important;
+  border-radius: 6px;
+  border: 1px solid #d5dfd7;
+  background: #ffffff;
+  color: #25352b;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none !important;
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+
+.account-management-workspace .management-row-actions > a {
+  background: #eff7f1;
+  border-color: #c2dec9;
+  color: #164628;
+  font-weight: 700;
+}
+
+.account-management-workspace .management-row-actions > a:hover {
+  background: #e1f0e5;
+  border-color: #9ec5a8;
+}
+
+.account-management-workspace .management-row-actions > button:hover {
+  background: #f4f7f5;
+  border-color: #9ab8a2;
+  color: #16241b;
+}
+
+.account-management-workspace .management-row-actions > button.management-row-danger {
+  background: #fff5f5;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+.account-management-workspace .management-row-actions > button.management-row-danger:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+/* Pagination */
+.account-management-workspace .management-pagination {
+  margin-top: 4px !important;
+  padding-top: 10px;
+  border-top: 1px solid #edf2ee;
+  font-size: 12.5px !important;
+}
+
+.account-management-workspace .management-page-button {
+  height: 34px;
+  min-height: 34px !important;
+  padding: 0 11px !important;
+  border-radius: 6px !important;
+  font-size: 12px !important;
+}
+
+/* Create Account Form & Detail View inside Modal */
+.management-form.account-create-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.management-form.account-create-form .account-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.management-form.account-create-form .management-field {
+  display: grid;
+  gap: 5px;
+}
+
+.management-form.account-create-form .management-field label {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #25352b;
+}
+
+.management-form.account-create-form .management-field input {
+  height: 38px !important;
+  min-height: 38px !important;
+  padding: 0 11px !important;
+  border-radius: 6px !important;
+  border: 1px solid #cfd9d0 !important;
+  font-size: 13px !important;
+}
+
+.management-form.account-create-form .management-password-wrap input {
+  padding-right: 42px !important;
+}
+
+.management-form.account-create-form .management-password-toggle {
+  width: 34px;
+  height: 34px;
+  right: 3px;
+}
+
+.account-detail-view {
+  display: grid;
+  gap: 12px;
+}
+
+.account-detail-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #dce6dd;
+  background: #f5f9f6;
+}
+
+.account-detail-hero-id {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.account-detail-hero-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 9px;
+  background: #164628;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.account-detail-hero-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.account-detail-hero-text strong {
+  font-size: 14px;
+  font-weight: 700;
+  color: #16241b;
+}
+
+.account-detail-hero-text span {
+  font-size: 12px;
+  color: #4a5a50;
+  overflow-wrap: anywhere;
+}
+
+.account-detail-view .management-details {
+  margin: 0 !important;
+  border-radius: 8px !important;
+  border: 1px solid #e1e8e2 !important;
+}
+
+.account-detail-view .management-details > div {
+  padding: 10px 13px !important;
+}
+
+.account-detail-view .management-details dt {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #4a5a50 !important;
+}
+
+.account-detail-view .management-details dd {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #16241b !important;
+}
+
+@media (max-width: 900px) {
+  .account-management-workspace .management-stats.order-summary-strip {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .management-form.account-create-form .account-form-grid {
+    grid-template-columns: 1fr;
+  }
+}

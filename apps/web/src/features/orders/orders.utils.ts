@@ -22,7 +22,14 @@ import type { OrderFilter, OrderMode, OrderPhase, WebOrder } from './orders.type
 export const money = (value: number) => value.toLocaleString('vi-VN') + ' đ';
 
 export const when = (value: string) =>
-  new Date(value).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+  new Date(value).toLocaleString('vi-VN', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    hour: '2-digit',
+    minute: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
 
 export const statusName = (row: WebOrder) =>
   row.orderStatus === 'PAID' && row.ready
@@ -51,7 +58,7 @@ export function needsOrderAction(row: OrderPhase, mode: OrderMode) {
   if (mode === 'member') return row.state === 'QUOTED' || row.orderStatus === 'AWAITING_PAYMENT';
   if (mode === 'seller')
     return (
-      ['REQUESTED', 'QUOTED'].includes(row.state) || (row.orderStatus === 'PAID' && !row.ready)
+      (!row.orderStatus && row.state === 'REQUESTED') || (row.orderStatus === 'PAID' && !row.ready)
     );
   return ['DISPUTED', 'DISPENSE_FAILED'].includes(row.orderStatus ?? '');
 }
@@ -60,6 +67,10 @@ export function matchesOrderFilter(row: OrderPhase, filter: OrderFilter, mode: O
   switch (filter) {
     case 'attention':
       return needsOrderAction(row, mode);
+    case 'requested':
+      return !row.orderStatus && row.state === 'REQUESTED';
+    case 'quoted':
+      return !row.orderStatus && row.state === 'QUOTED';
     case 'preparing':
       return row.orderStatus === 'PAID' && !row.ready;
     case 'ready':

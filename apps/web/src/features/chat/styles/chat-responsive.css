@@ -28,6 +28,10 @@
 }
 
 @media (max-width: 640px) {
+  .chat-details-toggle-btn span {
+    display: none;
+  }
+
   .chat-composer-controls {
     display: grid;
     grid-template-columns: auto 1fr auto;

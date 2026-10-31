@@ -40,4 +40,5 @@ export type OrderPhase = {
 
 export type OrderMode = 'member' | 'seller' | 'admin';
 
-export type OrderFilter = 'all' | 'attention' | 'preparing' | 'ready' | 'closed';
+export type OrderFilter =
+  'all' | 'attention' | 'requested' | 'quoted' | 'preparing' | 'ready' | 'closed';

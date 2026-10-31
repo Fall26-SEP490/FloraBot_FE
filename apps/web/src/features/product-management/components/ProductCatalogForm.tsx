@@ -92,7 +92,7 @@ export function ProductCreateForm({
       <div className="product-form-badge-strip">
         <span className="product-badge-pill">Bản nháp (DRAFT)</span>
         <span className="product-badge-note">
-          Hoa giả không áp dụng thời hạn tươi · Bán và tải ảnh sau khi tạo.
+          Hoa giả không áp dụng thời hạn tươi · Bạn có thể tải ảnh và mở bán sau khi tạo.
         </span>
       </div>
 
@@ -134,8 +134,7 @@ export function ProductCreateForm({
             ))}
           </select>
           <p className="quiet field-subhint" id="create-product-kiosk-help">
-            Kiosk xác nhận quyền tạo sản phẩm; mẫu hoa thuộc danh mục chung. Tạo mẫu chưa nạp bó vào
-            tủ. Chọn ô bán tại kiosk hoặc ô đặt trên web ở màn “Hoa tại kiosk”.
+            Kiosk xác nhận quyền tạo mẫu; chọn ô nạp hoa tại màn “Hoa tại kiosk”.
           </p>
           {form.formState.errors.kioskId && (
             <p className="error" id="create-product-kiosk-error">
@@ -145,30 +144,9 @@ export function ProductCreateForm({
         </div>
       </div>
 
-      <div className="form-field">
-        <label htmlFor="create-product-description">Mô tả sản phẩm</label>
-        <textarea
-          id="create-product-description"
-          rows={3}
-          maxLength={2000}
-          placeholder="Mô tả phong cách, chất liệu bó hoa giả cao cấp…"
-          disabled={!canEdit || submitting}
-          {...form.register('description')}
-          aria-invalid={!!form.formState.errors.description}
-          aria-describedby={
-            form.formState.errors.description ? 'create-product-desc-error' : undefined
-          }
-        />
-        {form.formState.errors.description && (
-          <p className="error" id="create-product-desc-error">
-            {form.formState.errors.description.message}
-          </p>
-        )}
-      </div>
-
       <div className="form-grid-2">
         <div className="form-field">
-          <label htmlFor="create-product-price">Giá bán (đồng)</label>
+          <label htmlFor="create-product-price">Giá bán niêm yết (VNĐ)</label>
           <input
             id="create-product-price"
             type="number"
@@ -212,10 +190,7 @@ export function ProductCreateForm({
       </div>
 
       <fieldset className="dimensions-fieldset">
-        <legend>Kích thước bó hoa bao gồm bao bì (Dài × Rộng × Cao tính bằng cm)</legend>
-        <p className="quiet dimensions-guide">
-          Kích thước đo thực tế của bó hoa đã bao gồm bao bì ngoài (tính bằng cm).
-        </p>
+        <legend>Kích thước đóng gói bao gồm bao bì (Dài × Rộng × Cao - cm)</legend>
         <div className="dimensions-grid">
           <div className="form-field">
             <label htmlFor="create-product-length">Dài (cm)</label>
@@ -225,7 +200,7 @@ export function ProductCreateForm({
               min="0.01"
               max="1000"
               step="0.01"
-              placeholder="Dài cm"
+              placeholder="VD: 25"
               disabled={!canEdit || submitting}
               {...form.register('lengthCm', { valueAsNumber: true })}
               aria-invalid={!!form.formState.errors.lengthCm}
@@ -248,7 +223,7 @@ export function ProductCreateForm({
               min="0.01"
               max="1000"
               step="0.01"
-              placeholder="Rộng cm"
+              placeholder="VD: 15"
               disabled={!canEdit || submitting}
               {...form.register('widthCm', { valueAsNumber: true })}
               aria-invalid={!!form.formState.errors.widthCm}
@@ -271,7 +246,7 @@ export function ProductCreateForm({
               min="0.01"
               max="1000"
               step="0.01"
-              placeholder="Cao cm"
+              placeholder="VD: 30"
               disabled={!canEdit || submitting}
               {...form.register('heightCm', { valueAsNumber: true })}
               aria-invalid={!!form.formState.errors.heightCm}
@@ -288,23 +263,48 @@ export function ProductCreateForm({
         </div>
       </fieldset>
 
-      <div className="form-actions">
-        <Button type="submit" disabled={!canEdit || submitting || kiosks.length === 0}>
-          {submitting ? 'Đang tạo mẫu hoa…' : 'Tạo mẫu hoa'}
-        </Button>
-        {onCancel && (
-          <Button type="button" variant="outline" onClick={onCancel} disabled={submitting}>
-            Hủy
-          </Button>
+      <div className="form-field">
+        <label htmlFor="create-product-description">Mô tả sản phẩm</label>
+        <textarea
+          id="create-product-description"
+          rows={2}
+          maxLength={2000}
+          placeholder="Mô tả phong cách, chất liệu bó hoa giả cao cấp…"
+          disabled={!canEdit || submitting}
+          {...form.register('description')}
+          aria-invalid={!!form.formState.errors.description}
+          aria-describedby={
+            form.formState.errors.description ? 'create-product-desc-error' : undefined
+          }
+        />
+        {form.formState.errors.description && (
+          <p className="error" id="create-product-desc-error">
+            {form.formState.errors.description.message}
+          </p>
         )}
       </div>
 
-      {successMessage && <p role="status">{successMessage}</p>}
+      {successMessage && (
+        <p role="status" className="product-form-success">
+          {successMessage}
+        </p>
+      )}
       {serverError && (
         <p role="alert" className="error">
           {serverError}
         </p>
       )}
+
+      <div className="form-actions">
+        {onCancel && (
+          <Button type="button" variant="outline" onClick={onCancel} disabled={submitting}>
+            Hủy
+          </Button>
+        )}
+        <Button type="submit" disabled={!canEdit || submitting || kiosks.length === 0}>
+          {submitting ? 'Đang tạo mẫu hoa…' : 'Tạo mẫu hoa'}
+        </Button>
+      </div>
     </form>
   );
 }
@@ -314,11 +314,13 @@ export function ProductMetadataEditor({
   sellerId,
   canEdit,
   onSuccess,
+  onCancel,
 }: {
   product: ProductItem;
   sellerId: string;
   canEdit: boolean;
   onSuccess?: () => void;
+  onCancel?: () => void;
 }) {
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -372,78 +374,73 @@ export function ProductMetadataEditor({
       onSubmit={form.handleSubmit(onSubmit)}
       aria-label={`Chỉnh sửa thông tin ${product.name}`}
     >
-      <h4>Chỉnh sửa thông tin & kích thước mẫu hoa</h4>
-      <p className="quiet price-snapshot-note">
+      <p className="price-snapshot-note">
         Lưu ý: Thay đổi giá áp dụng cho các lần nạp hoa tiếp theo, không thay đổi giá của bó hoa
         đang bán trong tủ hoặc đơn đặt trước đã tạo.
       </p>
 
+      <div className="form-grid-2">
+        <div className="form-field">
+          <label htmlFor={`${idPrefix}-name`}>Tên mẫu hoa</label>
+          <input
+            id={`${idPrefix}-name`}
+            type="text"
+            maxLength={120}
+            placeholder="Nhập tên mẫu hoa (tối đa 120 ký tự)"
+            disabled={!canEdit || submitting}
+            {...form.register('name')}
+            aria-invalid={!!form.formState.errors.name}
+            aria-describedby={form.formState.errors.name ? `${idPrefix}-name-error` : undefined}
+          />
+          {form.formState.errors.name && (
+            <p className="error" id={`${idPrefix}-name-error`}>
+              {form.formState.errors.name.message}
+            </p>
+          )}
+        </div>
+
+        <div className="form-field">
+          <label htmlFor={`${idPrefix}-price`}>Giá bán niêm yết (VNĐ)</label>
+          <input
+            id={`${idPrefix}-price`}
+            type="number"
+            min="1"
+            step="1"
+            inputMode="numeric"
+            placeholder="Nhập giá bán bằng số nguyên"
+            disabled={!canEdit || submitting}
+            {...form.register('price', { valueAsNumber: true })}
+            aria-invalid={!!form.formState.errors.price}
+            aria-describedby={form.formState.errors.price ? `${idPrefix}-price-error` : undefined}
+          />
+          {form.formState.errors.price && (
+            <p className="error" id={`${idPrefix}-price-error`}>
+              {form.formState.errors.price.message}
+            </p>
+          )}
+        </div>
+      </div>
+
       <div className="form-field">
-        <label htmlFor={`${idPrefix}-name`}>Tên mẫu hoa</label>
+        <label htmlFor={`${idPrefix}-tags`}>Từ khóa tìm kiếm (phân cách bằng dấu phẩy)</label>
         <input
-          id={`${idPrefix}-name`}
+          id={`${idPrefix}-tags`}
           type="text"
-          maxLength={120}
-          placeholder="Nhập tên mẫu hoa (tối đa 120 ký tự)"
+          placeholder="hoa hồng, hoa lụa, quà tặng"
           disabled={!canEdit || submitting}
-          {...form.register('name')}
-          aria-invalid={!!form.formState.errors.name}
-          aria-describedby={form.formState.errors.name ? `${idPrefix}-name-error` : undefined}
+          {...form.register('tagsInput')}
+          aria-invalid={!!form.formState.errors.tagsInput}
+          aria-describedby={form.formState.errors.tagsInput ? `${idPrefix}-tags-error` : undefined}
         />
-        {form.formState.errors.name && (
-          <p className="error" id={`${idPrefix}-name-error`}>
-            {form.formState.errors.name.message}
-          </p>
-        )}
-      </div>
-
-      <div className="form-field">
-        <label htmlFor={`${idPrefix}-description`}>Mô tả chi tiết</label>
-        <textarea
-          id={`${idPrefix}-description`}
-          rows={3}
-          maxLength={2000}
-          placeholder="Mô tả phong cách, chất liệu bó hoa giả cao cấp…"
-          disabled={!canEdit || submitting}
-          {...form.register('description')}
-          aria-invalid={!!form.formState.errors.description}
-          aria-describedby={
-            form.formState.errors.description ? `${idPrefix}-desc-error` : undefined
-          }
-        />
-        {form.formState.errors.description && (
-          <p className="error" id={`${idPrefix}-desc-error`}>
-            {form.formState.errors.description.message}
-          </p>
-        )}
-      </div>
-
-      <div className="form-field">
-        <label htmlFor={`${idPrefix}-price`}>Giá bán (đồng)</label>
-        <input
-          id={`${idPrefix}-price`}
-          type="number"
-          min="1"
-          step="1"
-          inputMode="numeric"
-          placeholder="Nhập giá bán bằng số nguyên"
-          disabled={!canEdit || submitting}
-          {...form.register('price', { valueAsNumber: true })}
-          aria-invalid={!!form.formState.errors.price}
-          aria-describedby={form.formState.errors.price ? `${idPrefix}-price-error` : undefined}
-        />
-        {form.formState.errors.price && (
-          <p className="error" id={`${idPrefix}-price-error`}>
-            {form.formState.errors.price.message}
+        {form.formState.errors.tagsInput && (
+          <p className="error" id={`${idPrefix}-tags-error`}>
+            {form.formState.errors.tagsInput.message}
           </p>
         )}
       </div>
 
       <fieldset className="dimensions-fieldset">
-        <legend>Kích thước bó hoa bao gồm bao bì (Dài × Rộng × Cao tính bằng cm)</legend>
-        <p className="quiet dimensions-guide">
-          Kích thước đo thực tế của bó hoa đã bao gồm bao bì ngoài (tính bằng cm).
-        </p>
+        <legend>Kích thước đóng gói bao gồm bao bì (Dài × Rộng × Cao - cm)</legend>
         <div className="dimensions-grid">
           <div className="form-field">
             <label htmlFor={`${idPrefix}-length`}>Dài (cm)</label>
@@ -517,34 +514,47 @@ export function ProductMetadataEditor({
       </fieldset>
 
       <div className="form-field">
-        <label htmlFor={`${idPrefix}-tags`}>Từ khóa tìm kiếm (phân cách bằng dấu phẩy)</label>
-        <input
-          id={`${idPrefix}-tags`}
-          type="text"
+        <label htmlFor={`${idPrefix}-description`}>Mô tả chi tiết</label>
+        <textarea
+          id={`${idPrefix}-description`}
+          rows={2}
+          maxLength={2000}
+          placeholder="Mô tả phong cách, chất liệu bó hoa giả cao cấp…"
           disabled={!canEdit || submitting}
-          {...form.register('tagsInput')}
-          aria-invalid={!!form.formState.errors.tagsInput}
-          aria-describedby={form.formState.errors.tagsInput ? `${idPrefix}-tags-error` : undefined}
+          {...form.register('description')}
+          aria-invalid={!!form.formState.errors.description}
+          aria-describedby={
+            form.formState.errors.description ? `${idPrefix}-desc-error` : undefined
+          }
         />
-        {form.formState.errors.tagsInput && (
-          <p className="error" id={`${idPrefix}-tags-error`}>
-            {form.formState.errors.tagsInput.message}
+        {form.formState.errors.description && (
+          <p className="error" id={`${idPrefix}-desc-error`}>
+            {form.formState.errors.description.message}
           </p>
         )}
       </div>
 
-      <div className="form-actions">
-        <Button type="submit" disabled={!canEdit || submitting}>
-          {submitting ? 'Đang lưu chi tiết…' : 'Lưu chi tiết mẫu hoa'}
-        </Button>
-      </div>
-
-      {successMessage && <p role="status">{successMessage}</p>}
+      {successMessage && (
+        <p role="status" className="product-form-success">
+          {successMessage}
+        </p>
+      )}
       {serverError && (
         <p role="alert" className="error">
           {serverError}
         </p>
       )}
+
+      <div className="form-actions">
+        {onCancel && (
+          <Button type="button" variant="outline" onClick={onCancel} disabled={submitting}>
+            Hủy
+          </Button>
+        )}
+        <Button type="submit" disabled={!canEdit || submitting}>
+          {submitting ? 'Đang lưu chi tiết…' : 'Lưu chi tiết mẫu hoa'}
+        </Button>
+      </div>
     </form>
   );
 }

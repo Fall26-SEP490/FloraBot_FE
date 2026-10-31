@@ -29,37 +29,44 @@ export default function SlotZoneSelector({
       setChoice('');
     },
   });
+
+  if (!canEdit && !update.isPending && !update.isSuccess && !update.isError) {
+    return null;
+  }
+
   return (
     <div className="slot-zone-settings">
       {(canEdit || update.isPending) && (
         <>
           <label htmlFor={`slot-zone-${slotId}`}>Hình thức bán cho ô {slotCode}</label>
-          <select
-            id={`slot-zone-${slotId}`}
-            value={choice || zone || ''}
-            disabled={!canEdit || update.isPending}
-            onChange={(event) => {
-              setChoice(event.target.value);
-              update.reset();
-            }}
-          >
-            <option value="" disabled>
-              Chưa phân loại
-            </option>
-            <option value="WALK_IN">Walk-in</option>
-            <option value="PREORDER">Pre-order</option>
-          </select>
+          <div className="slot-zone-row">
+            <select
+              id={`slot-zone-${slotId}`}
+              value={choice || zone || ''}
+              disabled={!canEdit || update.isPending}
+              onChange={(event) => {
+                setChoice(event.target.value);
+                update.reset();
+              }}
+            >
+              <option value="" disabled>
+                Chưa phân loại
+              </option>
+              <option value="WALK_IN">Walk-in</option>
+              <option value="PREORDER">Pre-order</option>
+            </select>
+            {canEdit ? (
+              <Button
+                type="button"
+                disabled={update.isPending || !choice || choice === zone}
+                onClick={() => update.mutate(choice)}
+              >
+                {update.isPending ? 'Đang lưu…' : 'Lưu hình thức bán'}
+              </Button>
+            ) : null}
+          </div>
         </>
       )}
-      {canEdit ? (
-        <Button
-          type="button"
-          disabled={update.isPending || !choice || choice === zone}
-          onClick={() => update.mutate(choice)}
-        >
-          {update.isPending ? 'Đang lưu…' : 'Lưu hình thức bán'}
-        </Button>
-      ) : null}
       {update.isSuccess && <p role="status">Đã cập nhật hình thức bán của ô {slotCode}.</p>}
       {update.isError && (
         <p role="alert">

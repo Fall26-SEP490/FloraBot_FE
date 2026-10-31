@@ -27,6 +27,7 @@ import {
 } from '../../shared/components/DataTable';
 import { paginate } from '../../shared/pagination';
 import AccountProfileDialog from './components/AccountProfileDialog';
+import './styles/account-management.css';
 
 export type AccountStatus = 'ACTIVE' | 'LOCKED' | 'DISABLED';
 export type AccountRole = 'OPERATIONS_MANAGER' | 'TECHNICIAN' | 'SELLER_STAFF';
@@ -93,12 +94,25 @@ const statusText: Record<AccountStatus, string> = {
   DISABLED: 'Đã vô hiệu hóa',
 };
 
+const roleDisplayText: Record<string, string> = {
+  SELLER_STAFF: 'Nhân viên shop',
+  TECHNICIAN: 'Kỹ thuật viên',
+  OPERATIONS_MANAGER: 'Quản lý vận hành',
+};
+
 function StatusBadge({ status }: { status: AccountStatus }) {
   return (
     <span className="management-status" data-status={status}>
       {statusText[status] ?? status}
     </span>
   );
+}
+
+function getInitials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return 'NV';
+  if (parts.length === 1) return parts[0].slice(0, 2).toLocaleUpperCase('vi-VN');
+  return `${parts[0].slice(0, 1)}${parts[parts.length - 1].slice(0, 1)}`.toLocaleUpperCase('vi-VN');
 }
 
 export default function AccountManagement({
@@ -251,16 +265,18 @@ export default function AccountManagement({
   if (!isAuthorized) {
     return (
       <section
-        className="management-panel"
+        className="management-panel account-management-workspace"
         role="alert"
         aria-labelledby="unauthorized-management-title"
       >
-        <h2 id="unauthorized-management-title">Không có quyền truy cập</h2>
-        <p>
-          {actorRole === 'SELLER' && !sellerId
-            ? 'Thiếu thông tin cửa hàng liên kết với phiên làm việc hiện tại.'
-            : 'Vai trò hiện tại không được phép truy cập giao diện quản lý nhân sự.'}
-        </p>
+        <div className="account-directory-card">
+          <h2 id="unauthorized-management-title">Không có quyền truy cập</h2>
+          <p>
+            {actorRole === 'SELLER' && !sellerId
+              ? 'Thiếu thông tin cửa hàng liên kết với phiên làm việc hiện tại.'
+              : 'Vai trò hiện tại không được phép truy cập giao diện quản lý nhân sự.'}
+          </p>
+        </div>
       </section>
     );
   }
@@ -289,15 +305,14 @@ export default function AccountManagement({
       key: 'fullName',
       header: 'Họ và tên',
       render: (item) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-          <span
-            className="dashboard-avatar"
-            aria-hidden="true"
-            style={{ width: 32, height: 32, fontSize: '0.85rem' }}
-          >
-            {item.fullName.trim().slice(0, 1).toLocaleUpperCase('vi-VN')}
+        <div className="account-identity-cell">
+          <span className="account-identity-avatar" aria-hidden="true">
+            {getInitials(item.fullName)}
           </span>
-          <strong>{item.fullName}</strong>
+          <div className="account-identity-meta">
+            <strong>{item.fullName}</strong>
+            <small>{roleDisplayText[item.role] || item.role}</small>
+          </div>
         </div>
       ),
     },
@@ -392,191 +407,228 @@ export default function AccountManagement({
   ];
 
   return (
-    <section className="management-panel" aria-labelledby="account-management-title">
-      <div className="management-heading">
-        <div>
-          <p className="management-eyebrow">{eyebrow}</p>
-          <h2 id="account-management-title">{title}</h2>
-          <p>{description}</p>
-        </div>
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => void refetch()}
-            disabled={isFetching}
-            aria-label="Tải lại danh sách"
-          >
-            <RefreshCw size={16} aria-hidden="true" className={isFetching ? 'spin' : ''} />
-            {isFetching ? 'Đang tải…' : 'Làm mới'}
-          </Button>
-          <Button
-            ref={createButtonRef}
-            type="button"
-            onClick={() => {
-              form.reset();
-              createMutation.reset();
-              setShowPassword(false);
-              setActionError(null);
-              setCreateOpen(true);
-            }}
-          >
-            <Plus size={18} aria-hidden="true" />
-            {createLabel}
-          </Button>
-        </div>
-      </div>
-
-      {actionSuccess && (
-        <div
-          role="status"
-          className="management-alert management-alert-success"
-          style={{ marginTop: '1rem' }}
-        >
-          {actionSuccess}
-        </div>
-      )}
-
-      {actionError && (
-        <div
-          ref={errorAlertRef}
-          tabIndex={-1}
-          role="alert"
-          className="management-alert management-alert-error"
-          style={{ marginTop: '1rem' }}
-        >
-          {actionError}
-        </div>
-      )}
-
-      {/* Summary stats */}
+    <section
+      className="management-panel account-management-workspace"
+      aria-labelledby="account-management-title"
+    >
+      {/* Summary stats strip at top */}
       <div
         role="region"
         className="management-stats order-summary-strip"
         aria-label={`Thống kê ${title.toLocaleLowerCase('vi-VN')}`}
       >
         <article className="operations-metric">
-          <Users aria-hidden="true" />
-          <span>Tổng số {itemName}</span>
+          <div className="account-stat-top">
+            <span>Tổng số {itemName}</span>
+            <div className="account-stat-icon">
+              <Users size={18} aria-hidden="true" />
+            </div>
+          </div>
           <strong>{accounts.length}</strong>
           <small>Tài khoản trong danh sách</small>
         </article>
         <article className="operations-metric">
-          <CheckCircle2 aria-hidden="true" style={{ color: '#16a34a' }} />
-          <span>Đang hoạt động</span>
-          <strong style={{ color: 'var(--color-status-success-ink)' }}>{activeCount}</strong>
+          <div className="account-stat-top">
+            <span>Đang hoạt động</span>
+            <div className="account-stat-icon account-stat-icon--green">
+              <CheckCircle2 size={18} aria-hidden="true" />
+            </div>
+          </div>
+          <strong>{activeCount}</strong>
           <small>Đang làm việc bình thường</small>
         </article>
         <article className="operations-metric">
-          <Lock aria-hidden="true" style={{ color: '#dc2626' }} />
-          <span>Tạm khóa / Vô hiệu</span>
-          <strong style={{ color: 'var(--color-status-danger-ink)' }}>
-            {lockedCount + disabledCount}
-          </strong>
-          <small>Đang tạm dừng hoặc vô hiệu</small>
+          <div className="account-stat-top">
+            <span>Tạm khóa / Vô hiệu</span>
+            <div className="account-stat-icon account-stat-icon--amber">
+              <Lock size={18} aria-hidden="true" />
+            </div>
+          </div>
+          <strong>{lockedCount + disabledCount}</strong>
+          <small>
+            {lockedCount} tạm khóa · {disabledCount} vô hiệu hóa
+          </small>
         </article>
       </div>
 
-      {/* Search and Filter toolbar */}
-      <div className="management-toolbar">
-        <div className="management-search">
-          <label htmlFor="account-search-input" className="sr-only">
-            Tìm kiếm theo họ tên, email hoặc số điện thoại
-          </label>
-          <div className="management-search-wrapper">
-            <Search size={16} aria-hidden="true" className="management-search-icon" />
-            <input
-              id="account-search-input"
-              type="search"
-              placeholder="Tìm theo họ tên, email, SĐT…"
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
+      <div className="account-directory-card">
+        <div className="management-heading">
+          <div>
+            <p className="management-eyebrow">{eyebrow}</p>
+            <h2 id="account-management-title">{title}</h2>
+            <p>{description}</p>
+          </div>
+          <div className="management-heading-actions">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void refetch()}
+              disabled={isFetching}
+              aria-label="Tải lại danh sách"
+            >
+              <RefreshCw size={14} aria-hidden="true" className={isFetching ? 'spin' : ''} />
+              {isFetching ? 'Đang tải…' : 'Làm mới'}
+            </Button>
+            <Button
+              ref={createButtonRef}
+              type="button"
+              onClick={() => {
+                form.reset();
+                createMutation.reset();
+                setShowPassword(false);
+                setActionError(null);
+                setCreateOpen(true);
               }}
-            />
+            >
+              <Plus size={15} aria-hidden="true" />
+              {createLabel}
+            </Button>
           </div>
         </div>
-        <div>
-          <label htmlFor="account-status-filter" className="sr-only">
-            Lọc theo trạng thái
-          </label>
-          <select
-            id="account-status-filter"
-            className="management-filter-select"
-            value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value as 'ALL' | AccountStatus);
-              setPage(1);
-            }}
+
+        {actionSuccess && (
+          <div role="status" className="management-alert management-alert-success">
+            {actionSuccess}
+          </div>
+        )}
+
+        {actionError && (
+          <div
+            ref={errorAlertRef}
+            tabIndex={-1}
+            role="alert"
+            className="management-alert management-alert-error"
           >
-            <option value="ALL">Tất cả trạng thái ({accounts.length})</option>
-            <option value="ACTIVE">Đang hoạt động ({activeCount})</option>
-            <option value="LOCKED">Tạm khóa ({lockedCount})</option>
-            <option value="DISABLED">Đã vô hiệu hóa ({disabledCount})</option>
-          </select>
-        </div>
-      </div>
+            {actionError}
+          </div>
+        )}
 
-      {/* Loading & Error States */}
-      {isLoading && (
-        <div className="management-loading" role="status">
-          <p>Đang tải danh sách {itemName}…</p>
+        {/* Quick Status Filter Tabs */}
+        <div className="account-status-tabs" role="group" aria-label="Bộ lọc nhanh theo trạng thái">
+          {(
+            [
+              { id: 'ALL', label: 'Tất cả', count: accounts.length },
+              { id: 'ACTIVE', label: 'Đang hoạt động', count: activeCount },
+              { id: 'LOCKED', label: 'Tạm khóa', count: lockedCount },
+              { id: 'DISABLED', label: 'Đã vô hiệu hóa', count: disabledCount },
+            ] as const
+          ).map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              className={`account-status-tab${statusFilter === tab.id ? 'is-active' : ''}`}
+              onClick={() => {
+                setStatusFilter(tab.id);
+                setPage(1);
+              }}
+            >
+              <span>{tab.label}</span>
+              <span className="account-status-tab-count">{tab.count}</span>
+            </button>
+          ))}
         </div>
-      )}
 
-      {isError && (
-        <div className="management-loading" role="alert">
-          <CircleAlert
-            size={32}
-            style={{ color: 'var(--color-status-danger-ink)', margin: '0 auto 0.5rem' }}
-          />
-          <p>
-            {error instanceof ApiError
-              ? error.message
-              : `Không tải được danh sách ${itemName}. Vui lòng kiểm tra lại.`}
-          </p>
-          <Button type="button" onClick={() => void refetch()}>
-            Thử lại
-          </Button>
+        {/* Search and Filter toolbar */}
+        <div className="management-toolbar">
+          <div className="management-search">
+            <label htmlFor="account-search-input" className="sr-only">
+              Tìm kiếm theo họ tên, email hoặc số điện thoại
+            </label>
+            <div className="management-search-wrapper">
+              <Search size={15} aria-hidden="true" className="management-search-icon" />
+              <input
+                id="account-search-input"
+                type="search"
+                placeholder="Tìm theo họ tên, email, SĐT…"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+              />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="account-status-filter" className="sr-only">
+              Lọc theo trạng thái
+            </label>
+            <select
+              id="account-status-filter"
+              className="management-filter-select"
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value as 'ALL' | AccountStatus);
+                setPage(1);
+              }}
+            >
+              <option value="ALL">Tất cả trạng thái ({accounts.length})</option>
+              <option value="ACTIVE">Đang hoạt động ({activeCount})</option>
+              <option value="LOCKED">Tạm khóa ({lockedCount})</option>
+              <option value="DISABLED">Đã vô hiệu hóa ({disabledCount})</option>
+            </select>
+          </div>
         </div>
-      )}
 
-      {/* Data Table */}
-      {!isLoading && !isError && (
-        <>
-          <DataTable
-            caption={title}
-            columns={columns}
-            rows={pagedRows}
-            getRowKey={(item) => item.id}
-            emptyMessage={
-              search || statusFilter !== 'ALL'
-                ? 'Không tìm thấy tài khoản nào khớp với bộ lọc.'
-                : `Chưa có ${itemName} nào được tạo trong hệ thống.`
-            }
-          />
-          {filtered.length > PAGE_SIZE && (
-            <TablePagination
-              page={page}
-              pageSize={PAGE_SIZE}
-              totalItems={filtered.length}
-              onPageChange={setPage}
+        {/* Loading & Error States */}
+        {isLoading && (
+          <div className="management-loading" role="status">
+            <p>Đang tải danh sách {itemName}…</p>
+          </div>
+        )}
+
+        {isError && (
+          <div className="management-loading" role="alert">
+            <CircleAlert
+              size={28}
+              style={{ color: 'var(--color-status-danger-ink)', margin: '0 auto 0.5rem' }}
             />
-          )}
-        </>
-      )}
+            <p>
+              {error instanceof ApiError
+                ? error.message
+                : `Không tải được danh sách ${itemName}. Vui lòng kiểm tra lại.`}
+            </p>
+            <Button type="button" onClick={() => void refetch()}>
+              Thử lại
+            </Button>
+          </div>
+        )}
+
+        {/* Data Table */}
+        {!isLoading && !isError && (
+          <>
+            <DataTable
+              caption={title}
+              columns={columns}
+              rows={pagedRows}
+              getRowKey={(item) => item.id}
+              emptyMessage={
+                search || statusFilter !== 'ALL'
+                  ? 'Không tìm thấy tài khoản nào khớp với bộ lọc.'
+                  : `Chưa có ${itemName} nào được tạo trong hệ thống.`
+              }
+            />
+            {filtered.length > PAGE_SIZE && (
+              <TablePagination
+                page={page}
+                pageSize={PAGE_SIZE}
+                totalItems={filtered.length}
+                onPageChange={setPage}
+              />
+            )}
+          </>
+        )}
+      </div>
 
       {/* Creation Modal */}
       <Modal
         open={createOpen}
         title={createLabel}
-        description={`Nhập thông tin để tạo tài khoản mới. Mật khẩu phải từ 6 đến 72 ký tự.`}
+        description="Nhập thông tin để tạo tài khoản mới. Mật khẩu phải từ 6 đến 72 ký tự."
         onClose={closeCreate}
         closeDisabled={createMutation.isPending}
       >
         <form
-          className="management-form"
+          className="management-form account-create-form"
           onSubmit={form.handleSubmit((values) => {
             setActionError(null);
             createMutation.mutate(values);
@@ -591,106 +643,110 @@ export default function AccountManagement({
             </p>
           )}
 
-          <div className="management-field">
-            <label htmlFor="account-fullname">
-              Họ và tên <span aria-hidden="true">*</span>
-            </label>
-            <input
-              id="account-fullname"
-              type="text"
-              placeholder="Nguyễn Văn A"
-              autoComplete="name"
-              data-autofocus
-              {...form.register('fullName')}
-              aria-invalid={form.formState.errors.fullName ? 'true' : 'false'}
-              aria-describedby={
-                form.formState.errors.fullName ? 'account-fullname-error' : undefined
-              }
-            />
-            {form.formState.errors.fullName && (
-              <p id="account-fullname-error" className="management-field-error" role="alert">
-                {form.formState.errors.fullName.message}
-              </p>
-            )}
-          </div>
-
-          <div className="management-field">
-            <label htmlFor="account-email">
-              Địa chỉ email <span aria-hidden="true">*</span>
-            </label>
-            <input
-              id="account-email"
-              type="email"
-              placeholder="ten@florabot.vn"
-              autoComplete="email"
-              inputMode="email"
-              autoCapitalize="none"
-              spellCheck={false}
-              {...form.register('email')}
-              aria-invalid={form.formState.errors.email ? 'true' : 'false'}
-              aria-describedby={form.formState.errors.email ? 'account-email-error' : undefined}
-            />
-            {form.formState.errors.email && (
-              <p id="account-email-error" className="management-field-error" role="alert">
-                {form.formState.errors.email.message}
-              </p>
-            )}
-          </div>
-
-          <div className="management-field">
-            <label htmlFor="account-password">
-              Mật khẩu <span aria-hidden="true">*</span>
-            </label>
-            <div className="management-password-wrap">
+          <div className="account-form-grid">
+            <div className="management-field">
+              <label htmlFor="account-fullname">
+                Họ và tên <span aria-hidden="true">*</span>
+              </label>
               <input
-                id="account-password"
-                type={showPassword ? 'text' : 'password'}
-                autoComplete="new-password"
-                placeholder="Tối thiểu 6 ký tự"
-                {...form.register('password')}
-                aria-invalid={form.formState.errors.password ? 'true' : 'false'}
+                id="account-fullname"
+                type="text"
+                placeholder="Nguyễn Văn A"
+                autoComplete="name"
+                data-autofocus
+                {...form.register('fullName')}
+                aria-invalid={form.formState.errors.fullName ? 'true' : 'false'}
                 aria-describedby={
-                  form.formState.errors.password ? 'account-password-error' : undefined
+                  form.formState.errors.fullName ? 'account-fullname-error' : undefined
                 }
               />
-              <button
-                type="button"
-                className="management-password-toggle"
-                onClick={() => setShowPassword(!showPassword)}
-                aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                aria-pressed={showPassword}
-              >
-                {showPassword ? (
-                  <EyeOff size={18} aria-hidden="true" />
-                ) : (
-                  <Eye size={18} aria-hidden="true" />
-                )}
-              </button>
+              {form.formState.errors.fullName && (
+                <p id="account-fullname-error" className="management-field-error" role="alert">
+                  {form.formState.errors.fullName.message}
+                </p>
+              )}
             </div>
-            {form.formState.errors.password && (
-              <p id="account-password-error" className="management-field-error" role="alert">
-                {form.formState.errors.password.message}
-              </p>
-            )}
+
+            <div className="management-field">
+              <label htmlFor="account-phone">Số điện thoại (tùy chọn)</label>
+              <input
+                id="account-phone"
+                type="tel"
+                placeholder="0901234567"
+                autoComplete="tel"
+                inputMode="tel"
+                {...form.register('phone')}
+                aria-invalid={form.formState.errors.phone ? 'true' : 'false'}
+                aria-describedby={form.formState.errors.phone ? 'account-phone-error' : undefined}
+              />
+              {form.formState.errors.phone && (
+                <p id="account-phone-error" className="management-field-error" role="alert">
+                  {form.formState.errors.phone.message}
+                </p>
+              )}
+            </div>
           </div>
 
-          <div className="management-field">
-            <label htmlFor="account-phone">Số điện thoại (tùy chọn)</label>
-            <input
-              id="account-phone"
-              type="tel"
-              placeholder="0901234567"
-              autoComplete="tel"
-              inputMode="tel"
-              {...form.register('phone')}
-              aria-invalid={form.formState.errors.phone ? 'true' : 'false'}
-              aria-describedby={form.formState.errors.phone ? 'account-phone-error' : undefined}
-            />
-            {form.formState.errors.phone && (
-              <p id="account-phone-error" className="management-field-error" role="alert">
-                {form.formState.errors.phone.message}
-              </p>
-            )}
+          <div className="account-form-grid">
+            <div className="management-field">
+              <label htmlFor="account-email">
+                Địa chỉ email <span aria-hidden="true">*</span>
+              </label>
+              <input
+                id="account-email"
+                type="email"
+                placeholder="ten@florabot.vn"
+                autoComplete="email"
+                inputMode="email"
+                autoCapitalize="none"
+                spellCheck={false}
+                {...form.register('email')}
+                aria-invalid={form.formState.errors.email ? 'true' : 'false'}
+                aria-describedby={form.formState.errors.email ? 'account-email-error' : undefined}
+              />
+              {form.formState.errors.email && (
+                <p id="account-email-error" className="management-field-error" role="alert">
+                  {form.formState.errors.email.message}
+                </p>
+              )}
+            </div>
+
+            <div className="management-field">
+              <label htmlFor="account-password">
+                Mật khẩu <span aria-hidden="true">*</span>
+              </label>
+              <div className="management-password-wrap">
+                <input
+                  id="account-password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  placeholder="Tối thiểu 6 ký tự"
+                  {...form.register('password')}
+                  aria-invalid={form.formState.errors.password ? 'true' : 'false'}
+                  aria-describedby={
+                    form.formState.errors.password ? 'account-password-error' : undefined
+                  }
+                />
+                <button
+                  type="button"
+                  className="management-password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                  aria-pressed={showPassword}
+                >
+                  {showPassword ? (
+                    <EyeOff size={16} aria-hidden="true" />
+                  ) : (
+                    <Eye size={16} aria-hidden="true" />
+                  )}
+                </button>
+              </div>
+              {form.formState.errors.password && (
+                <p id="account-password-error" className="management-field-error" role="alert">
+                  {form.formState.errors.password.message}
+                </p>
+              )}
+            </div>
           </div>
 
           <div className="management-modal-actions">
@@ -730,7 +786,19 @@ export default function AccountManagement({
         onClose={closeDetails}
       >
         {viewing && (
-          <>
+          <div className="account-detail-view">
+            <div className="account-detail-hero">
+              <div className="account-detail-hero-id">
+                <span className="account-detail-hero-avatar" aria-hidden="true">
+                  {getInitials(viewing.fullName)}
+                </span>
+                <div className="account-detail-hero-text">
+                  <strong>{viewing.fullName}</strong>
+                  <span>{viewing.email}</span>
+                </div>
+              </div>
+              <StatusBadge status={viewing.status} />
+            </div>
             <dl className="management-details">
               <div>
                 <dt>Họ và tên</dt>
@@ -752,7 +820,7 @@ export default function AccountManagement({
               </div>
               <div>
                 <dt>Vai trò</dt>
-                <dd>{viewing.role}</dd>
+                <dd>{roleDisplayText[viewing.role] || viewing.role}</dd>
               </div>
               <div>
                 <dt>Ngày khởi tạo</dt>
@@ -768,7 +836,7 @@ export default function AccountManagement({
                 Đóng
               </Button>
             </div>
-          </>
+          </div>
         )}
       </Modal>
 

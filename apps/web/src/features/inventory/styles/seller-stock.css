@@ -1,0 +1,937 @@
+/* Harmonized Seller Stock Workspace (/seller/stock) — aligned with Overview, Pre-orders & Products */
+
+.seller-workspace .seller-stock.stock-page {
+  display: grid;
+  gap: 16px;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #16241b;
+  font-family: var(--font-body, 'Be Vietnam Pro', sans-serif);
+}
+
+/* Status & Alert Banners */
+.seller-workspace .seller-stock.stock-page > p[role='status']:empty {
+  display: none;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-banner-notice,
+.seller-workspace .seller-stock.stock-page > p[role='status']:not(:empty),
+.seller-workspace .seller-stock.stock-page > p[role='alert'] {
+  margin: 0;
+  padding: 11px 14px;
+  border-radius: 8px;
+  border: 1px solid #cde4d4;
+  background: #eff7f1;
+  color: #164628;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-banner-warning {
+  border-color: #fde68a;
+  background: #fffbeb;
+  color: #78350f;
+}
+
+.seller-workspace .seller-stock.stock-page > p[role='alert'],
+.seller-workspace .seller-stock.stock-page .error {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+/* 4-Card Summary Strip */
+.seller-workspace .seller-stock.stock-page .stock-summary.operations-metrics.order-summary-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 13px;
+  margin: 0;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-summary .operations-metric {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  padding: 18px 19px;
+  border-radius: 9px;
+  border: 1px solid #e1e8e2;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(16, 28, 20, 0.03);
+  align-content: start;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-summary .operations-metric:first-child {
+  background: #eff6f0;
+  border-color: #c7d9cb;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-stat-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-stat-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #e3f1e7;
+  color: #164628;
+  flex-shrink: 0;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-stat-icon--sky {
+  background: #e0f2fe;
+  color: #0c4a6e;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-stat-icon--green {
+  background: #dcfce7;
+  color: #14532d;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-stat-icon--amber {
+  background: #fef3c7;
+  color: #78350f;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-summary .operations-metric span {
+  font-size: 12px;
+  font-weight: 700;
+  color: #4a5a50;
+  line-height: 1.3;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-summary .operations-metric strong {
+  grid-column: auto;
+  grid-row: auto;
+  font-family: var(--font-body, 'Be Vietnam Pro', sans-serif);
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: #16241b;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-summary .operations-metric > small {
+  display: block !important;
+  margin-top: 2px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #4a5a50;
+  line-height: 1.35;
+}
+
+/* Kiosk Selector & Filter Toolbar Card */
+.seller-workspace .seller-stock.stock-page .stock-toolbar-card {
+  display: grid;
+  gap: 14px;
+  padding: 18px 20px;
+  border-radius: 9px;
+  border: 1px solid #e1e8e2;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(16, 28, 20, 0.03);
+}
+
+.seller-workspace .seller-stock.stock-page .stock-toolbar-top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-toolbar-title {
+  display: grid;
+  gap: 3px;
+  flex: 1 1 260px;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-toolbar-title h3 {
+  margin: 0;
+  font-family: var(--font-body, 'Be Vietnam Pro', sans-serif);
+  font-size: 15px;
+  font-weight: 700;
+  color: #16241b;
+  letter-spacing: -0.01em;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-toolbar-title p {
+  margin: 0;
+  font-size: 12.5px;
+  color: #4a5a50;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-kiosk-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-kiosk-field {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  width: min(100%, 390px);
+  flex: 1 1 230px;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-kiosk-field label {
+  margin: 0;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #36453b;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-kiosk-field select,
+.seller-workspace .seller-stock.stock-page .stock-fields select {
+  width: 100%;
+  height: 38px;
+  min-height: 38px;
+  padding: 0 11px;
+  border-radius: 6px;
+  border: 1px solid #cfd9d0;
+  background-color: #ffffff;
+  color: #16241b;
+  font-size: 13px;
+  font-weight: 500;
+  transition:
+    border-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-kiosk-field select:focus,
+.seller-workspace .seller-stock.stock-page .stock-fields select:focus {
+  outline: none;
+  border-color: #164628;
+  box-shadow: 0 0 0 3px rgba(22, 70, 40, 0.12);
+}
+
+.seller-workspace .seller-stock.stock-page .stock-kiosk-field select:disabled,
+.seller-workspace .seller-stock.stock-page .stock-fields select:disabled {
+  background-color: #f4f6f4;
+  color: #637368;
+  cursor: not-allowed;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-kiosk-controls .stock-actions button {
+  height: 38px;
+  min-height: 38px;
+  padding: 0 13px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Filter Tabs inside Toolbar */
+.seller-workspace .seller-stock.stock-page .stock-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  border-top: 1px solid #edf2ee;
+  padding-top: 10px;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #4a5a50;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-tab:hover {
+  background: #f4f8f5;
+  color: #16241b;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-tab.is-active {
+  background: #eff6f0;
+  border-color: #c7d9cb;
+  color: #164628;
+  font-weight: 700;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #e9efea;
+  color: #36453b;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-tab.is-active .stock-tab-count {
+  background: #164628;
+  color: #ffffff;
+}
+
+/* 2-Column Workbench */
+.seller-workspace .seller-stock.stock-page .stock-workbench {
+  display: grid;
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  margin-top: 0;
+  gap: 16px;
+  align-items: start;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-form,
+.seller-workspace .seller-stock.stock-page .stock-inventory {
+  display: grid;
+  min-width: 0;
+  margin: 0;
+  gap: 14px;
+  padding: 18px 20px;
+  border-radius: 9px;
+  border: 1px solid #e1e8e2;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(16, 28, 20, 0.03);
+}
+
+.seller-workspace .seller-stock.stock-page .stock-form-heading,
+.seller-workspace .seller-stock.stock-page .stock-inventory-heading {
+  display: flex;
+  margin: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #edf2ee;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-eyebrow {
+  display: inline-block;
+  margin-bottom: 2px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #164628;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-form-heading h3,
+.seller-workspace .seller-stock.stock-page .stock-inventory-heading h3 {
+  margin: 0;
+  font-family: var(--font-body, 'Be Vietnam Pro', sans-serif);
+  font-size: 15px;
+  font-weight: 700;
+  color: #16241b;
+  letter-spacing: -0.01em;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-form-heading p,
+.seller-workspace .seller-stock.stock-page .stock-inventory-heading p {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  color: #4a5a50;
+  line-height: 1.4;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-form-badge,
+.seller-workspace .seller-stock.stock-page .stock-inventory-count {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #e3f1e7;
+  color: #164628;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-empty-notice {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 7px;
+  border: 1px solid #fde68a;
+  background: #fffbeb;
+  color: #78350f;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+.seller-workspace .seller-stock.stock-page .stock-empty-notice p {
+  margin: 8px 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.seller-workspace .seller-stock.stock-page .stock-empty-notice button {
+  margin-top: 5px;
+  min-height: 40px;
+}
+.seller-workspace .seller-stock.stock-page .stock-workbench > .stock-inventory:only-child {
+  grid-column: 1 / -1;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-empty-notice a {
+  color: #164628;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-fields {
+  display: grid;
+  gap: 12px;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-fields > div {
+  display: grid;
+  gap: 5px;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-fields label {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #25352b;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-fields .quiet {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #4a5a50;
+  line-height: 1.4;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-fields .error {
+  margin: 2px 0 0;
+  padding: 6px 9px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+/* Pre-stock Review Card */
+.seller-workspace .seller-stock.stock-page .stock-review-card.shop-profile {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #c7d9cb;
+  background: #f4f9f5;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-review-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-review-head strong {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #164628;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-review-product {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-review-meta {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-review-meta p {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #16241b;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-review-card .quiet {
+  margin: 0;
+  padding-top: 6px;
+  border-top: 1px dashed #c7d9cb;
+  font-size: 12px;
+  color: #36453b;
+  line-height: 1.4;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-form > .stock-actions button {
+  width: 100%;
+  height: 38px;
+  min-height: 38px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-preorder-hint {
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px solid #edf2ee;
+  font-size: 12px;
+  color: #4a5a50;
+  line-height: 1.45;
+}
+
+/* Product Thumbnail (shared in Review Card, Slot Card & Modal) */
+.stock-product-thumb {
+  width: 38px;
+  height: 38px;
+  border-radius: 7px;
+  border: 1px solid #dce5dd;
+  background: #eff5f0;
+  color: #164628;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.stock-product-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.stock-product-thumb--empty {
+  background: #f3f6f4;
+  border-color: #e2e8e3;
+  color: #526358;
+}
+
+/* Slot Cards Grid */
+.seller-workspace .seller-stock.stock-page .stock-inventory .admin-shop-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr));
+  gap: 11px;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-slot-card {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  height: 100%;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #dfe7e0;
+  background: #fcfdfc;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-slot-card:hover {
+  border-color: #9ab8a2;
+  background: #ffffff;
+  box-shadow: 0 3px 8px rgba(16, 28, 20, 0.06);
+}
+
+.seller-workspace .seller-stock.stock-page .stock-slot-card:focus-visible {
+  outline: 2px solid #164628;
+  outline-offset: 2px;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-slot-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-slot-card-id {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-slot-card strong {
+  font-family: var(--font-body, 'Be Vietnam Pro', sans-serif);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: #16241b;
+  margin: 0;
+}
+
+.seller-workspace .seller-stock.stock-page .slot-zone-label {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: #eef3ef;
+  color: #36453b;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.seller-workspace .seller-stock.stock-page .slot-status-pill,
+.stock-slot-modal .slot-status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.3;
+  background: #eef2ef;
+  color: #25352b;
+  white-space: nowrap;
+}
+
+.seller-workspace .seller-stock.stock-page .slot-status-pill[data-status='STOCKED'],
+.stock-slot-modal .slot-status-pill[data-status='STOCKED'] {
+  background: #dcfce7;
+  color: #14532d;
+}
+
+.seller-workspace .seller-stock.stock-page .slot-status-pill[data-status='RENTED_EMPTY'],
+.stock-slot-modal .slot-status-pill[data-status='RENTED_EMPTY'] {
+  background: #e0f2fe;
+  color: #0c4a6e;
+}
+
+.seller-workspace .seller-stock.stock-page .slot-status-pill[data-status='FAULT'],
+.seller-workspace .seller-stock.stock-page .slot-status-pill[data-status='LOCKED'],
+.stock-slot-modal .slot-status-pill[data-status='FAULT'],
+.stock-slot-modal .slot-status-pill[data-status='LOCKED'] {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.seller-workspace .seller-stock.stock-page .slot-status-pill[data-status='PENDING_REMOVAL'],
+.seller-workspace .seller-stock.stock-page .slot-status-pill[data-status='PENDING_RELEASE'],
+.seller-workspace .seller-stock.stock-page .slot-status-pill[data-status='HELD'],
+.stock-slot-modal .slot-status-pill[data-status='PENDING_REMOVAL'],
+.stock-slot-modal .slot-status-pill[data-status='PENDING_RELEASE'],
+.stock-slot-modal .slot-status-pill[data-status='HELD'] {
+  background: #fef3c7;
+  color: #78350f;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-slot-card-body {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #f5f8f5;
+  min-width: 0;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-slot-card-info {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-slot-product-name {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #16241b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-slot-product-sub {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #4a5a50;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-slot-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-slot-disclosure {
+  grid-column: auto;
+  grid-row: auto;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #164628;
+}
+
+/* Slot Detail Modal Harmonization */
+div.management-modal.stock-slot-modal {
+  width: min(100%, 600px);
+  max-height: min(88vh, 760px);
+  padding: 0 22px 20px;
+  border-radius: 12px;
+  border: 1px solid #dce5dd;
+  background: #ffffff;
+  box-shadow: 0 20px 48px rgba(15, 28, 20, 0.18);
+}
+
+div.management-modal.stock-slot-modal .management-modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 0 -22px 14px;
+  padding: 15px 22px 12px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid #e6ece7;
+}
+
+div.management-modal.stock-slot-modal .management-modal-header h3 {
+  font-family: var(--font-body, 'Be Vietnam Pro', sans-serif);
+  font-size: 16px;
+  font-weight: 700;
+  color: #16241b;
+  letter-spacing: -0.01em;
+}
+
+div.management-modal.stock-slot-modal .management-modal-header p {
+  margin-top: 2px;
+  font-size: 12px;
+  color: #4a5a50;
+}
+
+div.management-modal.stock-slot-modal .management-modal-close {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  min-height: 34px;
+  border-radius: 8px;
+}
+
+.stock-slot-modal-body {
+  display: grid;
+  gap: 14px;
+}
+
+.stock-slot-modal-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f5f8f6;
+  border: 1px solid #e3ebe4;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #25352b;
+}
+
+.stock-slot-modal-bouquet {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #dfe7e0;
+  background: #fbfdfb;
+}
+
+.stock-slot-modal-bouquet-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stock-slot-modal-bouquet-head strong {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #16241b;
+}
+
+.stock-slot-details {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.stock-slot-details > div {
+  padding: 9px 11px;
+  border-radius: 7px;
+  border: 1px solid #e4ece5;
+  background: #ffffff;
+}
+
+.stock-slot-details dt {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #4a5a50;
+}
+
+.stock-slot-details dd {
+  margin: 3px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #16241b;
+  word-break: break-word;
+}
+
+/* SlotZoneSelector inside Modal */
+.stock-slot-modal .slot-zone-settings {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #dfe7e0;
+  background: #f8fbf8;
+}
+
+.stock-slot-modal .slot-zone-settings label {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #16241b;
+}
+
+.stock-slot-modal .slot-zone-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.stock-slot-modal .slot-zone-settings select {
+  flex: 1 1 200px;
+  height: 38px;
+  min-height: 38px;
+  padding: 0 11px;
+  border-radius: 6px;
+  border: 1px solid #cfd9d0;
+  background: #ffffff;
+  color: #16241b;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.stock-slot-modal .slot-zone-settings button {
+  height: 38px;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ReturnFlowers & ReportFault inside Modal */
+.stock-slot-modal .return-flowers,
+.stock-slot-modal .report-fault {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 8px;
+  border: 1px solid #dfe7e0;
+  background: #ffffff;
+}
+
+.stock-slot-modal .return-flowers h3,
+.stock-slot-modal .report-fault h3 {
+  margin: 0;
+  font-family: var(--font-body, 'Be Vietnam Pro', sans-serif);
+  font-size: 14px;
+  font-weight: 700;
+  color: #16241b;
+}
+
+.stock-slot-modal .return-flowers p,
+.stock-slot-modal .report-fault p {
+  margin: 0;
+  font-size: 12.5px;
+  color: #4a5a50;
+  line-height: 1.45;
+}
+
+.stock-slot-modal .return-flowers label,
+.stock-slot-modal .report-fault label {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #25352b;
+}
+
+.stock-slot-modal .return-flowers input,
+.stock-slot-modal .return-flowers textarea,
+.stock-slot-modal .report-fault input,
+.stock-slot-modal .report-fault textarea {
+  width: 100%;
+  padding: 8px 11px;
+  border-radius: 6px;
+  border: 1px solid #cfd9d0;
+  font-size: 13px;
+}
+
+.stock-slot-modal .return-flowers button,
+.stock-slot-modal .report-fault button {
+  height: 36px;
+  min-height: 36px;
+  padding: 0 13px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+@media (max-width: 1024px) {
+  .seller-workspace .seller-stock.stock-page .stock-summary.operations-metrics.order-summary-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .seller-workspace .seller-stock.stock-page .stock-workbench {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .seller-workspace .seller-stock.stock-page .stock-summary.operations-metrics.order-summary-strip,
+  .seller-workspace .seller-stock.stock-page .stock-inventory .admin-shop-list,
+  .stock-slot-details {
+    grid-template-columns: 1fr;
+  }
+
+  .seller-workspace .seller-stock.stock-page .stock-kiosk-field {
+    min-width: 100%;
+  }
+}

@@ -12,6 +12,48 @@
   gap: 0.5rem;
 }
 
+.chat-composer-templates {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  padding-bottom: 0.2rem;
+}
+
+.chat-composer-templates-label {
+  font-size: 0.75rem;
+  color: #557060;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.chat-composer-templates-list {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.chat-template-chip {
+  white-space: nowrap;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: #f0f6ed;
+  border: 1px solid #d5e5d3;
+  color: #1e4e35;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.chat-template-chip:hover {
+  background: #dcebd8;
+  border-color: #245b3d;
+}
+
 .chat-composer-preview {
   display: flex;
   align-items: center;
@@ -143,6 +185,16 @@
     border-color 0.15s ease,
     background-color 0.15s ease,
     box-shadow 0.15s ease;
+}
+
+.staff-chat-section .chat-composer-textarea {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 0.4rem 0.5rem !important;
+  min-height: 38px !important;
+  height: 38px !important;
 }
 
 .chat-composer-textarea:focus {
