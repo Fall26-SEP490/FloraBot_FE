@@ -2,6 +2,10 @@ import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 async function setup(page: Page) {
+  await page.route('**/hub/**', (route) => route.fulfill({ status: 503 }));
+  await page.route('**/api/**', (route) =>
+    route.fulfill({ status: 501, json: { detail: 'Unmocked test API' } }),
+  );
   await page.route('**/api/auth/me', (route) =>
     route.fulfill({ json: { id: 'admin', name: 'Quản trị', role: 'ADMIN' } }),
   );
@@ -64,6 +68,7 @@ for (const width of [390, 1440])
     });
     await page.goto('/admin/reconciliation');
     const section = page.locator('.admin-reconciliation');
+    await section.getByRole('button', { name: 'Dán dữ liệu JSON', exact: true }).click();
     await section.getByRole('button', { name: 'Xem báo cáo ngày' }).click();
     await expect(section.getByLabel('Ngày đối soát (giờ Việt Nam)')).toBeFocused();
     await section.getByLabel('Ngày đối soát (giờ Việt Nam)').fill('2026-10-07');
@@ -127,6 +132,7 @@ test('Empty statements, amount bounds and failed requests never retry automatica
   });
   await page.goto('/admin/reconciliation');
   const section = page.locator('.admin-reconciliation');
+  await section.getByRole('button', { name: 'Dán dữ liệu JSON', exact: true }).click();
   await section.getByLabel('Ngày đối soát (giờ Việt Nam)').fill('2026-10-07');
   for (const amount of [0, -1, 1.5, 9007199254740992]) {
     await section.getByLabel('Nội dung sao kê JSON').fill(JSON.stringify([{ txn: 'x', amount }]));
@@ -155,6 +161,7 @@ test('Cleared or hidden reports cannot reappear from a late response', async ({ 
   });
   await page.goto('/admin/reconciliation');
   const section = page.locator('.admin-reconciliation');
+  await section.getByRole('button', { name: 'Dán dữ liệu JSON', exact: true }).click();
   await section.getByLabel('Ngày đối soát (giờ Việt Nam)').fill('2026-10-07');
   await section.getByLabel('Nội dung sao kê JSON').fill('[{"txn":"private","amount":100}]');
   await section.getByRole('button', { name: 'Xem báo cáo ngày' }).click();
@@ -198,6 +205,7 @@ test('Differences paginate and a fresh empty result is not confused with an erro
   );
   await page.goto('/admin/reconciliation');
   const section = page.locator('.admin-reconciliation');
+  await section.getByRole('button', { name: 'Dán dữ liệu JSON', exact: true }).click();
   await section.getByLabel('Ngày đối soát (giờ Việt Nam)').fill('2026-10-07');
   await section.getByLabel('Nội dung sao kê JSON').fill('[]');
   await section.getByRole('button', { name: 'Kiểm tra sao kê', exact: true }).click();

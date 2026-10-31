@@ -180,7 +180,12 @@ function RefundDetailCard({
       <div className="detail-panel-header">
         <div>
           <span className="kiosk-status-pill" data-status={selectedRefund.status}>
-            {selectedRefund.status}
+            {(
+              { REFUND_PENDING: 'Chờ hoàn tiền', REFUNDED: 'Đã hoàn tiền' } as Record<
+                string,
+                string
+              >
+            )[selectedRefund.status] || selectedRefund.status}
           </span>
           <h2 id="refund-action-heading">Xử lý hoàn tiền: {selectedRefund.shopName}</h2>
           <p className="status-meta">
@@ -365,9 +370,7 @@ function RefundDetailCard({
                   disabled={confirmMutation.isPending || !evidenceReference}
                 >
                   <Banknote size={18} aria-hidden="true" />
-                  {confirmMutation.isPending
-                    ? 'Đang ghi nhận...'
-                    : 'Xác nhận đã chuyển khoản (REFUNDED)'}
+                  {confirmMutation.isPending ? 'Đang ghi nhận...' : 'Xác nhận đã chuyển khoản'}
                 </Button>
               </div>
             )}
@@ -399,7 +402,7 @@ export default function AdminKioskRefunds({ session }: AdminKioskRefundsProps) {
     <div className="admin-kiosk-refunds-view">
       <div className="dashboard-page-heading">
         <div>
-          <h1>Xử lý hoàn tiền thuê Kiosk</h1>
+          <h2>Hồ sơ chờ hoàn phí thuê</h2>
           <p>
             Hoàn tiền cho các hồ sơ thuê kiosk bị từ chối hoặc khách hủy trước khi xác nhận. Tuân
             thủ quy trình đối soát hai bước giữa người phê duyệt và người chi trả.
@@ -434,7 +437,7 @@ export default function AdminKioskRefunds({ session }: AdminKioskRefundsProps) {
 
       <div className="queue-filter-bar">
         <span>
-          Tổng số yêu cầu hoàn tiền: <strong>{refunds.length}</strong>
+          Yêu cầu trong danh sách: <strong>{refundsQuery.isSuccess ? refunds.length : '—'}</strong>
         </span>
         <Button
           variant="outline"
@@ -480,7 +483,7 @@ export default function AdminKioskRefunds({ session }: AdminKioskRefundsProps) {
               <tr>
                 <th scope="col">Shop & Ngày tạo</th>
                 <th scope="col">Số tiền hoàn</th>
-                <th scope="col">Tài khoản nhận (Masked)</th>
+                <th scope="col">Tài khoản nhận (đã che số)</th>
                 <th scope="col">Lý do hoàn</th>
                 <th scope="col">Tiến độ phê duyệt</th>
                 <th scope="col">Thao tác</th>
@@ -493,29 +496,29 @@ export default function AdminKioskRefunds({ session }: AdminKioskRefundsProps) {
 
                 return (
                   <tr key={item.id} className={isSelected ? 'is-selected-row' : ''}>
-                    <td>
+                    <td data-label="Shop & ngày tạo">
                       <strong>{item.shopName}</strong>
                       <div className="table-sub-text">
                         {new Date(item.createdAt).toLocaleDateString('vi-VN')}
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Số tiền hoàn">
                       <strong className="refund-amount-text">
                         {Number(item.amount).toLocaleString('vi-VN')} đ
                       </strong>
                     </td>
-                    <td>
+                    <td data-label="Tài khoản nhận">
                       <div>{item.bankName}</div>
                       <div className="table-sub-text">
                         ****{item.bankAccountSuffix} ({item.bankHolder})
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Lý do hoàn">
                       <span className="refund-reason-cell" title={item.refundReason ?? undefined}>
                         {item.refundReason || '—'}
                       </span>
                     </td>
-                    <td>
+                    <td data-label="Tiến độ phê duyệt">
                       {item.status === 'REFUNDED' ? (
                         <span className="kiosk-status-pill" data-status="REFUNDED">
                           Đã chi trả
@@ -530,7 +533,7 @@ export default function AdminKioskRefunds({ session }: AdminKioskRefundsProps) {
                         </span>
                       )}
                     </td>
-                    <td>
+                    <td data-label="Thao tác">
                       <Button
                         variant={isSelected ? 'default' : 'outline'}
                         onClick={() => {

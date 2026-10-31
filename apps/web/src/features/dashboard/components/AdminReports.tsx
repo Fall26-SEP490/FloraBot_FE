@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { AdminFilterBar } from '@/features/portal/components/AdminUi';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import { request, type Session } from '@/shared/lib/api';
@@ -8,7 +9,7 @@ import { request, type Session } from '@/shared/lib/api';
 const reports = {
   v_admin_queue: {
     title: 'Hàng đợi vận hành',
-    description: 'Các hàng đợi do backend tổng hợp từ dữ liệu hiện tại.',
+    description: 'Các yêu cầu đang chờ xử lý được tổng hợp từ dữ liệu hiện tại.',
     columns: [
       ['hang_cho', 'Hàng đợi'],
       ['so_luong', 'Số lượng'],
@@ -17,7 +18,7 @@ const reports = {
   v_revenue_daily: {
     title: 'Giá trị đơn theo ngày',
     description:
-      'GMV theo ngày và kiosk từ khoản thu thành công; không phải lợi nhuận hay phí nền tảng.',
+      'Tổng giá trị đơn đã thu tiền theo ngày và kiosk; không phải lợi nhuận hay phí nền tảng.',
     columns: [
       ['ngay', 'Ngày'],
       ['kiosk', 'Kiosk'],
@@ -37,8 +38,7 @@ const reports = {
   },
   v_ai_effectiveness: {
     title: 'Hiệu quả tư vấn',
-    description:
-      'Khảo sát và kết quả mua ghi nhận trong backend. Không đại diện cho kiểm thử Gemini hay IoT thật.',
+    description: 'Kết quả khảo sát, mua hàng và thời gian phản hồi được hệ thống ghi nhận.',
     columns: [
       ['kiosk_id', 'Kiosk'],
       ['source', 'Nguồn'],
@@ -71,7 +71,11 @@ export default function AdminReports({ session }: { session: Session }) {
   const config = reports[report];
   const query = useQuery({
     queryKey: ['admin-reports', session.id, report],
-    queryFn: () => request<ReportRow[]>(`/admin/reports/${report}`),
+    queryFn: async () => {
+      const rows = await request<ReportRow[]>(`/admin/reports/${report}`);
+      if (!Array.isArray(rows)) throw new Error('Không đọc được dữ liệu báo cáo.');
+      return rows;
+    },
     enabled: session.role === 'ADMIN',
   });
   if (session.role !== 'ADMIN') return null;
@@ -81,45 +85,47 @@ export default function AdminReports({ session }: { session: Session }) {
     <section className="api-reports" aria-labelledby="api-reports-title">
       <div className="reports-heading">
         <div>
-          <p className="quiet">Dữ liệu từ hệ thống</p>
           <h2 id="api-reports-title">Báo cáo vận hành</h2>
           <p>
-            Tra cứu dữ liệu thật từ API. Các báo cáo chỉ đọc, không tạo giao dịch hoặc điều khiển
-            tủ.
+            Chọn báo cáo để tra cứu số liệu. Các báo cáo chỉ đọc, không tạo giao dịch hoặc điều
+            khiển tủ.
           </p>
         </div>
         <Button variant="outline" disabled={query.isFetching} onClick={() => void query.refetch()}>
           {query.isFetching ? 'Đang cập nhật…' : 'Cập nhật báo cáo'}
         </Button>
       </div>
-      <label htmlFor="operations-report">Chọn báo cáo</label>
-      <select
-        id="operations-report"
-        value={report}
-        onChange={(event) => {
-          setReport(event.target.value as ReportName);
-          setPage(1);
-        }}
-      >
-        {Object.entries(reports).map(([key, item]) => (
-          <option key={key} value={key}>
-            {item.title}
-          </option>
-        ))}
-      </select>
+      <AdminFilterBar label="Loại báo cáo">
+        <div>
+          <label htmlFor="operations-report">Chọn báo cáo</label>
+          <select
+            id="operations-report"
+            value={report}
+            onChange={(event) => {
+              setReport(event.target.value as ReportName);
+              setPage(1);
+            }}
+          >
+            {Object.entries(reports).map(([key, item]) => (
+              <option key={key} value={key}>
+                {item.title}
+              </option>
+            ))}
+          </select>
+        </div>
+      </AdminFilterBar>
       <p>{config.description}</p>
       <p className="quiet">
-        API trả tối đa 100 dòng mỗi báo cáo. Không suy ra tổng hệ thống từ các dòng đang hiển thị.
-        Hàng đợi có thể bao gồm dữ liệu của mô hình cũ.
+        Hiển thị tối đa 100 dòng được hệ thống trả về, không phải tổng toàn hệ thống. Một số hàng
+        đợi có cả hồ sơ trước quy trình thuê kiosk hiện tại.
       </p>
       {query.isPending ? (
-        <p role="status">Đang đọc báo cáo từ backend…</p>
+        <p role="status">Đang tải báo cáo…</p>
       ) : query.isError ? (
         <p role="alert">Chưa tải được báo cáo. Kiểm tra kết nối rồi chọn cập nhật.</p>
       ) : !rows.length ? (
         <p role="status" className="reports-empty">
-          Chưa có dữ liệu cho báo cáo này. Hệ thống chưa ghi nhận số liệu, không thay thế bằng dữ
-          liệu mẫu.
+          Chưa có dữ liệu cho báo cáo này. Chọn báo cáo khác hoặc cập nhật để kiểm tra lại.
         </p>
       ) : (
         <>
@@ -133,7 +139,7 @@ export default function AdminReports({ session }: { session: Session }) {
           >
             <table>
               <caption>
-                {config.title} · {rows.length} dòng API trả về
+                {config.title} · {rows.length} dòng dữ liệu
               </caption>
               <thead>
                 <tr>
@@ -147,8 +153,10 @@ export default function AdminReports({ session }: { session: Session }) {
               <tbody>
                 {rows.slice((page - 1) * 20, page * 20).map((row, index) => (
                   <tr key={`${page}-${index}`}>
-                    {config.columns.map(([key]) => (
-                      <td key={key}>{displayValue(row[key])}</td>
+                    {config.columns.map(([key, label]) => (
+                      <td key={key} data-label={label}>
+                        {displayValue(row[key])}
+                      </td>
                     ))}
                   </tr>
                 ))}

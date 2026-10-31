@@ -46,7 +46,7 @@ for (const role of ['ADMIN', 'SELLER'] as const)
       await page.route('**/hub/**', (route) => route.fulfill({ status: 503 }));
       await page.goto(base);
       await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-        role === 'SELLER' ? 'Tổng quan cửa hàng' : 'Chào Thảo,',
+        role === 'SELLER' ? 'Tổng quan cửa hàng' : 'Tổng quan quản trị',
       );
       await expect(page.getByRole('heading', { name: 'Yêu cầu đặt hoa gần đây' })).toBeVisible();
       await expect.poll(() => businessReads.length).toBeGreaterThanOrEqual(3);
@@ -77,7 +77,7 @@ for (const role of ['ADMIN', 'SELLER'] as const)
       await page.goBack();
       await expect(page).toHaveURL(base);
       await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-        role === 'SELLER' ? 'Tổng quan cửa hàng' : 'Chào Thảo,',
+        role === 'SELLER' ? 'Tổng quan cửa hàng' : 'Tổng quan quản trị',
       );
       await expect(page.locator('body')).toHaveJSProperty('scrollWidth', width);
       expect(

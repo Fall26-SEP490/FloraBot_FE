@@ -1,3 +1,4 @@
+import { AdminFilterBar, AdminDisclosureSummary } from '@/features/portal/components/AdminUi';
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -83,13 +84,12 @@ function IncidentItem({ row, onNotice }: { row: Incident; onNotice: (message: st
   return (
     <li>
       <details onToggle={(event) => setOpen(event.currentTarget.open)}>
-        <summary>
-          <strong>{formatIncidentLabel(row)}</strong>
-          <span>
-            {row.kind === 'DISPENSE_FAILED' ? 'Không giao được hoa' : 'Sự cố thiết bị'} ·{' '}
-            {formatIncidentDate(row.createdAt)}
-          </span>
-        </summary>
+        <AdminDisclosureSummary
+          statusCode={row.status}
+          title={formatIncidentLabel(row)}
+          meta={formatIncidentDate(row.createdAt)}
+          status={row.kind === 'DISPENSE_FAILED' ? 'Không giao được hoa' : 'Sự cố thiết bị'}
+        />
         {open && (
           <div className="incident-detail">
             {detail.isPending ? (
@@ -244,31 +244,38 @@ export default function AdminIncidents() {
     <section className="admin-incidents" aria-labelledby="incidents-title">
       <h2 id="incidents-title">Theo dõi sự cố tủ hoa</h2>
       <p>Ưu tiên các báo cáo đang mở để hoa sớm được bán trở lại. Mỗi trang có tối đa 25 sự cố.</p>
-      <label htmlFor="incident-status">Trạng thái sự cố</label>
-      <select
-        id="incident-status"
-        value={status}
-        onChange={(event) => {
-          setStatus(event.target.value);
-          setPage(1);
-        }}
+      <AdminFilterBar
+        actions={
+          <>
+            <Button
+              variant="outline"
+              disabled={queue.isFetching}
+              onClick={() => {
+                setPage(1);
+                void queryClient.invalidateQueries({ queryKey: ['admin-incidents'] });
+                void queryClient.invalidateQueries({ queryKey: ['admin-incident'] });
+              }}
+            >
+              Cập nhật danh sách sự cố
+            </Button>
+          </>
+        }
       >
-        <option value="OPEN">Đang mở · cũ nhất trước</option>
-        <option value="RESOLVED_FIXED">Đã xử lý · mới nhất trước</option>
-      </select>
-      <div className="stock-actions">
-        <Button
-          variant="outline"
-          disabled={queue.isFetching}
-          onClick={() => {
-            setPage(1);
-            void queryClient.invalidateQueries({ queryKey: ['admin-incidents'] });
-            void queryClient.invalidateQueries({ queryKey: ['admin-incident'] });
-          }}
-        >
-          Cập nhật danh sách sự cố
-        </Button>
-      </div>
+        <div>
+          <label htmlFor="incident-status">Trạng thái sự cố</label>
+          <select
+            id="incident-status"
+            value={status}
+            onChange={(event) => {
+              setStatus(event.target.value);
+              setPage(1);
+            }}
+          >
+            <option value="OPEN">Đang mở · cũ nhất trước</option>
+            <option value="RESOLVED_FIXED">Đã xử lý · mới nhất trước</option>
+          </select>
+        </div>
+      </AdminFilterBar>
       <p role="status" tabIndex={-1} ref={noticeRef}>
         {notice}
       </p>

@@ -90,7 +90,9 @@ export default function OperationsInstallations({ session }: OperationsInstallat
           <CircleAlert size={18} aria-hidden="true" />
           <p>
             <strong>Chế độ giám sát (Admin)</strong>
-            <span>Xem hồ sơ và tiến độ. Manager phụ trách xác nhận, phân công và bàn giao.</span>
+            <span>
+              Xem hồ sơ và tiến độ. Quản lý vận hành phụ trách xác nhận, phân công và bàn giao.
+            </span>
           </p>
         </div>
       )}

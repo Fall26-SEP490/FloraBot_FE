@@ -1,3 +1,4 @@
+import { AdminFilterBar, AdminDisclosureSummary } from '@/features/portal/components/AdminUi';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -96,12 +97,12 @@ function Complaint({ row, onSaved }: { row: Row; onSaved: (message: string) => v
   return (
     <li>
       <details onToggle={(event) => setOpen(event.currentTarget.open)}>
-        <summary>
-          <strong>Đơn {row.orderCode}</strong>
-          <span>
-            {formatComplaintDate(row.createdAt)} · {formatComplaintMoney(row.orderTotal)}
-          </span>
-        </summary>
+        <AdminDisclosureSummary
+          statusCode={row.status}
+          title={`Đơn ${row.orderCode}`}
+          meta={formatComplaintDate(row.createdAt)}
+          status={formatComplaintMoney(row.orderTotal)}
+        />
         {open && (
           <div className="incident-detail">
             {detail.isPending ? (
@@ -291,35 +292,42 @@ export default function AdminComplaints() {
   });
   return (
     <section className="admin-complaints" aria-labelledby="complaints-title">
-      <h2 id="complaints-title">Chăm sóc khách sau khi nhận hoa</h2>
+      <h2 id="complaints-title">Danh sách phản ánh của khách</h2>
       <p>
         Xem phản ánh và ghi nhận quyết định cho từng đơn. Phản ánh đang mở được xếp cũ nhất trước.
       </p>
-      <label htmlFor="complaint-status">Trạng thái phản ánh</label>
-      <select
-        id="complaint-status"
-        value={status}
-        onChange={(event) => {
-          setStatus(event.target.value);
-          setPage(1);
-        }}
+      <AdminFilterBar
+        actions={
+          <>
+            <Button
+              variant="outline"
+              disabled={queue.isFetching}
+              onClick={() => {
+                setPage(1);
+                void queryClient.invalidateQueries({ queryKey: ['admin-complaints'] });
+              }}
+            >
+              Cập nhật phản ánh
+            </Button>
+          </>
+        }
       >
-        <option value="OPEN">Chờ xem xét</option>
-        <option value="RESOLVED_REFUND">Đã duyệt hoàn</option>
-        <option value="RESOLVED_REJECT">Đã từ chối hoàn</option>
-      </select>
-      <div className="stock-actions">
-        <Button
-          variant="outline"
-          disabled={queue.isFetching}
-          onClick={() => {
-            setPage(1);
-            void queryClient.invalidateQueries({ queryKey: ['admin-complaints'] });
-          }}
-        >
-          Cập nhật phản ánh
-        </Button>
-      </div>
+        <div>
+          <label htmlFor="complaint-status">Trạng thái phản ánh</label>
+          <select
+            id="complaint-status"
+            value={status}
+            onChange={(event) => {
+              setStatus(event.target.value);
+              setPage(1);
+            }}
+          >
+            <option value="OPEN">Chờ xem xét</option>
+            <option value="RESOLVED_REFUND">Đã duyệt hoàn</option>
+            <option value="RESOLVED_REJECT">Đã từ chối hoàn</option>
+          </select>
+        </div>
+      </AdminFilterBar>
       <p role="status" tabIndex={-1} ref={noticeRef}>
         {notice}
       </p>

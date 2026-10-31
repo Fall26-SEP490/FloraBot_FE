@@ -123,7 +123,7 @@ test('Admin overview has no page-level horizontal overflow at viewport 934px', a
   await mockDashboard(page, 'ADMIN');
   await page.goto('/admin');
 
-  await expect(page.getByRole('heading', { name: 'Ưu tiên giám sát hệ thống' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Cần bạn xử lý' })).toBeVisible();
 
   // Verify no horizontal overflow at the page/body level
   const docOverflow = await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth);

@@ -1,3 +1,5 @@
+import { AdminFilterBar } from '@/features/portal/components/AdminUi';
+import StatementEditor, { type StatementEntry } from './StatementEditor';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Button } from '@florabot/ui';
 import type { DailyReconciliationResult, GatewayReconciliationResult } from '../../finance.types';
@@ -64,6 +66,9 @@ function parseStatement(raw: string): Statement {
 export default function AdminReconciliation() {
   const [date, setDate] = useState('');
   const [raw, setRaw] = useState('');
+  const [inputMode, setInputMode] = useState<'rows' | 'json'>('rows');
+  const [entries, setEntries] = useState<StatementEntry[]>([{ key: 0, txn: '', amount: '' }]);
+  const nextEntry = useRef(1);
   const [review, setReview] = useState<Statement | null>(null);
   const [daily, setDaily] = useState<Daily | null>(null);
   const [gateway, setGateway] = useState<Gateway | null>(null);
@@ -88,6 +93,7 @@ export default function AdminReconciliation() {
       epoch.current++;
       sending.current = false;
       setRaw('');
+      setEntries([{ key: 0, txn: '', amount: '' }]);
       setReview(null);
       setDaily(null);
       setGateway(null);
@@ -105,6 +111,7 @@ export default function AdminReconciliation() {
     epoch.current++;
     sending.current = false;
     setRaw('');
+    setEntries([{ key: 0, txn: '', amount: '' }]);
     setReview(null);
     setDaily(null);
     setGateway(null);
@@ -112,6 +119,13 @@ export default function AdminReconciliation() {
     setError('');
     setPage(0);
     setNotice('Đã xóa dữ liệu đối soát khỏi màn hình.');
+  }
+  function focusStatement() {
+    if (inputMode === 'json') input.current?.focus();
+    else
+      document
+        .getElementById(entries[0] ? `statement-txn-${entries[0].key}` : 'statement-add')
+        ?.focus();
   }
   function validDate() {
     if (!date || !dateInput.current?.validity.valid || date === '0001-01-01') {
@@ -150,6 +164,7 @@ export default function AdminReconciliation() {
         setGateway(result);
         setPage(0);
         setRaw('');
+        setEntries([{ key: 0, txn: '', amount: '' }]);
         setReview(null);
         setNotice(
           result.result.length
@@ -173,38 +188,46 @@ export default function AdminReconciliation() {
   }
   return (
     <section className="admin-reconciliation" aria-labelledby="reconciliation-title">
-      <h2 id="reconciliation-title">Đối chiếu từng khoản, rõ ràng mỗi ngày</h2>
+      <h2 id="reconciliation-title">Đối chiếu sổ cái và sao kê</h2>
       <p>
         So sánh sổ cái nội bộ và các khoản thu PAYOS với sao kê bạn cung cấp. Báo cáo chỉ chỉ ra
         chênh lệch, không tạo khoản thu hay chuyển tiền.
       </p>
-      <label htmlFor="reconciliation-date">Ngày đối soát (giờ Việt Nam)</label>
-      <input
-        ref={dateInput}
-        id="reconciliation-date"
-        aria-describedby="reconciliation-error"
-        type="date"
-        min="0001-01-02"
-        max="9999-12-31"
-        value={date}
-        disabled={busy}
-        onChange={(event) => {
-          setDate(event.target.value);
-          setDaily(null);
-          setGateway(null);
-          setReview(null);
-          setError('');
-          setNotice('');
-        }}
-      />
-      <div className="stock-actions">
-        <Button disabled={busy} onClick={() => void run('daily')}>
-          Xem báo cáo ngày
-        </Button>
-        <Button variant="outline" onClick={clear}>
-          Xóa dữ liệu trên màn hình
-        </Button>
-      </div>
+      <AdminFilterBar
+        label="Ngày và thao tác đối soát"
+        actions={
+          <>
+            <Button disabled={busy} onClick={() => void run('daily')}>
+              Xem báo cáo ngày
+            </Button>
+            <Button variant="outline" onClick={clear}>
+              Xóa dữ liệu trên màn hình
+            </Button>
+          </>
+        }
+      >
+        <div>
+          <label htmlFor="reconciliation-date">Ngày đối soát (giờ Việt Nam)</label>
+          <input
+            ref={dateInput}
+            id="reconciliation-date"
+            aria-describedby="reconciliation-error"
+            type="date"
+            min="0001-01-02"
+            max="9999-12-31"
+            value={date}
+            disabled={busy}
+            onChange={(event) => {
+              setDate(event.target.value);
+              setDaily(null);
+              setGateway(null);
+              setReview(null);
+              setError('');
+              setNotice('');
+            }}
+          />
+        </div>
+      </AdminFilterBar>
       <p role="status">{busy ? 'Đang đối chiếu dữ liệu…' : notice}</p>
       <p id="reconciliation-error" role="alert" className="error">
         {error}
@@ -224,7 +247,7 @@ export default function AdminReconciliation() {
               const clearing = row.muc === 'Tiền đang chờ hoàn (REFUND_CLEARING)';
               return (
                 <li key={row.muc}>
-                  <h4>{row.muc}</h4>
+                  <h4>{clearing ? 'Tiền đang chờ hoàn' : row.muc}</h4>
                   <dl>
                     {count ? (
                       <div>
@@ -259,18 +282,32 @@ export default function AdminReconciliation() {
         </div>
       )}
       <form
+        className="admin-statement-form"
         noValidate
         onSubmit={(event) => {
           event.preventDefault();
           if (sending.current || !validDate()) return;
           try {
-            setReview(parseStatement(raw));
+            setReview(
+              parseStatement(
+                inputMode === 'json'
+                  ? raw
+                  : JSON.stringify(
+                      entries.map(({ txn, amount }) => ({ txn, amount: Number(amount) })),
+                    ),
+              ),
+            );
             setGateway(null);
             setError('');
             setNotice('');
           } catch (cause) {
-            setError(cause instanceof Error ? cause.message : 'Kiểm tra lại sao kê.');
-            input.current?.focus();
+            const message = cause instanceof Error ? cause.message : 'Kiểm tra lại sao kê.';
+            setError(
+              inputMode === 'rows'
+                ? message.replaceAll('txn', 'mã giao dịch').replaceAll('amount', 'số tiền')
+                : message,
+            );
+            focusStatement();
           }
         }}
       >
@@ -279,34 +316,80 @@ export default function AdminReconciliation() {
           Dữ liệu nhập chỉ giữ trong tab hiện tại và được xóa khi bạn rời tab hoặc chọn xóa trên màn
           hình.
         </p>
-        <p id="statement-help">
-          Dán các khoản thu của đúng ngày đã chọn theo mẫu{' '}
-          <code>{'[{"txn":"ma-giao-dich","amount":100000}]'}</code>. Chỉ cần mã giao dịch và số tiền
-          đồng; không nhập tên, số tài khoản hay thông tin khách. Các mã trùng được cộng lại. Dùng{' '}
-          <code>[]</code> khi sao kê không có khoản thu.
-        </p>
         {!review && (
           <>
-            <label htmlFor="reconciliation-statement">Nội dung sao kê JSON</label>
-            <textarea
-              ref={input}
-              id="reconciliation-statement"
-              value={raw}
-              rows={5}
-              maxLength={1500000}
-              readOnly={busy}
-              autoComplete="off"
-              spellCheck={false}
-              aria-describedby="statement-help reconciliation-error"
-              onChange={(event) => {
-                setRaw(event.target.value);
-                setGateway(null);
-                setNotice('');
-              }}
-            />
-            <Button type="submit" disabled={busy}>
-              Kiểm tra sao kê
-            </Button>
+            <div className="admin-segmented" role="group" aria-label="Cách nhập sao kê">
+              <button
+                type="button"
+                disabled={busy}
+                aria-pressed={inputMode === 'rows'}
+                onClick={() => {
+                  setInputMode('rows');
+                  setError('');
+                }}
+              >
+                Nhập từng giao dịch
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                aria-pressed={inputMode === 'json'}
+                onClick={() => {
+                  setInputMode('json');
+                  setError('');
+                }}
+              >
+                Dán dữ liệu JSON
+              </button>
+            </div>
+            {inputMode === 'rows' ? (
+              <StatementEditor
+                entries={entries}
+                disabled={busy}
+                onChange={(next) => {
+                  setEntries(next);
+                  setGateway(null);
+                  setNotice('');
+                }}
+                onAdd={() => {
+                  const key = nextEntry.current++;
+                  setEntries((current) =>
+                    current.length >= 5000 ? current : [...current, { key, txn: '', amount: '' }],
+                  );
+                }}
+              />
+            ) : (
+              <>
+                <p id="statement-help">
+                  Dán sao kê của đúng ngày đã chọn theo mẫu{' '}
+                  <code>{'[{"txn":"ma-giao-dich","amount":100000}]'}</code>. Chỉ nhập mã giao dịch
+                  và số tiền theo đồng; không nhập thông tin khách hàng. Dùng <code>[]</code> nếu
+                  không có khoản thu.
+                </p>
+                <label htmlFor="reconciliation-statement">Nội dung sao kê JSON</label>
+                <textarea
+                  ref={input}
+                  id="reconciliation-statement"
+                  value={raw}
+                  rows={7}
+                  maxLength={1500000}
+                  readOnly={busy}
+                  autoComplete="off"
+                  spellCheck={false}
+                  aria-describedby="statement-help reconciliation-error"
+                  onChange={(event) => {
+                    setRaw(event.target.value);
+                    setGateway(null);
+                    setNotice('');
+                  }}
+                />
+              </>
+            )}
+            <div className="stock-actions">
+              <Button type="submit" disabled={busy}>
+                Kiểm tra sao kê
+              </Button>
+            </div>
           </>
         )}
         {review && (
@@ -338,7 +421,7 @@ export default function AdminReconciliation() {
                 disabled={busy}
                 onClick={() => {
                   setReview(null);
-                  requestAnimationFrame(() => input.current?.focus());
+                  requestAnimationFrame(focusStatement);
                 }}
               >
                 Sửa sao kê

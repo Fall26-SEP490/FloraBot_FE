@@ -139,16 +139,16 @@ for (const width of [390, 1440]) {
     await page.goto('/admin/approvals');
     await expect(page.getByRole('heading', { name: 'Trung tâm duyệt', exact: true })).toBeVisible();
     const complaints = page.getByRole('article', { name: 'Phản ánh của khách', exact: true });
-    await expect(complaints.getByRole('alert')).toContainText('Chưa tải được hàng đợi này.');
+    await expect(complaints.getByRole('alert')).toContainText('Chưa tải được danh sách.');
     await expect(complaints).not.toContainText('0 yêu cầu đang hiển thị');
     const leases = page.getByRole('article', { name: 'Hồ sơ thuê kiosk mới', exact: true });
-    await expect(leases).toContainText('1 yêu cầu đang hiển thị');
-    await expect(leases).toContainText('Manager');
+    await expect(leases.getByLabel('1 yêu cầu đang hiển thị')).toBeVisible();
+    await expect(leases).toContainText('Quản lý vận hành');
     model.complaintsUnavailable = false;
     await complaints
       .getByRole('button', { name: 'Thử lại phản ánh của khách', exact: true })
       .click();
-    await expect(complaints).toContainText('0 yêu cầu đang hiển thị');
+    await expect(complaints.getByLabel('0 yêu cầu đang hiển thị')).toBeVisible();
     expect(
       (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze())
         .violations,
@@ -156,7 +156,7 @@ for (const width of [390, 1440]) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
-    await leases.getByRole('link', { name: 'Xem giám sát hồ sơ thuê' }).click();
+    await leases.getByRole('link', { name: 'Hồ sơ thuê kiosk mới' }).click();
     await expect(page).toHaveURL(/\/admin\/installations$/);
     await expect(page.getByText('Chế độ giám sát (Admin)', { exact: true })).toBeVisible();
     expect(

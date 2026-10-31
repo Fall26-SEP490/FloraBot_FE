@@ -1,13 +1,21 @@
 export const workspaceSections = {
   ADMIN: [
-    ['approvals', 'Trung tâm duyệt', 'Các hàng đợi cần kiểm tra, xử lý và hướng dẫn đúng vai trò.'],
+    [
+      'approvals',
+      'Trung tâm duyệt',
+      'Kiểm tra phản ánh, hoàn tiền và yêu cầu rút tiền. Các hồ sơ vận hành được theo dõi riêng.',
+    ],
     [
       'accounts',
       'Tài khoản hệ thống',
       'Tra cứu tài khoản theo vai trò và xem hồ sơ toàn hệ thống.',
     ],
     ['managers', 'Quản lý vận hành', 'Tạo tài khoản và quản lý trạng thái Quản lý vận hành.'],
-    ['orders', 'Đơn đặt trước', 'Theo dõi yêu cầu đặt hoa và tiến độ chuẩn bị.'],
+    [
+      'orders',
+      'Đơn đặt trước',
+      'Giám sát đơn đặt hoa và tiến độ chuẩn bị. Shop phụ trách báo giá và xử lý đơn.',
+    ],
     ['incidents', 'Sự cố tủ', 'Kiểm tra lỗi thiết bị, cửa tủ và tiền bị kẹt.'],
     [
       'tasks',
@@ -17,9 +25,9 @@ export const workspaceSections = {
     [
       'installations',
       'Hồ sơ thuê kiosk',
-      'Giám sát hồ sơ thuê và lắp đặt; Manager xác nhận, phân công và bàn giao.',
+      'Theo dõi hồ sơ thuê và tiến độ lắp đặt. Quản lý vận hành xác nhận, phân công và bàn giao.',
     ],
-    ['shops', 'Shop hoa', 'Theo dõi shop đang có và các hồ sơ phê duyệt theo luồng cũ.'],
+    ['shops', 'Shop hoa', 'Tra cứu shop và duyệt gói cho hồ sơ shop có sẵn trong hệ thống.'],
     ['slots', 'Phân bổ kiosk', 'Gán toàn bộ kiosk cho một shop và theo dõi trạng thái phân bổ.'],
     ['complaints', 'Phản ánh', 'Xem bằng chứng và xử lý phản ánh của khách.'],
     ['refunds', 'Hoàn tiền', 'Kiểm tra khoản hoàn và xác nhận chi trả.'],
@@ -30,7 +38,11 @@ export const workspaceSections = {
     ],
     ['withdrawals', 'Rút tiền', 'Duyệt yêu cầu và ghi nhận khoản đã chi cho shop.'],
     ['reconciliation', 'Đối soát', 'Kiểm tra giao dịch và kết quả đối soát.'],
-    ['reports', 'Báo cáo vận hành', 'Đọc hàng đợi, giá trị đơn và doanh thu phí thuê từ API.'],
+    [
+      'reports',
+      'Báo cáo vận hành',
+      'Theo dõi yêu cầu, giá trị đơn và doanh thu phí thuê từ hệ thống.',
+    ],
   ],
   SELLER: [
     ['orders', 'Đơn đặt trước', 'Báo giá, chuẩn bị hoa và theo dõi lịch nhận.'],

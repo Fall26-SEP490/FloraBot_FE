@@ -1,9 +1,10 @@
+import { AdminFilterBar } from '@/features/portal/components/AdminUi';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button } from '@florabot/ui';
+import { Button, ChevronDown } from '@florabot/ui';
 import type { ApproveRefundRequest, ConfirmRefundRequest } from '../../finance.types';
 import { ApiError, queryClient, request } from '@/shared/lib/api';
 import EvidenceUpload from '../../../../shared/components/EvidenceUpload';
@@ -183,7 +184,9 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
             Hoàn {formatMoney(data.refund.amount)} cho đơn{' '}
             {data.refund.orderCode || data.refund.orderId}
           </h3>
-          <p className="incident-text">{data.refund.reason}</p>
+          <p className="incident-text">
+            {data.refund.reason?.replace(/^AUTO_REFUND:\s*/, 'Hoàn tiền tự động · ')}
+          </p>
           {data.refund.status === 'PENDING' && (
             <>
               {data.bankStatus === 'NEEDS_UPDATE' && (
@@ -393,13 +396,25 @@ function RefundItem({ item, onNotice }: { item: Item; onNotice: (message: string
     <li>
       <details onToggle={(event) => setOpen(event.currentTarget.open)}>
         <summary>
-          <strong>
-            Đơn {item.orderCode || item.orderId || item.id} · {formatMoney(item.amount)}
-          </strong>
-          <span>
+          <span className="refund-summary-main">
+            <strong>
+              Đơn {item.orderCode || item.orderId || item.id} · {formatMoney(item.amount)}
+            </strong>
+            {item.createdAt && (
+              <small>
+                Yêu cầu ngày{' '}
+                <time dateTime={item.createdAt}>{formatFinanceDate(item.createdAt)}</time>
+              </small>
+            )}
+          </span>
+          <span className="status-pill">
             {item.status === 'PENDING' && item.requiresApproval
-              ? 'Cần admin duyệt'
+              ? 'Cần Admin duyệt'
               : REFUND_STATUS_NAMES[item.status] || item.status}
+          </span>
+          <span className="refund-summary-toggle">
+            {open ? 'Ẩn chi tiết' : 'Xem chi tiết'}
+            <ChevronDown size={17} aria-hidden="true" />
           </span>
         </summary>
         {open && <RefundDetails id={item.id} onNotice={onNotice} />}
@@ -424,33 +439,40 @@ export default function AdminRefunds() {
     <section className="admin-refunds" aria-labelledby="refunds-title">
       <h2 id="refunds-title">Hoàn tiền cho khách</h2>
       <p>Duyệt và chi bằng hai admin khác nhau. Khoản đang chờ được xếp cũ nhất trước.</p>
-      <label htmlFor="refund-status">Trạng thái khoản hoàn</label>
-      <select
-        id="refund-status"
-        value={status}
-        onChange={(event) => {
-          setStatus(event.target.value);
-          setPage(1);
-        }}
+      <AdminFilterBar
+        actions={
+          <>
+            <Button
+              variant="outline"
+              disabled={queue.isFetching}
+              onClick={() => {
+                setPage(1);
+                void queryClient.invalidateQueries({ queryKey: ['admin-refunds'] });
+              }}
+            >
+              Cập nhật khoản hoàn
+            </Button>
+          </>
+        }
       >
-        {Object.entries(REFUND_STATUS_NAMES).map(([value, label]) => (
-          <option key={value} value={value}>
-            {label}
-          </option>
-        ))}
-      </select>
-      <div className="stock-actions">
-        <Button
-          variant="outline"
-          disabled={queue.isFetching}
-          onClick={() => {
-            setPage(1);
-            void queryClient.invalidateQueries({ queryKey: ['admin-refunds'] });
-          }}
-        >
-          Cập nhật khoản hoàn
-        </Button>
-      </div>
+        <div>
+          <label htmlFor="refund-status">Trạng thái khoản hoàn</label>
+          <select
+            id="refund-status"
+            value={status}
+            onChange={(event) => {
+              setStatus(event.target.value);
+              setPage(1);
+            }}
+          >
+            {Object.entries(REFUND_STATUS_NAMES).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </AdminFilterBar>
       <p role="status" tabIndex={-1} ref={noticeRef}>
         {notice}
       </p>
