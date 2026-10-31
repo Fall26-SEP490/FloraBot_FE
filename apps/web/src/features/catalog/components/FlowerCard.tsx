@@ -19,12 +19,16 @@ interface FlowerCardProps {
 export function FlowerCard({ item, openingChatId, onSelect, onOpenChat }: FlowerCardProps) {
   const walkIn = isWalkIn(item);
   const occBadgeClass = getOccasionBadgeClass(item.occasion);
+  const detailParams = new URLSearchParams();
+  if (item.zone) detailParams.set('zone', item.zone);
+  if (item.isDemoSample) detailParams.set('demo', '1');
+  const detailQuery = detailParams.toString();
 
   return (
     <li className="flower-card">
       <Link
         className="flower-card-media"
-        href={`/dat-hoa/${encodeURIComponent(item.productId)}/${encodeURIComponent(item.kioskId)}${item.isDemoSample ? '?demo=1' : ''}`}
+        href={`/dat-hoa/${encodeURIComponent(item.productId)}/${encodeURIComponent(item.kioskId)}${detailQuery ? `?${detailQuery}` : ''}`}
         aria-label={`Xem chi tiết ${item.name}`}
       >
         <img

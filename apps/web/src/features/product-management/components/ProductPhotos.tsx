@@ -232,7 +232,7 @@ export default function ProductPhotos({
           {canEdit && (
             <>
               <label
-                className={`button button-outline product-photo-file-button${
+                className={`button button-outline product-photo-file-button ${
                   !canEdit || pending || uncertain ? 'is-disabled' : ''
                 }`}
               >

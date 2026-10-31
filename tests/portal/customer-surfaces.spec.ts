@@ -13,7 +13,7 @@ const flower = {
   price: 350000,
   photo: null,
   bouquets: [],
-  slotZone: 'PREORDER',
+  zone: 'PREORDER',
 };
 const detailPath = `/dat-hoa/${flower.productId}/${flower.kioskId}`;
 

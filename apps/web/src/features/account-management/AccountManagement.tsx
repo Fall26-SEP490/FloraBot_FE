@@ -516,7 +516,7 @@ export default function AccountManagement({
             <button
               key={tab.id}
               type="button"
-              className={`account-status-tab${statusFilter === tab.id ? 'is-active' : ''}`}
+              className={`account-status-tab ${statusFilter === tab.id ? 'is-active' : ''}`}
               onClick={() => {
                 setStatusFilter(tab.id);
                 setPage(1);

@@ -103,7 +103,7 @@ describe('Catalog Utilities - Availability matching', () => {
     expect(matchesAvailability(sampleItem({ bouquets: [] }), 'stock')).toBe(false);
     expect(matchesAvailability(sampleItem({ bouquets: [] }), 'custom')).toBe(true);
     expect(matchesAvailability(sampleItem(), 'all')).toBe(true);
-    expect(matchesAvailability(sampleItem({ slotZone: 'WALK_IN', bouquets: [] }), 'custom')).toBe(
+    expect(matchesAvailability(sampleItem({ zone: 'WALK_IN', bouquets: [] }), 'custom')).toBe(
       false,
     );
   });
@@ -112,13 +112,13 @@ describe('Catalog Utilities - Availability matching', () => {
 describe('Catalog purchase channels', () => {
   it('allows PREORDER, blocks WALK_IN regardless of stock and rejects unknown zones', () => {
     for (const bouquets of [[], ['b1']]) {
-      expect(canOrderOnWeb(sampleItem({ slotZone: 'PREORDER', bouquets }))).toBe(true);
-      const walkIn = sampleItem({ slotZone: 'WALK_IN', bouquets });
+      expect(canOrderOnWeb(sampleItem({ zone: 'PREORDER', bouquets }))).toBe(true);
+      const walkIn = sampleItem({ zone: 'WALK_IN', bouquets });
       expect(canOrderOnWeb(walkIn)).toBe(false);
       expect(isWalkIn(walkIn)).toBe(true);
       expect(purchaseLabel(walkIn)).toBe('Chỉ mua tại kiosk');
     }
-    expect(canOrderOnWeb(sampleItem({ slotZone: 'UNKNOWN' }))).toBe(false);
+    expect(canOrderOnWeb(sampleItem({ zone: 'UNKNOWN' }))).toBe(false);
   });
 
   it('preserves web catalog stock eligibility guaranteed by the endpoint', () => {
