@@ -46,7 +46,7 @@ function ProductThumbnail({
 
   return (
     <span
-      className={`product-flower-icon${showImage ? 'has-thumb' : ''}`}
+      className={`product-flower-icon ${showImage ? 'has-thumb' : ''}`}
       aria-hidden={showImage ? undefined : 'true'}
     >
       {showImage && firstUrl ? (

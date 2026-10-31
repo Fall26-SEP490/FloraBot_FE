@@ -83,7 +83,7 @@ function StockProductThumb({
 
   return (
     <span
-      className={`stock-product-thumb${empty && !productId ? 'stock-product-thumb--empty' : ''}`}
+      className={`stock-product-thumb ${empty && !productId ? 'stock-product-thumb--empty' : ''}`}
       aria-hidden="true"
     >
       {showImage ? (
@@ -332,7 +332,7 @@ export default function SellerStock({ session }: { session: Session }) {
               <button
                 key={tab.id}
                 type="button"
-                className={`stock-tab${slotFilter === tab.id ? 'is-active' : ''}`}
+                className={`stock-tab ${slotFilter === tab.id ? 'is-active' : ''}`}
                 aria-pressed={slotFilter === tab.id}
                 onClick={() => setSlotFilter(tab.id)}
               >
