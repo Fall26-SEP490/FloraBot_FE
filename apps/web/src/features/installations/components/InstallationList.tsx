@@ -54,6 +54,7 @@ interface InstallationListProps {
   onSelectApp: (appId: string | null, triggerButton: HTMLButtonElement) => void;
   onRefresh: () => void;
   onOpenEnroll: () => void;
+  onOpenInventory?: () => void;
   enrollPending?: boolean;
 }
 
@@ -71,6 +72,7 @@ export function InstallationList({
   onSelectApp,
   onRefresh,
   onOpenEnroll,
+  onOpenInventory,
   enrollPending,
 }: InstallationListProps) {
   return (
@@ -81,9 +83,16 @@ export function InstallationList({
           <p>Chọn một hồ sơ để kiểm tra thông tin và thực hiện bước tiếp theo.</p>
         </div>
         {isManager && (
-          <Button variant="outline" onClick={onOpenEnroll} disabled={enrollPending}>
-            + Thêm tủ mới
-          </Button>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            {onOpenInventory && (
+              <Button variant="outline" onClick={onOpenInventory}>
+                📦 Kho tủ khả dụng
+              </Button>
+            )}
+            <Button variant="outline" onClick={onOpenEnroll} disabled={enrollPending}>
+              + Thêm tủ mới
+            </Button>
+          </div>
         )}
       </div>
 

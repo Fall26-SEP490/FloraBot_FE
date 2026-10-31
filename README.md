@@ -2,6 +2,8 @@
 
 Current API audit and UI mapping: [Backend API and frontend](docs/backend-api-and-frontend.md), including the 213 method/path combinations exported from the running BE. The order workspace now provides backend-state progress and explicit recovery for ambiguous writes; `/admin/reports` reads actual operational reports. `/kiosk/?preview=1` opens the separate kiosk UI preview through the local proxy when the kiosk service is running on port 5174. It does not require IoT and does not create orders, payments or unlock commands.
 
+The kiosk Home release adds `/ho-tro-cua-hang?kiosk=<UUID>` for authenticated customer/shop support. Preorder instructions explain SMS collection and the need to save the ordering account's phone in `/ho-so`; receipt collection remains available. Deploy the companion BE/Kios feature branches together. Vercel API forwarding defaults to `https://api.florabot.site`; local development still defaults to port 5080 and can override the server-only `API_PROXY_TARGET` in `apps/web/.env.local`. Never place device keys in public environment variables.
+
 Independent pnpm workspace for the Next.js website, member accounts, operations/shop dashboards, shared UI and generated API contracts. Kiosk is maintained in the separate FloraBot_Kios repository.
 
 ## Run
