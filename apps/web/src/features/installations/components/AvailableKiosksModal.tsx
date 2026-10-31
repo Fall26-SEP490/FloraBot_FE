@@ -1,11 +1,12 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Button, RefreshCw } from '@florabot/ui';
-import { request, type Session } from '@/shared/lib/api';
+import { Boxes, Button, Plus, RefreshCw, Search } from '@florabot/ui';
+import { queryClient, request, type Session } from '@/shared/lib/api';
 import { Modal } from '../../../shared/components/Modal';
 import type { EligibleKioskResponse } from '../installations.types';
+import { DeleteKioskModal } from './DeleteKioskModal';
 
 interface AvailableKiosksModalProps {
   open: boolean;
@@ -20,298 +21,247 @@ export function AvailableKiosksModal({
   session,
   onOpenEnroll,
 }: AvailableKiosksModalProps) {
-  const [slotFilter, setSlotFilter] = useState<string>('ALL');
+  const [deleteTarget, setDeleteTarget] = useState<EligibleKioskResponse | null>(null);
+  const [deleteSuccess, setDeleteSuccess] = useState('');
+  const [lastDeleteId, setLastDeleteId] = useState<string | null>(null);
+  const isManager = session.role === 'OPERATIONS_MANAGER';
+  const cancelDelete = useCallback(() => setDeleteTarget(null), []);
+  const removeFromInventory = async (id: string) => {
+    for (const key of ['available-kiosks-inventory', 'eligible-kiosks']) {
+      const queryKey = [key, session.id];
+      await queryClient.cancelQueries({ queryKey });
+      queryClient.setQueriesData<EligibleKioskResponse[]>({ queryKey }, (items) =>
+        items?.filter((item) => item.id !== id),
+      );
+      void queryClient.invalidateQueries({ queryKey });
+    }
+  };
+  const handleDeleted = async (kiosk: EligibleKioskResponse) => {
+    await removeFromInventory(kiosk.id);
+    setDeleteSuccess(`Đã xóa tủ ${kiosk.code} khỏi kho.`);
+    setDeleteTarget(null);
+  };
+  const [slotFilter, setSlotFilter] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
-
   const kiosksQuery = useQuery({
     queryKey: ['available-kiosks-inventory', session.id],
     queryFn: () => request<EligibleKioskResponse[]>('/operations/eligible-kiosks'),
-    enabled: open,
+    enabled: open && isManager,
   });
+  const allKiosks = useMemo(() => kiosksQuery.data || [], [kiosksQuery.data]);
+  const slotCounts = useMemo(
+    () => Array.from(new Set(allKiosks.map((k) => Number(k.slotCount)))).sort((a, b) => a - b),
+    [allKiosks],
+  );
+  const filteredKiosks = allKiosks.filter(
+    (k) =>
+      (slotFilter === 'ALL' || String(k.slotCount) === slotFilter) &&
+      (!searchTerm.trim() ||
+        `${k.code} ${k.name}`
+          .toLocaleLowerCase('vi')
+          .includes(searchTerm.trim().toLocaleLowerCase('vi'))),
+  );
+  const openEnroll = () => {
+    onClose();
+    onOpenEnroll(slotFilter === 'ALL' ? 2 : Number(slotFilter));
+  };
 
-  const rawKiosks = kiosksQuery.data;
-  const allKiosks = useMemo(() => rawKiosks || [], [rawKiosks]);
-
-  const availableSlotCounts = useMemo(() => {
-    const counts = new Set<number>();
-    allKiosks.forEach((k) => counts.add(Number(k.slotCount)));
-    return Array.from(counts).sort((a, b) => a - b);
-  }, [allKiosks]);
-
-  const filteredKiosks = useMemo(() => {
-    return allKiosks.filter((k) => {
-      const matchSlot = slotFilter === 'ALL' || String(k.slotCount) === slotFilter;
-      const matchSearch =
-        !searchTerm.trim() ||
-        k.code.toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
-        k.name.toLowerCase().includes(searchTerm.toLowerCase().trim());
-      return matchSlot && matchSearch;
-    });
-  }, [allKiosks, slotFilter, searchTerm]);
+  if (!isManager) return null;
 
   return (
-    <Modal open={open} onClose={onClose} title="Kho thiết bị Kiosk khả dụng" size="lg">
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <p style={{ margin: 0, color: 'var(--color-text-muted, #475569)', fontSize: '0.9rem' }}>
-          Danh sách các tủ kiosk phần cứng đã đăng ký, chưa được gán cho bất kỳ shop nào và đang sẵn
-          sàng để cấp phát khi xếp lịch lắp đặt.
-        </p>
-
-        {/* Toolbar: Search, Slot filter, Refresh & Add */}
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '0.75rem',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            background: '#f8fafc',
-            padding: '0.75rem',
-            borderRadius: '8px',
-            border: '1px solid #e2e8f0',
-          }}
-        >
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-            <input
-              type="text"
-              placeholder="Tìm theo mã hoặc tên tủ..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{
-                padding: '0.4rem 0.75rem',
-                fontSize: '0.875rem',
-                borderRadius: '6px',
-                border: '1px solid #cbd5e1',
-                minWidth: '200px',
-              }}
-            />
-
+    <>
+      <Modal
+        open={open && !deleteTarget}
+        onClose={onClose}
+        title="Kho thiết bị Kiosk khả dụng"
+        size="lg"
+        className="installation-modal installation-inventory-modal"
+        description="Tra cứu tủ chưa được phân bổ để chuẩn bị cho lịch lắp đặt."
+      >
+        {deleteSuccess && (
+          <p role="status" className="inventory-delete-success">
+            {deleteSuccess}
+          </p>
+        )}
+        <div className="inventory-overview">
+          <span className="installation-feature-icon">
+            <Boxes size={23} aria-hidden="true" />
+          </span>
+          <div>
+            <strong>
+              {kiosksQuery.isSuccess ? `${allKiosks.length} tủ khả dụng` : 'Kho tủ lắp đặt'}
+            </strong>
+            <p>Tủ OFFLINE vẫn có thể được phân công trước khi kết nối.</p>
+          </div>
+          <Button onClick={openEnroll}>
+            <Plus size={16} aria-hidden="true" />
+            Thêm tủ mới
+          </Button>
+        </div>
+        <div className="inventory-filters">
+          <div className="kiosk-form-field">
+            <label htmlFor="inventory-search">Tìm thiết bị</label>
+            <div className="installation-search">
+              <Search size={17} aria-hidden="true" />
+              <input
+                id="inventory-search"
+                type="search"
+                placeholder="Tìm theo mã hoặc tên tủ..."
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+              />
+            </div>
+          </div>
+          <div className="kiosk-form-field">
+            <label htmlFor="inventory-slot-filter">Quy mô ô</label>
             <select
+              id="inventory-slot-filter"
               value={slotFilter}
-              onChange={(e) => setSlotFilter(e.target.value)}
-              style={{
-                padding: '0.4rem 0.75rem',
-                fontSize: '0.875rem',
-                borderRadius: '6px',
-                border: '1px solid #cbd5e1',
-                background: '#ffffff',
-              }}
+              onChange={(event) => setSlotFilter(event.target.value)}
             >
-              <option value="ALL">Tất cả quy mô ô ({allKiosks.length} tủ)</option>
-              {availableSlotCounts.map((count) => (
+              <option value="ALL">Tất cả</option>
+              {slotCounts.map((count) => (
                 <option key={count} value={String(count)}>
-                  Quy mô {count} ô ({allKiosks.filter((k) => k.slotCount === count).length} tủ)
+                  {count} ô
                 </option>
               ))}
             </select>
           </div>
-
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <Button
-              variant="outline"
-              onClick={() => void kiosksQuery.refetch()}
-              disabled={kiosksQuery.isFetching}
-              style={{ fontSize: '0.85rem', padding: '0.4rem 0.75rem' }}
-            >
-              <RefreshCw
-                size={15}
-                className={kiosksQuery.isFetching ? 'spin' : ''}
-                aria-hidden="true"
-              />
-              Làm mới
-            </Button>
-            <Button
-              onClick={() => {
-                onClose();
-                onOpenEnroll(slotFilter !== 'ALL' ? Number(slotFilter) : 2);
-              }}
-              style={{ fontSize: '0.85rem', padding: '0.4rem 0.75rem' }}
-            >
-              + Thêm tủ mới
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            onClick={() => void kiosksQuery.refetch()}
+            disabled={kiosksQuery.isFetching}
+          >
+            <RefreshCw
+              size={16}
+              className={kiosksQuery.isFetching ? 'spin' : ''}
+              aria-hidden="true"
+            />
+            Làm mới
+          </Button>
         </div>
-
-        {/* Content Table / Status */}
-        {kiosksQuery.isLoading ? (
-          <p role="status" style={{ textAlign: 'center', padding: '2rem 0', color: '#64748b' }}>
+        {kiosksQuery.isPending ? (
+          <p role="status" className="installation-loading">
             Đang tải danh sách kho tủ...
           </p>
         ) : kiosksQuery.isError ? (
-          <div
-            role="alert"
-            style={{
-              padding: '1rem',
-              background: '#fee2e2',
-              borderRadius: '8px',
-              color: '#991b1b',
-            }}
-          >
-            <p style={{ margin: 0 }}>
-              Không thể tải danh sách tủ khả dụng lúc này. Vui lòng thử lại.
-            </p>
-            <Button
-              variant="outline"
-              onClick={() => void kiosksQuery.refetch()}
-              style={{ marginTop: '0.5rem' }}
-            >
-              Thử lại
-            </Button>
+          <div role="alert" className="kiosk-field-error-banner">
+            <div>
+              <p>Không thể tải danh sách tủ khả dụng lúc này. Vui lòng thử lại.</p>
+              <Button variant="outline" onClick={() => void kiosksQuery.refetch()}>
+                Thử lại
+              </Button>
+            </div>
           </div>
         ) : filteredKiosks.length === 0 ? (
-          <div
-            style={{
-              textAlign: 'center',
-              padding: '2.5rem 1rem',
-              background: '#f8fafc',
-              borderRadius: '8px',
-              border: '1px dashed #cbd5e1',
-            }}
-          >
-            <p style={{ fontWeight: 600, color: '#334155', margin: '0 0 0.5rem 0' }}>
+          <div className="installation-empty">
+            <Boxes size={32} aria-hidden="true" />
+            <h3>
+              {allKiosks.length === 0 ? 'Chưa có tủ trống trong kho' : 'Không tìm thấy tủ phù hợp'}
+            </h3>
+            <p>
               {allKiosks.length === 0
-                ? 'Hiện chưa có tủ kiosk trống nào trong kho'
-                : 'Không tìm thấy tủ phù hợp với bộ lọc'}
+                ? 'Đăng ký thiết bị mới để chuẩn bị phân công lắp đặt.'
+                : 'Thử thay đổi từ khóa hoặc chọn tất cả quy mô ô.'}
             </p>
-            <p style={{ color: '#64748b', fontSize: '0.875rem', margin: '0 0 1rem 0' }}>
-              {allKiosks.length === 0
-                ? 'Tất cả các tủ đã được gán cho các shop hoa hoặc chưa được đăng ký phần cứng.'
-                : 'Hãy thử đổi từ khóa tìm kiếm hoặc chọn tất cả quy mô ô.'}
-            </p>
-            {allKiosks.length === 0 && (
+            {allKiosks.length === 0 ? (
+              <Button onClick={openEnroll}>Đăng ký thiết bị tủ mới</Button>
+            ) : (
               <Button
+                variant="outline"
                 onClick={() => {
-                  onClose();
-                  onOpenEnroll(2);
+                  setSearchTerm('');
+                  setSlotFilter('ALL');
                 }}
               >
-                + Đăng ký thiết bị tủ mới ngay
+                Xóa bộ lọc
               </Button>
             )}
           </div>
         ) : (
-          <div
-            style={{
-              maxHeight: '350px',
-              overflowY: 'auto',
-              border: '1px solid #e2e8f0',
-              borderRadius: '8px',
-            }}
-          >
-            <table
-              style={{
-                width: '100%',
-                borderCollapse: 'collapse',
-                fontSize: '0.9rem',
-                textAlign: 'left',
-              }}
-            >
-              <thead style={{ background: '#f1f5f9', position: 'sticky', top: 0, zIndex: 1 }}>
-                <tr>
-                  <th
-                    style={{
-                      padding: '0.75rem 1rem',
-                      borderBottom: '1px solid #cbd5e1',
-                      color: '#1e293b',
-                    }}
-                  >
-                    Mã tủ (Code)
-                  </th>
-                  <th
-                    style={{
-                      padding: '0.75rem 1rem',
-                      borderBottom: '1px solid #cbd5e1',
-                      color: '#1e293b',
-                    }}
-                  >
-                    Tên thiết bị Kiosk
-                  </th>
-                  <th
-                    style={{
-                      padding: '0.75rem 1rem',
-                      borderBottom: '1px solid #cbd5e1',
-                      color: '#1e293b',
-                    }}
-                  >
-                    Quy mô ô
-                  </th>
-                  <th
-                    style={{
-                      padding: '0.75rem 1rem',
-                      borderBottom: '1px solid #cbd5e1',
-                      color: '#1e293b',
-                    }}
-                  >
-                    Trạng thái kết nối
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredKiosks.map((kiosk, idx) => (
-                  <tr
-                    key={kiosk.id}
-                    style={{
-                      background: idx % 2 === 0 ? '#ffffff' : '#f8fafc',
-                      borderBottom: '1px solid #e2e8f0',
-                    }}
-                  >
-                    <td style={{ padding: '0.75rem 1rem', fontWeight: 600 }}>
-                      <code>{kiosk.code}</code>
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem' }}>{kiosk.name}</td>
-                    <td style={{ padding: '0.75rem 1rem' }}>
-                      <span
-                        style={{
-                          display: 'inline-block',
-                          padding: '0.2rem 0.5rem',
-                          background: '#e0f2fe',
-                          color: '#0369a1',
-                          borderRadius: '4px',
-                          fontWeight: 600,
-                          fontSize: '0.8rem',
-                        }}
-                      >
-                        {kiosk.slotCount} ô
-                      </span>
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem' }}>
-                      <span
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.35rem',
-                          padding: '0.2rem 0.5rem',
-                          background: kiosk.status === 'ONLINE' ? '#dcfce7' : '#f1f5f9',
-                          color: kiosk.status === 'ONLINE' ? '#15803d' : '#475569',
-                          borderRadius: '4px',
-                          fontSize: '0.8rem',
-                          fontWeight: 500,
-                        }}
-                      >
-                        <span
-                          style={{
-                            width: '6px',
-                            height: '6px',
-                            borderRadius: '50%',
-                            background: kiosk.status === 'ONLINE' ? '#22c55e' : '#94a3b8',
-                          }}
-                        />
-                        {kiosk.status}
-                      </span>
-                    </td>
+          <>
+            <p className="inventory-result-count" role="status">
+              Hiển thị {filteredKiosks.length} / {allKiosks.length} tủ
+            </p>
+            <div className="inventory-table-wrap">
+              <table className="inventory-table" aria-label="Danh sách tủ khả dụng">
+                <thead>
+                  <tr>
+                    <th scope="col">Thiết bị</th>
+                    <th scope="col">Quy mô</th>
+                    <th scope="col">Kết nối</th>
+                    <th scope="col">
+                      <span className="sr-only">Thao tác</span>
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {filteredKiosks.map((kiosk) => (
+                    <tr key={kiosk.id}>
+                      <td data-label="Thiết bị">
+                        <strong>{kiosk.name}</strong>
+                        <code>{kiosk.code}</code>
+                      </td>
+                      <td data-label="Quy mô">
+                        <span className="inventory-slot-count">{kiosk.slotCount} ô</span>
+                      </td>
+                      <td data-label="Kết nối">
+                        <span
+                          className="inventory-connection"
+                          data-online={kiosk.status === 'ONLINE'}
+                        >
+                          <span aria-hidden="true" />
+                          {kiosk.status}
+                        </span>
+                      </td>
+                      <td data-label="Thao tác" className="inventory-row-actions">
+                        <Button
+                          variant="outline"
+                          className="inventory-delete-button"
+                          aria-label={`Xóa tủ ${kiosk.code}`}
+                          aria-describedby="inventory-delete-policy"
+                          data-autofocus={lastDeleteId === kiosk.id || undefined}
+                          disabled={kiosk.status !== 'OFFLINE'}
+                          title={
+                            kiosk.status !== 'OFFLINE'
+                              ? 'Chỉ xóa được tủ OFFLINE chưa từng kết nối.'
+                              : undefined
+                          }
+                          onClick={() => {
+                            setLastDeleteId(kiosk.id);
+                            setDeleteSuccess('');
+                            setDeleteTarget(kiosk);
+                          }}
+                        >
+                          Xóa
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
-
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+        <div className="installation-modal-footer">
+          <p id="inventory-delete-policy">
+            Chọn tủ khi xếp lịch. Chỉ xóa tủ OFFLINE chưa từng kết nối và chưa có lịch sử sử dụng.
+          </p>
           <Button variant="outline" onClick={onClose}>
             Đóng
           </Button>
         </div>
-      </div>
-    </Modal>
+      </Modal>
+      {open && deleteTarget && (
+        <DeleteKioskModal
+          key={deleteTarget.id}
+          kiosk={deleteTarget}
+          session={session}
+          onCancel={cancelDelete}
+          onDeleted={handleDeleted}
+          onMissing={removeFromInventory}
+        />
+      )}
+    </>
   );
 }

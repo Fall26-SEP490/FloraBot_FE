@@ -15,21 +15,14 @@ function TechnicianInstallationCard({
   onSelect,
 }: TechnicianInstallationCardProps) {
   return (
-    <div
+    <button
+      type="button"
       className={`tech-job-card ${isSelected ? 'is-selected' : ''}`}
       onClick={onSelect}
-      tabIndex={0}
-      role="button"
       aria-pressed={isSelected}
-      onKeyDown={(e) => {
-        if (e.key === ' ' || e.key === 'Enter') {
-          e.preventDefault();
-          onSelect();
-        }
-      }}
     >
       <div className="job-card-header">
-        <h4>{job.shopName}</h4>
+        <strong className="job-shop-name">{job.shopName}</strong>
         <span className="kiosk-status-pill" data-status={job.status}>
           {KIOSK_STATUS_LABELS[job.status] || job.status}
         </span>
@@ -57,7 +50,7 @@ function TechnicianInstallationCard({
           Cần làm lại: {job.reworkReason}
         </div>
       )}
-    </div>
+    </button>
   );
 }
 
@@ -70,6 +63,10 @@ interface TechnicianJobListProps {
 export function TechnicianJobList({ jobs, selectedJobId, onSelectJobId }: TechnicianJobListProps) {
   return (
     <section className="tech-jobs-list" aria-label="Danh sách công việc lắp đặt">
+      <div className="tech-list-heading">
+        <h2>Phiếu được giao</h2>
+        <span>{jobs.length}</span>
+      </div>
       {jobs.map((job) => (
         <TechnicianInstallationCard
           key={job.id}

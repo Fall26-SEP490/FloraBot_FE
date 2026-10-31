@@ -38,7 +38,12 @@ export function ProvisionedKeyModal({ info, onClose }: ProvisionedKeyModalProps)
   };
 
   return (
-    <Modal open={!!info} title="Cấu hình khóa thiết bị Kiosk (API Key)" onClose={handleClose}>
+    <Modal
+      open={!!info}
+      title="Cấu hình khóa thiết bị Kiosk (API Key)"
+      onClose={handleClose}
+      className="installation-modal"
+    >
       <div className="status-notice notice-info">
         <CircleAlert size={18} aria-hidden="true" />
         <div>

@@ -1,11 +1,12 @@
 import Layout from '@/features/marketing/MarketingLayout';
 import Registration from '@/features/marketing/Registration';
-import KioskMap from '@/features/marketing/KioskMap';
+import KioskLocations from '@/features/marketing/KioskLocations';
+import { loadLandingLocations } from '@/features/marketing/landing-locations.server';
+import { LandingPackagesProvider, LandingPricing } from '@/features/marketing/LandingPackages';
 import GiftDemo from '@/features/marketing/GiftDemo';
 import FlowerPhoto from '@/features/marketing/FlowerPhoto';
 import FlowerGallery from '@/features/marketing/FlowerGallery';
 import { flowerPhotos } from '@florabot/ui/flower-photos';
-import { packages } from '@florabot/contracts';
 const portal = '';
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -16,20 +17,16 @@ const jsonLd = {
       url: process.env.SITE_URL || 'http://localhost:8088',
       description: 'Dự án kiosk bán hoa theo gói thuê cho shop hoa.',
     },
-    ...packages.map((plan) => ({
-      '@type': 'Product',
-      name: `Gói FloraBot ${plan.name}`,
-      description: `Thuê tối đa ${plan.slots} ô kiosk theo tháng.`,
-      offers: { '@type': 'Offer', price: String(plan.fee), priceCurrency: 'VND' },
-    })),
   ],
 };
 
 import MarketingEffects from '@/features/marketing/MarketingEffects';
 
 export const metadata = { title: 'FloraBot - Đặt hoa theo ý bạn, nhận tại tủ' };
-export default function Page() {
-  return (
+export const dynamic = 'force-dynamic';
+export default async function Page() {
+  const locations = await loadLandingLocations();
+  const content = (
     <Layout>
       <link
         rel="preload"
@@ -239,44 +236,9 @@ export default function Page() {
         <section id="goi-thue" className="pricing-section section" aria-labelledby="pricing-title">
           <div className="section-intro">
             <h2 id="pricing-title">Gói thuê ô tủ</h2>
-            <p>Phí cố định mỗi tháng. Không thu hoa hồng.</p>
+            <p>Phí thuê hằng năm và sức chứa theo gói đang được cung cấp.</p>
           </div>
-          <div className="price-options">
-            {packages.map((plan, index) => (
-              <article
-                key={plan.id}
-                className={index === 1 ? 'plan plan-featured' : 'plan'}
-                aria-labelledby={`package-${plan.id}`}
-              >
-                <div className="plan-top">
-                  <>
-                    <h3 id={`package-${plan.id}`}>{plan.name}</h3>
-                    <span className="plan-capacity">Tối đa {plan.slots} ô</span>
-                  </>
-                </div>
-                <p className="plan-price">
-                  <>
-                    <strong>{plan.fee.toLocaleString('vi-VN')}</strong>
-                    <span>đ / tháng</span>
-                  </>
-                </p>
-                <a className="button choose-package" data-package={plan.id} href="#dang-ky">
-                  Chọn {plan.name}
-                  <svg
-                    aria-hidden="true"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M5 12h14m-6-6 6 6-6 6" />
-                  </svg>
-                </a>
-              </article>
-            ))}
-          </div>
+          <LandingPricing />
 
           <a className="section-next" href="#vi-tri">
             Xem vị trí tủ{' '}
@@ -298,40 +260,9 @@ export default function Page() {
         <section id="vi-tri" className="section locations" aria-labelledby="locations-title">
           <div className="section-intro">
             <h2 id="locations-title">Vị trí tủ bán hoa</h2>
-            <span className="context-label">Địa điểm minh họa · TP.HCM</span>
+            <span className="context-label">Địa điểm công khai từ hệ thống FloraBot</span>
           </div>
-          <div className="location-layout">
-            <div>
-              <ul className="location-list">
-                <li>
-                  <h3>Nhà Văn hóa Thanh Niên</h3>
-                  <p>4 Phạm Ngọc Thạch, Quận 1, TP.HCM</p>
-                </li>
-                <li>
-                  <h3>Đại học FPT</h3>
-                  <p>Lô E2a-7, Khu Công nghệ cao, Thủ Đức, TP.HCM</p>
-                </li>
-              </ul>
-              <a className="text-link" href="#dang-ky">
-                Tư vấn vị trí thuê{' '}
-                <svg
-                  aria-hidden="true"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M5 12h14m-6-6 6 6-6 6"></path>
-                </svg>
-              </a>
-            </div>
-            <KioskMap />
-            <noscript>
-              <p>Bật JavaScript để mở bản đồ tương tác.</p>
-            </noscript>
-          </div>
+          <KioskLocations initial={locations} />
           <a className="section-next" href="#bo-suu-tap">
             Khám phá hoa{' '}
             <span aria-hidden="true">
@@ -350,7 +281,8 @@ export default function Page() {
         </section>
 
         <section id="bo-suu-tap" className="section gift-section" aria-labelledby="gift-title">
-          <h2 id="gift-title">Bộ sưu tập hoa</h2>
+          <h2 id="gift-title">Bộ ảnh cảm hứng hoa</h2>
+          <p>Ảnh minh họa để tham khảo phong cách, không phải danh sách sản phẩm đang bán.</p>
           <FlowerGallery />
           <div className="flower-ribbon">
             <FlowerPhoto photo={flowerPhotos.tulipVase} sizes="(max-width: 700px) 90vw, 30vw" />
@@ -508,4 +440,5 @@ export default function Page() {
       <MarketingEffects />
     </Layout>
   );
+  return <LandingPackagesProvider>{content}</LandingPackagesProvider>;
 }

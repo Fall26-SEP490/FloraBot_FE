@@ -1,185 +1,142 @@
 'use client';
-
 import { useState } from 'react';
-import { Button, useHydrated } from '@florabot/ui';
-import { money } from '@florabot/contracts';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { Button } from '@florabot/ui';
 import { flowerPhotos } from '@florabot/ui/flower-photos';
-const flowers = [
-  {
-    name: 'Hồng trắng dịu dàng',
-    price: 220000,
-    photo: flowerPhotos.whiteRose,
-    tags: ['MOTHER', 'TEACHER', 'WHITE'],
-  },
-  {
-    name: 'Tulip hồng',
-    price: 280000,
-    photo: flowerPhotos.tulipVase,
-    tags: ['LOVER', 'BIRTHDAY', 'WARM'],
-  },
-  {
-    name: 'Hướng dương',
-    price: 300000,
-    photo: flowerPhotos.sunflowers,
-    tags: ['FRIEND', 'CONGRATS', 'BRIGHT'],
-  },
-  {
-    name: 'Hoa ly hồng',
-    price: 250000,
-    photo: flowerPhotos.pinkLilies,
-    tags: ['TEACHER', 'THANKS', 'WARM'],
-  },
-  { name: 'Hồng đỏ', price: 350000, photo: flowerPhotos.redRoses, tags: ['LOVER', 'ROMANTIC'] },
-];
+import { fetchLandingCatalog } from './landing-api';
+import { budgetSuggestions, priceVnd, safePublicUrl } from './landing-data';
 export default function GiftDemo() {
-  const ready = useHydrated();
-  const [result, setResult] = useState<typeof flowers>([]);
-  const [summary, setSummary] = useState('');
   const [budget, setBudget] = useState(300000);
-  const [revision, setRevision] = useState(0);
+  const [submitted, setSubmitted] = useState(false);
+  const catalog = useInfiniteQuery({
+    queryKey: ['landing-web-catalog'],
+    initialPageParam: 1,
+    queryFn: ({ pageParam }) => fetchLandingCatalog(pageParam),
+    getNextPageParam: (last) => (last.hasMore ? last.page + 1 : undefined),
+  });
+  const items = catalog.data?.pages.flatMap((page) => page.items) ?? [];
+  const suggestions = submitted ? budgetSuggestions(items, budget) : [];
   return (
-    <div className="gift-demo">
+    <div className="gift-demo" aria-busy={catalog.isPending || catalog.isFetchingNextPage}>
       <div className="gift-picker">
         <div className="gift-picker-art">
-          <h3 id="gift-picker-title">Chọn hoa để tặng</h3>
+          <h3 id="gift-picker-title">Chọn hoa theo ngân sách</h3>
           <img
             src={flowerPhotos.pastelBouquet.src}
-            srcSet={flowerPhotos.pastelBouquet.webpSrcSet}
-            sizes="(max-width: 700px) 90vw, 35vw"
+            alt="Bó hoa minh họa cho mục gợi ý"
             width={flowerPhotos.pastelBouquet.width}
             height={flowerPhotos.pastelBouquet.height}
-            alt={flowerPhotos.pastelBouquet.alt}
             loading="lazy"
-            decoding="async"
           />
         </div>
         <form
-          onChange={() => {
-            setResult([]);
-            setSummary('');
-          }}
+          aria-labelledby="gift-picker-title"
           onSubmit={(event) => {
             event.preventDefault();
-            const data = new FormData(event.currentTarget);
-            const recipient = String(data.get('recipient'));
-            const occasion = String(data.get('occasion'));
-            const tone = String(data.get('tone'));
-            const chosenBudget = Number(data.get('budget'));
-            const score = (flower: (typeof flowers)[number]) =>
-              flower.tags.filter((tag) => [recipient, occasion, tone].includes(tag)).length;
-            const selected = flowers
-              .filter((f) => f.price <= chosenBudget)
-              .sort((a, b) => score(b) - score(a))
-              .slice(0, 3);
-            setResult(selected);
-            setRevision((value) => value + 1);
-            setSummary(
-              selected.length
-                ? `${selected.length} gợi ý trong ngân sách ${money(chosenBudget)}`
-                : 'Chưa có hoa phù hợp. Bạn thử ngân sách khác nhé.',
-            );
+            setSubmitted(true);
           }}
-          aria-labelledby="gift-picker-title"
         >
-          <div className="gift-fields">
-            <div>
-              <label htmlFor="recipient">Bạn tặng ai?</label>
-              <select id="recipient" name="recipient">
-                <option value="MOTHER">Mẹ / người thân</option>
-                <option value="LOVER">Người thương</option>
-                <option value="FRIEND">Bạn bè</option>
-                <option value="TEACHER">Thầy cô</option>
-              </select>
+          <p>
+            Gợi ý theo giá của các mẫu đặt qua web đã tải. Shop xác nhận báo giá và lịch nhận sau
+            khi bạn gửi yêu cầu.
+          </p>
+          <fieldset className="gift-budget">
+            <legend>Ngân sách tối đa</legend>
+            <div className="budget-options">
+              {[300000, 500000, 700000].map((value) => (
+                <button
+                  type="button"
+                  key={value}
+                  aria-label={priceVnd(value)}
+                  aria-pressed={budget === value}
+                  onClick={() => {
+                    setBudget(value);
+                    setSubmitted(false);
+                  }}
+                >
+                  {priceVnd(value)}
+                </button>
+              ))}
             </div>
-            <div>
-              <label htmlFor="occasion">Nhân dịp gì?</label>
-              <select id="occasion" name="occasion">
-                <option value="BIRTHDAY">Sinh nhật</option>
-                <option value="THANKS">Cảm ơn</option>
-                <option value="CONGRATS">Chúc mừng</option>
-              </select>
-            </div>
-            <div className="gift-tone">
-              <label htmlFor="tone">Phong cách</label>
-              <select id="tone" name="tone">
-                <option value="WARM">Ấm áp, nhẹ nhàng</option>
-                <option value="BRIGHT">Tươi sáng</option>
-                <option value="ROMANTIC">Lãng mạn</option>
-              </select>
-            </div>
-            <fieldset className="gift-budget">
-              <legend>Ngân sách tối đa</legend>
-              <input type="hidden" name="budget" value={budget} />
-              <div className="budget-options">
-                {[300000, 500000, 700000].map((value) => (
-                  <button
-                    type="button"
-                    key={value}
-                    aria-label={money(value)}
-                    aria-pressed={budget === value}
-                    onClick={() => {
-                      setBudget(value);
-                      setResult([]);
-                      setSummary('');
-                    }}
-                  >
-                    <span className="budget-full">{money(value)}</span>
-                    <span className="budget-short" aria-hidden="true">
-                      {value / 1000}k
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </fieldset>
-          </div>
-          <Button type="submit" disabled={!ready}>
-            Xem gợi ý hoa{' '}
-            <svg
-              aria-hidden="true"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M5 12h14m-6-6 6 6-6 6" />
-            </svg>
+          </fieldset>
+          <Button type="submit" disabled={!catalog.data || items.length === 0}>
+            Xem gợi ý hoa
           </Button>
         </form>
       </div>
-      <p className="gift-status" role="status">
-        {summary}
-      </p>
-      {result.length > 0 && (
-        <ul className="gift-results" key={revision}>
-          {result.map((f) => (
-            <li key={f.name}>
-              <picture>
-                <source
-                  type="image/avif"
-                  srcSet={f.photo.avifSrcSet}
-                  sizes="(max-width: 700px) 90vw, 28vw"
-                />
+      {catalog.isPending && (
+        <p role="status" className="landing-data-status">
+          Đang tải mẫu hoa từ các shop…
+        </p>
+      )}
+      {catalog.isError && !catalog.data ? (
+        <div role="alert" className="landing-data-status">
+          <p>Chưa tải được mẫu hoa. Không có gợi ý để hiển thị.</p>
+          <Button variant="outline" onClick={() => void catalog.refetch()}>
+            Tải lại mẫu hoa
+          </Button>
+        </div>
+      ) : catalog.isSuccess && !items.length && !catalog.hasNextPage ? (
+        <p role="status" className="landing-data-status">
+          Hiện chưa có mẫu hoa để gợi ý.
+        </p>
+      ) : null}
+      {submitted && catalog.data && (
+        <p role="status" className="gift-status">
+          {suggestions.length
+            ? `${suggestions.length} gợi ý trong ${items.length} mẫu đã tải, tối đa ${priceVnd(budget)}.`
+            : 'Chưa có mẫu phù hợp ngân sách trong các trang đã tải.'}
+          {catalog.hasNextPage ? ' Còn mẫu khác; bạn có thể tải thêm.' : ''}
+        </p>
+      )}
+      {suggestions.length > 0 && (
+        <ul className="gift-results">
+          {suggestions.map((item) => (
+            <li key={`${item.productId}:${item.kioskId}`}>
+              {safePublicUrl(item.photo) ? (
                 <img
-                  src={f.photo.src}
-                  srcSet={f.photo.webpSrcSet}
-                  sizes="(max-width: 700px) 90vw, 28vw"
-                  width={f.photo.width}
-                  height={f.photo.height}
-                  alt={f.photo.alt}
+                  src={safePublicUrl(item.photo)!}
+                  alt={item.name}
+                  width={480}
+                  height={360}
                   loading="lazy"
-                  decoding="async"
                 />
-              </picture>
+              ) : (
+                <div className="gift-photo-empty">Chưa có ảnh sản phẩm</div>
+              )}
               <div className="gift-result-copy">
-                <h3>{f.name}</h3>
-                <p>{money(f.price)}</p>
+                <h3>{item.name}</h3>
+                <p>{priceVnd(item.price)} · giá mẫu tham khảo</p>
+                <p className="gift-shop">{item.shopName}</p>
+                <p className="gift-kiosk">Nhận tại {item.kioskName}</p>
+                <p>{item.address}</p>
+                <a
+                  className="text-link"
+                  href={`/dat-hoa/${encodeURIComponent(item.productId)}/${encodeURIComponent(item.kioskId)}`}
+                >
+                  Xem mẫu {item.name}
+                </a>
               </div>
             </li>
           ))}
         </ul>
       )}
+      {catalog.isFetchingNextPage && <p role="status">Đang tải thêm mẫu hoa…</p>}
+      {catalog.isFetchNextPageError && (
+        <p role="alert">Chưa tải được trang tiếp theo. Các mẫu đã tải vẫn được giữ; hãy thử lại.</p>
+      )}
+      {catalog.hasNextPage && (
+        <Button
+          variant="outline"
+          disabled={catalog.isFetching}
+          onClick={() => void catalog.fetchNextPage()}
+        >
+          {catalog.isFetchingNextPage ? 'Đang tải thêm mẫu…' : 'Tải thêm mẫu hoa'}
+        </Button>
+      )}
+      <a className="text-link" href="/dat-hoa">
+        Xem danh mục đặt hoa
+      </a>
     </div>
   );
 }

@@ -28,9 +28,6 @@ export function InstallationDetails({
   onInvalidateQueue,
 }: InstallationDetailsProps) {
   const panelRef = useRef<HTMLElement>(null);
-  useEffect(() => {
-    panelRef.current?.focus();
-  }, [appId]);
 
   const {
     selectedAppQuery,
@@ -73,8 +70,15 @@ export function InstallationDetails({
 
   const activeStep = appDetail ? getOperationsActiveStep(appDetail.status, needsSchedule) : -1;
 
+  useEffect(() => {
+    if (!appDetail?.id) return;
+    panelRef.current?.focus({ preventScroll: true });
+    panelRef.current?.scrollIntoView({ block: 'start' });
+  }, [appDetail?.id]);
+
   return (
     <section
+      id="installation-detail"
       ref={panelRef}
       tabIndex={-1}
       className="operations-detail-panel"
@@ -82,6 +86,7 @@ export function InstallationDetails({
     >
       <div className="detail-panel-header">
         <div>
+          <span className="installation-eyebrow">Hồ sơ triển khai kiosk</span>
           <span className="kiosk-status-pill" data-status={appDetail?.status}>
             {appDetail ? KIOSK_STATUS_LABELS[appDetail.status] || appDetail.status : 'Đang tải...'}
           </span>
@@ -136,16 +141,31 @@ export function InstallationDetails({
 
       {appDetail && (
         <div className="detail-panel-content">
-          <ol className="operations-detail-progress" aria-label="Tiến độ hồ sơ">
+          <ol
+            className="installation-progress operations-detail-progress"
+            aria-label="Tiến độ hồ sơ"
+          >
             {['Xác nhận liên hệ', 'Xếp lịch lắp đặt', 'Nghiệm thu', 'Bàn giao'].map(
               (label, index) => (
-                <li key={label} aria-current={activeStep === index ? 'step' : undefined}>
-                  {index + 1}. {label}
+                <li
+                  key={label}
+                  data-complete={index < activeStep || appDetail.status === 'ACTIVE' || undefined}
+                  aria-current={activeStep === index ? 'step' : undefined}
+                >
+                  <span aria-hidden="true">
+                    {index < activeStep || appDetail.status === 'ACTIVE' ? (
+                      <Check size={15} />
+                    ) : (
+                      String(index + 1).padStart(2, '0')
+                    )}
+                  </span>
+                  <strong>{label}</strong>
                 </li>
               ),
             )}
           </ol>
 
+          <h3 className="installation-section-title">Thông tin đăng ký</h3>
           <dl className="detail-info-grid">
             <div>
               <dt>Gói đăng ký</dt>
@@ -188,13 +208,19 @@ export function InstallationDetails({
           </dl>
 
           {appDetail.assignedTechnicianId && (
-            <div className="status-notice notice-info">
+            <div className="installation-appointment" aria-label="Lịch lắp đặt đã phân công">
               <div>
-                <strong>Lịch lắp đặt</strong>
-                <p>
-                  {appDetail.assignedTechnicianName || 'Kỹ thuật viên đã phân công'} ·{' '}
-                  {formatDateVN(appDetail.scheduledDate)} · {appDetail.timeWindow || '08:00-12:00'}
-                </p>
+                <span>Kỹ thuật viên</span>
+                <strong>{appDetail.assignedTechnicianName || 'Đã phân công'}</strong>
+              </div>
+              <div>
+                <span>Thời gian lắp đặt</span>
+                <strong>{formatDateVN(appDetail.scheduledDate)}</strong>
+                <small>{appDetail.timeWindow || 'Chưa có khung giờ'}</small>
+              </div>
+              <div>
+                <span>Kiosk được phân công</span>
+                <strong>{appDetail.assignedKioskCode || 'Chưa có mã tủ'}</strong>
               </div>
             </div>
           )}

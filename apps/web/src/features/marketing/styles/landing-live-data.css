@@ -1,0 +1,68 @@
+.marketing-site .landing-pricing-data {
+  min-height: 330px;
+}
+.marketing-site .landing-data-status {
+  padding: 1.25rem;
+  border: 1px solid #d4e2d0;
+  border-radius: 12px;
+  background: #f6f9f2;
+  line-height: 1.7;
+}
+.marketing-site .landing-data-status p {
+  margin-top: 0;
+}
+.marketing-site .price-options {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr));
+}
+.marketing-site .plan-price strong {
+  font-size: clamp(1.2rem, 3vw, 2.4rem);
+}
+.marketing-site .location-list {
+  max-height: 510px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+.marketing-site .gift-photo-empty {
+  aspect-ratio: 4 / 3;
+  display: grid;
+  place-items: center;
+  background: #edf3e8;
+  color: #536953;
+}
+.marketing-site .gift-demo .gift-shop,
+.marketing-site .gift-demo .gift-kiosk {
+  font-weight: 500;
+  margin-top: 0.5rem;
+}
+.marketing-site .gift-demo .gift-budget {
+  margin: 1.25rem 0;
+}
+.marketing-site .gift-demo > .text-link {
+  display: flex;
+  width: fit-content;
+  margin-top: 1rem;
+}
+.marketing-site .gift-results .text-link {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.marketing-site .location-list .text-link {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+@media (max-width: 700px) {
+  .marketing-site .location-list {
+    max-height: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .marketing-site .plan {
+    padding: 1rem;
+  }
+  .marketing-site .plan-price strong {
+    font-size: clamp(1.1rem, 6vw, 1.6rem);
+  }
+}

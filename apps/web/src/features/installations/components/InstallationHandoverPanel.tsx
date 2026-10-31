@@ -61,7 +61,8 @@ export function InstallationHandoverPanel({
 
   return (
     <div className="operations-action-card">
-      <h3>Bước 3: Nghiệm thu kết quả lắp đặt & Bàn giao</h3>
+      <span className="installation-eyebrow">Bước 03 · Nghiệm thu & bàn giao</span>
+      <h3>Kiểm tra kết quả lắp đặt</h3>
       <div className="report-display-box">
         <strong>Báo cáo từ Kỹ thuật viên ({appDetail.assignedTechnicianName}):</strong>
         <p>{appDetail.technicianReport || 'Chưa ghi nhận nội dung báo cáo chi tiết.'}</p>

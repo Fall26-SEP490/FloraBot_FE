@@ -12,6 +12,7 @@ import { technicianErrorMessage } from './technician-errors';
 import { TechnicianJobList } from './components/TechnicianJobList';
 import { TechnicianJobDetailCard } from './components/TechnicianJobDetailCard';
 import '../../shared/styles/kiosk-shared.css';
+import './styles/installation-ui.css';
 import './styles/technician-installations.css';
 
 interface TechnicianInstallationsProps {
@@ -62,11 +63,9 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
     <div className="technician-installations-view">
       <div className="dashboard-page-heading">
         <div>
+          <span className="installation-eyebrow">Công việc hiện trường</span>
           <h1>Lắp đặt Kiosk được phân công</h1>
-          <p>
-            Xem địa chỉ, chỉ đường Google Maps, khảo sát hiện trường, tải ảnh minh chứng thực tế và
-            nộp báo cáo hoàn thành.
-          </p>
+          <p>Theo dõi lịch hẹn, ghi nhận ảnh hiện trường và gửi báo cáo nghiệm thu.</p>
         </div>
         <Button variant="outline" disabled={jobsQuery.isFetching} onClick={invalidate}>
           <RefreshCw size={16} aria-hidden="true" /> Làm mới công việc lắp đặt

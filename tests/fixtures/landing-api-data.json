@@ -1,0 +1,104 @@
+{
+  "packages": [
+    {
+      "id": "20000000-0000-0000-0000-000000000101",
+      "name": "Gói API Nhỏ",
+      "annualFee": "770000",
+      "totalSlots": "7",
+      "termMonths": 18,
+      "status": "ACTIVE",
+      "description": "Mô tả gói API Nhỏ"
+    },
+    {
+      "id": "20000000-0000-0000-0000-000000000102",
+      "name": "Gói API Lớn",
+      "annualFee": 1999000,
+      "totalSlots": 15,
+      "termMonths": 24,
+      "status": "ACTIVE",
+      "description": "Mô tả gói API Lớn"
+    }
+  ],
+  "locations": [
+    {
+      "id": "40000000-0000-0000-0000-000000000111",
+      "code": "API-HN",
+      "name": "Điểm API Hà Nội",
+      "address": "12 Đường API, Hà Nội",
+      "region": "HN",
+      "status": "ONLINE",
+      "latitude": 21.02,
+      "longitude": 105.84,
+      "directionsUrl": "https://www.google.com/maps/dir/?api=1&destination=21.02%2C105.84"
+    },
+    {
+      "id": "40000000-0000-0000-0000-000000000112",
+      "code": "API-DN",
+      "name": "Điểm API Đà Nẵng",
+      "address": "18 Đường API, Đà Nẵng",
+      "region": "DN",
+      "status": "OFFLINE",
+      "latitude": 16.05,
+      "longitude": 108.2,
+      "directionsUrl": "https://www.google.com/maps/dir/?api=1&destination=16.05%2C108.2"
+    }
+  ],
+  "catalog": [
+    {
+      "productId": "10000000-0000-0000-0000-000000000001",
+      "sellerId": "30000000-0000-0000-0000-000000000111",
+      "name": "Mẫu API 1",
+      "description": "Mô tả từ API",
+      "price": "111000",
+      "shopName": "Shop API",
+      "kioskId": "40000000-0000-0000-0000-000000000111",
+      "kioskName": "Điểm API Hà Nội",
+      "address": "12 Đường API, Hà Nội",
+      "zone": "PREORDER",
+      "photo": "/images/generated/florabot-hero.webp",
+      "bouquets": []
+    },
+    {
+      "productId": "10000000-0000-0000-0000-000000000002",
+      "sellerId": "30000000-0000-0000-0000-000000000111",
+      "name": "Mẫu API 2",
+      "description": "Mô tả từ API",
+      "price": 222000,
+      "shopName": "Shop API",
+      "kioskId": "40000000-0000-0000-0000-000000000111",
+      "kioskName": "Điểm API Hà Nội",
+      "address": "12 Đường API, Hà Nội",
+      "zone": "PREORDER",
+      "photo": "/images/generated/florabot-hero.webp",
+      "bouquets": []
+    },
+    {
+      "productId": "10000000-0000-0000-0000-000000000003",
+      "sellerId": "30000000-0000-0000-0000-000000000111",
+      "name": "Mẫu API 3",
+      "description": "Mô tả từ API",
+      "price": 299000,
+      "shopName": "Shop API",
+      "kioskId": "40000000-0000-0000-0000-000000000111",
+      "kioskName": "Điểm API Hà Nội",
+      "address": "12 Đường API, Hà Nội",
+      "zone": "PREORDER",
+      "photo": "/images/generated/florabot-hero.webp",
+      "bouquets": []
+    },
+    {
+      "productId": "10000000-0000-0000-0000-000000000004",
+      "sellerId": "30000000-0000-0000-0000-000000000111",
+      "name": "Mẫu API 4",
+      "description": "Mô tả từ API",
+      "price": 99000,
+      "shopName": "Shop API",
+      "kioskId": "40000000-0000-0000-0000-000000000111",
+      "kioskName": "Điểm API Hà Nội",
+      "address": "12 Đường API, Hà Nội",
+      "zone": "PREORDER",
+      "photo": "/images/generated/florabot-hero.webp",
+      "bouquets": []
+    }
+  ]
+}

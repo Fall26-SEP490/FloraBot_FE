@@ -218,3 +218,205 @@
     width: 100%;
   }
 }
+
+/* Installation work orders share the same typography and controls as Operations. */
+.workspace-portal-root.platform-workspace .technician-installations-view .dashboard-page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.4rem;
+}
+.workspace-portal-root.platform-workspace
+  .technician-installations-view
+  .dashboard-page-heading
+  h1 {
+  font-size: clamp(1.3rem, 2.5vw, 1.65rem);
+  margin: 0;
+}
+.workspace-portal-root.platform-workspace .technician-installations-view .dashboard-page-heading p {
+  color: var(--install-muted);
+  font-size: 0.85rem;
+  margin: 0.5rem 0 0;
+}
+.workspace-portal-root.platform-workspace
+  .technician-installations-view
+  .technician-workspace-layout {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 1.2rem;
+}
+.workspace-portal-root.platform-workspace .technician-installations-view .tech-list-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.2rem;
+}
+.workspace-portal-root.platform-workspace .technician-installations-view .tech-list-heading h2 {
+  font-size: 0.88rem;
+  margin: 0;
+}
+.workspace-portal-root.platform-workspace .technician-installations-view .tech-list-heading > span {
+  min-width: 27px;
+  border-radius: 8px;
+  background: #e8f0e7;
+  text-align: center;
+  font-size: 0.77rem;
+  padding: 0.15rem 0.4rem;
+}
+.workspace-portal-root.platform-workspace .technician-installations-view .tech-job-card {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  line-height: 1.6;
+  border-radius: 14px;
+  padding: 1rem;
+}
+.workspace-portal-root.platform-workspace
+  .technician-installations-view
+  .tech-job-card.is-selected {
+  border-color: #8dae98;
+  box-shadow: 0 0 0 2px #20563d0d;
+  background: #f2f7ef;
+}
+.workspace-portal-root.platform-workspace
+  .technician-installations-view
+  .tech-job-card:focus-visible {
+  outline: 2px solid #3e7960;
+  outline-offset: 3px;
+}
+.workspace-portal-root.platform-workspace .technician-installations-view .job-card-header {
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.workspace-portal-root.platform-workspace .technician-installations-view .job-shop-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.workspace-portal-root.platform-workspace .technician-installations-view .job-meta-row {
+  gap: 0.5rem 0.8rem;
+  font-size: 0.73rem;
+}
+.workspace-portal-root.platform-workspace .technician-installations-view .job-meta-row > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.workspace-portal-root.platform-workspace .technician-installations-view .job-address-line {
+  margin-top: 0.75rem;
+}
+.workspace-portal-root.platform-workspace .technician-installations-view .tech-job-detail-card {
+  border-color: var(--install-line);
+  border-radius: 18px;
+  padding: 1.4rem;
+}
+.workspace-portal-root.platform-workspace .technician-installations-view .job-detail-top h2 {
+  font-size: 1.3rem;
+  margin: 0.6rem 0 0.3rem;
+}
+.workspace-portal-root.platform-workspace .technician-installations-view .job-code-subtitle {
+  font-size: 0.79rem;
+}
+.workspace-portal-root.platform-workspace .technician-installations-view .tech-contact-box {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-radius: 12px;
+  padding: 1.1rem;
+  gap: 1rem 1.4rem;
+}
+.workspace-portal-root.platform-workspace .technician-installations-view .tech-contact-box > div {
+  min-width: 0;
+}
+.workspace-portal-root.platform-workspace .technician-installations-view .tech-contact-box strong {
+  font-size: 0.73rem;
+  font-weight: 500;
+  margin-bottom: 0.35rem;
+}
+.workspace-portal-root.platform-workspace .technician-installations-view .tech-contact-box p {
+  font-size: 0.84rem;
+}
+.workspace-portal-root.platform-workspace .technician-installations-view .tech-action-step > p {
+  color: var(--install-muted);
+  font-size: 0.85rem;
+}
+.workspace-portal-root.platform-workspace .technician-installations-view .tech-action-step h3 {
+  font-size: 1.05rem;
+}
+.workspace-portal-root.platform-workspace .technician-installations-view .evidence-upload-block {
+  border-radius: 14px;
+  background: #fafcf8;
+}
+.workspace-portal-root.platform-workspace .technician-installations-view .evidence-upload-block h4,
+.workspace-portal-root.platform-workspace .technician-installations-view .report-submit-block h4 {
+  font-size: 0.9rem;
+  margin-top: 0;
+}
+.workspace-portal-root.platform-workspace .technician-installations-view .platform-upload-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px dashed #b8d0b9;
+  border-radius: 12px;
+  width: 100%;
+}
+.workspace-portal-root.platform-workspace
+  .technician-installations-view
+  .platform-upload-picker
+  > div {
+  flex: 1 1 140px;
+  min-width: 0;
+}
+.workspace-portal-root.platform-workspace
+  .technician-installations-view
+  .platform-upload-picker
+  strong {
+  display: block;
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+}
+.workspace-portal-root.platform-workspace
+  .technician-installations-view
+  .platform-upload-picker
+  small {
+  display: block;
+  margin-top: 0.3rem;
+}
+.workspace-portal-root.platform-workspace .technician-installations-view .file-input-row {
+  gap: 0.75rem;
+}
+.workspace-portal-root.platform-workspace .technician-installations-view .attached-evidence-list {
+  margin-top: 1rem;
+  font-size: 0.81rem;
+}
+.workspace-portal-root.platform-workspace .technician-installations-view .report-submit-block {
+  padding: 1.15rem;
+  border: 1px solid var(--install-line);
+  border-radius: 14px;
+}
+@media (min-width: 1150px) {
+  .workspace-portal-root.platform-workspace
+    .technician-installations-view
+    .technician-workspace-layout {
+    grid-template-columns: 290px minmax(0, 1fr);
+  }
+}
+@media (max-width: 700px) {
+  .workspace-portal-root.platform-workspace .technician-installations-view .tech-job-detail-card {
+    padding: 1rem;
+  }
+  .workspace-portal-root.platform-workspace .technician-installations-view .tech-contact-box {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .workspace-portal-root.platform-workspace
+    .technician-installations-view
+    .dashboard-page-heading
+    > button {
+    width: 100%;
+  }
+  .workspace-portal-root.platform-workspace .technician-installations-view .report-submit-block {
+    padding: 1rem;
+  }
+}

@@ -137,7 +137,7 @@ export function TechnicianJobDetailCard({
       )}
 
       {/* Contact Information & Stepper */}
-      <ol className="platform-installation-steps" aria-label="Tiến độ lắp đặt">
+      <ol className="installation-progress" aria-label="Tiến độ lắp đặt">
         {TECHNICIAN_PROGRESS_STEPS.map((label, index) => (
           <li
             key={label}
@@ -188,9 +188,7 @@ export function TechnicianJobDetailCard({
             disabled={startMutation.isPending}
           >
             <ListChecks size={18} aria-hidden="true" />
-            {startMutation.isPending
-              ? 'Đang cập nhật...'
-              : 'Bắt đầu khảo sát & Lắp đặt (INSTALLING)'}
+            {startMutation.isPending ? 'Đang cập nhật...' : 'Bắt đầu khảo sát & Lắp đặt'}
           </Button>
         </div>
       )}
