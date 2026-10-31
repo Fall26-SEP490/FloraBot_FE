@@ -1,4 +1,6 @@
-const apiOrigin = process.env.API_PROXY_TARGET || 'http://127.0.0.1:5080';
+const apiOrigin =
+  process.env.API_PROXY_TARGET ||
+  (process.env.VERCEL ? 'https://api.florabot.site' : 'http://127.0.0.1:5080');
 const kioskOrigin = process.env.KIOSK_PROXY_TARGET || 'http://127.0.0.1:5174';
 
 export default {

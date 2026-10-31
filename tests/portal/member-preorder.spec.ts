@@ -47,6 +47,13 @@ test('CUSTOMER places CUSTOM with selected kiosk and no door action', async ({ p
   });
   await page.goto('/dat-hoa');
   await page.getByRole('button', { name: 'Đặt hoa', exact: true }).first().click();
+  await expect(
+    page.getByText('Nhận hoa tại tủ bằng OTP gửi qua SMS.', { exact: false }),
+  ).toBeVisible();
+  await expect(page.getByRole('link', { name: 'hồ sơ của tài khoản đặt đơn' })).toHaveAttribute(
+    'href',
+    '/ho-so',
+  );
   await page.getByLabel('Tủ nhận hoa').selectOption(otherKiosk.kioskId);
   {
     const date = new Date(Date.now() + 48 * 60 * 60 * 1000);

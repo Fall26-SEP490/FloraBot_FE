@@ -2884,6 +2884,87 @@
         }
       }
     },
+    "/api/staff/tasks/{taskId}/preorders": {
+      "get": {
+        "tags": [
+          "Ordering"
+        ],
+        "summary": "Đơn đặt trước đã thanh toán có thể giao từ công việc này",
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffPreorderOptions"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/tasks/{taskId}/preorders/{requestId}/fulfill": {
+      "post": {
+        "tags": [
+          "Ordering"
+        ],
+        "summary": "Giao đơn preorder đã thanh toán vào ô PREORDER trong công việc được phân công",
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StaffPreorderFulfillInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffPreorderFulfillResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/member/chats/open": {
       "post": {
         "tags": [
@@ -4235,6 +4316,187 @@
         }
       }
     },
+    "/api/kiosk-support/{kioskId}": {
+      "get": {
+        "tags": [
+          "FloraBot.Api"
+        ],
+        "parameters": [
+          {
+            "name": "kioskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KioskHomeInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/kiosk-support/{kioskId}/device": {
+      "post": {
+        "tags": [
+          "FloraBot.Api"
+        ],
+        "parameters": [
+          {
+            "name": "kioskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceSupportInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceSupportResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/kiosks/{kioskId}/pickup/orders": {
+      "get": {
+        "tags": [
+          "FloraBot.Api"
+        ],
+        "parameters": [
+          {
+            "name": "kioskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/KioskPickupOrder"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/kiosks/{kioskId}/pickup/orders/{orderId}": {
+      "get": {
+        "tags": [
+          "FloraBot.Api"
+        ],
+        "parameters": [
+          {
+            "name": "kioskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KioskPickupOrder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/kiosks/{kioskId}/pickup/orders/{orderId}/open": {
+      "post": {
+        "tags": [
+          "FloraBot.Api"
+        ],
+        "parameters": [
+          {
+            "name": "kioskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlowResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/packages": {
       "get": {
         "tags": [
@@ -5113,44 +5375,6 @@
             }
           }
         }
-      },
-      "post": {
-        "tags": [
-          "FloraBot.Api"
-        ],
-        "parameters": [
-          {
-            "name": "sellerId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AssignStaffTask"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StaffTaskResult"
-                }
-              }
-            }
-          }
-        }
       }
     },
     "/api/staff/tasks": {
@@ -5186,6 +5410,45 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/StaffTaskPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me/staff-tasks": {
+      "post": {
+        "tags": [
+          "FloraBot.Api"
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSellerDeliveryTask"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffTaskResult"
                 }
               }
             }
@@ -6825,12 +7088,35 @@
         }
       }
     },
+    "/api/me/kiosks": {
+      "get": {
+        "tags": [
+          "KioskOps"
+        ],
+        "summary": "Danh sách kiosk của seller đang đăng nhập (seller_id lấy từ token)",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SellerKioskDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/sellers/{sellerId}/kiosks": {
       "get": {
         "tags": [
           "KioskOps"
         ],
-        "summary": "Danh sách kiosk thuộc quyền của Seller và trạng thái vị trí",
+        "summary": "Tương thích cũ: danh sách kiosk thuộc seller; dùng GET /api/me/kiosks cho route tự nhận seller từ token",
         "parameters": [
           {
             "name": "sellerId",
@@ -7741,6 +8027,35 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateKioskApplicationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KioskApplicationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me/kiosk-applications": {
+      "post": {
+        "tags": [
+          "KioskOnboarding"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAdditionalKioskApplicationRequest"
               }
             }
           },
@@ -8947,6 +9262,56 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/me/kiosks/{kioskId}/slots/{slotId}/zone": {
+      "put": {
+        "tags": [
+          "KioskOps"
+        ],
+        "summary": "Seller phân loại ô trống thuộc kiosk mình quản lý",
+        "parameters": [
+          {
+            "name": "kioskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "slotId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SellerSetSlotZoneRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SellerSlotZoneResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -10472,65 +10837,6 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "/api/me/kiosks/{kioskId}/slots/{slotId}/zone": {
-      "put": {
-        "tags": [
-          "KioskOps"
-        ],
-        "summary": "Seller chọn zone cho ô trống của kiosk mình",
-        "parameters": [
-          {
-            "name": "kioskId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "slotId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "zone"
-                ],
-                "properties": {
-                  "zone": {
-                    "type": "string",
-                    "enum": [
-                      "WALK_IN",
-                      "PREORDER"
-                    ]
-                  }
-                },
-                "additionalProperties": false
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "409": {
-            "description": "Ô không còn trống hoặc đang bị giữ"
           }
         }
       }
@@ -12171,6 +12477,43 @@
         },
         "additionalProperties": false
       },
+      "CreateAdditionalKioskApplicationRequest": {
+        "required": [
+          "packageId",
+          "installationAddress",
+          "latitude",
+          "longitude"
+        ],
+        "type": "object",
+        "properties": {
+          "packageId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "installationAddress": {
+            "type": "string"
+          },
+          "latitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "longitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
       "CreateKioskApplicationRequest": {
         "required": [
           "packageId",
@@ -12327,6 +12670,28 @@
               "null",
               "string"
             ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateSellerDeliveryTask": {
+        "required": [
+          "assigneeId",
+          "kioskId",
+          "instructions"
+        ],
+        "type": "object",
+        "properties": {
+          "assigneeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kioskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "instructions": {
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -12827,6 +13192,31 @@
         },
         "additionalProperties": false
       },
+      "DeviceSupportInput": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DeviceSupportResult": {
+        "required": [
+          "id"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
       "EligibleKioskResponse": {
         "required": [
           "id",
@@ -12894,10 +13284,12 @@
             ]
           },
           "slotCount": {
-            "type": "integer",
-            "format": "int32",
-            "minimum": 1,
-            "maximum": 50
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -13207,7 +13599,7 @@
         },
         "additionalProperties": false
       },
-      "JsonElement": {},
+      "JsonElement": { },
       "KioskAccessoryResponse": {
         "required": [
           "id",
@@ -13301,8 +13693,6 @@
           "packageId",
           "packageName",
           "annualFee",
-          "walkInSlots",
-          "preorderSlots",
           "totalSlots",
           "shopName",
           "phone",
@@ -13357,22 +13747,6 @@
               "string"
             ],
             "format": "int64"
-          },
-          "walkInSlots": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "preorderSlots": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
           },
           "totalSlots": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -13564,6 +13938,12 @@
           },
           "shopName": {
             "type": "string"
+          },
+          "imageUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         },
         "additionalProperties": false
@@ -13581,7 +13961,7 @@
               "format": "uuid"
             }
           },
-          "p_accessories": {},
+          "p_accessories": { },
           "p_points": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
@@ -13628,6 +14008,50 @@
       },
       "KioskHeartbeatRequest": {
         "type": "object",
+        "additionalProperties": false
+      },
+      "KioskHomeInfo": {
+        "required": [
+          "id",
+          "code",
+          "name",
+          "address",
+          "status",
+          "sellerId",
+          "shopName"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "sellerId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "shopName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
         "additionalProperties": false
       },
       "KioskLocationItem": {
@@ -13711,8 +14135,6 @@
           "id",
           "name",
           "annualFee",
-          "walkInSlots",
-          "preorderSlots",
           "totalSlots",
           "termMonths",
           "status",
@@ -13735,22 +14157,6 @@
             ],
             "format": "int64"
           },
-          "walkInSlots": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "preorderSlots": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
           "totalSlots": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
@@ -13772,6 +14178,36 @@
           },
           "description": {
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "KioskPickupOrder": {
+        "required": [
+          "id",
+          "orderCode",
+          "name",
+          "status",
+          "pickupBefore"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orderCode": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "pickupBefore": {
+            "type": "string",
+            "format": "date-time"
           }
         },
         "additionalProperties": false
@@ -14310,6 +14746,12 @@
           },
           "checkoutUrl": {
             "type": "string"
+          },
+          "qrCode": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         },
         "additionalProperties": false
@@ -14926,7 +15368,7 @@
             "type": "string",
             "format": "date"
           },
-          "p_statement": {}
+          "p_statement": { }
         },
         "additionalProperties": false
       },
@@ -15550,12 +15992,25 @@
         },
         "additionalProperties": false
       },
+      "SellerSetSlotZoneRequest": {
+        "required": [
+          "zone"
+        ],
+        "type": "object",
+        "properties": {
+          "zone": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "SellerSlotResponse": {
         "required": [
           "id",
           "kioskId",
           "slotCode",
           "status",
+          "zone",
           "bouquetId",
           "kioskCode",
           "kioskName",
@@ -15580,6 +16035,12 @@
           },
           "status": {
             "type": "string"
+          },
+          "zone": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "bouquetId": {
             "type": [
@@ -15625,6 +16086,28 @@
               "string"
             ],
             "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SellerSlotZoneResponse": {
+        "required": [
+          "kioskId",
+          "slotId",
+          "zone"
+        ],
+        "type": "object",
+        "properties": {
+          "kioskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "zone": {
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -16304,6 +16787,137 @@
         },
         "additionalProperties": false
       },
+      "StaffPreorderCandidate": {
+        "required": [
+          "requestId",
+          "orderId",
+          "orderCode",
+          "productId",
+          "productName",
+          "amount",
+          "pickupAt",
+          "pickupBefore"
+        ],
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orderCode": {
+            "type": "string"
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productName": {
+            "type": "string"
+          },
+          "amount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "pickupAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "pickupBefore": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StaffPreorderFulfillInput": {
+        "required": [
+          "slotId",
+          "qrCode"
+        ],
+        "type": "object",
+        "properties": {
+          "slotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "qrCode": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StaffPreorderFulfillResult": {
+        "required": [
+          "requestId",
+          "bouquetId"
+        ],
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bouquetId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StaffPreorderOptions": {
+        "required": [
+          "preorders",
+          "slots"
+        ],
+        "type": "object",
+        "properties": {
+          "preorders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StaffPreorderCandidate"
+            }
+          },
+          "slots": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StaffPreorderSlot"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "StaffPreorderSlot": {
+        "required": [
+          "id",
+          "slotCode",
+          "zone"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slotCode": {
+            "type": "string"
+          },
+          "zone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
       "StaffStockAction": {
         "required": [
           "id",
@@ -16435,7 +17049,8 @@
       "StaffStockSlot": {
         "required": [
           "id",
-          "code"
+          "code",
+          "zone"
         ],
         "type": "object",
         "properties": {
@@ -16445,6 +17060,12 @@
           },
           "code": {
             "type": "string"
+          },
+          "zone": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         },
         "additionalProperties": false
@@ -16822,7 +17443,8 @@
           "periodFrom",
           "periodTo",
           "price",
-          "status"
+          "status",
+          "kioskId"
         ],
         "type": "object",
         "properties": {
@@ -16851,6 +17473,13 @@
           },
           "status": {
             "type": "string"
+          },
+          "kioskId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         },
         "additionalProperties": false
@@ -17620,6 +18249,7 @@
           "kioskId",
           "kioskName",
           "address",
+          "zone",
           "photo",
           "bouquets"
         ],
@@ -17662,6 +18292,12 @@
           },
           "address": {
             "type": "string"
+          },
+          "zone": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "photo": {
             "type": [
@@ -17756,20 +18392,14 @@
       },
       "WebRequestInput": {
         "required": [
-          "id",
           "kind",
           "productId",
           "kioskId",
-          "bouquetId",
           "pickupAt",
           "instructions"
         ],
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
           "kind": {
             "type": "string"
           },
@@ -17781,6 +18411,13 @@
             "type": "string",
             "format": "uuid"
           },
+          "pickupAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "instructions": {
+            "type": "string"
+          },
           "bouquetId": {
             "type": [
               "null",
@@ -17788,12 +18425,12 @@
             ],
             "format": "uuid"
           },
-          "pickupAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "instructions": {
-            "type": "string"
+          "id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         },
         "additionalProperties": false
@@ -18060,6 +18697,9 @@
       "name": "Account"
     },
     {
+      "name": "Ordering"
+    },
+    {
       "name": "Customer Seller Chat"
     },
     {
@@ -18094,9 +18734,6 @@
     },
     {
       "name": "Ai"
-    },
-    {
-      "name": "Ordering"
     },
     {
       "name": "Notify"
