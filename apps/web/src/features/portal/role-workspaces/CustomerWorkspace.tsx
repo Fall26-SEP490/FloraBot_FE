@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { LayoutDashboard, MessageSquare, Package, RotateCcw, User } from '@florabot/ui';
+import { LayoutDashboard, Menu, MessageSquare, Package, RotateCcw, User } from '@florabot/ui';
 import { sessionQuery } from '@/shared/lib/api';
 import { getCustomerUnreadCount } from '@/features/chat/api';
 import '../workspace-styles.css';
@@ -39,6 +39,18 @@ export default function CustomerWorkspace({
   });
   const searchParams = useSearchParams();
   const [hash, setHash] = useState('');
+  const [navigationOpenAt, setNavigationOpenAt] = useState<string | null>(null);
+  const navigationToggle = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (navigationOpenAt === null) return;
+    const close = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      setNavigationOpenAt(null);
+      navigationToggle.current?.focus();
+    };
+    window.addEventListener('keydown', close);
+    return () => window.removeEventListener('keydown', close);
+  }, [navigationOpenAt]);
   useEffect(() => {
     const sync = () => setHash(window.location.hash);
     sync();
@@ -69,15 +81,41 @@ export default function CustomerWorkspace({
       ? '/ho-so'
       : `/tai-khoan${searchParams.get('chat') ? '#member-chats' : hash || '#overview'}`;
 
+  const navigationOpen = navigationOpenAt === current;
+  const currentLabel = items.find((item) => item.href === current)?.label ?? 'Tài khoản của tôi';
   return (
     <div className="customer-account-shell">
       <aside className="customer-account-sidebar">
         <div className="customer-account-sidebar-heading">
-          <strong>Tài khoản của tôi</strong>
+          <strong>
+            <span className="account-navigation-desktop-title">Tài khoản của tôi</span>
+            <span className="account-navigation-current">{currentLabel}</span>
+          </strong>
+          <button
+            ref={navigationToggle}
+            type="button"
+            className="account-navigation-toggle"
+            aria-expanded={navigationOpen}
+            aria-controls="customer-account-navigation"
+            onClick={() => setNavigationOpenAt(navigationOpen ? null : current)}
+          >
+            <Menu size={17} aria-hidden="true" /> Mục tài khoản
+          </button>
         </div>
-        <nav aria-label="Điều hướng tài khoản" className="customer-account-navigation">
+        <nav
+          id="customer-account-navigation"
+          aria-label="Điều hướng tài khoản"
+          className={['customer-account-navigation', navigationOpen ? 'is-open' : null]
+            .filter(Boolean)
+            .join(' ')}
+        >
           {items.map(({ href, label, icon: Icon }) => (
-            <a key={href} href={href} aria-current={current === href ? 'page' : undefined}>
+            <a
+              key={href}
+              href={href}
+              aria-current={current === href ? 'page' : undefined}
+              onClick={() => setNavigationOpenAt(null)}
+            >
               <Icon size={18} aria-hidden="true" />
               <span>{label}</span>
               {href === '/tai-khoan#member-chats' && unread.data != null && unread.data > 0 && (

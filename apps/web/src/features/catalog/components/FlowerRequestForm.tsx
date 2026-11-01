@@ -1,7 +1,7 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { Button, MapPin, MessageSquare } from '@florabot/ui';
+import { Button, Check, MapPin, MessageSquare } from '@florabot/ui';
 import { ApiError, queryClient, request, sessionQuery } from '@/shared/lib/api';
 import type { CatalogItem, CatalogResponse } from '../catalog.types';
 import { canOrderOnWeb, formatPrice, isWalkIn } from '../catalog.utils';
@@ -10,9 +10,19 @@ interface FlowerRequestFormProps {
   item: CatalogItem;
   onOpenChat?: () => void;
   openingChat?: boolean;
+  onDirtyChange?: (dirty: boolean) => void;
+  onBusyChange?: (busy: boolean) => void;
+  onUncertainChange?: (uncertain: boolean) => void;
 }
 
-export function FlowerRequestForm({ item, onOpenChat, openingChat }: FlowerRequestFormProps) {
+export function FlowerRequestForm({
+  item,
+  onOpenChat,
+  openingChat,
+  onDirtyChange,
+  onBusyChange,
+  onUncertainChange,
+}: FlowerRequestFormProps) {
   const session = useQuery(sessionQuery);
   const [kioskId, setKioskId] = useState(item.kioskId);
   const kiosks = useQuery({
@@ -51,9 +61,27 @@ export function FlowerRequestForm({ item, onOpenChat, openingChat }: FlowerReque
   const [uncertain, setUncertain] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
+  const [submittedId, setSubmittedId] = useState<string | null>(null);
+  const dirty = !done && Boolean(pickup || instructions || confirmed || kioskId !== item.kioskId);
+  useEffect(() => {
+    onDirtyChange?.(dirty);
+  }, [dirty, onDirtyChange]);
+  useEffect(() => {
+    onBusyChange?.(busy);
+  }, [busy, onBusyChange]);
+  useEffect(() => {
+    onUncertainChange?.(uncertain);
+  }, [uncertain, onUncertainChange]);
 
   // Keep the same request identity and payload after a network timeout.
-  const pending = useRef<object | null>(null);
+  const pending = useRef<{
+    id: string;
+    kind: 'CUSTOM';
+    productId: string;
+    kioskId: string;
+    pickupAt: string;
+    instructions: string;
+  } | null>(null);
   const sending = useRef(false);
 
   async function submit(event: React.FormEvent) {
@@ -96,6 +124,7 @@ export function FlowerRequestForm({ item, onOpenChat, openingChat }: FlowerReque
 
     try {
       await request('/member/preorders', pending.current);
+      setSubmittedId(pending.current.id);
       setDone(true);
       await queryClient.invalidateQueries({ queryKey: ['web-orders'] });
     } catch (cause) {
@@ -130,10 +159,16 @@ export function FlowerRequestForm({ item, onOpenChat, openingChat }: FlowerReque
   if (done) {
     return (
       <div role="status" className="flower-request-done">
-        <div className="flower-request-done-icon">✓</div>
+        <div className="flower-request-done-icon" aria-hidden="true">
+          <Check size={24} />
+        </div>
         <h3>Đã nhận yêu cầu của bạn</h3>
         <p>Shop sẽ báo giá và xác nhận lịch nhận trong tài khoản của bạn.</p>
-        <Link href="/tai-khoan">Theo dõi và thanh toán trong tài khoản</Link>
+        <Link
+          href={`/tai-khoan${submittedId ? `?requestId=${encodeURIComponent(submittedId)}` : ''}#web-orders`}
+        >
+          Xem yêu cầu vừa gửi
+        </Link>
       </div>
     );
   }
@@ -179,18 +214,16 @@ export function FlowerRequestForm({ item, onOpenChat, openingChat }: FlowerReque
       <div className="flower-request-scroll">
         <div className="flower-request-intro">
           <div>
-            <strong>Gửi ý tưởng, shop chuẩn bị hoa</strong>
-            <p>Bạn duyệt báo giá và lịch nhận trước khi thanh toán.</p>
+            <strong>Gửi yêu cầu báo giá</strong>
+            <p>Shop xác nhận giá và lịch nhận trước khi bạn thanh toán.</p>
           </div>
           <div className="flower-request-reference-price">
             <span>Giá mẫu</span>
             <strong>{formatPrice(item.price)} đ</strong>
           </div>
         </div>
-        <p className="flower-request-notice">
-          Nhận hoa tại tủ bằng OTP gửi qua SMS. Trước khi đến nhận, hãy lưu số điện thoại đang dùng
-          trong <Link href="/ho-so">hồ sơ của tài khoản đặt đơn</Link>. Khi hoa sẵn sàng, chọn “Nhận
-          đơn đặt trước” trên màn hình tủ và nhập số này.
+        <p className="flower-request-pickup-hint">
+          Khi hoa sẵn sàng, mã OTP nhận hoa được gửi tới <strong>email đăng nhập của bạn</strong>.
         </p>
         <fieldset disabled={busy || uncertain}>
           <legend className="sr-only">Đặt trước, shop chuẩn bị theo yêu cầu</legend>
@@ -282,7 +315,7 @@ export function FlowerRequestForm({ item, onOpenChat, openingChat }: FlowerReque
             variant="outline"
             type="button"
             className="chat-open-btn"
-            disabled={openingChat}
+            disabled={openingChat || busy}
             onClick={onOpenChat}
           >
             <MessageSquare size={16} aria-hidden="true" />
@@ -299,7 +332,7 @@ export function FlowerRequestForm({ item, onOpenChat, openingChat }: FlowerReque
       </div>
       {uncertain && !busy && (
         <p className="flower-request-uncertain-link">
-          <Link href="/tai-khoan">Kiểm tra yêu cầu trong tài khoản</Link>
+          <Link href="/tai-khoan#web-orders">Kiểm tra đơn đặt trước</Link>
         </p>
       )}
     </form>

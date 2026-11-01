@@ -199,3 +199,90 @@
     margin-left: 0;
   }
 }
+
+.workspace-portal-root .account-pending {
+  border: 1px solid #dfe9dc;
+  border-radius: 14px;
+  background: #fff;
+  padding: 20px 24px;
+  min-width: 0;
+}
+.account-pending-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.workspace-portal-root .account-pending h2 {
+  margin: 0;
+  font-size: 20px;
+}
+.account-pending-heading a,
+.account-pending-list a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  color: #1b4d36;
+  font-size: 14px;
+  font-weight: 600;
+}
+.account-pending-list {
+  padding: 0;
+  margin: 8px 0 0;
+  list-style: none;
+}
+.account-pending-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-top: 1px solid #e8eee5;
+  padding: 16px 0;
+}
+.account-pending-list li:last-child {
+  padding-bottom: 0;
+}
+.account-pending-list li > div {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.account-pending-list strong {
+  font-size: 15px;
+}
+.account-pending-list span,
+.account-pending-list small {
+  color: #48604e;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.account-pending-list a {
+  flex-shrink: 0;
+}
+.account-pending-empty,
+.account-pending-scope,
+.account-pending-error p {
+  color: #48604e;
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 12px 0 0;
+}
+.account-pending-error .button {
+  margin-top: 12px;
+}
+@media (max-width: 760px) {
+  .workspace-portal-root .account-pending {
+    padding: 16px;
+  }
+  .account-pending-list li {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .account-pending-list a {
+    align-self: flex-end;
+  }
+}

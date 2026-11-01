@@ -9,6 +9,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, Button, Flower2, MessageSquare, Store } from '@florabot/ui';
 import WebRequests from '../orders/WebRequests';
+import CustomerPendingOrders from './CustomerPendingOrders';
 import { preorderPaymentReturn } from '../orders/payment-return';
 import { CustomerChatSection } from '@/features/chat/CustomerChatSection';
 import { getCustomerUnreadCount } from '@/features/chat/api';
@@ -126,6 +127,7 @@ export default function MemberAccount() {
               Khám phá hoa <ArrowRight size={16} aria-hidden="true" />
             </Link>
           </header>
+          {isCustomer && <CustomerPendingOrders />}
           <div className="account-home-status">
             <div className="account-home-points">
               <Flower2 size={20} aria-hidden="true" />

@@ -716,7 +716,11 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
 
   return (
     <main id="main">
-      <div className="profile-page profile-refined">
+      <div
+        className={['profile-page', 'profile-refined', embedded ? 'profile-embedded' : null]
+          .filter(Boolean)
+          .join(' ')}
+      >
         {/* Navigation Breadcrumb */}
         <nav aria-label="Đường dẫn điều hướng" className="profile-breadcrumb">
           <Link href={homeUrl}>
@@ -752,23 +756,16 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
         {/* Quick navigation anchor chips */}
         <div className="profile-layout">
           <nav aria-label="Mục hồ sơ" className="profile-quick-nav">
-            <span className="profile-nav-caption">QUẢN LÝ HỒ SƠ</span>
-            {profileSections.map(([id, label], index) => (
+            {profileSections.map(([id, label]) => (
               <a
                 key={id}
                 href={`#${id}`}
                 onClick={() => setActiveSection(id)}
                 aria-current={activeSection === id ? 'location' : undefined}
               >
-                <span className="profile-nav-number" aria-hidden="true">
-                  0{index + 1}
-                </span>
                 {label}
               </a>
             ))}
-            <p className="profile-nav-note">
-              Chỉ bạn và người có thẩm quyền mới được truy cập hồ sơ này.
-            </p>
           </nav>
           <div className="profile-content">
             {/* Section 1: Read-only Login Identity & Role */}
@@ -777,12 +774,14 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
               className="profile-section profile-identity"
             >
               <div className="profile-section-heading">
-                <h2 id="identity-heading">Định danh tài khoản đăng nhập</h2>
-                <p>Email dùng để đăng nhập, chỉ xem tại đây.</p>
+                <h2 id="identity-heading">
+                  {embedded ? 'Email đăng nhập' : 'Định danh tài khoản đăng nhập'}
+                </h2>
+                {!embedded && <p>Email dùng để đăng nhập, chỉ xem tại đây.</p>}
               </div>
               <dl className="profile-summary-grid">
                 <div className="profile-summary-item">
-                  <dt>Email đăng nhập</dt>
+                  <dt className={embedded ? 'sr-only' : undefined}>Email đăng nhập</dt>
                   <dd>{currentProfile.loginEmail || 'Chưa thiết lập'}</dd>
                 </div>
               </dl>
