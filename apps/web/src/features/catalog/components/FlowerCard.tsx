@@ -73,9 +73,15 @@ export function FlowerCard({
         <h2 className="flower-card-title">
           <Link href={detailHref}>{item.name}</Link>
         </h2>
-        <p className="flower-card-desc">
-          {item.description || 'Mẫu hoa do shop thiết kế theo yêu cầu của bạn.'}
-        </p>
+
+        <div className="flower-card-price-row">
+          <div>
+            <span className="flower-card-price">{formatPrice(item.price)} đ</span>
+            <span className="flower-card-price-label">
+              {walkIn ? 'Giá niêm yết' : 'Giá tham khảo'}
+            </span>
+          </div>
+        </div>
 
         <div className="flower-card-meta">
           <span className="flower-meta-item" title={item.shopName}>
@@ -87,15 +93,6 @@ export function FlowerCard({
             <span>{item.kioskName}</span>
           </span>
           {walkIn && item.address && <span className="flower-meta-item">{item.address}</span>}
-        </div>
-
-        <div className="flower-card-price-row">
-          <div>
-            <span className="flower-card-price">{formatPrice(item.price)} đ</span>
-            <span className="flower-card-price-label">
-              {walkIn ? ' · giá niêm yết' : ' · giá tham khảo'}
-            </span>
-          </div>
         </div>
 
         <div className="flower-card-actions">

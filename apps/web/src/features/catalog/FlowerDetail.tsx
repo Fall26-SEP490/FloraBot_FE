@@ -139,12 +139,22 @@ export default function FlowerDetail({
                 )}
               </div>
               <h1>{item.name}</h1>
+              <p className="flower-detail-shop">
+                <Store size={16} aria-hidden="true" />
+                {item.shopName || 'Shop chưa cập nhật tên'}
+              </p>
               <div className="flower-detail-pricing">
                 <span className="flower-detail-price">{formatPrice(item.price)} đ</span>
                 <span className="flower-detail-price-sub">
-                  {isWalkIn(item) ? 'Giá niêm yết tại tủ' : 'Giá mẫu tham khảo'}
+                  {isWalkIn(item) ? 'Giá niêm yết tại tủ' : 'Giá mẫu'}
                 </span>
               </div>
+
+              {canOrderOnWeb(item) && (
+                <p className="flower-detail-note">
+                  Shop sẽ báo giá theo yêu cầu và xác nhận lịch nhận trước khi bạn thanh toán.
+                </p>
+              )}
 
               <div className="flower-detail-actions">
                 {canOrderOnWeb(item) ? (
@@ -167,7 +177,20 @@ export default function FlowerDetail({
                 </Button>
               </div>
 
-              <div className="flower-detail-divider" aria-hidden="true" />
+              <section className="flower-detail-location" aria-labelledby="flower-location-title">
+                <h2 id="flower-location-title">Nơi nhận hoa</h2>
+                <div className="flower-detail-location-body">
+                  <div className="flower-detail-info-row">
+                    <div className="flower-detail-info-icon" aria-hidden="true">
+                      <MapPin size={18} />
+                    </div>
+                    <div className="flower-detail-info-content">
+                      <strong>{item.kioskName || 'Chưa có thông tin'}</strong>
+                      <p>{item.address || 'Chưa có địa chỉ'}</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
 
               <section
                 className="flower-detail-description"
@@ -177,49 +200,11 @@ export default function FlowerDetail({
                 <p>{item.description?.trim() || 'Shop chưa cung cấp mô tả cho mẫu hoa này.'}</p>
               </section>
 
-              <section className="flower-detail-location" aria-labelledby="flower-location-title">
-                <h2 id="flower-location-title">Cửa hàng & kiosk</h2>
-                <div className="flower-detail-location-body">
-                  <div className="flower-detail-info-row">
-                    <div className="flower-detail-info-icon" aria-hidden="true">
-                      <Store size={18} />
-                    </div>
-                    <div className="flower-detail-info-content">
-                      <span>Cửa hàng</span>
-                      <strong>{item.shopName || 'Chưa có thông tin'}</strong>
-                    </div>
-                  </div>
-                  <div className="flower-detail-info-row">
-                    <div className="flower-detail-info-icon" aria-hidden="true">
-                      <MapPin size={18} />
-                    </div>
-                    <div className="flower-detail-info-content">
-                      <span>Kiosk nhận hoa</span>
-                      <strong>{item.kioskName || 'Chưa có thông tin'}</strong>
-                      <p>{item.address || 'Chưa có địa chỉ'}</p>
-                    </div>
-                  </div>
-                </div>
-              </section>
-
               {canOrderOnWeb(item) && (
-                <>
-                  <p className="flower-detail-note">
-                    Shop xác nhận giá và lịch nhận sau khi bạn gửi yêu cầu. Mẫu đặt trước không có
-                    nghĩa là hoa đang có sẵn tại tủ.
-                  </p>
-                  <ol className="flower-detail-guide" aria-label="Các bước đặt và nhận hoa">
-                    <li>
-                      <span aria-hidden="true">01</span>Gửi mong muốn và chọn tủ nhận hoa
-                    </li>
-                    <li>
-                      <span aria-hidden="true">02</span>Duyệt báo giá, xác nhận rồi thanh toán
-                    </li>
-                    <li>
-                      <span aria-hidden="true">03</span>Theo dõi đơn và ghé tủ theo lịch hẹn
-                    </li>
-                  </ol>
-                </>
+                <p className="flower-detail-help">
+                  Hoa đặt trước được shop chuẩn bị theo yêu cầu.{' '}
+                  <Link href="/huong-dan-dat-hoa">Xem cách đặt và nhận hoa</Link>
+                </p>
               )}
 
               {item.isDemoSample && (

@@ -4,7 +4,7 @@
 :root:has(.flower-shop-page:not(.flower-detail-page)) .site-frame,
 :root:has(.flower-shop-page:not(.flower-detail-page)) .site-content,
 body:has(.flower-shop-page:not(.flower-detail-page)) {
-  background: #ffffff !important;
+  background: #f4f6f0 !important;
   background-image: none !important;
 }
 
@@ -19,13 +19,60 @@ body:has(.flower-shop-page:not(.flower-detail-page)) {
   min-height: 100vh;
   margin: 1.75rem auto 3.5rem;
   padding: 0 clamp(0.75rem, 2vw, 1.5rem);
-  background: #ffffff;
+  background: transparent;
   box-sizing: border-box;
 }
 
 /* Streamlined Minimalist Header */
 .catalog-header-minimal {
-  margin-bottom: 1.75rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  align-items: center;
+  gap: 1.5rem 3rem;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  margin-bottom: 1.5rem;
+  border-radius: 16px;
+  background: #183e2b;
+  color: #fffdf7;
+}
+.catalog-header-minimal .catalog-hero-title {
+  color: inherit;
+  font-size: clamp(1.7rem, 2.4vw, 2.25rem);
+  margin: 0 0 0.65rem;
+}
+.catalog-header-minimal .catalog-hero-desc {
+  color: #edf2e6;
+  font-size: 0.95rem;
+  max-width: 43ch;
+}
+.catalog-header-minimal .catalog-search-bar-wrap {
+  margin: 0;
+}
+.catalog-header-minimal .catalog-search-submit-btn.button {
+  background: #e0ec9c;
+  border-color: #e0ec9c;
+  color: #183e2b;
+}
+.catalog-header-minimal .catalog-search-submit-btn.button:hover {
+  background: #eef4cb;
+}
+.catalog-header-minimal .catalog-search-submit-btn:focus-visible {
+  outline: 2px solid #fffdf7;
+  outline-offset: 3px;
+}
+@media (max-width: 960px) {
+  .catalog-header-minimal {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.15rem;
+  }
+}
+@media (max-width: 580px) {
+  .catalog-header-minimal {
+    padding: 1.25rem;
+  }
+  .catalog-header-minimal .catalog-hero-desc {
+    font-size: 0.88rem;
+  }
 }
 
 .catalog-header-badge {
@@ -108,7 +155,7 @@ body:has(.flower-shop-page:not(.flower-detail-page)) {
   padding: 0;
   border: 0;
   border-radius: 0;
-  background: #ffffff;
+  background: transparent;
 }
 
 /* Modern Empty State Card */

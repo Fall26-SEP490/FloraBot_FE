@@ -2,43 +2,34 @@
 .flower-catalog-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.85rem;
+  gap: 1rem;
   list-style: none;
   padding: 0;
   margin: 0 0 2rem;
 }
 
-@media (min-width: 1180px) {
+@media (min-width: 1280px) {
   .flower-catalog-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.85rem;
+    gap: 1.5rem;
   }
 }
 
 .flower-card {
   min-width: 0;
   background: #ffffff;
-  border: 1px solid #dce8d8;
-  border-radius: 8px;
+  border: 1px solid #dce6d7;
+  border-radius: 12px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   box-shadow: none;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    border-color 0.2s ease;
-}
-
-.flower-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px -6px rgba(24, 62, 43, 0.16);
-  border-color: #9bc390;
 }
 
 .flower-card-media {
   position: relative;
   aspect-ratio: 1 / 1;
+  border-radius: 0;
   background: #edf5eb;
   overflow: hidden;
   display: block;
@@ -46,320 +37,6 @@
   padding: 0;
   border: none;
   text-align: left;
-}
-
-/* Flower Detail Page */
-.flower-detail-page {
-  box-sizing: border-box;
-  max-width: var(--customer-page-width, 1160px);
-  margin: 1.5rem auto 3rem;
-  padding-inline: var(--customer-page-gutter, 1.5rem);
-  min-height: 0;
-  background: transparent;
-}
-.flower-detail-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  min-height: 24px;
-  margin-bottom: 1rem;
-  padding: 0.25rem 0;
-  color: var(--color-muted, #45654a);
-  font-size: 0.88rem;
-  font-weight: 600;
-  text-decoration: none;
-  background: transparent;
-  border: none;
-  transition: all 0.15s ease;
-}
-.flower-detail-back:hover {
-  color: var(--color-ink, #204b2e);
-  text-decoration: underline;
-  transform: translateX(-2px);
-}
-.flower-detail {
-  background: #fff;
-  border: 1px solid #dce6d7;
-  border-radius: 18px;
-  padding: clamp(1rem, 3vw, 2rem);
-  box-shadow: 0 3px 12px #183e2b04;
-}
-.flower-detail-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 44fr) minmax(0, 56fr);
-  gap: clamp(1.75rem, 4vw, 3rem);
-  align-items: start;
-}
-.flower-detail-media {
-  position: relative;
-  margin: 0;
-  overflow: hidden;
-  border-radius: 12px;
-  background: #f4f7f2;
-  border: 1px solid #e2ece0;
-  box-shadow: 0 4px 16px -4px rgba(24, 62, 43, 0.05);
-  width: 100%;
-}
-.flower-detail-media img {
-  display: block;
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  object-fit: cover;
-}
-.flower-detail-media figcaption {
-  padding: 0.65rem 0.85rem;
-  color: var(--color-muted, #45654a);
-  background: #f7faf5;
-  font-size: 0.8rem;
-  border-top: 1px solid #e8efe6;
-  text-align: center;
-  line-height: 1.4;
-}
-.flower-detail-content {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-.flower-detail-header-meta {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-  margin-bottom: 0.4rem;
-}
-.flower-detail-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.2rem 0.6rem;
-  border-radius: 6px;
-  background: #eaf5e6;
-  color: #174b27;
-  font-size: 0.75rem;
-  font-weight: 700;
-  border: 1px solid #c8ddc4;
-}
-.flower-detail-badge-occasion {
-  background: #fff8e6;
-  color: #7a5400;
-  border-color: #ffd666;
-}
-.flower-detail-content h1 {
-  margin: 0.15rem 0 0.5rem;
-  color: var(--color-ink, #204b2e);
-  font-family: var(--font-display, 'Nunito', sans-serif);
-  font-size: clamp(1.6rem, 2.6vw, 2.15rem);
-  font-weight: 800;
-  line-height: 1.25;
-  letter-spacing: -0.02em;
-  overflow-wrap: anywhere;
-}
-.flower-detail-pricing {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.65rem;
-  margin: 0.35rem 0 0.45rem;
-  padding: 0;
-  background: transparent;
-  border: none;
-}
-.flower-detail-price {
-  font-size: 1.85rem;
-  font-weight: 800;
-  color: #164624;
-  letter-spacing: -0.02em;
-}
-.flower-detail-price-sub {
-  font-size: 0.85rem;
-  color: #55775d;
-  font-weight: 600;
-}
-.flower-detail-divider {
-  border-top: 1px dashed #dce8d9;
-  margin: 0.75rem 0 1rem;
-}
-.flower-detail-description {
-  margin-bottom: 1rem;
-}
-.flower-detail-description h2 {
-  margin: 0 0 0.35rem;
-  color: #174b27;
-  font-size: 0.92rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-.flower-detail-description > p {
-  margin: 0;
-  color: #3b5643;
-  line-height: 1.6;
-  font-size: 0.9rem;
-  white-space: pre-line;
-  overflow-wrap: anywhere;
-}
-.flower-detail-location {
-  margin: 0 0 1.25rem;
-  padding: 0.85rem 1rem;
-  background: #f9fbf8;
-  border-radius: 10px;
-  border: 1px solid #e5ede2;
-}
-.flower-detail-location h2 {
-  margin: 0 0 0.6rem;
-  color: #1b4928;
-  font-size: 0.82rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.flower-detail-location-body {
-  display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
-}
-.flower-detail-info-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  color: var(--color-ink, #204b2e);
-}
-.flower-detail-info-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background: #eef5e9;
-  color: #1c4b29;
-  flex: 0 0 36px;
-  border: 1px solid #d5e6cf;
-}
-.flower-detail-info-content,
-.flower-detail-info-row > div:not(.flower-detail-info-icon) {
-  min-width: 0;
-  flex: 1;
-}
-.flower-detail-info-content span,
-.flower-detail-info-row span {
-  display: block;
-  color: #55775d;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-.flower-detail-info-content strong,
-.flower-detail-info-row strong {
-  display: block;
-  color: #164624;
-  font-size: 0.92rem;
-  font-weight: 700;
-  margin-top: 0.1rem;
-  overflow-wrap: anywhere;
-}
-.flower-detail-info-content p,
-.flower-detail-info-row p {
-  margin: 0.15rem 0 0;
-  color: #4b6b52;
-  font-size: 0.84rem;
-  line-height: 1.45;
-  overflow-wrap: anywhere;
-}
-.flower-detail-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.65rem;
-}
-.flower-detail-actions .button {
-  flex: 1 1 0;
-  min-height: 44px;
-  height: 44px;
-  padding: 0 1.15rem;
-  font-size: 0.92rem;
-  font-weight: 700;
-  border-radius: 8px;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  box-sizing: border-box;
-}
-.flower-detail-note {
-  font-size: 0.82rem;
-  color: #55775d;
-  line-height: 1.45;
-  margin: 0;
-  padding: 0;
-  background: transparent;
-  border: none;
-}
-
-.flower-detail-guide {
-  display: grid;
-  gap: 0.65rem;
-  margin: 1.25rem 0 0;
-  padding: 1rem 0 0;
-  border-top: 1px solid #e3ebdf;
-  list-style: none;
-  color: #476451;
-  font-size: 0.8rem;
-}
-
-.flower-detail-guide li {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-}
-
-.flower-detail-guide span {
-  display: grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  flex: 0 0 24px;
-  border-radius: 50%;
-  background: #edf4e9;
-  color: #254d33;
-  font-size: 0.7rem;
-  font-weight: 700;
-}
-.flower-detail-demo-note {
-  font-size: 0.82rem;
-  color: #708a76;
-  margin-top: 0.5rem;
-  font-style: italic;
-}
-@media (max-width: 899px) {
-  .flower-detail-page {
-    padding-inline: var(--customer-page-gutter, 1rem);
-    margin-top: 1rem;
-    margin-bottom: 2.5rem;
-  }
-  .flower-detail-layout {
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
-  }
-  .flower-detail-media {
-    max-width: 100%;
-    border-radius: 12px;
-  }
-  .flower-detail-media img {
-    aspect-ratio: 4 / 3;
-    max-height: 440px;
-  }
-}
-@media (max-width: 480px) {
-  .flower-detail-actions {
-    flex-direction: column;
-    width: 100%;
-  }
-  .flower-detail-actions .button {
-    width: 100%;
-    flex: none;
-  }
 }
 
 .flower-card-media:focus-visible {
@@ -467,19 +144,18 @@
 }
 
 .flower-card-body {
-  padding: 0.75rem;
+  padding: 0.85rem;
   display: flex;
   flex-direction: column;
   flex: 1;
 }
 
 .flower-card-title {
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: #113421;
-  margin: 0 0 0.35rem;
+  margin: 0 0 0.2rem;
   line-height: 1.35;
-  min-height: 2.5em;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -529,11 +205,11 @@
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  font-size: 0.72rem;
+  font-size: 0.76rem;
   color: #385540;
-  margin-top: auto;
-  padding-block: 0.4rem;
-  border-top: 1px solid #edf4ec;
+  margin-top: 0;
+  padding-block: 0.6rem 0.45rem;
+  border-top: 1px solid #edf1e9;
 }
 
 .flower-meta-item {
@@ -561,17 +237,26 @@
   justify-content: space-between;
   gap: 0.35rem;
   padding-top: 0.35rem;
-  margin-bottom: 0.55rem;
+  margin-bottom: 0.5rem;
+}
+
+.flower-card-price-row > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.15rem 0.5rem;
 }
 
 .flower-card-price {
-  font-size: 0.98rem;
+  font-size: 1.1rem;
+  font-variant-numeric: tabular-nums;
   font-weight: 700;
   color: #183e2b;
 }
 
 .flower-card-price-label {
-  font-size: 0.7rem;
+  display: block;
+  font-size: 0.75rem;
   color: #34523e;
 }
 

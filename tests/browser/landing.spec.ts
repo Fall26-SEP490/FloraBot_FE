@@ -60,7 +60,9 @@ test('Registration errors, selected package, and real request shape', async ({ p
   await page.getByRole('button', { name: 'Đăng ký tư vấn' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Đã nhận đăng ký' })).toBeVisible();
 });
-test('Keyboard skip, narrow reflow, text spacing, and gift demo', async ({ page }) => {
+test('Keyboard skip, narrow reflow, text spacing, and a single budget navigation', async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 320, height: 800 });
   await page.goto('/');
   await page.evaluate(() => document.fonts.ready);
@@ -76,9 +78,14 @@ test('Keyboard skip, narrow reflow, text spacing, and gift demo', async ({ page 
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
     true,
   );
-  await page.locator('.gift-demo').scrollIntoViewIfNeeded();
-  await page.getByRole('button', { name: 'Xem gợi ý hoa' }).click();
-  await expect(page.locator('.gift-results li')).toHaveCount(3);
+  const budgets = page.getByRole('navigation', { name: 'Chọn hoa theo ngân sách', exact: true });
+  await expect(budgets).toHaveCount(1);
+  await budgets.scrollIntoViewIfNeeded();
+  await expect(budgets.getByRole('link', { name: 'Dưới 300.000 đ', exact: true })).toHaveAttribute(
+    'href',
+    '/dat-hoa?price=under300',
+  );
+  await expect(page.locator('.gift-tool, .gift-demo')).toHaveCount(0);
 });
 
 test('Expanded flower collection loads twelve distinct photographs on desktop and mobile', async ({
@@ -138,15 +145,17 @@ for (const width of [390, 1440]) {
   });
 }
 
-test('Landing motion, map consent, expanded gift tool and budget', async ({ page }) => {
+test('Landing motion, map consent, and consolidated budget navigation', async ({ page }) => {
   let tiles = 0;
   page.on('request', (request) => {
     if (request.url().includes('tile.openstreetmap.org')) tiles++;
   });
   await page.goto('/');
   await page.evaluate(() => document.fonts.ready);
-  await expect(page.locator('.gift-tool > summary')).toHaveCount(0);
-  await expect(page.locator('.gift-demo form')).toBeVisible();
+  await expect(page.locator('.gift-tool, .gift-demo')).toHaveCount(0);
+  await expect(
+    page.getByRole('navigation', { name: 'Chọn hoa theo ngân sách', exact: true }),
+  ).toBeVisible();
   expect(tiles).toBe(0);
   await expect
     .poll(
@@ -171,19 +180,11 @@ test('Landing motion, map consent, expanded gift tool and budget', async ({ page
       .evaluate((element) => getComputedStyle(element).animationName),
   ).toBe('none');
   await expect(page.locator('#recipient, #occasion, #tone')).toHaveCount(0);
-  await page
-    .locator('.budget-options')
-    .getByRole('button', { name: /300\.000/ })
-    .click();
-  await page.getByRole('button', { name: 'Xem gợi ý hoa' }).click();
-  await expect(page.locator('.gift-results li')).toHaveCount(3);
-  await expect(page.locator('.gift-results')).not.toContainText('350.000');
-  await page
-    .locator('.budget-options')
-    .getByRole('button', { name: /500\.000/ })
-    .click();
-  await page.getByRole('button', { name: 'Xem gợi ý hoa' }).click();
-  await expect(page.locator('.gift-results li').first()).toContainText(fixture.catalog[0].name);
+  const budgets = page.getByRole('navigation', { name: 'Chọn hoa theo ngân sách', exact: true });
+  await expect(budgets).toHaveCount(1);
+  await expect(
+    budgets.getByRole('link', { name: '300.000–600.000 đ', exact: true }),
+  ).toHaveAttribute('href', '/dat-hoa?price=300to600');
   expect(
     (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations,
   ).toEqual([]);
