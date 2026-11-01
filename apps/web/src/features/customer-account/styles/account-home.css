@@ -322,3 +322,56 @@
   gap: 0.4rem;
   min-height: 44px;
 }
+
+.workspace-portal-root .account-rental {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid #cbdcc5;
+  border-radius: 14px;
+  background: #f1f6eb;
+  min-width: 0;
+}
+.account-rental-info {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.workspace-portal-root .account-rental h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.125rem;
+  color: #173e2c;
+}
+.account-rental-shop {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: #173e2c;
+}
+.account-rental-info p {
+  margin: 0.35rem 0 0;
+  color: #425d4a;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.account-rental-hint {
+  max-width: 60ch;
+}
+.account-rental > .button {
+  flex-shrink: 0;
+  min-height: 48px;
+  gap: 0.5rem;
+}
+.account-rental-info .button {
+  margin-top: 0.75rem;
+}
+@media (max-width: 760px) {
+  .workspace-portal-root .account-rental {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 1rem;
+  }
+  .account-rental > .button {
+    align-self: stretch;
+  }
+}
