@@ -224,7 +224,9 @@ test('Customer opens chat from product and enters conversation in account area',
   const chatBtn = page.getByRole('button', { name: 'Nhắn tin với shop' }).first();
   await chatBtn.click();
 
-  await expect(page).toHaveURL(new RegExp(`/tai-khoan\\?chat=${mockChat.id}#member-chats`));
+  await expect(page).toHaveURL(/#member-chats$/);
+  expect(new URL(page.url()).searchParams.get('chat')).toBe(mockChat.id);
+  expect(new URL(page.url()).searchParams.get('chatReturn')).toBe('/dat-hoa');
   expect(openedPayload).toEqual({
     sellerId: mockFlower.sellerId,
     productId: mockFlower.productId,
@@ -232,7 +234,7 @@ test('Customer opens chat from product and enters conversation in account area',
 
   // Verify conversation view renders with counterparty and messages
   await expect(page.getByRole('heading', { name: mockChat.otherPartyName })).toBeVisible();
-  await expect(page.getByText('Hoa: Hoa hồng pastel')).toBeVisible();
+  await expect(page.locator('.chat-conversation-context')).toContainText('Hoa hồng pastel');
   await expect(
     page.locator('.chat-messages-list').getByText('Shop ơi mình muốn đặt thêm nơ'),
   ).toBeVisible();

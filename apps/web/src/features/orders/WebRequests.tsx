@@ -26,6 +26,7 @@ import {
   orderStage,
   sellerOrderActionLabel,
   customerOrderActionLabel,
+  customerOrderHint,
   sellerOrderHint,
   statusName,
   money,
@@ -34,6 +35,9 @@ import {
 import type { OrderFilter, Page, SendPreorderPickupOtpResponse, WebOrder } from './orders.types';
 import styles from './seller-orders.module.css';
 import customerStyles from './customer-orders.module.css';
+import { CustomerQuoteDetails, CustomerPaymentReturn } from './CustomerQuoteDetails';
+import CustomerPickupGuide from './CustomerPickupGuide';
+import CustomerOrderChat from './CustomerOrderChat';
 import { readSellerQueue, sellerQueueKey, SELLER_RESULT_SIZE } from './seller-queue';
 import { rememberPreorderPayment } from './payment-return';
 
@@ -71,6 +75,7 @@ function OrderActions({
   mode,
   role,
   page,
+  filter,
   onReload,
 }: {
   row: WebOrder;
@@ -78,6 +83,7 @@ function OrderActions({
   mode: 'member' | 'seller' | 'admin';
   role?: string;
   page: number;
+  filter: OrderFilter;
   onReload: () => Promise<void>;
 }) {
   const [now, setNow] = useState(() => Date.now());
@@ -99,7 +105,6 @@ function OrderActions({
   const sending = useRef(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  const [copiedField, setCopiedField] = useState<'' | 'orderId' | 'token'>('');
   const [price, setPrice] = useState(String(row.quotedPrice || ''));
   const [note, setNote] = useState('');
   const [reject, setReject] = useState(false);
@@ -116,6 +121,12 @@ function OrderActions({
     pickupAt: string;
     note: string | null;
   } | null>(null);
+  const reviewedQuoteChanged = Boolean(
+    reviewedQuote &&
+    (reviewedQuote.price !== row.quotedPrice ||
+      reviewedQuote.pickupAt !== row.pickupAt ||
+      reviewedQuote.note !== row.quoteNote),
+  );
   const [otpSending, setOtpSending] = useState(false);
   const otpSendingRef = useRef(false);
   const [otpHasSent, setOtpHasSent] = useState(false);
@@ -198,6 +209,9 @@ function OrderActions({
       setOtpSending(false);
     }
   }
+  const quoteExpired = Boolean(row.quoteExpiresAt && new Date(row.quoteExpiresAt).getTime() <= now);
+  const paymentExpired = Boolean(row.payBefore && new Date(row.payBefore).getTime() <= now);
+  const hasQuotedPrice = row.quotedPrice != null && Number.isFinite(row.quotedPrice);
   const slots = useQuery({
     queryKey: ['seller-kiosk-slots', row.sellerId, row.kioskId],
     queryFn: () =>
@@ -211,17 +225,29 @@ function OrderActions({
       (item) => item.kioskId === row.kioskId && item.status === 'RENTED_EMPTY' && !item.bouquetId,
     ) ?? [];
   const fulfillSlots = emptyKioskSlots.filter((item) => item.zone === 'PREORDER');
-  async function copyText(value: string, field: 'orderId' | 'token') {
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopiedField(field);
-      window.setTimeout(() => setCopiedField(''), 2000);
-    } catch {
-      /* Clipboard permission may be unavailable in some contexts */
-    }
-  }
   async function send(kind: string, body: unknown) {
     if (sending.current || uncertain) return;
+    if (
+      mode === 'member' &&
+      kind === 'accept' &&
+      (!hasQuotedPrice ||
+        reviewedQuoteChanged ||
+        (row.quoteExpiresAt && new Date(row.quoteExpiresAt).getTime() <= Date.now()))
+    ) {
+      setError(
+        'Báo giá đã hết hạn hoặc chưa có số tiền hợp lệ. Làm mới đơn và liên hệ shop để kiểm tra.',
+      );
+      return;
+    }
+    if (
+      mode === 'member' &&
+      kind === 'payment-link' &&
+      row.payBefore &&
+      new Date(row.payBefore).getTime() <= Date.now()
+    ) {
+      setError('Đã hết hạn thanh toán. Làm mới để kiểm tra trạng thái của đơn.');
+      return;
+    }
     sending.current = true;
     setBusy(true);
     setError('');
@@ -314,13 +340,18 @@ function OrderActions({
         role="note"
       >
         {!(mode === 'seller' && orderClosed(row)) && <strong>Bước tiếp theo</strong>}
-        <p>{orderNextStep(row, mode)}</p>
+        <p>{mode === 'member' ? customerOrderHint(row) : orderNextStep(row, mode)}</p>
       </div>
       {mode !== 'seller' &&
+        !(
+          mode === 'member' &&
+          ((!row.orderId && row.state === 'QUOTED') || row.orderStatus === 'AWAITING_PAYMENT')
+        ) &&
         !orderClosed(row) &&
         !['DISPUTED', 'DISPENSE_FAILED'].includes(row.orderStatus ?? '') &&
         progress}
-      {mode !== 'seller' && (
+      {mode === 'member' && <CustomerQuoteDetails row={row} now={now} />}
+      {mode === 'admin' && (
         <>
           <p>
             <strong>{row.productName}</strong> · {row.shopName}
@@ -361,52 +392,7 @@ function OrderActions({
           )}
         </div>
       )}
-      {mode === 'member' && row.orderStatus === 'PAID' && row.ready && (
-        <p>
-          Đến đúng kiosk trong khung giờ nhận, chọn “Nhận đơn đặt trước” và nhập OTP 8 chữ số được
-          gửi qua email.
-        </p>
-      )}
-      {mode === 'member' &&
-        row.orderId &&
-        row.trackingToken &&
-        row.ready &&
-        ['PAID', 'DISPENSING'].includes(row.orderStatus ?? '') && (
-          <div className="order-pickup-credentials" aria-label="Thông tin nhận hoa tại Kiosk">
-            <p>
-              Giữ riêng hai mã này. Tại đúng kiosk, chọn “Đã thanh toán nhưng chưa nhận hoa?”, nhập
-              ID biên nhận và mã 8 ký tự bên dưới, rồi xác nhận mở ô trong giờ hẹn.
-            </p>
-            <dl className="bank-summary">
-              <div>
-                <dt>ID biên nhận (nhập tại Kiosk)</dt>
-                <dd>
-                  <code>{row.orderId}</code>{' '}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => void copyText(row.orderId!, 'orderId')}
-                  >
-                    {copiedField === 'orderId' ? 'Đã chép ID' : 'Sao chép ID'}
-                  </Button>
-                </dd>
-              </div>
-              <div>
-                <dt>Mã biên nhận 8 ký tự</dt>
-                <dd>
-                  <code>{row.trackingToken}</code>{' '}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => void copyText(row.trackingToken!, 'token')}
-                  >
-                    {copiedField === 'token' ? 'Đã chép mã' : 'Sao chép mã'}
-                  </Button>
-                </dd>
-              </div>
-            </dl>
-          </div>
-        )}
+      {mode === 'member' && <CustomerPickupGuide row={row} now={now} />}
       {mode === 'member' && row.orderId && row.trackingToken && (
         <a
           href={`/receipt#order=${encodeURIComponent(row.orderId)}&token=${encodeURIComponent(row.trackingToken)}`}
@@ -415,15 +401,14 @@ function OrderActions({
           Xem biên nhận và hỗ trợ hoàn tiền
         </a>
       )}
+      {mode === 'member' && role === 'CUSTOMER' && !action && !uncertain && (
+        <CustomerOrderChat row={row} page={page} filter={filter} />
+      )}
       {!action && (
         <div className="stock-actions">
           {mode === 'member' && row.state === 'QUOTED' && !row.orderId && (
             <Button
-              disabled={
-                busy ||
-                uncertain ||
-                (!!row.quoteExpiresAt && new Date(row.quoteExpiresAt).getTime() <= now)
-              }
+              disabled={busy || uncertain || !hasQuotedPrice || quoteExpired}
               onClick={() => {
                 setReviewedQuote({
                   price: row.quotedPrice,
@@ -440,9 +425,7 @@ function OrderActions({
           {mode === 'member' && row.orderStatus === 'AWAITING_PAYMENT' && (
             <Button
               aria-busy={busy}
-              disabled={
-                busy || uncertain || (!!row.payBefore && new Date(row.payBefore).getTime() <= now)
-              }
+              disabled={busy || uncertain || paymentExpired}
               onClick={() => void send('payment-link', {})}
             >
               {busy ? 'Đang mở thanh toán…' : 'Thanh toán ngay'}
@@ -505,7 +488,7 @@ function OrderActions({
           )}
         </div>
       )}
-      {row.payBefore && row.orderStatus === 'AWAITING_PAYMENT' && (
+      {mode !== 'member' && row.payBefore && row.orderStatus === 'AWAITING_PAYMENT' && (
         <p>
           Thanh toán trước {when(row.payBefore)}. Hết hạn, yêu cầu thanh toán không còn hiệu lực.
         </p>
@@ -574,9 +557,14 @@ function OrderActions({
             </h3>
             {action === 'accept' && reviewedQuote && (
               <p>
-                Bạn đồng ý giá {money(reviewedQuote.price || 0)}, nhận từ{' '}
-                {when(reviewedQuote.pickupAt)}. Nội dung: {reviewedQuote.note}. Bước tiếp theo là
-                thanh toán; hoa chỉ được chuẩn bị sau khi thanh toán được xác nhận.
+                Kiểm tra báo giá ở trên, rồi đánh dấu đồng ý để xác nhận với shop. Bước này chưa trừ
+                tiền; bạn sẽ thanh toán ở bước tiếp theo.
+              </p>
+            )}
+            {action === 'accept' && reviewedQuoteChanged && (
+              <p role="alert" className="error">
+                Shop đã cập nhật báo giá trong lúc bạn xem. Đóng phần xác nhận rồi chọn Kiểm tra báo
+                giá để xem lại.
               </p>
             )}
             {action === 'quote' && (
@@ -715,7 +703,11 @@ function OrderActions({
                   onChange={(event) => setConfirm(event.target.checked)}
                   disabled={busy}
                 />
-                <span>Tôi đã đối chiếu và xác nhận thông tin trên.</span>
+                <span>
+                  {action === 'accept' && mode === 'member'
+                    ? 'Tôi đồng ý với giá, ghi chú và lịch nhận của shop.'
+                    : 'Tôi đã đối chiếu và xác nhận thông tin trên.'}
+                </span>
               </label>
             )}
             <div className="stock-actions">
@@ -736,7 +728,12 @@ function OrderActions({
               ) : (
                 <Button
                   type="submit"
-                  disabled={busy}
+                  disabled={
+                    busy ||
+                    (mode === 'member' &&
+                      action === 'accept' &&
+                      (!confirm || quoteExpired || !hasQuotedPrice || reviewedQuoteChanged))
+                  }
                   className={
                     action === 'cancel' || (action === 'quote' && reject)
                       ? 'management-danger-button'
@@ -751,7 +748,9 @@ function OrderActions({
                         ? 'Xác nhận từ chối'
                         : action === 'fulfill'
                           ? 'Xác nhận nạp hoa'
-                          : 'Xác nhận gửi'}
+                          : action === 'accept' && mode === 'member'
+                            ? 'Đồng ý báo giá'
+                            : 'Xác nhận gửi'}
                 </Button>
               )}
               <Button
@@ -943,10 +942,11 @@ export default function WebRequests({
         </h2>
       )}
       {mode === 'member' && params.get('paymentReturn') === '1' && (
-        <p role="status">
-          Đã trở về từ payOS. Trạng thái đơn bên dưới được đối chiếu với máy chủ; nếu còn chờ thanh
-          toán, vui lòng chờ cập nhật. Mã nhận hoa xuất hiện khi shop đã nạp hoa vào tủ.
-        </p>
+        <CustomerPaymentReturn
+          row={items.find((row) => row.id === returnedRequest)}
+          loading={query.isPending}
+          failed={query.isError}
+        />
       )}
       {mode === 'member' && (
         <p role="status" aria-live="polite">
@@ -1101,24 +1101,32 @@ export default function WebRequests({
         query.data &&
         (mode !== 'member' || items.length > 0) &&
         (mode === 'member' ? (
-          <dl className={customerStyles.totals} aria-label="Tóm tắt trang đơn đang xem">
-            <div>
-              <dt>Đơn đang xem</dt>
-              <dd>{items.length}</dd>
-            </div>
-            <div>
-              <dt>Cần phản hồi</dt>
-              <dd>{items.filter((row) => needsOrderAction(row, mode)).length}</dd>
-            </div>
-            <div>
-              <dt>Đang chuẩn bị</dt>
-              <dd>{items.filter((row) => row.orderStatus === 'PAID' && !row.ready).length}</dd>
-            </div>
-            <div>
-              <dt>Sẵn sàng tại tủ</dt>
-              <dd>{items.filter((row) => row.ready && row.orderStatus === 'PAID').length}</dd>
-            </div>
-          </dl>
+          <div
+            className={customerStyles.filters}
+            role="group"
+            aria-label="Tóm tắt trang đơn đang xem"
+          >
+            {(
+              [
+                { value: 'all', label: 'Tất cả' },
+                { value: 'attention', label: 'Cần bạn xử lý' },
+                { value: 'preparing', label: 'Đang chuẩn bị' },
+                { value: 'ready', label: 'Chờ nhận hoa' },
+              ] as const
+            ).map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={filter === value}
+                onClick={() => setFilter(value)}
+              >
+                {label}
+                <span>
+                  {items.filter((row) => matchesOrderFilter(row, value, 'member')).length}
+                </span>
+              </button>
+            ))}
+          </div>
         ) : (
           <div
             className="operations-metrics order-summary-strip"
@@ -1162,7 +1170,9 @@ export default function WebRequests({
         </p>
       )}
       {mode !== 'seller' && (
-        <div className="queue-filter-bar order-filter-bar">
+        <div
+          className={`queue-filter-bar order-filter-bar ${mode === 'member' ? customerStyles.toolbar : ''}`}
+        >
           <div className="filter-group">
             <label htmlFor={`order-filter-${mode}`} className="sr-only">
               Lọc yêu cầu trong trang
@@ -1300,9 +1310,12 @@ export default function WebRequests({
                             </strong>
                           </span>
                         </span>
-                        <span className={customerStyles.action}>
-                          {customerOrderActionLabel(row)}{' '}
-                          <ArrowRight size={16} aria-hidden="true" />
+                        <span className={customerStyles.next}>
+                          <span>{customerOrderHint(row)}</span>
+                          <span className={customerStyles.action}>
+                            {customerOrderActionLabel(row)}{' '}
+                            <ArrowRight size={16} aria-hidden="true" />
+                          </span>
                         </span>
                       </span>
                     ) : (
@@ -1371,6 +1384,7 @@ export default function WebRequests({
                     mode={mode}
                     role={session.data?.role}
                     page={page}
+                    filter={filter}
                     onReload={async () => {
                       const fresh = await query.refetch();
                       if (fresh.isError || !fresh.data?.items.some((item) => item.id === row.id))

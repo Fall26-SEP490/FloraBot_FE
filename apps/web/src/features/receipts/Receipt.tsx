@@ -106,93 +106,112 @@ export default function Receipt() {
 
   return (
     <main id="main" className="receipt-page">
-      <a className="portal-brand" href={'/'}>
-        FloraBot
-      </a>
-      <h1>Biên nhận của bạn</h1>
-      <a href="/lich-su-mua">Biên nhận đã lưu trên thiết bị này</a>
-      <p>Mỗi bó hoa, một niềm vui. Xem lại đơn hàng và tình trạng hoàn tiền tại đây.</p>
-      <p className="quiet">
-        Giữ riêng mã tra cứu: người có cả hai mã có thể xem và gửi yêu cầu cho đơn này. Thông tin
-        nhập sẽ mất khi tải lại hoặc đóng trang, trừ khi bạn chọn lưu biên nhận trên thiết bị.
-      </p>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          void lookup();
-        }}
-        aria-label="Tra cứu biên nhận"
-      >
-        <label htmlFor="receipt-order">ID biên nhận</label>
-        <input
-          id="receipt-order"
-          value={orderId}
-          onChange={(event) => {
-            setOrderId(event.target.value);
-            setReceipt(null);
-          }}
-          autoComplete="off"
-          spellCheck={false}
-          maxLength={36}
-          readOnly={pending}
-          aria-describedby="receipt-help receipt-error"
-        />
-        <p className="quiet" id="receipt-help">
-          Dãy 36 ký tự tại kiosk, khác với mã đơn hàng. Quét QR để điền sẵn cả hai mã.
+      <header className="receipt-heading">
+        <h1>Biên nhận của bạn</h1>
+        <p>Xem thông tin đơn, trạng thái nhận hoa và khoản hoàn.</p>
+        <a href="/lich-su-mua">Biên nhận đã lưu trên thiết bị này</a>
+      </header>
+      <details className="receipt-lookup" open={!receipt || undefined}>
+        <summary>
+          {receipt ? 'Tra cứu lại hoặc cập nhật biên nhận' : 'Tra cứu bằng mã biên nhận'}
+        </summary>
+        <p className="quiet">
+          Nhập hai mã từ kiosk hoặc liên kết biên nhận trong đơn hàng. Mã tra cứu không phải OTP
+          nhận hoa trong email.
         </p>
-        <label htmlFor="receipt-token">Mã tra cứu</label>
-        <input
-          id="receipt-token"
-          value={token}
-          onChange={(event) => {
-            setToken(event.target.value);
-            setReceipt(null);
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            void lookup();
           }}
-          autoComplete="off"
-          autoCapitalize="characters"
-          spellCheck={false}
-          maxLength={8}
-          readOnly={pending}
-          aria-describedby="receipt-error"
-        />
-        <p id="receipt-error" role="alert" className="error">
-          {error}
+          aria-label="Tra cứu biên nhận"
+        >
+          <label htmlFor="receipt-order">ID biên nhận</label>
+          <input
+            id="receipt-order"
+            value={orderId}
+            onChange={(event) => {
+              setOrderId(event.target.value);
+              setReceipt(null);
+            }}
+            autoComplete="off"
+            spellCheck={false}
+            maxLength={36}
+            readOnly={pending}
+            aria-describedby="receipt-help receipt-error"
+          />
+          <p className="quiet" id="receipt-help">
+            Dãy 36 ký tự tại kiosk, khác với mã đơn hàng. Quét QR để điền sẵn cả hai mã.
+          </p>
+          <label htmlFor="receipt-token">Mã tra cứu</label>
+          <input
+            id="receipt-token"
+            value={token}
+            onChange={(event) => {
+              setToken(event.target.value);
+              setReceipt(null);
+            }}
+            autoComplete="off"
+            autoCapitalize="characters"
+            spellCheck={false}
+            maxLength={8}
+            readOnly={pending}
+            aria-describedby="receipt-error"
+          />
+          <p id="receipt-error" role="alert" className="error">
+            {error}
+          </p>
+          <div className="receipt-actions">
+            <Button type="submit" disabled={pending}>
+              {pending ? 'Đang tra cứu…' : 'Xem biên nhận'}
+            </Button>
+            {pending && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  controller.current?.abort();
+                  setPending(false);
+                  setError('');
+                  document.getElementById('receipt-order')?.focus();
+                }}
+              >
+                Hủy tra cứu
+              </Button>
+            )}
+          </div>
+        </form>
+        <p className="quiet receipt-privacy">
+          Giữ riêng hai mã: người có cả hai mã có thể xem và gửi yêu cầu cho đơn này. Chỉ lưu biên
+          nhận trên thiết bị riêng của bạn.
         </p>
-        <div className="receipt-actions">
-          <Button type="submit" disabled={pending}>
-            {pending ? 'Đang tra cứu…' : 'Xem biên nhận'}
-          </Button>
-          {pending && (
+      </details>
+      {receipt && (
+        <section className="receipt-result" aria-labelledby="receipt-result">
+          <div className="receipt-result-heading">
+            <h2 id="receipt-result" ref={heading} tabIndex={-1}>
+              Đơn {receipt.orderCode}
+            </h2>
             <Button
               type="button"
               variant="outline"
-              onClick={() => {
-                controller.current?.abort();
-                setPending(false);
-                setError('');
-                document.getElementById('receipt-order')?.focus();
-              }}
+              disabled={pending}
+              onClick={() => void lookup()}
             >
-              Hủy tra cứu
+              Cập nhật trạng thái
             </Button>
-          )}
-        </div>
-      </form>
-      <p className="quiet">
-        Việc tra cứu không xóa biên nhận hoặc giao dịch thanh toán trong hệ thống.
-      </p>
-      {receipt && (
-        <section aria-labelledby="receipt-result">
-          <h2 id="receipt-result" ref={heading} tabIndex={-1}>
-            Đơn {receipt.orderCode}
-          </h2>
-          <p className="receipt-status">{statuses[receipt.status] || 'Đang cập nhật trạng thái'}</p>
+          </div>
+          <p className="receipt-status" data-status={receipt.status}>
+            {statuses[receipt.status] || 'Đang cập nhật trạng thái'}
+          </p>
           <p>Đặt lúc {date(receipt.createdAt)}</p>
           {['PAID', 'DISPENSING'].includes(receipt.status) && receipt.items.length > 0 && (
-            <div>
+            <details className="receipt-recovery">
+              <summary>Mã tra cứu khi cần hỗ trợ tại kiosk</summary>
               <p>
-                Tại đúng kiosk, chọn “Đã thanh toán nhưng chưa nhận hoa?” và nhập hai mã bên dưới
-                trong giờ hẹn.
+                Hai mã này khác với OTP nhận đơn đặt trước trong email. Chỉ nhập khi màn hình kiosk
+                yêu cầu tại mục “Đã thanh toán nhưng chưa nhận hoa?”. Biên nhận không xác nhận hoa
+                đã sẵn sàng hoặc tủ đã mở.
               </p>
               <dl className="receipt-totals" aria-label="Mã nhận hoa tại Kiosk">
                 <div>
@@ -208,8 +227,9 @@ export default function Receipt() {
                   </dd>
                 </div>
               </dl>
-            </div>
+            </details>
           )}
+          <h3>Chi tiết tiền hàng</h3>
           <ul className="receipt-items">
             {receipt.items.map((item, index) => (
               <li key={index}>
@@ -221,7 +241,7 @@ export default function Receipt() {
               </li>
             ))}
           </ul>
-          <dl className="receipt-totals">
+          <dl className="receipt-totals" aria-label="Tiền hàng và khoản hoàn">
             <div>
               <dt>Tiền hàng</dt>
               <dd>{money(receipt.subtotal)}</dd>
@@ -267,7 +287,7 @@ export default function Receipt() {
           {receipt.completedAt && <p>Nhận hoa lúc {date(receipt.completedAt)}.</p>}
           {receipt.completedAt && (
             <section aria-labelledby="save-receipt-title">
-              <h3 id="save-receipt-title">Giữ lại lần gửi thương này</h3>
+              <h3 id="save-receipt-title">Lưu biên nhận trên thiết bị riêng</h3>
               <p>
                 Lưu biên nhận để xem lại mà không cần đăng nhập. Chỉ lưu trên điện thoại hoặc thiết
                 bị riêng của bạn.
@@ -325,7 +345,10 @@ export default function Receipt() {
               }
             />
           )}
-          <p className="quiet">Chọn “Xem biên nhận” để cập nhật tình trạng mới nhất.</p>
+          <p className="quiet">
+            Mở “Tra cứu lại hoặc cập nhật biên nhận”, rồi chọn “Xem biên nhận” để tải trạng thái mới
+            nhất.
+          </p>
         </section>
       )}
     </main>

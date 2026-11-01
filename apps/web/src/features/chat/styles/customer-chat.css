@@ -78,3 +78,75 @@
     width: 100%;
   }
 }
+
+.customer-chat-origin {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.25rem;
+  padding: 0.6rem 0 1rem;
+}
+.customer-chat-origin a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: #1e5037;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-underline-offset: 0.25em;
+}
+.customer-chat-origin p {
+  margin: 0;
+  color: #4a6552;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+.customer-chat-origin a:focus-visible {
+  outline: 2px solid #1e5037;
+  outline-offset: 3px;
+}
+.workspace-portal-root .member-page .customer-chat-section .chat-conversation-name {
+  font-size: 1rem;
+}
+.member-page .customer-chat-section .chat-list-search-input {
+  min-height: 44px;
+  height: 44px;
+}
+@media (max-width: 768px) {
+  .customer-chat-origin {
+    padding-bottom: 0.75rem;
+  }
+  .member-page .customer-chat-section .chat-conversation-footer {
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+}
+/* Customer composer keeps touch controls readable without changing seller chat. */
+.workspace-portal-root.member-account-root .customer-chat-section textarea.chat-composer-textarea {
+  min-height: 44px !important;
+  height: 44px !important;
+  font-size: 1rem !important;
+  outline: none !important;
+  caret-color: #1e5037;
+}
+.member-page .customer-chat-section .chat-composer-controls:has(textarea:focus-visible) {
+  outline: 2px solid #1e5037;
+  outline-offset: 2px;
+}
+.member-page .customer-chat-section .chat-composer-image-btn,
+.member-page .customer-chat-section .chat-composer-submit-btn.button {
+  min-width: 44px;
+  min-height: 44px;
+  height: 44px;
+}
+.member-page .customer-chat-section .chat-composer-counter:not(.is-warning):not(.is-error) {
+  display: none;
+}
+.member-page .customer-chat-section .chat-list-scope {
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+body:has(.customer-chat-section) .site-hotline-button {
+  display: none;
+}

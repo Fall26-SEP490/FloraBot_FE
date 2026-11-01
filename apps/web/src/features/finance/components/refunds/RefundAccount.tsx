@@ -93,7 +93,7 @@ export default function RefundAccount({
             : response.status === 429
               ? 'Bạn thao tác hơi nhanh. Hãy thử lại sau một phút.'
               : response.status === 409
-                ? 'Trạng thái khoản hoàn đã thay đổi. Chọn “Xem biên nhận” để cập nhật trước khi gửi lại.'
+                ? 'Trạng thái khoản hoàn đã thay đổi. Chọn “Cập nhật trạng thái” để cập nhật trước khi gửi lại.'
                 : 'Thông tin chưa hợp lệ. Kiểm tra lại ngân hàng, số tài khoản và tên chủ tài khoản.',
         );
         setReview(false);
@@ -113,7 +113,7 @@ export default function RefundAccount({
         setEditing(false);
         setUncertain(true);
         setError(
-          'Chưa xác nhận được kết quả gửi. Chọn “Xem biên nhận” để kiểm tra trạng thái trước khi nhập lại; thông tin vừa gửi có thể đã được lưu.',
+          'Chưa xác nhận được kết quả gửi. Chọn “Cập nhật trạng thái” để kiểm tra trạng thái trước khi nhập lại; thông tin vừa gửi có thể đã được lưu.',
         );
       }
     } finally {

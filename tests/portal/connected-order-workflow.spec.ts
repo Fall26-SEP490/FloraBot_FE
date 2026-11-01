@@ -208,9 +208,9 @@ test('Customer request → seller quote → customer acceptance/payment → sell
   await page.locator('details[id^="preorder-"] > summary').click();
   await page.getByRole('button', { name: 'Kiểm tra báo giá' }).click();
   await page
-    .getByRole('checkbox', { name: 'Tôi đã đối chiếu và xác nhận thông tin trên.' })
+    .getByRole('checkbox', { name: 'Tôi đồng ý với giá, ghi chú và lịch nhận của shop.' })
     .check();
-  await page.getByRole('button', { name: 'Xác nhận gửi', exact: true }).click();
+  await page.getByRole('button', { name: 'Đồng ý báo giá', exact: true }).click();
   await page.route('https://pay.payos.vn/**', (route) =>
     route.fulfill({ contentType: 'text/html', body: '<h1>Payment test page</h1>' }),
   );
@@ -259,10 +259,11 @@ test('Customer request → seller quote → customer acceptance/payment → sell
   await page.goto('/tai-khoan#web-orders');
   await page.locator('details[id^="preorder-"] > summary').click();
   await expect(
-    page.getByText(
-      'Đến đúng kiosk trong khung giờ nhận, chọn “Nhận đơn đặt trước” và nhập OTP 8 chữ số được gửi qua email.',
-    ),
+    page.getByText('Nhập OTP 8 chữ số được gửi tới email đăng nhập của bạn.'),
   ).toBeVisible();
+  await page
+    .getByText('Hỗ trợ khi đã thanh toán nhưng chưa nhận được hoa', { exact: true })
+    .click();
   await expect(page.getByLabel('Thông tin nhận hoa tại Kiosk')).toContainText('ABCD2345');
   await expect(page.getByLabel('Thông tin nhận hoa tại Kiosk')).toContainText(
     'Đã thanh toán nhưng chưa nhận hoa?',

@@ -375,3 +375,25 @@
     align-self: stretch;
   }
 }
+
+.account-pending-list .account-pending-status {
+  width: fit-content;
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  background: #edf3e8;
+  color: #2c563b;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+.account-pending-status[data-status='READY'] {
+  background: #e1f0dd;
+  color: #1c5139;
+}
+.account-pending-status[data-status='QUOTED'],
+.account-pending-status[data-status='AWAITING_PAYMENT'] {
+  background: #fff1d6;
+  color: #704b0e;
+}
+.account-pending-list li > div > small {
+  max-width: 65ch;
+}

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   canSendPreorderPickupOtp,
+  customerOrderHint,
+  customerOrderActionLabel,
   matchesOrderFilter,
   needsOrderAction,
   orderClosed,
@@ -62,4 +64,29 @@ describe('Order guidance follows backend state', () => {
       ),
     ).toBe(false);
   });
+});
+
+describe('Customer language follows the actual order state', () => {
+  it.each([
+    ['REQUESTED', null, false, 'Shop đang xem yêu cầu', 'Xem tiến độ'],
+    ['QUOTED', null, false, 'chỉ thanh toán sau khi đồng ý báo giá', 'Xem báo giá'],
+    ['ORDERED', 'AWAITING_PAYMENT', false, 'chờ đơn cập nhật trạng thái', 'Xem thanh toán'],
+    ['ORDERED', 'PAID', false, 'bạn chưa cần đến tủ', 'Xem tiến độ'],
+    ['ORDERED', 'PAID', true, 'Kiểm tra giờ nhận', 'Xem hướng dẫn nhận'],
+    ['CANCELLED', 'DISPENSE_FAILED', false, 'Giữ biên nhận', 'Theo dõi xử lý'],
+    ['ORDERED', 'COMPLETED', true, 'Bạn đã nhận hoa', 'Xem lại đơn'],
+    ['ORDERED', 'REFUNDED', false, 'Đơn đã được hoàn tiền', 'Xem lại đơn'],
+  ])(
+    '%s / %s describes the next step without technical jargon',
+    (state, orderStatus, ready, text, action) => {
+      const phase = {
+        state: String(state),
+        orderStatus: orderStatus as string | null,
+        ready: Boolean(ready),
+      };
+      expect(customerOrderHint(phase)).toContain(text);
+      expect(customerOrderActionLabel(phase)).toBe(action);
+      expect(customerOrderHint(phase)).not.toMatch(/backend|lệnh thiết bị/);
+    },
+  );
 });

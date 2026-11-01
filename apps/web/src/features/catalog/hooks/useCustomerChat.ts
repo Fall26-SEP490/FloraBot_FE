@@ -6,6 +6,10 @@ import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { queryClient, sessionQuery } from '@/shared/lib/api';
 import { formatChatError, openCustomerChat } from '@/features/chat/api';
+import {
+  customerConversationHref,
+  rememberOpenedCustomerChat,
+} from '@/features/chat/customer-chat.navigation';
 import type { CatalogItem } from '../catalog.types';
 import type { ChatNotice } from '../components/ChatNoticeDialog';
 
@@ -58,20 +62,9 @@ export function useCustomerChat(onBeforeOpen: (item: CatalogItem | null) => void
         const chat = await openCustomerChat({ sellerId: item.sellerId, productId: item.productId });
         // Reopening an existing chat can change its product context on the backend.
         queryClient.removeQueries({ queryKey: ['member-chats'] });
-        try {
-          sessionStorage.setItem(
-            'florabot_opened_chat',
-            JSON.stringify({
-              id: chat.id,
-              otherPartyName: chat.otherPartyName,
-              productContext: chat.productContext,
-              createdAt: new Date().toISOString(),
-            }),
-          );
-        } catch {
-          // Opening the conversation still works when browser storage is unavailable.
-        }
-        router.push(`/tai-khoan?chat=${encodeURIComponent(chat.id)}#member-chats`);
+        rememberOpenedCustomerChat(chat);
+        const current = new URL(window.location.href);
+        router.push(customerConversationHref(chat.id, current.pathname + current.search));
       } catch (error) {
         setChatNotice({ kind: 'error', message: formatChatError(error) });
       } finally {

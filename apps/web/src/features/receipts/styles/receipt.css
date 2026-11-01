@@ -115,3 +115,158 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+
+.receipt-page {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 880px;
+  padding: 2rem clamp(1rem, 4vw, 2rem) 4rem;
+  color: #183e2b;
+}
+.receipt-heading {
+  margin-bottom: 1.75rem;
+}
+.receipt-heading h1 {
+  margin: 0 0 0.65rem;
+  font-size: clamp(1.65rem, 4vw, 2.25rem);
+  line-height: 1.25;
+}
+.receipt-heading > a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 0.875rem;
+  text-underline-offset: 0.2em;
+}
+.receipt-lookup {
+  padding: 1.25rem;
+  border: 1px solid #d6e2d0;
+  border-radius: 14px;
+  background: #f6f9f2;
+  margin-bottom: 1.5rem;
+}
+.receipt-lookup > summary,
+.receipt-recovery > summary {
+  cursor: pointer;
+  min-height: 44px;
+  align-content: center;
+  font-weight: 700;
+  line-height: 1.5;
+}
+.receipt-lookup form {
+  margin: 1.25rem 0 0;
+}
+.receipt-lookup .quiet,
+.receipt-privacy {
+  color: #49634f;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.receipt-page input:not([type='checkbox']) {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid #b5c8ae;
+  border-radius: 8px;
+  padding: 0.75rem;
+  background: #fff;
+  color: #183e2b;
+}
+.receipt-page input:focus-visible,
+.receipt-page summary:focus-visible {
+  outline: 2px solid #245b3e;
+  outline-offset: 3px;
+}
+.receipt-page label:not(.receipt-save-consent):not(.payout-checkbox) {
+  display: block;
+  margin-bottom: 0.45rem;
+  font-size: 0.9375rem;
+}
+.receipt-page #receipt-token {
+  max-width: 260px;
+  letter-spacing: 0.12em;
+}
+.receipt-page .receipt-result {
+  border-top: 0;
+  padding: 1.5rem 0 0;
+}
+.receipt-result h2 {
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  margin: 0 0 0.75rem;
+}
+.receipt-result h3 {
+  font-size: 1.125rem;
+  margin-block: 1.5rem 0.75rem;
+}
+.receipt-status {
+  width: fit-content;
+  background: #e7f2df;
+  color: #1b5135;
+  font-size: 0.875rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 6px;
+}
+.receipt-status[data-status='DISPUTED'],
+.receipt-status[data-status='DISPENSE_FAILED'] {
+  background: #fff0d8;
+  color: #754711;
+}
+.receipt-recovery {
+  padding-block: 0.75rem;
+  border-block: 1px solid #dce6d7;
+}
+.receipt-recovery p {
+  color: #49634f;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.receipt-page code {
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+.receipt-totals {
+  margin: 1rem 0;
+}
+.receipt-totals dd {
+  margin-left: 0;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+.receipt-totals > div:has(> dd > strong) {
+  padding-block: 0.75rem;
+  border-block: 1px solid #dce6d7;
+}
+@media (max-width: 580px) {
+  .receipt-page {
+    padding-top: 1.5rem;
+  }
+  .receipt-lookup {
+    padding: 1rem;
+  }
+  .receipt-actions > button {
+    width: 100%;
+    min-height: 48px;
+  }
+}
+.receipt-result-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.receipt-result-heading > button {
+  min-height: 44px;
+}
+.receipt-page p,
+.receipt-page .receipt-items,
+.receipt-page .receipt-totals {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+.receipt-page .receipt-items li {
+  border-color: #dce6d7;
+}
+.receipt-page .receipt-result {
+  padding-top: 1rem;
+}
