@@ -37,6 +37,7 @@ const icons = {
 
 export function UserMenu({
   name,
+  roleLabel,
   links,
   busy,
   onLogout,
@@ -47,6 +48,7 @@ export function UserMenu({
   className = '',
 }: {
   name: string;
+  roleLabel: string;
   links: UserMenuLink[];
   busy: boolean;
   onLogout: () => void;
@@ -104,7 +106,7 @@ export function UserMenu({
           {name.trim().slice(0, 1).toLocaleUpperCase('vi-VN') || 'F'}
         </span>
         <span className="user-menu-identity">
-          <span className="user-menu-caption">Tài khoản</span>
+          <span className="user-menu-caption">{roleLabel}</span>
           <span className="user-menu-name">{name}</span>
         </span>
         <ChevronDown size={16} aria-hidden="true" />

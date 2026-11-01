@@ -283,7 +283,7 @@ test.describe('Flower Catalog (/dat-hoa) Redesign & Chat Integration', () => {
     await page
       .locator('.flower-card')
       .first()
-      .getByRole('button', { name: 'Đặt hoa', exact: true })
+      .getByRole('button', { name: /báo giá/i })
       .click();
     await expect(page.locator('.flower-request')).toBeVisible();
     await expect(page.getByRole('dialog')).toBeVisible();

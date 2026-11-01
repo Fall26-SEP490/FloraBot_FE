@@ -86,7 +86,7 @@ export function CatalogSidebar({
   const availabilityOptions: FilterOption[] = [
     {
       id: 'all',
-      label: 'Tất cả tình trạng',
+      label: 'Tất cả hình thức mua',
       count: totalRawItems,
       isSelected: availabilityFilter === 'all',
       isEmpty: false,
@@ -94,7 +94,7 @@ export function CatalogSidebar({
     },
     {
       id: 'stock',
-      label: 'Có sẵn tại tủ kiosk',
+      label: 'Mua trực tiếp tại tủ',
       count: availabilityCounts.stock,
       isSelected: availabilityFilter === 'stock',
       isEmpty: availabilityCounts.stock === 0,
@@ -102,7 +102,7 @@ export function CatalogSidebar({
     },
     {
       id: 'custom',
-      label: 'Đặt trước',
+      label: 'Đặt theo yêu cầu',
       count: availabilityCounts.custom,
       isSelected: availabilityFilter === 'custom',
       isEmpty: availabilityCounts.custom === 0,

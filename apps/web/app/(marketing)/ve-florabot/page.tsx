@@ -64,7 +64,7 @@ export default function Page() {
             FloraBot có gói thuê ô tủ theo tháng, cùng công cụ quản lý mẫu hoa, hàng trong tủ và đơn
             đặt trước từ website.
           </p>
-          <a className="text-link" href="/#goi-thue">
+          <a className="text-link" href="/thue-kiosk">
             Tìm hiểu gói thuê dành cho shop
           </a>
         </section>

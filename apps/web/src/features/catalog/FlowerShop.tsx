@@ -16,6 +16,7 @@ import { FlowerRequestPanel } from './components/FlowerRequestPanel';
 import { useCatalogDialog } from './hooks/useCatalogDialog';
 import { useCatalogFilters } from './hooks/useCatalogFilters';
 import { useCustomerChat } from './hooks/useCustomerChat';
+import { loadCatalog } from './catalog.data';
 
 export default function FlowerShop() {
   const router = useRouter();
@@ -23,7 +24,7 @@ export default function FlowerShop() {
 
   const [search, setSearch] = useState('');
   const [draft, setDraft] = useState('');
-  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ key: '', page: 1 });
 
   const [demoEnabled] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
@@ -37,19 +38,20 @@ export default function FlowerShop() {
   const { handleOpenChat, openingChatId, chatNotice, setChatNotice } = useCustomerChat(setSelected);
 
   const catalog = useQuery({
-    queryKey: ['web-catalog', search, page],
+    queryKey: ['web-catalog', 'complete'],
+    enabled: !demoEnabled,
     queryFn: () =>
-      request<CatalogResponse>(`/shop/catalog?page=${page}&search=${encodeURIComponent(search)}`),
+      loadCatalog((page) => request<CatalogResponse>(`/shop/catalog?page=${page}&search=`)),
   });
 
   // Prefer backend data. Demo data is opt-in via ?demo=1 and never creates real writes.
-  const hasLiveItems = (catalog.data?.items?.length ?? 0) > 0;
+  const hasLiveItems = !demoEnabled && (catalog.data?.length ?? 0) > 0;
   const rawItems: CatalogItem[] = useMemo(() => {
     if (demoEnabled) {
       return MOCK_CATALOG_ITEMS.map((item) => ({ ...item, isDemoSample: true }));
     }
-    return catalog.data?.items ?? [];
-  }, [catalog.data?.items, demoEnabled]);
+    return catalog.data ?? [];
+  }, [catalog.data, demoEnabled]);
 
   // Hook owns filters state and derived items
   const filters = useCatalogFilters(rawItems, {
@@ -58,6 +60,20 @@ export default function FlowerShop() {
     draft,
     setDraft,
   });
+  const filterKey = JSON.stringify([
+    search,
+    filters.priceFilter,
+    filters.occasionFilter,
+    filters.shopFilter,
+    filters.kioskFilter,
+    filters.availabilityFilter,
+    filters.sortBy,
+  ]);
+  const page = Math.min(
+    pagination.key === filterKey ? pagination.page : 1,
+    Math.max(1, Math.ceil(filters.displayedItems.length / 12)),
+  );
+  const pageItems = filters.displayedItems.slice((page - 1) * 12, page * 12);
 
   // Resume "Nhắn tin với shop" after returning from login
   useEffect(() => {
@@ -98,14 +114,12 @@ export default function FlowerShop() {
   }, [session.data, rawItems, handleOpenChat]);
 
   const handleSearchSubmit = (draftText: string) => {
-    setPage(1);
     setSearch(draftText.trim());
   };
 
   const handleSearchClear = () => {
     setDraft('');
     if (search) {
-      setPage(1);
       setSearch('');
     }
   };
@@ -118,7 +132,10 @@ export default function FlowerShop() {
             Chọn hoa cho một dịp thật riêng.
           </h1>
         </div>
-        <p className="catalog-hero-desc">Chọn mẫu hoa yêu thích và đặt trước để nhận tại kiosk.</p>
+        <p className="catalog-hero-desc">
+          Đặt theo yêu cầu: shop báo giá, bạn xác nhận rồi thanh toán. Hoa có sẵn: mua trực tiếp tại
+          tủ.
+        </p>
       </header>
 
       <ChatNoticeDialog
@@ -177,7 +194,7 @@ export default function FlowerShop() {
           )}
 
           <CatalogEmptyState
-            isPending={catalog.isPending}
+            isPending={!demoEnabled && catalog.isPending}
             isError={catalog.isError}
             hasItems={filters.displayedItems.length > 0}
             search={search}
@@ -186,23 +203,23 @@ export default function FlowerShop() {
             onResetFilters={filters.resetFilters}
           />
 
-          {!catalog.isPending &&
+          {(demoEnabled || !catalog.isPending) &&
             (!catalog.isError || filters.displayedItems.length > 0) &&
             filters.displayedItems.length > 0 && (
               <CatalogGrid
-                items={filters.displayedItems}
+                items={pageItems}
                 page={page}
-                hasMore={Boolean(catalog.data?.hasMore)}
+                hasMore={page * 12 < filters.displayedItems.length}
                 isFetching={catalog.isFetching}
-                hasLiveItems={hasLiveItems}
+                hasLiveItems={hasLiveItems || demoEnabled}
                 openingChatId={openingChatId}
                 onSelect={(item) => {
                   if (!canOrderOnWeb(item)) return;
                   dialog.setSelected(item);
                 }}
                 onOpenChat={(item) => void handleOpenChat(item)}
-                onPrevPage={() => setPage((value) => value - 1)}
-                onNextPage={() => setPage((value) => value + 1)}
+                onPrevPage={() => setPagination({ key: filterKey, page: page - 1 })}
+                onNextPage={() => setPagination({ key: filterKey, page: page + 1 })}
               />
             )}
         </section>

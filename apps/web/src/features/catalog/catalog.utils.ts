@@ -52,9 +52,8 @@ export function matchesPrice(price: number, filter: PriceFilter): boolean {
 }
 
 export function matchesAvailability(item: CatalogItem, filter: AvailabilityFilter): boolean {
-  const hasStock = isWalkIn(item) || item.bouquets.length > 0;
-  if (filter === 'stock') return hasStock;
-  if (filter === 'custom') return !hasStock;
+  if (filter === 'stock') return isWalkIn(item);
+  if (filter === 'custom') return canOrderOnWeb(item);
   return true;
 }
 
@@ -117,7 +116,7 @@ export function computeFilterCounts(items: CatalogItem[]) {
   let custom = 0;
   items.forEach((item) => {
     if (matchesAvailability(item, 'stock')) stock++;
-    else custom++;
+    else if (canOrderOnWeb(item)) custom++;
   });
   const availabilityCounts: AvailabilityCounts = { stock, custom };
 

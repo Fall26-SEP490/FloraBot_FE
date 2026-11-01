@@ -237,7 +237,7 @@ for (const width of [320, 390, 790, 1440]) {
   test(`ordering dialog fits and preserves background scroll at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 700 });
     await page.goto(detailPath);
-    const order = page.getByRole('button', { name: 'Đặt hoa', exact: true });
+    const order = page.getByRole('button', { name: /báo giá/i });
     await expect(order).toBeVisible();
     await order.scrollIntoViewIfNeeded();
     const beforeScroll = await page.evaluate(() => scrollY);

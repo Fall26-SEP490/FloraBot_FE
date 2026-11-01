@@ -38,6 +38,10 @@ export type { Mode };
 
 export default function MemberAuth({ mode }: { mode: Mode }) {
   const router = useRouter();
+  const [returnQuery] = useState(() => {
+    const target = new URLSearchParams(window.location.search).get('returnUrl');
+    return target ? `?returnUrl=${encodeURIComponent(target)}` : '';
+  });
   const form = useForm<Fields>({ mode: 'onBlur', reValidateMode: 'onChange' });
   const [busy, setBusy] = useState(false);
   const submitting = useRef(false);
@@ -952,10 +956,10 @@ export default function MemberAuth({ mode }: { mode: Mode }) {
       <div className="auth-alternative">
         {mode === 'login' ? (
           <p>
-            Chưa có tài khoản? <Link href="/dang-ky">Đăng ký thành viên</Link>
+            Chưa có tài khoản? <Link href={`/dang-ky${returnQuery}`}>Đăng ký thành viên</Link>
           </p>
         ) : (
-          <Link href="/dang-nhap">
+          <Link href={`/dang-nhap${returnQuery}`}>
             {mode === 'register' ? 'Đã có tài khoản? Đăng nhập' : 'Quay lại đăng nhập'}
           </Link>
         )}

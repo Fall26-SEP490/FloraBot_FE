@@ -1,7 +1,5 @@
 import Layout from '@/features/marketing/MarketingLayout';
 import Registration from '@/features/marketing/Registration';
-import KioskLocations from '@/features/marketing/KioskLocations';
-import { loadLandingLocations } from '@/features/marketing/landing-locations.server';
 import { LandingPackagesProvider, LandingPricing } from '@/features/marketing/LandingPackages';
 import GiftDemo from '@/features/marketing/GiftDemo';
 import FlowerPhoto from '@/features/marketing/FlowerPhoto';
@@ -15,7 +13,7 @@ const jsonLd = {
       '@type': 'Organization',
       name: 'FloraBot',
       url: process.env.SITE_URL || 'http://localhost:8088',
-      description: 'Dự án kiosk bán hoa theo gói thuê cho shop hoa.',
+      description: 'Đặt hoa giả theo yêu cầu, duyệt báo giá từ shop và nhận tại tủ kiosk.',
     },
   ],
 };
@@ -24,8 +22,7 @@ import MarketingEffects from '@/features/marketing/MarketingEffects';
 
 export const metadata = { title: 'FloraBot - Đặt hoa theo ý bạn, nhận tại tủ' };
 export const dynamic = 'force-dynamic';
-export default async function Page() {
-  const locations = await loadLandingLocations();
+export default function Page() {
   const content = (
     <Layout>
       <link
@@ -46,8 +43,8 @@ export default async function Page() {
               <span className="hero-highlight">thật nhiều thương.</span>
             </h1>
             <p>
-              Chọn mẫu bạn thích, để shop chăm chút và gửi đến tủ theo lịch hẹn. Hoặc chọn ngay một
-              bó hoa có sẵn gần bạn.
+              Chọn mẫu hoa giả bạn thích, gửi mong muốn và duyệt báo giá từ shop trước khi thanh
+              toán. Nhận tại tủ theo lịch hẹn, hoặc đến kiosk để mua bó hoa có sẵn.
             </p>
             <div className="hero-actions">
               <a className="button button-primary" href={`${portal}/dat-hoa`}>
@@ -90,7 +87,10 @@ export default async function Page() {
               <br />
               Shop chăm chút bó hoa.
             </h2>
-            <p>Chọn mẫu bạn thích, kể shop nghe mong muốn và hẹn nhận tại tủ thuận tiện cho bạn.</p>
+            <p>
+              Chọn mẫu, gửi màu hoa, ngân sách và lời nhắn. Shop xác nhận báo giá cùng lịch nhận tại
+              tủ bạn chọn.
+            </p>
             <div className="preorder-actions">
               <a className="button button-primary" href={`${portal}/dat-hoa`}>
                 Chọn một bó hoa{' '}
@@ -115,7 +115,7 @@ export default async function Page() {
               <p>
                 <strong>Cần hoa sớm hơn?</strong>
                 <br />
-                Chọn bó có sẵn tại tủ và xem hạn nhận trước khi thanh toán.
+                Xem hoa có sẵn, đến kiosk để chọn bó, thanh toán và nhận hoa trực tiếp.
               </p>
             </div>
           </div>
@@ -145,8 +145,8 @@ export default async function Page() {
               <div>
                 <h3>Hoa sẵn sàng, bạn ghé nhận</h3>
                 <p>
-                  Theo dõi đơn trong tài khoản. Đến đúng tủ theo lịch hẹn và dùng mã trên biên nhận
-                  để lấy hoa.
+                  Khi đơn sẵn sàng, đến đúng tủ, chọn “Nhận đơn đặt trước”, nhập số điện thoại trong
+                  hồ sơ và xác thực OTP gửi qua SMS.
                 </p>
               </div>
             </li>
@@ -172,7 +172,7 @@ export default async function Page() {
                 </span>
                 <div>
                   <h3>Shop đưa hoa vào tủ</h3>
-                  <p>Chọn ô thuê, đặt giá và hạn bán.</p>
+                  <p>Phân loại ô Walk-in, chọn mẫu và nạp bó hoa để bán trực tiếp tại tủ.</p>
                 </div>
               </div>
             </li>
@@ -191,7 +191,7 @@ export default async function Page() {
                 </span>
                 <div>
                   <h3>Khách mua tại tủ</h3>
-                  <p>Chọn hoa, quét VietQR và nhận hoa.</p>
+                  <p>Chọn bó có sẵn trên màn hình kiosk, thanh toán và nhận hoa tại ô tủ.</p>
                 </div>
               </div>
             </li>
@@ -210,7 +210,7 @@ export default async function Page() {
                 </span>
                 <div>
                   <h3>Shop theo dõi bán hàng</h3>
-                  <p>Xem đơn hàng và số dư trên cổng quản lý.</p>
+                  <p>Theo dõi đơn đặt trước, hoa tại tủ và số dư trong kênh người bán.</p>
                 </div>
               </div>
             </li>
@@ -236,33 +236,13 @@ export default async function Page() {
         <section id="goi-thue" className="pricing-section section" aria-labelledby="pricing-title">
           <div className="section-intro">
             <h2 id="pricing-title">Gói thuê ô tủ</h2>
-            <p>Phí thuê hằng năm và sức chứa theo gói đang được cung cấp.</p>
+            <p>
+              Xem phí thuê, tổng số ô và thời hạn của các gói đang được cung cấp. Shop tự phân loại
+              ô Walk-in hoặc Pre-order sau khi bàn giao.
+            </p>
           </div>
           <LandingPricing />
 
-          <a className="section-next" href="#vi-tri">
-            Xem vị trí tủ{' '}
-            <span aria-hidden="true">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M12 5v14m-6-6 6 6 6-6"></path>
-              </svg>
-            </span>
-          </a>
-        </section>
-
-        <section id="vi-tri" className="section locations" aria-labelledby="locations-title">
-          <div className="section-intro">
-            <h2 id="locations-title">Vị trí tủ bán hoa</h2>
-            <span className="context-label">Địa điểm công khai từ hệ thống FloraBot</span>
-          </div>
-          <KioskLocations initial={locations} />
           <a className="section-next" href="#bo-suu-tap">
             Khám phá hoa{' '}
             <span aria-hidden="true">
@@ -328,12 +308,21 @@ export default async function Page() {
             <div className="money-benefits">
               <article>
                 <h3>Theo dõi từng đơn hàng</h3>
+                <p>Báo giá yêu cầu mới, chuẩn bị hoa và cập nhật tiến độ để khách theo dõi.</p>
               </article>
               <article>
                 <h3>Xem số dư và rút tiền</h3>
+                <p>
+                  Kiểm tra số dư có thể rút, khoản đang chờ và gửi yêu cầu về tài khoản nhận tiền
+                  của shop.
+                </p>
               </article>
               <article>
                 <h3>Xử lý đơn gặp sự cố</h3>
+                <p>
+                  Theo dõi phản ánh và phối hợp với đội ngũ vận hành khi việc nhận hoa không thành
+                  công.
+                </p>
               </article>
             </div>
           </div>
@@ -369,31 +358,39 @@ export default async function Page() {
           <div className="faq-list">
             <details>
               <summary>Đăng ký tư vấn có mất phí không?</summary>
-              <p>Không. Bạn chỉ thanh toán gói thuê sau khi vị trí và hồ sơ shop được xác nhận.</p>
+              <p>
+                Gửi form tư vấn bên dưới không thu phí. Khi đăng ký thuê chính thức tại mục “Thuê tủ
+                kiosk”, bạn nộp hồ sơ và thanh toán phí thuê, sau đó theo dõi xác nhận liên hệ, lắp
+                đặt và bàn giao.
+              </p>
             </details>
             <details>
               <summary>Shop cần chuẩn bị những gì?</summary>
               <p>
-                Shop chuẩn bị hoa, đặt giá, hạn bán và bố trí người bổ sung hoa, kiểm tra chất
-                lượng, lấy hoa hết hạn về.
+                Shop tạo mẫu hoa giả, ảnh, giá bán và kích thước gồm bao bì; phân loại ô để bán trực
+                tiếp hoặc nhận đơn đặt trước, đồng thời bố trí nhân viên nạp và thu hồi hoa.
               </p>
             </details>
             <details>
               <summary>Khách mua hoa tại tủ như thế nào?</summary>
-              <p>Khách chọn hoa, quét VietQR để thanh toán và nhận hoa tại ô tủ.</p>
+              <p>
+                Với bó có sẵn, khách chọn và thanh toán trên màn hình kiosk rồi nhận hoa tại ô tủ.
+                Với đơn đặt trước, khách chờ báo sẵn sàng, nhập số điện thoại trong hồ sơ và xác
+                thực OTP qua SMS tại kiosk.
+              </p>
             </details>
             <details>
               <summary>Khách trả tiền nhưng không nhận được hoa?</summary>
               <p>
                 Khách dùng mã biên nhận để báo sự cố và theo dõi xử lý. Khi xác nhận không giao được
-                hoa, đội ngũ hoàn tiền có chứng từ.
+                hoa, yêu cầu hoàn tiền được kiểm tra và chi trả theo quy trình của hệ thống.
               </p>
             </details>
             <details>
               <summary>Hoa hết hạn bán được xử lý ra sao?</summary>
               <p>
-                Hệ thống ẩn hoa hết hạn khỏi danh mục và cảnh báo trên cổng quản lý. Shop kiểm tra
-                chất lượng và lấy hoa về.
+                Shop theo dõi trạng thái “Chờ lấy hoa hết hạn” trong mục Hoa tại tủ, kiểm tra và thu
+                hồi bó hoa trước khi nạp bó mới.
               </p>
             </details>
           </div>

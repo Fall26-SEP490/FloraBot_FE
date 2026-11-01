@@ -95,7 +95,7 @@ export default function Page() {
             <section id="quyen-du-lieu" aria-labelledby="privacy-rights-title">
               <h2 id="privacy-rights-title">Quyền của bạn</h2>
               <p>Bạn có thể yêu cầu truy cập, chỉnh sửa, rút lại sự đồng ý hoặc xóa dữ liệu.</p>
-              <a className="text-link" href="/#dang-ky">
+              <a className="text-link" href="/lien-he">
                 Liên hệ đội ngũ FloraBot
               </a>
               <InfoHint label="Quy định và thời hạn lưu trữ">
