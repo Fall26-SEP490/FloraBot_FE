@@ -82,7 +82,7 @@ export default function MemberAccount() {
       window.removeEventListener('hashchange', syncFromUrl);
       window.removeEventListener('popstate', syncFromUrl);
     };
-  }, [router, session.data, initialChatId]);
+  }, [router, session.data, initialChatId, searchParams]);
 
   const profile = useQuery({
     queryKey: ['member-profile', session.data?.id],

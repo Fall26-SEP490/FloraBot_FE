@@ -98,8 +98,6 @@ function OrderActions({
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [copiedField, setCopiedField] = useState<'' | 'orderId' | 'token'>('');
-  const [link, setLink] = useState<string | null>(null);
-  const [paymentCode, setPaymentCode] = useState<number | null>(null);
   const [price, setPrice] = useState(String(row.quotedPrice || ''));
   const [note, setNote] = useState('');
   const [reject, setReject] = useState(false);
@@ -240,8 +238,8 @@ function OrderActions({
           url.password
         )
           throw new Error('Liên kết thanh toán không hợp lệ.');
-        setLink(url.href);
-        setPaymentCode(result.orderCode ?? null);
+        if (result.orderCode != null) rememberPreorderPayment(row.id, page, result.orderCode);
+        window.location.assign(url.href);
       } else {
         setAction(null);
         setConfirm(false);
@@ -439,12 +437,13 @@ function OrderActions({
           )}
           {mode === 'member' && row.orderStatus === 'AWAITING_PAYMENT' && (
             <Button
+              aria-busy={busy}
               disabled={
                 busy || uncertain || (!!row.payBefore && new Date(row.payBefore).getTime() <= now)
               }
               onClick={() => void send('payment-link', {})}
             >
-              Tạo liên kết thanh toán
+              {busy ? 'Đang mở thanh toán…' : 'Thanh toán ngay'}
             </Button>
           )}
           {mode === 'seller' && ['REQUESTED', 'QUOTED'].includes(row.state) && (
@@ -508,18 +507,6 @@ function OrderActions({
         <p>
           Thanh toán trước {when(row.payBefore)}. Hết hạn, yêu cầu thanh toán không còn hiệu lực.
         </p>
-      )}
-      {link && row.orderStatus === 'AWAITING_PAYMENT' && (
-        <a
-          className="button button-primary"
-          href={link}
-          rel="noreferrer"
-          onClick={() => {
-            if (paymentCode !== null) rememberPreorderPayment(row.id, page, paymentCode);
-          }}
-        >
-          Mở trang thanh toán payOS
-        </a>
       )}
       {action && (
         <form
@@ -805,7 +792,6 @@ function OrderActions({
                 }
                 setUncertain(false);
                 setAction(null);
-                setLink(null);
                 setError('');
                 setNotice(
                   'Đã tải lại hồ sơ từ máy chủ. Hãy đối chiếu trạng thái trước khi tạo thao tác mới.',

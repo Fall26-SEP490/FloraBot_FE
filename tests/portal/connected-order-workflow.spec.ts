@@ -145,7 +145,11 @@ test('Customer request → seller quote → customer acceptance/payment → sell
         return { result: row.id };
       }
       if (path.endsWith('/payment-link'))
-        return { checkoutUrl: 'https://pay.payos.vn/web/test-order', amount: row.quotedPrice };
+        return {
+          checkoutUrl: 'https://pay.payos.vn/web/test-order',
+          amount: row.quotedPrice,
+          orderCode: 123456,
+        };
       if (path.endsWith('/fulfill')) {
         expect(body.slotId).toBe(slotId);
         expect(body.qrCode).toBe('TEST-BOUQUET-01');
@@ -207,12 +211,17 @@ test('Customer request → seller quote → customer acceptance/payment → sell
     .getByRole('checkbox', { name: 'Tôi đã đối chiếu và xác nhận thông tin trên.' })
     .check();
   await page.getByRole('button', { name: 'Xác nhận gửi', exact: true }).click();
-  await page.getByRole('button', { name: 'Tạo liên kết thanh toán' }).click();
-  await expect(page.getByLabel('Thông tin nhận hoa tại Kiosk')).toHaveCount(0);
-  await expect(page.getByRole('link', { name: /Mở trang thanh toán payOS/ })).toHaveAttribute(
-    'href',
-    'https://pay.payos.vn/web/test-order',
+  await page.route('https://pay.payos.vn/**', (route) =>
+    route.fulfill({ contentType: 'text/html', body: '<h1>Payment test page</h1>' }),
   );
+  await page.getByRole('button', { name: 'Thanh toán ngay', exact: true }).click();
+  await expect(page).toHaveURL('https://pay.payos.vn/web/test-order');
+  expect(writes.filter((path) => path.endsWith('/payment-link'))).toHaveLength(1);
+  await page.goto('/tai-khoan#web-orders');
+  expect(
+    await page.evaluate(() => JSON.parse(sessionStorage.getItem('florabot-preorder-payment')!)),
+  ).toMatchObject({ requestId: row.id, page: 1, orderCode: 123456 });
+  await expect(page.getByLabel('Thông tin nhận hoa tại Kiosk')).toHaveCount(0);
   // A controlled backend fixture represents a verified payment; no provider is contacted.
   row.orderStatus = 'PAID';
   role = 'SELLER';
@@ -291,9 +300,54 @@ test('payOS return opens the saved request and trusts server status instead of c
   await page.goto('/tai-khoan?orderCode=123456&status=PAID&cancel=false');
   await expect(page).toHaveURL(/requestId=.*paymentReturn=1#web-orders/);
   await expect(page.getByText('Đã trở về từ payOS.', { exact: false })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Tạo liên kết thanh toán' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Thanh toán ngay', exact: true })).toBeVisible();
   await expect(page.getByLabel('Thông tin nhận hoa tại Kiosk')).toHaveCount(0);
 });
+
+for (const failure of ['untrusted-url', 'server-error'] as const)
+  test(`Preorder payment stays on the order after ${failure} and blocks duplicate requests`, async ({
+    page,
+  }) => {
+    const width = failure === 'server-error' ? 390 : 1440;
+    await page.setViewportSize({ width, height: 950 });
+    const row = { ...order(), state: 'ORDERED', orderStatus: 'AWAITING_PAYMENT' };
+    await common(
+      page,
+      () => 'CUSTOMER',
+      () => [row],
+    );
+    let attempts = 0;
+    let release!: () => void;
+    const responseReady = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await page.route('**/preorders/*/payment-link', async (route) => {
+      attempts++;
+      await responseReady;
+      await route.fulfill(
+        failure === 'server-error'
+          ? { status: 503, json: { detail: 'Cổng thanh toán tạm thời gián đoạn.' } }
+          : {
+              json: { checkoutUrl: 'https://pay.payos.vn.example.test/payment', orderCode: 123456 },
+            },
+      );
+    });
+    await page.goto('/tai-khoan#web-orders');
+    await page.locator('details[id^="preorder-"] > summary').click();
+    await page.getByRole('button', { name: 'Thanh toán ngay', exact: true }).click();
+    const pending = page.getByRole('button', { name: 'Đang mở thanh toán…', exact: true });
+    await expect(pending).toBeDisabled();
+    await expect(pending).toHaveAttribute('aria-busy', 'true');
+    await page.screenshot({ path: `artifacts/preorder-payment-${width}.png`, fullPage: true });
+    release();
+    await expect(page.getByRole('button', { name: 'Kiểm tra kết quả từ máy chủ' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Thanh toán ngay', exact: true })).toBeDisabled();
+    await expect(page).toHaveURL(/\/tai-khoan#web-orders$/);
+    expect(attempts).toBe(1);
+    expect(
+      await page.evaluate(() => sessionStorage.getItem('florabot-preorder-payment')),
+    ).toBeNull();
+  });
 
 test('Unknown write outcome remains locked across reload until an explicit successful read', async ({
   page,

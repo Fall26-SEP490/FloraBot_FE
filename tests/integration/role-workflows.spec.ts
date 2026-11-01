@@ -253,7 +253,9 @@ test.describe('FloraBot Role Workflows Integration', () => {
       .locator('.member-orders li')
       .filter({ hasText: acceptedOrder!.orderCode! });
     await expect(pendingRow.locator('summary')).toContainText('Chờ thanh toán');
-    await expect(pendingRow.getByRole('button', { name: 'Tạo liên kết thanh toán' })).toBeVisible();
+    await expect(
+      pendingRow.getByRole('button', { name: 'Thanh toán ngay', exact: true }),
+    ).toBeVisible();
 
     // Verify DB consistency in florabot_browser_tests
     const order1DbState = sql(
