@@ -7,9 +7,10 @@ import './styles/account-home.css';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Button, Flower2, MessageSquare, Store } from '@florabot/ui';
+import { ArrowRight, Button, Flower2, MessageSquare } from '@florabot/ui';
 import WebRequests from '../orders/WebRequests';
 import CustomerPendingOrders from './CustomerPendingOrders';
+import CustomerRentalApplication from './CustomerRentalApplication';
 import { preorderPaymentReturn } from '../orders/payment-return';
 import { CustomerChatSection } from '@/features/chat/CustomerChatSection';
 import { getCustomerUnreadCount } from '@/features/chat/api';
@@ -127,6 +128,7 @@ export default function MemberAccount() {
               Khám phá hoa <ArrowRight size={16} aria-hidden="true" />
             </Link>
           </header>
+          {isCustomer && <CustomerRentalApplication />}
           {isCustomer && <CustomerPendingOrders />}
           <div className="account-home-status">
             <div className="account-home-points">
@@ -214,15 +216,6 @@ export default function MemberAccount() {
               </div>
             )}
           </section>
-          {isCustomer && (
-            <div className="account-home-partner">
-              <Store size={18} aria-hidden="true" />
-              <span>Bạn muốn mở shop trên FloraBot?</span>
-              <Link href="/thue-kiosk">
-                Tìm hiểu thuê kiosk <ArrowRight size={16} aria-hidden="true" />
-              </Link>
-            </div>
-          )}
         </div>
       )}
 

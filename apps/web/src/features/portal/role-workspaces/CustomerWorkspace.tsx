@@ -4,7 +4,15 @@ import React, { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { LayoutDashboard, Menu, MessageSquare, Package, RotateCcw, User } from '@florabot/ui';
+import {
+  LayoutDashboard,
+  Menu,
+  MessageSquare,
+  Package,
+  RotateCcw,
+  Store,
+  User,
+} from '@florabot/ui';
 import { sessionQuery } from '@/shared/lib/api';
 import { getCustomerUnreadCount } from '@/features/chat/api';
 import '../workspace-styles.css';
@@ -75,6 +83,9 @@ export default function CustomerWorkspace({
       : []),
     { href: '/tai-khoan#member-orders', label: 'Lịch sử mua', icon: RotateCcw },
     { href: '/ho-so', label: 'Hồ sơ cá nhân', icon: User },
+    ...(session.data?.role === 'CUSTOMER'
+      ? [{ href: '/thue-kiosk', label: 'Thuê kiosk', icon: Store }]
+      : []),
   ];
   const current =
     screen === 'profile'

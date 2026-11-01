@@ -11,6 +11,7 @@ playwright-report/
 artifacts/
 tmp/
 .impeccable/review/
+.impeccable/critique/
 .impeccable/detector.json
 .next/
 *.tsbuildinfo

@@ -1,6 +1,6 @@
 .customer-account-shell {
   display: grid;
-  grid-template-columns: 230px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: start;
   gap: 24px;
   max-width: 1200px;
@@ -9,9 +9,8 @@
 }
 
 .customer-account-sidebar {
-  position: sticky;
-  top: calc(var(--header-height, 76px) + 20px);
-  padding: 16px 10px;
+  position: static;
+  padding: 8px 10px;
   border: 1px solid #dce9d9;
   border-radius: 16px;
   background: #fff;
@@ -30,9 +29,9 @@
   font-size: 14px;
 }
 .customer-account-navigation {
-  display: grid;
-  gap: 3px;
-  padding-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 .customer-account-navigation a {
   display: flex;
@@ -46,6 +45,16 @@
   font-weight: 600;
   text-decoration: none;
 }
+@media (min-width: 761px) {
+  .customer-account-sidebar-heading {
+    display: none;
+  }
+  .customer-account-navigation a {
+    flex: 0 0 auto;
+    padding-inline: 14px;
+  }
+}
+
 .customer-account-navigation a:hover {
   background: #eef6eb;
 }
