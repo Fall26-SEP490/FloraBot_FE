@@ -46,14 +46,18 @@ export const workspaceSections = {
   ],
   SELLER: [
     ['orders', 'Đơn đặt trước', 'Báo giá, chuẩn bị hoa và theo dõi lịch nhận.'],
-    ['chats', 'Tin nhắn', 'Trao đổi và giải đáp thắc mắc với khách hàng.'],
+    [
+      'chats',
+      'Tin nhắn khách hàng',
+      'Trao đổi mong muốn của khách; ghi nhận báo giá và lịch nhận trong đơn đặt trước.',
+    ],
     ['staff-chats', 'Tin nhắn nhân viên', 'Trao đổi công việc và gửi ảnh với nhân viên của shop.'],
     [
       'products',
       'Mẫu hoa',
-      'Quản lý mẫu hoa giả, ảnh, giá bán và kích thước bó hoa bao gồm bao bì.',
+      'Tạo mẫu giới thiệu cho khách: ảnh, giá và kích thước. Việc nạp bó hoa vào tủ được thực hiện riêng.',
     ],
-    ['stock', 'Hoa tại tủ', 'Nạp hoa, kiểm tra tồn kho và báo sự cố.'],
+    ['stock', 'Hoa tại tủ', 'Kiểm tra từng ô, nạp bó hoa bán tại tủ, thu hồi hoa và báo sự cố.'],
     ['accessories', 'Phụ kiện', 'Quản lý phụ kiện đi kèm chỉ áp dụng cho đơn đặt trước.'],
     ['tasks', 'Giao việc nhân viên', 'Phân công giao hoa và theo dõi tiến độ nhân viên shop.'],
     ['staff', 'Nhân viên shop', 'Tạo tài khoản và quản lý trạng thái nhân viên shop.'],
@@ -62,8 +66,12 @@ export const workspaceSections = {
       'Vị trí kiosk',
       'Cập nhật địa chỉ và tọa độ kiosk để khách hàng tìm thấy điểm nhận hoa.',
     ],
-    ['subscriptions', 'Gói thuê', 'Đăng ký, thanh toán và gia hạn ô tủ.'],
-    ['wallet', 'Ví & tài khoản nhận tiền', 'Theo dõi số dư, khoản chi và yêu cầu rút tiền.'],
+    ['subscriptions', 'Gói thuê', 'Kiểm tra gói của shop, đăng ký kỳ thuê và theo dõi thanh toán.'],
+    [
+      'wallet',
+      'Ví & rút tiền',
+      'Theo dõi tiền bán hoa, tài khoản ngân hàng và tiến độ yêu cầu rút tiền.',
+    ],
   ],
   OPERATIONS_MANAGER: [
     ['sellers', 'Quản lý shop hoa', 'Thông tin shop, tài khoản chủ shop và lịch sử trạng thái.'],

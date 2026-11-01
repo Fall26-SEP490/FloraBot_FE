@@ -7,62 +7,6 @@
   --order-muted: #52665b;
   --order-green: #285f43;
 }
-.summary {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-  margin-bottom: 22px;
-}
-.summary button {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  text-align: left;
-  padding: 19px;
-  border: 1px solid var(--order-line);
-  border-radius: 9px;
-  background: white;
-  color: #244533;
-  font: inherit;
-  cursor: pointer;
-}
-.summary button:hover,
-.summary button[aria-pressed='true'] {
-  border-color: #7c9c83;
-  background: #f7faf5;
-}
-.summary small {
-  display: block;
-  font-size: 12px;
-  color: var(--order-muted);
-}
-.summary strong {
-  display: block;
-  font-size: 28px;
-  font-weight: 600;
-  line-height: 1.4;
-}
-.statIcon {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 9px;
-  background: #edf3e9;
-  flex-shrink: 0;
-}
-.summary button:nth-child(2) .statIcon {
-  background: #fff3df;
-  color: #9b6c20;
-}
-.summary button:nth-child(3) .statIcon {
-  background: #eaf1f8;
-  color: #527b9b;
-}
-.summary button:nth-child(4) .statIcon {
-  background: #e8f4ec;
-  color: #337354;
-}
 .filters {
   background: white;
   border: 1px solid var(--order-line);
@@ -589,9 +533,6 @@
   outline-offset: -3px;
 }
 @media (max-width: 1200px) {
-  .summary {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
   .orderBody {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -600,20 +541,6 @@
   }
 }
 @media (max-width: 600px) {
-  .summary {
-    gap: 10px;
-  }
-  .summary button {
-    padding: 12px;
-    gap: 9px;
-  }
-  .statIcon {
-    width: 32px;
-    height: 36px;
-  }
-  .summary small {
-    font-size: 11px;
-  }
   .filterHeading {
     padding: 17px 16px;
     align-items: start;
@@ -658,5 +585,118 @@
   }
   .kind {
     font-size: 11px;
+  }
+}
+
+.sellerOrders .filters {
+  border-radius: 12px;
+  overflow: visible;
+}
+.sellerOrders .filterHeading {
+  padding: 20px 22px 12px;
+  flex-wrap: wrap;
+}
+.sellerOrders .tabs {
+  padding-inline: 22px;
+  gap: 8px;
+  flex-wrap: wrap;
+  border: 0;
+  overflow: visible;
+}
+.sellerOrders .tabs button {
+  border: 1px solid transparent;
+  border-radius: 7px;
+  padding: 8px 10px;
+  min-height: 44px;
+  font-size: 0.8rem;
+}
+.sellerOrders .tabs button[aria-pressed='true'] {
+  background: #eaf2e5;
+  border-color: #aac4ab;
+  color: #245b3e;
+}
+.sellerOrders .searchBar {
+  flex-wrap: wrap;
+  padding: 16px 22px 20px;
+  border-top: 1px solid var(--order-line);
+  margin-top: 14px;
+}
+.sellerOrders .searchBar input {
+  min-height: 46px;
+  font-size: 0.87rem;
+  border-color: #92a697;
+  border-radius: 8px;
+}
+.sellerOrders .searchField,
+.sellerOrders .dateField {
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+.sellerOrders .resultCount {
+  font-size: 0.8rem;
+  line-height: 1.7;
+  margin: 16px 0;
+}
+.sellerOrders .orderList > li {
+  border-radius: 12px;
+}
+.sellerOrders .orderHeading {
+  padding: 16px 20px;
+}
+.sellerOrders .orderHeading > strong {
+  font-size: 0.86rem;
+}
+.sellerOrders .orderBody {
+  padding: 18px 20px;
+  gap: 18px;
+}
+.sellerOrders .orderBody strong {
+  font-size: 0.84rem;
+}
+.sellerOrders .orderBody small {
+  font-size: 0.74rem;
+}
+.sellerOrders .status,
+.sellerOrders .kind,
+.sellerOrders .address {
+  font-size: 0.75rem;
+}
+.sellerOrders .disclosure {
+  padding: 0 20px 16px;
+  font-size: 0.78rem;
+}
+@media (max-width: 1100px) {
+  .sellerOrders .orderBody {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sellerOrders .price {
+    text-align: left;
+  }
+}
+@media (max-width: 600px) {
+  .sellerOrders .searchBar {
+    padding: 14px 16px;
+  }
+  .sellerOrders .dateField {
+    width: 100%;
+  }
+  .sellerOrders .searchField {
+    flex-basis: 100%;
+  }
+  .sellerOrders .filterHeading {
+    padding: 18px 16px 12px;
+  }
+  .sellerOrders .tabs {
+    padding-inline: 16px;
+  }
+  .sellerOrders .orderBody {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sellerOrders .kind {
+    padding-left: 0;
+    border-left: 0;
+  }
+  .sellerOrders .orderHeading {
+    align-items: start;
   }
 }

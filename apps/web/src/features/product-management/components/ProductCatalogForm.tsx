@@ -90,9 +90,10 @@ export function ProductCreateForm({
     >
       <h3 className="sr-only">Thêm mẫu hoa giả mới</h3>
       <div className="product-form-badge-strip">
-        <span className="product-badge-pill">Bản nháp (DRAFT)</span>
+        <span className="product-badge-pill">Bản nháp</span>
         <span className="product-badge-note">
-          Hoa giả không áp dụng thời hạn tươi · Bạn có thể tải ảnh và mở bán sau khi tạo.
+          Tạo mẫu trước, sau đó thêm ảnh và bật bán trong chi tiết. Chưa có bó hoa nào được nạp vào
+          tủ ở bước này.
         </span>
       </div>
 
@@ -134,7 +135,8 @@ export function ProductCreateForm({
             ))}
           </select>
           <p className="quiet field-subhint" id="create-product-kiosk-help">
-            Kiosk xác nhận quyền tạo mẫu; chọn ô nạp hoa tại màn “Hoa tại kiosk”.
+            Chọn tủ thuộc shop để tạo mẫu. Việc chọn ô và ghi nhận bó hoa được thực hiện riêng tại
+            “Hoa tại tủ” hoặc chi tiết đơn đặt trước.
           </p>
           {form.formState.errors.kioskId && (
             <p className="error" id="create-product-kiosk-error">

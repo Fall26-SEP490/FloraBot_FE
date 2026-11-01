@@ -9,6 +9,7 @@ import { Button } from '@florabot/ui';
 import { ApiError, logoutSession, sessionQuery, type Session } from '@/shared/lib/api';
 import { accountPath } from '@/features/portal/config/roleRoutes';
 import WorkspaceNavigation, { WorkspaceHeader } from '../components/WorkspaceNavigation';
+import SellerGuide from '../components/SellerGuide';
 import { workspaceSections } from '@/features/portal/config/workspaceSections';
 import { startPortalUpdates } from '@/shared/lib/realtime';
 import '../workspace-styles.css';
@@ -19,6 +20,8 @@ import '../../account-management/styles/platform-refresh.css';
 import '../styles/workspace-role-parity.css';
 import '../../dashboard/styles/seller-overview.module.css';
 import '../../orders/seller-orders.module.css';
+import '../styles/seller-usability.css';
+import '../styles/seller-flows.css';
 
 const DashboardOverview = dynamic(() => import('../../dashboard/DashboardOverview'), {
   loading: () => <p role="status">Đang tải tổng quan cửa hàng…</p>,
@@ -178,8 +181,21 @@ export default function SellerWorkspace({ section = 'overview' }: { section?: st
       />
       <div className="dashboard-shell seller-workspace">
         <WorkspaceNavigation key={section} workspaceRole="SELLER" section={section} />
-        <main id="main" className="workspace dashboard-content">
+        <main id="main" className="workspace dashboard-content seller-content">
           <PortalUpdates />
+          <nav className="seller-breadcrumb" aria-label="Vị trí hiện tại">
+            {section === 'overview' ? (
+              <span>Cửa hàng của bạn</span>
+            ) : (
+              <>
+                <Link href="/seller">Tổng quan cửa hàng</Link>
+                <span aria-hidden="true">/</span>
+                <span aria-current="page">
+                  {workspaceSections.SELLER.find(([key]) => key === section)?.[1]}
+                </span>
+              </>
+            )}
+          </nav>
           <div className="dashboard-page-heading">
             <div>
               <h1>
@@ -195,6 +211,7 @@ export default function SellerWorkspace({ section = 'overview' }: { section?: st
             </div>
           </div>
           <SubscriptionBanner session={session.data} />
+          <SellerGuide key={section} section={section} />
           {section === 'overview' && (
             <>
               <DashboardOverview session={session.data} />

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { Button } from '@florabot/ui';
@@ -123,7 +124,9 @@ export default function AdminTaskAssignment({
     });
   }
   return (
-    <details className="member-empty">
+    <details
+      className={effectiveRole === 'SELLER' ? 'member-empty seller-assignment' : 'member-empty'}
+    >
       <summary>Phân công công việc mới</summary>
       {attempt ? (
         <>
@@ -138,21 +141,31 @@ export default function AdminTaskAssignment({
         </>
       ) : (
         <>
-          <label htmlFor="assignment-kind">Loại công việc</label>
-          <select
-            id="assignment-kind"
-            value={kind}
-            disabled={busy || allowedKinds.length <= 1}
-            onChange={(event) => {
-              setKind(event.target.value);
-              form.resetField('target');
-            }}
-          >
-            {allowedKinds.includes('INCIDENT') && <option value="INCIDENT">Kiểm tra sự cố</option>}
-            {allowedKinds.includes('DELIVERY') && (
-              <option value="DELIVERY">Giao hoa cho shop</option>
-            )}
-          </select>
+          {effectiveRole === 'SELLER' && (
+            <p className="assignment-help">
+              Chọn người phụ trách, tủ cần giao và hướng dẫn cụ thể. Đây là phân công giao hoa; việc
+              nạp hoa được nhân viên ghi nhận khi thực hiện công việc.
+            </p>
+          )}
+          <div className={effectiveRole === 'SELLER' ? 'assignment-kind-note' : undefined}>
+            <label htmlFor="assignment-kind">Loại công việc</label>
+            <select
+              id="assignment-kind"
+              value={kind}
+              disabled={busy || allowedKinds.length <= 1}
+              onChange={(event) => {
+                setKind(event.target.value);
+                form.resetField('target');
+              }}
+            >
+              {allowedKinds.includes('INCIDENT') && (
+                <option value="INCIDENT">Kiểm tra sự cố</option>
+              )}
+              {allowedKinds.includes('DELIVERY') && (
+                <option value="DELIVERY">Giao hoa cho shop</option>
+              )}
+            </select>
+          </div>
           {staff.isPending || targetQuery.isPending ? (
             <p role="status">Đang tải thông tin phân công…</p>
           ) : staff.isError || targetQuery.isError ? (
@@ -168,9 +181,26 @@ export default function AdminTaskAssignment({
               </Button>
             </>
           ) : !Array.isArray(staff.data) || staff.data.length === 0 ? (
-            <p>Chưa có tài khoản nhân viên đang hoạt động để phân công.</p>
+            <div role="status">
+              <p>Chưa có tài khoản nhân viên đang hoạt động để phân công.</p>
+              {effectiveRole === 'SELLER' && (
+                <Link href="/seller/staff">Thêm hoặc mở lại nhân viên shop</Link>
+              )}
+            </div>
+          ) : effectiveRole === 'SELLER' && scopes.data?.length === 0 ? (
+            <div role="status">
+              <p>
+                Chưa có tủ giao hoa đủ điều kiện trong shop. Kiểm tra tủ và quyền sử dụng trước khi
+                phân công.
+              </p>
+              <Link href="/seller/kiosks">Kiểm tra kiosk của shop</Link>
+            </div>
           ) : (
-            <form noValidate onSubmit={form.handleSubmit(submit)}>
+            <form
+              className={effectiveRole === 'SELLER' ? 'assignment-form' : undefined}
+              noValidate
+              onSubmit={form.handleSubmit(submit)}
+            >
               {(kind === 'INCIDENT'
                 ? incidents.data?.items.length === 0
                 : scopes.data?.length === 0) && (
@@ -180,51 +210,57 @@ export default function AdminTaskAssignment({
                     : 'Chưa có shop đang hoạt động với ô tủ hợp lệ để giao hoa.'}
                 </p>
               )}
-              <label htmlFor="assignment-staff">Nhân viên phụ trách</label>
-              <select
-                id="assignment-staff"
-                {...form.register('assigneeId', { required: 'Chọn nhân viên phụ trách.' })}
-                aria-invalid={!!form.formState.errors.assigneeId}
-                aria-describedby="assignment-staff-error"
-              >
-                <option value="">Chọn nhân viên</option>
-                {staff.data.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
+              <div className="assignment-field">
+                <label htmlFor="assignment-staff">Nhân viên phụ trách</label>
+                <select
+                  id="assignment-staff"
+                  {...form.register('assigneeId', { required: 'Chọn nhân viên phụ trách.' })}
+                  aria-invalid={!!form.formState.errors.assigneeId}
+                  aria-describedby="assignment-staff-error"
+                >
+                  <option value="">Chọn nhân viên</option>
+                  {staff.data.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+                <p id="assignment-staff-error" className="error">
+                  {form.formState.errors.assigneeId?.message}
+                </p>
+              </div>
+              <div className="assignment-field">
+                <label htmlFor="assignment-target">
+                  {kind === 'INCIDENT' ? 'Sự cố cần kiểm tra' : 'Shop và tủ giao hoa'}
+                </label>
+                <select
+                  id="assignment-target"
+                  {...form.register('target', { required: 'Chọn nơi cần thực hiện công việc.' })}
+                  aria-invalid={!!form.formState.errors.target}
+                  aria-describedby="assignment-target-error"
+                >
+                  <option value="">
+                    {kind === 'INCIDENT' ? 'Chọn công việc' : 'Chọn tủ giao hoa'}
                   </option>
-                ))}
-              </select>
-              <p id="assignment-staff-error" className="error">
-                {form.formState.errors.assigneeId?.message}
-              </p>
-              <label htmlFor="assignment-target">
-                {kind === 'INCIDENT' ? 'Sự cố cần kiểm tra' : 'Shop và tủ giao hoa'}
-              </label>
-              <select
-                id="assignment-target"
-                {...form.register('target', { required: 'Chọn nơi cần thực hiện công việc.' })}
-                aria-invalid={!!form.formState.errors.target}
-                aria-describedby="assignment-target-error"
-              >
-                <option value="">Chọn công việc</option>
-                {kind === 'INCIDENT'
-                  ? incidents.data?.items.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.location?.kioskName || 'Tủ hoa'} · {item.reason}
-                      </option>
-                    ))
-                  : scopes.data?.map((item) => (
-                      <option
-                        key={`${item.sellerId}:${item.kioskId}`}
-                        value={`${item.sellerId}:${item.kioskId}`}
-                      >
-                        {item.shopName} · {item.kioskName} · {item.address}
-                      </option>
-                    ))}
-              </select>
-              <p id="assignment-target-error" className="error">
-                {form.formState.errors.target?.message}
-              </p>
+                  {kind === 'INCIDENT'
+                    ? incidents.data?.items.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.location?.kioskName || 'Tủ hoa'} · {item.reason}
+                        </option>
+                      ))
+                    : scopes.data?.map((item) => (
+                        <option
+                          key={`${item.sellerId}:${item.kioskId}`}
+                          value={`${item.sellerId}:${item.kioskId}`}
+                        >
+                          {item.shopName} · {item.kioskName} · {item.address}
+                        </option>
+                      ))}
+                </select>
+                <p id="assignment-target-error" className="error">
+                  {form.formState.errors.target?.message}
+                </p>
+              </div>
               {kind === 'INCIDENT' && (
                 <div>
                   <Button
@@ -252,23 +288,30 @@ export default function AdminTaskAssignment({
                   </Button>
                 </div>
               )}
-              <label htmlFor="assignment-instructions">Hướng dẫn công việc</label>
-              <textarea
-                id="assignment-instructions"
-                rows={3}
-                maxLength={2000}
-                {...form.register('instructions', {
-                  validate: (value) =>
-                    value.trim().length >= 10 || 'Mô tả công việc ít nhất 10 ký tự.',
-                })}
-                aria-invalid={!!form.formState.errors.instructions}
-                aria-describedby="assignment-instructions-error"
-              />
-              <p id="assignment-instructions-error" className="error">
-                {form.formState.errors.instructions?.message}
-              </p>
+              <div className="assignment-field assignment-field-wide">
+                <label htmlFor="assignment-instructions">Hướng dẫn công việc</label>
+                <textarea
+                  id="assignment-instructions"
+                  rows={3}
+                  maxLength={2000}
+                  placeholder={
+                    effectiveRole === 'SELLER'
+                      ? 'Ghi mẫu hoa, số lượng và lưu ý khi giao tại tủ…'
+                      : undefined
+                  }
+                  {...form.register('instructions', {
+                    validate: (value) =>
+                      value.trim().length >= 10 || 'Mô tả công việc ít nhất 10 ký tự.',
+                  })}
+                  aria-invalid={!!form.formState.errors.instructions}
+                  aria-describedby="assignment-instructions-error"
+                />
+                <p id="assignment-instructions-error" className="error">
+                  {form.formState.errors.instructions?.message}
+                </p>
+              </div>
               <Button type="submit" disabled={busy}>
-                Giao công việc
+                {busy ? 'Đang phân công…' : 'Giao công việc'}
               </Button>
             </form>
           )}

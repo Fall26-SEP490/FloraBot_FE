@@ -94,7 +94,7 @@ export default function Subscriptions({ session }: { session: Session }) {
       tabIndex={-1}
     >
       <h2 id="subscriptions-title">Gói thuê của shop</h2>
-      <p>Thêm một kỳ thuê để những bó hoa luôn có chỗ đón khách.</p>
+      <p>Xem gói đang dùng, đăng ký thêm kỳ thuê và theo dõi xác nhận thanh toán.</p>
       {overview.isPending ? (
         <p role="status">Đang tải gói thuê…</p>
       ) : overview.isError ? (
@@ -107,11 +107,20 @@ export default function Subscriptions({ session }: { session: Session }) {
       ) : (
         <>
           {overview.data.package ? (
-            <p className="package-summary">
-              <strong>{overview.data.package.name}</strong> ·{' '}
-              {money(overview.data.package.monthlyFee)}/tháng · Tối đa{' '}
-              {overview.data.package.maxSlots} ô
-            </p>
+            <dl className="package-summary">
+              <div>
+                <dt>Gói của shop</dt>
+                <dd>{overview.data.package.name}</dd>
+              </div>
+              <div>
+                <dt>Phí mỗi tháng</dt>
+                <dd>{money(overview.data.package.monthlyFee)}</dd>
+              </div>
+              <div>
+                <dt>Quy mô</dt>
+                <dd>Tối đa {overview.data.package.maxSlots} ô</dd>
+              </div>
+            </dl>
           ) : (
             <p>
               Shop chưa được duyệt gói thuê. Đội ngũ FloraBot sẽ hỗ trợ bạn sau khi duyệt hồ sơ.
@@ -123,6 +132,8 @@ export default function Subscriptions({ session }: { session: Session }) {
               noValidate
               onSubmit={form.handleSubmit((values) => subscribe.mutate(values))}
             >
+              <h3>Đăng ký kỳ thuê mới</h3>
+              <p>Chọn thời hạn và kiểm tra phí trước khi tạo kỳ chờ thanh toán.</p>
               <label htmlFor="subscription-months">Số tháng đăng ký</label>
               <select
                 id="subscription-months"
@@ -154,7 +165,7 @@ export default function Subscriptions({ session }: { session: Session }) {
             </form>
           )}
           {hasPending && (
-            <p className="quiet">
+            <p className="subscription-pending-notice" role="status">
               Bạn có kỳ đang chờ thanh toán bên dưới. Hãy hoàn tất kỳ này trước khi đăng ký thêm.
             </p>
           )}
@@ -185,14 +196,18 @@ export default function Subscriptions({ session }: { session: Session }) {
           ) : (
             <ul className="subscription-list">
               {overview.data.subscriptions.map((row) => (
-                <li key={row.id}>
+                <li key={row.id} data-status={row.status}>
                   <div>
                     <h4>{row.packageName}</h4>
                     <p>
                       {date(row.periodFrom)} đến trước {date(row.periodTo)}
                     </p>
                     <p>
-                      {statuses[row.status] || row.status} · <strong>{money(row.price)}</strong>
+                      <span className="subscription-status" data-status={row.status}>
+                        {statuses[row.status] || row.status}
+                      </span>
+                      {' · '}
+                      <strong>{money(row.price)}</strong>
                     </p>
                   </div>
                   {row.status === 'PENDING_PAYMENT' && allowed && (

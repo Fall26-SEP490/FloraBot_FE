@@ -183,7 +183,9 @@ test('Customer request → seller quote → customer acceptance/payment → sell
   const sellerSummary = page.locator('details[id^="preorder-"] > summary');
   await expect(sellerSummary).toContainText(flower.name);
   await expect(sellerSummary).toContainText(flower.kioskName);
-  await expect(page.getByLabel('Thống kê đơn ở trang 1')).toBeVisible();
+  await expect(
+    page.getByLabel('Lọc trạng thái đơn').getByRole('button', { name: /Chờ báo giá/ }),
+  ).toContainText('1');
   await expect(page.getByRole('navigation', { name: 'Phân trang đơn đặt trước' })).toHaveCount(0);
   await page.locator('details[id^="preorder-"] > summary').click();
   await expect(page.getByText(row.instructions)).toBeVisible();

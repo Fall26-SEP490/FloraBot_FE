@@ -867,7 +867,7 @@ export default function WebRequests({
     enabled: mode !== 'seller' || Boolean(sellerId),
   });
   const items = query.data?.items ?? [];
-  const returnedRequest = mode === 'member' ? params.get('requestId') : null;
+  const returnedRequest = mode === 'member' || mode === 'seller' ? params.get('requestId') : null;
   const [readyNotice, setReadyNotice] = useState('');
   const previousReady = useRef<Map<string, boolean>>(new Map());
   const scrolledRequest = useRef<string | null>(null);
@@ -888,10 +888,12 @@ export default function WebRequests({
       const target = document.getElementById(`preorder-${returnedRequest}`);
       if (target) {
         target.scrollIntoView({ block: 'center' });
+        if (mode === 'seller')
+          target.querySelector<HTMLElement>('summary')?.focus({ preventScroll: true });
         scrolledRequest.current = returnedRequest;
       }
     }
-  }, [returnedRequest, query.data]);
+  }, [returnedRequest, query.data, mode]);
   const Container = mode === 'seller' ? 'div' : 'section';
   const filtered = items.filter(
     (row) =>
@@ -934,35 +936,6 @@ export default function WebRequests({
       )}
       {mode === 'seller' && (
         <>
-          <div className={styles.summary} aria-label={`Thống kê đơn ở trang ${page}`}>
-            {[
-              { label: 'Yêu cầu trong trang', value: 'all' as OrderFilter, icon: ClipboardList },
-              { label: 'Cần xử lý', value: 'attention' as OrderFilter, icon: CircleAlert },
-              { label: 'Đang chuẩn bị', value: 'preparing' as OrderFilter, icon: Package },
-              { label: 'Sẵn sàng tại tủ', value: 'ready' as OrderFilter, icon: Boxes },
-            ].map(({ label, value, icon: Icon }) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setFilter(value)}
-                aria-pressed={filter === value}
-              >
-                <span className={styles.statIcon}>
-                  <Icon size={20} aria-hidden="true" />
-                </span>
-                <span>
-                  <small>{label}</small>
-                  <strong>
-                    {query.isError
-                      ? '—'
-                      : query.isPending
-                        ? '…'
-                        : items.filter((row) => matchesOrderFilter(row, value, mode)).length}
-                  </strong>
-                </span>
-              </button>
-            ))}
-          </div>
           <div className={styles.filters}>
             <div className={styles.filterHeading}>
               <div>
@@ -987,7 +960,7 @@ export default function WebRequests({
                   onClick={() => setFilter(value)}
                 >
                   {label}
-                  {value === 'attention' && query.isSuccess && (
+                  {query.isSuccess && (
                     <span>
                       {items.filter((row) => matchesOrderFilter(row, value, mode)).length}
                     </span>
@@ -997,7 +970,7 @@ export default function WebRequests({
             </div>
             <div className={styles.searchBar}>
               <label className={styles.searchField}>
-                <span>Tìm yêu cầu</span>
+                <span>Tìm đơn trong trang</span>
                 <input
                   type="search"
                   value={search}
@@ -1006,7 +979,7 @@ export default function WebRequests({
                 />
               </label>
               <label className={styles.dateField}>
-                <span>Ngày bắt đầu nhận</span>
+                <span>Lọc theo ngày nhận</span>
                 <input
                   type="date"
                   value={pickupDay}
@@ -1014,6 +987,18 @@ export default function WebRequests({
                   onChange={(event) => setPickupDay(event.target.value)}
                 />
               </label>
+              {(search || pickupDay || filter !== 'all') && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSearch('');
+                    setPickupDay('');
+                    setFilter('all');
+                  }}
+                >
+                  Xóa bộ lọc
+                </Button>
+              )}
             </div>
           </div>
           {query.isSuccess && (
