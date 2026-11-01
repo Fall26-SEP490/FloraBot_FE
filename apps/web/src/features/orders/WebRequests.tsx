@@ -24,12 +24,15 @@ import {
   orderClosed,
   orderNextStep,
   orderStage,
+  sellerOrderActionLabel,
+  sellerOrderHint,
   statusName,
   money,
   when,
 } from './orders.utils';
 import type { OrderFilter, Page, SendPreorderPickupOtpResponse, WebOrder } from './orders.types';
 import styles from './seller-orders.module.css';
+import { readSellerQueue, sellerQueueKey, SELLER_RESULT_SIZE } from './seller-queue';
 import { rememberPreorderPayment } from './payment-return';
 
 const sellerFilters: { value: OrderFilter; label: string }[] = [
@@ -37,6 +40,7 @@ const sellerFilters: { value: OrderFilter; label: string }[] = [
   { value: 'attention', label: 'Cần xử lý' },
   { value: 'requested', label: 'Chờ báo giá' },
   { value: 'quoted', label: 'Chờ xác nhận' },
+  { value: 'payment', label: 'Chờ thanh toán' },
   { value: 'preparing', label: 'Đang chuẩn bị' },
   { value: 'ready', label: 'Sẵn sàng' },
   { value: 'closed', label: 'Đã kết thúc' },
@@ -841,6 +845,7 @@ export default function WebRequests({
     'attention',
     'requested',
     'quoted',
+    'payment',
     'preparing',
     'ready',
     'closed',
@@ -851,8 +856,11 @@ export default function WebRequests({
   const [filter, setFilter] = useState<OrderFilter>(
     filters.find((value) => value === initialFilter) ?? 'all',
   );
+  const [resultPage, setResultPage] = useState<number | null>(null);
+  const [queueLimit, setQueueLimit] = useState(50);
   const [search, setSearch] = useState('');
   const [pickupDay, setPickupDay] = useState('');
+  const [dateFilterOpen, setDateFilterOpen] = useState(false);
   const base =
     mode === 'member'
       ? '/member/preorders'
@@ -860,10 +868,18 @@ export default function WebRequests({
         ? '/admin/preorders'
         : `/sellers/${sellerId}/preorders`;
   const query = useQuery({
-    queryKey: ['web-orders', base, page],
-    queryFn: () => request<Page>(`${base}?page=${page}`),
+    queryKey: mode === 'seller' ? sellerQueueKey(base, queueLimit) : ['web-orders', base, page],
+    queryFn: ({ signal }) =>
+      mode === 'seller'
+        ? readSellerQueue((next) => request<Page>(`${base}?page=${next}`), queueLimit, signal)
+        : request<Page>(`${base}?page=${page}`),
     refetchInterval: (q) =>
-      q.state.data?.items?.some((item) => item.orderStatus === 'AWAITING_PAYMENT') ? 5_000 : 30_000,
+      mode !== 'seller' &&
+      q.state.data?.items?.some((item) => item.orderStatus === 'AWAITING_PAYMENT')
+        ? 5_000
+        : 30_000,
+    placeholderData: (previous, previousQuery) =>
+      mode === 'seller' && previousQuery?.queryKey[1] === base ? previous : undefined,
     enabled: mode !== 'seller' || Boolean(sellerId),
   });
   const items = query.data?.items ?? [];
@@ -907,6 +923,22 @@ export default function WebRequests({
           ).includes(searchable(search.trim()))) &&
           (!pickupDay || pickupDayKey(row.pickupAt) === pickupDay))),
   );
+  const targetIndex = returnedRequest
+    ? filtered.findIndex((row) => row.id === returnedRequest)
+    : -1;
+  const totalResultPages = Math.max(1, Math.ceil(filtered.length / SELLER_RESULT_SIZE));
+  const displayPage =
+    mode === 'seller'
+      ? Math.min(
+          resultPage ?? (targetIndex >= 0 ? Math.floor(targetIndex / SELLER_RESULT_SIZE) + 1 : 1),
+          totalResultPages,
+        )
+      : page;
+  const displayItems =
+    mode === 'seller'
+      ? filtered.slice((displayPage - 1) * SELLER_RESULT_SIZE, displayPage * SELLER_RESULT_SIZE)
+      : filtered;
+  const filterName = sellerFilters.find((item) => item.value === filter)?.label ?? 'Tất cả';
   return (
     <Container
       id="web-orders"
@@ -945,8 +977,8 @@ export default function WebRequests({
           <div className={styles.filters}>
             <div className={styles.filterHeading}>
               <div>
-                <h3>Danh sách yêu cầu</h3>
-                <p>Thống kê, tìm kiếm và bộ lọc áp dụng trong trang {page}.</p>
+                <h3>Quản lý đơn đặt trước</h3>
+                <p>Chọn trạng thái, tìm đơn rồi mở chi tiết để xử lý.</p>
               </div>
               <Button
                 variant="outline"
@@ -957,13 +989,35 @@ export default function WebRequests({
                 {query.isFetching ? 'Đang cập nhật…' : 'Làm mới'}
               </Button>
             </div>
-            <div className={styles.tabs} aria-label="Lọc trạng thái đơn">
+            <label className={styles.mobileStatus}>
+              <span>Trạng thái đơn</span>
+              <select
+                value={filter}
+                onChange={(event) => {
+                  setFilter(event.target.value as OrderFilter);
+                  setResultPage(1);
+                }}
+              >
+                {sellerFilters.map(({ value, label }) => (
+                  <option key={value} value={value}>
+                    {label}
+                    {query.isSuccess
+                      ? ` (${items.filter((row) => matchesOrderFilter(row, value, mode)).length})`
+                      : ''}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className={styles.tabs} role="group" aria-label="Lọc trạng thái đơn">
               {sellerFilters.map(({ value, label }) => (
                 <button
                   key={value}
                   type="button"
                   aria-pressed={filter === value}
-                  onClick={() => setFilter(value)}
+                  onClick={() => {
+                    setFilter(value);
+                    setResultPage(1);
+                  }}
                 >
                   {label}
                   {query.isSuccess && (
@@ -976,12 +1030,15 @@ export default function WebRequests({
             </div>
             <div className={styles.searchBar}>
               <label className={styles.searchField}>
-                <span>Tìm đơn trong trang</span>
+                <span>Tìm đơn của shop</span>
                 <input
                   type="search"
                   value={search}
                   placeholder="Mã đơn, tên hoa hoặc kiosk…"
-                  onChange={(event) => setSearch(event.target.value)}
+                  onChange={(event) => {
+                    setSearch(event.target.value);
+                    setResultPage(1);
+                  }}
                 />
               </label>
               <label className={styles.dateField}>
@@ -989,10 +1046,40 @@ export default function WebRequests({
                 <input
                   type="date"
                   value={pickupDay}
-                  onInput={(event) => setPickupDay(event.currentTarget.value)}
-                  onChange={(event) => setPickupDay(event.target.value)}
+                  onInput={(event) => {
+                    setPickupDay(event.currentTarget.value);
+                    setResultPage(1);
+                  }}
+                  onChange={(event) => {
+                    setPickupDay(event.target.value);
+                    setResultPage(1);
+                  }}
                 />
               </label>
+              <div className={styles.mobileDate}>
+                <button
+                  type="button"
+                  aria-expanded={dateFilterOpen}
+                  onClick={() => setDateFilterOpen((open) => !open)}
+                >
+                  {pickupDay
+                    ? `Ngày nhận: ${pickupDate(`${pickupDay}T12:00:00+07:00`)}`
+                    : 'Lọc theo ngày nhận'}
+                </button>
+                {dateFilterOpen && (
+                  <label>
+                    <span>Ngày nhận hoa</span>
+                    <input
+                      type="date"
+                      value={pickupDay}
+                      onChange={(event) => {
+                        setPickupDay(event.target.value);
+                        setResultPage(1);
+                      }}
+                    />
+                  </label>
+                )}
+              </div>
               {(search || pickupDay || filter !== 'all') && (
                 <Button
                   variant="outline"
@@ -1000,6 +1087,7 @@ export default function WebRequests({
                     setSearch('');
                     setPickupDay('');
                     setFilter('all');
+                    setResultPage(1);
                   }}
                 >
                   Xóa bộ lọc
@@ -1009,7 +1097,14 @@ export default function WebRequests({
           </div>
           {query.isSuccess && (
             <p className={styles.resultCount} role="status">
-              Hiển thị {filtered.length} / {items.length} yêu cầu · Trang {page}
+              {filterName}: {filtered.length} yêu cầu
+              {filtered.length > 0
+                ? ` · Hiển thị ${(displayPage - 1) * SELLER_RESULT_SIZE + 1}–${Math.min(displayPage * SELLER_RESULT_SIZE, filtered.length)}`
+                : ''}
+              .{' '}
+              {query.data.hasMore
+                ? `Còn đơn chưa được tải; kết quả hiện tính trên ${items.length} yêu cầu đã tải.`
+                : `Đã tìm trên ${items.length} yêu cầu của shop.`}
             </p>
           )}
         </>
@@ -1103,7 +1198,9 @@ export default function WebRequests({
               <h3>{items.length ? 'Không tìm thấy yêu cầu phù hợp' : 'Chưa có đơn đặt trước'}</h3>
               <p>
                 {items.length
-                  ? 'Không có yêu cầu phù hợp bộ lọc trong trang này.'
+                  ? mode === 'seller'
+                    ? 'Thử đổi trạng thái, từ khóa hoặc ngày nhận để tìm đơn.'
+                    : 'Không có yêu cầu phù hợp bộ lọc trong trang này.'
                   : mode === 'member' && page === 1
                     ? 'Chọn một mẫu hoa bạn thích và gửi mong muốn cho shop. Đơn của bạn sẽ xuất hiện tại đây.'
                     : 'Chưa có yêu cầu ở trang này.'}
@@ -1116,7 +1213,7 @@ export default function WebRequests({
             </div>
           )}
           <ul className={mode === 'seller' ? styles.orderList : 'member-orders'}>
-            {filtered.map((row) => (
+            {displayItems.map((row) => (
               <li key={row.id}>
                 <details id={`preorder-${row.id}`} open={row.id === returnedRequest || undefined}>
                   <summary className={mode === 'seller' ? styles.orderSummary : undefined}>
@@ -1187,9 +1284,12 @@ export default function WebRequests({
                           </span>
                         </span>
                         <span className={styles.disclosure}>
-                          <span className={styles.showDetails}>Xem chi tiết & thao tác</span>
+                          <span className={styles.nextTask}>{sellerOrderHint(row)}</span>
+                          <span className={styles.showDetails}>
+                            {sellerOrderActionLabel(row)}{' '}
+                            <ArrowRight size={15} aria-hidden="true" />
+                          </span>
                           <span className={styles.hideDetails}>Thu gọn chi tiết</span>
-                          <ArrowRight size={15} aria-hidden="true" />
                         </span>
                       </>
                     )}
@@ -1210,23 +1310,45 @@ export default function WebRequests({
               </li>
             ))}
           </ul>
-          {(page > 1 || query.data.hasMore) && (
+          {mode === 'seller' && query.data.hasMore && (
+            <div className={styles.loadMore}>
+              <p>Chưa tải hết đơn của shop. Tải thêm để tiếp tục tìm và thống kê.</p>
+              <Button
+                variant="outline"
+                disabled={query.isFetching}
+                onClick={() => setQueueLimit((value) => value + 50)}
+              >
+                Tải thêm đơn của shop
+              </Button>
+            </div>
+          )}
+          {(mode === 'seller' ? totalResultPages > 1 : page > 1 || query.data.hasMore) && (
             <nav className="order-pagination" aria-label="Phân trang đơn đặt trước">
               <Button
                 variant="outline"
-                disabled={page === 1 || query.isFetching}
-                onClick={() => setPage((value) => value - 1)}
+                disabled={displayPage === 1 || query.isFetching}
+                onClick={() =>
+                  mode === 'seller' ? setResultPage(displayPage - 1) : setPage((value) => value - 1)
+                }
               >
                 <ArrowLeft size={15} aria-hidden="true" />
-                <span>Yêu cầu trước</span>
+                <span>{mode === 'seller' ? 'Trang trước' : 'Yêu cầu trước'}</span>
               </Button>
-              <span className="order-page-indicator">Trang {page}</span>
+              <span className="order-page-indicator">
+                Trang {displayPage}
+                {mode === 'seller' ? ` / ${totalResultPages}` : ''}
+              </span>
               <Button
                 variant="outline"
-                disabled={!query.data.hasMore || query.isFetching}
-                onClick={() => setPage((value) => value + 1)}
+                disabled={
+                  (mode === 'seller' ? displayPage >= totalResultPages : !query.data.hasMore) ||
+                  query.isFetching
+                }
+                onClick={() =>
+                  mode === 'seller' ? setResultPage(displayPage + 1) : setPage((value) => value + 1)
+                }
               >
-                <span>Yêu cầu sau</span>
+                <span>{mode === 'seller' ? 'Trang sau' : 'Yêu cầu sau'}</span>
                 <ArrowRight size={15} aria-hidden="true" />
               </Button>
             </nav>

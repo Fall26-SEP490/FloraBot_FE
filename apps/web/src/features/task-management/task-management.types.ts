@@ -102,6 +102,7 @@ export type StaffDirectoryMember = {
 };
 
 export type StaffTasksProps = {
+  initialStatus?: string;
   actorRole?: ActiveTaskRole;
   role?: ActiveTaskRole;
   mode?: 'worker' | 'manager' | 'oversight';

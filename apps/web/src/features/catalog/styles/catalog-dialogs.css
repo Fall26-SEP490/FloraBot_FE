@@ -546,3 +546,73 @@
     justify-content: center;
   }
 }
+
+/* Quotation keeps the task and actions visible within the existing dialog. */
+.flower-request-form-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.flower-request-intro {
+  align-items: center;
+  flex-wrap: nowrap;
+  padding: 0 0 0.75rem;
+  margin-bottom: 0.75rem;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid #e2ebe0;
+  border-radius: 0;
+}
+.flower-request-intro > div:first-child {
+  flex: 1 1 auto;
+}
+.flower-request-intro p {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+.flower-request-reference-price {
+  flex-shrink: 0;
+}
+.flower-request-pickup-hint {
+  margin: 0 0 1rem;
+  color: #476451;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+.flower-request-discard {
+  padding: 1.25rem 1.4rem;
+}
+.flower-request-discard h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+}
+.flower-request-discard p {
+  margin: 0;
+  color: #476451;
+  line-height: 1.6;
+}
+.flower-request-discard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+@media (max-width: 640px) {
+  .flower-request-intro {
+    gap: 0.75rem;
+  }
+  .flower-request-intro strong {
+    font-size: 0.95rem;
+  }
+  .flower-request-reference-price strong {
+    font-size: 1rem;
+  }
+  .flower-request-discard-actions {
+    flex-direction: column;
+  }
+  .flower-request-discard-actions .button {
+    width: 100%;
+  }
+}

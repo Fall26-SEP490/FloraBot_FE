@@ -167,6 +167,7 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
     await expect(maintenanceCard.locator('.kiosk-permission-notice')).toContainText(
       'Tủ kiosk này dùng chung hoặc chưa được gán toàn quyền cho shop',
     );
+    await maintenanceCard.getByText('Xem ghim và thông tin vị trí', { exact: true }).click();
     await expect(maintenanceCard.locator('input[name="address"]')).toBeDisabled();
     await expect(
       maintenanceCard.locator('input[name="latitude"], input[name="longitude"]'),
@@ -404,6 +405,11 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
     );
 
     await page.goto('/seller/kiosks');
+    await page
+      .locator('.kiosk-card')
+      .filter({ hasText: 'Kiosk Landmark 81' })
+      .getByText('Chỉnh địa chỉ và ghim bản đồ', { exact: true })
+      .click();
 
     await page
       .locator('.kiosk-picker-map.maplibregl-map, .kiosk-picker-map.leaflet-container')
@@ -466,6 +472,7 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
     await page.goto('/seller/kiosks');
 
     const card = page.locator('.kiosk-card').filter({ hasText: 'Kiosk Landmark 81' });
+    await card.getByText('Chỉnh địa chỉ và ghim bản đồ', { exact: true }).click();
     const tileWarning = card.locator('.kiosk-map-tile-warning');
     await expect(tileWarning).toBeVisible();
     await expect(tileWarning).toContainText('Bản đồ chưa tải được đầy đủ hình ảnh.');

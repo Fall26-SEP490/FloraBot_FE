@@ -295,10 +295,6 @@ export function ConversationView({
         <div className="chat-conversation-title-area">
           <div className="chat-conversation-title-row">
             <h2 className="chat-conversation-name">{otherPartyName}</h2>
-            <span className="chat-conversation-status">
-              <span className="chat-status-dot online" aria-hidden="true" />
-              Trực tuyến
-            </span>
           </div>
           {productContext && (
             <p className="chat-conversation-context" title={productContext}>

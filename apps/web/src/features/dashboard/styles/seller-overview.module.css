@@ -94,37 +94,6 @@
   font-weight: 600;
   text-underline-offset: 4px;
 }
-.metrics {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  padding: 0 24px 18px;
-  gap: 12px;
-}
-.metric {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: 72px;
-  gap: 7px;
-  color: var(--green);
-  text-decoration: none;
-  padding: 10px;
-  border-radius: 8px;
-  background: #f2f6ef;
-}
-.metric:hover {
-  background: #e7f0e1;
-}
-.metric strong {
-  font-size: 1.35rem;
-  font-variant-numeric: tabular-nums;
-  line-height: 1.2;
-}
-.metric span {
-  color: var(--muted);
-  font-size: 0.74rem;
-  line-height: 1.6;
-}
 .tabs {
   display: flex;
   gap: 24px;
@@ -369,11 +338,6 @@
   .aside {
     grid-template-columns: minmax(0, 1fr);
   }
-  .metrics {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-    padding-inline: 18px;
-  }
   .heading {
     padding: 18px;
   }
@@ -425,28 +389,171 @@
   grid-column: 1/-1;
   grid-row: 2;
 }
-.metric {
-  flex-direction: row;
-  align-items: center;
-  justify-content: start;
-  min-height: 52px;
-}
-.metric strong {
-  font-size: 1.15rem;
-  flex-shrink: 0;
-}
 @media (max-width: 600px) {
-  .metrics {
-    padding-bottom: 12px;
-  }
-  .metric {
-    min-height: 54px;
-    padding: 9px;
-  }
-  .metric span {
-    font-size: 0.72rem;
-  }
   .heading p {
     font-size: 0.8rem;
   }
+}
+
+/* Daily work takes the full width before supporting shop information. */
+.workbench {
+  margin-bottom: 24px;
+  border: 1px solid #cbdcc9;
+  border-radius: 14px;
+  background: #f1f6ee;
+  overflow: hidden;
+}
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: 0 24px;
+  padding: 0 0 20px;
+  gap: 0;
+}
+.metric {
+  --metric-bg: transparent;
+  --metric-hover: #e4eddf;
+  --metric-ink: var(--green);
+  --metric-muted: var(--muted);
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  gap: 10px;
+  padding: 10px 16px;
+  color: var(--metric-ink);
+  background: var(--metric-bg);
+  text-decoration: none;
+  min-width: 0;
+  border-radius: 8px;
+}
+.metric + .metric {
+  border-left: 1px solid var(--line);
+}
+.metric:hover {
+  background: var(--metric-hover);
+}
+.metric:hover > span {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.metric small {
+  text-decoration: none;
+}
+.metric[data-has-items='true'] {
+  --metric-bg: #dfeada;
+  --metric-hover: #d2e3ca;
+}
+.metric[data-action='true'][data-has-items='true'] {
+  --metric-bg: #245b3e;
+  --metric-hover: #19492f;
+  --metric-ink: #fff;
+  --metric-muted: #d8e8db;
+  border-left-color: transparent;
+}
+.metric strong {
+  font-size: 1.6rem;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+}
+.metric > span {
+  font-size: 0.84rem;
+  line-height: 1.6;
+  font-weight: 600;
+}
+.metric small {
+  display: block;
+  color: var(--metric-muted);
+  font-size: 0.74rem;
+  font-weight: 400;
+  margin-top: 4px;
+}
+.metric strong {
+  color: inherit;
+}
+.inboxLink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 24px;
+  border-top: 1px solid var(--line);
+  background: #f7faf5;
+  color: var(--green);
+  text-decoration: none;
+  font-size: 0.83rem;
+  min-height: 64px;
+}
+.inboxLink > span {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  font-weight: 600;
+}
+.inboxLink small {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+.inboxLink:hover {
+  background: #edf4e9;
+}
+.queueScope {
+  margin: 0;
+  padding: 10px 24px;
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.7;
+}
+@media (max-width: 760px) {
+  .metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-inline: 16px;
+    row-gap: 16px;
+  }
+  .metric {
+    padding: 8px 10px;
+  }
+  .metric:nth-child(4) {
+    border-left: 0;
+  }
+  .metric strong {
+    font-size: 1.35rem;
+  }
+}
+@media (max-width: 600px) {
+  .metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-inline: 12px;
+    padding-bottom: 12px;
+    row-gap: 12px;
+  }
+  .metric {
+    gap: 8px;
+    padding: 8px;
+    border-radius: 6px;
+  }
+  .metric small {
+    display: none;
+  }
+  .metric > span {
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+  .metric:nth-child(4) {
+    border-left: 0;
+  }
+  .metric:nth-child(5) {
+    border-left: 1px solid var(--line);
+  }
+  .inboxLink,
+  .queueScope {
+    padding-inline: 18px;
+  }
+  .inboxLink > span {
+    display: grid;
+    gap: 4px;
+  }
+}
+.inboxLink:focus-visible {
+  outline-offset: -3px;
 }

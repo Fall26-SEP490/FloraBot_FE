@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Flower2, Plus, X } from '@florabot/ui';
 import type { CustomerSellerChatItem } from './types';
 
@@ -17,17 +17,46 @@ export function ChatCustomerDetails({
   chat: CustomerSellerChatItem;
   onClose?: () => void;
 }) {
+  const closeRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (
+        event.key === 'Escape' &&
+        !event.defaultPrevented &&
+        !document.querySelector('[aria-modal="true"]')
+      ) {
+        event.preventDefault();
+        onClose?.();
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
+  useEffect(() => {
+    closeRef.current?.focus();
+  }, []);
   const storageKey = `florabot_chat_notes_${chat.id}`;
   const [notes, setNotes] = useState<NoteItem[]>(() => {
     if (typeof window === 'undefined') return [];
     try {
       const saved = localStorage.getItem(storageKey);
-      return saved ? (JSON.parse(saved) as NoteItem[]) : [];
+      const parsed: unknown = saved ? JSON.parse(saved) : [];
+      return Array.isArray(parsed)
+        ? parsed.filter(
+            (item): item is NoteItem =>
+              item &&
+              typeof item.id === 'string' &&
+              typeof item.text === 'string' &&
+              typeof item.createdAt === 'string',
+          )
+        : [];
     } catch {
       return [];
     }
   });
   const [newNote, setNewNote] = useState('');
+  const [noteError, setNoteError] = useState('');
+  const [noteNotice, setNoteNotice] = useState('');
 
   const handleAddNote = () => {
     const trimmed = newNote.trim();
@@ -44,22 +73,30 @@ export function ChatCustomerDetails({
       }),
     };
     const updated = [note, ...notes];
-    setNotes(updated);
-    setNewNote('');
     try {
       localStorage.setItem(storageKey, JSON.stringify(updated));
+      setNotes(updated);
+      setNewNote('');
+      setNoteError('');
+      setNoteNotice('Đã lưu ghi chú trên trình duyệt này.');
     } catch {
-      /* Local storage may be restricted */
+      setNoteNotice('');
+      setNoteError(
+        'Chưa lưu được trên trình duyệt. Nội dung vẫn được giữ để bạn sao chép hoặc thử lại.',
+      );
     }
   };
 
   const handleDeleteNote = (id: string) => {
     const updated = notes.filter((n) => n.id !== id);
-    setNotes(updated);
     try {
       localStorage.setItem(storageKey, JSON.stringify(updated));
+      setNotes(updated);
+      setNoteError('');
+      setNoteNotice('Đã xóa ghi chú trên trình duyệt này.');
     } catch {
-      /* Local storage may be restricted */
+      setNoteNotice('');
+      setNoteError('Chưa xóa được ghi chú khỏi trình duyệt. Bạn có thể thử lại.');
     }
   };
 
@@ -78,6 +115,7 @@ export function ChatCustomerDetails({
         {onClose && (
           <button
             type="button"
+            ref={closeRef}
             className="chat-details-close-btn"
             onClick={onClose}
             aria-label="Thu gọn bảng thông tin"
@@ -94,17 +132,13 @@ export function ChatCustomerDetails({
           </div>
           <h4 className="chat-details-name">{chat.otherPartyName}</h4>
           <div className="chat-details-profile-tags">
-            <span className="chat-details-badge online">
-              <span className="chat-status-dot online" aria-hidden="true" />
-              Trực tuyến
-            </span>
             <span className="chat-details-date">Bắt đầu: {createdDate}</span>
           </div>
         </div>
 
         {chat.productContext && (
           <section className="chat-details-section">
-            <h5 className="chat-details-section-title">MẪU HOA QUAN TÂM</h5>
+            <h5 className="chat-details-section-title">Mẫu hoa đang trao đổi</h5>
             <div className="chat-details-product-card">
               <span className="chat-details-product-icon" aria-hidden="true">
                 <Flower2 size={18} />
@@ -119,12 +153,17 @@ export function ChatCustomerDetails({
 
         <section className="chat-details-section chat-details-notes-section">
           <div className="chat-details-section-header">
-            <h5 className="chat-details-section-title">GHI CHÚ CỦA SHOP</h5>
-            <span className="chat-details-section-hint">Chỉ shop thấy</span>
+            <h5 className="chat-details-section-title">Ghi chú trên trình duyệt</h5>
+            <span className="chat-details-section-hint">Không gửi cho khách</span>
           </div>
 
+          <p className="chat-note-storage-help">
+            Ghi chú chỉ lưu trên trình duyệt này, chưa đồng bộ với tài khoản hoặc thiết bị khác.
+          </p>
           <div className="chat-note-input-box">
             <textarea
+              aria-label="Ghi chú khách hàng trên trình duyệt"
+              maxLength={2000}
               value={newNote}
               onChange={(e) => setNewNote(e.target.value)}
               placeholder="Thêm ghi chú khách hàng..."
@@ -141,6 +180,8 @@ export function ChatCustomerDetails({
             </button>
           </div>
 
+          {noteError && <p role="alert">{noteError}</p>}
+          <p role="status">{noteNotice}</p>
           <div className="chat-notes-list">
             {notes.length === 0 ? (
               <p className="chat-notes-empty">Chưa có ghi chú nào cho khách hàng này.</p>

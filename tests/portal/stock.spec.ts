@@ -392,7 +392,7 @@ test('Seller classifies empty slots, blocks held slots and stocks only WALK_IN',
 
   await expect(section.getByLabel('Hình thức bán của ô tủ')).toHaveCount(0);
   await expect(
-    section.getByLabel('Thống kê ô tủ').locator('.operations-metric').nth(1).locator('strong'),
+    section.getByRole('button', { name: /^Walk-in trống/ }).locator('.stock-tab-count'),
   ).toHaveText('1');
   await section.getByRole('button', { name: 'Nạp hoa vào ô' }).click();
   await expect.poll(() => writes.length).toBe(1);
@@ -415,7 +415,7 @@ test('Seller classifies empty slots, blocks held slots and stocks only WALK_IN',
   slots[0].zone = undefined;
   await section.getByRole('button', { name: 'Làm mới', exact: true }).click();
   await expect(
-    section.getByLabel('Thống kê ô tủ').locator('.operations-metric').nth(1).locator('strong'),
+    section.getByRole('button', { name: /^Walk-in trống/ }).locator('.stock-tab-count'),
   ).toHaveText('0');
   await expect(section.getByRole('button', { name: 'Nạp hoa vào ô' })).toHaveCount(0);
   await expect(section.getByRole('note')).toContainText('Không có ô Walk-in trống');

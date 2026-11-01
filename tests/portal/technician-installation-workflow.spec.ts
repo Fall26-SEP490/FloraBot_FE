@@ -192,7 +192,7 @@ for (const width of [390, 1440]) {
     expect(model.customerRole).toBe('CUSTOMER');
     model.role = 'OPERATIONS_MANAGER';
     await page.goto('/operations/installations');
-    await page.getByRole('button', { name: 'Chi tiết', exact: true }).click();
+    await page.getByRole('button', { name: 'Kiểm tra bàn giao', exact: true }).click();
     await expect(page.getByText(model.report, { exact: true })).toBeVisible();
     await expect(page.getByRole('img', { name: 'Minh chứng #1', exact: true })).toBeVisible();
     await page
@@ -323,7 +323,7 @@ for (const missing of ['photo', 'report']) {
       model.photos.push({ id: 'test-evidence-101', createdAt: new Date().toISOString() });
     if (missing !== 'report') model.report = 'Đã hoàn tất lắp đặt, chờ người quản lý kiểm tra.';
     await page.goto('/operations/installations');
-    await page.getByRole('button', { name: 'Chi tiết', exact: true }).click();
+    await page.getByRole('button', { name: 'Kiểm tra bàn giao', exact: true }).click();
     await expect(
       page.getByRole('button', { name: 'Nghiệm thu Đạt & Bàn giao Kiosk', exact: true }),
     ).toBeDisabled();

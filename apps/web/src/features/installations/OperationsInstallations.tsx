@@ -30,7 +30,9 @@ export default function OperationsInstallations({ session }: OperationsInstallat
 
   // Enroll & Inventory modal state
   const [enrollModalOpen, setEnrollModalOpen] = useState(false);
-  const [inventoryModalOpen, setInventoryModalOpen] = useState(false);
+  const [inventoryModalOpen, setInventoryModalOpen] = useState(
+    searchParams.get('inventory') === '1',
+  );
   const [enrollSlotCount, setEnrollSlotCount] = useState(1);
   const [enrollSuccess, setEnrollSuccess] = useState<string | null>(null);
 

@@ -4,6 +4,7 @@ import React from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@florabot/ui';
 import { logoutSession, sessionQuery } from '@/shared/lib/api';
 import { accountPath } from '@/features/portal/config/roleRoutes';
@@ -13,6 +14,7 @@ import '../../dashboard/styles/dashboard-overview.css';
 import '../styles/operations.css';
 import '../../account-management/styles/platform-workspace.css';
 import '../../account-management/styles/platform-refresh.css';
+import '../styles/manager-usability.css';
 
 const OperationsInstallations = dynamic(
   () => import('../../installations/OperationsInstallations'),
@@ -48,6 +50,7 @@ const StaffTasks = dynamic(() => import('../../task-management/TaskManagement'),
 });
 
 export default function OperationsWorkspace({ section = 'overview' }: { section?: string }) {
+  const params = useSearchParams();
   const session = useQuery({ ...sessionQuery, refetchInterval: 60_000 });
   const logout = useMutation({
     mutationFn: logoutSession,
@@ -85,12 +88,23 @@ export default function OperationsWorkspace({ section = 'overview' }: { section?
         busy={logout.isPending}
         onLogout={() => logout.mutate()}
       />
-      <div className="dashboard-shell operations-workspace">
+      <div
+        className={`dashboard-shell operations-workspace ${session.data.role === 'OPERATIONS_MANAGER' ? 'manager-workspace' : ''}`}
+      >
         <WorkspaceNavigation
           workspaceRole={session.data.role === 'ADMIN' ? 'ADMIN' : 'OPERATIONS_MANAGER'}
           section={section}
         />
         <main id="main" className="workspace dashboard-content">
+          {session.data.role === 'OPERATIONS_MANAGER' && (
+            <nav className="manager-breadcrumb" aria-label="Vị trí hiện tại">
+              {section === 'overview' ? (
+                <span>Điều phối vận hành</span>
+              ) : (
+                <Link href="/operations">Tổng quan vận hành</Link>
+              )}
+            </nav>
+          )}
           <div className="dashboard-page-heading">
             <div>
               <h1>
@@ -106,19 +120,21 @@ export default function OperationsWorkspace({ section = 'overview' }: { section?
                           ? 'Điều phối công việc kỹ thuật'
                           : 'Tổng quan vận hành'}
               </h1>
-              <p>
-                {section === 'sellers'
-                  ? 'Theo dõi shop, thông tin chủ shop và lịch sử trạng thái hoạt động.'
-                  : section === 'customers'
-                    ? 'Quản lý thông tin liên hệ và trạng thái tài khoản khách hàng.'
-                    : section === 'technicians'
-                      ? 'Quản lý đội ngũ, thông tin liên hệ và trạng thái tài khoản kỹ thuật viên.'
-                      : section === 'installations'
-                        ? 'Theo dõi hồ sơ từ xác nhận liên hệ, xếp lịch lắp đặt đến nghiệm thu bàn giao.'
-                        : section === 'tasks'
-                          ? 'Phân công sự cố, điều chỉnh người phụ trách và duyệt báo cáo khắc phục.'
-                          : `Chào ${session.data.name}, cùng theo dõi hoạt động kiosk hôm nay.`}
-              </p>
+              {section !== 'overview' && (
+                <p>
+                  {section === 'sellers'
+                    ? 'Theo dõi shop, thông tin chủ shop và lịch sử trạng thái hoạt động.'
+                    : section === 'customers'
+                      ? 'Quản lý thông tin liên hệ và trạng thái tài khoản khách hàng.'
+                      : section === 'technicians'
+                        ? 'Quản lý đội ngũ, thông tin liên hệ và trạng thái tài khoản kỹ thuật viên.'
+                        : section === 'installations'
+                          ? 'Xác nhận liên hệ, xếp lịch và kiểm tra bàn giao kiosk.'
+                          : section === 'tasks'
+                            ? 'Phân công sự cố, điều chỉnh người phụ trách và duyệt báo cáo khắc phục.'
+                            : `Chào ${session.data.name}, xem các việc cần xử lý tại đây.`}
+                </p>
+              )}
             </div>
           </div>
           {section === 'installations' ? (
@@ -139,7 +155,7 @@ export default function OperationsWorkspace({ section = 'overview' }: { section?
             <AccountManagement
               actorRole="OPERATIONS_MANAGER"
               targetRole="TECHNICIAN"
-              title="Quản lý Kỹ thuật viên"
+              title="Danh sách kỹ thuật viên"
               eyebrow="Vận hành kỹ thuật"
               description="Tạo tài khoản và quản lý trạng thái kỹ thuật viên phụ trách xử lý sự cố tủ hoa."
               createLabel="Thêm Kỹ thuật viên"
@@ -152,6 +168,7 @@ export default function OperationsWorkspace({ section = 'overview' }: { section?
             <>
               <StaffTasks
                 actorRole="OPERATIONS_MANAGER"
+                initialStatus={params.get('status') ?? undefined}
                 mode="manager"
                 actorId={session.data.id}
                 apiBase="/operations/staff-tasks"
@@ -161,32 +178,15 @@ export default function OperationsWorkspace({ section = 'overview' }: { section?
                 canAssign
                 canReassign
               />
-              <section
-                id="operations-guide"
-                className="dashboard-staff-guide"
-                tabIndex={-1}
-                aria-labelledby="operations-guide-title"
-              >
-                <h2 id="operations-guide-title">Hướng dẫn điều phối vận hành</h2>
+              <details className="manager-help" id="operations-guide">
+                <summary>Hướng dẫn điều phối công việc kỹ thuật</summary>
                 <ol>
-                  <li>
-                    <strong>Kiểm tra sự cố mở</strong>
-                    <p>Theo dõi các cảnh báo và sự cố tủ trong phạm vi phụ trách.</p>
-                  </li>
-                  <li>
-                    <strong>Phân công kỹ thuật viên</strong>
-                    <p>Giao công việc kiểm tra sự cố cho kỹ thuật viên phù hợp.</p>
-                  </li>
-                  <li>
-                    <strong>Duyệt kết quả xử lý</strong>
-                    <p>Kiểm tra báo cáo và ảnh minh chứng trước khi xác nhận hoàn thành.</p>
-                  </li>
+                  <li>Chọn sự cố cần xử lý và kỹ thuật viên phụ trách.</li>
+                  <li>Theo dõi tiến độ, báo cáo và ảnh hiện trường trong công việc.</li>
+                  <li>Kiểm tra kết quả trước khi duyệt hoàn thành hoặc yêu cầu làm lại.</li>
                 </ol>
-                <p className="dashboard-data-note">
-                  Công việc sự cố được giới hạn theo cụm tủ phụ trách. Hồ sơ thuê và đội ngũ kỹ
-                  thuật được quản lý theo phân quyền nền tảng.
-                </p>
-              </section>
+                <p>Công việc sự cố được giới hạn theo cụm tủ phụ trách.</p>
+              </details>
             </>
           )}
           {logout.isError && <p role="alert">Chưa đăng xuất được. Bạn thử lại nhé.</p>}

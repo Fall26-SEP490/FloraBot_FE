@@ -145,8 +145,8 @@ export default function Page() {
               <div>
                 <h3>Hoa sẵn sàng, bạn ghé nhận</h3>
                 <p>
-                  Khi đơn sẵn sàng, đến đúng tủ, chọn “Nhận đơn đặt trước”, nhập số điện thoại trong
-                  hồ sơ và xác thực OTP gửi qua SMS.
+                  Khi đơn sẵn sàng, đến đúng tủ, chọn “Nhận đơn đặt trước” và nhập mã OTP được gửi
+                  tới email đăng nhập của bạn.
                 </p>
               </div>
             </li>
@@ -375,8 +375,8 @@ export default function Page() {
               <summary>Khách mua hoa tại tủ như thế nào?</summary>
               <p>
                 Với bó có sẵn, khách chọn và thanh toán trên màn hình kiosk rồi nhận hoa tại ô tủ.
-                Với đơn đặt trước, khách chờ báo sẵn sàng, nhập số điện thoại trong hồ sơ và xác
-                thực OTP qua SMS tại kiosk.
+                Với đơn đặt trước, khách chờ shop báo sẵn sàng, lấy mã OTP trong email đăng nhập và
+                chọn “Nhận đơn đặt trước” tại đúng kiosk.
               </p>
             </details>
             <details>

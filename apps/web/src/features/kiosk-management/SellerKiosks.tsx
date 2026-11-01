@@ -37,6 +37,7 @@ function KioskCard({
   isActiveMap: boolean;
   onSelectMap: () => void;
 }) {
+  const [editorOpen, setEditorOpen] = useState(!kiosk.locationComplete);
   const [address, setAddress] = useState(kiosk.address || '');
   const [latInput, setLatInput] = useState(
     kiosk.latitude !== null && kiosk.latitude !== undefined ? String(kiosk.latitude) : '',
@@ -333,224 +334,238 @@ function KioskCard({
         </p>
       )}
 
-      <form className="kiosk-form" onSubmit={handleSubmit} noValidate>
-        <div className="kiosk-form-grid">
-          <div className="kiosk-form-fields">
-            <div className="kiosk-field kiosk-address-search">
-              <label htmlFor={`kiosk-address-${kiosk.id}`}>
-                Tìm địa chỉ kiosk <span className="kiosk-required">*</span>
-              </label>
-              <input
-                id={`kiosk-address-${kiosk.id}`}
-                name="address"
-                type="text"
-                role="combobox"
-                aria-autocomplete="list"
-                aria-controls={
-                  searchActive && predictions.length > 0 ? suggestionListId : undefined
-                }
-                aria-expanded={searchActive && predictions.length > 0}
-                aria-activedescendant={
-                  searchActive && predictions.length > 0
-                    ? `${suggestionListId}-${activeSuggestion}`
-                    : undefined
-                }
-                autoComplete="off"
-                disabled={!canEdit || saveMutation.isPending || detailLoading}
-                value={address}
-                onChange={(e) => handleAddressChange(e.target.value)}
-                onBlur={(event) => {
-                  if (!event.currentTarget.parentElement?.contains(event.relatedTarget as Node)) {
-                    setSearchActive(false);
-                  }
-                }}
-                onKeyDown={(e) => {
-                  if (!searchActive || predictions.length === 0) return;
-                  if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    setActiveSuggestion((index) => (index + 1) % predictions.length);
-                  } else if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    setActiveSuggestion(
-                      (index) => (index - 1 + predictions.length) % predictions.length,
-                    );
-                  } else if (e.key === 'Enter') {
-                    e.preventDefault();
-                    void handleSelectSuggestion(predictions[activeSuggestion]);
-                  } else if (e.key === 'Escape') {
-                    setSearchActive(false);
-                  }
-                }}
-                placeholder="Nhập tên đường, số nhà hoặc địa điểm…"
-                required
-                aria-required="true"
-                className="kiosk-input"
-              />
-              {searchActive && address.trim().length >= 3 && hasGoongSearch && (
-                <div className="kiosk-suggestion-panel">
-                  {searchLoading ? (
-                    <p role="status">Đang tìm địa chỉ…</p>
-                  ) : predictions.length > 0 ? (
-                    <div id={suggestionListId} role="listbox" aria-label="Địa chỉ gợi ý">
-                      {predictions.map((prediction, index) => (
-                        <button
-                          key={prediction.place_id}
-                          id={`${suggestionListId}-${index}`}
-                          type="button"
-                          role="option"
-                          aria-selected={index === activeSuggestion}
-                          onMouseDown={(event) => event.preventDefault()}
-                          onBlur={(event) => {
-                            if (
-                              !event.currentTarget
-                                .closest('.kiosk-address-search')
-                                ?.contains(event.relatedTarget as Node)
-                            ) {
-                              setSearchActive(false);
-                            }
-                          }}
-                          onClick={() => void handleSelectSuggestion(prediction)}
-                        >
-                          {prediction.description}
-                        </button>
-                      ))}
+      <details
+        className="kiosk-location-editor"
+        open={editorOpen}
+        onToggle={(event) => setEditorOpen(event.currentTarget.open)}
+      >
+        <summary>
+          {canEdit ? 'Chỉnh địa chỉ và ghim bản đồ' : 'Xem ghim và thông tin vị trí'}
+        </summary>
+        {editorOpen && (
+          <form className="kiosk-form" onSubmit={handleSubmit} noValidate>
+            <div className="kiosk-form-grid">
+              <div className="kiosk-form-fields">
+                <div className="kiosk-field kiosk-address-search">
+                  <label htmlFor={`kiosk-address-${kiosk.id}`}>
+                    Tìm địa chỉ kiosk <span className="kiosk-required">*</span>
+                  </label>
+                  <input
+                    id={`kiosk-address-${kiosk.id}`}
+                    name="address"
+                    type="text"
+                    role="combobox"
+                    aria-autocomplete="list"
+                    aria-controls={
+                      searchActive && predictions.length > 0 ? suggestionListId : undefined
+                    }
+                    aria-expanded={searchActive && predictions.length > 0}
+                    aria-activedescendant={
+                      searchActive && predictions.length > 0
+                        ? `${suggestionListId}-${activeSuggestion}`
+                        : undefined
+                    }
+                    autoComplete="off"
+                    disabled={!canEdit || saveMutation.isPending || detailLoading}
+                    value={address}
+                    onChange={(e) => handleAddressChange(e.target.value)}
+                    onBlur={(event) => {
+                      if (
+                        !event.currentTarget.parentElement?.contains(event.relatedTarget as Node)
+                      ) {
+                        setSearchActive(false);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (!searchActive || predictions.length === 0) return;
+                      if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        setActiveSuggestion((index) => (index + 1) % predictions.length);
+                      } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        setActiveSuggestion(
+                          (index) => (index - 1 + predictions.length) % predictions.length,
+                        );
+                      } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        void handleSelectSuggestion(predictions[activeSuggestion]);
+                      } else if (e.key === 'Escape') {
+                        setSearchActive(false);
+                      }
+                    }}
+                    placeholder="Nhập tên đường, số nhà hoặc địa điểm…"
+                    required
+                    aria-required="true"
+                    className="kiosk-input"
+                  />
+                  {searchActive && address.trim().length >= 3 && hasGoongSearch && (
+                    <div className="kiosk-suggestion-panel">
+                      {searchLoading ? (
+                        <p role="status">Đang tìm địa chỉ…</p>
+                      ) : predictions.length > 0 ? (
+                        <div id={suggestionListId} role="listbox" aria-label="Địa chỉ gợi ý">
+                          {predictions.map((prediction, index) => (
+                            <button
+                              key={prediction.place_id}
+                              id={`${suggestionListId}-${index}`}
+                              type="button"
+                              role="option"
+                              aria-selected={index === activeSuggestion}
+                              onMouseDown={(event) => event.preventDefault()}
+                              onBlur={(event) => {
+                                if (
+                                  !event.currentTarget
+                                    .closest('.kiosk-address-search')
+                                    ?.contains(event.relatedTarget as Node)
+                                ) {
+                                  setSearchActive(false);
+                                }
+                              }}
+                              onClick={() => void handleSelectSuggestion(prediction)}
+                            >
+                              {prediction.description}
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <p role="status">
+                          Không tìm thấy địa chỉ. Bạn có thể chọn vị trí trên bản đồ.
+                        </p>
+                      )}
                     </div>
-                  ) : (
-                    <p role="status">Không tìm thấy địa chỉ. Bạn có thể chọn vị trí trên bản đồ.</p>
+                  )}
+                  {canEdit && !hasGoongSearch && (
+                    <p className="kiosk-address-hint">
+                      Gợi ý địa chỉ chưa khả dụng. Hãy nhập địa chỉ và chọn ghim trên bản đồ.
+                    </p>
+                  )}
+                  {detailLoading && (
+                    <p className="kiosk-address-hint" role="status">
+                      Đang lấy vị trí địa chỉ…
+                    </p>
                   )}
                 </div>
-              )}
-              {canEdit && !hasGoongSearch && (
-                <p className="kiosk-address-hint">
-                  Gợi ý địa chỉ chưa khả dụng. Hãy nhập địa chỉ và chọn ghim trên bản đồ.
+
+                <p className="kiosk-location-selection" role="status">
+                  {coordsValid
+                    ? locationSource === 'saved'
+                      ? 'Đang hiển thị ghim đã lưu. Chọn gợi ý hoặc bấm bản đồ để cập nhật.'
+                      : 'Đã chọn vị trí ghim. Kiểm tra trên bản đồ trước khi lưu.'
+                    : 'Chọn địa chỉ gợi ý hoặc bấm vào bản đồ để đặt ghim.'}
                 </p>
-              )}
-              {detailLoading && (
-                <p className="kiosk-address-hint" role="status">
-                  Đang lấy vị trí địa chỉ…
-                </p>
-              )}
+
+                {canEdit && (
+                  <div className="kiosk-geo-actions">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleUseCurrentLocation}
+                      disabled={geoBusy || saveMutation.isPending}
+                      className="kiosk-btn-location"
+                    >
+                      <MapPin size={16} aria-hidden="true" />
+                      <span>{geoBusy ? 'Đang định vị…' : 'Dùng vị trí hiện tại'}</span>
+                    </Button>
+                    {geoStatus && (
+                      <p className="kiosk-geo-status" role="status">
+                        {geoStatus}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <div className="kiosk-coords-summary" role="region" aria-label="Tọa độ kiosk">
+                  <div className="kiosk-coord-item">
+                    <span className="kiosk-coord-label">Vĩ độ (Lat):</span>
+                    <span className="kiosk-coord-val">
+                      {parsedLat !== null ? parsedLat.toFixed(6) : '--'}
+                    </span>
+                  </div>
+                  <div className="kiosk-coord-item">
+                    <span className="kiosk-coord-label">Kinh độ (Lon):</span>
+                    <span className="kiosk-coord-val">
+                      {parsedLon !== null ? parsedLon.toFixed(6) : '--'}
+                    </span>
+                  </div>
+                  {coordsValid && (
+                    <div className="kiosk-preview-link-wrap">
+                      <a
+                        href={buildGoogleMapsSearchUrl(parsedLat, parsedLon)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="kiosk-external-link"
+                      >
+                        Xem vị trí này trên Google Maps (mở tab mới)
+                      </a>
+                    </div>
+                  )}
+                </div>
+
+                <div className="kiosk-disclaimer" role="note">
+                  <CircleAlert size={15} aria-hidden="true" className="kiosk-disclaimer-icon" />
+                  <span>
+                    Địa chỉ và ghim giúp khách tìm đúng tủ. Lưu vị trí không di chuyển thiết bị hay
+                    kích hoạt tủ; việc chuyển tủ thực tế cần phối hợp với Quản lý vận hành.
+                  </span>
+                </div>
+              </div>
+
+              <div className="kiosk-map-column">
+                {isActiveMap ? (
+                  <KioskPickerMap
+                    latitude={parsedLat}
+                    longitude={parsedLon}
+                    onLocationSelect={handleMapPin}
+                    interactive={canEdit}
+                    ariaLabel={`Bản đồ chọn vị trí cho ${kiosk.name}`}
+                  />
+                ) : (
+                  <div className="kiosk-map-inactive">
+                    <div className="kiosk-map-inactive-content">
+                      <MapPin size={28} aria-hidden="true" />
+                      <p>
+                        {coordsValid
+                          ? 'Vị trí kiosk đã được chọn'
+                          : 'Bản đồ đang tạm ẩn để tối ưu hiệu năng'}
+                      </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={onSelectMap}
+                        className="kiosk-btn-open-map"
+                      >
+                        <span>Mở bản đồ tủ này</span>
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
-            <p className="kiosk-location-selection" role="status">
-              {coordsValid
-                ? locationSource === 'saved'
-                  ? 'Đang hiển thị ghim đã lưu. Chọn gợi ý hoặc bấm bản đồ để cập nhật.'
-                  : 'Đã chọn vị trí ghim. Kiểm tra trên bản đồ trước khi lưu.'
-                : 'Chọn địa chỉ gợi ý hoặc bấm vào bản đồ để đặt ghim.'}
-            </p>
-
             {canEdit && (
-              <div className="kiosk-geo-actions">
+              <footer className="kiosk-form-actions">
+                <Button
+                  type="submit"
+                  variant="default"
+                  disabled={saveMutation.isPending || detailLoading}
+                  className="kiosk-btn-submit"
+                >
+                  {saveMutation.isPending ? 'Đang lưu…' : 'Lưu vị trí kiosk'}
+                </Button>
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={handleUseCurrentLocation}
-                  disabled={geoBusy || saveMutation.isPending}
-                  className="kiosk-btn-location"
+                  onClick={handleReset}
+                  disabled={saveMutation.isPending}
+                  className="kiosk-btn-reset"
                 >
-                  <MapPin size={16} aria-hidden="true" />
-                  <span>{geoBusy ? 'Đang định vị…' : 'Dùng vị trí hiện tại'}</span>
+                  Hoàn tác chưa lưu
                 </Button>
-                {geoStatus && (
-                  <p className="kiosk-geo-status" role="status">
-                    {geoStatus}
-                  </p>
-                )}
-              </div>
+              </footer>
             )}
-
-            <div className="kiosk-coords-summary" role="region" aria-label="Tọa độ kiosk">
-              <div className="kiosk-coord-item">
-                <span className="kiosk-coord-label">Vĩ độ (Lat):</span>
-                <span className="kiosk-coord-val">
-                  {parsedLat !== null ? parsedLat.toFixed(6) : '--'}
-                </span>
-              </div>
-              <div className="kiosk-coord-item">
-                <span className="kiosk-coord-label">Kinh độ (Lon):</span>
-                <span className="kiosk-coord-val">
-                  {parsedLon !== null ? parsedLon.toFixed(6) : '--'}
-                </span>
-              </div>
-              {coordsValid && (
-                <div className="kiosk-preview-link-wrap">
-                  <a
-                    href={buildGoogleMapsSearchUrl(parsedLat, parsedLon)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="kiosk-external-link"
-                  >
-                    Xem vị trí này trên Google Maps (mở tab mới)
-                  </a>
-                </div>
-              )}
-            </div>
-
-            <div className="kiosk-disclaimer" role="note">
-              <CircleAlert size={15} aria-hidden="true" className="kiosk-disclaimer-icon" />
-              <span>
-                Lưu ý: Địa chỉ và ghim bản đồ phục vụ chỉ đường cho khách nhận hoa tại tủ. Việc lưu
-                thông tin không cấu thành xác thực vật lý của điểm bán và không cấp quyền kích hoạt
-                gói thuê ô tủ hay trạng thái trực tuyến.
-              </span>
-            </div>
-          </div>
-
-          <div className="kiosk-map-column">
-            {isActiveMap ? (
-              <KioskPickerMap
-                latitude={parsedLat}
-                longitude={parsedLon}
-                onLocationSelect={handleMapPin}
-                interactive={canEdit}
-                ariaLabel={`Bản đồ chọn vị trí cho ${kiosk.name}`}
-              />
-            ) : (
-              <div className="kiosk-map-inactive">
-                <div className="kiosk-map-inactive-content">
-                  <MapPin size={28} aria-hidden="true" />
-                  <p>
-                    {coordsValid
-                      ? 'Vị trí kiosk đã được chọn'
-                      : 'Bản đồ đang tạm ẩn để tối ưu hiệu năng'}
-                  </p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={onSelectMap}
-                    className="kiosk-btn-open-map"
-                  >
-                    <span>Mở bản đồ tủ này</span>
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {canEdit && (
-          <footer className="kiosk-form-actions">
-            <Button
-              type="submit"
-              variant="default"
-              disabled={saveMutation.isPending || detailLoading}
-              className="kiosk-btn-submit"
-            >
-              {saveMutation.isPending ? 'Đang lưu…' : 'Lưu vị trí kiosk'}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleReset}
-              disabled={saveMutation.isPending}
-              className="kiosk-btn-reset"
-            >
-              Đặt lại
-            </Button>
-          </footer>
+          </form>
         )}
-      </form>
+      </details>
     </article>
   );
 }
@@ -651,9 +666,7 @@ export default function SellerKiosks({ session }: SellerKiosksProps) {
       {kiosks.length > 0 && (
         <div className="seller-kiosks-toolbar">
           <div className="kiosk-search-field">
-            <label htmlFor="seller-kiosk-search" className="sr-only">
-              Tìm kiếm kiosk
-            </label>
+            <label htmlFor="seller-kiosk-search">Tìm kiếm kiosk</label>
             <input
               id="seller-kiosk-search"
               type="search"
@@ -667,6 +680,7 @@ export default function SellerKiosks({ session }: SellerKiosksProps) {
             />
           </div>
           <div className="kiosk-filter-group">
+            <label htmlFor="seller-kiosk-status-filter">Trạng thái kiosk</label>
             <select
               id="seller-kiosk-status-filter"
               value={statusFilter}
@@ -700,6 +714,19 @@ export default function SellerKiosks({ session }: SellerKiosksProps) {
         </div>
       )}
 
+      {(searchQuery || statusFilter !== 'ALL') && kiosks.length > 0 && (
+        <Button
+          variant="outline"
+          className="kiosk-clear-filters"
+          onClick={() => {
+            setSearchQuery('');
+            setStatusFilter('ALL');
+            setPage(1);
+          }}
+        >
+          Xóa bộ lọc kiosk
+        </Button>
+      )}
       {kiosksQuery.isPending && (
         <div className="kiosk-loading-state" role="status">
           <p>Đang tải danh sách kiosk của shop…</p>

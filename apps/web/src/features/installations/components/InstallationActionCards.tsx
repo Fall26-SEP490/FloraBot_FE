@@ -96,32 +96,6 @@ export function InstallationActionCards({
         </div>
       )}
 
-      {/* Provision Key Option for assigned kiosk */}
-      {appDetail.assignedKioskId && isManager && (
-        <div className="operations-kiosk-assignment">
-          <div>
-            <strong>Tủ đã phân bổ: {appDetail.assignedKioskCode}</strong>
-            <p>Bạn có thể cấp lại khóa API thiết bị nếu cần nạp lại cấu hình phần cứng.</p>
-          </div>
-          <Button
-            variant="outline"
-            onClick={() => {
-              if (
-                confirm(
-                  'Cấp lại khóa API sẽ vô hiệu hóa khóa cũ của tủ. Bạn có chắc chắn muốn cấp lại không?',
-                )
-              ) {
-                onProvisionKey(appDetail.assignedKioskId!);
-              }
-            }}
-            disabled={provisionKeyPending}
-          >
-            <Lock size={16} aria-hidden="true" />
-            {provisionKeyPending ? 'Đang cấp...' : 'Cấp lại khóa API'}
-          </Button>
-        </div>
-      )}
-
       {/* ACTION: PAID_REVIEW -> CONFIRM CONTACT */}
       {appDetail.status === 'AWAITING_PAYMENT' && isManager && (
         <div className="operations-action-card">
@@ -151,7 +125,6 @@ export function InstallationActionCards({
 
       {appDetail.status === 'PAID_REVIEW' && isManager && (
         <div className="operations-action-card">
-          <span className="installation-eyebrow">Bước 01 · Xác nhận</span>
           <h3>Xác nhận liên hệ với chủ shop</h3>
           <p>
             Quản lý vận hành gọi điện xác nhận địa chỉ lắp đặt và vị trí nguồn điện. Sau bước này,
@@ -290,6 +263,34 @@ export function InstallationActionCards({
             </Button>
           </details>
         )}
+      {/* Provision Key Option for assigned kiosk */}
+      {appDetail.assignedKioskId && isManager && (
+        <details className="manager-device-settings">
+          <summary>Thiết bị và khóa kết nối</summary>
+          <div className="operations-kiosk-assignment">
+            <div>
+              <strong>Tủ đã phân bổ: {appDetail.assignedKioskCode}</strong>
+              <p>Bạn có thể cấp lại khóa API thiết bị nếu cần nạp lại cấu hình phần cứng.</p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (
+                  confirm(
+                    'Cấp lại khóa API sẽ vô hiệu hóa khóa cũ của tủ. Bạn có chắc chắn muốn cấp lại không?',
+                  )
+                ) {
+                  onProvisionKey(appDetail.assignedKioskId!);
+                }
+              }}
+              disabled={provisionKeyPending}
+            >
+              <Lock size={16} aria-hidden="true" />
+              {provisionKeyPending ? 'Đang cấp...' : 'Cấp lại khóa API'}
+            </Button>
+          </div>
+        </details>
+      )}
     </fieldset>
   );
 }

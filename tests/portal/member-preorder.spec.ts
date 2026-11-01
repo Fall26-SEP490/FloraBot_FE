@@ -50,13 +50,8 @@ test('CUSTOMER places CUSTOM with selected kiosk and no door action', async ({ p
     .getByRole('button', { name: /báo giá/i })
     .first()
     .click();
-  await expect(
-    page.getByText('Nhận hoa tại tủ bằng OTP gửi qua SMS.', { exact: false }),
-  ).toBeVisible();
-  await expect(page.getByRole('link', { name: 'hồ sơ của tài khoản đặt đơn' })).toHaveAttribute(
-    'href',
-    '/ho-so',
-  );
+  await expect(page.getByText('email đăng nhập của bạn', { exact: true })).toBeVisible();
+  await expect(page.getByText(/OTP gửi qua SMS/)).toHaveCount(0);
   await page.getByLabel('Tủ nhận hoa').selectOption(otherKiosk.kioskId);
   {
     const date = new Date(Date.now() + 48 * 60 * 60 * 1000);
@@ -198,8 +193,14 @@ test('legacy API design templates still place CUSTOM requests without guessing s
 for (const width of [390, 1440])
   test(`Member registration is accessible and responsive ${width}`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
+    await page.route('**/api/auth/config', (route) =>
+      route.fulfill({
+        json: { googleEnabled: false, googleClientId: null, registrationEmailEnabled: true },
+      }),
+    );
+    await page.route('**/api/auth/me', (route) => route.fulfill({ status: 401, json: {} }));
     await page.goto('/dang-ky');
-    await expect(page.getByRole('heading', { name: 'Tạo tài khoản FloraBot' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Tạo tài khoản', exact: true })).toBeVisible();
     expect(
       (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze())
         .violations,

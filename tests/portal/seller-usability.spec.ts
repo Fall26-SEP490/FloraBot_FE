@@ -92,10 +92,10 @@ test('Seller can reset order filters and only one set of product status filters 
 }) => {
   const model = await setupSellerUsability(page);
   await page.goto('/seller/orders');
-  await page.getByLabel('Tìm đơn trong trang').fill('khongco');
+  await page.getByLabel('Tìm đơn của shop').fill('khongco');
   await expect(page.getByRole('heading', { name: 'Không tìm thấy yêu cầu phù hợp' })).toBeVisible();
   await page.getByRole('button', { name: 'Xóa bộ lọc', exact: true }).click();
-  await expect(page.getByLabel('Tìm đơn trong trang')).toHaveValue('');
+  await expect(page.getByLabel('Tìm đơn của shop')).toHaveValue('');
   await expect(page.locator('.web-orders summary')).toHaveCount(1);
   await page.goto('/seller/products');
   await expect(page.locator('.product-summary button')).toHaveCount(4);

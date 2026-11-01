@@ -201,9 +201,6 @@
   font-size: 14px;
   line-height: 1.6;
 }
-.customer-account-content .profile-nav-number {
-  display: none;
-}
 .workspace-portal-root .customer-account-content .profile-refined .profile-quick-nav a {
   font-size: 13px;
   min-height: 44px;
@@ -225,13 +222,17 @@
   grid-template-columns: minmax(0, 1fr);
 }
 .workspace-portal-root .customer-account-content .profile-refined .profile-quick-nav {
-  position: static;
+  position: sticky;
+  top: calc(var(--header-height, 76px) + 8px);
+  z-index: 20;
   flex-direction: row;
-  flex-wrap: wrap;
-}
-.customer-account-content .profile-nav-caption,
-.customer-account-content .profile-nav-note {
-  display: none;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding: 6px;
+  margin-bottom: 16px;
+  border: 1px solid #dce6d7;
+  border-radius: 12px;
+  background: #fff;
 }
 
 @media (max-width: 760px) {
@@ -258,5 +259,87 @@
   }
   .customer-account-navigation a svg {
     flex-shrink: 0;
+  }
+}
+
+.account-navigation-toggle,
+.account-navigation-current {
+  display: none;
+}
+.workspace-portal-root .customer-account-content .profile-refined .profile-quick-nav a {
+  flex: 0 0 auto;
+}
+.workspace-portal-root .profile-embedded .profile-identity {
+  padding: 12px 16px;
+  gap: 4px 16px;
+}
+.workspace-portal-root .profile-embedded .profile-identity h2 {
+  margin: 0;
+  font-size: 14px;
+}
+.workspace-portal-root .profile-embedded .profile-section-heading {
+  margin-bottom: 12px;
+}
+.workspace-portal-root .profile-embedded .profile-form-group {
+  margin-bottom: 12px;
+}
+.workspace-portal-root .profile-embedded .profile-form-hint {
+  margin: 4px 0 0;
+  line-height: 1.45;
+}
+.workspace-portal-root .profile-embedded #profile-address {
+  height: 64px;
+  min-height: 64px;
+  resize: vertical;
+}
+.workspace-portal-root .profile-embedded :is(.profile-section h2, .profile-section[id]) {
+  scroll-margin-top: 72px;
+}
+@media (max-width: 760px) {
+  .account-navigation-desktop-title {
+    display: none;
+  }
+  .account-navigation-current {
+    display: inline;
+  }
+  .account-navigation-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 8px 12px;
+    border: 1px solid #c9d9c8;
+    border-radius: 8px;
+    background: #fff;
+    color: #1b4d36;
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .account-navigation-toggle:focus-visible {
+    outline: 2px solid #2b7049;
+    outline-offset: 3px;
+  }
+  .customer-account-sidebar-heading {
+    justify-content: space-between;
+    padding: 0;
+    border: 0;
+  }
+  .customer-account-navigation {
+    display: none;
+  }
+  .customer-account-navigation.is-open {
+    display: grid;
+    margin-top: 10px;
+    border-top: 1px solid #e8efe5;
+  }
+  .account-profile-heading {
+    margin: 0 0 16px;
+  }
+  .account-profile-heading p {
+    margin: 0;
+  }
+  .workspace-portal-root .customer-account-content .profile-refined .profile-quick-nav a {
+    font-size: 14px;
   }
 }

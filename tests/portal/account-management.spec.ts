@@ -360,9 +360,9 @@ test.describe('Account Management UI - Multi-Role, Hierarchy & Security', () => 
     await page.goto('/operations/technicians');
 
     await expect(
-      page.getByRole('heading', { level: 2, name: 'Quản lý Kỹ thuật viên' }),
+      page.getByRole('heading', { level: 2, name: 'Danh sách kỹ thuật viên' }),
     ).toBeVisible();
-    const table = page.getByRole('table', { name: 'Quản lý Kỹ thuật viên' });
+    const table = page.getByRole('table', { name: 'Danh sách kỹ thuật viên' });
     await expect(table.getByRole('row').filter({ hasText: 'Trần Kỹ Thuật Viên' })).toBeVisible();
 
     // Create technician

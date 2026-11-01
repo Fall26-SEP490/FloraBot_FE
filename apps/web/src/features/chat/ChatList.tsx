@@ -54,15 +54,21 @@ export function ChatList({
     0,
   );
 
-  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const normalize = (value: string) =>
+    value
+      .toLocaleLowerCase('vi-VN')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd');
+  const normalizedQuery = normalize(searchQuery.trim());
   const filteredItems = items.filter((item) => {
     if (filterTab === 'unread' && Number(item.unreadCount) <= 0) {
       return false;
     }
     if (!normalizedQuery) return true;
-    const matchName = item.otherPartyName.toLowerCase().includes(normalizedQuery);
-    const matchContext = item.productContext?.toLowerCase().includes(normalizedQuery);
-    const matchMsg = item.lastMessage?.toLowerCase().includes(normalizedQuery);
+    const matchName = normalize(item.otherPartyName).includes(normalizedQuery);
+    const matchContext = normalize(item.productContext ?? '').includes(normalizedQuery);
+    const matchMsg = normalize(item.lastMessage ?? '').includes(normalizedQuery);
     return matchName || matchContext || matchMsg;
   });
 
@@ -86,7 +92,7 @@ export function ChatList({
     );
   }
 
-  if (items.length === 0) {
+  if (items.length === 0 && page === 1 && !hasMore) {
     return (
       <div className="chat-list-empty">
         <h3>Chưa có cuộc trò chuyện nào</h3>
@@ -110,7 +116,13 @@ export function ChatList({
             type="search"
             className="chat-list-search-input"
             placeholder={
-              userRole === 'CUSTOMER' ? 'Tìm shop hoặc mẫu hoa…' : 'Tìm theo tên khách, mẫu hoa…'
+              userRole === 'CUSTOMER'
+                ? 'Tìm shop hoặc mẫu hoa…'
+                : internal
+                  ? 'Tìm người hoặc nội dung tin…'
+                  : userRole === 'SELLER'
+                    ? 'Tên khách, mẫu hoa, tin nhắn…'
+                    : 'Tìm theo tên khách, mẫu hoa…'
             }
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -128,11 +140,10 @@ export function ChatList({
           )}
         </div>
 
-        <div className="chat-list-tabs" role="tablist" aria-label="Bộ lọc tin nhắn">
+        <div className="chat-list-tabs" role="group" aria-label="Bộ lọc tin nhắn">
           <button
             type="button"
-            role="tab"
-            aria-selected={filterTab === 'all'}
+            aria-pressed={filterTab === 'all'}
             className={`chat-list-tab ${filterTab === 'all' ? 'is-active' : ''}`}
             onClick={() => setFilterTab('all')}
           >
@@ -141,8 +152,7 @@ export function ChatList({
           </button>
           <button
             type="button"
-            role="tab"
-            aria-selected={filterTab === 'unread'}
+            aria-pressed={filterTab === 'unread'}
             className={`chat-list-tab ${filterTab === 'unread' ? 'is-active' : ''}`}
             onClick={() => setFilterTab('unread')}
           >
@@ -156,14 +166,29 @@ export function ChatList({
         </div>
       </div>
 
+      <p className="chat-list-scope" role="status">
+        {filteredItems.length}/{items.length} hội thoại · Trang {page}. Tìm kiếm và bộ lọc áp dụng
+        trong trang này.
+      </p>
       {filteredItems.length === 0 ? (
         <div className="chat-list-empty-search">
           <p className="chat-list-empty-title">Không tìm thấy cuộc trò chuyện nào</p>
           <p className="quiet">
-            {filterTab === 'unread'
-              ? 'Bạn đã đọc hết tất cả các tin nhắn mới.'
-              : 'Thử tìm với tên khách hoặc từ khóa khác.'}
+            {normalizedQuery
+              ? 'Thử từ khóa khác hoặc xóa bộ lọc.'
+              : filterTab === 'unread'
+                ? 'Trang này không có hội thoại chưa đọc.'
+                : 'Trang này chưa có hội thoại. Chọn trang trước để xem lại.'}
           </p>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setSearchQuery('');
+              setFilterTab('all');
+            }}
+          >
+            Xóa bộ lọc hội thoại
+          </Button>
         </div>
       ) : (
         <ul className="chat-list" aria-label="Danh sách cuộc trò chuyện">

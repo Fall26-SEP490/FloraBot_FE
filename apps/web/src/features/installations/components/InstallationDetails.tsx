@@ -86,7 +86,7 @@ export function InstallationDetails({
     >
       <div className="detail-panel-header">
         <div>
-          <span className="installation-eyebrow">Hồ sơ triển khai kiosk</span>
+          {!isManager && <span className="installation-eyebrow">Hồ sơ triển khai kiosk</span>}
           <span className="kiosk-status-pill" data-status={appDetail?.status}>
             {appDetail ? KIOSK_STATUS_LABELS[appDetail.status] || appDetail.status : 'Đang tải...'}
           </span>
@@ -165,47 +165,114 @@ export function InstallationDetails({
             )}
           </ol>
 
-          <h3 className="installation-section-title">Thông tin đăng ký</h3>
-          <dl className="detail-info-grid">
-            <div>
-              <dt>Gói đăng ký</dt>
-              <dd>
-                <strong>{appDetail.packageName}</strong> (
-                {Number(appDetail.annualFee).toLocaleString('vi-VN')} đ/năm)
-                <br />
-                Tổng số ô: {appDetail.totalSlots}
-              </dd>
-            </div>
-            <div>
-              <dt>Thông tin liên hệ</dt>
-              <dd>
-                <a className="detail-contact-link" href={`tel:${appDetail.phone}`}>
-                  {appDetail.phone}
-                </a>
-                <br />
-                <a className="detail-contact-link" href={`mailto:${appDetail.contactEmail}`}>
-                  {appDetail.contactEmail}
-                </a>
-              </dd>
-            </div>
-            <div>
-              <dt>Địa chỉ đề xuất</dt>
-              <dd>
-                {appDetail.installationAddress}
-                <br />
-                <small>
-                  Tọa độ: {Number(appDetail.latitude).toFixed(6)},{' '}
-                  {Number(appDetail.longitude).toFixed(6)}
-                </small>
-              </dd>
-            </div>
-            <div>
-              <dt>Tài khoản nhận tiền</dt>
-              <dd>
-                {appDetail.bankName} - ****{appDetail.bankAccountSuffix} ({appDetail.bankHolder})
-              </dd>
-            </div>
-          </dl>
+          {isManager ? (
+            <>
+              <dl className="manager-contact-summary">
+                <div>
+                  <dt>Liên hệ chủ shop</dt>
+                  <dd>
+                    <a href={`tel:${appDetail.phone}`}>{appDetail.phone}</a>
+                    <small>{appDetail.contactEmail}</small>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Địa điểm lắp đặt</dt>
+                  <dd>{appDetail.installationAddress}</dd>
+                </div>
+              </dl>
+              <details className="manager-registration">
+                {' '}
+                <summary>Thông tin gói thuê và hồ sơ đăng ký</summary>
+                <dl className="detail-info-grid">
+                  <div>
+                    <dt>Gói đăng ký</dt>
+                    <dd>
+                      <strong>{appDetail.packageName}</strong> (
+                      {Number(appDetail.annualFee).toLocaleString('vi-VN')} đ/năm)
+                      <br />
+                      Tổng số ô: {appDetail.totalSlots}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Thông tin liên hệ</dt>
+                    <dd>
+                      <a className="detail-contact-link" href={`tel:${appDetail.phone}`}>
+                        {appDetail.phone}
+                      </a>
+                      <br />
+                      <a className="detail-contact-link" href={`mailto:${appDetail.contactEmail}`}>
+                        {appDetail.contactEmail}
+                      </a>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Địa chỉ đề xuất</dt>
+                    <dd>
+                      {appDetail.installationAddress}
+                      <br />
+                      <small>
+                        Tọa độ: {Number(appDetail.latitude).toFixed(6)},{' '}
+                        {Number(appDetail.longitude).toFixed(6)}
+                      </small>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Tài khoản nhận tiền</dt>
+                    <dd>
+                      {appDetail.bankName} - ****{appDetail.bankAccountSuffix} (
+                      {appDetail.bankHolder})
+                    </dd>
+                  </div>
+                </dl>
+              </details>
+            </>
+          ) : (
+            <>
+              {' '}
+              <h3 className="installation-section-title">Thông tin đăng ký</h3>
+              <dl className="detail-info-grid">
+                <div>
+                  <dt>Gói đăng ký</dt>
+                  <dd>
+                    <strong>{appDetail.packageName}</strong> (
+                    {Number(appDetail.annualFee).toLocaleString('vi-VN')} đ/năm)
+                    <br />
+                    Tổng số ô: {appDetail.totalSlots}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Thông tin liên hệ</dt>
+                  <dd>
+                    <a className="detail-contact-link" href={`tel:${appDetail.phone}`}>
+                      {appDetail.phone}
+                    </a>
+                    <br />
+                    <a className="detail-contact-link" href={`mailto:${appDetail.contactEmail}`}>
+                      {appDetail.contactEmail}
+                    </a>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Địa chỉ đề xuất</dt>
+                  <dd>
+                    {appDetail.installationAddress}
+                    <br />
+                    <small>
+                      Tọa độ: {Number(appDetail.latitude).toFixed(6)},{' '}
+                      {Number(appDetail.longitude).toFixed(6)}
+                    </small>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Tài khoản nhận tiền</dt>
+                  <dd>
+                    {appDetail.bankName} - ****{appDetail.bankAccountSuffix} ({appDetail.bankHolder}
+                    )
+                  </dd>
+                </div>
+              </dl>
+            </>
+          )}
 
           {appDetail.assignedTechnicianId && (
             <div className="installation-appointment" aria-label="Lịch lắp đặt đã phân công">
