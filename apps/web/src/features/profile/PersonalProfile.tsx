@@ -1386,87 +1386,92 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
                   <p>Quản lý mật khẩu và phương thức đăng nhập.</p>
                 </div>
 
-                <div className="profile-disclaimer-card">
-                  Đổi mật khẩu sẽ đăng xuất các phiên hiện tại.
-                </div>
-                <p className="profile-form-hint">
-                  Mật khẩu mới cần ít nhất 12 ký tự và tối đa 72 byte UTF-8.
-                </p>
-
-                {passwordError && (
-                  <p role="alert" className="profile-status-message profile-status-error">
-                    {passwordError}
-                  </p>
-                )}
-
-                <form
-                  noValidate
-                  className="profile-form"
-                  aria-busy={passwordSaving}
-                  onSubmit={(event) => void passwords.handleSubmit(handleChangePassword)(event)}
-                >
-                  {(['currentPassword', 'newPassword', 'confirm'] as const).map((field, index) => (
-                    <div key={field} className="profile-form-group">
-                      <label htmlFor={`security-${field}`}>
-                        {['Mật khẩu hiện tại', 'Mật khẩu mới', 'Nhập lại mật khẩu mới'][index]}
-                      </label>
-                      <div className="profile-password-field">
-                        <input
-                          id={`security-${field}`}
-                          type={visiblePasswords[field] ? 'text' : 'password'}
-                          autoComplete={index === 0 ? 'current-password' : 'new-password'}
-                          disabled={passwordSaving}
-                          {...passwords.register(field, {
-                            required: 'Nhập mật khẩu.',
-                            validate:
-                              index === 1
-                                ? passwordRule
-                                : index === 2
-                                  ? (value) =>
-                                      value === passwords.getValues('newPassword') ||
-                                      'Hai mật khẩu chưa khớp.'
-                                  : undefined,
-                          })}
-                          aria-describedby={
-                            passwords.formState.errors[field]
-                              ? `security-${field}-error`
-                              : undefined
-                          }
-                          aria-invalid={!!passwords.formState.errors[field]}
-                        />
-                        <button
-                          type="button"
-                          className="profile-password-toggle"
-                          disabled={passwordSaving}
-                          aria-label={`${visiblePasswords[field] ? 'Ẩn' : 'Hiện'} ${['mật khẩu hiện tại', 'mật khẩu mới', 'nhập lại mật khẩu mới'][index]}`}
-                          aria-pressed={!!visiblePasswords[field]}
-                          onClick={() =>
-                            setVisiblePasswords((previous) => ({
-                              ...previous,
-                              [field]: !previous[field],
-                            }))
-                          }
-                        >
-                          {visiblePasswords[field] ? (
-                            <EyeOff size={18} aria-hidden="true" />
-                          ) : (
-                            <Eye size={18} aria-hidden="true" />
-                          )}
-                        </button>
-                      </div>
-                      {passwords.formState.errors[field] && (
-                        <p id={`security-${field}-error`} className="profile-field-error">
-                          {passwords.formState.errors[field]?.message}
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                  <div className="profile-actions">
-                    <Button type="submit" disabled={passwordSaving}>
-                      {passwordSaving ? 'Đang cập nhật…' : 'Đổi mật khẩu và đăng nhập lại'}
-                    </Button>
+                <details className="profile-security-disclosure" open={!embedded || undefined}>
+                  <summary>Đổi mật khẩu</summary>
+                  <div className="profile-disclaimer-card">
+                    Đổi mật khẩu sẽ đăng xuất các phiên hiện tại.
                   </div>
-                </form>
+                  <p className="profile-form-hint">
+                    Mật khẩu mới cần ít nhất 12 ký tự và tối đa 72 byte UTF-8.
+                  </p>
+
+                  {passwordError && (
+                    <p role="alert" className="profile-status-message profile-status-error">
+                      {passwordError}
+                    </p>
+                  )}
+
+                  <form
+                    noValidate
+                    className="profile-form"
+                    aria-busy={passwordSaving}
+                    onSubmit={(event) => void passwords.handleSubmit(handleChangePassword)(event)}
+                  >
+                    {(['currentPassword', 'newPassword', 'confirm'] as const).map(
+                      (field, index) => (
+                        <div key={field} className="profile-form-group">
+                          <label htmlFor={`security-${field}`}>
+                            {['Mật khẩu hiện tại', 'Mật khẩu mới', 'Nhập lại mật khẩu mới'][index]}
+                          </label>
+                          <div className="profile-password-field">
+                            <input
+                              id={`security-${field}`}
+                              type={visiblePasswords[field] ? 'text' : 'password'}
+                              autoComplete={index === 0 ? 'current-password' : 'new-password'}
+                              disabled={passwordSaving}
+                              {...passwords.register(field, {
+                                required: 'Nhập mật khẩu.',
+                                validate:
+                                  index === 1
+                                    ? passwordRule
+                                    : index === 2
+                                      ? (value) =>
+                                          value === passwords.getValues('newPassword') ||
+                                          'Hai mật khẩu chưa khớp.'
+                                      : undefined,
+                              })}
+                              aria-describedby={
+                                passwords.formState.errors[field]
+                                  ? `security-${field}-error`
+                                  : undefined
+                              }
+                              aria-invalid={!!passwords.formState.errors[field]}
+                            />
+                            <button
+                              type="button"
+                              className="profile-password-toggle"
+                              disabled={passwordSaving}
+                              aria-label={`${visiblePasswords[field] ? 'Ẩn' : 'Hiện'} ${['mật khẩu hiện tại', 'mật khẩu mới', 'nhập lại mật khẩu mới'][index]}`}
+                              aria-pressed={!!visiblePasswords[field]}
+                              onClick={() =>
+                                setVisiblePasswords((previous) => ({
+                                  ...previous,
+                                  [field]: !previous[field],
+                                }))
+                              }
+                            >
+                              {visiblePasswords[field] ? (
+                                <EyeOff size={18} aria-hidden="true" />
+                              ) : (
+                                <Eye size={18} aria-hidden="true" />
+                              )}
+                            </button>
+                          </div>
+                          {passwords.formState.errors[field] && (
+                            <p id={`security-${field}-error`} className="profile-field-error">
+                              {passwords.formState.errors[field]?.message}
+                            </p>
+                          )}
+                        </div>
+                      ),
+                    )}
+                    <div className="profile-actions">
+                      <Button type="submit" disabled={passwordSaving}>
+                        {passwordSaving ? 'Đang cập nhật…' : 'Đổi mật khẩu và đăng nhập lại'}
+                      </Button>
+                    </div>
+                  </form>
+                </details>
 
                 <div
                   style={{

@@ -13,6 +13,7 @@ export default tseslint.config(
       '**/generated/**',
       '**/playwright-report/**',
       '**/test-results/**',
+      'artifacts/**',
       '**/.worktrees/**',
       '**/public/**',
       '**/.agents/**',

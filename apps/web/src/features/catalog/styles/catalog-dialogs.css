@@ -439,7 +439,7 @@
   line-height: 1.5;
 }
 
-.flower-request-notice a {
+.flower-request-notice a:not(.button) {
   color: #183e2b;
   font-weight: 600;
   text-decoration: underline;

@@ -35,3 +35,57 @@
     flex: 1;
   }
 }
+
+.flower-card-title a {
+  color: inherit;
+  text-decoration: none;
+}
+.flower-card-title a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.flower-card-illustration {
+  position: absolute;
+  z-index: 2;
+  bottom: 8px;
+  left: 8px;
+  padding: 0.25rem 0.45rem;
+  border-radius: 4px;
+  background: #fff;
+  color: #385540;
+  font-size: 0.75rem;
+}
+.flower-detail-back {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.flower-detail-actions {
+  margin-block: 1rem;
+}
+@media (max-width: 580px) {
+  .flower-detail-layout {
+    display: flex;
+    flex-direction: column;
+  }
+  .flower-detail-media {
+    width: 100%;
+  }
+  .flower-detail-media img {
+    max-height: 210px;
+    object-fit: contain;
+  }
+  .flower-detail-content {
+    width: 100%;
+  }
+  .flower-detail-actions {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .flower-detail-actions > .button {
+    flex: 1 1 140px;
+    min-height: 46px;
+  }
+}

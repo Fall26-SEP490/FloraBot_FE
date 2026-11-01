@@ -34,9 +34,9 @@
 }
 
 .catalog-sidebar-reset-btn {
-  width: 28px;
-  height: 28px;
-  min-height: 28px !important;
+  width: 44px;
+  height: 44px;
+  min-height: 44px !important;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -143,7 +143,7 @@
 }
 
 .catalog-filter-option {
-  min-height: 38px;
+  min-height: 44px;
   line-height: 1.5;
   width: 100%;
   display: flex;
@@ -206,4 +206,33 @@
 
 .catalog-filter-option.is-empty:hover {
   background-color: #f6faf5;
+}
+
+.catalog-option-count {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  color: #4c6656;
+}
+.catalog-filter-option:disabled {
+  cursor: default;
+  opacity: 1;
+  color: #66746a;
+}
+.catalog-more-filters > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: #1c5139;
+  font-weight: 650;
+}
+.catalog-more-filters[open] > summary {
+  margin-bottom: 0.6rem;
+}
+.catalog-more-filters > summary::after {
+  content: '+';
+  margin-left: auto;
+}
+.catalog-more-filters[open] > summary::after {
+  content: '−';
 }

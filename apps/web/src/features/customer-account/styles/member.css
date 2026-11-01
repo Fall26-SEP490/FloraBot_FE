@@ -115,11 +115,11 @@
   padding: 1.2rem 0;
   overflow-wrap: anywhere;
 }
-.member-orders summary {
+.member-orders:not(.customer-order-list) summary {
   cursor: pointer;
   padding: 0.6rem 0;
 }
-.member-orders summary span {
+.member-orders:not(.customer-order-list) summary span {
   display: block;
   color: #235232;
   margin-top: 0.5rem;
@@ -532,4 +532,12 @@
   font-weight: 700;
   color: #113421;
   word-break: break-word;
+}
+
+.member-orders.customer-order-list > li {
+  padding: 0;
+  margin-bottom: 1rem;
+  border: 1px solid #dce7d8;
+  border-radius: 12px;
+  background: #fff;
 }

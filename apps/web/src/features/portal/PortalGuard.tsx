@@ -34,7 +34,10 @@ export function PortalGuard({
           : '/dang-nhap'
         : null;
   useEffect(() => {
-    if (target) router.replace(target);
+    if (!target) return;
+    const loginTarget = target === '/dang-nhap' || target === '/admin/login';
+    const returnUrl = window.location.pathname + window.location.search + window.location.hash;
+    router.replace(loginTarget ? `${target}?returnUrl=${encodeURIComponent(returnUrl)}` : target);
   }, [target, router]);
   if (session.isPending || target)
     return (

@@ -153,4 +153,7 @@ export const sessionQuery = {
   queryKey: ['session'],
   queryFn: () => request<Session>('/auth/me'),
   staleTime: 30_000,
+  retryOnMount: false,
+  refetchOnWindowFocus: (query: { state: { error: Error | null } }) =>
+    !(query.state.error instanceof ApiError && query.state.error.status === 401),
 };

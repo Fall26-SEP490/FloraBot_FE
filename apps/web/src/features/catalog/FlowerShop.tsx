@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import './styles/catalog.css';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { catalogReturnPath } from './catalog.navigation';
 import { useQuery } from '@tanstack/react-query';
 import { request, sessionQuery } from '@/shared/lib/api';
 import { MOCK_CATALOG_ITEMS } from '@/features/catalog/mocks/mockCatalog';
@@ -22,10 +23,7 @@ export default function FlowerShop() {
   const router = useRouter();
   const session = useQuery(sessionQuery);
 
-  const [search, setSearch] = useState('');
-  const [draft, setDraft] = useState('');
-  const [pagination, setPagination] = useState({ key: '', page: 1 });
-
+  const searchParams = useSearchParams();
   const [demoEnabled] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
     const params = new URLSearchParams(window.location.search);
@@ -54,25 +52,10 @@ export default function FlowerShop() {
   }, [catalog.data, demoEnabled]);
 
   // Hook owns filters state and derived items
-  const filters = useCatalogFilters(rawItems, {
-    search,
-    setSearch,
-    draft,
-    setDraft,
-  });
-  const filterKey = JSON.stringify([
-    search,
-    filters.priceFilter,
-    filters.occasionFilter,
-    filters.shopFilter,
-    filters.kioskFilter,
-    filters.availabilityFilter,
-    filters.sortBy,
-  ]);
-  const page = Math.min(
-    pagination.key === filterKey ? pagination.page : 1,
-    Math.max(1, Math.ceil(filters.displayedItems.length / 12)),
-  );
+  const filters = useCatalogFilters(rawItems);
+  const { search, setSearch, draft, setDraft } = filters;
+  const page = Math.min(filters.page, Math.max(1, Math.ceil(filters.displayedItems.length / 12)));
+  const catalogHref = catalogReturnPath('/dat-hoa?' + searchParams.toString());
   const pageItems = filters.displayedItems.slice((page - 1) * 12, page * 12);
 
   // Resume "Nhắn tin với shop" after returning from login
@@ -207,6 +190,7 @@ export default function FlowerShop() {
             (!catalog.isError || filters.displayedItems.length > 0) &&
             filters.displayedItems.length > 0 && (
               <CatalogGrid
+                catalogHref={catalogHref}
                 items={pageItems}
                 page={page}
                 hasMore={page * 12 < filters.displayedItems.length}
@@ -218,8 +202,8 @@ export default function FlowerShop() {
                   dialog.setSelected(item);
                 }}
                 onOpenChat={(item) => void handleOpenChat(item)}
-                onPrevPage={() => setPagination({ key: filterKey, page: page - 1 })}
-                onNextPage={() => setPagination({ key: filterKey, page: page + 1 })}
+                onPrevPage={() => filters.setPage(page - 1)}
+                onNextPage={() => filters.setPage(page + 1)}
               />
             )}
         </section>

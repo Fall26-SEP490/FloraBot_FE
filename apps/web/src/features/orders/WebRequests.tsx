@@ -25,6 +25,7 @@ import {
   orderNextStep,
   orderStage,
   sellerOrderActionLabel,
+  customerOrderActionLabel,
   sellerOrderHint,
   statusName,
   money,
@@ -32,6 +33,7 @@ import {
 } from './orders.utils';
 import type { OrderFilter, Page, SendPreorderPickupOtpResponse, WebOrder } from './orders.types';
 import styles from './seller-orders.module.css';
+import customerStyles from './customer-orders.module.css';
 import { readSellerQueue, sellerQueueKey, SELLER_RESULT_SIZE } from './seller-queue';
 import { rememberPreorderPayment } from './payment-return';
 
@@ -1095,41 +1097,63 @@ export default function WebRequests({
           )}
         </>
       )}
-      {mode !== 'seller' && query.data && (mode !== 'member' || items.length > 0) && (
-        <div
-          className="operations-metrics order-summary-strip"
-          aria-label="Tóm tắt trang đơn đang xem"
-        >
-          <div className="operations-metric">
-            <ClipboardList aria-hidden="true" />
-            <span>{mode === 'member' ? 'Đơn đang xem' : 'Yêu cầu trong trang'}</span>
-            <strong>{items.length}</strong>
-            <small>{mode === 'member' ? `Trang ${page}` : 'Toàn bộ đơn hiển thị'}</small>
+      {mode !== 'seller' &&
+        query.data &&
+        (mode !== 'member' || items.length > 0) &&
+        (mode === 'member' ? (
+          <dl className={customerStyles.totals} aria-label="Tóm tắt trang đơn đang xem">
+            <div>
+              <dt>Đơn đang xem</dt>
+              <dd>{items.length}</dd>
+            </div>
+            <div>
+              <dt>Cần phản hồi</dt>
+              <dd>{items.filter((row) => needsOrderAction(row, mode)).length}</dd>
+            </div>
+            <div>
+              <dt>Đang chuẩn bị</dt>
+              <dd>{items.filter((row) => row.orderStatus === 'PAID' && !row.ready).length}</dd>
+            </div>
+            <div>
+              <dt>Sẵn sàng tại tủ</dt>
+              <dd>{items.filter((row) => row.ready && row.orderStatus === 'PAID').length}</dd>
+            </div>
+          </dl>
+        ) : (
+          <div
+            className="operations-metrics order-summary-strip"
+            aria-label="Tóm tắt trang đơn đang xem"
+          >
+            <div className="operations-metric">
+              <ClipboardList aria-hidden="true" />
+              <span>Yêu cầu trong trang</span>
+              <strong>{items.length}</strong>
+              <small>Toàn bộ đơn hiển thị</small>
+            </div>
+            <div className="operations-metric">
+              <CircleAlert aria-hidden="true" />
+              <span>Cần theo dõi</span>
+              <strong>{items.filter((row) => needsOrderAction(row, mode)).length}</strong>
+              <small>Chờ phản hồi / xử lý</small>
+            </div>
+            <div className="operations-metric">
+              <Package aria-hidden="true" />
+              <span>Đang chuẩn bị</span>
+              <strong>
+                {items.filter((row) => row.orderStatus === 'PAID' && !row.ready).length}
+              </strong>
+              <small>Đã thanh toán · cần nạp</small>
+            </div>
+            <div className="operations-metric">
+              <Boxes aria-hidden="true" />
+              <span>Sẵn sàng tại tủ</span>
+              <strong>
+                {items.filter((row) => row.ready && row.orderStatus === 'PAID').length}
+              </strong>
+              <small>Khách có thể nhận hoa</small>
+            </div>
           </div>
-          <div className="operations-metric">
-            <CircleAlert aria-hidden="true" />
-            <span>{mode === 'member' ? 'Cần phản hồi' : 'Cần theo dõi'}</span>
-            <strong>{items.filter((row) => needsOrderAction(row, mode)).length}</strong>
-            <small>{mode === 'member' ? 'Kiểm tra bước tiếp theo' : 'Chờ phản hồi / xử lý'}</small>
-          </div>
-          <div className="operations-metric">
-            <Package aria-hidden="true" />
-            <span>Đang chuẩn bị</span>
-            <strong>
-              {items.filter((row) => row.orderStatus === 'PAID' && !row.ready).length}
-            </strong>
-            <small>
-              {mode === 'member' ? 'Shop đang chuẩn bị hoa' : 'Đã thanh toán · cần nạp'}
-            </small>
-          </div>
-          <div className="operations-metric">
-            <Boxes aria-hidden="true" />
-            <span>Sẵn sàng tại tủ</span>
-            <strong>{items.filter((row) => row.ready && row.orderStatus === 'PAID').length}</strong>
-            <small>{mode === 'member' ? 'Bạn có thể đến nhận' : 'Khách có thể nhận hoa'}</small>
-          </div>
-        </div>
-      )}
+        ))}
       {mode !== 'seller' && query.data && (mode !== 'member' || items.length > 0) && (
         <p className="quiet order-page-note">
           {mode === 'member'
@@ -1150,9 +1174,14 @@ export default function WebRequests({
               onChange={(event) => setFilter(event.target.value as OrderFilter)}
             >
               <option value="all">Tất cả yêu cầu trong trang</option>
-              <option value="attention">Cần theo dõi</option>
+              <option value="attention">
+                {mode === 'member' ? 'Cần bạn phản hồi' : 'Cần theo dõi'}
+              </option>
               <option value="requested">Chờ báo giá</option>
-              <option value="quoted">Chờ khách xác nhận</option>
+              <option value="quoted">
+                {mode === 'member' ? 'Đã có báo giá' : 'Chờ khách xác nhận'}
+              </option>
+              <option value="payment">Chờ thanh toán</option>
               <option value="preparing">Đang chuẩn bị</option>
               <option value="ready">Sẵn sàng tại tủ</option>
               <option value="closed">Đã kết thúc</option>
@@ -1198,11 +1227,25 @@ export default function WebRequests({
               )}
             </div>
           )}
-          <ul className={mode === 'seller' ? styles.orderList : 'member-orders'}>
+          <ul
+            className={
+              mode === 'seller'
+                ? styles.orderList
+                : `member-orders ${mode === 'member' ? 'customer-order-list' : ''}`
+            }
+          >
             {displayItems.map((row) => (
               <li key={row.id}>
                 <details id={`preorder-${row.id}`} open={row.id === returnedRequest || undefined}>
-                  <summary className={mode === 'seller' ? styles.orderSummary : undefined}>
+                  <summary
+                    className={
+                      mode === 'seller'
+                        ? styles.orderSummary
+                        : mode === 'member'
+                          ? customerStyles.summary
+                          : undefined
+                    }
+                  >
                     {mode === 'seller' ? (
                       <span className={styles.orderHeading}>
                         <strong>{row.orderCode || `Yêu cầu ${row.id.slice(0, 8)}`}</strong>
@@ -1218,6 +1261,48 @@ export default function WebRequests({
                           }
                         >
                           {statusName(row)}
+                        </span>
+                      </span>
+                    ) : mode === 'member' ? (
+                      <span className={customerStyles.content}>
+                        <span className={customerStyles.heading}>
+                          <strong>{row.productName || 'Hoa theo yêu cầu'}</strong>
+                          <span
+                            className="order-status-pill"
+                            data-status={
+                              row.ready && row.orderStatus === 'PAID'
+                                ? 'READY'
+                                : row.orderStatus || row.state
+                            }
+                          >
+                            {statusName(row)}
+                          </span>
+                        </span>
+                        <span className={customerStyles.shop}>
+                          {row.shopName || 'Shop nhận yêu cầu'} ·{' '}
+                          {row.orderCode || `Yêu cầu ${row.id.slice(0, 8)}`}
+                        </span>
+                        <span className={customerStyles.facts}>
+                          <span>
+                            <small>Tủ nhận hoa</small>
+                            <span>{row.kioskName || 'Xem địa điểm trong chi tiết'}</span>
+                          </span>
+                          <span>
+                            <small>
+                              Lịch nhận {row.state === 'REQUESTED' ? 'mong muốn' : 'dự kiến'}
+                            </small>
+                            <span>{when(row.pickupAt)}</span>
+                          </span>
+                          <span>
+                            <small>Giá shop báo</small>
+                            <strong>
+                              {row.quotedPrice == null ? 'Chưa có báo giá' : money(row.quotedPrice)}
+                            </strong>
+                          </span>
+                        </span>
+                        <span className={customerStyles.action}>
+                          {customerOrderActionLabel(row)}{' '}
+                          <ArrowRight size={16} aria-hidden="true" />
                         </span>
                       </span>
                     ) : (

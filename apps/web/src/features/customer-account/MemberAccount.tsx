@@ -276,6 +276,27 @@ export default function MemberAccount() {
                         <p>{order.items.join(', ') || 'Hoa đặt theo yêu cầu'}</p>
                         <strong>{Number(order.totalAmount).toLocaleString('vi-VN')} đ</strong>
                       </div>
+                      <details className="account-history-details">
+                        <summary>Xem thông tin giao dịch</summary>
+                        <dl>
+                          <div>
+                            <dt>Mã đơn</dt>
+                            <dd>{order.orderCode}</dd>
+                          </div>
+                          <div>
+                            <dt>Điểm được cộng</dt>
+                            <dd>{Number(order.pointsEarned).toLocaleString('vi-VN')}</dd>
+                          </div>
+                          <div>
+                            <dt>Điểm đã dùng</dt>
+                            <dd>{Number(order.pointsRedeemed).toLocaleString('vi-VN')}</dd>
+                          </div>
+                        </dl>
+                        <p>Cần hỗ trợ? Liên hệ FloraBot và cung cấp mã đơn này.</p>
+                        <Link href="/lien-he">
+                          Liên hệ hỗ trợ <ArrowRight size={16} aria-hidden="true" />
+                        </Link>
+                      </details>
                     </li>
                   ))}
                 </ul>

@@ -3,6 +3,7 @@ import type { CatalogItem } from '../catalog.types';
 import { FlowerCard } from './FlowerCard';
 
 interface CatalogGridProps {
+  catalogHref?: string;
   items: CatalogItem[];
   page: number;
   hasMore: boolean;
@@ -16,6 +17,7 @@ interface CatalogGridProps {
 }
 
 export function CatalogGrid({
+  catalogHref,
   items,
   page,
   hasMore,
@@ -34,6 +36,7 @@ export function CatalogGrid({
           <FlowerCard
             key={`${item.productId}-${item.kioskId}-${item.zone ?? 'template'}`}
             item={item}
+            catalogHref={catalogHref}
             openingChatId={openingChatId}
             onSelect={onSelect}
             onOpenChat={onOpenChat}

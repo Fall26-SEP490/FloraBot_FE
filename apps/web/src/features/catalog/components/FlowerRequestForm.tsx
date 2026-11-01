@@ -1,3 +1,6 @@
+'use client';
+
+import { catalogReturnPath } from '../catalog.navigation';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
@@ -185,6 +188,13 @@ export function FlowerRequestForm({
 
   if (!session.data) {
     const params = new URLSearchParams({ order: '1' });
+    const current = new URL(window.location.href);
+    const from = catalogReturnPath(
+      current.pathname === '/dat-hoa'
+        ? current.pathname + current.search
+        : current.searchParams.get('from'),
+    );
+    if (from !== '/dat-hoa') params.set('from', from);
     if (item.zone) params.set('zone', item.zone);
     const returnUrl = `/dat-hoa/${encodeURIComponent(item.productId)}/${encodeURIComponent(item.kioskId)}?${params}`;
     const authQuery = `?returnUrl=${encodeURIComponent(returnUrl)}`;

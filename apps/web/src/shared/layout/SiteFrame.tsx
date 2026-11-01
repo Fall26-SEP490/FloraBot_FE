@@ -319,20 +319,22 @@ function Frame({ children }: { children: ReactNode }) {
           <SiteFooter />
         ))}
       {!workspace && !authSurface && (
-        <a
-          className="site-hotline-button"
-          href={
-            process.env.NEXT_PUBLIC_SUPPORT_PHONE
-              ? `tel:${process.env.NEXT_PUBLIC_SUPPORT_PHONE}`
-              : '/lien-he'
-          }
-          aria-label={
-            process.env.NEXT_PUBLIC_SUPPORT_PHONE ? 'Gọi hotline hỗ trợ' : 'Liên hệ hỗ trợ'
-          }
-          title={process.env.NEXT_PUBLIC_SUPPORT_PHONE ? 'Gọi hotline hỗ trợ' : 'Liên hệ hỗ trợ'}
-        >
-          <Phone size={24} aria-hidden="true" />
-        </a>
+        <aside aria-label="Hỗ trợ khách hàng">
+          <a
+            className="site-hotline-button"
+            href={
+              process.env.NEXT_PUBLIC_SUPPORT_PHONE
+                ? `tel:${process.env.NEXT_PUBLIC_SUPPORT_PHONE}`
+                : '/lien-he'
+            }
+            aria-label={
+              process.env.NEXT_PUBLIC_SUPPORT_PHONE ? 'Gọi hotline hỗ trợ' : 'Liên hệ hỗ trợ'
+            }
+            title={process.env.NEXT_PUBLIC_SUPPORT_PHONE ? 'Gọi hotline hỗ trợ' : 'Liên hệ hỗ trợ'}
+          >
+            <Phone size={24} aria-hidden="true" />
+          </a>
+        </aside>
       )}
     </div>
   );
