@@ -1,0 +1,37 @@
+@media (max-width: 580px) {
+  .flower-catalog .flower-card {
+    display: grid;
+    grid-template-columns: minmax(96px, 30%) minmax(0, 1fr);
+    align-items: start;
+  }
+  .flower-catalog .flower-card-media {
+    aspect-ratio: 3 / 4;
+    margin-top: 0.65rem;
+    border-radius: 8px;
+  }
+  .flower-catalog .flower-card-body {
+    padding: 0.65rem;
+  }
+  .flower-catalog .flower-card-badges {
+    position: static;
+    padding: 0.3rem;
+  }
+  .flower-catalog .flower-card-badges .flower-badge-occasion {
+    display: none;
+  }
+  .flower-catalog .flower-card-desc {
+    display: none;
+  }
+  .flower-catalog .flower-card-actions {
+    flex-wrap: wrap;
+  }
+  .flower-catalog .flower-card-title {
+    font-size: 0.9rem;
+  }
+  .flower-catalog .flower-card-select-btn.button {
+    flex-basis: 100%;
+  }
+  .flower-catalog .flower-card-chat-btn.button {
+    flex: 1;
+  }
+}

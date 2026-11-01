@@ -33,7 +33,10 @@ import './styles/kiosk-location.css';
 export default function CustomerKioskLocator() {
   const [keyword, setKeyword] = useState('');
   const [selectedArea, setSelectedArea] = useState('ALL');
-  const [selectedKioskId, setSelectedKioskId] = useState<string | null>(null);
+  const [selectedKioskId, setSelectedKioskId] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    return new URLSearchParams(window.location.search).get('kiosk');
+  });
   const [selectedMarkerPos, setSelectedMarkerPos] = useState<{ x: number; y: number } | null>(null);
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'MAINTENANCE' | 'OFFLINE'>(
     'ALL',

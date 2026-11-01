@@ -18,16 +18,18 @@ for (const width of [320, 390, 820, 1440]) {
     await expect(page.locator('.flower-card')).toHaveCount(12);
     await expect(page.getByRole('button', { name: 'Xem chi tiết', exact: true })).toHaveCount(0);
     const firstCard = page.locator('.flower-card').first();
-    const order = await firstCard
-      .getByRole('button', { name: 'Đặt hoa', exact: true })
-      .boundingBox();
+    const order = await firstCard.getByRole('button', { name: /báo giá/i }).boundingBox();
     const chat = await firstCard
       .getByRole('button', { name: 'Nhắn tin với shop', exact: true })
       .boundingBox();
     expect(order).not.toBeNull();
     expect(chat).not.toBeNull();
-    expect(Math.abs(order!.y - chat!.y)).toBeLessThanOrEqual(1);
-    expect(chat!.x).toBeGreaterThanOrEqual(order!.x + order!.width);
+    if (width <= 580) {
+      expect(chat!.y).toBeGreaterThanOrEqual(order!.y + order!.height);
+    } else {
+      expect(Math.abs(order!.y - chat!.y)).toBeLessThanOrEqual(1);
+      expect(chat!.x).toBeGreaterThanOrEqual(order!.x + order!.width);
+    }
     await page.evaluate(() => document.fonts.ready);
     const input = await page
       .getByRole('searchbox', { name: 'Tìm mẫu hoa, shop hoặc tủ nhận' })
@@ -136,7 +138,7 @@ test('a 600,000đ product belongs to only one price range', async ({ page }) => 
 test('order action opens an accessible modal and restores focus', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/dat-hoa?demo=1');
-  const trigger = page.getByRole('button', { name: 'Đặt hoa', exact: true }).first();
+  const trigger = page.getByRole('button', { name: /báo giá/i }).first();
   await trigger.click();
   const panel = page.locator('.flower-request');
   await expect(panel).toBeVisible();
@@ -156,7 +158,7 @@ test('flower image opens its detail page and allows ordering', async ({ page }) 
   await expect(page).toHaveURL(/\/dat-hoa\/[^/]+\/[^/?]+\?demo=1/);
   await expect(page.getByRole('heading', { name, exact: true })).toBeVisible();
   await page.screenshot({ path: 'artifacts/flower-detail-desktop.png', fullPage: true });
-  await page.getByRole('button', { name: 'Đặt hoa', exact: true }).click();
+  await page.getByRole('button', { name: /báo giá/i }).click();
   await expect(page.getByRole('dialog')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);

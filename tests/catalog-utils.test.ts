@@ -97,9 +97,9 @@ describe('Catalog Utilities - Search matching', () => {
 });
 
 describe('Catalog Utilities - Availability matching', () => {
-  it('identifies stock vs custom pre-order', () => {
-    expect(matchesAvailability(sampleItem(), 'stock')).toBe(true);
-    expect(matchesAvailability(sampleItem(), 'custom')).toBe(false);
+  it('uses the sales channel rather than bouquet count', () => {
+    expect(matchesAvailability(sampleItem(), 'stock')).toBe(false);
+    expect(matchesAvailability(sampleItem(), 'custom')).toBe(true);
     expect(matchesAvailability(sampleItem({ bouquets: [] }), 'stock')).toBe(false);
     expect(matchesAvailability(sampleItem({ bouquets: [] }), 'custom')).toBe(true);
     expect(matchesAvailability(sampleItem(), 'all')).toBe(true);
@@ -186,8 +186,8 @@ describe('Catalog Utilities - Combined filtering and counts', () => {
     expect(counts.priceCounts.under300).toBe(1);
     expect(counts.priceCounts.range300to600).toBe(1);
     expect(counts.priceCounts.range600to1000).toBe(1);
-    expect(counts.availabilityCounts.stock).toBe(2);
-    expect(counts.availabilityCounts.custom).toBe(1);
+    expect(counts.availabilityCounts.stock).toBe(0);
+    expect(counts.availabilityCounts.custom).toBe(3);
   });
 
   it('formats badge class and price', () => {

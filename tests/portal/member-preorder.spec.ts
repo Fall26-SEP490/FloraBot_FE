@@ -46,7 +46,10 @@ test('CUSTOMER places CUSTOM with selected kiosk and no door action', async ({ p
     await route.fulfill({ json: { result: input.id } });
   });
   await page.goto('/dat-hoa');
-  await page.getByRole('button', { name: 'Đặt hoa', exact: true }).first().click();
+  await page
+    .getByRole('button', { name: /báo giá/i })
+    .first()
+    .click();
   await expect(
     page.getByText('Nhận hoa tại tủ bằng OTP gửi qua SMS.', { exact: false }),
   ).toBeVisible();
@@ -86,7 +89,7 @@ test('SELLER cannot create a customer preorder in the FE', async ({ page }) => {
     route.fulfill({ json: { items: [flower], page: 1, hasMore: false } }),
   );
   await page.goto('/dat-hoa');
-  await page.getByRole('button', { name: 'Đặt hoa', exact: true }).click();
+  await page.getByRole('button', { name: /báo giá/i }).click();
   await expect(page.getByRole('button', { name: 'Gửi yêu cầu để shop báo giá' })).toHaveCount(0);
 });
 
@@ -107,14 +110,14 @@ test('same flower at one kiosk keeps Walk-in view separate from Pre-order', asyn
   await page.goto('/dat-hoa');
   const cards = page.locator('.flower-card');
   await expect(cards).toHaveCount(2);
-  await expect(cards.first().getByRole('button', { name: 'Đặt hoa' })).toHaveCount(0);
+  await expect(cards.first().getByRole('button', { name: /báo giá/i })).toHaveCount(0);
   await cards
     .first()
     .getByRole('link', { name: `Xem chi tiết ${flower.name}` })
     .click();
   await expect(page).toHaveURL(/zone=WALK_IN/);
   await expect(page.getByText('Chỉ mua tại kiosk', { exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Đặt hoa', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /báo giá/i })).toHaveCount(0);
 
   await page.goto('/dat-hoa');
   await cards
@@ -122,10 +125,10 @@ test('same flower at one kiosk keeps Walk-in view separate from Pre-order', asyn
     .getByRole('link', { name: `Xem chi tiết ${flower.name}` })
     .click();
   await expect(page).toHaveURL(/zone=PREORDER/);
-  await expect(page.getByRole('button', { name: 'Đặt hoa', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: /báo giá/i })).toBeVisible();
 
   await page.goto(`/dat-hoa/${flower.productId}/${flower.kioskId}`);
-  await expect(page.getByRole('button', { name: 'Đặt hoa', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: /báo giá/i })).toBeVisible();
 });
 
 for (const zone of ['WALK_IN', 'UNKNOWN']) {
@@ -143,7 +146,7 @@ for (const zone of ['WALK_IN', 'UNKNOWN']) {
     await page.goto('/dat-hoa');
     const card = page.locator('.flower-card');
     await expect(card).toHaveCount(1);
-    await expect(card.getByRole('button', { name: 'Đặt hoa', exact: true })).toHaveCount(0);
+    await expect(card.getByRole('button', { name: /báo giá/i })).toHaveCount(0);
     if (zone === 'WALK_IN') {
       await expect(card.getByText('Chỉ mua tại kiosk', { exact: true })).toBeVisible();
       await expect(card.getByText(flower.kioskName, { exact: true })).toBeVisible();
@@ -175,7 +178,7 @@ test('legacy API design templates still place CUSTOM requests without guessing s
     await route.fulfill({ status: 409, json: { detail: 'Kiosk không nhận đơn mới' } });
   });
   await page.goto('/dat-hoa');
-  await page.getByRole('button', { name: 'Đặt hoa', exact: true }).click();
+  await page.getByRole('button', { name: /báo giá/i }).click();
   await expect(page.getByRole('radio')).toHaveCount(0);
   const date = new Date(Date.now() + 48 * 60 * 60 * 1000);
   await page

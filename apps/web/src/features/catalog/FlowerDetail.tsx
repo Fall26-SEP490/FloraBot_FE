@@ -1,14 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Button, MapPin, MessageSquare, Store } from '@florabot/ui';
-import { request } from '@/shared/lib/api';
+import { request, sessionQuery } from '@/shared/lib/api';
 import { MOCK_CATALOG_ITEMS } from './mocks/mockCatalog';
 import type { CatalogItem, CatalogResponse } from './catalog.types';
-import { canOrderOnWeb, formatPrice, purchaseLabel } from './catalog.utils';
+import { canOrderOnWeb, formatPrice, isWalkIn, purchaseLabel } from './catalog.utils';
 import { FlowerRequestPanel } from './components/FlowerRequestPanel';
 import { ChatNoticeDialog } from './components/ChatNoticeDialog';
 import { useCustomerChat } from './hooks/useCustomerChat';
@@ -48,7 +48,13 @@ export default function FlowerDetail({
   zone?: string;
 }) {
   const router = useRouter();
+  const session = useQuery(sessionQuery);
   const [selected, setSelected] = useState<CatalogItem | null>(null);
+  const [resumeOrder, setResumeOrder] = useState(
+    () =>
+      typeof window !== 'undefined' &&
+      new URLSearchParams(window.location.search).get('order') === '1',
+  );
   const [failedPhoto, setFailedPhoto] = useState<string | null>(null);
   const [demo] = useState(
     () =>
@@ -65,12 +71,25 @@ export default function FlowerDetail({
         : findItem(productId, kioskId, zone),
   });
   const item = query.data;
+  const resumedItem =
+    resumeOrder && item && session.data?.role === 'CUSTOMER' && canOrderOnWeb(item) ? item : null;
+  useEffect(() => {
+    if (!resumedItem) return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('order') !== '1') return;
+    url.searchParams.delete('order');
+    window.history.replaceState(window.history.state, '', url.pathname + url.search);
+  }, [resumedItem]);
+  const selectItem = (next: CatalogItem | null) => {
+    setResumeOrder(false);
+    setSelected(next);
+  };
   const {
     handleOpenChat: openChat,
     openingChatId,
     chatNotice,
     setChatNotice,
-  } = useCustomerChat(setSelected);
+  } = useCustomerChat(selectItem);
   return (
     <main id="main" className="flower-shop-page flower-detail-page">
       <Link className="flower-detail-back" href={demo ? '/dat-hoa?demo=1' : '/dat-hoa'}>
@@ -117,7 +136,9 @@ export default function FlowerDetail({
               <h1>{item.name}</h1>
               <div className="flower-detail-pricing">
                 <span className="flower-detail-price">{formatPrice(item.price)} đ</span>
-                <span className="flower-detail-price-sub">Giá mẫu tham khảo</span>
+                <span className="flower-detail-price-sub">
+                  {isWalkIn(item) ? 'Giá niêm yết tại tủ' : 'Giá mẫu tham khảo'}
+                </span>
               </div>
 
               <div className="flower-detail-divider" aria-hidden="true" />
@@ -156,7 +177,16 @@ export default function FlowerDetail({
               </section>
 
               <div className="flower-detail-actions">
-                {canOrderOnWeb(item) && <Button onClick={() => setSelected(item)}>Đặt hoa</Button>}
+                {canOrderOnWeb(item) ? (
+                  <Button onClick={() => selectItem(item)}>Yêu cầu báo giá</Button>
+                ) : isWalkIn(item) ? (
+                  <Link
+                    className="button button-primary"
+                    href={`/tim-kiosk?kiosk=${encodeURIComponent(item.kioskId)}`}
+                  >
+                    Xem tủ để mua trực tiếp
+                  </Link>
+                ) : null}
                 <Button
                   variant="outline"
                   onClick={() => openChat(item)}
@@ -194,8 +224,8 @@ export default function FlowerDetail({
         </article>
       )}
       <FlowerRequestPanel
-        selected={selected}
-        onClose={() => setSelected(null)}
+        selected={selected ?? resumedItem}
+        onClose={() => selectItem(null)}
         onOpenChat={openChat}
         openingChatId={openingChatId}
       />

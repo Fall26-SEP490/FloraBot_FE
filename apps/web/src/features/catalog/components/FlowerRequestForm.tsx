@@ -149,11 +149,18 @@ export function FlowerRequestForm({ item, onOpenChat, openingChat }: FlowerReque
   }
 
   if (!session.data) {
+    const params = new URLSearchParams({ order: '1' });
+    if (item.zone) params.set('zone', item.zone);
+    const returnUrl = `/dat-hoa/${encodeURIComponent(item.productId)}/${encodeURIComponent(item.kioskId)}?${params}`;
+    const authQuery = `?returnUrl=${encodeURIComponent(returnUrl)}`;
     return (
       <div className="flower-request-notice">
+        <p>Đăng nhập để gửi yêu cầu báo giá. Bạn sẽ quay lại đúng mẫu hoa này.</p>
+        <Link className="button button-primary" href={`/dang-nhap${authQuery}`}>
+          Đăng nhập để tiếp tục
+        </Link>
         <p>
-          <Link href="/dang-nhap">Đăng nhập</Link> hoặc <Link href="/dang-ky">tạo tài khoản</Link>{' '}
-          để đặt hoa và theo dõi đơn.
+          Chưa có tài khoản? <Link href={`/dang-ky${authQuery}`}>Tạo tài khoản</Link>
         </p>
       </div>
     );

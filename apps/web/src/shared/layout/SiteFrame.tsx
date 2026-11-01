@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { Flower2, LogIn, Menu, Phone, X } from '@florabot/ui';
 import { workspaceBase } from '@/features/portal/config/workspaceSections';
+import { getRoleLabel } from '@/features/portal/config/roleRoutes';
 import { UserMenu, type UserMenuLink } from '@/shared/components/UserMenu';
 import { logoutSession, queryClient, sessionQuery } from '@/shared/lib/api';
 
@@ -59,14 +60,13 @@ function SiteHeader() {
   });
   const accountLinks: UserMenuLink[] = session.data
     ? [
-        { href: '/ho-so', label: 'Hồ sơ cá nhân', icon: 'profile' },
+        ...(['CUSTOMER', 'SELLER'].includes(session.data.role)
+          ? [{ href: '/tai-khoan', label: 'Tài khoản và hồ sơ', icon: 'profile' as const }]
+          : [{ href: '/ho-so', label: 'Hồ sơ cá nhân', icon: 'profile' as const }]),
         ...(session.data.role === 'SELLER'
-          ? [
-              { href: '/seller', label: 'Quản lý shop', icon: 'shop' as const },
-              { href: '/tai-khoan', label: 'Tài khoản của tôi', icon: 'purchase' as const },
-            ]
+          ? [{ href: '/seller', label: 'Quản lý shop', icon: 'shop' as const }]
           : session.data.role === 'CUSTOMER'
-            ? [{ href: '/tai-khoan', label: 'Tài khoản của tôi', icon: 'purchase' as const }]
+            ? []
             : [
                 {
                   href: workspaceBase(session.data.role),
@@ -187,6 +187,7 @@ function SiteHeader() {
           className="site-account"
           menuId="site-user-menu"
           name={session.data.name}
+          roleLabel={getRoleLabel(session.data.role)}
           links={accountLinks}
           busy={busy}
           onLogout={() => void logout()}

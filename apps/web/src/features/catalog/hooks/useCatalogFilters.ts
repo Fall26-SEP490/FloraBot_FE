@@ -29,7 +29,11 @@ export function useCatalogFilters(rawItems: CatalogItem[], searchState?: Catalog
   const [occasionFilter, setOccasionFilter] = useState<string>('all');
   const [shopFilter, setShopFilter] = useState<string>('all');
   const [kioskFilter, setKioskFilter] = useState<string>('all');
-  const [availabilityFilter, setAvailabilityFilter] = useState<AvailabilityFilter>('all');
+  const [availabilityFilter, setAvailabilityFilter] = useState<AvailabilityFilter>(() => {
+    if (typeof window === 'undefined') return 'all';
+    const mode = new URLSearchParams(window.location.search).get('mode');
+    return mode === 'stock' || mode === 'custom' ? mode : 'all';
+  });
   const [sortBy, setSortBy] = useState<SortOption>('default');
 
   const filteredItems = useMemo(
@@ -90,7 +94,7 @@ export function useCatalogFilters(rawItems: CatalogItem[], searchState?: Catalog
     if (availabilityFilter !== 'all') {
       list.push({
         id: 'availability',
-        label: availabilityFilter === 'stock' ? 'Có sẵn tại tủ' : 'Đặt trước',
+        label: availabilityFilter === 'stock' ? 'Mua trực tiếp tại tủ' : 'Đặt theo yêu cầu',
         onClear: () => setAvailabilityFilter('all'),
       });
     }

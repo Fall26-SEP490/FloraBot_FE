@@ -1,6 +1,31 @@
 import { expect, it } from 'vitest';
 import { postLoginPath } from '../apps/web/src/features/auth/auth.utils';
 
+it('preserves the product chat context without accepting extra destinations', () => {
+  const target =
+    '/dat-hoa?action=chat&sellerId=20000000-0000-0000-0000-000000000001&productId=30000000-0000-0000-0000-000000000001&shopName=Shop&name=Hoa';
+  expect(postLoginPath('CUSTOMER', '?returnUrl=' + encodeURIComponent(target))).toBe(target);
+  expect(
+    postLoginPath(
+      'CUSTOMER',
+      '?returnUrl=' + encodeURIComponent(target + '&redirect=//evil.example'),
+    ),
+  ).toBe('/tai-khoan');
+});
+
+it('resumes the selected flower for customers, and rejects extra redirect parameters', () => {
+  const target =
+    '/dat-hoa/30000000-0000-0000-0000-000000000001/40000000-0000-0000-0000-000000000001?order=1&zone=PREORDER';
+  expect(postLoginPath('CUSTOMER', '?returnUrl=' + encodeURIComponent(target))).toBe(target);
+  expect(postLoginPath('SELLER', '?returnUrl=' + encodeURIComponent(target))).toBe('/seller');
+  expect(
+    postLoginPath(
+      'CUSTOMER',
+      '?returnUrl=' + encodeURIComponent(target + '&redirect=//evil.example'),
+    ),
+  ).toBe('/tai-khoan');
+});
+
 it.each(['CUSTOMER', 'SELLER', 'ADMIN', 'OPERATIONS_MANAGER', 'TECHNICIAN', 'SELLER_STAFF'])(
   '%s returns to profile after signing in from the profile page',
   (role) => {
