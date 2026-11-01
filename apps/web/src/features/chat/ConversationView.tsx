@@ -25,6 +25,8 @@ export function ConversationView({
   isActive = true,
   onToggleDetails,
   showDetails = false,
+  detailsLabel = 'khách hàng',
+  customerMode = false,
 }: {
   chatId: string;
   otherPartyName: string;
@@ -37,6 +39,8 @@ export function ConversationView({
   isActive?: boolean;
   onToggleDetails?: () => void;
   showDetails?: boolean;
+  detailsLabel?: string;
+  customerMode?: boolean;
   registerRealtimeHandlers?: (
     onMessage: (msg: ChatMessageReceivedEvent) => void,
     onRead: (event: ChatMessagesReadEvent) => void,
@@ -308,8 +312,9 @@ export function ConversationView({
             type="button"
             className={`chat-details-toggle-btn ${showDetails ? 'is-active' : ''}`}
             onClick={onToggleDetails}
-            aria-label={showDetails ? 'Thu gọn thông tin khách hàng' : 'Xem thông tin khách hàng'}
-            title="Xem thông tin chi tiết & Ghi chú"
+            aria-label={`${showDetails ? 'Thu gọn' : 'Xem'} thông tin ${detailsLabel}`}
+            aria-expanded={showDetails}
+            title={`Thông tin ${detailsLabel}`}
           >
             <User size={16} aria-hidden="true" />
             <span>Thông tin</span>
@@ -376,6 +381,7 @@ export function ConversationView({
           onMessageSent={handleMessageSent}
           disabled={disabled || initialQuery.isPending || initialQuery.isError}
           transport={transport}
+          customerMode={customerMode}
         />
       </footer>
     </section>

@@ -35,14 +35,14 @@ import { basicPayload, basicValues, validBirthDate, vietnamToday } from './profi
 import { profileSections, useProfileNavigation } from './useProfileNavigation';
 import { useProfileDraftGuard } from './useProfileDraftGuard';
 
-export default function PersonalProfile() {
+export default function PersonalProfile({ embedded = false }: { embedded?: boolean } = {}) {
   const session = useQuery(sessionQuery);
   // A new identity gets fresh form/OTP/bank state, even when cookies change in
   // another tab without navigating away from the current profile page.
-  return <PersonalProfileContent key={session.data?.id ?? 'signed-out'} />;
+  return <PersonalProfileContent key={session.data?.id ?? 'signed-out'} embedded={embedded} />;
 }
 
-function PersonalProfileContent() {
+function PersonalProfileContent({ embedded }: { embedded: boolean }) {
   const session = useQuery(sessionQuery);
   const active = useRef(true);
   const revealVersion = useRef(0);
@@ -728,19 +728,26 @@ function PersonalProfileContent() {
         </nav>
 
         {/* Profile Header */}
-        <header className="profile-header">
-          <div className="profile-header-info">
-            <span className="profile-avatar-large" aria-hidden="true">
-              {initialAvatar}
-            </span>
-            <div className="profile-header-titles">
-              <span className="profile-eyebrow">HỒ SƠ CÁ NHÂN</span>
-              <h1>{currentProfile.fullName || 'Hồ sơ người dùng'}</h1>
-              <p>Thông tin của bạn, luôn trong tầm tay.</p>
+        {embedded ? (
+          <header className="account-profile-heading">
+            <h1>Hồ sơ cá nhân</h1>
+            <p>Cập nhật thông tin liên hệ và quản lý bảo mật tài khoản.</p>
+          </header>
+        ) : (
+          <header className="profile-header">
+            <div className="profile-header-info">
+              <span className="profile-avatar-large" aria-hidden="true">
+                {initialAvatar}
+              </span>
+              <div className="profile-header-titles">
+                <span className="profile-eyebrow">HỒ SƠ CÁ NHÂN</span>
+                <h1>{currentProfile.fullName || 'Hồ sơ người dùng'}</h1>
+                <p>Thông tin của bạn, luôn trong tầm tay.</p>
+              </div>
             </div>
-          </div>
-          <span className="profile-badge profile-badge-neutral">{roleLabel}</span>
-        </header>
+            <span className="profile-badge profile-badge-neutral">{roleLabel}</span>
+          </header>
+        )}
 
         {/* Quick navigation anchor chips */}
         <div className="profile-layout">

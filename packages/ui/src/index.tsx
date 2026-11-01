@@ -61,6 +61,7 @@ export {
   RotateCcw,
   RefreshCw,
   MessageSquare,
+  Phone,
   Send,
   Image as ImageIcon,
   CheckCheck,

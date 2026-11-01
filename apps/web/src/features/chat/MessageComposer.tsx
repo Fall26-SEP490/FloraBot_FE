@@ -10,6 +10,12 @@ import {
 import type { ChatTransport, CustomerSellerChatMessage } from './types';
 
 const GATEWAY_SAFE_IMAGE_BYTES = 58 * 1024;
+const CUSTOMER_TEMPLATES = [
+  { label: 'Chào shop', text: 'Chào shop, mình muốn tìm hiểu thêm về mẫu hoa này.' },
+  { label: 'Hỏi giá', text: 'Shop cho mình xin giá và các lựa chọn của mẫu hoa này nhé.' },
+  { label: 'Lịch nhận hoa', text: 'Mình có thể nhận hoa vào thời gian nào vậy shop?' },
+  { label: 'Cảm ơn shop', text: 'Cảm ơn shop đã tư vấn nhé!' },
+];
 
 const QUICK_TEMPLATES = [
   { label: 'Chào bạn', text: 'Dạ chào bạn, shop có thể hỗ trợ gì cho bạn về mẫu hoa này ạ?' },
@@ -74,11 +80,13 @@ export function MessageComposer({
   onMessageSent,
   disabled = false,
   transport = customerChatTransport,
+  customerMode = false,
 }: {
   chatId: string;
   onMessageSent: (message: CustomerSellerChatMessage) => void;
   disabled?: boolean;
   transport?: ChatTransport;
+  customerMode?: boolean;
 }) {
   const [content, setContent] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -238,7 +246,7 @@ export function MessageComposer({
       <div className="chat-composer-templates" aria-label="Mẫu tin nhắn nhanh">
         <span className="chat-composer-templates-label">Gợi ý nhanh:</span>
         <div className="chat-composer-templates-list">
-          {QUICK_TEMPLATES.map((tmpl) => (
+          {(customerMode ? CUSTOMER_TEMPLATES : QUICK_TEMPLATES).map((tmpl) => (
             <button
               key={tmpl.label}
               type="button"

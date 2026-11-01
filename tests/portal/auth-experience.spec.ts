@@ -13,7 +13,7 @@ test.beforeEach(async ({ page }) => {
 
 const screens = [
   ['/dang-nhap', 'Đăng nhập'],
-  ['/dang-ky', 'Tạo tài khoản FloraBot'],
+  ['/dang-ky', 'Tạo tài khoản'],
   ['/quen-mat-khau', 'Quên mật khẩu?'],
   ['/dat-lai-mat-khau#token=test-reset-token', 'Tạo mật khẩu mới'],
   ['/admin/login', 'Đăng nhập vận hành'],
@@ -28,12 +28,8 @@ for (const width of [320, 390, 1440]) {
       await expect(page.locator('.auth-form')).toBeVisible();
       if (path === '/dang-nhap') {
         if (width === 320) {
-          const dims = await page.evaluate(() => {
-            const b = document.querySelector('.site-brand')?.getBoundingClientRect();
-            const a = document.querySelector('.site-account')?.getBoundingClientRect();
-            return { bY: b ? Math.round(b.top) : 0, aY: a ? Math.round(a.top) : 0 };
-          });
-          expect(dims.aY).toBe(dims.bY);
+          await expect(page.getByRole('link', { name: 'Về trang chủ', exact: true })).toBeVisible();
+          await expect(page.locator('.site-hotline-button')).toHaveCount(0);
         }
         await page.screenshot({ path: `artifacts/auth-final-login-${width}.png`, fullPage: true });
       }
@@ -194,7 +190,7 @@ test('Login rate limit preserves input and exposes a focused recoverable error',
 test('Authentication reflows at 320px and enlarged text', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 900 });
   for (const [path, title, btnText] of [
-    ['/dang-ky', 'Tạo tài khoản FloraBot', 'Tạo tài khoản'],
+    ['/dang-ky', 'Tạo tài khoản', 'Tạo tài khoản'],
     ['/dang-nhap', 'Đăng nhập', 'Đăng nhập'],
   ] as const) {
     await page.setViewportSize({ width: 320, height: 900 });

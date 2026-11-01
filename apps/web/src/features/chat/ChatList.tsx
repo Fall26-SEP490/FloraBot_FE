@@ -109,7 +109,9 @@ export function ChatList({
           <input
             type="search"
             className="chat-list-search-input"
-            placeholder="Tìm theo tên khách, mẫu hoa..."
+            placeholder={
+              userRole === 'CUSTOMER' ? 'Tìm shop hoặc mẫu hoa…' : 'Tìm theo tên khách, mẫu hoa…'
+            }
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             aria-label="Tìm kiếm cuộc trò chuyện"

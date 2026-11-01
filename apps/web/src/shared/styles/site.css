@@ -1,5 +1,60 @@
 @import './modal.css';
 
+.auth-frame-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px clamp(16px, 4vw, 48px);
+  border-bottom: 1px solid #e2ece0;
+}
+.auth-frame-header > a:last-child,
+.auth-frame-footer a {
+  color: #245d40;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.auth-frame-header > a:last-child:hover,
+.auth-frame-footer a:hover {
+  text-decoration: underline;
+}
+.auth-frame-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 24px;
+  padding: 16px;
+}
+.auth-frame-header a:focus-visible,
+.auth-frame-footer a:focus-visible {
+  outline: 2px solid #174b35;
+  outline-offset: 3px;
+}
+
+.site-hotline-button {
+  position: fixed;
+  right: max(20px, env(safe-area-inset-right));
+  bottom: max(20px, env(safe-area-inset-bottom));
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #1e5037;
+  color: #fff;
+  box-shadow: 0 4px 16px #173e2c30;
+}
+.site-hotline-button:hover {
+  background: #143e29;
+}
+.site-hotline-button:focus-visible {
+  outline: 3px solid #1e5037;
+  outline-offset: 3px;
+}
+
 /* Disable native Edge password reveal and clear buttons site-wide */
 input[type='password']::-ms-reveal,
 input[type='password']::-ms-clear {

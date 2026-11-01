@@ -913,9 +913,15 @@ export default function WebRequests({
       className={`web-orders ${mode === 'seller' ? styles.sellerOrders : ''}`}
       aria-labelledby="web-orders-title"
     >
-      <h2 id="web-orders-title" className={mode === 'seller' ? 'sr-only' : undefined}>
-        {mode === 'member' ? 'Đơn đặt trước' : 'Đơn đặt trước từ website'}
-      </h2>
+      {mode === 'member' ? (
+        <h1 id="web-orders-title" className="account-orders-title">
+          Đơn đặt trước
+        </h1>
+      ) : (
+        <h2 id="web-orders-title" className={mode === 'seller' ? 'sr-only' : undefined}>
+          Đơn đặt trước từ website
+        </h2>
+      )}
       {mode === 'member' && params.get('paymentReturn') === '1' && (
         <p role="status">
           Đã trở về từ payOS. Trạng thái đơn bên dưới được đối chiếu với máy chủ; nếu còn chờ thanh

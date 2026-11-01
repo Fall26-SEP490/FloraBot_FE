@@ -93,7 +93,7 @@ export default function MemberAuth({ mode }: { mode: Mode }) {
 
   const titles = {
     login: 'Đăng nhập',
-    register: 'Tạo tài khoản FloraBot',
+    register: 'Tạo tài khoản',
     forgot: 'Quên mật khẩu?',
     reset: 'Tạo mật khẩu mới',
   };
@@ -523,7 +523,7 @@ export default function MemberAuth({ mode }: { mode: Mode }) {
         mode !== 'login' && (
           <p className="auth-intro">
             {mode === 'register'
-              ? 'Đặt hoa và theo dõi đơn của bạn.'
+              ? 'Đặt hoa và theo dõi đơn của bạn. Bạn sẽ nhận mã xác thực qua email.'
               : mode === 'forgot'
                 ? 'Nhập email để nhận liên kết khôi phục.'
                 : 'Liên kết dùng một lần, có hiệu lực trong 20 phút.'}
@@ -638,6 +638,74 @@ export default function MemberAuth({ mode }: { mode: Mode }) {
           </span>
         </form>
       )}
+
+      {/* Real Google Identity Services section */}
+      {(mode === 'login' || mode === 'register') &&
+        !invalidReset &&
+        !completed &&
+        !pendingChallenge && (
+          <div className="auth-social-section">
+            {gisStatus === 'unavailable' && (
+              <div className="auth-google-status auth-google-unavailable" role="status">
+                <button
+                  type="button"
+                  className="auth-google-btn auth-google-btn-disabled"
+                  disabled
+                  aria-disabled="true"
+                >
+                  <GoogleIcon />
+                  <span>Google tạm thời không khả dụng</span>
+                </button>
+              </div>
+            )}
+            {gisStatus === 'loading' && (
+              <div className="auth-google-status auth-google-loading" role="status">
+                <button
+                  type="button"
+                  className="auth-google-btn auth-google-btn-disabled"
+                  disabled
+                  aria-disabled="true"
+                >
+                  <GoogleIcon />
+                  <span>Đang kết nối Google…</span>
+                </button>
+              </div>
+            )}
+            {(gisStatus === 'error' || gisStatus === 'slow_load_error') && (
+              <div className="auth-google-status auth-google-error" role="status">
+                <button
+                  type="button"
+                  className="auth-google-btn auth-google-btn-disabled"
+                  disabled
+                  aria-disabled="true"
+                >
+                  <GoogleIcon />
+                  <span>Không thể tải đăng nhập Google</span>
+                </button>
+                <p className="auth-hint auth-google-note">
+                  Không thể kết nối đến Google Identity Services. Vui lòng thử lại sau.
+                </p>
+              </div>
+            )}
+            <div
+              className="auth-google-custom-container"
+              style={{ display: gisStatus === 'ready' ? 'block' : 'none' }}
+            >
+              <button type="button" className="auth-google-btn" tabIndex={-1} aria-hidden="true">
+                <GoogleIcon />
+                <span>{mode === 'register' ? 'Đăng ký bằng Google' : 'Đăng nhập bằng Google'}</span>
+              </button>
+              <div
+                ref={googleBtnContainerRef}
+                className="auth-google-rendered-wrapper"
+                data-testid="google-button-container"
+              />
+            </div>
+            <div className="auth-divider">
+              <span>hoặc dùng email</span>
+            </div>
+          </div>
+        )}
 
       {/* Main Authentication Form */}
       {!invalidReset && !completed && !pendingChallenge && (
@@ -860,77 +928,6 @@ export default function MemberAuth({ mode }: { mode: Mode }) {
           </span>
         </form>
       )}
-
-      {/* Real Google Identity Services section */}
-      {(mode === 'login' || mode === 'register') &&
-        !invalidReset &&
-        !completed &&
-        !pendingChallenge && (
-          <div className="auth-social-section">
-            <div className="auth-divider">
-              <span>hoặc</span>
-            </div>
-            {gisStatus === 'unavailable' && (
-              <div className="auth-google-status auth-google-unavailable" role="status">
-                <button
-                  type="button"
-                  className="auth-google-btn auth-google-btn-disabled"
-                  disabled
-                  aria-disabled="true"
-                >
-                  <GoogleIcon />
-                  <span>Đăng nhập Google hiện không khả dụng</span>
-                </button>
-                <p className="auth-hint auth-google-note">
-                  Đăng nhập Google tạm thời chưa được kích hoạt trên hệ thống.
-                </p>
-              </div>
-            )}
-            {gisStatus === 'loading' && (
-              <div className="auth-google-status auth-google-loading" role="status">
-                <button
-                  type="button"
-                  className="auth-google-btn auth-google-btn-disabled"
-                  disabled
-                  aria-disabled="true"
-                >
-                  <GoogleIcon />
-                  <span>Đang kết nối Google…</span>
-                </button>
-              </div>
-            )}
-            {(gisStatus === 'error' || gisStatus === 'slow_load_error') && (
-              <div className="auth-google-status auth-google-error" role="status">
-                <button
-                  type="button"
-                  className="auth-google-btn auth-google-btn-disabled"
-                  disabled
-                  aria-disabled="true"
-                >
-                  <GoogleIcon />
-                  <span>Không thể tải đăng nhập Google</span>
-                </button>
-                <p className="auth-hint auth-google-note">
-                  Không thể kết nối đến Google Identity Services. Vui lòng thử lại sau.
-                </p>
-              </div>
-            )}
-            <div
-              className="auth-google-custom-container"
-              style={{ display: gisStatus === 'ready' ? 'block' : 'none' }}
-            >
-              <button type="button" className="auth-google-btn" tabIndex={-1} aria-hidden="true">
-                <GoogleIcon />
-                <span>{mode === 'register' ? 'Đăng ký bằng Google' : 'Đăng nhập bằng Google'}</span>
-              </button>
-              <div
-                ref={googleBtnContainerRef}
-                className="auth-google-rendered-wrapper"
-                data-testid="google-button-container"
-              />
-            </div>
-          </div>
-        )}
 
       {mode === 'forgot' && notice && (
         <div className="auth-recovery-actions">

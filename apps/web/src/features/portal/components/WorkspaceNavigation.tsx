@@ -69,16 +69,17 @@ export function WorkspaceUserMenu({
   const pathname = usePathname();
   const [openedPath, setOpenedPath] = useState<string | null>(null);
   const menuOpen = openedPath === pathname;
-  const roleLabel = workspaceRoleLabel(role);
   const links: UserMenuLink[] = [
     { href: '/ho-so', label: 'Hồ sơ cá nhân', icon: 'profile' },
     ...(role === 'SELLER'
       ? [
           {
             href: '/tai-khoan',
-            label: 'Hoạt động mua hoa',
+            label: 'Tài khoản của tôi',
             icon: 'purchase' as const,
           },
+          { href: '/tai-khoan#web-orders', label: 'Đơn đặt trước', icon: 'orders' as const },
+          { href: '/tai-khoan#member-orders', label: 'Lịch sử mua', icon: 'history' as const },
         ]
       : []),
   ];
@@ -88,7 +89,6 @@ export function WorkspaceUserMenu({
       className="dashboard-account"
       menuId="workspace-user-menu"
       name={name}
-      roleLabel={roleLabel}
       links={links}
       busy={busy}
       onLogout={onLogout}

@@ -4,8 +4,7 @@ import { memo, useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { QueryClientProvider, useQuery } from '@tanstack/react-query';
-import { Flower2, LogIn, Menu, X } from '@florabot/ui';
-import { getRoleLabel } from '@/features/portal/config/roleRoutes';
+import { Flower2, LogIn, Menu, Phone, X } from '@florabot/ui';
 import { workspaceBase } from '@/features/portal/config/workspaceSections';
 import { UserMenu, type UserMenuLink } from '@/shared/components/UserMenu';
 import { logoutSession, queryClient, sessionQuery } from '@/shared/lib/api';
@@ -60,13 +59,14 @@ function SiteHeader() {
   });
   const accountLinks: UserMenuLink[] = session.data
     ? [
+        { href: '/ho-so', label: 'Hồ sơ cá nhân', icon: 'profile' },
         ...(session.data.role === 'SELLER'
           ? [
               { href: '/seller', label: 'Quản lý shop', icon: 'shop' as const },
-              { href: '/tai-khoan', label: 'Hoạt động mua hoa', icon: 'purchase' as const },
+              { href: '/tai-khoan', label: 'Tài khoản của tôi', icon: 'purchase' as const },
             ]
           : session.data.role === 'CUSTOMER'
-            ? [{ href: '/tai-khoan', label: 'Hoạt động mua hoa', icon: 'purchase' as const }]
+            ? [{ href: '/tai-khoan', label: 'Tài khoản của tôi', icon: 'purchase' as const }]
             : [
                 {
                   href: workspaceBase(session.data.role),
@@ -74,7 +74,15 @@ function SiteHeader() {
                   icon: 'workspace' as const,
                 },
               ]),
-        { href: '/ho-so', label: 'Hồ sơ cá nhân', icon: 'profile' },
+        ...(['CUSTOMER', 'SELLER'].includes(session.data.role)
+          ? [
+              { href: '/tai-khoan#web-orders', label: 'Đơn đặt trước', icon: 'orders' as const },
+              ...(session.data.role === 'CUSTOMER'
+                ? [{ href: '/tai-khoan#member-chats', label: 'Tin nhắn', icon: 'chats' as const }]
+                : []),
+              { href: '/tai-khoan#member-orders', label: 'Lịch sử mua', icon: 'history' as const },
+            ]
+          : []),
       ]
     : [];
 
@@ -179,7 +187,6 @@ function SiteHeader() {
           className="site-account"
           menuId="site-user-menu"
           name={session.data.name}
-          roleLabel={getRoleLabel(session.data.role)}
           links={accountLinks}
           busy={busy}
           onLogout={() => void logout()}
@@ -271,6 +278,9 @@ const SiteFooter = memo(function SiteFooter() {
 
 function Frame({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const authSurface = ['/dang-nhap', '/dang-ky', '/quen-mat-khau', '/dat-lai-mat-khau'].includes(
+    pathname,
+  );
   const workspace =
     /^\/(admin|seller|staff|operations|technician|workspace)(\/|$)/.test(pathname) &&
     pathname !== '/admin/login';
@@ -288,9 +298,41 @@ function Frame({ children }: { children: ReactNode }) {
       <a className="skip-link" href="#main">
         Bỏ qua tới nội dung
       </a>
-      {!workspace && <SiteHeader />}
+      {!workspace &&
+        (authSurface ? (
+          <header className="auth-frame-header">
+            <SiteBrand />
+            <Link href="/">Về trang chủ</Link>
+          </header>
+        ) : (
+          <SiteHeader />
+        ))}
       <div className="site-content">{children}</div>
-      {!workspace && <SiteFooter />}
+      {!workspace &&
+        (authSurface ? (
+          <footer className="auth-frame-footer">
+            <Link href="/lien-he">Cần hỗ trợ?</Link>
+            <Link href="/chinh-sach-rieng-tu">Chính sách riêng tư</Link>
+          </footer>
+        ) : (
+          <SiteFooter />
+        ))}
+      {!workspace && !authSurface && (
+        <a
+          className="site-hotline-button"
+          href={
+            process.env.NEXT_PUBLIC_SUPPORT_PHONE
+              ? `tel:${process.env.NEXT_PUBLIC_SUPPORT_PHONE}`
+              : '/lien-he'
+          }
+          aria-label={
+            process.env.NEXT_PUBLIC_SUPPORT_PHONE ? 'Gọi hotline hỗ trợ' : 'Liên hệ hỗ trợ'
+          }
+          title={process.env.NEXT_PUBLIC_SUPPORT_PHONE ? 'Gọi hotline hỗ trợ' : 'Liên hệ hỗ trợ'}
+        >
+          <Phone size={24} aria-hidden="true" />
+        </a>
+      )}
     </div>
   );
 }
