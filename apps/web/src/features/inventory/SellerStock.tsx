@@ -1,9 +1,10 @@
+import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button, CircleAlert, Flower2, Package, RefreshCw, Store } from '@florabot/ui';
+import { Button, Flower2, RefreshCw } from '@florabot/ui';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
 import { queryClient, request, type Session } from '@/shared/lib/api';
 import ReportFault from '../incidents/ReportFault';
@@ -214,58 +215,10 @@ export default function SellerStock({ session }: { session: Session }) {
         </p>
       )}
 
-      {selectedKioskId && allSlots.length > 0 && (
-        <div
-          className="stock-summary operations-metrics order-summary-strip"
-          aria-label="Thống kê ô tủ"
-        >
-          <div className="operations-metric">
-            <div className="stock-stat-top">
-              <span>Tổng số ô quản lý</span>
-              <div className="stock-stat-icon">
-                <Store size={18} aria-hidden="true" />
-              </div>
-            </div>
-            <strong>{allSlots.length}</strong>
-            <small>{selectedKiosk?.name || 'Tại kiosk đang chọn'}</small>
-          </div>
-          <div className="operations-metric">
-            <div className="stock-stat-top">
-              <span>Ô có thể nạp hoa</span>
-              <div className="stock-stat-icon stock-stat-icon--sky">
-                <Package size={18} aria-hidden="true" />
-              </div>
-            </div>
-            <strong>{matchingEmpty.length}</strong>
-            <small>Bán trực tiếp · Walk-in</small>
-          </div>
-          <div className="operations-metric">
-            <div className="stock-stat-top">
-              <span>Ô đang có hoa</span>
-              <div className="stock-stat-icon stock-stat-icon--green">
-                <Flower2 size={18} aria-hidden="true" />
-              </div>
-            </div>
-            <strong>{stockedSlots.length}</strong>
-            <small>Ô có trạng thái đã nạp hoa</small>
-          </div>
-          <div className="operations-metric">
-            <div className="stock-stat-top">
-              <span>Cần theo dõi</span>
-              <div className="stock-stat-icon stock-stat-icon--amber">
-                <CircleAlert size={18} aria-hidden="true" />
-              </div>
-            </div>
-            <strong>{attentionSlots.length}</strong>
-            <small>Sự cố, đang khóa hoặc chờ xử lý</small>
-          </div>
-        </div>
-      )}
-
       <div className="stock-toolbar-card">
         <div className="stock-toolbar-top">
           <div className="stock-toolbar-title">
-            <h3>Kiosk đang quản lý</h3>
+            <h3>Chọn tủ để quản lý hoa</h3>
             <p>Chọn kiosk để kiểm tra ô tủ và nạp hoa bán trực tiếp.</p>
           </div>
           <div className="stock-kiosk-controls">
@@ -363,9 +316,20 @@ export default function SellerStock({ session }: { session: Session }) {
         {message}
       </p>
 
+      <nav className="stock-flow-links" aria-label="Các thao tác hoa tại tủ">
+        {canStock && selectedKioskId && (
+          <a href="#stock-fill" onClick={() => document.getElementById('stock-fill')?.focus()}>
+            Nạp hoa bán tại tủ
+          </a>
+        )}
+        <Link href="/seller/orders">Xử lý đơn đặt trước</Link>
+        <Link href="/seller/products">Quản lý mẫu hoa</Link>
+      </nav>
       <div className="stock-workbench">
         {canStock && selectedKioskId && (
           <form
+            id="stock-fill"
+            tabIndex={-1}
             className="stock-form"
             noValidate
             onSubmit={form.handleSubmit((values) => {
@@ -389,7 +353,6 @@ export default function SellerStock({ session }: { session: Session }) {
           >
             <div className="stock-form-heading">
               <div>
-                <span className="stock-eyebrow">BÁN TRỰC TIẾP</span>
                 <h3>Nạp hoa vào tủ</h3>
                 <p>Chọn ô Walk-in trống và mẫu hoa để ghi nhận một bó hoa.</p>
               </div>
@@ -518,8 +481,8 @@ export default function SellerStock({ session }: { session: Session }) {
               </>
             )}
             <p className="stock-preorder-hint">
-              Đơn đặt trước đã thanh toán được giao tại mục Đơn đặt trước hoặc công việc giao hoa
-              của nhân viên.
+              Nạp hoa cho đơn đã thanh toán tại <Link href="/seller/orders">Đơn đặt trước</Link>,
+              hoặc giao cho nhân viên tại <Link href="/seller/tasks">Giao việc nhân viên</Link>.
             </p>
             {stock.isError && (
               <div role="alert" className="error">
@@ -534,7 +497,6 @@ export default function SellerStock({ session }: { session: Session }) {
           <section className="stock-inventory" aria-labelledby="stock-slot-list">
             <div className="stock-inventory-heading">
               <div>
-                <span className="stock-eyebrow">QUẢN LÝ Ô TỦ</span>
                 <h3 id="stock-slot-list">Danh sách ô</h3>
                 <p>{selectedKiosk?.name || 'Kiosk đã chọn'}</p>
               </div>
@@ -551,7 +513,12 @@ export default function SellerStock({ session }: { session: Session }) {
               !slotsLoading &&
               allSlots.length > 0 &&
               filteredSlots.length === 0 && (
-                <p className="quiet">Không có ô tủ nào khớp với bộ lọc đang chọn.</p>
+                <div className="stock-filter-empty" role="status">
+                  <p>Không có ô tủ nào khớp với bộ lọc đang chọn.</p>
+                  <Button variant="outline" onClick={() => setSlotFilter('ALL')}>
+                    Xem tất cả ô
+                  </Button>
+                </div>
               )}
             <ul className="admin-shop-list">
               {filteredSlots.map((slot) => {
@@ -676,6 +643,33 @@ export default function SellerStock({ session }: { session: Session }) {
                       </dl>
                     </div>
                   )}
+                  {canStock &&
+                    detailSlot.zone === 'WALK_IN' &&
+                    detailSlot.status === 'RENTED_EMPTY' &&
+                    !detailSlot.bouquetId &&
+                    !slotsLoading &&
+                    !stock.isPending && (
+                      <Button
+                        disabled={
+                          products.isPending ||
+                          products.isFetching ||
+                          products.isError ||
+                          !available.length
+                        }
+                        onClick={() => {
+                          form.setValue('slotId', detailSlot.id, { shouldValidate: true });
+                          setDetailSlotId(null);
+                          requestAnimationFrame(() => {
+                            document
+                              .getElementById('stock-fill')
+                              ?.scrollIntoView({ block: 'center' });
+                            form.setFocus('productId');
+                          });
+                        }}
+                      >
+                        Chọn ô này để nạp hoa
+                      </Button>
+                    )}
                   <SlotZoneSelector
                     kioskId={selectedKioskId}
                     slotId={detailSlot.id}

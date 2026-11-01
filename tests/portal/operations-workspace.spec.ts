@@ -159,6 +159,7 @@ test('Rescheduling preserves the reserved kiosk and validates the time window be
 
   // Re-provisioning API key displays real kiosk code (K-HCM-01) from assignedKioskCode
   page.on('dialog', (dialog) => dialog.accept());
+  await page.getByText('Thiết bị và khóa kết nối', { exact: true }).click();
   await page.getByRole('button', { name: 'Cấp lại khóa API' }).click();
   await expect(page.getByText('Cấu hình khóa thiết bị Kiosk (API Key)')).toBeVisible();
   await expect(page.locator('.provision-field-row strong')).toHaveText('K-HCM-01');

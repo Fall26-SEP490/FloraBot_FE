@@ -1,6 +1,7 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState, useSyncExternalStore } from 'react';
 import './chat.css';
 import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
 import { RefreshCw } from '@florabot/ui';
 import { queryClient, type Session } from '@/shared/lib/api';
 import { getSellerChats } from './api';
@@ -14,13 +15,33 @@ import type {
   CustomerSellerChatItem,
 } from './types';
 
+function subscribeViewport(callback: () => void) {
+  const media = window.matchMedia('(min-width: 769px)');
+  media.addEventListener('change', callback);
+  return () => media.removeEventListener('change', callback);
+}
+const desktopSnapshot = () => window.matchMedia('(min-width: 769px)').matches;
+const serverSnapshot = () => false;
+function subscribeInfoLayout(callback: () => void) {
+  const media = window.matchMedia('(max-width: 1400px)');
+  media.addEventListener('change', callback);
+  return () => media.removeEventListener('change', callback);
+}
+const compactInfoSnapshot = () => window.matchMedia('(max-width: 1400px)').matches;
+
 export function SellerChatSection({ session }: { session: Session }) {
   const sellerId = session.sellerId;
 
   const [page, setPage] = useState(1);
-  const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+  const [selectedChat, setSelectedChat] = useState<CustomerSellerChatItem | null>(null);
+  const desktop = useSyncExternalStore(subscribeViewport, desktopSnapshot, serverSnapshot);
+  const infoReplacesConversation = useSyncExternalStore(
+    subscribeInfoLayout,
+    compactInfoSnapshot,
+    serverSnapshot,
+  );
   const [viewMode, setViewMode] = useState<'list' | 'conversation'>('list');
-  const [showDetailsPanel, setShowDetailsPanel] = useState(true);
+  const [showDetailsPanel, setShowDetailsPanel] = useState(false);
 
   const onRealtimeMessageRef = useRef<((msg: ChatMessageReceivedEvent) => void) | null>(null);
   const onRealtimeReadRef = useRef<((event: ChatMessagesReadEvent) => void) | null>(null);
@@ -37,20 +58,20 @@ export function SellerChatSection({ session }: { session: Session }) {
   const items = chatsQuery.data?.items || [];
   const hasMore = chatsQuery.data?.hasMore || false;
 
-  // Derive activeChat from items and selectedChatId: never pick items[0] if selectedChatId is set
-  const activeChat =
-    (selectedChatId ? items.find((item) => item.id === selectedChatId) : null) ||
-    (!selectedChatId && typeof window !== 'undefined' && window.innerWidth >= 768
-      ? items[0] || null
-      : null);
-
-  const activeChatId = activeChat?.id || selectedChatId;
+  const activeChat = selectedChat
+    ? (items.find((item) => item.id === selectedChat.id) ?? selectedChat)
+    : desktop
+      ? (items[0] ?? null)
+      : null;
+  const activeChatId = activeChat?.id ?? null;
+  const conversationVisible =
+    (desktop || viewMode === 'conversation') && (!showDetailsPanel || !infoReplacesConversation);
 
   // Realtime hook
   useChatRealtime({
     enabled: isValidSeller,
     onMessageReceived: (event: ChatMessageReceivedEvent) => {
-      if (event.chatId === activeChatId) {
+      if (event.chatId === activeChatId && conversationVisible) {
         onRealtimeMessageRef.current?.(event);
       }
       if (sellerId) {
@@ -91,12 +112,14 @@ export function SellerChatSection({ session }: { session: Session }) {
   }
 
   const handleSelectChat = (chat: CustomerSellerChatItem) => {
-    setSelectedChatId(chat.id);
+    setSelectedChat(chat);
+    setShowDetailsPanel(false);
     setViewMode('conversation');
   };
 
   const handleBackToList = () => {
     setViewMode('list');
+    setShowDetailsPanel(false);
   };
 
   const handleRefreshAll = () => {
@@ -108,6 +131,9 @@ export function SellerChatSection({ session }: { session: Session }) {
 
   return (
     <section className="staff-chat-section" aria-label="Tin nhắn khách hàng">
+      <div className="seller-chat-actions">
+        <Link href="/seller/orders">Mở đơn đặt trước</Link>
+      </div>
       <div
         className={`chat-layout mode-${viewMode} ${
           showDetailsPanel && activeChat ? 'with-details' : ''
@@ -140,7 +166,10 @@ export function SellerChatSection({ session }: { session: Session }) {
             onSelectChat={handleSelectChat}
             page={page}
             hasMore={hasMore}
-            onPageChange={setPage}
+            onPageChange={(nextPage) => {
+              if (activeChat) setSelectedChat(activeChat);
+              setPage(nextPage);
+            }}
             isLoading={chatsQuery.isPending}
             isError={chatsQuery.isError}
             error={chatsQuery.error}
@@ -149,10 +178,16 @@ export function SellerChatSection({ session }: { session: Session }) {
           />
         </div>
 
-        <div className="chat-layout-main">
+        <div
+          className="chat-layout-main"
+          onFocusCapture={() => {
+            if (!selectedChat && activeChat) setSelectedChat(activeChat);
+          }}
+        >
           {activeChat ? (
             <ConversationView
-              key={activeChat.id}
+              key={`${session.id}:${activeChat.id}`}
+              isActive={conversationVisible}
               chatId={activeChat.id}
               otherPartyName={activeChat.otherPartyName}
               productContext={activeChat.productContext}
@@ -169,7 +204,7 @@ export function SellerChatSection({ session }: { session: Session }) {
             <div className="chat-empty-selection">
               <p className="chat-empty-selection-title">Chưa chọn khách hàng</p>
               <p className="quiet">
-                Chọn một khách hàng từ danh sách bên trái để xem cuộc trò chuyện và gửi phản hồi.
+                Chọn khách hàng trong danh sách để xem lịch sử và gửi phản hồi.
               </p>
             </div>
           )}
@@ -179,7 +214,12 @@ export function SellerChatSection({ session }: { session: Session }) {
           <ChatCustomerDetails
             key={activeChat.id}
             chat={activeChat}
-            onClose={() => setShowDetailsPanel(false)}
+            onClose={() => {
+              setShowDetailsPanel(false);
+              requestAnimationFrame(() =>
+                document.querySelector<HTMLButtonElement>('.chat-details-toggle-btn')?.focus(),
+              );
+            }}
           />
         )}
       </div>

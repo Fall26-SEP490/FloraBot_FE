@@ -1,8 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Boxes, ClipboardList, RefreshCw, Users, Button } from '@florabot/ui';
+import { useQueries, useQuery } from '@tanstack/react-query';
+import {
+  ArrowRight,
+  RefreshCw,
+  Button,
+  Store,
+  Clock,
+  CheckCircle2,
+  Users,
+  Boxes,
+} from '@florabot/ui';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
 import { request, type Session } from '@/shared/lib/api';
 import type { AccountDirectoryItem } from '../account-management/account-management.types';
@@ -11,8 +20,14 @@ import type {
   KioskApplicationPage,
 } from '../installations/installations.types';
 import { KIOSK_STATUS_LABELS } from '../installations/installations.constants';
-import WorkspaceWelcome from '../../shared/components/WorkspaceWelcome';
+import { managerApplicationAction } from '../installations/operations-presentation';
+import { readOperationsCount } from './operations-queue';
 
+const stages = [
+  { status: 'PAID_REVIEW', label: 'Chờ xác nhận', hint: 'Liên hệ chủ shop' },
+  { status: 'CONFIRMED', label: 'Chờ xếp lịch', hint: 'Chọn tủ và kỹ thuật viên' },
+  { status: 'AWAITING_HANDOVER', label: 'Chờ bàn giao', hint: 'Kiểm tra báo cáo lắp đặt' },
+];
 export default function OperationsOverview({ session }: { session: Session }) {
   const enabled = session.role === 'OPERATIONS_MANAGER';
   const applications = useQuery({
@@ -20,13 +35,31 @@ export default function OperationsOverview({ session }: { session: Session }) {
     queryFn: () => request<KioskApplicationPage>('/operations/kiosk-applications?page=1&limit=5'),
     enabled,
   });
+  const counts = useQueries({
+    queries: stages.map(({ status }) => ({
+      queryKey: ['operations-kiosk-applications', session.id, 'workbench', status],
+      enabled,
+      queryFn: ({ signal }: { signal: AbortSignal }) =>
+        readOperationsCount(
+          (page) =>
+            request<KioskApplicationPage>(
+              `/operations/kiosk-applications?page=${page}&limit=50&status=${status}`,
+            ),
+          signal,
+        ),
+    })),
+  });
   const reports = useQuery({
     queryKey: ['staff-tasks', 'OPERATIONS_MANAGER', session.id, 'overview-submitted'],
-    queryFn: () =>
-      request<components['schemas']['StaffTaskPage']>(
-        '/operations/staff-tasks?page=1&status=SUBMITTED',
-      ),
     enabled,
+    queryFn: ({ signal }) =>
+      readOperationsCount(
+        (page) =>
+          request<components['schemas']['StaffTaskPage']>(
+            `/operations/staff-tasks?page=${page}&status=SUBMITTED`,
+          ),
+        signal,
+      ),
   });
   const technicians = useQuery({
     queryKey: ['account-directory', 'TECHNICIAN', 'platform', '/operations/technicians'],
@@ -38,9 +71,21 @@ export default function OperationsOverview({ session }: { session: Session }) {
     queryFn: () => request<EligibleKioskResponse[]>('/operations/eligible-kiosks'),
     enabled,
   });
-  const queries = [applications, reports, technicians, kiosks];
-  const busy = queries.some((query) => query.isFetching);
-
+  const queries = [applications, ...counts, reports, technicians, kiosks];
+  const jobs = [
+    ...stages.map((stage, index) => ({
+      ...stage,
+      href: `/operations/installations?status=${stage.status}`,
+      query: counts[index],
+    })),
+    {
+      status: 'SUBMITTED',
+      label: 'Báo cáo chờ duyệt',
+      hint: 'Kết quả xử lý sự cố',
+      href: '/operations/tasks?status=SUBMITTED',
+      query: reports,
+    },
+  ];
   if (!enabled)
     return (
       <p role="status">
@@ -48,136 +93,184 @@ export default function OperationsOverview({ session }: { session: Session }) {
         <Link href="/operations/installations">Xem hồ sơ thuê và lắp đặt kiosk</Link>.
       </p>
     );
-
+  const queueQueries = [...counts, reports];
+  const queueClear = queueQueries.every(
+    (query) => query.isSuccess && query.data.count === 0 && !query.data.hasMore,
+  );
+  const dateLabel = (value: string | null | undefined) => {
+    if (!value) return null;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime())
+      ? null
+      : date.toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+  };
   return (
-    <div className="operations-overview">
-      <WorkspaceWelcome workspaceRole="operations" />
-
-      <div className="operations-section-heading">
-        <div>
-          <span className="operations-eyebrow">NHỊP VẬN HÀNH</span>
-          <h2>Việc cần theo dõi</h2>
-        </div>
-        <Button
-          variant="outline"
-          disabled={busy}
-          onClick={() => {
-            queries.forEach((query) => void query.refetch());
-          }}
-        >
-          <RefreshCw size={16} aria-hidden="true" />
-          {busy ? 'Đang cập nhật…' : 'Làm mới'}
-        </Button>
-      </div>
-      <div className="operations-metrics">
-        <Link href="/operations/tasks" className="operations-metric">
-          <ClipboardList aria-hidden="true" />
-          <span>Báo cáo chờ duyệt</span>
-          <strong>
-            {reports.isError
-              ? '—'
-              : reports.data
-                ? `${reports.data.items.length}${reports.data.hasMore ? '+' : ''}`
-                : '…'}
-          </strong>
-          <small>
-            {reports.isError ? 'Chưa tải được công việc' : 'Công việc kỹ thuật · trang đầu'}
-          </small>
-        </Link>
-        <Link href="/operations/technicians" className="operations-metric">
-          <Users aria-hidden="true" />
-          <span>Kỹ thuật viên hoạt động</span>
-          <strong>
-            {technicians.isError
-              ? '—'
-              : technicians.data
-                ? technicians.data.filter((item) => item.status === 'ACTIVE').length
-                : '…'}
-          </strong>
-          <small>Đội ngũ kỹ thuật trên nền tảng</small>
-        </Link>
-        <Link href="/operations/installations" className="operations-metric">
-          <Boxes aria-hidden="true" />
-          <span>Kiosk có thể phân bổ</span>
-          <strong>{kiosks.isError ? '—' : (kiosks.data?.length ?? '…')}</strong>
-          <small>Chưa gán shop · gồm cả tủ offline</small>
-        </Link>
-      </div>
+    <div className="operations-overview manager-overview">
       {queries.some((query) => query.isError) && (
         <p role="alert" className="operations-inline-error">
           Một số dữ liệu chưa tải được. Bấm Làm mới hoặc mở mục tương ứng để thử lại.
         </p>
       )}
-
-      <div className="operations-overview-grid">
-        <section className="operations-surface" aria-labelledby="operations-recent-title">
-          <div className="operations-section-heading">
-            <div>
-              <h2 id="operations-recent-title">Hồ sơ mới nhất</h2>
-              <p>Tối đa 5 hồ sơ gần nhất, theo ngày tiếp nhận.</p>
-            </div>
+      <div className="manager-overview-layout">
+        <section className="manager-recent" aria-labelledby="operations-recent-title">
+          <div className="manager-section-heading">
+            <h2 id="operations-recent-title">Hồ sơ mới nhất</h2>
             <Link href="/operations/installations">
-              Xem tất cả <ArrowRight size={16} aria-hidden="true" />
+              Tất cả hồ sơ <ArrowRight size={16} aria-hidden="true" />
             </Link>
           </div>
           {applications.isPending && <p role="status">Đang tải hồ sơ…</p>}
           {applications.isError && <p role="alert">Chưa tải được hồ sơ. Hãy thử làm mới.</p>}
-          {applications.data?.items.length === 0 && (
+          {applications.isSuccess && applications.data.items.length === 0 && (
             <div className="operations-empty">
-              <ClipboardList size={32} aria-hidden="true" />
+              <Store size={26} aria-hidden="true" />
               <h3>Chưa có hồ sơ thuê kiosk</h3>
-              <p>Hồ sơ khách gửi sẽ xuất hiện tại đây để bạn theo dõi.</p>
+              <p>Hồ sơ mới sẽ xuất hiện tại đây.</p>
             </div>
           )}
-          <div className="operations-recent-list">
-            {applications.data?.items.map((item) => (
-              <Link
-                key={item.id}
-                href={`/operations/installations?application=${encodeURIComponent(item.id)}`}
+          {applications.isSuccess && (
+            <ul className="manager-recent-list">
+              {applications.data.items.map((item) => {
+                const scheduled = ['SCHEDULED', 'INSTALLING'].includes(item.status)
+                  ? dateLabel(item.scheduledDate)
+                  : null;
+                return (
+                  <li key={item.id}>
+                    <Link
+                      href={`/operations/installations?application=${encodeURIComponent(item.id)}`}
+                    >
+                      <span className="manager-record-identity">
+                        <span className="manager-record-icon" aria-hidden="true">
+                          <Store size={20} />
+                        </span>
+                        <span>
+                          <strong>{item.shopName}</strong>
+                          <small>
+                            {item.packageName} · Tiếp nhận{' '}
+                            {dateLabel(item.createdAt) ?? 'chưa rõ ngày'}
+                          </small>
+                        </span>
+                      </span>
+                      <span className="kiosk-status-pill" data-status={item.status}>
+                        {KIOSK_STATUS_LABELS[item.status] ?? item.status}
+                      </span>
+                      {scheduled && (
+                        <span className="manager-record-schedule">
+                          <Clock size={16} aria-hidden="true" />
+                          <span>
+                            <strong>
+                              Lịch lắp đặt: {scheduled}
+                              {item.timeWindow ? ` · ${item.timeWindow}` : ''}
+                            </strong>
+                            {item.assignedTechnicianName && (
+                              <small>
+                                {item.assignedTechnicianName}
+                                {item.assignedKioskCode ? ` · ${item.assignedKioskCode}` : ''}
+                              </small>
+                            )}
+                          </span>
+                        </span>
+                      )}
+                      <span className="manager-row-action">
+                        {managerApplicationAction(item.status)}{' '}
+                        <ArrowRight size={16} aria-hidden="true" />
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          <p className="manager-count-note">Hiển thị tối đa 5 hồ sơ gần nhất.</p>
+        </section>
+        <aside className="manager-overview-side" aria-label="Hàng đợi và nguồn lực">
+          <section className="manager-workbench" aria-labelledby="manager-work-title">
+            <div className="manager-section-heading">
+              <h2 id="manager-work-title">Việc cần xử lý</h2>
+              <Button
+                variant="outline"
+                aria-label="Làm mới"
+                disabled={queries.some((query) => query.isFetching)}
+                onClick={() => queries.forEach((query) => void query.refetch())}
               >
-                <span className="operations-list-icon">
-                  <Boxes size={20} aria-hidden="true" />
-                </span>
-                <span className="operations-recent-name">
-                  <strong>{item.shopName}</strong>
-                  <small>
-                    {item.packageName} · {new Date(item.createdAt).toLocaleDateString('vi-VN')}
-                  </small>
-                </span>
-                <span className="kiosk-status-pill" data-status={item.status}>
-                  {KIOSK_STATUS_LABELS[item.status] ?? item.status}
-                </span>
-                <ArrowRight size={16} aria-hidden="true" />
-              </Link>
-            ))}
-          </div>
-        </section>
-        <section
-          className="operations-surface operations-guide"
-          id="operations-guide"
-          aria-labelledby="operations-guide-title"
-        >
-          <span className="operations-eyebrow">QUY TRÌNH LÀM VIỆC</span>
-          <h2 id="operations-guide-title">Từ hồ sơ đến bàn giao</h2>
-          <ol>
-            <li>
-              <strong>Xác nhận liên hệ</strong>
-              <p>Kiểm tra địa chỉ, mặt bằng và điều kiện lắp đặt với khách.</p>
-            </li>
-            <li>
-              <strong>Xếp lịch & phân công</strong>
-              <p>Chọn kỹ thuật viên và kiosk đúng cấu hình gói thuê.</p>
-            </li>
-            <li>
-              <strong>Nghiệm thu kết quả</strong>
-              <p>Đọc báo cáo, xem ảnh minh chứng rồi xác nhận bàn giao.</p>
-            </li>
-          </ol>
-          <Link href="/operations/tasks">
-            Điều phối sự cố kỹ thuật <ArrowRight size={16} aria-hidden="true" />
-          </Link>
-        </section>
+                <RefreshCw size={16} aria-hidden="true" />
+                <span className="sr-only">Làm mới</span>
+              </Button>
+            </div>
+            {queueClear && (
+              <p className="manager-queue-clear" role="status">
+                <CheckCircle2 size={17} aria-hidden="true" />
+                Không có việc đang chờ
+              </p>
+            )}
+            <nav className="manager-work-links" aria-label="Chọn việc cần xử lý">
+              {jobs.map(({ status, label, href, query }) => (
+                <Link
+                  key={status}
+                  href={href}
+                  data-has-work={query.isSuccess && query.data.count > 0}
+                >
+                  <span>{label}</span>
+                  <strong>
+                    {query.isError
+                      ? '—'
+                      : query.isPending
+                        ? '…'
+                        : `${query.data.hasMore ? '≥ ' : ''}${query.data.count}`}
+                  </strong>
+                  <ArrowRight size={15} aria-hidden="true" />
+                </Link>
+              ))}
+            </nav>
+            {queueQueries.some(
+              (query) => query.isPending || query.isError || query.data?.hasMore,
+            ) && (
+              <p className="manager-count-note" role="status">
+                {queueQueries.some((query) => query.isPending)
+                  ? 'Đang kiểm tra công việc…'
+                  : queueQueries.some((query) => query.isError)
+                    ? 'Có nhóm chưa tải được. Mở nhóm hoặc làm mới để thử lại.'
+                    : 'Dấu ≥: còn dữ liệu sau 50 trang đã tải.'}
+              </p>
+            )}
+          </section>
+          <section className="manager-resources" aria-labelledby="manager-resources-title">
+            <h2 id="manager-resources-title">Nguồn lực</h2>
+            <Link href="/operations/technicians">
+              <Users size={17} aria-hidden="true" />
+              <span>Kỹ thuật viên hoạt động</span>
+              <strong>
+                {technicians.isError
+                  ? '—'
+                  : technicians.isPending
+                    ? '…'
+                    : technicians.data.filter((item) => item.status === 'ACTIVE').length}
+              </strong>
+              <ArrowRight size={15} aria-hidden="true" />
+            </Link>
+            {technicians.isError && <p role="status">Chưa tải được kỹ thuật viên.</p>}
+            <Link href="/operations/installations?inventory=1">
+              <Boxes size={17} aria-hidden="true" />
+              <span>Tủ có thể phân bổ</span>
+              <strong>{kiosks.isError ? '—' : kiosks.isPending ? '…' : kiosks.data.length}</strong>
+              <ArrowRight size={15} aria-hidden="true" />
+            </Link>
+            {kiosks.isError && <p role="status">Chưa tải được kho tủ.</p>}
+          </section>
+        </aside>
       </div>
+      <details className="manager-help" id="operations-guide">
+        <summary>Hướng dẫn tiếp nhận và bàn giao kiosk</summary>
+        <ol>
+          <li>Xác nhận liên hệ và điều kiện lắp đặt với chủ shop.</li>
+          <li>Chọn kỹ thuật viên, tủ phù hợp gói thuê và lịch lắp đặt.</li>
+          <li>Kiểm tra báo cáo, ảnh nghiệm thu rồi xác nhận bàn giao.</li>
+        </ol>
+        <p>
+          Việc xử lý sự cố được theo dõi riêng tại{' '}
+          <Link href="/operations/tasks">Công việc kỹ thuật</Link>.
+        </p>
+      </details>
     </div>
   );
 }

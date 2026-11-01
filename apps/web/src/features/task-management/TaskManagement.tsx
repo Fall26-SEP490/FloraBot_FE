@@ -50,7 +50,13 @@ export function TaskManagement(props: StaffTasksProps) {
         : ['INCIDENT', 'DELIVERY']);
 
   const [page, setPage] = useState(1);
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState(() =>
+    role === 'OPERATIONS_MANAGER' &&
+    props.initialStatus &&
+    Object.hasOwn(TASK_STATUS_LABELS, props.initialStatus)
+      ? props.initialStatus
+      : '',
+  );
   const [reload, setReload] = useState(0);
   const scopeKey = sellerId ? `seller:${sellerId}` : apiBase;
   const tasks = useQuery({
@@ -98,9 +104,11 @@ export function TaskManagement(props: StaffTasksProps) {
       }
       aria-labelledby="staff-tasks-title"
     >
-      <h2 id="staff-tasks-title">{sectionTitle}</h2>
-      <p>{sectionDescription}</p>
-      {tasks.data && role !== 'SELLER' && (
+      <h2 id="staff-tasks-title" className={role === 'OPERATIONS_MANAGER' ? 'sr-only' : undefined}>
+        {sectionTitle}
+      </h2>
+      {role !== 'OPERATIONS_MANAGER' && <p>{sectionDescription}</p>}
+      {tasks.data && role !== 'SELLER' && role !== 'OPERATIONS_MANAGER' && (
         <div className="operations-metrics order-summary-strip" aria-label="Thống kê công việc">
           <div className="operations-metric">
             <ClipboardList aria-hidden="true" />
@@ -133,8 +141,8 @@ export function TaskManagement(props: StaffTasksProps) {
           </div>
         </div>
       )}
-      {role === 'SELLER' && tasks.isSuccess && (
-        <p className="seller-task-count" role="status">
+      {(role === 'SELLER' || role === 'OPERATIONS_MANAGER') && tasks.isSuccess && (
+        <p className={role === 'SELLER' ? 'seller-task-count' : 'manager-task-count'} role="status">
           {tasks.data.items.length} công việc trong trang {page}
           {status ? ` · ${TASK_STATUS_LABELS[status] || status}` : ''}.
           {tasks.data.hasMore ? ' Còn công việc ở trang sau.' : ''}
@@ -154,7 +162,10 @@ export function TaskManagement(props: StaffTasksProps) {
       )}
       <div className="staff-task-toolbar">
         <div>
-          <label htmlFor="task-status" className={role === 'SELLER' ? undefined : 'sr-only'}>
+          <label
+            htmlFor="task-status"
+            className={role === 'SELLER' || role === 'OPERATIONS_MANAGER' ? undefined : 'sr-only'}
+          >
             Lọc trạng thái
           </label>
           <select
@@ -195,7 +206,13 @@ export function TaskManagement(props: StaffTasksProps) {
             <div className="operations-empty">
               <ClipboardList size={36} aria-hidden="true" />
               <h3>Chưa có công việc</h3>
-              <p>Chưa có công việc trong danh sách này.</p>
+              <p>
+                {role === 'OPERATIONS_MANAGER'
+                  ? status
+                    ? 'Thử chọn trạng thái khác để xem công việc.'
+                    : 'Mở Phân công công việc mới để chọn sự cố và người xử lý.'
+                  : 'Chưa có công việc trong danh sách này.'}
+              </p>
               {role === 'SELLER' && (
                 <p>
                   {status || page > 1
@@ -204,7 +221,7 @@ export function TaskManagement(props: StaffTasksProps) {
                   <Link href="/seller/staff">Quản lý nhân viên shop</Link>
                 </p>
               )}
-              {isPlatform && (
+              {isPlatform && role !== 'OPERATIONS_MANAGER' && (
                 <p className="platform-empty-hint">
                   {status || page > 1
                     ? 'Thử đổi bộ lọc hoặc quay về trang đầu để xem các công việc khác.'

@@ -22,6 +22,7 @@ import '../../dashboard/styles/seller-overview.module.css';
 import '../../orders/seller-orders.module.css';
 import '../styles/seller-usability.css';
 import '../styles/seller-flows.css';
+import '../styles/seller-detail-flows.css';
 
 const DashboardOverview = dynamic(() => import('../../dashboard/DashboardOverview'), {
   loading: () => <p role="status">Đang tải tổng quan cửa hàng…</p>,
@@ -205,16 +206,19 @@ export default function SellerWorkspace({ section = 'overview' }: { section?: st
               </h1>
               <p>
                 {section === 'overview'
-                  ? `Chào ${session.data.name}, cùng theo dõi hoạt động kiosk hôm nay.`
+                  ? `Chào ${session.data.name}, xem việc cần làm và xử lý đơn của shop tại đây.`
                   : workspaceSections['SELLER'].find(([key]) => key === section)?.[2]}
               </p>
             </div>
           </div>
           <SubscriptionBanner session={session.data} />
-          <SellerGuide key={section} section={section} />
+          {!['overview', 'orders'].includes(section) && (
+            <SellerGuide key={section} section={section} />
+          )}
           {section === 'overview' && (
             <>
               <DashboardOverview session={session.data} />
+              <SellerGuide section="overview" />
               <details className="workspace-profile">
                 <summary>Thông tin tài khoản và quyền truy cập</summary>
                 <dl className="account-details">
@@ -241,7 +245,10 @@ export default function SellerWorkspace({ section = 'overview' }: { section?: st
             </>
           )}
           {section === 'orders' && (
-            <WebRequests mode="seller" sellerId={session.data.sellerId || undefined} />
+            <>
+              <WebRequests mode="seller" sellerId={session.data.sellerId || undefined} />
+              <SellerGuide section="orders" />
+            </>
           )}
           {section === 'chats' && <SellerChatSection session={session.data} />}
           {section === 'staff-chats' && (

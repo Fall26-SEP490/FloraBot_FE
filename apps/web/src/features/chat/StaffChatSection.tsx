@@ -1,6 +1,7 @@
 'use client';
 
 import './chat.css';
+import Link from 'next/link';
 
 import { useCallback, useRef, useState, useSyncExternalStore } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -153,7 +154,9 @@ export function StaffChatSection({ session }: { session: Session }) {
                 )}
                 {directory.isSuccess && activeStaff.length === 0 && (
                   <p>
-                    Shop chưa có nhân viên đang hoạt động. Bạn có thể thêm tại mục Nhân viên shop.
+                    Shop chưa có nhân viên đang hoạt động.{' '}
+                    <Link href="/seller/staff">Quản lý nhân viên shop</Link> để thêm hoặc mở lại tài
+                    khoản.
                   </p>
                 )}
                 <Button

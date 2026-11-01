@@ -8,6 +8,7 @@ import {
   ClipboardList,
   Flower2,
   RefreshCw,
+  MessageSquare,
   Store,
   Users,
   Wallet,
@@ -15,7 +16,15 @@ import {
 import type { components } from '../../../../../packages/contracts/src/generated/api';
 import { request, type Session } from '@/shared/lib/api';
 import type { OrderFilter, OrderPage, WebOrder } from '../orders/orders.types';
-import { needsOrderAction, orderClosed, orderNextStep, statusName } from '../orders/orders.utils';
+import {
+  needsOrderAction,
+  orderClosed,
+  sellerOrderHint,
+  sellerOrderActionLabel,
+  statusName,
+} from '../orders/orders.utils';
+import { readSellerQueue, sellerQueueKey } from '../orders/seller-queue';
+import { getSellerChats } from '../chat/api';
 import { fetchProducts } from '../product-management/product.api';
 import styles from './styles/seller-overview.module.css';
 
@@ -33,22 +42,6 @@ const pickupTime = (value: string) =>
     minute: '2-digit',
   });
 type Staff = { id: string; status: string };
-type OverviewOrder = WebOrder & { overviewPage: number };
-async function readOrders(base: string) {
-  const items: OverviewOrder[] = [];
-  let hasMore = true;
-  let page = 1;
-  while (hasMore && page <= 50) {
-    const result = await request<OrderPage>(`${base}/preorders?page=${page}`);
-    if (!Array.isArray(result.items) || (result.hasMore && result.items.length === 0)) {
-      throw new Error('Invalid order page');
-    }
-    items.push(...result.items.map((row) => ({ ...row, overviewPage: page })));
-    hasMore = result.hasMore;
-    page += 1;
-  }
-  return { items, hasMore };
-}
 const shortcuts = [
   {
     href: '/seller/products',
@@ -81,8 +74,9 @@ export default function SellerOverview({ session }: { session: Session }) {
   const options = { enabled: !!session.sellerId, refetchInterval: 60_000 };
   const orders = useQuery({
     ...options,
-    queryKey: ['dashboard-seller-orders-all', session.id, base],
-    queryFn: () => readOrders(base),
+    queryKey: sellerQueueKey(`${base}/preorders`),
+    queryFn: ({ signal }) =>
+      readSellerQueue((page) => request<OrderPage>(`${base}/preorders?page=${page}`), 50, signal),
   });
   const products = useQuery({
     ...options,
@@ -108,8 +102,33 @@ export default function SellerOverview({ session }: { session: Session }) {
       return items;
     },
   });
+  const inbox = useQuery({
+    ...options,
+    queryKey: ['seller-inbox-summary', session.id, session.sellerId],
+    queryFn: async ({ signal }) => {
+      const unread = new Map<string, number>();
+      let hasMore = true;
+      for (let page = 1; hasMore && page <= 50; page++) {
+        signal.throwIfAborted();
+        const result = await getSellerChats(session.sellerId!, page);
+        signal.throwIfAborted();
+        if (!Array.isArray(result.items) || typeof result.hasMore !== 'boolean')
+          throw new Error('Invalid chat page');
+        const before = unread.size;
+        for (const row of result.items) {
+          const count = Number(row.unreadCount ?? 0);
+          if (!Number.isFinite(count) || count < 0) throw new Error('Invalid unread count');
+          unread.set(row.id, count);
+        }
+        if (result.hasMore && before === unread.size)
+          throw new Error('Chat pagination did not advance');
+        hasMore = result.hasMore;
+      }
+      return { conversations: [...unread.values()].filter((count) => count > 0).length, hasMore };
+    },
+  });
   const [view, setView] = useState<'attention' | 'all'>('attention');
-  const queries = [orders, products, wallet, staff];
+  const queries = [orders, products, wallet, staff, inbox];
   const busy = queries.some((query) => query.isFetching);
   const items = orders.data?.items ?? [];
   const actionItems = items.filter((row) => needsOrderAction(row, 'seller'));
@@ -132,6 +151,12 @@ export default function SellerOverview({ session }: { session: Session }) {
       filter: 'quoted',
       detail: 'Theo dõi báo giá đã gửi',
       match: (row) => !row.orderStatus && row.state === 'QUOTED',
+    },
+    {
+      label: 'Chờ thanh toán',
+      filter: 'payment',
+      detail: 'Khách chưa thanh toán',
+      match: (row) => row.orderStatus === 'AWAITING_PAYMENT',
     },
     {
       label: 'Đang chuẩn bị',
@@ -186,36 +211,71 @@ export default function SellerOverview({ session }: { session: Session }) {
           dụng được.
         </p>
       )}
+      <section className={styles.workbench} aria-labelledby="seller-workbench-title">
+        <div className={styles.heading}>
+          <div>
+            <h2 id="seller-workbench-title">Việc cần làm</h2>
+            <p>Chọn một nhóm để xem đơn và bước xử lý tiếp theo.</p>
+          </div>
+          <Link href="/seller/orders">
+            Tất cả đơn <ArrowRight size={16} aria-hidden="true" />
+          </Link>
+        </div>
+        <nav className={styles.metrics} aria-label="Xem đơn theo tiến độ">
+          {metrics.map((metric) => (
+            <Link
+              href={`/seller/orders?filter=${metric.filter}`}
+              key={metric.label}
+              className={styles.metric}
+              data-action={metric.filter === 'requested' || metric.filter === 'preparing'}
+              data-has-items={orders.isSuccess && items.some(metric.match)}
+            >
+              <strong>
+                {orders.isError ? '—' : orders.isPending ? '…' : items.filter(metric.match).length}
+              </strong>
+              <span>
+                {metric.label}
+                <small>{metric.detail}</small>
+              </span>
+            </Link>
+          ))}
+        </nav>
+        <Link href="/seller/chats" className={styles.inboxLink}>
+          <MessageSquare size={18} aria-hidden="true" />
+          <span>
+            Tin nhắn khách hàng{' '}
+            <small>
+              {inbox.isError
+                ? 'Chưa tải được tin nhắn'
+                : inbox.isPending
+                  ? 'Đang kiểm tra…'
+                  : `${inbox.data.hasMore ? 'Ít nhất ' : ''}${inbox.data.conversations} cuộc trò chuyện chưa đọc`}
+            </small>
+          </span>
+          <ArrowRight size={16} aria-hidden="true" />
+        </Link>
+        <p className={styles.queueScope}>
+          {orders.isPending
+            ? 'Đang tải đơn đặt hoa…'
+            : orders.isError
+              ? 'Chưa tải được số lượng đơn. Các mục khác vẫn sử dụng được.'
+              : orders.data.hasMore
+                ? `Đã tải ${orders.data.loadedPages} trang; còn đơn chưa được tính. Mở danh sách đơn để tải tiếp.`
+                : `Đã đối chiếu ${items.length} yêu cầu của shop.`}
+        </p>
+      </section>
       <div className={styles.layout}>
         <div className={styles.main}>
           <section className={styles.card} aria-labelledby="seller-orders-title">
             <div className={styles.heading}>
               <div>
-                <h2 id="seller-orders-title">Đơn đặt hoa</h2>
-                <p>Bắt đầu từ đơn cần báo giá hoặc chuẩn bị hoa.</p>
+                <h2 id="seller-orders-title">Đơn cần theo dõi</h2>
+                <p>Ưu tiên báo giá và chuẩn bị những đơn đã thanh toán.</p>
               </div>
               <Link href="/seller/orders">
-                Tất cả đơn <ArrowRight size={16} aria-hidden="true" />
+                Xem danh sách <ArrowRight size={16} aria-hidden="true" />
               </Link>
             </div>
-            <nav className={styles.metrics} aria-label="Xem đơn theo tiến độ">
-              {metrics.map((metric) => (
-                <Link
-                  href={`/seller/orders?filter=${metric.filter}&page=${items.find(metric.match)?.overviewPage ?? 1}`}
-                  key={metric.label}
-                  className={styles.metric}
-                >
-                  <strong>
-                    {orders.isError
-                      ? '—'
-                      : orders.isPending
-                        ? '…'
-                        : items.filter(metric.match).length}
-                  </strong>
-                  <span>{metric.label}</span>
-                </Link>
-              ))}
-            </nav>
             <div className={styles.tabs} role="group" aria-label="Lọc đơn đặt hoa">
               <button aria-pressed={view === 'attention'} onClick={() => setView('attention')}>
                 Cần xử lý <span>{orders.isSuccess ? actionItems.length : '—'}</span>
@@ -226,7 +286,7 @@ export default function SellerOverview({ session }: { session: Session }) {
             </div>
             {orders.isPending ? (
               <p className={styles.empty} role="status">
-                Đang tải đơn đặt hoa…
+                Đang tải danh sách theo dõi…
               </p>
             ) : orders.isError ? (
               <p className={styles.empty}>
@@ -274,11 +334,11 @@ export default function SellerOverview({ session }: { session: Session }) {
                           {row.quotedPrice == null ? 'Chưa báo giá' : currency(row.quotedPrice)}
                         </small>
                         {view === 'attention' && (
-                          <p className={styles.nextAction}>{orderNextStep(row, 'seller')}</p>
+                          <p className={styles.nextAction}>{sellerOrderHint(row)}</p>
                         )}
                       </div>
                       <span className={styles.openOrder}>
-                        Mở đơn <ArrowRight size={16} aria-hidden="true" />
+                        {sellerOrderActionLabel(row)} <ArrowRight size={16} aria-hidden="true" />
                       </span>
                     </Link>
                   </li>

@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import AdminNavigation from './AdminNavigation';
 import SellerNavigation from './SellerNavigation';
+import ManagerNavigation from './ManagerNavigation';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -9,7 +10,6 @@ import {
   Store,
   Boxes,
   ListChecks,
-  Users,
   Menu,
   X,
   MessageSquare,
@@ -224,68 +224,7 @@ export default function WorkspaceNavigation({
             </Link>
           </>
         ) : role === 'OPERATIONS_MANAGER' ? (
-          <>
-            <Link
-              onKeyDown={handleEscape}
-              onClick={closeMenu}
-              href="/operations"
-              aria-current={section === 'overview' ? 'page' : undefined}
-            >
-              <LayoutDashboard size={19} aria-hidden="true" />
-              Tổng quan vận hành
-            </Link>
-            <div className="workspace-nav-group">
-              <p>Quản lý tài khoản</p>
-              <Link
-                onKeyDown={handleEscape}
-                onClick={closeMenu}
-                href="/operations/sellers"
-                aria-current={section === 'sellers' ? 'page' : undefined}
-              >
-                <Store size={19} aria-hidden="true" />
-                <span>Quản lý shop hoa</span>
-              </Link>
-              <Link
-                onKeyDown={handleEscape}
-                onClick={closeMenu}
-                href="/operations/customers"
-                aria-current={section === 'customers' ? 'page' : undefined}
-              >
-                <Users size={19} aria-hidden="true" />
-                <span>Khách hàng</span>
-              </Link>
-            </div>
-            <div className="workspace-nav-group">
-              <p>Điều phối kỹ thuật</p>
-              <Link
-                onKeyDown={handleEscape}
-                onClick={closeMenu}
-                href="/operations/installations"
-                aria-current={section === 'installations' ? 'page' : undefined}
-              >
-                <Boxes size={19} aria-hidden="true" />
-                <span>Hồ sơ thuê & Lắp đặt</span>
-              </Link>
-              <Link
-                onKeyDown={handleEscape}
-                onClick={closeMenu}
-                href="/operations/tasks"
-                aria-current={section === 'tasks' ? 'page' : undefined}
-              >
-                <ListChecks size={19} aria-hidden="true" />
-                <span>Công việc kỹ thuật</span>
-              </Link>
-              <Link
-                onKeyDown={handleEscape}
-                onClick={closeMenu}
-                href="/operations/technicians"
-                aria-current={section === 'technicians' ? 'page' : undefined}
-              >
-                <Users size={19} aria-hidden="true" />
-                <span>Kỹ thuật viên</span>
-              </Link>
-            </div>
-          </>
+          <ManagerNavigation section={section} closeMenu={closeMenu} onEscape={handleEscape} />
         ) : (
           <Link
             onKeyDown={handleEscape}

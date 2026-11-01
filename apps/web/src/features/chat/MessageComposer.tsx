@@ -20,12 +20,12 @@ const CUSTOMER_TEMPLATES = [
 const QUICK_TEMPLATES = [
   { label: 'Chào bạn', text: 'Dạ chào bạn, shop có thể hỗ trợ gì cho bạn về mẫu hoa này ạ?' },
   {
-    label: 'Hoa tươi có sẵn',
-    text: 'Dạ mẫu hoa này shop đang có sẵn hoa tươi hôm nay, chuẩn bị trong khoảng 30-45 phút ạ.',
+    label: 'Kiểm tra mẫu hoa',
+    text: 'Mình sẽ kiểm tra lại mẫu hoa và thông tin yêu cầu trước khi xác nhận nhé.',
   },
   {
-    label: 'Đã nạp vào Kiosk',
-    text: 'Dạ shop đã chuẩn bị xong và đưa hoa vào ô tủ Kiosk rồi, bạn kiểm tra mã nhận trên ứng dụng giúp shop nhé!',
+    label: 'Trao đổi lịch nhận',
+    text: 'Mình cùng kiểm tra lại lịch nhận và tủ nhận hoa trong đơn nhé.',
   },
   {
     label: 'Cảm ơn bạn',

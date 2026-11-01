@@ -87,6 +87,8 @@ export function matchesOrderFilter(row: OrderPhase, filter: OrderFilter, mode: O
       return !row.orderStatus && row.state === 'REQUESTED';
     case 'quoted':
       return !row.orderStatus && row.state === 'QUOTED';
+    case 'payment':
+      return row.orderStatus === 'AWAITING_PAYMENT';
     case 'preparing':
       return row.orderStatus === 'PAID' && !row.ready;
     case 'ready':
@@ -122,4 +124,33 @@ export function orderNextStep(row: OrderPhase, mode: OrderMode) {
   return mode === 'seller'
     ? 'Kiểm tra yêu cầu, phản hồi giá và lịch nhận hoặc từ chối kèm lý do.'
     : 'Shop đang xem yêu cầu để gửi báo giá và lịch nhận phù hợp.';
+}
+
+/** Labels open the existing detail form; they never imply a write or device command. */
+export function sellerOrderActionLabel(row: OrderPhase) {
+  if (orderClosed(row)) return 'Xem đơn';
+  if (!row.orderStatus && row.state === 'REQUESTED') return 'Báo giá';
+  if (row.orderStatus === 'PAID' && !row.ready) return 'Chuẩn bị & nạp hoa';
+  if (row.orderStatus === 'PAID' && row.ready) return 'Theo dõi nhận hoa';
+  if (!row.orderStatus && row.state === 'QUOTED') return 'Xem báo giá';
+  if (row.orderStatus === 'AWAITING_PAYMENT') return 'Theo dõi thanh toán';
+  return 'Xem chi tiết';
+}
+
+/** Compact guidance for queue rows; the detailed safety/context copy stays inside the order. */
+export function sellerOrderHint(row: OrderPhase) {
+  if (orderClosed(row)) return 'Đơn đã kết thúc. Mở chi tiết để xem lại thông tin.';
+  if (['DISPUTED', 'DISPENSE_FAILED'].includes(row.orderStatus ?? ''))
+    return 'Mở chi tiết để theo dõi phản ánh hoặc hoàn tiền.';
+  if (row.orderStatus === 'PAID' && row.ready)
+    return 'Hoa đã ở tủ. Theo dõi khách nhận trong giờ hẹn.';
+  if (row.orderStatus === 'PAID')
+    return 'Đã thanh toán. Chuẩn bị hoa, rồi ghi nhận nạp tại đúng tủ.';
+  if (row.orderStatus === 'AWAITING_PAYMENT')
+    return 'Chờ xác nhận thanh toán trước khi chuẩn bị hoa.';
+  if (!row.orderStatus && row.state === 'QUOTED')
+    return 'Đã gửi báo giá. Chờ khách đồng ý và thanh toán.';
+  if (!row.orderStatus && row.state === 'REQUESTED')
+    return 'Xem mong muốn của khách và gửi giá kèm lịch nhận.';
+  return 'Mở chi tiết để theo dõi tiến độ và bước tiếp theo.';
 }

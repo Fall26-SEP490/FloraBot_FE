@@ -16,7 +16,7 @@ const guides: Record<string, Guide> = {
   orders: {
     title: 'Xử lý đơn đặt trước như thế nào?',
     steps: [
-      'Chọn “Cần xử lý” để xem các đơn cần shop phản hồi trong trang đang xem.',
+      'Chọn “Cần xử lý” để xem các đơn cần shop phản hồi của shop.',
       'Mở chi tiết để kiểm tra yêu cầu, báo giá và lịch nhận. Chờ hệ thống xác nhận thanh toán trước khi chuẩn bị.',
       'Khi hoa đã đặt đúng ô, ghi nhận nạp từ chính đơn này. Có thể giao việc cho nhân viên ở mục Giao việc nhân viên.',
     ],

@@ -256,9 +256,11 @@
 .disclosure {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 7px;
-  padding: 0 22px 15px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 22px;
+  border-top: 1px solid var(--order-line);
   color: var(--order-green);
   font-size: 12px;
   font-weight: 600;
@@ -698,5 +700,151 @@
   }
   .sellerOrders .orderHeading {
     align-items: start;
+  }
+}
+
+.nextTask {
+  flex: 1;
+  min-width: 180px;
+  max-width: 65ch;
+  font-size: 0.8rem;
+  font-weight: 400;
+  line-height: 1.75;
+  color: var(--order-muted);
+}
+.showDetails,
+.hideDetails {
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 9px 14px;
+  border: 1px solid #9db8a5;
+  border-radius: 8px;
+  background: #fff;
+}
+.showDetails {
+  display: inline-flex;
+}
+.orderList details[open] .hideDetails {
+  display: inline-flex;
+}
+.orderSummary:hover .showDetails {
+  background: #edf4e9;
+}
+.loadMore {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px;
+  margin-block: 16px;
+  border: 1px solid var(--order-line);
+  border-radius: 12px;
+  background: #fff;
+}
+.loadMore p {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.75;
+}
+@media (max-width: 600px) {
+  .nextTask {
+    flex-basis: 100%;
+  }
+  .showDetails,
+  .hideDetails {
+    margin-left: auto;
+  }
+}
+
+.mobileStatus,
+.mobileDate {
+  display: none;
+}
+@media (max-width: 600px) {
+  .sellerOrders .filters {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    padding: 16px;
+    overflow: visible;
+  }
+  .sellerOrders .filterHeading {
+    display: contents;
+  }
+  .sellerOrders .filterHeading > div {
+    display: none;
+  }
+  .sellerOrders .filterHeading > button {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: end;
+  }
+  .sellerOrders .tabs {
+    display: none;
+  }
+  .sellerOrders .mobileStatus {
+    display: grid;
+    grid-column: 1;
+    grid-row: 1;
+    gap: 7px;
+    min-width: 0;
+    font-size: 0.8rem;
+    color: var(--order-muted);
+  }
+  .sellerOrders .mobileStatus select {
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+  }
+  .sellerOrders .searchBar {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    padding: 0;
+  }
+  .sellerOrders .searchField {
+    grid-column: 1 / -1;
+  }
+  .sellerOrders .dateField {
+    display: none;
+  }
+  .sellerOrders .mobileDate {
+    display: block;
+    min-width: 0;
+    margin: 0;
+    border: 0;
+    padding: 0;
+  }
+  .sellerOrders .mobileDate > button {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 8px 0;
+    font-size: 0.8rem;
+    color: var(--order-green);
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    border: 0;
+    background: transparent;
+  }
+  .sellerOrders .mobileDate > button::after {
+    display: none;
+  }
+  .sellerOrders .mobileDate label {
+    display: grid;
+    gap: 7px;
+    font-size: 0.8rem;
+    color: var(--order-muted);
+  }
+  .sellerOrders .mobileDate input {
+    width: 100%;
+    min-width: 0;
+  }
+  .sellerOrders .searchBar > button {
+    align-self: start;
   }
 }

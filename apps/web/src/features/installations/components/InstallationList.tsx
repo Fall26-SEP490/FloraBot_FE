@@ -1,14 +1,21 @@
 import { Button, Boxes, CircleAlert, ClipboardList, Eye, Plus, RefreshCw } from '@florabot/ui';
 import type { KioskApplicationPage, KioskApplicationResponse } from '../installations.types';
+import { managerApplicationAction } from '../operations-presentation';
 import { KIOSK_STATUS_LABELS, OPERATIONS_STAGE_TABS } from '../installations.constants';
 
 interface InstallationListItemProps {
   item: KioskApplicationResponse;
   isSelected: boolean;
+  isManager: boolean;
   onSelect: (event: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
-function InstallationListItem({ item, isSelected, onSelect }: InstallationListItemProps) {
+function InstallationListItem({
+  item,
+  isSelected,
+  onSelect,
+  isManager,
+}: InstallationListItemProps) {
   return (
     <tr className={isSelected ? 'is-selected-row' : ''}>
       <td data-label="Shop & liên hệ">
@@ -38,7 +45,7 @@ function InstallationListItem({ item, isSelected, onSelect }: InstallationListIt
           aria-controls={isSelected ? 'installation-detail' : undefined}
         >
           <Eye size={16} aria-hidden="true" />
-          {isSelected ? 'Đang xem' : 'Chi tiết'}
+          {isSelected ? 'Đang xem' : isManager ? managerApplicationAction(item.status) : 'Chi tiết'}
         </Button>
       </td>
     </tr>
@@ -84,9 +91,8 @@ export function InstallationList({
     <section className="operations-queue-section" aria-labelledby="queue-heading">
       <div className="operations-section-heading">
         <div>
-          <span className="installation-eyebrow">Tiếp nhận & triển khai</span>
+          {!isManager && <span className="installation-eyebrow">Tiếp nhận & triển khai</span>}
           <h2 id="queue-heading">{isManager ? 'Hàng đợi hồ sơ' : 'Danh sách hồ sơ'}</h2>
-          {isManager && <p>Theo dõi từ xác nhận liên hệ đến bàn giao kiosk cho shop.</p>}
         </div>
         {isManager && (
           <div className="installation-header-actions">
@@ -165,7 +171,6 @@ export function InstallationList({
             <span>
               <strong>{applicationsPage.items.length} hồ sơ</strong> trong trang {page}
             </span>
-            <span>Chọn Chi tiết để xem tiến độ và bước xử lý.</span>
           </p>
           <div className="table-responsive">
             <table className="kiosk-data-table" aria-label="Danh sách hồ sơ thuê kiosk">
@@ -197,6 +202,7 @@ export function InstallationList({
                     <InstallationListItem
                       key={item.id}
                       item={item}
+                      isManager={isManager}
                       isSelected={selectedAppId === item.id}
                       onSelect={(event) => {
                         onSelectApp(

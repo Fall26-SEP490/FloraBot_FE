@@ -1,10 +1,15 @@
 import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { validApplicationStatus } from '../operations-presentation';
 import { useQuery } from '@tanstack/react-query';
 import { queryClient, request, type Session } from '@/shared/lib/api';
 import type { KioskApplicationPage } from '../installations.types';
 
 export function useInstallationList(session: Session) {
-  const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const params = useSearchParams();
+  const [statusFilter, setStatusFilter] = useState(() =>
+    validApplicationStatus(params.get('status')),
+  );
   const [page, setPage] = useState(1);
 
   const queryPath = `/operations/kiosk-applications?page=${page}&limit=10${
