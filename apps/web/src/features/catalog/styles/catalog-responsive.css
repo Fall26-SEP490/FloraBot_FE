@@ -344,8 +344,8 @@
   }
 
   .catalog-mobile-filter-btn {
-    height: 34px !important;
-    min-height: 34px !important;
+    height: 44px !important;
+    min-height: 44px !important;
     padding: 0.2rem 0.65rem !important;
     font-size: 0.8rem !important;
   }
@@ -361,8 +361,8 @@
   select.catalog-sort-select {
     width: auto !important;
     font-size: 0.8rem !important;
-    height: 34px !important;
-    min-height: 34px !important;
+    height: 44px !important;
+    min-height: 44px !important;
     padding: 0.2rem 1.6rem 0.2rem 0.65rem !important;
     box-sizing: border-box;
   }

@@ -60,7 +60,7 @@ export function CatalogSidebar({
         isEmpty: count === 0,
         onSelect: () => setOccasionFilter(occasionFilter === occ ? 'all' : occ),
       };
-    }).filter((opt) => opt.count > 0 || totalRawItems > 0),
+    }).filter((opt) => opt.count > 0 || opt.isSelected),
   ];
 
   // Price filter options
@@ -193,12 +193,24 @@ export function CatalogSidebar({
       </div>
 
       <div className="catalog-sidebar-scroll-body">
-        <CatalogFilterGroup title="Dịp tặng" options={occasionOptions} />
-        <CatalogFilterGroup title="Khoảng giá" options={priceOptions} />
         <CatalogFilterGroup title="Hình thức nhận hoa" options={availabilityOptions} />
-        {availableShops.length > 1 && <CatalogFilterGroup title="Cửa hàng" options={shopOptions} />}
-        {availableKiosks.length > 1 && (
-          <CatalogFilterGroup title="Điểm tủ Kiosk" options={kioskOptions} />
+        <CatalogFilterGroup title="Khoảng giá" options={priceOptions} />
+        {(availableKiosks.length > 1 || kioskFilter !== 'all') && (
+          <CatalogFilterGroup title="Tủ nhận hoa" options={kioskOptions} />
+        )}
+        {(occasionOptions.length > 1 || availableShops.length > 1 || shopFilter !== 'all') && (
+          <details
+            className="catalog-more-filters"
+            open={occasionFilter !== 'all' || shopFilter !== 'all' || undefined}
+          >
+            <summary>Dịp tặng & cửa hàng</summary>
+            {occasionOptions.length > 1 && (
+              <CatalogFilterGroup title="Dịp tặng" options={occasionOptions} />
+            )}
+            {(availableShops.length > 1 || shopFilter !== 'all') && (
+              <CatalogFilterGroup title="Cửa hàng" options={shopOptions} />
+            )}
+          </details>
         )}
       </div>
 

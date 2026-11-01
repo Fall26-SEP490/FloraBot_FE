@@ -27,12 +27,14 @@ export function CatalogFilterGroup({ title, options }: CatalogFilterGroupProps) 
                 option.isEmpty ? 'is-empty' : ''
               }`}
               aria-pressed={option.isSelected}
+              disabled={option.isEmpty && !option.isSelected}
               onClick={option.onSelect}
             >
               <span className="catalog-option-checkbox">
                 {option.isSelected && <Check size={12} strokeWidth={3} />}
               </span>
               <span className="catalog-option-text">{option.label}</span>
+              <span className="catalog-option-count">{option.count}</span>
             </button>
           </li>
         ))}

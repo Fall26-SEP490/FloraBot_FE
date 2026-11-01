@@ -82,8 +82,9 @@ test('mobile filters expose selection, apply, and close with Escape', async ({ p
   await expect(toggle).toHaveAttribute('aria-controls', 'catalog-filters');
   await expect(panel).toBeHidden();
   await toggle.click();
+  await panel.getByText('Dịp tặng & cửa hàng', { exact: true }).click();
   const birthday = panel.getByRole('button', { name: /^Sinh nhật/ });
-  await expect(birthday).toHaveText('Sinh nhật');
+  await expect(birthday).toHaveText('Sinh nhật4');
   await birthday.click();
   await expect(birthday).toHaveAttribute('aria-pressed', 'true');
   await panel.getByRole('button', { name: 'Áp dụng bộ lọc' }).click();

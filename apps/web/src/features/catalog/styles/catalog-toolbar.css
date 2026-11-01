@@ -56,6 +56,8 @@
 
 /* Search Input Clear Button */
 .catalog-search-clear-btn {
+  min-width: 44px;
+  min-height: 44px;
   position: absolute;
   right: 0.85rem;
   top: 50%;
@@ -141,8 +143,8 @@
 /* Explicit override for select */
 select.catalog-sort-select {
   width: auto !important;
-  height: 38px !important;
-  min-height: 38px !important;
+  height: 44px !important;
+  min-height: 44px !important;
   max-width: 100%;
   padding: 0.25rem 2rem 0.25rem 0.85rem !important;
   border: 1px solid #c9dec6 !important;

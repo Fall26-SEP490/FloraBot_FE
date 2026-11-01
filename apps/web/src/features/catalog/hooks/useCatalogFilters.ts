@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { readCatalogQuery } from '../catalog.navigation';
 import { PRICE_TIER_ACTIVE_LABELS } from '../catalog.constants';
 import type {
   ActiveFilterItem,
@@ -9,32 +11,37 @@ import type {
 } from '../catalog.types';
 import { computeFilterCounts, filterCatalogItems, sortCatalogItems } from '../catalog.utils';
 
-export interface CatalogSearchState {
-  search: string;
-  setSearch: (value: string) => void;
-  draft: string;
-  setDraft: (value: string) => void;
-}
-
-export function useCatalogFilters(rawItems: CatalogItem[], searchState?: CatalogSearchState) {
-  const [internalSearch, setInternalSearch] = useState('');
-  const [internalDraft, setInternalDraft] = useState('');
-
-  const search = searchState ? searchState.search : internalSearch;
-  const setSearch = searchState ? searchState.setSearch : setInternalSearch;
-  const draft = searchState ? searchState.draft : internalDraft;
-  const setDraft = searchState ? searchState.setDraft : setInternalDraft;
-
-  const [priceFilter, setPriceFilter] = useState<PriceFilter>('all');
-  const [occasionFilter, setOccasionFilter] = useState<string>('all');
-  const [shopFilter, setShopFilter] = useState<string>('all');
-  const [kioskFilter, setKioskFilter] = useState<string>('all');
-  const [availabilityFilter, setAvailabilityFilter] = useState<AvailabilityFilter>(() => {
-    if (typeof window === 'undefined') return 'all';
-    const mode = new URLSearchParams(window.location.search).get('mode');
-    return mode === 'stock' || mode === 'custom' ? mode : 'all';
-  });
-  const [sortBy, setSortBy] = useState<SortOption>('default');
+export function useCatalogFilters(rawItems: CatalogItem[]) {
+  const searchParams = useSearchParams();
+  const state = readCatalogQuery(new URLSearchParams(searchParams.toString()));
+  const {
+    search,
+    priceFilter,
+    occasionFilter,
+    shopFilter,
+    kioskFilter,
+    availabilityFilter,
+    sortBy,
+  } = state;
+  const [draftState, setDraftState] = useState({ search, value: search });
+  const draft = draftState.search === search ? draftState.value : search;
+  const setDraft = (value: string) => setDraftState({ search, value });
+  const update = (key: string, value: string, resetPage = true) => {
+    const params = new URLSearchParams(window.location.search);
+    if (resetPage) params.delete('page');
+    if (!value || value === 'all' || value === 'default' || (key === 'page' && value === '1'))
+      params.delete(key);
+    else params.set(key, value);
+    window.history.pushState(null, '', '/dat-hoa' + (params.size ? '?' + params.toString() : ''));
+  };
+  const setSearch = (value: string) => update('search', value.trim());
+  const setPriceFilter = (value: PriceFilter) => update('price', value);
+  const setOccasionFilter = (value: string) => update('occasion', value);
+  const setShopFilter = (value: string) => update('shop', value);
+  const setKioskFilter = (value: string) => update('kiosk', value);
+  const setAvailabilityFilter = (value: AvailabilityFilter) => update('mode', value);
+  const setSortBy = (value: SortOption) => update('sort', value);
+  const setPage = (value: number) => update('page', String(value), false);
 
   const filteredItems = useMemo(
     () =>
@@ -65,7 +72,7 @@ export function useCatalogFilters(rawItems: CatalogItem[], searchState?: Catalog
     availabilityFilter !== 'all',
   );
 
-  const activeFilters = useMemo(() => {
+  const activeFilters = (() => {
     const list: ActiveFilterItem[] = [];
     if (search.trim()) {
       list.push({
@@ -113,29 +120,19 @@ export function useCatalogFilters(rawItems: CatalogItem[], searchState?: Catalog
       });
     }
     return list;
-  }, [
-    search,
-    occasionFilter,
-    priceFilter,
-    availabilityFilter,
-    shopFilter,
-    kioskFilter,
-    setSearch,
-    setDraft,
-  ]);
+  })();
 
   const resetFilters = () => {
-    setDraft('');
-    setSearch('');
-    setPriceFilter('all');
-    setOccasionFilter('all');
-    setShopFilter('all');
-    setKioskFilter('all');
-    setAvailabilityFilter('all');
-    setSortBy('default');
+    setDraftState({ search: '', value: '' });
+    const params = new URLSearchParams(window.location.search);
+    for (const key of ['search', 'price', 'occasion', 'shop', 'kiosk', 'mode', 'sort', 'page'])
+      params.delete(key);
+    window.history.pushState(null, '', '/dat-hoa' + (params.size ? '?' + params.toString() : ''));
   };
 
   return {
+    page: state.page,
+    setPage,
     search,
     setSearch,
     draft,

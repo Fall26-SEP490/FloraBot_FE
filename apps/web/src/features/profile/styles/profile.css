@@ -700,3 +700,22 @@
     justify-content: center;
   }
 }
+
+.profile-security-disclosure > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  font-weight: 650;
+  color: #1c5139;
+}
+.profile-security-disclosure > summary::after {
+  content: '+';
+}
+.profile-security-disclosure[open] > summary::after {
+  content: '−';
+}
+.profile-security-disclosure[open] > summary {
+  margin-bottom: 1rem;
+}

@@ -286,3 +286,39 @@
     align-self: flex-end;
   }
 }
+
+.account-history-details > summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  cursor: pointer;
+  color: #1c5139;
+  font-weight: 600;
+}
+.account-history-details > summary::after {
+  content: '+';
+  margin-left: 0.65rem;
+}
+.account-history-details[open] > summary::after {
+  content: '−';
+}
+.account-history-details dl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+  padding-block: 0.5rem;
+}
+.account-history-details dt {
+  font-size: 0.875rem;
+  color: #4c6656;
+}
+.account-history-details dd {
+  margin: 0.3rem 0 0;
+  font-variant-numeric: tabular-nums;
+}
+.account-history-details a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+}

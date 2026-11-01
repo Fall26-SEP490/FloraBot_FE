@@ -154,3 +154,14 @@ export function sellerOrderHint(row: OrderPhase) {
     return 'Xem mong muốn của khách và gửi giá kèm lịch nhận.';
   return 'Mở chi tiết để theo dõi tiến độ và bước tiếp theo.';
 }
+
+/** Opens details only; accepting a quote/payment remains an explicit action inside. */
+export function customerOrderActionLabel(row: OrderPhase) {
+  if (orderClosed(row)) return 'Xem lại đơn';
+  if (row.orderStatus === 'DISPUTED' || row.orderStatus === 'DISPENSE_FAILED')
+    return 'Theo dõi xử lý';
+  if (row.ready && row.orderStatus === 'PAID') return 'Xem hướng dẫn nhận';
+  if (row.orderStatus === 'AWAITING_PAYMENT') return 'Xem thanh toán';
+  if (!row.orderStatus && row.state === 'QUOTED') return 'Xem báo giá';
+  return 'Xem tiến độ';
+}

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { catalogReturnPath } from './catalog.navigation';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Button, MapPin, MessageSquare, Store } from '@florabot/ui';
 import { request, sessionQuery } from '@/shared/lib/api';
@@ -48,6 +49,10 @@ export default function FlowerDetail({
   zone?: string;
 }) {
   const router = useRouter();
+  const params = useSearchParams();
+  const backHref = catalogReturnPath(
+    params.get('from') ?? (params.get('demo') === '1' ? '/dat-hoa?demo=1' : null),
+  );
   const session = useQuery(sessionQuery);
   const [selected, setSelected] = useState<CatalogItem | null>(null);
   const [resumeOrder, setResumeOrder] = useState(
@@ -92,7 +97,7 @@ export default function FlowerDetail({
   } = useCustomerChat(selectItem);
   return (
     <main id="main" className="flower-shop-page flower-detail-page">
-      <Link className="flower-detail-back" href={demo ? '/dat-hoa?demo=1' : '/dat-hoa'}>
+      <Link className="flower-detail-back" href={backHref}>
         <ArrowLeft size={16} aria-hidden="true" /> Quay lại danh mục
       </Link>
       {query.isPending && <p role="status">Đang tải thông tin mẫu hoa…</p>}
@@ -141,6 +146,27 @@ export default function FlowerDetail({
                 </span>
               </div>
 
+              <div className="flower-detail-actions">
+                {canOrderOnWeb(item) ? (
+                  <Button onClick={() => selectItem(item)}>Yêu cầu báo giá</Button>
+                ) : isWalkIn(item) ? (
+                  <Link
+                    className="button button-primary"
+                    href={`/tim-kiosk?kiosk=${encodeURIComponent(item.kioskId)}`}
+                  >
+                    Xem tủ để mua trực tiếp
+                  </Link>
+                ) : null}
+                <Button
+                  variant="outline"
+                  onClick={() => openChat(item)}
+                  disabled={item.isDemoSample || openingChatId !== null}
+                >
+                  <MessageSquare size={17} aria-hidden="true" />{' '}
+                  {openingChatId ? 'Đang mở chat…' : 'Chat với shop'}
+                </Button>
+              </div>
+
               <div className="flower-detail-divider" aria-hidden="true" />
 
               <section
@@ -176,31 +202,11 @@ export default function FlowerDetail({
                 </div>
               </section>
 
-              <div className="flower-detail-actions">
-                {canOrderOnWeb(item) ? (
-                  <Button onClick={() => selectItem(item)}>Yêu cầu báo giá</Button>
-                ) : isWalkIn(item) ? (
-                  <Link
-                    className="button button-primary"
-                    href={`/tim-kiosk?kiosk=${encodeURIComponent(item.kioskId)}`}
-                  >
-                    Xem tủ để mua trực tiếp
-                  </Link>
-                ) : null}
-                <Button
-                  variant="outline"
-                  onClick={() => openChat(item)}
-                  disabled={item.isDemoSample || openingChatId !== null}
-                >
-                  <MessageSquare size={17} aria-hidden="true" />{' '}
-                  {openingChatId ? 'Đang mở chat…' : 'Chat với shop'}
-                </Button>
-              </div>
-
               {canOrderOnWeb(item) && (
                 <>
                   <p className="flower-detail-note">
-                    Giá và thời gian nhận sẽ được shop xác nhận sau khi bạn gửi yêu cầu.
+                    Shop xác nhận giá và lịch nhận sau khi bạn gửi yêu cầu. Mẫu đặt trước không có
+                    nghĩa là hoa đang có sẵn tại tủ.
                   </p>
                   <ol className="flower-detail-guide" aria-label="Các bước đặt và nhận hoa">
                     <li>

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Button, MapPin, MessageSquare, Store } from '@florabot/ui';
 import Link from 'next/link';
 import type { CatalogItem } from '../catalog.types';
@@ -10,40 +11,52 @@ import {
 } from '../catalog.utils';
 
 interface FlowerCardProps {
+  catalogHref?: string;
   item: CatalogItem;
   openingChatId: string | null;
   onSelect: (item: CatalogItem) => void;
   onOpenChat: (item: CatalogItem) => void;
 }
 
-export function FlowerCard({ item, openingChatId, onSelect, onOpenChat }: FlowerCardProps) {
+export function FlowerCard({
+  item,
+  openingChatId,
+  onSelect,
+  onOpenChat,
+  catalogHref,
+}: FlowerCardProps) {
+  const [failedPhoto, setFailedPhoto] = useState<string | null>(null);
+  const illustrative = !item.photo || failedPhoto === item.photo;
   const walkIn = isWalkIn(item);
   const occBadgeClass = getOccasionBadgeClass(item.occasion);
   const detailParams = new URLSearchParams();
   if (item.zone) detailParams.set('zone', item.zone);
   if (item.isDemoSample) detailParams.set('demo', '1');
+  if (catalogHref && catalogHref !== '/dat-hoa') detailParams.set('from', catalogHref);
   const detailQuery = detailParams.toString();
+  const detailHref = `/dat-hoa/${encodeURIComponent(item.productId)}/${encodeURIComponent(item.kioskId)}${detailQuery ? `?${detailQuery}` : ''}`;
 
   return (
     <li className="flower-card">
       <Link
         className="flower-card-media"
-        href={`/dat-hoa/${encodeURIComponent(item.productId)}/${encodeURIComponent(item.kioskId)}${detailQuery ? `?${detailQuery}` : ''}`}
+        href={detailHref}
         aria-label={`Xem chi tiết ${item.name}`}
       >
         <img
-          src={item.photo || '/images/floral-white-online.webp'}
-          alt={`Mẫu ${item.name} từ ${item.shopName}`}
+          src={illustrative ? '/images/floral-white-online.webp' : item.photo!}
+          alt={
+            illustrative
+              ? 'Ảnh hoa minh họa, chưa có ảnh sản phẩm'
+              : `Mẫu ${item.name} từ ${item.shopName}`
+          }
           loading="lazy"
           className="flower-card-img"
-          onError={(e) => {
-            const target = e.currentTarget;
-            if (!target.dataset.fallback) {
-              target.dataset.fallback = '1';
-              target.src = '/images/floral-white-online.webp';
-            }
+          onError={() => {
+            if (item.photo) setFailedPhoto(item.photo);
           }}
         />
+        {illustrative && <span className="flower-card-illustration">Ảnh minh họa</span>}
         <div className="flower-card-badges">
           <span className={`flower-badge ${walkIn ? 'flower-badge-stock' : 'flower-badge-custom'}`}>
             {purchaseLabel(item)}
@@ -57,7 +70,9 @@ export function FlowerCard({ item, openingChatId, onSelect, onOpenChat }: Flower
       </Link>
 
       <div className="flower-card-body">
-        <h2 className="flower-card-title">{item.name}</h2>
+        <h2 className="flower-card-title">
+          <Link href={detailHref}>{item.name}</Link>
+        </h2>
         <p className="flower-card-desc">
           {item.description || 'Mẫu hoa do shop thiết kế theo yêu cầu của bạn.'}
         </p>

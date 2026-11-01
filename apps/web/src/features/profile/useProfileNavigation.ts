@@ -14,6 +14,10 @@ export function useProfileNavigation(ready: boolean) {
   const setActiveSection = useCallback((id: string) => {
     // A deliberate anchor choice takes priority over the height of a short section.
     requestedSection.current = id;
+    if (id === 'security')
+      document
+        .querySelector<HTMLDetailsElement>('.profile-security-disclosure')
+        ?.setAttribute('open', '');
     setCurrentSection(id);
   }, []);
 
@@ -66,6 +70,10 @@ export function useProfileNavigation(ready: boolean) {
     };
     const onHashChange = () => {
       const id = window.location.hash.slice(1);
+      if (id === 'security')
+        document
+          .querySelector<HTMLDetailsElement>('.profile-security-disclosure')
+          ?.setAttribute('open', '');
       requestedSection.current = profileSections.some(([section]) => section === id) ? id : null;
       schedule();
     };

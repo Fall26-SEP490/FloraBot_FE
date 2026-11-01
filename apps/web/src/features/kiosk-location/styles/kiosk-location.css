@@ -1210,8 +1210,8 @@ body:has(.customer-kiosk-page) {
 
 .customer-kiosk-page .customer-no-coords-note {
   display: block;
-  font-size: 0.72rem;
-  color: #94a3b8;
+  font-size: 0.875rem;
+  color: #52675b;
   font-style: italic;
 }
 
