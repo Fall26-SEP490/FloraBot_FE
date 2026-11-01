@@ -166,12 +166,13 @@ for (const width of [390, 1440]) {
     const model = await installationFixture(page);
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/technician/installations');
+    if (width === 390) await page.getByRole('button', { name: /Shop Hoa Kiểm Thử/ }).click();
     await expect(page.locator('#job-detail-title')).toHaveText('Shop Hoa Kiểm Thử');
     await expect(page.getByRole('button', { name: /Nghiệm thu Đạt/ })).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
-    await page.getByRole('button', { name: /Bắt đầu khảo sát/ }).click();
+    await page.getByRole('button', { name: /Bắt đầu lắp đặt/ }).click();
     const report = page.getByLabel('Nội dung báo cáo chi tiết:');
     await report.fill('Đã kiểm tra nguồn điện và hoàn thành lắp đặt tại hiện trường.');
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
@@ -291,7 +292,7 @@ for (const failure of ['list403', 'detail404']) {
           : /Không tìm thấy công việc được phân công/,
       ),
     ).toBeVisible();
-    await expect(page.getByRole('button', { name: /Bắt đầu khảo sát/ })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /Bắt đầu lắp đặt/ })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Tải ảnh lên', exact: true })).toHaveCount(0);
     expect(model.writes).toHaveLength(0);
   });

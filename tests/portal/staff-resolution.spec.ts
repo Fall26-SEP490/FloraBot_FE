@@ -41,6 +41,7 @@ for (const width of [390, 1440])
       return route.fulfill({ json: { id: 'operation', version: 3 } });
     });
     await page.goto('/technician');
+    await page.locator('.technician-task-body > summary').click();
     const panel = page.locator('.staff-resolution');
     await panel.locator('summary').click();
     await panel.getByRole('button', { name: 'Đóng sự cố và gửi báo cáo' }).click();
@@ -63,6 +64,7 @@ for (const width of [390, 1440])
     await panel.getByRole('button', { name: 'Đóng sự cố và gửi báo cáo' }).click();
     await expect(panel.getByRole('alert')).toContainText('Chưa xác nhận được kết quả');
     await page.reload();
+    await page.locator('.technician-task-body > summary').click();
     await panel.locator('summary').click();
     await panel.getByRole('button', { name: 'Kiểm tra kết quả xử lý' }).click();
     await expect(panel).toHaveCount(0);

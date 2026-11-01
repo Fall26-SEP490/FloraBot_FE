@@ -45,7 +45,8 @@ for (const width of [390, 1440]) {
       return route.fulfill({ json: { id: 'task-1', version } });
     });
     await page.goto('/technician');
-    await page.getByRole('button', { name: 'Xác nhận cập nhật' }).click();
+    await page.locator('.technician-task-body > summary').click();
+    await page.getByRole('button', { name: 'Bắt đầu xử lý' }).click();
     await expect(page.getByText('Mô tả ít nhất 10 ký tự.')).toBeVisible();
     expect(writes).toBe(0);
     await page.getByLabel('Nội dung cập nhật').fill('Bắt đầu kiểm tra cửa tại tủ');
@@ -57,15 +58,16 @@ for (const width of [390, 1440]) {
           .analyze()
       ).violations,
     ).toEqual([]);
-    await page.getByRole('button', { name: 'Xác nhận cập nhật' }).click();
+    await page.getByRole('button', { name: 'Bắt đầu xử lý' }).click();
     await expect(page.getByText(/Chưa xác nhận được trạng thái mới/)).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Xác nhận cập nhật' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Bắt đầu xử lý' })).toBeDisabled();
     expect(writes).toBe(1);
     await page.getByRole('button', { name: 'Tải lại công việc' }).click();
+    await page.locator('.technician-task-body > summary').click();
     await expect(page.getByLabel('Bước tiếp theo')).toHaveValue('SUBMITTED');
     await page.getByLabel('Nội dung cập nhật').fill('Đã kiểm tra xong, gửi quản trị viên duyệt');
-    await page.getByRole('button', { name: 'Xác nhận cập nhật' }).click();
-    await expect(page.getByRole('button', { name: 'Xác nhận cập nhật' })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Gửi báo cáo' }).click();
+    await expect(page.getByRole('button', { name: 'Gửi báo cáo' })).toHaveCount(0);
     expect(writes).toBe(2);
   });
 

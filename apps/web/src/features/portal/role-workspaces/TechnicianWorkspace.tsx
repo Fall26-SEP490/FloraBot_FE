@@ -11,7 +11,7 @@ import WorkspaceNavigation, { WorkspaceHeader } from '../components/WorkspaceNav
 import '../workspace-styles.css';
 import '../../account-management/styles/platform-workspace.css';
 import '../../account-management/styles/platform-refresh.css';
-import WorkspaceWelcome from '../../../shared/components/WorkspaceWelcome';
+import '../styles/technician-usability.css';
 
 const TechnicianInstallations = dynamic(
   () => import('../../installations/TechnicianInstallations'),
@@ -62,7 +62,7 @@ export default function TechnicianWorkspace({ section = 'tasks' }: { section?: s
         busy={logout.isPending}
         onLogout={() => logout.mutate()}
       />
-      <div className="dashboard-shell">
+      <div className="dashboard-shell technician-workspace">
         <WorkspaceNavigation workspaceRole="TECHNICIAN" section={section} />
         <main id="main" className="workspace dashboard-content">
           {section === 'installations' ? (
@@ -74,11 +74,10 @@ export default function TechnicianWorkspace({ section = 'tasks' }: { section?: s
             <>
               <div className="dashboard-page-heading">
                 <div>
-                  <h1>Chào {session.data.name}</h1>
-                  <p>Nhận việc kiểm tra sự cố, cập nhật tiến độ và gửi báo cáo tại tủ.</p>
+                  <h1>Công việc kỹ thuật</h1>
+                  <p>Xem sự cố được giao và cập nhật kết quả xử lý.</p>
                 </div>
               </div>
-              <WorkspaceWelcome workspaceRole="technician" />
               <StaffTasks
                 actorRole="TECHNICIAN"
                 mode="worker"
@@ -86,31 +85,18 @@ export default function TechnicianWorkspace({ section = 'tasks' }: { section?: s
                 apiBase="/staff/tasks"
                 allowedKinds={['INCIDENT']}
               />
-              <section
-                id="technician-guide"
-                className="dashboard-staff-guide"
-                tabIndex={-1}
-                aria-labelledby="technician-guide-title"
-              >
-                <h2 id="technician-guide-title">Từ nhận việc đến hoàn thành sự cố</h2>
+              <details className="technician-help">
+                <summary>Cách xử lý một sự cố</summary>
                 <ol>
-                  <li>
-                    <strong>Kiểm tra sự cố</strong>
-                    <p>Xem thông tin tủ, lý do và hướng dẫn xử lý.</p>
-                  </li>
-                  <li>
-                    <strong>Khắc phục và ghi nhận</strong>
-                    <p>Bắt đầu công việc, sửa chữa thực tế và tải ảnh minh chứng.</p>
-                  </li>
-                  <li>
-                    <strong>Đóng sự cố và gửi báo cáo</strong>
-                    <p>Xác nhận đã kiểm tra thực tế để gửi người quản lý duyệt.</p>
-                  </li>
+                  <li>Xem địa chỉ, hướng dẫn và thông tin sự cố.</li>
+                  <li>Bắt đầu công việc khi đến tủ, kiểm tra và tải ảnh minh chứng.</li>
+                  <li>Ghi nhận kết quả xử lý và gửi báo cáo cho Quản lý vận hành.</li>
                 </ol>
-                <p className="dashboard-data-note">
-                  Kỹ thuật viên chỉ phụ trách sự cố kỹ thuật; không thực hiện nạp hoa cho shop.
+                <p>
+                  Việc lắp đặt kiosk nằm trong mục Lắp đặt Kiosk. Nạp hoa do nhân viên shop phụ
+                  trách.
                 </p>
-              </section>
+              </details>
             </>
           )}
           {logout.isError && <p role="alert">Chưa đăng xuất được. Bạn thử lại nhé.</p>}

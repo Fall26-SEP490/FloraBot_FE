@@ -498,14 +498,17 @@ test('Technician installation detail and evidence errors block actions until ret
   state.evidenceError = true;
   await page.goto('/technician/installations');
   await expect(page.getByRole('button', { name: 'Tải lại chi tiết lắp đặt' })).toBeVisible();
-  await expect(page.getByRole('button', { name: /Bắt đầu khảo sát/ })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /Bắt đầu lắp đặt/ })).toHaveCount(0);
   state.failTechDetail = false;
   await page.getByRole('button', { name: 'Tải lại chi tiết lắp đặt' }).click();
-  await page.getByRole('button', { name: /Bắt đầu khảo sát/ }).click();
+  await page.getByRole('button', { name: /Bắt đầu lắp đặt/ }).click();
   const submit = page.getByRole('button', { name: /Nộp báo cáo hoàn thành/ });
   await expect(submit).toBeDisabled();
   state.evidenceError = false;
   await page.getByRole('button', { name: 'Tải lại minh chứng' }).click();
+  await page
+    .getByLabel('Nội dung báo cáo chi tiết:')
+    .fill('Đã lắp đặt và kiểm tra thực tế tại tủ.');
   await expect(submit).toBeEnabled();
   await expect(
     page.getByRole('list', { name: 'Tiến độ lắp đặt' }).locator('[aria-current="step"]'),
@@ -526,10 +529,10 @@ test('Technician installation detail and evidence errors block actions until ret
     fullPage: true,
   });
   await page.getByLabel('Nội dung báo cáo chi tiết:').fill('Ngắn');
-  await submit.click();
-  await expect(page.getByRole('region', { name: 'Hoa Bình An' }).getByRole('alert')).toContainText(
-    'ít nhất 10 ký tự',
-  );
+  await expect(submit).toBeDisabled();
+  await expect(
+    page.getByText('Viết ít nhất 10 ký tự. Cần đính kèm thành công ít nhất 1 ảnh trước khi gửi.'),
+  ).toBeVisible();
   expect(writes.some((write) => write.path.endsWith('/submit'))).toBe(false);
   await page
     .getByLabel('Nội dung báo cáo chi tiết:')

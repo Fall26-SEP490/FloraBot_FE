@@ -1,0 +1,500 @@
+/* Technician: work orders first, on-site controls on phones. */
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .dashboard-page-heading {
+  margin-bottom: 1.25rem;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .dashboard-page-heading
+  h1 {
+  margin: 0;
+  font-size: clamp(1.4rem, 2vw, 1.8rem);
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .dashboard-page-heading
+  p {
+  margin: 0.45rem 0 0;
+  color: #526b5d;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .platform-task-panel {
+  padding: 1.25rem;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .manager-task-count {
+  margin: 0 0 1rem;
+  font-size: 0.88rem;
+  color: #526b5d;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .staff-task-toolbar {
+  align-items: end;
+  gap: 1rem;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .staff-task-toolbar
+  label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-weight: 600;
+}
+.workspace-portal-root.platform-workspace .technician-workspace.technician-workspace .member-empty {
+  padding: 1.25rem 0;
+  border: 0;
+  border-top: 1px solid #dce6df;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .staff-task-heading {
+  align-items: start;
+  gap: 0.75rem;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .staff-task-heading
+  h3 {
+  font-size: 1rem;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .staff-task-label {
+  white-space: normal;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .technician-task-body
+  > summary {
+  display: list-item;
+  width: fit-content;
+  min-height: 44px;
+  padding: 0.6rem 1rem;
+  color: #174b35;
+  background: #eaf2eb;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .technician-task-body[open]
+  > summary {
+  margin-bottom: 1rem;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .technician-task-body
+  form {
+  padding-top: 1rem;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .technician-help {
+  margin-top: 1.25rem;
+  color: #526b5d;
+  font-size: 0.9rem;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .technician-help
+  summary {
+  padding: 0.75rem 0;
+  min-height: 44px;
+  cursor: pointer;
+  color: #244c39;
+  font-weight: 600;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .technician-help
+  li {
+  margin: 0.5rem 0;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .technician-help
+  p {
+  max-width: 65ch;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .technician-list-pane,
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .technician-detail-pane {
+  min-width: 0;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .technician-list-filters {
+  display: grid;
+  gap: 0.45rem;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .technician-list-filters
+  label {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .technician-list-filters
+  input,
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .technician-list-filters
+  select {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid #bdcfc2;
+  border-radius: 8px;
+  font: inherit;
+  color: #183e2b;
+  background: #fff;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .technician-list-filters
+  input::placeholder {
+  color: #607568;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .technician-list-filters
+  label:not(:first-child) {
+  margin-top: 0.4rem;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .technician-list-count {
+  color: #526b5d;
+  font-size: 0.82rem;
+  margin: 0.85rem 0;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .technician-workspace.technician-workspace-layout {
+  grid-template-columns: minmax(250px, 0.8fr) minmax(0, 1.7fr);
+  align-items: start;
+  gap: 1.25rem;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .tech-list-heading {
+  display: none;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .tech-jobs-list {
+  gap: 0;
+  border: 1px solid #d8e4dc;
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .tech-job-card {
+  border: 0;
+  border-bottom: 1px solid #e2ebe5;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 1rem;
+  transition: background-color 0.15s;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .tech-job-card:last-child {
+  border-bottom: 0;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .tech-job-card.is-selected {
+  background: #eaf3e9;
+  box-shadow: none;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .tech-job-card
+  .job-card-header {
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .job-shop-name {
+  color: #183e2b;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .job-address-line {
+  font-size: 0.83rem;
+}
+.workspace-portal-root.platform-workspace .technician-workspace.technician-workspace .job-meta-row {
+  gap: 0.35rem 0.75rem;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .job-meta-row
+  > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .technician-job-action {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-top: 0.65rem;
+  color: #24543d;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .tech-job-detail-card {
+  border-color: #d8e4dc;
+  box-shadow: none;
+  padding: 1.35rem;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .tech-job-detail-card
+  .job-detail-top {
+  margin-bottom: 0.9rem;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .job-address-primary {
+  margin: 0.5rem 0;
+  color: #526b5d;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .technician-next-step {
+  margin: 0 0 1rem;
+  color: #355b45;
+  font-size: 0.9rem;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .tech-contact-box {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 1rem 0;
+  gap: 0.85rem;
+  border-top: 1px solid #e2ebe5;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .tech-contact-box
+  a {
+  display: inline-block;
+  min-height: 44px;
+  padding: 0.4rem 0;
+  text-underline-offset: 4px;
+  font-weight: 600;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .tech-contact-box
+  p {
+  overflow-wrap: anywhere;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .tech-action-step
+  h3 {
+  font-size: 1.05rem;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .tech-action-step
+  > p {
+  color: #526b5d;
+  max-width: 65ch;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .evidence-upload-block {
+  padding: 1rem 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .platform-upload-picker {
+  box-shadow: none;
+  min-width: 0;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .platform-upload-picker
+  > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .platform-upload-picker
+  small {
+  color: #526b5d;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .report-submit-block {
+  border-top: 1px solid #e2ebe5;
+  padding-top: 1rem;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .technician-back {
+  display: none;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .technician-filter-empty {
+  padding: 1rem 0;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  :is(button, a, summary, input, select, textarea):focus-visible {
+  outline: 2px solid #20593d;
+  outline-offset: 3px;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  :is(.technician-list-pane, .technician-detail-pane):focus {
+  outline: none;
+}
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  :is(input, textarea) {
+  caret-color: #174b35;
+}
+.workspace-portal-root.platform-workspace .technician-workspace.technician-workspace ::selection {
+  background: #d9eacb;
+  color: #173e2b;
+}
+@media (max-width: 1100px) {
+  .workspace-portal-root.platform-workspace
+    .technician-workspace.technician-workspace
+    .technician-workspace.technician-workspace-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .technician-workspace.technician-workspace [data-detail-open='false'] .technician-detail-pane {
+    display: none;
+  }
+  .technician-workspace.technician-workspace [data-detail-open='true'] .technician-list-pane {
+    display: none;
+  }
+  .technician-workspace.technician-workspace .technician-back {
+    display: inline-flex;
+    margin-bottom: 1rem;
+  }
+}
+@media (max-width: 640px) {
+  .technician-workspace.technician-workspace .platform-task-panel {
+    padding: 1rem;
+  }
+  .technician-workspace.technician-workspace .staff-task-toolbar {
+    align-items: stretch;
+  }
+  .technician-workspace.technician-workspace .staff-task-toolbar > * {
+    width: 100%;
+  }
+  .technician-workspace.technician-workspace .staff-task-heading {
+    flex-direction: column;
+  }
+  .workspace-portal-root.platform-workspace
+    .technician-workspace.technician-workspace
+    .tech-job-detail-card {
+    padding: 1rem;
+  }
+  .technician-workspace.technician-workspace .installation-progress {
+    gap: 0.5rem;
+  }
+  .technician-workspace.technician-workspace .installation-progress li {
+    min-width: 0;
+  }
+  .technician-workspace.technician-workspace .installation-progress strong {
+    font-size: 0.72rem;
+  }
+  .technician-workspace.technician-workspace .tech-action-step > button,
+  .technician-workspace.technician-workspace .report-submit-block > button {
+    width: 100%;
+    min-height: 48px;
+  }
+  .technician-workspace.technician-workspace .file-input-row {
+    align-items: stretch;
+  }
+  .technician-workspace.technician-workspace .file-input-row > :not(.sr-only) {
+    width: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .technician-workspace.technician-workspace .tech-job-card {
+    transition: none;
+  }
+}
+
+.workspace-portal-root.platform-workspace
+  .technician-workspace
+  .dashboard-page-heading
+  > div:first-child::before {
+  content: none;
+}
+.workspace-portal-root.platform-workspace .technician-workspace .order-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #dce6df;
+}
+.workspace-portal-root.platform-workspace .technician-workspace .order-pagination button {
+  padding: 0.55rem 0.65rem;
+  font-size: 0.78rem;
+}
+.workspace-portal-root.platform-workspace .technician-workspace .order-pagination-indicator {
+  white-space: nowrap;
+  font-size: 0.8rem;
+  color: #526b5d;
+}
+.workspace-portal-root.platform-workspace .technician-workspace .tech-contact-box {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.workspace-portal-root.platform-workspace .technician-workspace .tech-contact-box p {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 640px) {
+  .workspace-portal-root.platform-workspace .technician-workspace .tech-contact-box {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .workspace-portal-root.platform-workspace .technician-workspace .tech-job-detail-card {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 1100px) {
+  .workspace-portal-root.platform-workspace
+    .technician-workspace
+    .technician-installations-view
+    .technician-back {
+    display: inline-flex;
+    margin-bottom: 1rem;
+  }
+}

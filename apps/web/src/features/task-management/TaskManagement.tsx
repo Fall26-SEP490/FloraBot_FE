@@ -104,50 +104,61 @@ export function TaskManagement(props: StaffTasksProps) {
       }
       aria-labelledby="staff-tasks-title"
     >
-      <h2 id="staff-tasks-title" className={role === 'OPERATIONS_MANAGER' ? 'sr-only' : undefined}>
+      <h2
+        id="staff-tasks-title"
+        className={role === 'OPERATIONS_MANAGER' || role === 'TECHNICIAN' ? 'sr-only' : undefined}
+      >
         {sectionTitle}
       </h2>
-      {role !== 'OPERATIONS_MANAGER' && <p>{sectionDescription}</p>}
-      {tasks.data && role !== 'SELLER' && role !== 'OPERATIONS_MANAGER' && (
-        <div className="operations-metrics order-summary-strip" aria-label="Thống kê công việc">
-          <div className="operations-metric">
-            <ClipboardList aria-hidden="true" />
-            <span>Tổng công việc</span>
-            <strong>{tasks.data.items.length}</strong>
-            <small>{isPlatform ? 'Trong trang đang xem' : 'Trong danh sách'}</small>
+      {role !== 'OPERATIONS_MANAGER' && role !== 'TECHNICIAN' && <p>{sectionDescription}</p>}
+      {tasks.data &&
+        role !== 'SELLER' &&
+        role !== 'OPERATIONS_MANAGER' &&
+        role !== 'TECHNICIAN' && (
+          <div className="operations-metrics order-summary-strip" aria-label="Thống kê công việc">
+            <div className="operations-metric">
+              <ClipboardList aria-hidden="true" />
+              <span>Tổng công việc</span>
+              <strong>{tasks.data.items.length}</strong>
+              <small>{isPlatform ? 'Trong trang đang xem' : 'Trong danh sách'}</small>
+            </div>
+            <div className="operations-metric">
+              <RefreshCw aria-hidden="true" style={{ color: '#0369a1' }} />
+              <span>Đang thực hiện</span>
+              <strong style={{ color: '#0369a1' }}>
+                {
+                  tasks.data.items.filter(
+                    (t) => t.status === 'IN_PROGRESS' || t.status === 'ASSIGNED',
+                  ).length
+                }
+              </strong>
+              <small>Chờ hoặc đang làm</small>
+            </div>
+            <div className="operations-metric">
+              <CheckCircle2 aria-hidden="true" style={{ color: '#16a34a' }} />
+              <span>{isPlatform ? 'Đã gửi / Hoàn tất' : 'Đã duyệt / Hoàn tất'}</span>
+              <strong style={{ color: 'var(--color-status-success-ink)' }}>
+                {
+                  tasks.data.items.filter(
+                    (t) => t.status === 'SUBMITTED' || t.status === 'COMPLETED',
+                  ).length
+                }
+              </strong>
+              <small>Đã gửi báo cáo</small>
+            </div>
           </div>
-          <div className="operations-metric">
-            <RefreshCw aria-hidden="true" style={{ color: '#0369a1' }} />
-            <span>Đang thực hiện</span>
-            <strong style={{ color: '#0369a1' }}>
-              {
-                tasks.data.items.filter(
-                  (t) => t.status === 'IN_PROGRESS' || t.status === 'ASSIGNED',
-                ).length
-              }
-            </strong>
-            <small>Chờ hoặc đang làm</small>
-          </div>
-          <div className="operations-metric">
-            <CheckCircle2 aria-hidden="true" style={{ color: '#16a34a' }} />
-            <span>{isPlatform ? 'Đã gửi / Hoàn tất' : 'Đã duyệt / Hoàn tất'}</span>
-            <strong style={{ color: 'var(--color-status-success-ink)' }}>
-              {
-                tasks.data.items.filter((t) => t.status === 'SUBMITTED' || t.status === 'COMPLETED')
-                  .length
-              }
-            </strong>
-            <small>Đã gửi báo cáo</small>
-          </div>
-        </div>
-      )}
-      {(role === 'SELLER' || role === 'OPERATIONS_MANAGER') && tasks.isSuccess && (
-        <p className={role === 'SELLER' ? 'seller-task-count' : 'manager-task-count'} role="status">
-          {tasks.data.items.length} công việc trong trang {page}
-          {status ? ` · ${TASK_STATUS_LABELS[status] || status}` : ''}.
-          {tasks.data.hasMore ? ' Còn công việc ở trang sau.' : ''}
-        </p>
-      )}
+        )}
+      {(role === 'SELLER' || role === 'OPERATIONS_MANAGER' || role === 'TECHNICIAN') &&
+        tasks.isSuccess && (
+          <p
+            className={role === 'SELLER' ? 'seller-task-count' : 'manager-task-count'}
+            role="status"
+          >
+            {tasks.data.items.length} công việc trong trang {page}
+            {status ? ` · ${TASK_STATUS_LABELS[status] || status}` : ''}.
+            {tasks.data.hasMore ? ' Còn công việc ở trang sau.' : ''}
+          </p>
+        )}
       {canAssign && actorId && (
         <AdminTaskAssignment
           actorId={actorId}
@@ -164,7 +175,11 @@ export function TaskManagement(props: StaffTasksProps) {
         <div>
           <label
             htmlFor="task-status"
-            className={role === 'SELLER' || role === 'OPERATIONS_MANAGER' ? undefined : 'sr-only'}
+            className={
+              role === 'SELLER' || role === 'OPERATIONS_MANAGER' || role === 'TECHNICIAN'
+                ? undefined
+                : 'sr-only'
+            }
           >
             Lọc trạng thái
           </label>
