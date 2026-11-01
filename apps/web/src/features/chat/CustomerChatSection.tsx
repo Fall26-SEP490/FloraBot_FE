@@ -1,5 +1,8 @@
 import { useCallback, useRef, useState } from 'react';
+import Link from 'next/link';
+import { Flower2, MessageSquare, RefreshCw, X } from '@florabot/ui';
 import './chat.css';
+import './styles/customer-chat.css';
 import { useQuery } from '@tanstack/react-query';
 import { queryClient } from '@/shared/lib/api';
 import { getCustomerChats } from './api';
@@ -14,6 +17,7 @@ import type {
 
 export function CustomerChatSection({ initialChatId }: { initialChatId?: string | null }) {
   const [page, setPage] = useState(1);
+  const [showDetailsPanel, setShowDetailsPanel] = useState(false);
   const [selectedChatId, setSelectedChatId] = useState<string | null>(() => initialChatId || null);
   const [viewMode, setViewMode] = useState<'list' | 'conversation'>(() =>
     initialChatId ? 'conversation' : 'list',
@@ -109,15 +113,18 @@ export function CustomerChatSection({ initialChatId }: { initialChatId?: string 
         onRealtimeMessageRef.current?.(event);
       }
       void queryClient.invalidateQueries({ queryKey: ['member-chats'] });
+      void queryClient.invalidateQueries({ queryKey: ['member-chats-unread-count'] });
     },
     onMessagesRead: (event: ChatMessagesReadEvent) => {
       if (event.chatId === activeChatId) {
         onRealtimeReadRef.current?.(event);
       }
       void queryClient.invalidateQueries({ queryKey: ['member-chats'] });
+      void queryClient.invalidateQueries({ queryKey: ['member-chats-unread-count'] });
     },
     onReconnect: () => {
       void queryClient.invalidateQueries({ queryKey: ['member-chats'] });
+      void queryClient.invalidateQueries({ queryKey: ['member-chats-unread-count'] });
     },
   });
 
@@ -128,60 +135,142 @@ export function CustomerChatSection({ initialChatId }: { initialChatId?: string 
 
   const handleBackToList = () => {
     setViewMode('list');
+    setShowDetailsPanel(false);
+  };
+
+  const handleRefreshAll = () => {
+    void chatsQuery.refetch();
+    void queryClient.invalidateQueries({ queryKey: ['member-chats-unread-count'] });
+    if (activeChatId) {
+      void queryClient.invalidateQueries({ queryKey: ['chat-messages', activeChatId] });
+    }
   };
 
   const handleMessagesReadLocally = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: ['member-chats'] });
+    void queryClient.invalidateQueries({ queryKey: ['member-chats-unread-count'] });
   }, []);
 
+  if (chatsQuery.isSuccess && page === 1 && !hasMore && displayedItems.length === 0) {
+    return (
+      <div className="customer-inbox-empty">
+        <MessageSquare size={30} aria-hidden="true" />
+        <h2>Chưa có cuộc trò chuyện nào</h2>
+        <p>
+          Chọn một mẫu hoa bạn thích và nhắn tin với shop. Các cuộc trò chuyện sẽ được lưu tại đây.
+        </p>
+        <Link href="/dat-hoa" className="button button-primary">
+          Khám phá hoa
+        </Link>
+      </div>
+    );
+  }
+
   return (
-    <div className={`chat-layout mode-${viewMode}`}>
-      <div className="chat-layout-sidebar">
-        <div className="chat-sidebar-header">
-          <h2 className="chat-sidebar-title">Tin nhắn với các shop</h2>
-          <p className="chat-sidebar-subtitle quiet">
-            Trao đổi trực tiếp về yêu cầu cắm hoa và đơn hàng
-          </p>
+    <section className="staff-chat-section customer-chat-section" aria-label="Tin nhắn với shop">
+      <div
+        className={`chat-layout mode-${viewMode} ${showDetailsPanel && activeChat ? 'with-details' : ''}`}
+      >
+        <div className="chat-layout-sidebar">
+          <div className="chat-sidebar-header">
+            <div className="chat-sidebar-header-row">
+              <h2 className="chat-sidebar-title">Shop đang trao đổi</h2>
+              <button
+                type="button"
+                className="chat-sidebar-refresh-btn"
+                disabled={chatsQuery.isFetching}
+                onClick={handleRefreshAll}
+                title="Làm mới danh sách tin nhắn"
+                aria-label="Làm mới danh sách tin nhắn"
+              >
+                <RefreshCw
+                  size={15}
+                  aria-hidden="true"
+                  className={chatsQuery.isFetching ? 'is-spinning' : ''}
+                />
+              </button>
+            </div>
+          </div>
+
+          <ChatList
+            items={displayedItems}
+            activeChatId={activeChatId}
+            onSelectChat={handleSelectChat}
+            page={page}
+            hasMore={hasMore}
+            onPageChange={setPage}
+            isLoading={chatsQuery.isPending}
+            isError={chatsQuery.isError}
+            error={chatsQuery.error}
+            onRetry={() => void chatsQuery.refetch()}
+            userRole="CUSTOMER"
+          />
         </div>
 
-        <ChatList
-          items={displayedItems}
-          activeChatId={activeChatId}
-          onSelectChat={handleSelectChat}
-          page={page}
-          hasMore={hasMore}
-          onPageChange={setPage}
-          isLoading={chatsQuery.isPending}
-          isError={chatsQuery.isError}
-          error={chatsQuery.error}
-          onRetry={() => void chatsQuery.refetch()}
-          userRole="CUSTOMER"
-        />
-      </div>
-
-      <div className="chat-layout-main">
-        {activeChat ? (
-          <ConversationView
-            key={activeChat.id}
-            chatId={activeChat.id}
-            otherPartyName={activeChat.otherPartyName}
-            productContext={activeChat.productContext}
-            onBack={handleBackToList}
-            onMessagesReadLocally={handleMessagesReadLocally}
-            registerRealtimeHandlers={(handleMessage, handleRead) => {
-              onRealtimeMessageRef.current = handleMessage;
-              onRealtimeReadRef.current = handleRead;
-            }}
-          />
-        ) : (
-          <div className="chat-empty-selection">
-            <p className="chat-empty-selection-title">Chưa chọn cuộc trò chuyện</p>
-            <p className="quiet">
-              Chọn một cuộc trò chuyện từ danh sách bên trái để xem lịch sử và gửi tin nhắn.
-            </p>
-          </div>
+        <div className="chat-layout-main">
+          {activeChat ? (
+            <ConversationView
+              key={activeChat.id}
+              chatId={activeChat.id}
+              otherPartyName={activeChat.otherPartyName}
+              productContext={activeChat.productContext}
+              onBack={handleBackToList}
+              onMessagesReadLocally={handleMessagesReadLocally}
+              onToggleDetails={() => setShowDetailsPanel((value) => !value)}
+              showDetails={showDetailsPanel}
+              detailsLabel="shop"
+              customerMode
+              registerRealtimeHandlers={(handleMessage, handleRead) => {
+                onRealtimeMessageRef.current = handleMessage;
+                onRealtimeReadRef.current = handleRead;
+              }}
+            />
+          ) : (
+            <div className="chat-empty-selection">
+              <p className="chat-empty-selection-title">Chưa chọn cuộc trò chuyện</p>
+              <p className="quiet">
+                Chọn một cuộc trò chuyện từ danh sách bên trái để xem lịch sử và gửi tin nhắn.
+              </p>
+            </div>
+          )}
+        </div>
+        {activeChat && showDetailsPanel && (
+          <aside className="chat-details-panel" aria-label="Thông tin shop">
+            <div className="chat-details-header">
+              <h3>Thông tin shop</h3>
+              <button
+                type="button"
+                className="chat-details-close-btn"
+                aria-label="Thu gọn bảng thông tin"
+                onClick={() => setShowDetailsPanel(false)}
+              >
+                <X size={18} aria-hidden="true" />
+              </button>
+            </div>
+            <div className="chat-details-scroll">
+              <div className="chat-details-profile">
+                <div className="chat-details-avatar" aria-hidden="true">
+                  {activeChat.otherPartyName.slice(0, 1).toLocaleUpperCase('vi-VN')}
+                </div>
+                <h4 className="chat-details-name">{activeChat.otherPartyName}</h4>
+              </div>
+              {activeChat.productContext && (
+                <section className="chat-details-section">
+                  <h5 className="chat-details-section-title">MẪU HOA ĐANG TRAO ĐỔI</h5>
+                  <div className="chat-details-product-card">
+                    <span className="chat-details-product-icon">
+                      <Flower2 size={18} aria-hidden="true" />
+                    </span>
+                    <div className="chat-details-product-info">
+                      <strong>{activeChat.productContext}</strong>
+                    </div>
+                  </div>
+                </section>
+              )}
+            </div>
+          </aside>
         )}
       </div>
-    </div>
+    </section>
   );
 }

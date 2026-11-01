@@ -9,10 +9,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 8px;
   min-width: 48px;
   min-height: 48px;
-  padding: 3px 7px 3px 3px;
+  padding: 3px 10px 3px 3px;
   border: 1px solid #c9d9c8;
   border-radius: 9999px;
   background: #ffffff;
@@ -38,6 +38,7 @@
 }
 
 .user-menu-trigger > svg {
+  flex-shrink: 0;
   transition: transform 0.2s ease;
 }
 
@@ -47,6 +48,7 @@
 
 .user-menu-avatar {
   display: grid;
+  flex-shrink: 0;
   width: 38px;
   height: 38px;
   place-items: center;
@@ -56,6 +58,28 @@
   font-size: 15px;
   font-weight: 800;
   box-shadow: 0 2px 7px rgba(23, 75, 53, 0.2);
+}
+
+.user-menu-identity {
+  display: grid;
+  min-width: 0;
+  text-align: left;
+}
+
+.user-menu-caption {
+  color: #587264;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.user-menu-name {
+  max-width: min(160px, 25vw);
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .user-menu-popover {
@@ -73,23 +97,12 @@
   animation: sharedUserMenuIn 0.16s ease-out;
 }
 
-.user-menu-summary {
-  display: grid;
-  gap: 2px;
-  padding: 10px 11px 12px;
-  border-bottom: 1px solid #e5eee3;
-}
-
-.user-menu-summary strong {
-  overflow: hidden;
-  color: #173824;
-  font-size: 14px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.user-menu-summary span {
-  color: #6b7f70;
+.user-menu-unread {
+  margin-left: auto;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #dcefdc;
+  color: #174b35;
   font-size: 12px;
 }
 

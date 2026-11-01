@@ -3,13 +3,26 @@
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronDown, Flower2, LayoutDashboard, LogOut, Store, User } from '@florabot/ui';
+import { useQuery } from '@tanstack/react-query';
+import { getCustomerUnreadCount } from '@/features/chat/api';
+import { sessionQuery } from '@/shared/lib/api';
+import {
+  ChevronDown,
+  Flower2,
+  LayoutDashboard,
+  LogOut,
+  MessageSquare,
+  Package,
+  RotateCcw,
+  Store,
+  User,
+} from '@florabot/ui';
 import '../styles/user-menu.css';
 
 export type UserMenuLink = {
   href: string;
   label: string;
-  icon: 'workspace' | 'shop' | 'purchase' | 'profile';
+  icon: 'workspace' | 'shop' | 'purchase' | 'profile' | 'orders' | 'chats' | 'history';
 };
 
 const icons = {
@@ -17,11 +30,13 @@ const icons = {
   shop: Store,
   purchase: Flower2,
   profile: User,
+  orders: Package,
+  chats: MessageSquare,
+  history: RotateCcw,
 } as const;
 
 export function UserMenu({
   name,
-  roleLabel,
   links,
   busy,
   onLogout,
@@ -32,7 +47,6 @@ export function UserMenu({
   className = '',
 }: {
   name: string;
-  roleLabel: string;
   links: UserMenuLink[];
   busy: boolean;
   onLogout: () => void;
@@ -43,6 +57,13 @@ export function UserMenu({
   className?: string;
 }) {
   const pathname = usePathname();
+  const session = useQuery(sessionQuery);
+  const unread = useQuery({
+    queryKey: ['member-chats-unread-count', session.data?.id],
+    queryFn: ({ signal }) => getCustomerUnreadCount(signal),
+    enabled: open && session.data?.role === 'CUSTOMER',
+    refetchInterval: 15_000,
+  });
   const container = useRef<HTMLDivElement>(null);
   const toggle = useRef<HTMLButtonElement>(null);
 
@@ -82,14 +103,14 @@ export function UserMenu({
         <span className="user-menu-avatar" aria-hidden="true">
           {name.trim().slice(0, 1).toLocaleUpperCase('vi-VN') || 'F'}
         </span>
+        <span className="user-menu-identity">
+          <span className="user-menu-caption">Tài khoản</span>
+          <span className="user-menu-name">{name}</span>
+        </span>
         <ChevronDown size={16} aria-hidden="true" />
       </button>
       {open && (
         <div id={menuId} className="user-menu-popover" aria-label="Menu người dùng">
-          <div className="user-menu-summary">
-            <strong>{name}</strong>
-            <span>{roleLabel}</span>
-          </div>
           <div className="user-menu-links">
             {links.map((item) => {
               const Icon = icons[item.icon];
@@ -98,11 +119,27 @@ export function UserMenu({
                   key={`${item.href}-${item.label}`}
                   href={item.href}
                   prefetch={false}
-                  aria-current={pathname === item.href ? 'page' : undefined}
-                  onClick={() => onOpenChange(false)}
+                  aria-current={
+                    `${pathname}${typeof window === 'undefined' ? '' : window.location.hash}` ===
+                    item.href
+                      ? 'page'
+                      : undefined
+                  }
+                  onClick={(event) => {
+                    if (item.href.includes('#') && item.href.split('#')[0] === pathname) {
+                      event.preventDefault();
+                      window.location.assign(item.href);
+                    }
+                    onOpenChange(false);
+                  }}
                 >
                   <Icon size={17} aria-hidden="true" />
                   <span>{item.label}</span>
+                  {item.icon === 'chats' && unread.data != null && unread.data > 0 && (
+                    <span className="user-menu-unread" aria-label={`${unread.data} tin chưa đọc`}>
+                      {unread.data}
+                    </span>
+                  )}
                 </Link>
               );
             })}

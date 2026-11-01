@@ -71,12 +71,12 @@
   overflow: clip;
 }
 .auth-form-panel {
-  padding: clamp(2rem, 5vw, 3.5rem) clamp(2rem, 5vw, 4.5rem);
+  padding: clamp(1.5rem, 3vw, 2.5rem) clamp(2rem, 5vw, 4.5rem);
   align-self: center;
   min-width: 0;
 }
 .auth-form-panel h1 {
-  font: 800 clamp(2rem, 3.2vw, 2.6rem)/1.15 var(--font-display);
+  font: 800 clamp(1.8rem, 3vw, 2.3rem)/1.15 var(--font-display);
   letter-spacing: -0.025em;
   color: #123823;
   margin: 0 0 1.25rem;
@@ -86,7 +86,7 @@
   color: #3b5242;
   font-size: 0.95rem;
   line-height: 1.65;
-  margin: 0 0 1.5rem;
+  margin: 0 0 1rem;
 }
 .auth-tabs {
   display: flex;
@@ -116,7 +116,7 @@
 }
 .auth-form {
   display: grid;
-  gap: 1.15rem;
+  gap: 0.8rem;
 }
 .auth-required,
 .auth-hint {
@@ -295,7 +295,7 @@
   cursor: wait;
 }
 .auth-social-section {
-  margin-top: 1.25rem;
+  margin: 0 0 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.875rem;
@@ -464,7 +464,7 @@
   height: 270px;
   flex: 1 1 270px;
   min-height: 220px;
-  max-height: 480px;
+  max-height: none;
   object-fit: cover;
   object-position: center 55%;
 }
