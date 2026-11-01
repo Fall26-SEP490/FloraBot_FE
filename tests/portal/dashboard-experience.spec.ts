@@ -103,7 +103,7 @@ for (const role of ['ADMIN', 'SELLER', 'SELLER_STAFF'] as const) {
       } else if (role === 'ADMIN') {
         await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tổng quan quản trị');
       } else {
-        await expect(page.getByRole('heading', { level: 1 })).toContainText('Ngọc Anh');
+        await expect(page.getByRole('heading', { level: 1 })).toHaveText('Công việc giao hoa');
       }
       if (role === 'ADMIN')
         await expect(page.getByText('Cửa ô A02 chưa đóng sau lượt nhận hoa')).toBeVisible();
@@ -113,14 +113,16 @@ for (const role of ['ADMIN', 'SELLER', 'SELLER_STAFF'] as const) {
           page.getByRole('heading', { name: 'Giao hoa · Tủ Đại học FPT' }),
         ).toBeVisible();
       expect(
-        requests.every((path) =>
-          path.startsWith(
-            role === 'ADMIN'
-              ? '/api/admin/'
-              : role === 'SELLER'
-                ? '/api/sellers/my-shop/'
-                : '/api/staff/',
-          ),
+        requests.every(
+          (path) =>
+            (role === 'SELLER' && path === '/api/me/products') ||
+            path.startsWith(
+              role === 'ADMIN'
+                ? '/api/admin/'
+                : role === 'SELLER'
+                  ? '/api/sellers/my-shop/'
+                  : '/api/staff/',
+            ),
         ),
       ).toBe(true);
       if (width < 900) {
@@ -207,9 +209,9 @@ test('Empty wallet does not fabricate a financial balance', async ({ page }) => 
     route.fulfill({ json: { balance: null } }),
   );
   await page.goto('/seller');
-  await expect(page.getByText('Ví chưa có số dư được ghi nhận.')).toBeVisible();
+  await expect(page.getByText('Chưa ghi nhận số dư ví.')).toBeVisible();
   await expect(
-    page.getByRole('region', { name: 'Tình hình cửa hàng' }).getByText(/0\s*₫/),
+    page.getByRole('region', { name: 'Tiền bán hoa', exact: true }).getByText(/0\s*₫/),
   ).toHaveCount(0);
   await page.setViewportSize({ width: 320, height: 1000 });
   await page.addStyleTag({ content: ':root { font-size: 36px !important; }' });

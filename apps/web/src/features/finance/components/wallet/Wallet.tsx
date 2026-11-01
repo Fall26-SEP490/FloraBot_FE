@@ -101,6 +101,16 @@ export default function Wallet({ session }: { session: Session }) {
   });
   const available = Number(overview.data?.balance?.availableBalance ?? 0);
   const minimum = Number(overview.data?.minimumWithdrawal ?? 0);
+  const hasBalance =
+    overview.data?.balance?.availableBalance != null &&
+    overview.data.balance.pendingBalance != null;
+  const openBankDetails = () => {
+    const panel = document.getElementById('seller-bank-details') as HTMLDetailsElement | null;
+    if (!panel) return;
+    panel.open = true;
+    panel.querySelector('summary')?.focus();
+    panel.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+  };
   const validateAmount = (amount: number) => {
     if (amount < minimum || amount <= 0) {
       form.setError(
@@ -126,6 +136,7 @@ export default function Wallet({ session }: { session: Session }) {
       uncertain ||
       review === null ||
       !overview.data?.bankConfigured ||
+      !hasBalance ||
       overview.isFetching ||
       overview.isError
     )
@@ -164,11 +175,11 @@ export default function Wallet({ session }: { session: Session }) {
           <dl className="wallet-balances">
             <div>
               <dt>Có thể rút</dt>
-              <dd>{money(available)}</dd>
+              <dd>{hasBalance ? money(available) : '—'}</dd>
             </div>
             <div>
               <dt>Đang chờ kết chuyển</dt>
-              <dd>{money(overview.data.balance?.pendingBalance ?? 0)}</dd>
+              <dd>{hasBalance ? money(overview.data.balance!.pendingBalance!) : '—'}</dd>
             </div>
             {Number(overview.data.balance?.debt ?? 0) > 0 && (
               <div>
@@ -177,127 +188,137 @@ export default function Wallet({ session }: { session: Session }) {
               </div>
             )}
           </dl>
+          {!hasBalance && (
+            <p role="status">Chưa ghi nhận số dư ví. Bạn chưa thể gửi yêu cầu rút tiền.</p>
+          )}
           <p className="quiet">
             Tiền bán hàng được kết chuyển sau thời hạn khiếu nại khi đơn đủ điều kiện. Yêu cầu rút
             đang chờ chưa trừ số dư; số tiền được kiểm tra lại khi chuyển khoản.
           </p>
-          <BankDetails session={session} />
-          <div className="wallet-actions">
-            <div>
-              <h3>Gửi yêu cầu rút tiền</h3>
-              <p>
-                Mức rút tối thiểu hiện tại: <strong>{money(minimum)}</strong>.
-              </p>
-              <p className="quiet">
-                Đội ngũ sẽ duyệt yêu cầu và chuyển khoản. Gửi yêu cầu chưa có nghĩa là tiền đã về
-                ngân hàng.
-              </p>
-            </div>
-            <div>
-              {!overview.data.bankConfigured ? (
+          <div className="wallet-workflow">
+            <BankDetails session={session} />
+            <div className="wallet-actions">
+              <div>
+                <h3>Gửi yêu cầu rút tiền</h3>
                 <p>
-                  Shop chưa có đầy đủ thông tin tài khoản nhận tiền. Mở mục “Tài khoản nhận tiền” để
-                  khai báo trước khi rút.
+                  Mức rút tối thiểu hiện tại: <strong>{money(minimum)}</strong>.
                 </p>
-              ) : uncertain && !withdrawal.isPending ? (
-                <div role="alert">
-                  <p>
-                    Chưa xác định được kết quả lần gửi trước. Cập nhật ví và kiểm tra các yêu cầu
-                    gần đây trước khi gửi thêm.
-                  </p>
-                  <Button
-                    variant="outline"
-                    disabled={overview.isFetching}
-                    onClick={() => {
-                      markUncertain(false);
-                      withdrawal.reset();
-                    }}
-                  >
-                    Tôi đã kiểm tra lịch sử yêu cầu
-                  </Button>
-                </div>
-              ) : review !== null ? (
-                <div className="withdrawal-review">
-                  <p>
-                    Bạn muốn yêu cầu rút <strong>{money(review)}</strong> về tài khoản shop đã khai
-                    báo?
-                  </p>
-                  <div className="wallet-buttons">
-                    <Button
-                      ref={confirmRef}
-                      onClick={confirm}
-                      disabled={withdrawal.isPending || overview.isFetching}
-                    >
-                      {withdrawal.isPending ? 'Đang gửi yêu cầu…' : 'Xác nhận yêu cầu rút'}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      disabled={withdrawal.isPending}
-                      onClick={() => {
-                        setReview(null);
-                        requestAnimationFrame(() => amountRef.current?.focus());
-                      }}
-                    >
-                      Sửa số tiền
+                <p className="quiet">
+                  Đội ngũ sẽ duyệt yêu cầu và chuyển khoản. Gửi yêu cầu chưa có nghĩa là tiền đã về
+                  ngân hàng.
+                </p>
+              </div>
+              <div>
+                {!overview.data.bankConfigured ? (
+                  <div className="wallet-blocked">
+                    <p>
+                      Shop chưa có đầy đủ thông tin tài khoản nhận tiền. Khai báo trước khi rút.
+                    </p>
+                    <Button variant="outline" onClick={openBankDetails}>
+                      Mở tài khoản nhận tiền
                     </Button>
                   </div>
-                </div>
-              ) : (
-                <form
-                  noValidate
-                  onSubmit={form.handleSubmit((values) => {
-                    const amount = Number(values.amount);
-                    if (validateAmount(amount)) {
-                      withdrawal.reset();
-                      setReview(amount);
-                    }
-                  })}
-                >
-                  <label htmlFor="withdrawal-amount">Số tiền muốn rút (đồng)</label>
-                  <input
-                    id="withdrawal-amount"
-                    inputMode="numeric"
-                    autoComplete="off"
-                    {...amountField}
-                    ref={(node) => {
-                      amountField.ref(node);
-                      amountRef.current = node;
-                    }}
-                    aria-invalid={!!form.formState.errors.amount}
-                    aria-describedby="withdrawal-help withdrawal-error"
-                  />
-                  <p id="withdrawal-help" className="quiet">
-                    Nhập số nguyên, ví dụ 100000 cho 100.000 đồng.
-                  </p>
-                  <p id="withdrawal-error" className="error">
-                    {form.formState.errors.amount?.message}
-                  </p>
-                  <Button
-                    type="submit"
-                    disabled={
-                      withdrawal.isPending ||
-                      overview.isFetching ||
-                      available < minimum ||
-                      available <= 0
-                    }
+                ) : uncertain && !withdrawal.isPending ? (
+                  <div role="alert">
+                    <p>
+                      Chưa xác định được kết quả lần gửi trước. Cập nhật ví và kiểm tra các yêu cầu
+                      gần đây trước khi gửi thêm.
+                    </p>
+                    <Button
+                      variant="outline"
+                      disabled={overview.isFetching}
+                      onClick={() => {
+                        markUncertain(false);
+                        withdrawal.reset();
+                      }}
+                    >
+                      Tôi đã kiểm tra lịch sử yêu cầu
+                    </Button>
+                  </div>
+                ) : review !== null ? (
+                  <div className="withdrawal-review">
+                    <p>
+                      Bạn muốn yêu cầu rút <strong>{money(review)}</strong> về tài khoản shop đã
+                      khai báo?
+                    </p>
+                    <div className="wallet-buttons">
+                      <Button
+                        ref={confirmRef}
+                        onClick={confirm}
+                        disabled={withdrawal.isPending || overview.isFetching}
+                      >
+                        {withdrawal.isPending ? 'Đang gửi yêu cầu…' : 'Xác nhận yêu cầu rút'}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        disabled={withdrawal.isPending}
+                        onClick={() => {
+                          setReview(null);
+                          requestAnimationFrame(() => amountRef.current?.focus());
+                        }}
+                      >
+                        Sửa số tiền
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <form
+                    noValidate
+                    onSubmit={form.handleSubmit((values) => {
+                      const amount = Number(values.amount);
+                      if (validateAmount(amount)) {
+                        withdrawal.reset();
+                        setReview(amount);
+                      }
+                    })}
                   >
-                    Kiểm tra yêu cầu rút
-                  </Button>
-                  {available < minimum && (
-                    <p className="quiet">Tiền có thể rút chưa đạt mức tối thiểu.</p>
-                  )}
-                </form>
-              )}
-              {withdrawal.isError && (
-                <p role="alert" className="error">
-                  {message(withdrawal.error)}
+                    <label htmlFor="withdrawal-amount">Số tiền muốn rút (đồng)</label>
+                    <input
+                      id="withdrawal-amount"
+                      inputMode="numeric"
+                      autoComplete="off"
+                      {...amountField}
+                      ref={(node) => {
+                        amountField.ref(node);
+                        amountRef.current = node;
+                      }}
+                      aria-invalid={!!form.formState.errors.amount}
+                      aria-describedby="withdrawal-help withdrawal-error"
+                    />
+                    <p id="withdrawal-help" className="quiet">
+                      Nhập số nguyên, ví dụ 100000 cho 100.000 đồng.
+                    </p>
+                    <p id="withdrawal-error" className="error">
+                      {form.formState.errors.amount?.message}
+                    </p>
+                    <Button
+                      type="submit"
+                      disabled={
+                        withdrawal.isPending ||
+                        overview.isFetching ||
+                        !hasBalance ||
+                        available < minimum ||
+                        available <= 0
+                      }
+                    >
+                      Kiểm tra yêu cầu rút
+                    </Button>
+                    {available < minimum && (
+                      <p className="quiet">Tiền có thể rút chưa đạt mức tối thiểu.</p>
+                    )}
+                  </form>
+                )}
+                {withdrawal.isError && (
+                  <p role="alert" className="error">
+                    {message(withdrawal.error)}
+                  </p>
+                )}
+                <p role="status">
+                  {withdrawal.isSuccess
+                    ? 'Đã gửi yêu cầu rút tiền. Bạn có thể theo dõi tiến độ bên dưới.'
+                    : ''}
                 </p>
-              )}
-              <p role="status">
-                {withdrawal.isSuccess
-                  ? 'Đã gửi yêu cầu rút tiền. Bạn có thể theo dõi tiến độ bên dưới.'
-                  : ''}
-              </p>
+              </div>
             </div>
           </div>
           <h3>Yêu cầu rút gần đây</h3>

@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import AdminNavigation from './AdminNavigation';
+import SellerNavigation from './SellerNavigation';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -7,14 +8,8 @@ import {
   ClipboardList,
   Store,
   Boxes,
-  Wallet,
-  CircleAlert,
-  Package,
-  Banknote,
   ListChecks,
   Users,
-  Flower2,
-  MapPin,
   Menu,
   X,
   MessageSquare,
@@ -23,7 +18,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { getSellerChats } from '@/features/chat/api';
 import { getRoleLabel } from '@/features/portal/config/roleRoutes';
-import { workspaceBase, workspaceSections } from '@/features/portal/config/workspaceSections';
+import { workspaceBase } from '@/features/portal/config/workspaceSections';
 import { UserMenu, type UserMenuLink } from '@/shared/components/UserMenu';
 import { SiteBrand } from '@/shared/layout/SiteFrame';
 import { sessionQuery } from '@/shared/lib/api';
@@ -37,43 +32,6 @@ function workspaceRoleLabel(role: string) {
       ? 'Quản lý vận hành'
       : getRoleLabel(role);
 }
-
-const icons = {
-  overview: LayoutDashboard,
-  approvals: ClipboardList,
-  managers: Users,
-  accounts: Users,
-  customers: Users,
-  sellers: Store,
-  technicians: Users,
-  staff: Users,
-  orders: ClipboardList,
-  chats: MessageSquare,
-  'staff-chats': MessageSquare,
-  incidents: CircleAlert,
-  tasks: ListChecks,
-  shops: Store,
-  slots: Boxes,
-  complaints: CircleAlert,
-  refunds: Banknote,
-  'kiosk-refunds': Banknote,
-  installations: Boxes,
-  withdrawals: Wallet,
-  reconciliation: ListChecks,
-  reports: LayoutDashboard,
-  products: Flower2,
-  stock: Boxes,
-  accessories: Package,
-  kiosks: MapPin,
-  subscriptions: Store,
-  wallet: Wallet,
-};
-const groups = {
-  SELLER: [
-    ['Bán hoa', ['orders', 'chats', 'products', 'stock', 'accessories', 'tasks']],
-    ['Cửa hàng', ['staff', 'staff-chats', 'kiosks', 'subscriptions', 'wallet']],
-  ],
-} as const;
 
 export function WorkspaceHeader({
   workspaceRole: role,
@@ -218,6 +176,13 @@ export default function WorkspaceNavigation({
       >
         {role === 'ADMIN' ? (
           <AdminNavigation section={section} closeMenu={closeMenu} onEscape={handleEscape} />
+        ) : role === 'SELLER' ? (
+          <SellerNavigation
+            section={section}
+            closeMenu={closeMenu}
+            onEscape={handleEscape}
+            unreadChatsCount={unreadChatsCount}
+          />
         ) : role === 'TECHNICIAN' ? (
           <>
             <Link
@@ -324,49 +289,15 @@ export default function WorkspaceNavigation({
             </div>
           </>
         ) : (
-          <>
-            <Link
-              onKeyDown={handleEscape}
-              onClick={closeMenu}
-              href={base}
-              aria-current={section === 'overview' ? 'page' : undefined}
-            >
-              <LayoutDashboard size={19} aria-hidden="true" />
-              {role === 'SELLER' ? 'Tổng quan cửa hàng' : 'Tổng quan'}
-            </Link>
-            {groups[role as 'SELLER']?.map(([label, keys]) => (
-              <div className="workspace-nav-group" key={label}>
-                <p>{label}</p>
-                {keys.map((key) => {
-                  const item = workspaceSections[role as 'ADMIN' | 'SELLER']?.find(
-                    ([id]) => id === key,
-                  );
-                  if (!item) return null;
-                  const Icon = icons[key as keyof typeof icons];
-                  return (
-                    <Link
-                      onKeyDown={handleEscape}
-                      onClick={closeMenu}
-                      key={key}
-                      href={`${base}/${key}`}
-                      aria-current={section === key ? 'page' : undefined}
-                    >
-                      <Icon size={19} aria-hidden="true" />
-                      <span>{item[1]}</span>
-                      {key === 'chats' && unreadChatsCount > 0 && (
-                        <span
-                          className="workspace-badge"
-                          aria-label={`${unreadChatsCount} tin nhắn chưa đọc`}
-                        >
-                          {unreadChatsCount > 99 ? '99+' : unreadChatsCount}
-                        </span>
-                      )}
-                    </Link>
-                  );
-                })}
-              </div>
-            ))}
-          </>
+          <Link
+            onKeyDown={handleEscape}
+            onClick={closeMenu}
+            href={base}
+            aria-current={section === 'overview' ? 'page' : undefined}
+          >
+            <LayoutDashboard size={19} aria-hidden="true" />
+            Tổng quan
+          </Link>
         )}
       </nav>
     </aside>

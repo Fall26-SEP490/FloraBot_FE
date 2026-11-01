@@ -120,9 +120,9 @@ export function StaffChatSection({ session }: { session: Session }) {
       <div className={`chat-layout staff-chat-layout mode-${mode}`}>
         <div className="chat-layout-sidebar">
           <div className="chat-sidebar-header">
-            <h3 className="chat-sidebar-title">
+            <h2 className="chat-sidebar-title">
               {seller ? 'Tin nhắn nhân viên' : 'Tin nhắn với shop'}
-            </h3>
+            </h2>
             {seller ? (
               <div className="staff-chat-start">
                 <label htmlFor="staff-chat-person">Chọn nhân viên đang hoạt động</label>

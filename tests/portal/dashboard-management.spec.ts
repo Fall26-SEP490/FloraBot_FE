@@ -145,18 +145,15 @@ test('Seller overview displays truthful Seller Staff personnel summary linking t
   await page.goto('/seller');
 
   // Verify truthful personnel summary card exists for shop staff
-  const panel = page.getByRole('region', { name: 'Đội ngũ Nhân viên shop' });
+  const panel = page.getByRole('region', { name: 'Nhân viên shop', exact: true });
   await expect(panel).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Đội ngũ Nhân viên shop' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Nhân viên shop', exact: true })).toBeVisible();
 
   // Verify real counts from API: 3 total, 2 active, 1 inactive/disabled
-  await expect(panel.getByText('Tổng số nhân viên')).toBeVisible();
-  await expect(panel.getByText('3')).toBeVisible();
-  await expect(panel.getByText('Đang làm việc')).toBeVisible();
-  await expect(panel.getByText('2')).toBeVisible();
+  await expect(panel).toContainText('2 tài khoản đang hoạt động / 3 nhân viên');
 
   // Verify link to real seller staff management
-  const staffLink = page.getByRole('link', { name: 'Quản lý nhân viên' });
+  const staffLink = page.getByRole('link', { name: 'Quản lý tài khoản nhân viên' });
   await expect(staffLink).toBeVisible();
   await expect(staffLink).toHaveAttribute('href', '/seller/staff');
 
@@ -173,7 +170,7 @@ test('Staff workspace renders real assigned tasks without fake mock management t
   await page.goto('/staff');
 
   // Verify real staff tasks heading and guide are present
-  await expect(page.getByRole('heading', { name: 'Chào Nhân viên ca sáng' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Công việc giao hoa' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Từ nhận việc đến hoàn thành' })).toBeVisible();
 
   // Verify fake mock management table is NOT present

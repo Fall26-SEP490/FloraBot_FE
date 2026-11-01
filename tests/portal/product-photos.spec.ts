@@ -84,11 +84,12 @@ for (const width of [390, 1440]) {
       return uploads === 1 ? route.fulfill({ json: photos[0] }) : route.abort();
     });
     await page.goto('/seller/products');
-    await page.locator('.product-list summary').click();
-    const section = page.locator('.product-photos');
-    expect(reads).toBe(0);
-    await section.getByRole('button', { name: 'Xem ảnh sản phẩm' }).click();
-    await expect(section.getByText('Chưa có ảnh trên trang này.')).toBeVisible();
+    await page.locator('.product-order-list summary').click();
+    const section = page.locator('.product-photos-inline');
+    await expect.poll(() => reads).toBe(1);
+    await expect(
+      section.getByText('Chưa có ảnh riêng — đang hiển thị ảnh mặc định của hệ thống.'),
+    ).toBeVisible();
     const input = section.getByLabel(`Chọn ảnh cho ${product.name}`);
     await input.setInputFiles({
       name: 'unsafe.svg',
@@ -96,16 +97,14 @@ for (const width of [390, 1440]) {
       buffer: Buffer.from('<svg/>'),
     });
     await expect(section.getByRole('alert')).toContainText('Chọn ảnh PNG');
-    await expect(
-      section.getByRole('button', { name: 'Tải ảnh sản phẩm', exact: true }),
-    ).toBeDisabled();
+    await expect(section.getByRole('button', { name: 'Tải ảnh lên', exact: true })).toHaveCount(0);
     await input.setInputFiles({ name: 'hoa.jpg', mimeType: 'image/jpeg', buffer: bytes });
     await expect(section.getByAltText(`Xem trước ảnh đã chọn cho ${product.name}`)).toBeVisible();
     expect(uploads).toBe(0);
     expect(
       (
         await new AxeBuilder({ page })
-          .include('.product-photos')
+          .include('.product-photos-inline')
           .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
           .analyze()
       ).violations,
@@ -114,19 +113,17 @@ for (const width of [390, 1440]) {
       true,
     );
     await section.screenshot({ path: `.impeccable/review/product-photos-${width}.png` });
-    await section.getByRole('button', { name: 'Tải ảnh sản phẩm', exact: true }).click();
+    await section.getByRole('button', { name: 'Tải ảnh lên', exact: true }).click();
     await expect(section.getByRole('status').filter({ hasText: 'Đã thêm ảnh' })).toBeFocused();
     await expect(section.getByAltText(`Ảnh 1 của ${product.name}`, { exact: true })).toBeVisible();
     await expect(input).toHaveValue('');
     await input.setInputFiles({ name: 'hoa.jpg', mimeType: 'image/jpeg', buffer: bytes });
-    await section.getByRole('button', { name: 'Tải ảnh sản phẩm', exact: true }).click();
+    await section.getByRole('button', { name: 'Tải ảnh lên', exact: true }).click();
     await expect(section.getByRole('alert')).toContainText('Chưa xác định được ảnh đã lưu');
     await expect(input).toBeDisabled();
-    await section.getByRole('button', { name: 'Làm mới danh sách ảnh' }).click();
+    await section.getByRole('button', { name: 'Làm mới', exact: true }).click();
     await expect(section.getByAltText(`Ảnh 2 của ${product.name}`, { exact: true })).toBeVisible();
-    await expect(
-      section.getByRole('button', { name: 'Tải ảnh sản phẩm', exact: true }),
-    ).toBeDisabled();
+    await expect(section.getByRole('button', { name: 'Tải ảnh lên', exact: true })).toBeDisabled();
     expect(uploads).toBe(2);
   });
 }
@@ -169,16 +166,19 @@ test('Seller captures a product photo from the device camera before uploading', 
   });
 
   await page.goto('/seller/products');
-  await page.locator('.product-list summary').click();
-  const section = page.locator('.product-photos');
-  await section.getByRole('button', { name: 'Chụp ảnh bằng camera' }).click();
+  await page.locator('.product-order-list summary').click();
+  const section = page.locator('.product-photos-inline');
+  await section.getByRole('button', { name: 'Chụp ảnh', exact: true }).click();
   const camera = section.getByLabel(`Hình ảnh trực tiếp từ camera cho ${product.name}`);
   await expect(camera).toBeVisible();
   await camera.dispatchEvent('loadedmetadata');
-  await section.getByRole('button', { name: 'Chụp ảnh', exact: true }).click();
+  await section
+    .getByLabel(`Camera chụp ảnh cho ${product.name}`, { exact: true })
+    .getByRole('button', { name: 'Chụp ảnh', exact: true })
+    .click();
   await expect(section.getByText('Đã chụp ảnh.', { exact: false })).toBeVisible();
   await expect(section.getByAltText(`Xem trước ảnh đã chọn cho ${product.name}`)).toBeVisible();
-  await section.getByRole('button', { name: 'Tải ảnh sản phẩm', exact: true }).click();
+  await section.getByRole('button', { name: 'Tải ảnh lên', exact: true }).click();
   await expect.poll(() => uploaded).toBe(true);
   await expect(section.getByText('Đã thêm ảnh cho sản phẩm.')).toBeVisible();
 });
@@ -214,14 +214,16 @@ test('Expired shop reads gallery pages, retries failed reads and rejects unsafe 
     });
   });
   await page.goto('/seller/products');
-  await page.locator('.product-list summary').click();
-  const section = page.locator('.product-photos');
-  await expect(section.getByLabel(`Chọn ảnh cho ${product.name}`)).toBeDisabled();
-  await section.getByRole('button', { name: 'Xem ảnh sản phẩm' }).click();
+  await page.locator('.product-order-list summary').click();
+  const section = page.locator('.product-photos-inline');
+  await expect(section.getByLabel(`Chọn ảnh cho ${product.name}`)).toHaveCount(0);
   await expect(section.getByRole('alert')).toContainText('Chưa tải được danh sách ảnh');
-  await section.getByRole('button', { name: 'Làm mới danh sách ảnh' }).click();
-  await expect(section.getByText('Không hiển thị được', { exact: false })).toBeVisible();
-  await section.getByRole('button', { name: 'Trang ảnh sau' }).click();
+  await section.getByRole('button', { name: 'Làm mới', exact: true }).click();
+  await expect(section.getByTitle(/Không hiển thị được/)).toBeVisible();
+  await expect(section.locator('img[src^="javascript:"]')).toHaveCount(0);
+  await section.getByRole('button', { name: 'Trang sau', exact: true }).click();
   await expect(section.getByText('Trang 2', { exact: true })).toBeVisible();
-  await expect(section.getByText('Chưa có ảnh trên trang này.')).toBeVisible();
+  await expect(
+    section.getByText('Chưa có ảnh riêng — đang hiển thị ảnh mặc định của hệ thống.'),
+  ).toBeVisible();
 });

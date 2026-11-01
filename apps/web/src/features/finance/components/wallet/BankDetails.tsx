@@ -106,7 +106,11 @@ export default function BankDetails({ session }: { session: Session }) {
     }
   };
   return (
-    <details className="bank-details" onToggle={(event) => setOpen(event.currentTarget.open)}>
+    <details
+      id="seller-bank-details"
+      className="bank-details"
+      onToggle={(event) => setOpen(event.currentTarget.open)}
+    >
       <summary>Tài khoản nhận tiền</summary>
       {open && (
         <div className="bank-content">

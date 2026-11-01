@@ -136,39 +136,6 @@ export default function ProductManagement({ session }: { session: Session }) {
         </div>
       )}
 
-      {/* Summary Stat Strip - Harmonized with .summary in seller-orders */}
-      <div className="product-summary" aria-label="Thống kê mẫu hoa">
-        {[
-          { label: 'Tổng mẫu hoa', value: 'ALL' as const, count: totalCount, icon: Flower2 },
-          { label: 'Đang kinh doanh', value: 'ACTIVE' as const, count: activeCount, icon: Store },
-          { label: 'Bản nháp', value: 'DRAFT' as const, count: draftCount, icon: Boxes },
-          {
-            label: 'Tạm ngừng bán',
-            value: 'INACTIVE' as const,
-            count: inactiveCount,
-            icon: CircleAlert,
-          },
-        ].map(({ label, value, count, icon: Icon }) => (
-          <button
-            key={value}
-            type="button"
-            onClick={() => {
-              setFilter(value);
-              setPage(1);
-            }}
-            aria-pressed={filter === value}
-          >
-            <span className="product-stat-icon">
-              <Icon size={20} aria-hidden="true" />
-            </span>
-            <span>
-              <small>{label}</small>
-              <strong>{query.isError ? '—' : query.isPending ? '…' : count}</strong>
-            </span>
-          </button>
-        ))}
-      </div>
-
       {/* Main Filter Container - Harmonized with .filters in seller-orders */}
       <div className="product-filters-card">
         <div className="product-filter-heading">
@@ -210,31 +177,41 @@ export default function ProductManagement({ session }: { session: Session }) {
                 aria-controls="product-create-section"
               >
                 <Plus size={15} aria-hidden="true" />
-                <span>Thêm bó hoa mới</span>
+                <span>Thêm mẫu hoa</span>
               </Button>
             )}
           </div>
         </div>
 
-        {/* Status Tabs - identical underline style to seller-orders */}
-        <div className="product-tabs" aria-label="Bộ lọc trạng thái mẫu hoa">
+        {/* Summary Stat Strip - Harmonized with .summary in seller-orders */}
+        <div className="product-summary" aria-label="Thống kê mẫu hoa">
           {[
-            { label: 'Tất cả', value: 'ALL' as const, count: totalCount },
-            { label: 'Đang bán', value: 'ACTIVE' as const, count: activeCount },
-            { label: 'Bản nháp', value: 'DRAFT' as const, count: draftCount },
-            { label: 'Tạm ngừng', value: 'INACTIVE' as const, count: inactiveCount },
-          ].map(({ label, value, count }) => (
+            { label: 'Tất cả', value: 'ALL' as const, count: totalCount, icon: Flower2 },
+            { label: 'Đang bán', value: 'ACTIVE' as const, count: activeCount, icon: Store },
+            { label: 'Bản nháp', value: 'DRAFT' as const, count: draftCount, icon: Boxes },
+            {
+              label: 'Tạm ngừng bán',
+              value: 'INACTIVE' as const,
+              count: inactiveCount,
+              icon: CircleAlert,
+            },
+          ].map(({ label, value, count, icon: Icon }) => (
             <button
               key={value}
               type="button"
-              aria-pressed={filter === value}
               onClick={() => {
                 setFilter(value);
                 setPage(1);
               }}
+              aria-pressed={filter === value}
             >
-              {label}
-              {query.isSuccess && <span>{count}</span>}
+              <span className="product-stat-icon">
+                <Icon size={20} aria-hidden="true" />
+              </span>
+              <span>
+                <small>{label}</small>
+                <strong>{query.isError ? '—' : query.isPending ? '…' : count}</strong>
+              </span>
             </button>
           ))}
         </div>
@@ -268,7 +245,7 @@ export default function ProductManagement({ session }: { session: Session }) {
           open
           size="lg"
           className="product-form-modal"
-          title="Thêm bó hoa giả mới"
+          title="Thêm mẫu hoa"
           description="Nhập thông tin mẫu hoa trước khi đưa vào danh mục của shop."
           onClose={() => setShowCreateForm(false)}
         >
@@ -319,14 +296,14 @@ export default function ProductManagement({ session }: { session: Session }) {
         </div>
       )}
 
-      {!query.isPending && filteredProducts.length === 0 && (
+      {!query.isPending && !query.isError && filteredProducts.length === 0 && (
         <div className="product-empty-state" role="status">
           <Flower2 size={32} className="product-empty-icon" aria-hidden="true" />
           <h3>Không tìm thấy mẫu hoa nào</h3>
           <p>
             {allProducts.length
               ? 'Thử tìm với từ khóa khác hoặc chuyển sang tab trạng thái khác.'
-              : 'Shop của bạn chưa có mẫu hoa nào. Hãy bấm "Thêm bó hoa mới" để bắt đầu kinh doanh.'}
+              : 'Shop của bạn chưa có mẫu hoa nào. Hãy bấm "Thêm mẫu hoa" để bắt đầu kinh doanh.'}
           </p>
         </div>
       )}

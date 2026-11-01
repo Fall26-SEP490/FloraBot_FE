@@ -15,7 +15,7 @@ import {
 import type { components } from '../../../../../packages/contracts/src/generated/api';
 import { request, type Session } from '@/shared/lib/api';
 import type { OrderFilter, OrderPage, WebOrder } from '../orders/orders.types';
-import { needsOrderAction, orderClosed, statusName } from '../orders/orders.utils';
+import { needsOrderAction, orderClosed, orderNextStep, statusName } from '../orders/orders.utils';
 import { fetchProducts } from '../product-management/product.api';
 import styles from './styles/seller-overview.module.css';
 
@@ -50,15 +50,30 @@ async function readOrders(base: string) {
   return { items, hasMore };
 }
 const shortcuts = [
-  { href: '/seller/products', title: 'Mẫu hoa', detail: 'Chăm chút danh mục', icon: Flower2 },
-  { href: '/seller/stock', title: 'Hoa tại tủ', detail: 'Theo dõi & nạp hoa', icon: Boxes },
+  {
+    href: '/seller/products',
+    title: 'Mẫu hoa',
+    detail: 'Tạo mẫu, thêm ảnh và điều chỉnh giá',
+    icon: Flower2,
+  },
+  {
+    href: '/seller/stock',
+    title: 'Hoa tại tủ',
+    detail: 'Kiểm tra ô và ghi nhận bó hoa',
+    icon: Boxes,
+  },
   {
     href: '/seller/tasks',
     title: 'Giao công việc',
-    detail: 'Điều phối nhân viên',
+    detail: 'Phân công giao hoa cho nhân viên',
     icon: ClipboardList,
   },
-  { href: '/seller/kiosks', title: 'Vị trí kiosk', detail: 'Quản lý điểm bán', icon: Store },
+  {
+    href: '/seller/kiosks',
+    title: 'Vị trí kiosk',
+    detail: 'Kiểm tra địa chỉ khách đến nhận',
+    icon: Store,
+  },
 ];
 
 export default function SellerOverview({ session }: { session: Session }) {
@@ -143,11 +158,17 @@ export default function SellerOverview({ session }: { session: Session }) {
       } as Record<string, string>
     )[session.sellerStatus ?? ''] ?? 'Chưa xác định';
 
+  if (!session.sellerId)
+    return (
+      <p role="status">
+        Chưa xác định được shop của tài khoản. Thử đăng nhập lại hoặc liên hệ đội ngũ vận hành.
+      </p>
+    );
   return (
     <div className={styles.overview}>
       <div className={styles.toolbar}>
         <span className={styles.status} data-active={session.sellerStatus === 'ACTIVE'}>
-          <span />
+          <span aria-hidden="true" />
           {shopStatus}
         </span>
         <button
@@ -155,28 +176,29 @@ export default function SellerOverview({ session }: { session: Session }) {
           disabled={busy}
           onClick={() => queries.forEach((query) => void query.refetch())}
         >
-          <RefreshCw size={15} aria-hidden="true" />
+          <RefreshCw size={17} aria-hidden="true" />
           {busy ? 'Đang cập nhật…' : 'Làm mới dữ liệu'}
         </button>
       </div>
       {queries.some((query) => query.isError) && (
         <p role="alert" className={styles.error}>
-          Một số dữ liệu chưa tải được. Chọn “Làm mới dữ liệu” để thử lại.
+          Một số dữ liệu chưa tải được. Chọn “Làm mới dữ liệu” để thử lại; các mục còn lại vẫn sử
+          dụng được.
         </p>
       )}
       <div className={styles.layout}>
         <div className={styles.main}>
-          <section className={styles.card} aria-labelledby="seller-todo-title">
+          <section className={styles.card} aria-labelledby="seller-orders-title">
             <div className={styles.heading}>
               <div>
-                <h2 id="seller-todo-title">Việc cần theo dõi</h2>
-                <p>Chăm sóc từng đơn hoa, từ báo giá đến lúc nhận.</p>
+                <h2 id="seller-orders-title">Đơn đặt hoa</h2>
+                <p>Bắt đầu từ đơn cần báo giá hoặc chuẩn bị hoa.</p>
               </div>
               <Link href="/seller/orders">
-                Xem đơn hàng <ArrowRight size={15} aria-hidden="true" />
+                Tất cả đơn <ArrowRight size={16} aria-hidden="true" />
               </Link>
             </div>
-            <div className={styles.metrics}>
+            <nav className={styles.metrics} aria-label="Xem đơn theo tiến độ">
               {metrics.map((metric) => (
                 <Link
                   href={`/seller/orders?filter=${metric.filter}&page=${items.find(metric.match)?.overviewPage ?? 1}`}
@@ -191,30 +213,10 @@ export default function SellerOverview({ session }: { session: Session }) {
                         : items.filter(metric.match).length}
                   </strong>
                   <span>{metric.label}</span>
-                  <small>{metric.detail}</small>
                 </Link>
               ))}
-            </div>
-            <p className={styles.footnote}>
-              {orders.isSuccess
-                ? orders.data.hasMore
-                  ? `Đã thống kê ${items.length} yêu cầu từ 50 trang đầu; còn đơn chưa được tính.`
-                  : `Thống kê trên tất cả ${items.length} yêu cầu.`
-                : 'Thống kê theo danh sách đơn đặt trước.'}
-            </p>
-          </section>
-
-          <section className={styles.card} aria-labelledby="seller-orders-title">
-            <div className={styles.heading}>
-              <div>
-                <h2 id="seller-orders-title">Đơn đặt hoa</h2>
-                <p>Ưu tiên những yêu cầu đang cần bạn xử lý.</p>
-              </div>
-              <Link href="/seller/orders">
-                Tất cả đơn <ArrowRight size={15} aria-hidden="true" />
-              </Link>
-            </div>
-            <div className={styles.tabs} aria-label="Lọc đơn đặt hoa">
+            </nav>
+            <div className={styles.tabs} role="group" aria-label="Lọc đơn đặt hoa">
               <button aria-pressed={view === 'attention'} onClick={() => setView('attention')}>
                 Cần xử lý <span>{orders.isSuccess ? actionItems.length : '—'}</span>
               </button>
@@ -227,10 +229,12 @@ export default function SellerOverview({ session }: { session: Session }) {
                 Đang tải đơn đặt hoa…
               </p>
             ) : orders.isError ? (
-              <p className={styles.empty}>Không tải được đơn đặt hoa. Hãy thử làm mới dữ liệu.</p>
+              <p className={styles.empty}>
+                Chưa tải được đơn đặt hoa. Chọn làm mới dữ liệu để thử lại.
+              </p>
             ) : visibleItems.length === 0 ? (
-              <div className={styles.empty}>
-                <Check size={30} aria-hidden="true" />
+              <div className={styles.empty} role="status">
+                <Check size={24} aria-hidden="true" />
                 <strong>
                   {view === 'attention'
                     ? orders.data?.hasMore
@@ -238,196 +242,154 @@ export default function SellerOverview({ session }: { session: Session }) {
                       : 'Không có đơn cần xử lý'
                     : 'Chưa có yêu cầu đặt hoa'}
                 </strong>
-                <p>Yêu cầu mới sẽ xuất hiện tại đây khi khách đặt hoa.</p>
+                <p>
+                  Yêu cầu mới sẽ xuất hiện khi khách đặt hoa. Bạn có thể kiểm tra mẫu hoa hoặc tủ
+                  trong lúc chờ.
+                </p>
               </div>
             ) : (
               <ul className={styles.orders}>
                 {visibleItems.map((row) => (
                   <li key={row.id}>
-                    <Link href={`/seller/orders?page=${row.overviewPage}`}>
-                      <span className={styles.orderIcon}>
-                        <Flower2 size={21} aria-hidden="true" />
-                      </span>
+                    <Link
+                      href={`/seller/orders?page=${row.overviewPage}&requestId=${encodeURIComponent(row.id)}`}
+                    >
                       <div className={styles.orderInfo}>
-                        <strong>{row.productName || 'Hoa theo yêu cầu'}</strong>
+                        <div className={styles.orderTop}>
+                          <strong>{row.productName || 'Hoa theo yêu cầu'}</strong>
+                          <span
+                            className={styles.badge}
+                            data-closed={orderClosed(row)}
+                            data-status={row.orderStatus || row.state}
+                          >
+                            {statusName(row)}
+                          </span>
+                        </div>
                         <small>
                           {row.orderCode || `Yêu cầu ${row.id.slice(0, 8)}`} ·{' '}
                           {row.kioskName || 'Tủ nhận'}
                         </small>
-                        <small>Hẹn nhận {pickupTime(row.pickupAt)}</small>
-                      </div>
-                      <div className={styles.orderMeta}>
-                        <span
-                          className={styles.badge}
-                          data-closed={orderClosed(row)}
-                          data-status={row.orderStatus || row.state}
-                        >
-                          {statusName(row)}
-                        </span>
-                        <strong>
+                        <small>
+                          Hẹn nhận {pickupTime(row.pickupAt)} ·{' '}
                           {row.quotedPrice == null ? 'Chưa báo giá' : currency(row.quotedPrice)}
-                        </strong>
+                        </small>
+                        {view === 'attention' && (
+                          <p className={styles.nextAction}>{orderNextStep(row, 'seller')}</p>
+                        )}
                       </div>
-                      <ArrowRight className={styles.orderArrow} size={16} aria-hidden="true" />
+                      <span className={styles.openOrder}>
+                        Mở đơn <ArrowRight size={16} aria-hidden="true" />
+                      </span>
                     </Link>
                   </li>
                 ))}
               </ul>
             )}
-            <div className={styles.cardFooter}>
-              <span>
-                {orders.data?.hasMore
-                  ? 'Tối đa 5 yêu cầu từ 50 trang đã tải'
-                  : 'Hiển thị tối đa 5 yêu cầu'}
-              </span>
-            </div>
+            <p className={styles.footnote}>
+              {orders.isSuccess
+                ? orders.data.hasMore
+                  ? `Đã tải ${items.length} yêu cầu từ 50 trang đầu; còn đơn chưa được tính.`
+                  : `Thống kê trên tất cả ${items.length} yêu cầu. Hiển thị tối đa 5 yêu cầu bên trên.`
+                : 'Số lượng theo dữ liệu đơn đặt trước đã tải.'}
+            </p>
           </section>
-
           <section className={styles.card} aria-labelledby="seller-tools-title">
             <div className={styles.heading}>
               <div>
-                <h2 id="seller-tools-title">Công cụ cửa hàng</h2>
-                <p>Các thao tác thường dùng, ngay trong tầm tay.</p>
+                <h2 id="seller-tools-title">Quản lý hoa và tủ</h2>
+                <p>Danh mục giới thiệu mẫu; hoa tại tủ là những bó đã được nạp thực tế.</p>
               </div>
             </div>
-            <div className={styles.shortcuts}>
+            <ul className={styles.shortcuts}>
               {shortcuts.map(({ href, title, detail, icon: Icon }) => (
-                <Link key={href} href={href}>
-                  <span>
-                    <Icon size={23} aria-hidden="true" />
-                  </span>
-                  <strong>{title}</strong>
-                  <small>{detail}</small>
-                </Link>
+                <li key={href}>
+                  <Link href={href}>
+                    <Icon size={20} aria-hidden="true" />
+                    <span>
+                      <strong>{title}</strong>
+                      <small>{detail}</small>
+                    </span>
+                    <ArrowRight size={16} aria-hidden="true" />
+                  </Link>
+                </li>
               ))}
-            </div>
-          </section>
-
-          <section className={styles.card} aria-labelledby="seller-catalog-title">
-            <div className={styles.heading}>
-              <div>
-                <h2 id="seller-catalog-title">Danh mục hoa</h2>
-                <p>Giữ những mẫu hoa của bạn luôn sẵn sàng đón khách.</p>
-              </div>
-              <Link href="/seller/products">
-                Quản lý <ArrowRight size={15} aria-hidden="true" />
-              </Link>
-            </div>
-            <div className={styles.catalog}>
-              <div className={styles.catalogIcon}>
-                <Flower2 size={32} aria-hidden="true" />
-              </div>
-              <div className={styles.catalogContent}>
-                <strong>
-                  {products.isSuccess
-                    ? `${activeProducts} mẫu đang hoạt động`
-                    : products.isError
-                      ? 'Chưa tải được mẫu hoa'
-                      : 'Đang tải mẫu hoa…'}
-                </strong>
-                <p>
-                  {products.isSuccess
-                    ? `${products.data.length - activeProducts} mẫu chưa hoạt động · ${products.data.length} mẫu trong danh mục`
-                    : 'Thông tin danh mục của cửa hàng'}
-                </p>
-                <div className={styles.progress} aria-hidden="true">
-                  <span
-                    style={{
-                      width: `${products.data?.length ? (activeProducts / products.data.length) * 100 : 0}%`,
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
+            </ul>
+            <p className={styles.footnote}>
+              {products.isSuccess
+                ? `${activeProducts} mẫu đang hoạt động · ${products.data.length} mẫu trong danh mục`
+                : products.isError
+                  ? 'Chưa tải được số lượng mẫu hoa.'
+                  : 'Đang tải danh mục mẫu hoa…'}
+            </p>
+            {products.isSuccess && products.data.length === 0 && (
+              <p className={styles.firstUse}>
+                <Link href="/seller/products">Tạo mẫu hoa đầu tiên</Link> để khách xem danh mục và
+                gửi yêu cầu đặt hoa.
+              </p>
+            )}
           </section>
         </div>
-
         <aside className={styles.aside} aria-label="Thông tin vận hành cửa hàng">
-          <section
-            className={`${styles.card} ${styles.wallet}`}
-            aria-labelledby="seller-wallet-title"
-          >
+          <section className={styles.card} aria-labelledby="seller-wallet-title">
             <div className={styles.heading}>
-              <h2 id="seller-wallet-title">
-                <Wallet size={19} aria-hidden="true" /> Ví cửa hàng
-              </h2>
+              <h2 id="seller-wallet-title">Tiền bán hoa</h2>
+              <Wallet size={20} aria-hidden="true" />
             </div>
-            <span className={styles.balanceLabel}>Số dư có thể rút</span>
-            <strong className={styles.balance}>
-              {wallet.isPending
-                ? '…'
-                : wallet.isError
-                  ? '—'
-                  : currency(wallet.data?.balance?.availableBalance)}
-            </strong>
-            <p>
-              Đang chờ:{' '}
-              {wallet.isPending
-                ? '…'
-                : wallet.isError
-                  ? '—'
-                  : currency(wallet.data?.balance?.pendingBalance)}
-            </p>
-            {wallet.isSuccess && !wallet.data.balance && <p>Chưa ghi nhận số dư ví.</p>}
-            <Link className={styles.walletLink} href="/seller/wallet">
-              Xem ví & giao dịch <ArrowRight size={16} aria-hidden="true" />
+            <dl className={styles.balances}>
+              <div>
+                <dt>Có thể rút</dt>
+                <dd>
+                  {wallet.isPending
+                    ? '…'
+                    : wallet.isError
+                      ? '—'
+                      : currency(wallet.data?.balance?.availableBalance)}
+                </dd>
+              </div>
+              <div>
+                <dt>Đang chờ</dt>
+                <dd>
+                  {wallet.isPending
+                    ? '…'
+                    : wallet.isError
+                      ? '—'
+                      : currency(wallet.data?.balance?.pendingBalance)}
+                </dd>
+              </div>
+            </dl>
+            {wallet.isSuccess && !wallet.data.balance && (
+              <p className={styles.footnote}>Chưa ghi nhận số dư ví.</p>
+            )}
+            <Link className={styles.textLink} href="/seller/wallet">
+              Xem ví và yêu cầu rút <ArrowRight size={16} aria-hidden="true" />
             </Link>
           </section>
           <section className={styles.card} aria-labelledby="seller-team-title">
             <div className={styles.heading}>
-              <h2 id="seller-team-title">Đội ngũ cửa hàng</h2>
-              <Users size={19} aria-hidden="true" />
+              <h2 id="seller-team-title">Nhân viên shop</h2>
+              <Users size={20} aria-hidden="true" />
             </div>
-            <div className={styles.team}>
-              <strong>
-                {staff.isError
-                  ? '—'
-                  : staff.isPending
-                    ? '…'
-                    : staff.data.filter((item) => item.status === 'ACTIVE').length}
-              </strong>
-              <span>
-                Tài khoản đang hoạt động
-                <small>
-                  {staff.isSuccess
-                    ? `Trên tổng số ${staff.data.length} nhân viên`
-                    : staff.isError
-                      ? 'Chưa tải được nhân viên'
-                      : 'Đang tải thông tin…'}
-                </small>
-              </span>
-            </div>
+            <p className={styles.team}>
+              {staff.isError
+                ? 'Chưa tải được nhân viên.'
+                : staff.isPending
+                  ? 'Đang tải nhân viên…'
+                  : `${staff.data.filter((item) => item.status === 'ACTIVE').length} tài khoản đang hoạt động / ${staff.data.length} nhân viên`}
+            </p>
+            <Link className={styles.textLink} href="/seller/tasks">
+              Phân công giao hoa <ArrowRight size={16} aria-hidden="true" />
+            </Link>
             <Link className={styles.textLink} href="/seller/staff">
-              Quản lý nhân viên <ArrowRight size={15} aria-hidden="true" />
+              Quản lý tài khoản nhân viên <ArrowRight size={16} aria-hidden="true" />
             </Link>
           </section>
-          <details className={`${styles.card} ${styles.guideDetails}`}>
-            <summary className={styles.heading}>Hướng dẫn xử lý đơn hoa</summary>
-            <ol className={styles.guide}>
-              <li>
-                <strong>Phản hồi yêu cầu</strong>
-                <p>Chốt mẫu hoa, báo giá và lịch nhận cùng khách.</p>
-              </li>
-              <li>
-                <strong>Chuẩn bị & nạp hoa</strong>
-                <p>Kiểm tra thanh toán, giao việc và đặt hoa vào đúng tủ.</p>
-              </li>
-              <li>
-                <strong>Theo dõi khách nhận</strong>
-                <p>Kiểm tra trạng thái đơn và giao dịch trong ví.</p>
-              </li>
-            </ol>
-            <Link className={styles.textLink} href="/seller/tasks">
-              Điều phối công việc <ArrowRight size={15} aria-hidden="true" />
-            </Link>
-          </details>
           <Link className={styles.subscription} href="/seller/subscriptions">
-            <Store size={24} aria-hidden="true" />
+            <Store size={20} aria-hidden="true" />
             <span>
-              <strong>Gói thuê cửa hàng</strong>
-              <small>Xem gói dịch vụ & gia hạn</small>
+              <strong>Gói thuê của shop</strong>
+              <small>Xem gói, kỳ thuê và trạng thái thanh toán</small>
             </span>
-            <ArrowRight size={17} aria-hidden="true" />
+            <ArrowRight size={16} aria-hidden="true" />
           </Link>
         </aside>
       </div>
