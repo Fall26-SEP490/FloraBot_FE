@@ -33,6 +33,15 @@ export function TaskItem({
   readOnly: boolean;
 }) {
   const isWorker = mode === 'worker';
+  const isTechnician = isWorker && role === 'TECHNICIAN';
+  const nextLabel =
+    task.status === 'ASSIGNED'
+      ? 'Bắt đầu xử lý'
+      : task.status === 'IN_PROGRESS'
+        ? 'Tiếp tục xử lý'
+        : task.status === 'SUBMITTED' || task.status === 'COMPLETED'
+          ? 'Xem báo cáo'
+          : 'Xem chi tiết';
   const isManager = mode === 'manager';
   const form = useForm<{ report: string; status: string }>();
   const [busy, setBusy] = useState(false);
@@ -76,20 +85,8 @@ export function TaskItem({
       setBusy(false);
     }
   }
-  return (
-    <article className="member-empty" aria-labelledby={`task-${task.id}`}>
-      <div className="staff-task-heading">
-        <h3 id={`task-${task.id}`}>
-          {task.kind === 'INCIDENT' ? 'Kiểm tra sự cố' : 'Giao hoa'} · {task.kioskName}
-        </h3>
-        <span className="staff-task-label">{TASK_STATUS_LABELS[task.status] || task.status}</span>
-      </div>
-      <p>Người thực hiện: {task.assigneeName}</p>
-      <p>
-        {task.address}
-        {task.shopName ? ` · ${task.shopName}` : ''}
-      </p>
-      <p>{task.instructions}</p>
+  const taskContent = (
+    <>
       <StaffTaskDetails
         taskId={task.id}
         version={task.version}
@@ -186,9 +183,42 @@ export function TaskItem({
             {form.formState.errors.report?.message}
           </p>
           <Button type="submit" disabled={busy || uncertain}>
-            {busy ? 'Đang cập nhật…' : 'Xác nhận cập nhật'}
+            {busy
+              ? 'Đang cập nhật…'
+              : isTechnician
+                ? task.status === 'ASSIGNED'
+                  ? 'Bắt đầu xử lý'
+                  : 'Gửi báo cáo'
+                : 'Xác nhận cập nhật'}
           </Button>
         </form>
+      )}
+    </>
+  );
+  return (
+    <article className="member-empty" aria-labelledby={`task-${task.id}`}>
+      <div className="staff-task-heading">
+        <h3 id={`task-${task.id}`}>
+          {task.kind === 'INCIDENT' ? 'Kiểm tra sự cố' : 'Giao hoa'} · {task.kioskName}
+        </h3>
+        <span className="staff-task-label">{TASK_STATUS_LABELS[task.status] || task.status}</span>
+      </div>
+      {!isTechnician && <p>Người thực hiện: {task.assigneeName}</p>}
+      <p>
+        {task.address}
+        {task.shopName ? ` · ${task.shopName}` : ''}
+      </p>
+      <p>{task.instructions}</p>
+      {isTechnician ? (
+        <details className="technician-task-body">
+          <summary>
+            {nextLabel}
+            <span className="sr-only"> · {task.kioskName}</span>
+          </summary>
+          {taskContent}
+        </details>
+      ) : (
+        taskContent
       )}
       {error && <p role="alert">{error}</p>}
       {notice && <p role="status">{notice}</p>}

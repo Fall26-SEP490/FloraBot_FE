@@ -45,6 +45,13 @@ function TechnicianInstallationCard({
         </span>
       </div>
 
+      <span className="technician-job-action">
+        {job.status === 'SCHEDULED'
+          ? 'Xem lịch & bắt đầu'
+          : job.status === 'INSTALLING'
+            ? 'Tiếp tục lắp đặt'
+            : 'Xem báo cáo'}
+      </span>
       {job.reworkReason && (
         <div className="job-rework-tag" role="alert">
           Cần làm lại: {job.reworkReason}

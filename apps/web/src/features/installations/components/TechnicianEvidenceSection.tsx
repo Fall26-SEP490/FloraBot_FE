@@ -31,6 +31,9 @@ function TechEvidenceThumbnail({
           <small>{`Ảnh minh chứng #${evidenceId.slice(0, 8)}`}</small>
         </div>
       )}
+      <a href={src} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">
+        Xem ảnh {index + 1}
+      </a>
     </div>
   );
 }
@@ -124,30 +127,53 @@ export function TechnicianEvidenceSection({
         </p>
       )}
 
-      {/* Evidence List */}
-      <div className="attached-evidence-list">
-        <strong>Danh sách minh chứng đã đính kèm ({evidenceItems.length}):</strong>
-        {evidenceLoading ? (
-          <p role="status">Đang tải minh chứng…</p>
-        ) : evidenceError ? (
-          <div role="alert">
-            <p>Chưa đọc được minh chứng lắp đặt.</p>
-            <Button variant="outline" onClick={onRefetchEvidence}>
-              Tải lại minh chứng
-            </Button>
-          </div>
-        ) : evidenceItems.length === 0 ? (
-          <p className="empty-sub-text">
-            Chưa có ảnh nào được đính kèm. Vui lòng tải lên ít nhất 1 ảnh.
-          </p>
-        ) : (
-          <div className="evidence-thumbnails-grid">
-            {evidenceItems.map((ev, i) => (
-              <TechEvidenceThumbnail key={ev.id || i} jobId={jobId} evidenceId={ev.id} index={i} />
-            ))}
-          </div>
-        )}
-      </div>
+      <TechnicianEvidenceGallery
+        jobId={jobId}
+        evidenceItems={evidenceItems}
+        evidenceLoading={evidenceLoading}
+        evidenceError={evidenceError}
+        onRefetchEvidence={onRefetchEvidence}
+      />
+    </div>
+  );
+}
+
+export function TechnicianEvidenceGallery({
+  jobId,
+  evidenceItems,
+  evidenceLoading,
+  evidenceError,
+  onRefetchEvidence,
+}: Pick<
+  TechnicianEvidenceSectionProps,
+  'jobId' | 'evidenceItems' | 'evidenceLoading' | 'evidenceError' | 'onRefetchEvidence'
+>) {
+  return (
+    <div className="attached-evidence-list">
+      <strong>
+        Danh sách minh chứng đã đính kèm
+        {!evidenceLoading && !evidenceError ? ` (${evidenceItems.length})` : ''}:
+      </strong>
+      {evidenceLoading ? (
+        <p role="status">Đang tải minh chứng…</p>
+      ) : evidenceError ? (
+        <div role="alert">
+          <p>Chưa đọc được minh chứng lắp đặt.</p>
+          <Button variant="outline" onClick={onRefetchEvidence}>
+            Tải lại minh chứng
+          </Button>
+        </div>
+      ) : evidenceItems.length === 0 ? (
+        <p className="empty-sub-text">
+          Chưa có ảnh nào được đính kèm. Vui lòng tải lên ít nhất 1 ảnh.
+        </p>
+      ) : (
+        <div className="evidence-thumbnails-grid">
+          {evidenceItems.map((ev, i) => (
+            <TechEvidenceThumbnail key={ev.id || i} jobId={jobId} evidenceId={ev.id} index={i} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
