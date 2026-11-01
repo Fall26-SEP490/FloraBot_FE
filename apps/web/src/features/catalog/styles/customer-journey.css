@@ -1,20 +1,19 @@
 @media (max-width: 580px) {
   .flower-catalog .flower-card {
-    display: grid;
-    grid-template-columns: minmax(96px, 30%) minmax(0, 1fr);
-    align-items: start;
+    display: flex;
+    flex-direction: column;
   }
   .flower-catalog .flower-card-media {
-    aspect-ratio: 3 / 4;
-    margin-top: 0.65rem;
-    border-radius: 8px;
+    aspect-ratio: 1 / 1;
+    margin-top: 0;
+    border-radius: 0;
   }
   .flower-catalog .flower-card-body {
     padding: 0.65rem;
   }
   .flower-catalog .flower-card-badges {
-    position: static;
-    padding: 0.3rem;
+    position: absolute;
+    padding: 0;
   }
   .flower-catalog .flower-card-badges .flower-badge-occasion {
     display: none;
@@ -54,38 +53,4 @@
   background: #fff;
   color: #385540;
   font-size: 0.75rem;
-}
-.flower-detail-back {
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
-}
-.flower-detail-actions {
-  margin-block: 1rem;
-}
-@media (max-width: 580px) {
-  .flower-detail-layout {
-    display: flex;
-    flex-direction: column;
-  }
-  .flower-detail-media {
-    width: 100%;
-  }
-  .flower-detail-media img {
-    max-height: 210px;
-    object-fit: contain;
-  }
-  .flower-detail-content {
-    width: 100%;
-  }
-  .flower-detail-actions {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-  .flower-detail-actions > .button {
-    flex: 1 1 140px;
-    min-height: 46px;
-  }
 }

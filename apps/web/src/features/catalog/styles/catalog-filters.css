@@ -1,12 +1,12 @@
 /* Catalog Filters: Sidebar, Active tags, Filter Groups & Options */
 .catalog-sidebar {
-  width: 228px;
+  width: 236px;
+  box-sizing: border-box;
   flex-shrink: 0;
   background: #ffffff;
-  border: 0;
-  border-right: none;
-  border-radius: 0;
-  padding: 0.25rem 1rem 0 0;
+  border: 1px solid #dce6d7;
+  border-radius: 12px;
+  padding: 1rem;
   box-shadow: none;
   position: static;
 }

@@ -121,10 +121,10 @@ function SelectedFlowerRequestPanel({
         <div className="flower-request-heading">
           <div className="flower-request-header-content">
             <h2 id="selected-flower" className="flower-request-title">
-              Đặt {selected.name}
+              Yêu cầu báo giá
             </h2>
             <p className="flower-request-meta">
-              {selected.shopName} · {selected.kioskName}
+              {selected.name} · {selected.shopName}
             </p>
           </div>
           <Button

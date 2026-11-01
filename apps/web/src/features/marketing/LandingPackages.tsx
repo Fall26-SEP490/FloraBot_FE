@@ -54,16 +54,29 @@ function PriceCard({ plan }: { plan: LandingPackage }) {
   const { select } = useLandingPackages();
   return (
     <article className="plan" aria-labelledby={`package-${plan.id}`}>
-      <div className="plan-top">
-        <h3 id={`package-${plan.id}`}>{plan.name}</h3>
-        <span className="plan-capacity">{plan.totalSlots} ô</span>
-      </div>
+      <h3 id={`package-${plan.id}`}>{plan.name}</h3>
       <p className="plan-price">
         <strong>{new Intl.NumberFormat('vi-VN').format(plan.annualFee)}</strong>
         <span>đ / năm</span>
       </p>
-      <p>Thời hạn: {plan.termMonths} tháng</p>
-      <p>{plan.description}</p>
+      <dl className="plan-facts">
+        <div>
+          <dt>Số ô tủ</dt>
+          <dd>{plan.totalSlots} ô</dd>
+        </div>
+        <div>
+          <dt>Thời hạn thuê</dt>
+          <dd>{plan.termMonths} tháng</dd>
+        </div>
+      </dl>
+      {plan.description && (
+        <details className="plan-description">
+          <summary>
+            Chi tiết gói <span className="sr-only">{plan.name}</span>
+          </summary>
+          <p>{plan.description}</p>
+        </details>
+      )}
       <a
         className="button choose-package"
         data-package={plan.id}

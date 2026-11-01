@@ -112,13 +112,18 @@ export default function FlowerShop() {
       <header className="catalog-header-minimal" aria-labelledby="catalog-hero-title">
         <div className="catalog-header-left">
           <h1 id="catalog-hero-title" className="catalog-hero-title">
-            Chọn hoa cho một dịp thật riêng.
+            Sản phẩm hoa
           </h1>
+          <p className="catalog-hero-desc">
+            Chọn mẫu từ shop, nhận báo giá rồi hẹn lấy hoa tại kiosk.
+          </p>
         </div>
-        <p className="catalog-hero-desc">
-          Đặt theo yêu cầu: shop báo giá, bạn xác nhận rồi thanh toán. Hoa có sẵn: mua trực tiếp tại
-          tủ.
-        </p>
+        <CatalogSearchBar
+          draft={draft}
+          setDraft={setDraft}
+          onSubmit={handleSearchSubmit}
+          onClear={handleSearchClear}
+        />
       </header>
 
       <ChatNoticeDialog
@@ -156,13 +161,6 @@ export default function FlowerShop() {
         />
 
         <section className="catalog-main-content" aria-label="Danh sách sản phẩm">
-          <CatalogSearchBar
-            draft={draft}
-            setDraft={setDraft}
-            onSubmit={handleSearchSubmit}
-            onClear={handleSearchClear}
-          />
-
           {(filters.displayedItems.length > 0 || filters.hasActiveFilters) && (
             <CatalogToolbar
               filterToggleRef={dialog.filterToggleRef}

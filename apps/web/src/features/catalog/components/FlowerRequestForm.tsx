@@ -63,6 +63,10 @@ export function FlowerRequestForm({
   const [busy, setBusy] = useState(false);
   const [uncertain, setUncertain] = useState(false);
   const [error, setError] = useState('');
+  const [pickupError, setPickupError] = useState('');
+  const [briefError, setBriefError] = useState('');
+  const pickupRef = useRef<HTMLInputElement>(null);
+  const briefRef = useRef<HTMLTextAreaElement>(null);
   const [done, setDone] = useState(false);
   const [submittedId, setSubmittedId] = useState<string | null>(null);
   const dirty = !done && Boolean(pickup || instructions || confirmed || kioskId !== item.kioskId);
@@ -90,6 +94,9 @@ export function FlowerRequestForm({
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     if (sending.current || !confirmed || !canOrderOnWeb(item)) return;
+    setError('');
+    setPickupError('');
+    setBriefError('');
     if (!selectedKiosk || kiosks.isPending || kiosks.isError) {
       setError('Chưa xác minh được tủ nhận hoa. Hãy tải lại danh sách tủ.');
       return;
@@ -97,12 +104,14 @@ export function FlowerRequestForm({
     const pickupDate = new Date(pickup);
     const delay = pickupDate.getTime() - Date.now();
     if (!Number.isFinite(delay) || delay <= 0 || delay > 30 * 24 * 60 * 60 * 1000) {
-      setError('Chọn thời gian nhận trong tương lai, tối đa 30 ngày tới.');
+      setPickupError('Chọn thời gian nhận trong tương lai, tối đa 30 ngày tới.');
+      pickupRef.current?.focus();
       return;
     }
     const brief = instructions.trim();
     if (brief.length < 10 || brief.length > 2000) {
-      setError('Mô tả từ 10 đến 2000 ký tự.');
+      setBriefError('Nhập mong muốn từ 10 đến 2.000 ký tự để shop báo giá.');
+      briefRef.current?.focus();
       return;
     }
     sending.current = true;
@@ -220,56 +229,20 @@ export function FlowerRequestForm({
   }
 
   return (
-    <form className="flower-request-form" onSubmit={(event) => void submit(event)}>
+    <form className="flower-request-form" noValidate onSubmit={(event) => void submit(event)}>
       <div className="flower-request-scroll">
         <div className="flower-request-intro">
           <div>
-            <strong>Gửi yêu cầu báo giá</strong>
-            <p>Shop xác nhận giá và lịch nhận trước khi bạn thanh toán.</p>
+            <strong>Bạn chưa cần thanh toán</strong>
+            <p>Shop sẽ gửi báo giá và lịch nhận để bạn kiểm tra.</p>
           </div>
           <div className="flower-request-reference-price">
             <span>Giá mẫu</span>
             <strong>{formatPrice(item.price)} đ</strong>
           </div>
         </div>
-        <p className="flower-request-pickup-hint">
-          Khi hoa sẵn sàng, mã OTP nhận hoa được gửi tới <strong>email đăng nhập của bạn</strong>.
-        </p>
         <fieldset disabled={busy || uncertain}>
           <legend className="sr-only">Đặt trước, shop chuẩn bị theo yêu cầu</legend>
-          <div className="flower-request-field">
-            <label htmlFor={`pickup-${item.productId}`}>Thời gian mong muốn nhận hoa</label>
-            <input
-              id={`pickup-${item.productId}`}
-              type="datetime-local"
-              required
-              value={pickup}
-              onChange={(event) => setPickup(event.target.value)}
-              aria-describedby={`pickup-hint-${item.productId}`}
-            />
-            <p className="quiet" id={`pickup-hint-${item.productId}`}>
-              Chọn thời gian trong tương lai, tối đa 30 ngày tới. Lịch chính thức được shop xác nhận
-              cùng báo giá.
-            </p>
-          </div>
-          <div className="flower-request-field">
-            <label htmlFor={`brief-${item.productId}`}>
-              Dịp tặng, màu hoa, ngân sách và lời nhắn
-            </label>
-            <textarea
-              id={`brief-${item.productId}`}
-              minLength={10}
-              maxLength={2000}
-              required
-              value={instructions}
-              onChange={(event) => setInstructions(event.target.value)}
-              placeholder="Ví dụ: Tặng sinh nhật, hoa hồng tông pastel, ngân sách 400.000 đ…"
-              aria-describedby={`brief-hint-${item.productId}`}
-            />
-            <p className="quiet" id={`brief-hint-${item.productId}`}>
-              Chia sẻ mong muốn của bạn trong 10–2.000 ký tự.
-            </p>
-          </div>
           <div className="flower-request-field">
             <label htmlFor={`kiosk-${item.productId}`}>Tủ nhận hoa</label>
             <select
@@ -284,7 +257,7 @@ export function FlowerRequestForm({
             >
               {eligibleKiosks.map((entry) => (
                 <option key={entry.kioskId} value={entry.kioskId}>
-                  {entry.kioskName} — {entry.address}
+                  {entry.kioskName}
                 </option>
               ))}
             </select>
@@ -300,10 +273,71 @@ export function FlowerRequestForm({
             <div className="flower-request-kiosk-box">
               <MapPin size={16} className="flower-request-kiosk-icon" aria-hidden="true" />
               <div className="flower-request-kiosk-content">
-                <strong>Tủ nhận:</strong> {selectedKiosk?.kioskName ?? item.kioskName} —{' '}
-                {selectedKiosk?.address ?? item.address}
+                <strong>Địa chỉ nhận hoa</strong>
+                <span>{selectedKiosk?.address || 'Chọn tủ để xem địa chỉ nhận hoa.'}</span>
               </div>
             </div>
+          </div>
+          <div className="flower-request-field">
+            <label htmlFor={`pickup-${item.productId}`}>Thời gian mong muốn nhận hoa</label>
+            <input
+              id={`pickup-${item.productId}`}
+              ref={pickupRef}
+              type="datetime-local"
+              required
+              value={pickup}
+              onChange={(event) => {
+                setPickup(event.target.value);
+                setPickupError('');
+              }}
+              aria-invalid={Boolean(pickupError)}
+              aria-describedby={`pickup-hint-${item.productId}${pickupError ? ` pickup-error-${item.productId}` : ''}`}
+            />
+            <p className="quiet" id={`pickup-hint-${item.productId}`}>
+              Chọn thời gian trong tương lai, tối đa 30 ngày tới. Lịch chính thức được shop xác nhận
+              cùng báo giá.
+            </p>
+            {pickupError && (
+              <p
+                className="flower-request-field-error"
+                role="alert"
+                id={`pickup-error-${item.productId}`}
+              >
+                {pickupError}
+              </p>
+            )}
+          </div>
+          <div className="flower-request-field">
+            <label htmlFor={`brief-${item.productId}`}>
+              Dịp tặng, màu hoa, ngân sách và lời nhắn
+            </label>
+            <textarea
+              id={`brief-${item.productId}`}
+              ref={briefRef}
+              minLength={10}
+              maxLength={2000}
+              required
+              value={instructions}
+              onChange={(event) => {
+                setInstructions(event.target.value);
+                setBriefError('');
+              }}
+              placeholder="Ví dụ: Tặng sinh nhật, hoa hồng tông pastel, ngân sách 400.000 đ…"
+              aria-invalid={Boolean(briefError)}
+              aria-describedby={`brief-hint-${item.productId}${briefError ? ` brief-error-${item.productId}` : ''}`}
+            />
+            <p className="quiet" id={`brief-hint-${item.productId}`}>
+              Chia sẻ mong muốn của bạn trong 10–2.000 ký tự.
+            </p>
+            {briefError && (
+              <p
+                className="flower-request-field-error"
+                role="alert"
+                id={`brief-error-${item.productId}`}
+              >
+                {briefError}
+              </p>
+            )}
           </div>
           <label className="payout-checkbox flower-request-confirm-label">
             <input
@@ -315,6 +349,9 @@ export function FlowerRequestForm({
             <span>Tôi đã kiểm tra tủ nhận và thông tin yêu cầu.</span>
           </label>
         </fieldset>
+        <p className="flower-request-pickup-hint">
+          Khi hoa sẵn sàng, mã OTP nhận hoa được gửi tới <strong>email đăng nhập của bạn</strong>.
+        </p>
         <p role="alert" className="error">
           {error}
         </p>

@@ -205,7 +205,7 @@ test('detail page resolves product and kiosk beyond first API page on direct nav
   await expect(page.getByText('Kiosk A', { exact: false })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Mô tả sản phẩm' })).toBeVisible();
   await expect(page.getByText('Shop chưa cung cấp mô tả cho mẫu hoa này.')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Cửa hàng & kiosk' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Nơi nhận hoa' })).toBeVisible();
   await expect(page.getByText('Địa chỉ A')).toBeVisible();
   await expect(page.getByText(/Ảnh minh họa · Shop chưa có ảnh/)).toBeVisible();
   await page.reload();

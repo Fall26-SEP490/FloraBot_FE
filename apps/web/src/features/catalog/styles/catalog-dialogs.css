@@ -15,7 +15,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  width: min(100%, 640px);
+  width: min(100%, 680px);
   min-width: 0;
   max-height: calc(100dvh - 2 * clamp(0.75rem, 3vw, 1.5rem));
   overflow: hidden;
@@ -55,7 +55,8 @@
   flex-direction: column;
   min-height: 0;
   min-width: 0;
-  overflow: auto;
+  overflow: hidden;
+  flex: 1 1 auto;
 }
 
 .flower-request-form {
@@ -63,6 +64,7 @@
 }
 
 .flower-request-scroll {
+  flex: 1 1 auto;
   overflow-y: auto;
   overscroll-behavior-y: contain;
   min-height: 0;
@@ -364,8 +366,8 @@
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
-  min-height: 42px !important;
-  height: 42px;
+  min-height: 44px !important;
+  height: 44px;
   padding: 0 1rem !important;
   font-size: 0.88rem !important;
   font-weight: 600 !important;
@@ -386,7 +388,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 42px !important;
+  min-height: 44px !important;
   height: auto;
   padding: 0 1.25rem !important;
   font-size: 0.92rem !important;
@@ -421,7 +423,7 @@
 }
 
 .flower-request-actions .chat-open-btn {
-  min-height: 42px;
+  min-height: 44px;
   font-size: 0.88rem;
   border-radius: 8px;
 }
@@ -524,8 +526,8 @@
 }
 
 .catalog-chat-notice-actions .button {
-  min-height: 42px;
-  height: 42px;
+  min-height: 44px;
+  height: 44px;
   padding: 0 1.25rem;
   font-size: 0.9rem;
   font-weight: 600;
@@ -614,5 +616,38 @@
   }
   .flower-request-discard-actions .button {
     width: 100%;
+  }
+}
+
+.flower-request-meta {
+  overflow-wrap: anywhere;
+}
+.flower-request .flower-request-field-error {
+  margin: 0.4rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: #842323;
+}
+.flower-request form :is(input, textarea)[aria-invalid='true'] {
+  border-color: #a53939;
+}
+.flower-request-kiosk-content > span {
+  display: block;
+  margin-top: 0.2rem;
+}
+.flower-request-pickup-hint {
+  margin-block: 0.75rem 0;
+}
+@media (max-width: 640px) {
+  .flower-request-backdrop {
+    padding: 0.5rem 0.5rem 0;
+    place-items: end center;
+  }
+  .flower-request {
+    max-height: calc(100dvh - 0.5rem);
+    border-radius: 16px 16px 0 0;
+  }
+  .flower-request-footer {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
   }
 }

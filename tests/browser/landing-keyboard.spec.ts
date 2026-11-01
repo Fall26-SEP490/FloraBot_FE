@@ -30,8 +30,14 @@ for (const path of ['/', '/chinh-sach-rieng-tu']) {
       }),
     );
     if (path === '/') {
-      await page.locator('.gift-demo').scrollIntoViewIfNeeded();
-      await expect(page.getByRole('button', { name: 'Xem gợi ý hoa', exact: true })).toBeEnabled();
+      const budgets = page.getByRole('navigation', {
+        name: 'Chọn hoa theo ngân sách',
+        exact: true,
+      });
+      await budgets.scrollIntoViewIfNeeded();
+      await expect(
+        budgets.getByRole('link', { name: 'Dưới 300.000 đ', exact: true }),
+      ).toBeVisible();
     }
     await page.evaluate(() => document.fonts.ready);
     const targets = await page.locator(focusable).evaluateAll((elements) =>

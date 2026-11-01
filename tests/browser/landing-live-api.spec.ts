@@ -71,24 +71,21 @@ for (const width of [390, 1440])
     await expect(page.locator('.leaflet-tooltip')).toHaveCount(fixture.locations.length);
     await expect(page.locator('#vi-tri')).not.toContainText('vị trí demo');
     await expect(page.locator('#vi-tri')).not.toContainText('Quần đảo');
-    const gift = page.locator('.gift-demo');
-    await gift.getByRole('button', { name: 'Xem gợi ý hoa', exact: true }).click();
-    await expect(gift.locator('.gift-results li')).toHaveCount(3);
-    await expect(gift).toContainText('111.000');
-    await expect(gift).toContainText('Shop API');
-    await expect(gift).toContainText(fixture.locations[0].name);
-    await expect(gift.locator('.gift-results img').first()).toHaveAttribute(
+    const preview = page.locator('#mau-hoa');
+    await expect(preview.locator('.storefront-flower')).toHaveCount(3);
+    await expect(preview).toContainText('111.000');
+    await expect(preview).toContainText('Shop API');
+    await expect(preview.locator('.storefront-flower img').first()).toHaveAttribute(
       'src',
       fixture.catalog[0].photo,
     );
-    await expect(gift.locator('select')).toHaveCount(0);
-    await expect(gift).not.toContainText('còn bó');
-    await gift.getByRole('button', { name: 'Tải thêm mẫu hoa', exact: true }).click();
-    await expect(gift).toContainText('Mẫu API 4');
-    await expect(gift).toContainText('99.000');
-    await expect(gift.getByRole('button', { name: 'Tải thêm mẫu hoa', exact: true })).toHaveCount(
-      0,
-    );
+    await expect(
+      preview.getByRole('navigation', { name: 'Chọn hoa theo ngân sách', exact: true }),
+    ).toHaveCount(1);
+    await expect(
+      preview.getByRole('link', { name: 'Xem tất cả mẫu', exact: true }),
+    ).toHaveAttribute('href', '/dat-hoa');
+    await expect(preview).not.toContainText('còn bó');
     const seo = JSON.parse(
       (await page.locator('script[type="application/ld+json"]').textContent()) || '{}',
     );
@@ -133,13 +130,13 @@ for (const endpoint of ['packages', 'locations', 'catalog'])
         await expect(page.getByRole('button', { name: 'Mở bản đồ', exact: true })).toBeDisabled();
         await expect(page.locator('#goi-thue')).toContainText(fixture.packages[0].name);
       } else {
-        await expect(page.locator('.gift-demo')).toContainText(
+        await expect(page.locator('#mau-hoa')).toContainText(
           mode === 'empty' ? 'Hiện chưa có mẫu hoa' : 'Chưa tải được mẫu hoa',
         );
-        await expect(page.locator('.gift-results li')).toHaveCount(0);
+        await expect(page.locator('#mau-hoa .storefront-flower')).toHaveCount(0);
         await expect(
-          page.getByRole('button', { name: 'Xem gợi ý hoa', exact: true }),
-        ).toBeDisabled();
+          page.locator('#mau-hoa').getByRole('link', { name: 'Xem tất cả mẫu', exact: true }),
+        ).toBeVisible();
         for (const name of [
           'Hồng trắng dịu dàng',
           'Tulip hồng',
@@ -147,7 +144,7 @@ for (const endpoint of ['packages', 'locations', 'catalog'])
           'Hoa ly hồng',
           'Hồng đỏ',
         ])
-          await expect(page.locator('.gift-demo')).not.toContainText(name);
+          await expect(page.locator('#mau-hoa')).not.toContainText(name);
       }
     });
 
@@ -172,7 +169,7 @@ test('Loading packages/catalog blocks fake selection and resolves to a real API 
   });
   await page.goto('/');
   await expect(page.locator('#goi-thue').getByRole('status')).toContainText('Đang tải gói thuê');
-  await expect(page.locator('.gift-demo').getByRole('status')).toContainText('Đang tải mẫu hoa');
+  await expect(page.locator('#mau-hoa').getByRole('status')).toContainText('Đang tải mẫu hoa');
   await expect(page.locator('#package')).toBeDisabled();
   await expect(page.locator('#package')).toHaveValue('');
   releasePackages();
@@ -230,21 +227,25 @@ test('Location retry has an accessible loading state and recovers without changi
   await expect(page.locator('.location-list li')).toHaveCount(fixture.locations.length);
 });
 
-test('A failed later catalog page keeps real loaded results and retries the same page', async ({
+test('Preview remains available when full catalog loading fails and the user retries', async ({
   page,
 }) => {
   await page.goto('/');
-  const gift = page.locator('.gift-demo');
-  await gift.getByRole('button', { name: 'Xem gợi ý hoa', exact: true }).click();
+  const preview = page.locator('#mau-hoa');
+  await expect(preview.locator('.storefront-flower')).toHaveCount(3);
   await page.route(
     '**/api/shop/catalog?page=2&search=',
     (route) => route.fulfill({ status: 503, json: { detail: 'retry test' } }),
     { times: 1 },
   );
-  await gift.getByRole('button', { name: 'Tải thêm mẫu hoa', exact: true }).click();
-  await expect(gift.getByRole('alert')).toContainText('Chưa tải được trang tiếp theo');
-  await expect(gift.locator('.gift-results li')).toHaveCount(3);
-  await expect(gift.getByRole('button', { name: 'Xem gợi ý hoa', exact: true })).toBeEnabled();
-  await gift.getByRole('button', { name: 'Tải thêm mẫu hoa', exact: true }).click();
-  await expect(gift).toContainText('Mẫu API 4');
+  await preview.getByRole('link', { name: 'Xem tất cả mẫu', exact: true }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Chưa tải được danh mục hoa', exact: true }),
+  ).toBeVisible();
+  await page.goBack();
+  await expect(preview.locator('.storefront-flower')).toHaveCount(3);
+  await expect(preview).toContainText(fixture.catalog[0].name);
+  await preview.getByRole('link', { name: 'Xem tất cả mẫu', exact: true }).click();
+  await expect(page.locator('.flower-card')).toHaveCount(fixture.catalog.length);
+  await expect(page.locator('.flower-catalog')).toContainText('Mẫu API 4');
 });

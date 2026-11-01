@@ -5,7 +5,6 @@
   scroll-margin-top: 1rem;
   overflow-wrap: break-word;
 }
-.how,
 .locations,
 .faq-section {
   background:
@@ -34,56 +33,6 @@
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--color-muted);
-}
-.steps {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 2.5rem;
-  list-style: none;
-  padding: 0;
-  margin: 0 0 1rem;
-}
-.steps li {
-  display: flex;
-  flex-direction: column;
-  gap: 1.2rem;
-  min-width: 0;
-}
-.step-art {
-  width: 100%;
-  aspect-ratio: 1;
-  object-fit: cover;
-  border-radius: 8px;
-}
-.step-copy {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.4rem;
-}
-.step-copy > div {
-  min-width: 0;
-}
-.step-number {
-  flex-shrink: 0;
-  white-space: nowrap;
-  font-weight: 600;
-  font-size: 0.85rem;
-  color: #47714d;
-  padding-top: 0.2rem;
-}
-.steps h3 {
-  font-size: 1.15rem;
-  margin: 0 0 0.5rem;
-  text-wrap: pretty;
-}
-.steps p {
-  font-size: 0.9rem;
-  margin: 0;
-  max-width: 30ch;
-}
-.how > h2 {
-  margin-bottom: 2rem;
 }
 .section-next {
   display: flex;
@@ -174,68 +123,117 @@
   margin: 0;
   max-width: 65ch;
 }
+.shop-intro {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 2rem 5rem;
+  background: var(--color-ink);
+  color: var(--color-on-ink);
+  padding-block: 2.25rem;
+}
+.shop-intro h2 {
+  color: inherit;
+  margin: 0;
+  max-width: 17ch;
+  font-size: clamp(1.7rem, 2.6vw, 2.5rem);
+}
+.shop-intro-copy p {
+  max-width: 51ch;
+  margin: 0;
+  color: #edf2e6;
+}
 .pricing-section {
-  background:
-    linear-gradient(#fffdf7de, #fffdf7de),
-    url('/images/generated/florabot-pattern.webp') center / 460px repeat;
+  background: #f6f7ef;
 }
 .pricing-section .section-intro {
-  background: var(--color-canvas);
-  padding: 1.2rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  margin-bottom: 2rem;
+}
+.pricing-section .section-intro p {
+  max-width: 64ch;
+  margin: 0;
 }
 .price-options {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 .plan {
   display: flex;
   flex-direction: column;
-  background: var(--color-canvas);
-  border: 1px solid var(--color-divider);
-  padding: 2rem;
-  border-radius: 8px;
+  background: #fffdf7;
+  border: 1px solid #ccd6c5;
+  padding: 1.75rem;
+  border-radius: 16px;
   min-width: 0;
-}
-.plan-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.7rem;
 }
 .plan h3 {
   margin: 0;
-  font-size: 1.4rem;
-}
-.plan-capacity {
-  padding: 0.2rem 0.65rem;
-  border: 1px solid #a7bda0;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 1.3rem;
 }
 .plan-price {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 0.5rem;
-  margin: 1.3rem 0 1.8rem;
+  gap: 0.45rem;
+  margin: 0.75rem 0 1.5rem;
   font-variant-numeric: tabular-nums;
 }
 .plan-price strong {
-  font-size: clamp(2rem, 3.5vw, 3.2rem);
+  font-size: clamp(1.75rem, 2.5vw, 2.5rem);
   font-weight: 800;
-  white-space: nowrap;
-  line-height: 1.4;
+  line-height: 1.3;
   letter-spacing: -0.025em;
+  overflow-wrap: anywhere;
 }
 .plan-price span {
   font-size: 0.85rem;
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+.plan-facts {
+  margin: 0;
+  font-size: 0.9rem;
+}
+.plan-facts > div {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  padding-block: 0.7rem;
+  border-top: 1px solid #e0e6d9;
+}
+.plan-facts dt {
+  color: var(--color-muted);
+}
+.plan-facts dd {
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.plan-description {
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+.plan-description summary {
+  cursor: pointer;
+  min-height: 44px;
+  align-content: center;
+  width: fit-content;
+  text-underline-offset: 0.2em;
+}
+.plan-description summary:hover {
+  text-decoration: underline;
+}
+.plan-description p {
+  margin: 0.35rem 0 0.75rem;
+  color: var(--color-muted);
 }
 .plan .button {
-  justify-content: space-between;
+  justify-content: center;
   margin-top: auto;
+  min-height: 48px;
   color: var(--color-on-ink);
   background: var(--color-ink);
   border-color: var(--color-ink);
@@ -243,22 +241,15 @@
 .plan .button:hover {
   background: var(--color-action-hover);
 }
-.plan-featured {
-  background: var(--color-ink);
-  color: var(--color-on-ink);
-  border-color: var(--color-ink);
+.pricing-note {
+  font-size: 0.85rem;
+  color: var(--color-muted);
+  max-width: 76ch;
+  margin: 1.25rem 0 0;
 }
-.plan-featured .plan-capacity {
-  border-color: #90b692;
-}
-.plan-featured .plan-price strong {
-  color: var(--landing-accent);
-}
-.plan-featured .button {
-  background: var(--landing-accent);
-  color: var(--color-ink);
-  border-color: var(--landing-accent);
-}
-.plan-featured .button:hover {
-  background: #f2f7d2;
+@media (max-width: 700px) {
+  .shop-intro {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+  }
 }

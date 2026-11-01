@@ -6,7 +6,6 @@ import {
   parseCatalogPage,
   resolvePackageId,
   createRegistrationSchema,
-  budgetSuggestions,
   kioskDirections,
   safePublicUrl,
   priceVnd,
@@ -72,15 +71,6 @@ describe('Landing API mapping', () => {
     expect(page.items[0].photo).toBe(fixture.catalog[0].photo);
     expect(page.items[0]).not.toHaveProperty('tags');
     expect(page.items[0]).not.toHaveProperty('occasion');
-  });
-  it('suggests by loaded prices and respects product plus kiosk identity', () => {
-    const items = parseCatalogPage({ items: fixture.catalog, page: 1, hasMore: false }).items;
-    expect(budgetSuggestions(items, 120000).map((item) => item.name)).toEqual([
-      'Mẫu API 4',
-      'Mẫu API 1',
-    ]);
-    expect(budgetSuggestions([], 999999)).toEqual([]);
-    expect(budgetSuggestions([...items, items[0]], 120000)).toHaveLength(2);
   });
   it('rejects executable image and directions URLs', () => {
     expect(safePublicUrl('javascript:alert(1)')).toBeNull();

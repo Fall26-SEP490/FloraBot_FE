@@ -78,13 +78,6 @@ export function kioskDirections(kiosk: LandingLocation) {
     `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${kiosk.latitude},${kiosk.longitude}`)}`
   );
 }
-export function budgetSuggestions(items: LandingFlower[], budget: number) {
-  const distinct = new Map(items.map((item) => [`${item.productId}:${item.kioskId}`, item]));
-  return [...distinct.values()]
-    .filter((item) => item.price <= budget)
-    .sort((a, b) => a.price - b.price)
-    .slice(0, 3);
-}
 export function createRegistrationSchema(plans: LandingPackage[]) {
   return z.object({
     shopName: z

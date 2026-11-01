@@ -153,12 +153,6 @@ html:has(.marketing-site) {
   height: 100%;
   object-fit: cover;
 }
-.graphic-divider {
-  height: 56px;
-  margin: auto;
-  background: url('/images/generated/florabot-pattern.webp') center / 350px repeat;
-  border-block: 1px solid var(--color-ink);
-}
 .button {
   transition:
     background-color 0.15s,

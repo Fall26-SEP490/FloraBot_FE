@@ -1,7 +1,7 @@
 import Layout from '@/features/marketing/MarketingLayout';
 import Registration from '@/features/marketing/Registration';
 import { LandingPackagesProvider, LandingPricing } from '@/features/marketing/LandingPackages';
-import GiftDemo from '@/features/marketing/GiftDemo';
+import StorefrontFlowers from '@/features/marketing/StorefrontFlowers';
 import FlowerPhoto from '@/features/marketing/FlowerPhoto';
 import FlowerGallery from '@/features/marketing/FlowerGallery';
 import { flowerPhotos } from '@florabot/ui/flower-photos';
@@ -36,15 +36,15 @@ export default function Page() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
       />
       <main id="main" tabIndex={-1}>
-        <section className="hero" aria-labelledby="hero-title">
+        <section className="hero storefront-hero" aria-labelledby="hero-title">
           <div className="hero-copy">
             <h1 id="hero-title">
               <span>Một bó hoa, </span>
               <span className="hero-highlight">thật nhiều thương.</span>
             </h1>
             <p>
-              Chọn mẫu hoa giả bạn thích, gửi mong muốn và duyệt báo giá từ shop trước khi thanh
-              toán. Nhận tại tủ theo lịch hẹn, hoặc đến kiosk để mua bó hoa có sẵn.
+              Chọn mẫu hoa giả bạn thích. Shop báo giá, bạn xác nhận rồi thanh toán và nhận hoa tại
+              kiosk theo lịch hẹn.
             </p>
             <div className="hero-actions">
               <a className="button button-primary" href={`${portal}/dat-hoa`}>
@@ -61,9 +61,9 @@ export default function Page() {
                   <path d="M5 12h14m-6-6 6 6-6 6"></path>
                 </svg>
               </a>
-              <p className="hero-rate">
-                <a href="#goi-thue">Bạn là shop hoa? Khám phá gói thuê tủ</a>
-              </p>
+              <a className="text-link storefront-kiosk-link" href="/tim-kiosk">
+                Tìm kiosk nhận hoa
+              </a>
             </div>
           </div>
           <div className="hero-garden">
@@ -80,184 +80,38 @@ export default function Page() {
           </div>
         </section>
 
+        <StorefrontFlowers />
+
         <section id="dat-truoc" className="section preorder-story" aria-labelledby="preorder-title">
           <div className="preorder-intro">
-            <h2 id="preorder-title">
-              Bạn chọn lời thương.
-              <br />
-              Shop chăm chút bó hoa.
-            </h2>
-            <p>
-              Chọn mẫu, gửi màu hoa, ngân sách và lời nhắn. Shop xác nhận báo giá cùng lịch nhận tại
-              tủ bạn chọn.
-            </p>
-            <div className="preorder-actions">
-              <a className="button button-primary" href={`${portal}/dat-hoa`}>
-                Chọn một bó hoa{' '}
-                <svg
-                  aria-hidden="true"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M5 12h14m-6-6 6 6-6 6"></path>
-                </svg>
-              </a>
-              <a className="text-link" href="/huong-dan-dat-hoa">
-                Xem hướng dẫn đặt hoa
-              </a>
-            </div>
-            <div className="preorder-ready">
-              <FlowerPhoto photo={flowerPhotos.pastelBouquet} sizes="96px" />
-              <p>
-                <strong>Cần hoa sớm hơn?</strong>
-                <br />
-                Xem hoa có sẵn, đến kiosk để chọn bó, thanh toán và nhận hoa trực tiếp.
-              </p>
-            </div>
+            <h2 id="preorder-title">Đặt hoa trong 3 bước</h2>
+            <a className="text-link" href="/huong-dan-dat-hoa">
+              Xem hướng dẫn chi tiết
+            </a>
           </div>
           <ol className="preorder-steps">
             <li>
               <span aria-hidden="true">01</span>
               <div>
-                <h3>Chọn hoa, gửi mong muốn</h3>
-                <p>
-                  Chọn mẫu, tủ nhận và thời gian mong muốn. Ghi thêm màu hoa, ngân sách hoặc lời
-                  nhắn của bạn.
-                </p>
+                <h3>Gửi yêu cầu</h3>
+                <p>Chọn mẫu hoa, tủ nhận và thời gian bạn mong muốn.</p>
               </div>
             </li>
             <li>
               <span aria-hidden="true">02</span>
               <div>
-                <h3>Ưng ý rồi mới thanh toán</h3>
-                <p>
-                  Shop gửi báo giá và lịch nhận. Bạn kiểm tra, xác nhận rồi thanh toán để shop chuẩn
-                  bị.
-                </p>
+                <h3>Xác nhận và thanh toán</h3>
+                <p>Shop báo giá và lịch nhận. Bạn xác nhận rồi thanh toán.</p>
               </div>
             </li>
             <li>
               <span aria-hidden="true">03</span>
               <div>
-                <h3>Hoa sẵn sàng, bạn ghé nhận</h3>
-                <p>
-                  Khi đơn sẵn sàng, đến đúng tủ, chọn “Nhận đơn đặt trước” và nhập mã OTP được gửi
-                  tới email đăng nhập của bạn.
-                </p>
+                <h3>Nhận tại kiosk</h3>
+                <p>Khi hoa sẵn sàng, đến đúng tủ và dùng mã OTP trong email để nhận.</p>
               </div>
             </li>
           </ol>
-        </section>
-        <div className="graphic-divider" aria-hidden="true"></div>
-
-        <section id="cach-hoat-dong" className="section how" aria-labelledby="how-title">
-          <h2 id="how-title">Bán hoa tại tủ như thế nào?</h2>
-          <ol className="steps">
-            <li>
-              <img
-                className="step-art"
-                src="/images/generated/florabot-step-stock.webp"
-                width="600"
-                height="600"
-                loading="lazy"
-                alt=""
-              />
-              <div className="step-copy">
-                <span className="step-number" aria-hidden="true">
-                  01
-                </span>
-                <div>
-                  <h3>Shop đưa hoa vào tủ</h3>
-                  <p>Phân loại ô Walk-in, chọn mẫu và nạp bó hoa để bán trực tiếp tại tủ.</p>
-                </div>
-              </div>
-            </li>
-            <li>
-              <img
-                className="step-art"
-                src="/images/generated/florabot-step-buy.webp"
-                width="600"
-                height="600"
-                loading="lazy"
-                alt=""
-              />
-              <div className="step-copy">
-                <span className="step-number" aria-hidden="true">
-                  02
-                </span>
-                <div>
-                  <h3>Khách mua tại tủ</h3>
-                  <p>Chọn bó có sẵn trên màn hình kiosk, thanh toán và nhận hoa tại ô tủ.</p>
-                </div>
-              </div>
-            </li>
-            <li>
-              <img
-                className="step-art"
-                src="/images/generated/florabot-step-manage.webp"
-                width="600"
-                height="600"
-                loading="lazy"
-                alt=""
-              />
-              <div className="step-copy">
-                <span className="step-number" aria-hidden="true">
-                  03
-                </span>
-                <div>
-                  <h3>Shop theo dõi bán hàng</h3>
-                  <p>Theo dõi đơn đặt trước, hoa tại tủ và số dư trong kênh người bán.</p>
-                </div>
-              </div>
-            </li>
-          </ol>
-
-          <a className="section-next" href="#goi-thue">
-            So sánh gói thuê{' '}
-            <span aria-hidden="true">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M12 5v14m-6-6 6 6 6-6"></path>
-              </svg>
-            </span>
-          </a>
-        </section>
-
-        <section id="goi-thue" className="pricing-section section" aria-labelledby="pricing-title">
-          <div className="section-intro">
-            <h2 id="pricing-title">Gói thuê ô tủ</h2>
-            <p>
-              Xem phí thuê, tổng số ô và thời hạn của các gói đang được cung cấp. Shop tự phân loại
-              ô Walk-in hoặc Pre-order sau khi bàn giao.
-            </p>
-          </div>
-          <LandingPricing />
-
-          <a className="section-next" href="#bo-suu-tap">
-            Khám phá hoa{' '}
-            <span aria-hidden="true">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M12 5v14m-6-6 6 6 6-6"></path>
-              </svg>
-            </span>
-          </a>
         </section>
 
         <section id="bo-suu-tap" className="section gift-section" aria-labelledby="gift-title">
@@ -269,15 +123,9 @@ export default function Page() {
             <FlowerPhoto photo={flowerPhotos.redRoses} sizes="(max-width: 700px) 90vw, 30vw" />
             <FlowerPhoto photo={flowerPhotos.pastelBouquet} sizes="(max-width: 700px) 90vw, 30vw" />
           </div>
-          <div className="gift-tool">
-            <GiftDemo />
-            <noscript>
-              <p>Bật JavaScript để chọn hoa theo ngân sách.</p>
-            </noscript>
-          </div>
 
-          <a className="section-next" href="#quan-ly">
-            Xem cách quản lý{' '}
+          <a className="section-next" href="#cach-hoat-dong">
+            Dành cho shop hoa{' '}
             <span aria-hidden="true">
               <svg
                 width="20"
@@ -291,6 +139,28 @@ export default function Page() {
               </svg>
             </span>
           </a>
+        </section>
+
+        <section id="cach-hoat-dong" className="section shop-intro" aria-labelledby="how-title">
+          <h2 id="how-title">Đưa shop hoa của bạn đến kiosk.</h2>
+          <div className="shop-intro-copy">
+            <p>
+              Thuê kiosk để bán hoa có sẵn và nhận đơn đặt trước. Shop quản lý mẫu hoa, đơn hàng và
+              tiền bán trong cùng một kênh người bán.
+            </p>
+          </div>
+        </section>
+
+        <section id="goi-thue" className="pricing-section section" aria-labelledby="pricing-title">
+          <div className="section-intro">
+            <h2 id="pricing-title">Gói thuê kiosk</h2>
+            <p>So sánh phí thuê hằng năm, số ô và thời hạn để chọn gói phù hợp với shop.</p>
+          </div>
+          <LandingPricing />
+          <p className="pricing-note">
+            Sau khi bàn giao, shop có thể dùng các ô để bán hoa có sẵn tại tủ hoặc nhận đơn đặt
+            trước.
+          </p>
         </section>
 
         <section id="quan-ly" className="section money-section" aria-labelledby="money-title">

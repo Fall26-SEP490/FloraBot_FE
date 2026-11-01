@@ -45,17 +45,13 @@ export default function MarketingEffects() {
       { threshold: 0.2 },
     );
     document
-      .querySelectorAll(
-        '.section h2, .step-copy, .money-photo, .faq-visual img, .registration-flowers, .gift-picker-art img',
-      )
+      .querySelectorAll('.section h2, .money-photo, .faq-visual img, .registration-flowers')
       .forEach((element) => entranceObserver.observe(element));
     const onMotionChange = (event: MediaQueryListEvent) => {
       if (event.matches) entranceAnimations.forEach((animation) => animation.cancel());
     };
     reducedMotion.addEventListener('change', onMotionChange);
-    const motionTargets = document.querySelectorAll(
-      '.steps, .gift-demo, .graphic-divider, .section-next',
-    );
+    const motionTargets = document.querySelectorAll('.section-next');
     const motionObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
