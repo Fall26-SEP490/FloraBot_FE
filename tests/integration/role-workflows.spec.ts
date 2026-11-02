@@ -224,20 +224,22 @@ test.describe('FloraBot Role Workflows Integration', () => {
     await expect(custRow3.locator('summary')).toContainText('Đã hủy');
 
     const custRow1 = page.locator('.member-orders li').filter({ hasText: preorder1Id.slice(0, 8) });
-    await expect(custRow1.locator('summary')).toContainText('Đã có báo giá');
-    await custRow1.locator('summary').click();
-    await expect(custRow1.locator('.bank-summary')).toContainText('500.000 đ');
+    await expect(custRow1.locator(':scope > details > summary')).toContainText('Đã có báo giá');
+    await custRow1.locator(':scope > details > summary').click();
+    await expect(
+      custRow1.getByRole('region', { name: 'Báo giá của shop', exact: true }),
+    ).toContainText('500.000 đ');
 
     // Customer accepts the quote to transition to AWAITING_PAYMENT (pending-payment)
     await custRow1.getByRole('button', { name: 'Kiểm tra báo giá' }).click();
-    await custRow1.getByLabel('Tôi đã đối chiếu và xác nhận thông tin trên.').check();
+    await custRow1.getByLabel('Tôi đồng ý với giá, ghi chú và lịch nhận của shop.').check();
 
     const acceptReq = page.waitForResponse(
       (response) =>
         response.url().endsWith(`/api/member/preorders/${preorder1Id}/accept`) &&
         response.request().method() === 'POST',
     );
-    await custRow1.getByRole('button', { name: 'Xác nhận gửi' }).click();
+    await custRow1.getByRole('button', { name: 'Đồng ý báo giá' }).click();
     expect((await acceptReq).status()).toBe(200);
 
     // Assert order state is AWAITING_PAYMENT (Chờ thanh toán). Stop before provider payment.

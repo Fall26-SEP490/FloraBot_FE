@@ -165,3 +165,28 @@ export function customerOrderActionLabel(row: OrderPhase) {
   if (!row.orderStatus && row.state === 'QUOTED') return 'Xem báo giá';
   return 'Xem tiến độ';
 }
+
+/** Customer-facing guidance; never implies payment or collection from a redirect alone. */
+export function customerOrderHint(row: OrderPhase) {
+  if (row.orderStatus === 'COMPLETED')
+    return 'Bạn đã nhận hoa. Mở thông tin giao dịch nếu cần hỗ trợ.';
+  if (row.orderStatus === 'REFUNDED')
+    return 'Đơn đã được hoàn tiền. Xem lại thông tin giao dịch bên dưới.';
+  if (row.orderStatus === 'DISPUTED' || row.orderStatus === 'DISPENSE_FAILED')
+    return 'Đơn đang được xử lý. Giữ biên nhận để theo dõi phản ánh hoặc hoàn tiền.';
+  if (orderClosed(row))
+    return 'Đơn đã kết thúc. Bạn có thể xem lại thông tin hoặc chọn mẫu hoa khác.';
+  if (row.orderStatus === 'DISPENSING')
+    return 'Đang xử lý nhận hoa tại kiosk. Chờ cập nhật kết quả trên đơn.';
+  if (row.orderStatus === 'PAID' && row.ready)
+    return 'Kiểm tra giờ nhận và địa chỉ tủ. Khi đến kiosk, dùng mã OTP trong email để nhận hoa.';
+  if (row.orderStatus === 'PAID')
+    return 'Đã xác nhận thanh toán. Shop đang chuẩn bị; bạn chưa cần đến tủ.';
+  if (row.orderStatus === 'AWAITING_PAYMENT')
+    return 'Kiểm tra số tiền và hạn thanh toán trong đơn. Sau khi trả tiền, chờ đơn cập nhật trạng thái.';
+  if (!row.orderStatus && row.state === 'QUOTED')
+    return 'Kiểm tra giá, ghi chú và lịch nhận. Bạn chỉ thanh toán sau khi đồng ý báo giá.';
+  if (!row.orderStatus && row.state === 'REQUESTED')
+    return 'Shop đang xem yêu cầu. Khi có báo giá, mở đơn để kiểm tra và phản hồi.';
+  return 'Mở chi tiết để kiểm tra trạng thái và hướng dẫn mới nhất của đơn.';
+}

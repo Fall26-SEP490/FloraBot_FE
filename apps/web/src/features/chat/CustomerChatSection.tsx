@@ -1,5 +1,11 @@
 import { useCallback, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import {
+  customerChatReturn,
+  customerConversationHref,
+  rememberOpenedCustomerChat,
+} from './customer-chat.navigation';
 import { Flower2, MessageSquare, RefreshCw, X } from '@florabot/ui';
 import './chat.css';
 import './styles/customer-chat.css';
@@ -16,6 +22,7 @@ import type {
 } from './types';
 
 export function CustomerChatSection({ initialChatId }: { initialChatId?: string | null }) {
+  const params = useSearchParams();
   const [page, setPage] = useState(1);
   const [showDetailsPanel, setShowDetailsPanel] = useState(false);
   const [selectedChatId, setSelectedChatId] = useState<string | null>(() => initialChatId || null);
@@ -45,7 +52,7 @@ export function CustomerChatSection({ initialChatId }: { initialChatId?: string 
           return {
             id: parsed.id,
             otherPartyName: parsed.otherPartyName || 'Shop hoa',
-            createdAt: parsed.createdAt || new Date().toISOString(),
+            createdAt: parsed.createdAt || '',
             lastMessageAt: null,
             lastMessage: null,
             lastMessageHasImage: false,
@@ -64,7 +71,7 @@ export function CustomerChatSection({ initialChatId }: { initialChatId?: string 
       return {
         id: initialChatId,
         otherPartyName: shopName,
-        createdAt: new Date().toISOString(),
+        createdAt: '',
         lastMessageAt: null,
         lastMessage: null,
         lastMessageHasImage: false,
@@ -84,7 +91,7 @@ export function CustomerChatSection({ initialChatId }: { initialChatId?: string 
         : {
             id: selectedChatId,
             otherPartyName: 'Shop hoa',
-            createdAt: new Date().toISOString(),
+            createdAt: '',
             lastMessageAt: null,
             lastMessage: null,
             lastMessageHasImage: false,
@@ -104,6 +111,8 @@ export function CustomerChatSection({ initialChatId }: { initialChatId?: string 
       : null);
 
   const activeChatId = activeChat?.id || selectedChatId;
+  const origin =
+    activeChatId === initialChatId ? customerChatReturn(params.get('chatReturn')) : null;
 
   // Realtime SignalR connection
   useChatRealtime({
@@ -131,6 +140,10 @@ export function CustomerChatSection({ initialChatId }: { initialChatId?: string 
   const handleSelectChat = (chat: CustomerSellerChatItem) => {
     setSelectedChatId(chat.id);
     setViewMode('conversation');
+    if (chat.id !== activeChatId) {
+      rememberOpenedCustomerChat(chat);
+      window.history.replaceState(null, '', customerConversationHref(chat.id));
+    }
   };
 
   const handleBackToList = () => {
@@ -168,6 +181,12 @@ export function CustomerChatSection({ initialChatId }: { initialChatId?: string 
 
   return (
     <section className="staff-chat-section customer-chat-section" aria-label="Tin nhắn với shop">
+      {origin && (
+        <div className="customer-chat-origin">
+          <Link href={origin.href}>{origin.label}</Link>
+          {origin.kind === 'order' && <p>Xác nhận báo giá và thanh toán tại đơn đặt trước.</p>}
+        </div>
+      )}
       <div
         className={`chat-layout mode-${viewMode} ${showDetailsPanel && activeChat ? 'with-details' : ''}`}
       >

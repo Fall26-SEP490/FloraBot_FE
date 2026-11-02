@@ -89,7 +89,7 @@ export default function ReceiptComplaint({
         setEditing(false);
         form.reset(empty);
         setError(
-          'Trạng thái hoặc thời hạn phản ánh đã thay đổi, hoặc hai mã chưa khớp. Chọn “Xem biên nhận” để cập nhật trước khi tiếp tục.',
+          'Trạng thái hoặc thời hạn phản ánh đã thay đổi, hoặc hai mã chưa khớp. Chọn “Cập nhật trạng thái” để cập nhật trước khi tiếp tục.',
         );
       } else {
         setError(
@@ -106,7 +106,7 @@ export default function ReceiptComplaint({
         setReview(false);
         setCheckReceipt(true);
         setError(
-          'Chưa xác nhận được kết quả gửi. Phản ánh có thể đã được ghi nhận. Chọn “Xem biên nhận” để kiểm tra trước khi gửi lại.',
+          'Chưa xác nhận được kết quả gửi. Phản ánh có thể đã được ghi nhận. Chọn “Cập nhật trạng thái” để kiểm tra trước khi gửi lại.',
         );
       }
     } finally {

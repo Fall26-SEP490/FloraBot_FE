@@ -3,14 +3,14 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, Button } from '@florabot/ui';
 import { request, sessionQuery } from '@/shared/lib/api';
 import type { OrderPage, WebOrder } from '../orders/orders.types';
-import { needsOrderAction, orderClosed, statusName, when } from '../orders/orders.utils';
-
-function actionLabel(row: WebOrder) {
-  if (row.ready && row.orderStatus === 'PAID') return 'Xem hướng dẫn nhận';
-  if (row.orderStatus === 'AWAITING_PAYMENT') return 'Xem thanh toán';
-  if (row.state === 'QUOTED') return 'Xem báo giá';
-  return 'Xem yêu cầu';
-}
+import {
+  customerOrderActionLabel,
+  customerOrderHint,
+  needsOrderAction,
+  orderClosed,
+  statusName,
+  when,
+} from '../orders/orders.utils';
 
 export default function CustomerPendingOrders() {
   const session = useQuery(sessionQuery);
@@ -57,11 +57,21 @@ export default function CustomerPendingOrders() {
               <li key={row.id}>
                 <div>
                   <strong>{row.productName || row.shopName || 'Yêu cầu đặt hoa'}</strong>
-                  <span>{statusName(row)}</span>
-                  {row.pickupAt && <small>Nhận dự kiến: {when(row.pickupAt)}</small>}
+                  <span
+                    className="account-pending-status"
+                    data-status={
+                      row.ready && row.orderStatus === 'PAID'
+                        ? 'READY'
+                        : row.orderStatus || row.state
+                    }
+                  >
+                    {statusName(row)}
+                  </span>
+                  <small>{customerOrderHint(row)}</small>
+                  {row.pickupAt && <small>Lịch nhận trên đơn: {when(row.pickupAt)}</small>}
                 </div>
                 <Link href={`/tai-khoan?requestId=${encodeURIComponent(row.id)}#web-orders`}>
-                  {actionLabel(row)} <ArrowRight size={15} aria-hidden="true" />
+                  {customerOrderActionLabel(row)} <ArrowRight size={15} aria-hidden="true" />
                 </Link>
               </li>
             ))}

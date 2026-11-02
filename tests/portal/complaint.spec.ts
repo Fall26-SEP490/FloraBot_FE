@@ -117,7 +117,7 @@ test('Lost complaint response blocks another submission until receipt is checked
       json: { ...receipt, status: 'DISPUTED', hasComplaint: true, canComplain: false },
     }),
   );
-  await page.getByRole('button', { name: 'Xem biên nhận', exact: true }).click();
+  await page.getByRole('button', { name: 'Cập nhật trạng thái', exact: true }).click();
   await expect(
     page.getByRole('status').filter({ hasText: 'Đã ghi nhận phản ánh cho đơn này.' }),
   ).toHaveText('Đã ghi nhận phản ánh cho đơn này.');
@@ -143,7 +143,7 @@ test('Server rejection and expired eligibility do not invite another complaint',
   await page.route('**/api/receipts/lookup', (route) =>
     route.fulfill({ json: { ...receipt, canComplain: false } }),
   );
-  await page.getByRole('button', { name: 'Xem biên nhận', exact: true }).click();
+  await page.getByRole('button', { name: 'Cập nhật trạng thái', exact: true }).click();
   await expect(page.getByText('Đã hết thời hạn gửi phản ánh cho đơn này.')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Gửi phản ánh về hoa' })).toHaveCount(0);
 });

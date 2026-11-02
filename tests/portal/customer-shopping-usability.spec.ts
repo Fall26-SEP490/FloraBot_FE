@@ -198,14 +198,14 @@ for (const width of [390, 1440]) {
     await page.setViewportSize({ width, height: 844 });
     await fixture(page);
     await page.goto('/tai-khoan#web-orders');
-    const summary = page.locator('.customer-order-list summary').first();
+    const summary = page.locator('.customer-order-list > li > details > summary').first();
     await expect(summary).toContainText(flower.name);
     await expect(summary).toContainText(flower.kioskName);
     await expect(summary).toContainText('350.000 đ');
     await expect(summary).toContainText('Xem báo giá');
-    await expect(page.locator('.customer-order-list summary').nth(1)).toContainText(
-      'Xem hướng dẫn nhận',
-    );
+    await expect(
+      page.locator('.customer-order-list > li > details > summary').nth(1),
+    ).toContainText('Xem hướng dẫn nhận');
     await page.getByRole('combobox', { name: 'Lọc yêu cầu trong trang' }).selectOption('ready');
     await expect(page.locator('.customer-order-list > li')).toHaveCount(1);
     await page.screenshot({ path: test.info().outputPath(`orders-${width}.png`), fullPage: true });
@@ -284,12 +284,11 @@ test('Customer account keeps its layout when session resolution is delayed', asy
   await page.goto('/tai-khoan#web-orders');
   await expect(page.getByText('Đang kiểm tra phiên làm việc…', { exact: true })).toBeVisible();
   release();
-  await expect(page.locator('.customer-order-list summary').first()).toBeVisible();
+  await expect(page.locator('.customer-order-list > li > details > summary').first()).toBeVisible();
   await expect(page.locator('.customer-account-shell')).toHaveCSS('display', 'grid');
-  await expect(page.locator('.customer-order-list summary').first().locator('> span')).toHaveCSS(
-    'display',
-    'flex',
-  );
+  await expect(
+    page.locator('.customer-order-list > li > details > summary').first().locator('> span'),
+  ).toHaveCSS('display', 'flex');
 });
 
 test('Account route includes layout styles before client-side session checks', async ({
