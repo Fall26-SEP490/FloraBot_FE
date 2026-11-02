@@ -14,7 +14,7 @@
   display: grid;
   gap: 16px;
   color: #16241b;
-  font-family: var(--font-sans, 'Plus Jakarta Sans', system-ui, sans-serif);
+  font-family: var(--font-body);
 }
 
 /* 3-Card Summary Strip */
@@ -84,7 +84,7 @@
   article.operations-metric
   strong {
   margin: 0 !important;
-  font-family: var(--font-sans, 'Plus Jakarta Sans', system-ui, sans-serif);
+  font-family: var(--font-body);
   font-size: 26px !important;
   font-weight: 800 !important;
   line-height: 1.05 !important;
@@ -134,7 +134,7 @@
 
 .account-management-workspace .management-heading h2 {
   margin: 0;
-  font-family: var(--font-sans, 'Plus Jakarta Sans', system-ui, sans-serif);
+  font-family: var(--font-body);
   font-size: 15px !important;
   font-weight: 700;
   color: #16241b;

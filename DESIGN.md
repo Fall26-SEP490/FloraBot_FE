@@ -60,7 +60,7 @@ in docs/assets.md; this revision adds no generated imagery or third-party servic
 
 ## Established website direction
 
-Latest user-approved direction: a botanical storefront with forest green, warm ivory and leaf-yellow highlights. Be Vietnam Pro headings and body, Nunito wordmark, real flower photographs and an illustrated green conceptual cabinet. Screenprint floral graphics, coral accents and repeating botanical patterns give the landing its visual identity.
+Latest user-approved direction: a botanical storefront with forest green, warm ivory and leaf-yellow highlights. Be Vietnam Pro throughout headings, body and wordmark, real flower photographs and an illustrated green conceptual cabinet. Screenprint floral graphics, coral accents and repeating botanical patterns give the landing its visual identity.
 
 | Token  | Value               | Use                                            |
 | ------ | ------------------- | ---------------------------------------------- |
@@ -72,7 +72,7 @@ Latest user-approved direction: a botanical storefront with forest green, warm i
 | accent | #e0ec9c             | Hero phrase, primary action and featured price |
 | error  | oklch(0.43 0.17 28) | Error text                                     |
 
-Landing headings: Be Vietnam Pro 800 for clear Vietnamese diacritics. Wordmark and photo captions: Nunito 800. Body: Be Vietnam Pro 400/600. Vietnamese and Latin subsets self-hosted. Base 18px. Display maximum 6rem, tracking -0.025em. Text measure 70ch. Borders 1px; radius 12px for controls and structured panels. No nested cards.
+Landing headings, wordmark and photo captions: Be Vietnam Pro 800 for clear Vietnamese diacritics. Body: Be Vietnam Pro 400/600. Vietnamese and Latin glyphs self-hosted. The body, display and sans font tokens all use Be Vietnam Pro across public pages and role workspaces. Base 18px. Display maximum 6rem, tracking -0.025em. Text measure 70ch. Borders 1px; radius 12px for controls and structured panels. No nested cards.
 
 Focus: 3px solid ink with 4px white offset; minimum 44px touch target. The hero reveals its conceptual illustration once over 750ms; reduced motion displays it immediately. Buttons move their arrow by 3px on hover, disabled under reduced motion. Content remains visible without JS. No repeating animation. Workflow images unfold once when they enter the viewport; botanical section connectors slide their print once, and gift results enter as a short staggered list. All spatial animation is omitted under reduced motion. Mobile navigation stays visible. Pricing uses two distinct plan cards on desktop and mobile, with prominent monthly prices and capacity badges. The financial section uses a dark green band. The marketing landing has no circled-i information disclosures; FAQ remains expandable. Privacy-specific disclosures remain on the policy page. Essential prices and demo notices remain visible. Gift suggestions are an always-visible photograph-and-form panel with three budget buttons; map tiles load only after the user opens the map.
 
@@ -95,3 +95,11 @@ Gift selection: a large bouquet photograph anchors a solid form surface. Recipie
 Wide-screen surfaces: hero, botanical divider and landing sections extend edge to edge. Section padding keeps content at a 1310px measure while backgrounds cover 1920px and 2560px screens. Body also carries the botanical print so header/footer gutters are not empty white. Native Web Animations API sequences hero phrase lines and introduces section headings, workflow copy and large photographs once on intersection. No animation dependency is added; changing reduced-motion preferences cancels active entrance animations. Content remains visible if scripting fails.
 
 Horizontal motion revision: hero phrase lines enter from opposite sides with 100ms sequencing. Section headings and workflow copy alternate direction by section/step; photographs translate horizontally with only a subtle scale change. Text has no vertical movement or clipping mask. Entrances take 1000-1100ms with cubic-bezier(.22,1,.36,1), while mobile travel is capped by viewport width. Workflow illustration masks reveal horizontally and result cards enter from the left. Main overflow uses clip to avoid transient horizontal scrollbars without creating a scrolling container. Reduced-motion behavior is preserved.
+
+## Homepage — November 2, 2026
+
+This user-approved, Casalana-inspired surface refinement supersedes the earlier homepage composition, typography weights and motion descriptions above. It retains FloraBot's green identity and Be Vietnam Pro without establishing new global tokens. The homepage uses a white canvas, soft green hero and supporting panels, restrained borders and regular/semibold type (400/600). The compact hero pairs its shopping action with the existing conceptual cabinet illustration; catalog photographs carry the product presentation.
+
+The catalog preview follows the hero, with budget links, product names, reference prices and shop names. It uses actual catalog images; missing or failed images retain the visible “Ảnh minh họa” fallback label. The product grid has four columns on desktop and two on mobile, falling back to one below 360px. A three-step buyer guide and native FAQ disclosures follow the products. Seller information sits later on the page; rental pricing and the existing API-backed consultation form remain inside a native details disclosure that starts collapsed.
+
+Homepage presentation is scoped to the storefront surface. The shared mobile header keeps the green wordmark, navigation trigger and signed-in identity on one compact row; the icon-only menu retains its accessible “Menu” name and disclosure state. These are local layout refinements, not a replacement of the wider brand system.

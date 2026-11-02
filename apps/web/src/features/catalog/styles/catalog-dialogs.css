@@ -110,7 +110,7 @@
 .flower-request-title {
   margin: 0;
   color: #183e2b;
-  font-family: var(--font-display, 'Nunito', sans-serif);
+  font-family: var(--font-display, 'Be Vietnam Pro', sans-serif);
   font-size: clamp(1.15rem, 2.5vw, 1.35rem);
   font-weight: 700;
   line-height: 1.3;

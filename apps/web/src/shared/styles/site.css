@@ -441,6 +441,28 @@ html {
   .florabot-header.site-header {
     padding: 8px 14px;
     gap: 8px;
+    flex-wrap: nowrap;
+  }
+
+  .site-menu-label {
+    display: none;
+  }
+  .site-menu {
+    width: 44px;
+    flex-shrink: 0;
+    justify-content: center;
+  }
+  .site-header .user-menu-trigger {
+    gap: 5px;
+    padding-right: 7px;
+  }
+  .site-header .user-menu-name,
+  .site-header .user-menu-caption {
+    max-width: 68px;
+  }
+  .site-header .user-menu-avatar {
+    width: 30px;
+    height: 30px;
   }
 
   .site-brand {

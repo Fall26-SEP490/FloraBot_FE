@@ -164,7 +164,8 @@ function SiteHeader() {
           setOpenedPath(expanded ? null : pathname);
         }}
       >
-        {expanded ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />} Menu
+        {expanded ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}{' '}
+        <span className="site-menu-label">Menu</span>
       </button>
       {expanded && (
         <div className="site-nav-backdrop" onClick={() => setOpenedPath(null)} aria-hidden="true" />

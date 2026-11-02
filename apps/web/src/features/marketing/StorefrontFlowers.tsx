@@ -18,7 +18,7 @@ export default function StorefrontFlowers() {
     ...new Map(
       (catalog.data?.items ?? []).map((item) => [`${item.productId}:${item.kioskId}`, item]),
     ).values(),
-  ].slice(0, 6);
+  ].slice(0, 8);
 
   return (
     <section
@@ -64,7 +64,7 @@ export default function StorefrontFlowers() {
         )}
         {catalog.isSuccess && items.length === 0 && (
           <p role="status" className="storefront-feedback">
-            Hiện chưa có mẫu hoa để hiển thị.
+            Hiện chưa có mẫu hoa để hiển thị. Hãy quay lại sau hoặc tìm kiosk gần bạn.
           </p>
         )}
         {items.length > 0 && (
@@ -72,6 +72,7 @@ export default function StorefrontFlowers() {
             {items.map((item) => {
               const key = `${item.productId}:${item.kioskId}`;
               const photo = safePublicUrl(item.photo);
+              const illustrative = !photo || failedPhotos.has(photo);
               return (
                 <li key={key}>
                   <Link
@@ -81,19 +82,24 @@ export default function StorefrontFlowers() {
                     aria-describedby="storefront-price-note"
                   >
                     <div className="storefront-flower-photo">
-                      {photo && !failedPhotos.has(photo) ? (
-                        <img
-                          src={photo}
-                          alt={item.name}
-                          width={480}
-                          height={540}
-                          loading="lazy"
-                          onError={() =>
-                            setFailedPhotos((previous) => new Set(previous).add(photo))
+                      <img
+                        src={illustrative ? '/images/floral-white-online.webp' : photo!}
+                        alt={
+                          illustrative
+                            ? 'Ảnh hoa minh họa, chưa có ảnh sản phẩm'
+                            : `Mẫu ${item.name} từ ${item.shopName}`
+                        }
+                        width={480}
+                        height={480}
+                        loading="lazy"
+                        onError={() => {
+                          if (photo && !illustrative) {
+                            setFailedPhotos((previous) => new Set(previous).add(photo));
                           }
-                        />
-                      ) : (
-                        <span>{photo ? 'Chưa tải được ảnh' : 'Shop chưa có ảnh mẫu'}</span>
+                        }}
+                      />
+                      {illustrative && (
+                        <span className="storefront-flower-illustration">Ảnh minh họa</span>
                       )}
                     </div>
                     <div className="storefront-flower-copy">
@@ -108,6 +114,13 @@ export default function StorefrontFlowers() {
               );
             })}
           </ul>
+        )}
+        {catalog.isSuccess && items.length > 0 && (
+          <div className="storefront-more">
+            <Link className="button button-primary" href="/dat-hoa">
+              Xem tất cả mẫu hoa <span aria-hidden="true">→</span>
+            </Link>
+          </div>
         )}
       </div>
       <noscript>

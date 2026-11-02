@@ -160,7 +160,7 @@
   margin-top: 2rem;
 }
 .member-auth-story p {
-  font-family: Nunito, sans-serif;
+  font-family: var(--font-body);
   font-size: 1.8rem;
   font-weight: 800;
   color: #245035;
