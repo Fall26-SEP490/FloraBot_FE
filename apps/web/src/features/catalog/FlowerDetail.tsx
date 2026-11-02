@@ -66,7 +66,7 @@ export default function FlowerDetail({
       typeof window !== 'undefined' &&
       new URLSearchParams(window.location.search).get('demo') === '1',
   );
-  const query = useQuery({
+  const query = useQuery<CatalogItem | null>({
     queryKey: ['web-catalog-detail', productId, kioskId, zone, demo],
     queryFn: async () =>
       demo
@@ -146,10 +146,13 @@ export default function FlowerDetail({
               <div className="flower-detail-pricing">
                 <span className="flower-detail-price">{formatPrice(item.price)} đ</span>
                 <span className="flower-detail-price-sub">
-                  {isWalkIn(item) ? 'Giá niêm yết tại tủ' : 'Giá mẫu'}
+                  {isWalkIn(item) ? 'Giá niêm yết tại tủ' : canOrderOnWeb(item) ? 'Giá mẫu' : ''}
                 </span>
               </div>
 
+              {item.description?.trim() && (
+                <p className="flower-detail-product-copy">{item.description.trim()}</p>
+              )}
               {canOrderOnWeb(item) && (
                 <p className="flower-detail-note">
                   Shop sẽ báo giá theo yêu cầu và xác nhận lịch nhận trước khi bạn thanh toán.
@@ -178,7 +181,9 @@ export default function FlowerDetail({
               </div>
 
               <section className="flower-detail-location" aria-labelledby="flower-location-title">
-                <h2 id="flower-location-title">Nơi nhận hoa</h2>
+                <h2 id="flower-location-title">
+                  {isWalkIn(item) ? 'Nơi mua hoa' : 'Nơi nhận hoa'}
+                </h2>
                 <div className="flower-detail-location-body">
                   <div className="flower-detail-info-row">
                     <div className="flower-detail-info-icon" aria-hidden="true">
@@ -190,14 +195,6 @@ export default function FlowerDetail({
                     </div>
                   </div>
                 </div>
-              </section>
-
-              <section
-                className="flower-detail-description"
-                aria-labelledby="flower-description-title"
-              >
-                <h2 id="flower-description-title">Mô tả sản phẩm</h2>
-                <p>{item.description?.trim() || 'Shop chưa cung cấp mô tả cho mẫu hoa này.'}</p>
               </section>
 
               {canOrderOnWeb(item) && (

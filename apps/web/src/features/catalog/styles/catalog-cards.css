@@ -26,6 +26,19 @@
   box-shadow: none;
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  .flower-card {
+    transition:
+      transform 180ms ease,
+      box-shadow 180ms ease;
+  }
+  .flower-card:hover,
+  .flower-card:focus-within {
+    transform: scale(1.025);
+    box-shadow: 0 8px 24px rgb(24 62 43 / 12%);
+  }
+}
+
 .flower-card-media {
   position: relative;
   aspect-ratio: 1 / 1;
@@ -281,6 +294,7 @@
 
 .flower-card-chat-btn.button {
   flex: 0 0 auto;
+  width: 44px;
   min-height: 44px !important;
   height: auto !important;
   font-size: 0.78rem !important;

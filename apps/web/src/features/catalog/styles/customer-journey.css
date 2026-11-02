@@ -28,10 +28,10 @@
     font-size: 0.9rem;
   }
   .flower-catalog .flower-card-select-btn.button {
-    flex-basis: 100%;
+    flex: 1 1 auto;
   }
   .flower-catalog .flower-card-chat-btn.button {
-    flex: 1;
+    flex: 0 0 44px;
   }
 }
 

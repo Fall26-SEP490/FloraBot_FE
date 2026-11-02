@@ -69,12 +69,6 @@ export default function Page() {
                 </div>
               </li>
             </ol>
-            <div className="home-location">
-              <p>Chưa biết nhận hoa ở đâu?</p>
-              <a href="/tim-kiosk">
-                Xem vị trí kiosk <span aria-hidden="true">→</span>
-              </a>
-            </div>
           </section>
           <section className="home-faq" aria-labelledby="faq-title">
             <div>
@@ -90,13 +84,6 @@ export default function Page() {
                 <p>
                   Đây là giá tham khảo. Shop gửi báo giá theo yêu cầu và lịch nhận của bạn. Bạn kiểm
                   tra, xác nhận báo giá rồi mới thanh toán.
-                </p>
-              </details>
-              <details>
-                <summary>Tôi nhận hoa tại kiosk như thế nào?</summary>
-                <p>
-                  Khi shop báo hoa đã sẵn sàng, đến đúng kiosk, chọn “Nhận đơn đặt trước” và nhập mã
-                  OTP được gửi tới email đăng nhập của bạn.
                 </p>
               </details>
               <details>

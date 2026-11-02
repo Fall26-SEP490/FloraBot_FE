@@ -115,7 +115,7 @@ export default function FlowerShop() {
             Sản phẩm hoa
           </h1>
           <p className="catalog-hero-desc">
-            Chọn mẫu từ shop, nhận báo giá rồi hẹn lấy hoa tại kiosk.
+            Khám phá hoa đặt trước và những bó hoa có sẵn tại kiosk.
           </p>
         </div>
         <CatalogSearchBar
