@@ -35,7 +35,8 @@
   --color-status-danger-action: #922b25;
   --color-status-danger-action-hover: #741f1a;
   --font-body: 'Be Vietnam Pro', sans-serif;
-  --font-display: 'Nunito', sans-serif;
+  --font-display: 'Be Vietnam Pro', sans-serif;
+  --font-sans: 'Be Vietnam Pro', sans-serif;
 }
 :root {
   --radius-workspace-panel: 12px;

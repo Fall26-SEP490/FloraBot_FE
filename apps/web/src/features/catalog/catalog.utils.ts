@@ -8,17 +8,17 @@ import type {
   SortOption,
 } from './catalog.types';
 
-export function isWalkIn(item: CatalogItem): boolean {
+export function isWalkIn(item: Pick<CatalogItem, 'zone'>): boolean {
   return item.zone === 'WALK_IN';
 }
 
-export function canOrderOnWeb(item: CatalogItem): boolean {
+export function canOrderOnWeb(item: Pick<CatalogItem, 'zone'>): boolean {
   // /shop/catalog reads v_web_catalog: its bouquet IDs already exclude WALK_IN.
   // An explicit zone takes precedence if the API includes kiosk-only entries.
   return item.zone == null || item.zone === 'PREORDER';
 }
 
-export function purchaseLabel(item: CatalogItem): string {
+export function purchaseLabel(item: Pick<CatalogItem, 'zone'>): string {
   if (isWalkIn(item)) return 'Chỉ mua tại kiosk';
   return canOrderOnWeb(item) ? 'Đặt trước' : 'Chưa xác định hình thức mua';
 }

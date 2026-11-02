@@ -47,8 +47,8 @@ async function setup(page: Page) {
           : [
               {
                 ...flower,
-                productId: '30000000-0000-0000-0000-000000000003',
-                name: 'Mẫu API trang tiếp theo',
+                zone: 'WALK_IN',
+                price: 250000,
               },
             ];
       return route.fulfill({
@@ -73,7 +73,7 @@ for (const width of [390, 1440]) {
     const state = await setup(page);
     await page.goto('/');
     const preview = page.getByRole('region', { name: 'Mẫu hoa từ các shop', exact: true });
-    await expect(preview.locator('.storefront-flower')).toHaveCount(2);
+    await expect(preview.locator('.storefront-flower')).toHaveCount(3);
     await expect(
       page.getByRole('navigation', { name: 'Chọn hoa theo ngân sách', exact: true }),
     ).toHaveCount(1);
@@ -81,17 +81,33 @@ for (const width of [390, 1440]) {
     await expect(preview).toContainText(flower.name);
     await expect(preview).toContainText('245.000');
     await expect(preview).toContainText(flower.shopName);
-    await expect(preview).toContainText('Giá hiển thị là giá mẫu');
-    await expect(preview).toContainText('chỉ thanh toán sau khi xác nhận báo giá từ shop');
-    await expect(preview).toContainText('Shop chưa có ảnh mẫu');
+    await expect(preview).toContainText('Giá mẫu');
+    await expect(preview).toContainText('Giá tại tủ');
+    await expect(preview.locator('.storefront-flower-illustration')).toHaveText('Ảnh minh họa');
+    await expect(preview.getByAltText('Ảnh hoa minh họa, chưa có ảnh sản phẩm')).toHaveAttribute(
+      'src',
+      '/images/floral-white-online.webp',
+    );
     await expect(preview).not.toContainText('Bán chạy');
     const previewPosition = await preview.boundingBox();
-    const partnerPosition = await page.locator('#goi-thue').boundingBox();
+    const partnerPosition = await page.locator('#danh-cho-shop').boundingBox();
     expect(previewPosition!.y).toBeLessThan(partnerPosition!.y);
     expect(previewPosition!.y).toBeLessThan(900);
     await expect(
-      preview.getByRole('link', { name: `Xem mẫu ${flower.name}`, exact: true }),
-    ).toHaveAttribute('href', `/dat-hoa/${flower.productId}/${flower.kioskId}`);
+      preview.getByRole('link', {
+        name: `${flower.name} · Đặt trước · ${flower.kioskName}`,
+        exact: true,
+      }),
+    ).toHaveAttribute('href', `/dat-hoa/${flower.productId}/${flower.kioskId}?zone=PREORDER`);
+    const walkInCard = preview.getByRole('link', {
+      name: `${flower.name} · Chỉ mua tại kiosk · ${flower.kioskName}`,
+      exact: true,
+    });
+    await expect(walkInCard).toContainText('250.000');
+    await walkInCard.click();
+    await expect(page.getByRole('link', { name: 'Xem tủ để mua trực tiếp' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Yêu cầu báo giá' })).toHaveCount(0);
+    await page.goBack();
     await expect(
       preview.getByRole('link', { name: 'Dưới 300.000 đ', exact: true }),
     ).toHaveAttribute('href', '/dat-hoa?price=under300');
@@ -106,15 +122,13 @@ for (const width of [390, 1440]) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
-    await page.screenshot({ path: test.info().outputPath(`home-${width}.png`), fullPage: false });
+    await page.screenshot({ path: test.info().outputPath(`home-${width}.png`), fullPage: true });
     await preview.getByRole('link', { name: 'Dưới 300.000 đ', exact: true }).click();
     await expect(page).toHaveURL(/\/dat-hoa\?price=under300$/);
     await expect(page.locator('.flower-card')).toHaveCount(3);
     await expect(page.locator('.flower-card').first()).toContainText(flower.kioskName);
     expect(state.pages).toContain(2);
-    await expect(
-      page.getByRole('heading', { name: 'Mẫu API trang tiếp theo', exact: true }),
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: flower.name, exact: true })).toHaveCount(2);
     await expect(page.locator('.flower-card-desc')).toHaveCount(0);
     const card = page.locator('.flower-card').first();
     const imageBox = await card.locator('.flower-card-media').boundingBox();
@@ -159,7 +173,7 @@ test('Homepage catalog failure can be retried without losing the rest of the pag
   await preview
     .getByRole('button', { name: 'Tải lại mẫu hoa trên trang chủ', exact: true })
     .click();
-  await expect(preview.locator('.storefront-flower')).toHaveCount(2);
+  await expect(preview.locator('.storefront-flower')).toHaveCount(3);
   expect(state.writes).toEqual([]);
 });
 test('Empty catalog never falls back to inspiration photos or fabricated products', async ({
@@ -172,7 +186,7 @@ test('Empty catalog never falls back to inspiration photos or fabricated product
   await expect(preview.getByRole('status')).toContainText('Hiện chưa có mẫu hoa');
   await expect(preview.locator('.storefront-flower')).toHaveCount(0);
   await expect(preview.locator('img')).toHaveCount(0);
-  await expect(page.locator('#goi-thue')).toBeVisible();
+  await expect(page.locator('#danh-cho-shop')).toBeVisible();
 });
 test('Loading and broken images are explicit without blocking navigation', async ({ page }) => {
   await setup(page);
@@ -198,8 +212,12 @@ test('Loading and broken images are explicit without blocking navigation', async
   await expect(preview.getByRole('status')).toContainText('Đang tải mẫu hoa');
   await expect(preview.getByRole('link', { name: 'Xem tất cả mẫu', exact: true })).toBeVisible();
   release();
-  await expect(preview).toContainText('Chưa tải được ảnh');
-  await expect(preview.locator('.storefront-flower-photo img')).toHaveCount(0);
+  await expect(preview.locator('.storefront-flower-illustration')).toHaveText('Ảnh minh họa');
+  const fallback = preview.getByAltText('Ảnh hoa minh họa, chưa có ảnh sản phẩm');
+  await expect(fallback).toHaveAttribute('src', '/images/floral-white-online.webp');
+  await expect
+    .poll(() => fallback.evaluate((image: HTMLImageElement) => image.naturalWidth))
+    .toBeGreaterThan(0);
   await expect(preview).toContainText('245.000');
 });
 const rentalPackage = {
@@ -224,6 +242,7 @@ test('Moving partner pricing retains the exact asynchronous API packageId in Reg
     await route.fulfill({ json: [rentalPackage] });
   });
   await page.goto('/');
+  await page.locator('.home-partner-details > summary').click();
   await expect(page.locator('#goi-thue').getByRole('status')).toContainText('Đang tải gói thuê');
   await expect(page.locator('#package')).toHaveValue('');
   release();
@@ -243,7 +262,8 @@ for (const status of [200, 503]) {
       route.fulfill({ status, json: status === 200 ? [] : { detail: 'Unavailable' } }),
     );
     await page.goto('/');
-    await expect(page.locator('#mau-hoa .storefront-flower')).toHaveCount(2);
+    await expect(page.locator('#mau-hoa .storefront-flower')).toHaveCount(3);
+    await page.locator('.home-partner-details > summary').click();
     await expect(page.locator('#goi-thue')).toContainText(
       status === 200 ? 'Hiện chưa có gói thuê' : 'Chưa tải được gói thuê',
     );
@@ -279,7 +299,8 @@ for (const width of [390, 1440]) {
       },
     ];
     await page.route('**/api/kiosk-packages', (route) => route.fulfill({ json: packages }));
-    await page.goto('/#goi-thue');
+    await page.goto('/');
+    await page.locator('.home-partner-details > summary').click();
     const pricing = page.getByRole('region', { name: 'Gói thuê kiosk', exact: true });
     await expect(pricing.locator('.plan')).toHaveCount(3);
     await expect(page.locator('#cach-hoat-dong .step-art')).toHaveCount(0);

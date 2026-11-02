@@ -74,11 +74,16 @@
 }
 .storefront-flower-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 2rem 1.5rem;
   list-style: none;
   padding: 0;
   margin: 0;
+}
+@media (min-width: 1280px) {
+  .storefront-flower-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
 }
 .storefront-flower-grid > li {
   min-width: 0;
@@ -90,11 +95,20 @@
   text-decoration: none;
   border-radius: 12px;
 }
+@media (prefers-reduced-motion: no-preference) {
+  .storefront-flower {
+    transition: transform 180ms ease;
+  }
+  .storefront-flower:hover,
+  .storefront-flower:focus-visible {
+    transform: scale(1.025);
+  }
+}
 .storefront-flower-photo {
   position: relative;
   display: grid;
   place-items: center;
-  aspect-ratio: 3 / 2;
+  aspect-ratio: 1 / 1;
   overflow: hidden;
   border-radius: 12px;
   background: #edf1e7;
@@ -107,21 +121,28 @@
   height: 100%;
   object-fit: cover;
 }
-.storefront-flower-photo > span {
-  padding: 1rem;
-  font-size: 0.9rem;
+.storefront-flower-illustration {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 0.5rem;
+  right: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+  background: #fffdf7;
+  color: #183e2b;
+  font-size: 0.75rem;
 }
 .storefront-flower-copy {
   padding-block: 0.85rem 0.25rem;
 }
-.marketing-site .storefront-flower-copy h3 {
+.marketing-site .storefront-flower-copy h4 {
   margin: 0 0 0.35rem;
   font-family: var(--font-body);
   font-size: 1.1rem;
   font-weight: 700;
   overflow-wrap: anywhere;
 }
-.storefront-flower:hover h3 {
+.storefront-flower:hover h4 {
   text-decoration: underline;
   text-underline-offset: 4px;
 }
@@ -141,6 +162,31 @@
   text-overflow: ellipsis;
   font-size: 0.78rem;
   color: #495f4e;
+}
+.storefront-more {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+.storefront-more .button {
+  gap: 0.75rem;
+}
+.storefront-kiosk-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  background: #edf4e9;
+}
+.marketing-site .storefront-kiosk-section h2 {
+  margin-bottom: 0.5rem;
+}
+.storefront-kiosk-section p {
+  margin: 0;
+  color: #495f4e;
+}
+.storefront-kiosk-section .button {
+  flex-shrink: 0;
 }
 .storefront-feedback {
   padding: 1.5rem 0;
@@ -166,6 +212,10 @@
   outline-offset: 4px;
 }
 @media (max-width: 760px) {
+  .storefront-kiosk-section {
+    align-items: flex-start;
+    flex-direction: column;
+  }
   .marketing-site .storefront-hero .hero-copy {
     padding: 1.75rem 5%;
   }
@@ -217,7 +267,7 @@
   .storefront-flower-photo {
     aspect-ratio: 1 / 1;
   }
-  .marketing-site .storefront-flower-copy h3 {
+  .marketing-site .storefront-flower-copy h4 {
     font-size: 0.9rem;
   }
   .storefront-flower-price {

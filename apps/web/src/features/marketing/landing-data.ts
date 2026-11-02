@@ -26,6 +26,7 @@ const locationSchema = z.object({
   directionsUrl: z.string().nullish(),
 });
 const flowerSchema = z.object({
+  zone: z.string().nullish(),
   productId: z.string().regex(GUID_PATTERN),
   sellerId: z.string().regex(GUID_PATTERN),
   kioskId: z.string().regex(GUID_PATTERN),

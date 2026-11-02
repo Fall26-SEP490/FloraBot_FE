@@ -77,9 +77,7 @@ export function FlowerCard({
         <div className="flower-card-price-row">
           <div>
             <span className="flower-card-price">{formatPrice(item.price)} đ</span>
-            <span className="flower-card-price-label">
-              {walkIn ? 'Giá niêm yết' : 'Giá tham khảo'}
-            </span>
+            <span className="flower-card-price-label">{walkIn ? 'Giá tại tủ' : 'Giá mẫu'}</span>
           </div>
         </div>
 
@@ -102,7 +100,7 @@ export function FlowerCard({
               aria-label="Yêu cầu báo giá"
               onClick={() => onSelect(item)}
             >
-              Yêu cầu báo giá
+              Báo giá
             </Button>
           )}
           {walkIn && (
@@ -110,7 +108,7 @@ export function FlowerCard({
               className="button flower-card-select-btn"
               href={`/tim-kiosk?kiosk=${encodeURIComponent(item.kioskId)}`}
             >
-              Xem tủ để mua
+              Xem kiosk
             </Link>
           )}
           <Button
@@ -123,7 +121,6 @@ export function FlowerCard({
             onClick={() => void onOpenChat(item)}
           >
             <MessageSquare size={14} aria-hidden="true" />
-            <span>{openingChatId === item.productId ? 'Đang mở…' : 'Chat'}</span>
           </Button>
         </div>
       </div>

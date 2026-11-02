@@ -4,7 +4,7 @@
 :root:has(.flower-shop-page:not(.flower-detail-page)) .site-frame,
 :root:has(.flower-shop-page:not(.flower-detail-page)) .site-content,
 body:has(.flower-shop-page:not(.flower-detail-page)) {
-  background: #f4f6f0 !important;
+  background: #fff !important;
   background-image: none !important;
 }
 
@@ -29,19 +29,20 @@ body:has(.flower-shop-page:not(.flower-detail-page)) {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
   align-items: center;
   gap: 1.5rem 3rem;
-  padding: clamp(1.5rem, 3vw, 2.5rem);
+  padding: clamp(1rem, 2vw, 1.75rem) 0;
   margin-bottom: 1.5rem;
-  border-radius: 16px;
-  background: #183e2b;
-  color: #fffdf7;
+  border-bottom: 1px solid #dce6d7;
+  color: #183e2b;
 }
 .catalog-header-minimal .catalog-hero-title {
   color: inherit;
+  font-family: Georgia, serif;
+  font-weight: 500;
   font-size: clamp(1.7rem, 2.4vw, 2.25rem);
   margin: 0 0 0.65rem;
 }
 .catalog-header-minimal .catalog-hero-desc {
-  color: #edf2e6;
+  color: #526656;
   font-size: 0.95rem;
   max-width: 43ch;
 }
@@ -49,15 +50,15 @@ body:has(.flower-shop-page:not(.flower-detail-page)) {
   margin: 0;
 }
 .catalog-header-minimal .catalog-search-submit-btn.button {
-  background: #e0ec9c;
-  border-color: #e0ec9c;
-  color: #183e2b;
+  background: #183e2b;
+  border-color: #183e2b;
+  color: white;
 }
 .catalog-header-minimal .catalog-search-submit-btn.button:hover {
-  background: #eef4cb;
+  background: #28563d;
 }
 .catalog-header-minimal .catalog-search-submit-btn:focus-visible {
-  outline: 2px solid #fffdf7;
+  outline: 2px solid #28563d;
   outline-offset: 3px;
 }
 @media (max-width: 960px) {
@@ -68,7 +69,7 @@ body:has(.flower-shop-page:not(.flower-detail-page)) {
 }
 @media (max-width: 580px) {
   .catalog-header-minimal {
-    padding: 1.25rem;
+    padding: 1rem 0;
   }
   .catalog-header-minimal .catalog-hero-desc {
     font-size: 0.88rem;

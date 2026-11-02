@@ -4,21 +4,27 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
+import { loadCatalog } from '@/features/catalog/catalog.data';
+import { canOrderOnWeb, isWalkIn, purchaseLabel } from '@/features/catalog/catalog.utils';
 import { fetchLandingCatalog } from './landing-api';
 import { priceVnd, safePublicUrl } from './landing-data';
 
 export default function StorefrontFlowers() {
   const [failedPhotos, setFailedPhotos] = useState<Set<string>>(() => new Set());
-  // This is a preview; budget links open the catalog, which loads every API page.
   const catalog = useQuery({
     queryKey: ['landing-catalog-preview'],
-    queryFn: () => fetchLandingCatalog(1),
+    queryFn: () => loadCatalog(fetchLandingCatalog),
   });
-  const items = [
-    ...new Map(
-      (catalog.data?.items ?? []).map((item) => [`${item.productId}:${item.kioskId}`, item]),
-    ).values(),
-  ].slice(0, 6);
+  const items = catalog.data ?? [];
+  const groups = [
+    { title: 'Hoa đặt trước', href: '/dat-hoa?mode=custom', flowers: items.filter(canOrderOnWeb) },
+    { title: 'Hoa mua tại kiosk', href: '/dat-hoa?mode=stock', flowers: items.filter(isWalkIn) },
+    {
+      title: 'Mẫu hoa khác',
+      href: '/dat-hoa',
+      flowers: items.filter((item) => !isWalkIn(item) && !canOrderOnWeb(item)),
+    },
+  ];
 
   return (
     <section
@@ -29,9 +35,6 @@ export default function StorefrontFlowers() {
       <div className="storefront-section-heading">
         <div>
           <h2 id="storefront-flowers-title">Mẫu hoa từ các shop</h2>
-          <p id="storefront-price-note">
-            Giá hiển thị là giá mẫu. Bạn chỉ thanh toán sau khi xác nhận báo giá từ shop.
-          </p>
         </div>
         <Link className="text-link" href="/dat-hoa">
           Xem tất cả mẫu
@@ -64,51 +67,71 @@ export default function StorefrontFlowers() {
         )}
         {catalog.isSuccess && items.length === 0 && (
           <p role="status" className="storefront-feedback">
-            Hiện chưa có mẫu hoa để hiển thị.
+            Hiện chưa có mẫu hoa để hiển thị. Hãy quay lại sau hoặc tìm kiosk gần bạn.
           </p>
         )}
-        {items.length > 0 && (
-          <ul className="storefront-flower-grid">
-            {items.map((item) => {
-              const key = `${item.productId}:${item.kioskId}`;
-              const photo = safePublicUrl(item.photo);
-              return (
-                <li key={key}>
-                  <Link
-                    className="storefront-flower"
-                    href={`/dat-hoa/${encodeURIComponent(item.productId)}/${encodeURIComponent(item.kioskId)}`}
-                    aria-label={`Xem mẫu ${item.name}`}
-                    aria-describedby="storefront-price-note"
-                  >
-                    <div className="storefront-flower-photo">
-                      {photo && !failedPhotos.has(photo) ? (
-                        <img
-                          src={photo}
-                          alt={item.name}
-                          width={480}
-                          height={540}
-                          loading="lazy"
-                          onError={() =>
-                            setFailedPhotos((previous) => new Set(previous).add(photo))
-                          }
-                        />
-                      ) : (
-                        <span>{photo ? 'Chưa tải được ảnh' : 'Shop chưa có ảnh mẫu'}</span>
-                      )}
-                    </div>
-                    <div className="storefront-flower-copy">
-                      <h3>{item.name}</h3>
-                      <p className="storefront-flower-price">{priceVnd(item.price)}</p>
-                      <p className="storefront-flower-shop" title={item.shopName}>
-                        {item.shopName || 'Chưa có tên shop'}
-                      </p>
-                    </div>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+        {groups
+          .filter((group) => group.flowers.length > 0)
+          .map((group) => (
+            <section className="storefront-collection" key={group.title}>
+              <div className="collection-heading">
+                <h3>{group.title}</h3>
+                <Link href={group.href} aria-label={`Xem tất cả: ${group.title}`}>
+                  Xem tất cả →
+                </Link>
+              </div>
+              <ul className="storefront-flower-grid">
+                {group.flowers.slice(0, 10).map((item) => {
+                  const key = `${item.productId}:${item.kioskId}:${item.zone ?? 'template'}`;
+                  const photo = safePublicUrl(item.photo);
+                  const illustrative = !photo || failedPhotos.has(photo);
+                  return (
+                    <li key={key}>
+                      <Link
+                        className="storefront-flower"
+                        href={`/dat-hoa/${encodeURIComponent(item.productId)}/${encodeURIComponent(item.kioskId)}${item.zone ? `?zone=${encodeURIComponent(item.zone)}` : ''}`}
+                        aria-label={`${item.name} · ${purchaseLabel(item)} · ${item.kioskName}`}
+                      >
+                        <div className="storefront-flower-photo">
+                          <img
+                            src={illustrative ? '/images/floral-white-online.webp' : photo!}
+                            alt={
+                              illustrative
+                                ? 'Ảnh hoa minh họa, chưa có ảnh sản phẩm'
+                                : `Mẫu ${item.name} từ ${item.shopName}`
+                            }
+                            width={480}
+                            height={480}
+                            loading="lazy"
+                            onError={() => {
+                              if (photo && !illustrative) {
+                                setFailedPhotos((previous) => new Set(previous).add(photo));
+                              }
+                            }}
+                          />
+                          {illustrative && (
+                            <span className="storefront-flower-illustration">Ảnh minh họa</span>
+                          )}
+                        </div>
+                        <div className="storefront-flower-copy">
+                          <h4>{item.name}</h4>
+                          <p className="storefront-flower-price">
+                            {priceVnd(item.price)}{' '}
+                            <small>
+                              {isWalkIn(item) ? 'Giá tại tủ' : canOrderOnWeb(item) ? 'Giá mẫu' : ''}
+                            </small>
+                          </p>
+                          <p className="storefront-flower-shop" title={item.shopName}>
+                            {[item.shopName, item.kioskName].filter(Boolean).join(' · ')}
+                          </p>
+                        </div>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))}
       </div>
       <noscript>
         <p>
