@@ -2965,6 +2965,125 @@
         }
       }
     },
+    "/api/me/preorders/{requestId}/pickup-otp": {
+      "post": {
+        "tags": [
+          "Ordering"
+        ],
+        "summary": "Seller gửi OTP nhận preorder tới email đăng nhập của khách",
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreorderPickupOtpSent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/kiosks/{kioskId}/preorders/pickup-otp/open": {
+      "post": {
+        "tags": [
+          "Ordering"
+        ],
+        "summary": "Nhập OTP email tại đúng kiosk và yêu cầu mở ô preorder",
+        "parameters": [
+          {
+            "name": "kioskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreorderPickupOtpOpenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreorderPickupOtpOpened"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/kiosks/{kioskId}/preorders/pickup-otp/attempts/{attemptId}": {
+      "get": {
+        "tags": [
+          "Ordering"
+        ],
+        "summary": "Theo dõi lệnh nhận hoa; gửi X-Pickup-Token từ kết quả mở ô",
+        "parameters": [
+          {
+            "name": "kioskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "attemptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "X-Pickup-Token",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreorderPickupOtpStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/member/chats/open": {
       "post": {
         "tags": [
@@ -4721,6 +4840,7 @@
           "KioskOps"
         ],
         "summary": "Danh sách các ô trong kiosk đang được Seller đăng nhập quản lý",
+        "description": "status là trạng thái ô; bouquetStatus là trạng thái bó đang nằm trong ô. orderId/orderCode/orderStatus/paymentStatus mô tả đơn đang giữ bó này, hoặc đơn gần nhất khi ô chờ thu hồi. paymentStatus chỉ lấy từ khoản CHARGE. Ô trống hoặc hoa đang bán lại không mang trạng thái đơn cũ.",
         "parameters": [
           {
             "name": "kioskId",
@@ -7235,6 +7355,37 @@
         }
       }
     },
+    "/api/kiosks/{id}/flower-presence": {
+      "get": {
+        "tags": [
+          "KioskOps"
+        ],
+        "summary": "Tín hiệu cảm biến hoa theo ô, chưa xác nhận hoàn tất lấy hàng",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlowerPresenceResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/me/products/{productId}/photos": {
       "get": {
         "tags": [
@@ -8573,6 +8724,70 @@
         }
       }
     },
+    "/api/operations/kiosks/{id}": {
+      "delete": {
+        "tags": [
+          "KioskOnboarding"
+        ],
+        "summary": "Xóa kiosk chưa bàn giao và chưa phát sinh dữ liệu vận hành",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/operations/kiosks/{id}/provision-key": {
       "post": {
         "tags": [
@@ -9312,6 +9527,86 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/me/kiosks/{kioskId}/slots/{slotId}/bouquet": {
+      "delete": {
+        "tags": [
+          "KioskOps"
+        ],
+        "summary": "Seller thu hồi bó hoa khỏi ô để nạp hoa mới",
+        "description": "Chỉ STOCKED/PENDING_REMOVAL chưa giữ cho đơn. Xác nhận đã lấy hoa thật khỏi ô. Giữ zone, trả RENTED_EMPTY; không gửi lệnh mở cửa. bouquetId giúp chặn thao tác từ dữ liệu ô đã cũ.",
+        "parameters": [
+          {
+            "name": "kioskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "slotId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemoveSlotBouquetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoveSlotBouquetResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
           }
         }
       }
@@ -10834,70 +11129,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/FlowResult"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/operations/kiosks/{id}": {
-      "delete": {
-        "tags": [
-          "KioskOnboarding"
-        ],
-        "summary": "Xóa kiosk chưa bàn giao và chưa phát sinh dữ liệu vận hành",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "No Content"
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Conflict",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -13413,6 +13644,79 @@
         },
         "additionalProperties": false
       },
+      "FlowerPresenceResponse": {
+        "required": [
+          "kioskId",
+          "observedAt",
+          "receivedAt",
+          "isFresh",
+          "slots"
+        ],
+        "type": "object",
+        "properties": {
+          "kioskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "observedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "receivedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "isFresh": {
+            "type": "boolean"
+          },
+          "slots": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FlowerSlotPresence"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "FlowerSlotPresence": {
+        "required": [
+          "slotId",
+          "slotCode",
+          "relayChannel",
+          "hasFlowers"
+        ],
+        "type": "object",
+        "properties": {
+          "slotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slotCode": {
+            "type": "string"
+          },
+          "relayChannel": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "hasFlowers": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
       "FlowResult": {
         "required": [
           "result"
@@ -14939,6 +15243,140 @@
         },
         "additionalProperties": false
       },
+      "PreorderPickupOtpOpened": {
+        "required": [
+          "attemptId",
+          "orderId",
+          "orderCode",
+          "productName",
+          "slotCode",
+          "orderStatus",
+          "commandId",
+          "watchToken",
+          "watchExpiresAt"
+        ],
+        "type": "object",
+        "properties": {
+          "attemptId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orderCode": {
+            "type": "string"
+          },
+          "productName": {
+            "type": "string"
+          },
+          "slotCode": {
+            "type": "string"
+          },
+          "orderStatus": {
+            "type": "string"
+          },
+          "commandId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "watchToken": {
+            "type": "string"
+          },
+          "watchExpiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PreorderPickupOtpOpenRequest": {
+        "required": [
+          "code",
+          "attemptId"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "attemptId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PreorderPickupOtpSent": {
+        "required": [
+          "requestId",
+          "orderId",
+          "recipientMasked",
+          "expiresAt",
+          "resendAfterSeconds"
+        ],
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "recipientMasked": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "resendAfterSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PreorderPickupOtpStatus": {
+        "required": [
+          "orderId",
+          "orderCode",
+          "productName",
+          "slotCode",
+          "orderStatus",
+          "commandStatus"
+        ],
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orderCode": {
+            "type": "string"
+          },
+          "productName": {
+            "type": "string"
+          },
+          "slotCode": {
+            "type": "string"
+          },
+          "orderStatus": {
+            "type": "string"
+          },
+          "commandStatus": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "ProblemDetails": {
         "type": "object",
         "properties": {
@@ -15584,6 +16022,69 @@
         },
         "additionalProperties": false
       },
+      "RemoveSlotBouquetRequest": {
+        "required": [
+          "bouquetId",
+          "reason",
+          "confirmedRemoved"
+        ],
+        "type": "object",
+        "properties": {
+          "bouquetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "confirmedRemoved": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RemoveSlotBouquetResponse": {
+        "required": [
+          "kioskId",
+          "slotId",
+          "status",
+          "bouquetId",
+          "removedBouquetId",
+          "zone"
+        ],
+        "type": "object",
+        "properties": {
+          "kioskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string"
+          },
+          "bouquetId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "removedBouquetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "zone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
       "ReportDeviceFaultRequest": {
         "required": [
           "p_kiosk",
@@ -16150,6 +16651,37 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "bouquetStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "orderId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "orderCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "orderStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "paymentStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         },
         "additionalProperties": false
