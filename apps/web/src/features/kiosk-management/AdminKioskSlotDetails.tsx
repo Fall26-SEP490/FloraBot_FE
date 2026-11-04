@@ -4,6 +4,7 @@ import { Button } from '@florabot/ui';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
 import { request } from '@/shared/lib/api';
 import '../dashboard/styles/admin-approvals.css';
+import { FlowerPresencePanel } from './FlowerPresencePanel';
 
 type Slot = components['schemas']['AdminSlotResponse'];
 const slotStatus: Record<string, string> = {
@@ -46,6 +47,7 @@ export function AdminKioskSlotDetails({
         {open && (
           <section aria-label={`Các ô của kiosk ${kioskCode}`}>
             <h4>Các ô của kiosk {kioskCode}</h4>
+            <FlowerPresencePanel kioskId={kioskId} />
             <p className="quiet">
               Trạng thái đọc từ BE. Phân loại ô do chủ shop cấu hình sau bàn giao.
             </p>

@@ -1,0 +1,54 @@
+.flower-presence {
+  margin-block: 1rem;
+  border-block-start: 1px solid var(--color-workspace-border, #d3ded5);
+  padding-block-start: 1rem;
+  text-align: start;
+  white-space: normal;
+}
+.flower-presence > summary {
+  cursor: pointer;
+  min-height: 44px;
+  font-weight: 600;
+}
+.flower-presence > summary:focus-visible {
+  outline: 2px solid var(--color-primary, #286341);
+  outline-offset: 3px;
+}
+.flower-presence-body {
+  display: grid;
+  gap: 0.75rem;
+}
+.flower-presence-body > p {
+  margin: 0;
+}
+.flower-presence-body > button {
+  justify-self: start;
+}
+.flower-presence .flower-presence-body .flower-presence-list {
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+.flower-presence .flower-presence-body .flower-presence-list > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+  padding-block: 0.625rem;
+  border: 0;
+  border-block-end: 1px solid var(--color-workspace-border, #d3ded5);
+  border-radius: 0;
+  background: transparent;
+}
+.flower-presence-list dt {
+  font-weight: 600;
+}
+.flower-presence-list dd {
+  margin: 0;
+}
+.flower-presence-list [data-state='present'] {
+  color: #225b38;
+}
+.flower-presence-list [data-state='unknown'] {
+  color: #6b5424;
+}

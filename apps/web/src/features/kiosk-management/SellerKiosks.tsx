@@ -19,6 +19,7 @@ import {
   buildGoogleMapsSearchUrl,
 } from '../kiosk-location/kiosk-location.utils';
 import './styles/kiosk-management.css';
+import { FlowerPresencePanel } from './FlowerPresencePanel';
 
 interface SellerKiosksProps {
   session: Session;
@@ -308,6 +309,8 @@ function KioskCard({
           </div>
         </div>
       </header>
+
+      {isSellerRole && <FlowerPresencePanel kioskId={kiosk.id} />}
 
       {!canEdit && (
         <div className="kiosk-permission-notice" role="note">

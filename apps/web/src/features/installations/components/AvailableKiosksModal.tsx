@@ -7,6 +7,7 @@ import { queryClient, request, type Session } from '@/shared/lib/api';
 import { Modal } from '../../../shared/components/Modal';
 import type { EligibleKioskResponse } from '../installations.types';
 import { DeleteKioskModal } from './DeleteKioskModal';
+import { FlowerPresencePanel } from '../../kiosk-management/FlowerPresencePanel';
 
 interface AvailableKiosksModalProps {
   open: boolean;
@@ -201,6 +202,7 @@ export function AvailableKiosksModal({
                       <td data-label="Thiết bị">
                         <strong>{kiosk.name}</strong>
                         <code>{kiosk.code}</code>
+                        <FlowerPresencePanel kioskId={kiosk.id} />
                       </td>
                       <td data-label="Quy mô">
                         <span className="inventory-slot-count">{kiosk.slotCount} ô</span>

@@ -3045,6 +3045,127 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/me/preorders/{requestId}/pickup-otp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Seller gửi OTP nhận preorder tới email đăng nhập của khách */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    requestId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PreorderPickupOtpSent"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/kiosks/{kioskId}/preorders/pickup-otp/open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Nhập OTP email tại đúng kiosk và yêu cầu mở ô preorder */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kioskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PreorderPickupOtpOpenRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PreorderPickupOtpOpened"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/kiosks/{kioskId}/preorders/pickup-otp/attempts/{attemptId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Theo dõi lệnh nhận hoa; gửi X-Pickup-Token từ kết quả mở ô */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    "X-Pickup-Token"?: string;
+                };
+                path: {
+                    kioskId: string;
+                    attemptId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PreorderPickupOtpStatus"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/member/chats/open": {
         parameters: {
             query?: never;
@@ -4834,7 +4955,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Danh sách các ô trong kiosk đang được Seller đăng nhập quản lý */
+        /**
+         * Danh sách các ô trong kiosk đang được Seller đăng nhập quản lý
+         * @description status là trạng thái ô; bouquetStatus là trạng thái bó đang nằm trong ô. orderId/orderCode/orderStatus/paymentStatus mô tả đơn đang giữ bó này, hoặc đơn gần nhất khi ô chờ thu hồi. paymentStatus chỉ lấy từ khoản CHARGE. Ô trống hoặc hoa đang bán lại không mang trạng thái đơn cũ.
+         */
         get: {
             parameters: {
                 query?: never;
@@ -7465,6 +7589,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/kiosks/{id}/flower-presence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tín hiệu cảm biến hoa theo ô, chưa xác nhận hoàn tất lấy hàng */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FlowerPresenceResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/me/products/{productId}/photos": {
         parameters: {
             query?: never;
@@ -8778,6 +8940,78 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/operations/kiosks/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Xóa kiosk chưa bàn giao và chưa phát sinh dữ liệu vận hành */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/operations/kiosks/{id}/provision-key": {
         parameters: {
             query?: never;
@@ -9549,6 +9783,91 @@ export interface paths {
         };
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/kiosks/{kioskId}/slots/{slotId}/bouquet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Seller thu hồi bó hoa khỏi ô để nạp hoa mới
+         * @description Chỉ STOCKED/PENDING_REMOVAL chưa giữ cho đơn. Xác nhận đã lấy hoa thật khỏi ô. Giữ zone, trả RENTED_EMPTY; không gửi lệnh mở cửa. bouquetId giúp chặn thao tác từ dữ liệu ô đã cũ.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kioskId: string;
+                    slotId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RemoveSlotBouquetRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RemoveSlotBouquetResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -10345,78 +10664,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/operations/kiosks/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Xóa kiosk chưa bàn giao và chưa phát sinh dữ liệu vận hành */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description No Content */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-                /** @description Forbidden */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-                /** @description Conflict */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -11037,6 +11284,24 @@ export interface components {
             /** Format: date-time */
             expiresAt: string;
         };
+        FlowerPresenceResponse: {
+            /** Format: uuid */
+            kioskId: string;
+            /** Format: date-time */
+            observedAt: null | string;
+            /** Format: date-time */
+            receivedAt: null | string;
+            isFresh: boolean;
+            slots: components["schemas"]["FlowerSlotPresence"][];
+        };
+        FlowerSlotPresence: {
+            /** Format: uuid */
+            slotId: string;
+            slotCode: string;
+            /** Format: int32 */
+            relayChannel: number | string;
+            hasFlowers: null | boolean;
+        };
         FlowResult: {
             result: null | components["schemas"]["JsonElement"];
             /** Format: uuid */
@@ -11408,6 +11673,46 @@ export interface components {
         PlatformFailureRequest: {
             reason: string;
         };
+        PreorderPickupOtpOpened: {
+            /** Format: uuid */
+            attemptId: string;
+            /** Format: uuid */
+            orderId: string;
+            orderCode: string;
+            productName: string;
+            slotCode: string;
+            orderStatus: string;
+            /** Format: uuid */
+            commandId: string;
+            watchToken: string;
+            /** Format: date-time */
+            watchExpiresAt: string;
+        };
+        PreorderPickupOtpOpenRequest: {
+            code: string;
+            /** Format: uuid */
+            attemptId: string;
+        };
+        PreorderPickupOtpSent: {
+            /** Format: uuid */
+            requestId: string;
+            /** Format: uuid */
+            orderId: string;
+            recipientMasked: string;
+            /** Format: date-time */
+            expiresAt: string;
+            /** Format: int32 */
+            resendAfterSeconds: number | string;
+        };
+        PreorderPickupOtpStatus: {
+            /** Format: uuid */
+            orderId: string;
+            orderCode: string;
+            productName: string;
+            slotCode: string;
+            orderStatus: string;
+            commandStatus: string;
+        };
         ProblemDetails: {
             type?: null | string;
             title?: null | string;
@@ -11570,6 +11875,24 @@ export interface components {
             p_slot: string;
             p_reason: string;
         };
+        RemoveSlotBouquetRequest: {
+            /** Format: uuid */
+            bouquetId: string;
+            reason: string;
+            confirmedRemoved: boolean;
+        };
+        RemoveSlotBouquetResponse: {
+            /** Format: uuid */
+            kioskId: string;
+            /** Format: uuid */
+            slotId: string;
+            status: string;
+            /** Format: uuid */
+            bouquetId: null | string;
+            /** Format: uuid */
+            removedBouquetId: string;
+            zone: null | string;
+        };
         ReportDeviceFaultRequest: {
             /** Format: uuid */
             p_kiosk: string;
@@ -11715,6 +12038,12 @@ export interface components {
             priceSnapshot: null | number | string;
             /** Format: date-time */
             sellableUntil: null | string;
+            bouquetStatus?: null | string;
+            /** Format: uuid */
+            orderId?: null | string;
+            orderCode?: null | string;
+            orderStatus?: null | string;
+            paymentStatus?: null | string;
         };
         SellerSlotZoneResponse: {
             /** Format: uuid */
