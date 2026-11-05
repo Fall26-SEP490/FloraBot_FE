@@ -1,41 +1,16 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-const packagesMock = [
-  {
-    id: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
-    name: 'Trial',
-    annualFee: 10000,
-    walkInSlots: 1,
-    preorderSlots: 1,
-    totalSlots: 2,
-    termMonths: 12,
-    status: 'ACTIVE',
-    description: 'Gói trải nghiệm 1 năm: 1 ô vãng lai (Walk-in) + 1 ô đặt trước (Pre-order)',
-  },
-  {
-    id: '4fa85f64-5717-4562-b3fc-2c963f66afa7',
-    name: 'Pro',
-    annualFee: 15000,
-    walkInSlots: 4,
-    preorderSlots: 4,
-    totalSlots: 8,
-    termMonths: 12,
-    status: 'ACTIVE',
-    description: 'Gói chuyên nghiệp 1 năm: 4 ô vãng lai (Walk-in) + 4 ô đặt trước (Pre-order)',
-  },
-  {
-    id: '5fa85f64-5717-4562-b3fc-2c963f66afa8',
-    name: 'Max',
-    annualFee: 20000,
-    walkInSlots: 6,
-    preorderSlots: 6,
-    totalSlots: 12,
-    termMonths: 12,
-    status: 'ACTIVE',
-    description: 'Gói tối đa 1 năm: 6 ô vãng lai (Walk-in) + 6 ô đặt trước (Pre-order)',
-  },
-];
+const packagesMock = {
+  walkInAnnualPrice: 5000,
+  preorderAnnualPrice: 5000,
+  version: 1,
+  configured: true,
+  updatedAt: '2026-11-04T03:00:00Z',
+  termMonths: 12,
+  minSlots: 1,
+  maxSlots: 50,
+};
 
 test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
   test('Customer application: package catalog, Goong address suggestions, GPS overlay, coordinate validation, submit, and status timeline', async ({
@@ -216,11 +191,7 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/thue-kiosk');
 
-    // Verify Packages rendered
-    await expect(page.getByText('Trial')).toBeVisible();
-    await expect(page.getByText('10.000')).toBeVisible();
-    await expect(page.getByText('Pro')).toBeVisible();
-    await expect(page.getByText('Max')).toBeVisible();
+    await expect(page.getByRole('heading', { name: '1. Chọn số ô và xem phí thuê' })).toBeVisible();
 
     // Accessibility check on catalog & form
     const a11yResult = await new AxeBuilder({ page })
@@ -231,7 +202,8 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     expect(a11yResult.violations).toEqual([]);
 
     // Select Trial package
-    await page.getByText('Trial').click();
+    await page.getByLabel('Ô đặt trước (Pre-order)', { exact: true }).fill('1');
+    await page.getByRole('checkbox', { name: /Tôi xác nhận số ô/ }).check();
 
     // Verify manual Latitude & Longitude inputs are removed from UI
     await expect(page.getByLabel('Vĩ độ (Latitude)')).toHaveCount(0);
@@ -487,16 +459,16 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
 
       if (path === '/api/operations/kiosks/enroll' && route.request().method() === 'POST') {
         const body = route.request().postDataJSON();
-        expect(body.slotCount).toBe(2);
+        expect(body.applicationId).toBe('app-500');
+        expect(body).not.toHaveProperty('slotCount');
         expect(body.mqttClientId).toBeNull();
-        expect(body.slotCount).toBeLessThanOrEqual(50);
         expect(body).not.toHaveProperty('walkInSlots');
         expect(body).not.toHaveProperty('preorderSlots');
         const newKiosk = {
           id: 'kiosk-02',
           code: body.code,
           name: body.name,
-          slotCount: body.slotCount,
+          slotCount: 2,
           status: 'OFFLINE',
           apiKey: 'kiosk-device-api-key-xyz',
         };
@@ -545,17 +517,18 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     await expect(page.getByText('Hoa Tươi Sài Gòn')).toBeVisible();
     // The deployed application DTO exposes totalSlots without a W/P breakdown.
     const applicationRow = page.getByRole('row').filter({ hasText: 'Hoa Tươi Sài Gòn' });
-    await expect(applicationRow).toContainText('Tổng số ô: 2');
+    await expect(applicationRow).toContainText('2 ô');
     await expect(applicationRow).not.toContainText('W +');
-    await page.getByRole('button', { name: 'Chi tiết' }).click();
+    await page.getByRole('row').filter({ hasText: 'Hoa Tươi Sài Gòn' }).getByRole('button').click();
 
     // Verify detail panel
     await expect(page.getByText('Chi tiết: Hoa Tươi Sài Gòn')).toBeVisible();
-    await expect(page.getByText('MB Bank - ****9988')).toBeVisible();
+    await page.locator('.manager-registration > summary').click();
+    await expect(page.getByText('MB Bank - ****9988', { exact: false })).toBeVisible();
     const packageSummary = page
       .locator('.detail-info-grid > div')
-      .filter({ hasText: 'Gói đăng ký' });
-    await expect(packageSummary).toContainText('Tổng số ô: 2');
+      .filter({ hasText: 'Nhu cầu thuê' });
+    await expect(packageSummary).toContainText('Tổng 2 ô');
     await expect(packageSummary).not.toContainText('ô vãng lai');
     await expect(packageSummary).not.toContainText('ô đặt trước');
 
@@ -567,7 +540,7 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     await expect(page.getByText('Đã xác nhận liên hệ cho shop Hoa Tươi Sài Gòn')).toBeVisible();
 
     // Enroll a new Kiosk and verify once-only key delivery panel
-    await page.getByRole('button', { name: '+ Thêm tủ mới' }).click();
+    await page.getByRole('button', { name: '+ Tạo tủ theo hồ sơ' }).click();
     await page.getByLabel('Mã tủ (Code) *').fill('K-NEW-02');
     await page.getByLabel('Tên tủ *').fill('Kiosk Phú Nhuận');
     await page.getByLabel('Hardware ID (Serial) *').fill('ESP32-SN-998811');
@@ -580,7 +553,7 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
 
     // OFFLINE kiosks with a matching slotCount are selectable before installation.
     await expect(
-      page.getByRole('option', { name: 'K-HCM-01 - Kiosk Quận 1 (2 ô) [OFFLINE]', exact: true }),
+      page.getByLabel('Tủ kiosk cấp phát').locator('option[value="kiosk-01"]'),
     ).toHaveCount(1);
 
     // Step 2: Schedule Tech and Kiosk
@@ -724,10 +697,14 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     await page.goto('/operations/installations');
 
     await expect(page.getByText('Hoa Tươi Thử Nghiệm')).toBeVisible();
-    await page.getByRole('button', { name: 'Chi tiết' }).click();
+    await page
+      .getByRole('row')
+      .filter({ hasText: 'Hoa Tươi Thử Nghiệm' })
+      .getByRole('button')
+      .click();
 
     // 1. First Enrollment
-    await page.getByRole('button', { name: '+ Thêm tủ mới' }).click();
+    await page.getByRole('button', { name: '+ Tạo tủ theo hồ sơ' }).click();
     await page.getByLabel('Mã tủ (Code) *').fill('K-CYCLE-01');
     await page.getByLabel('Tên tủ *').fill('Kiosk Chu Kỳ 1');
     await page.getByLabel('Hardware ID (Serial) *').fill('SN-CYCLE-001');
@@ -749,7 +726,7 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     await expect(page.getByText('Cấu hình khóa thiết bị Kiosk (API Key)')).not.toBeVisible();
 
     // 2. Second Enrollment
-    await page.getByRole('button', { name: '+ Thêm tủ mới' }).click();
+    await page.getByRole('button', { name: '+ Tạo tủ theo hồ sơ' }).click();
     await page.getByLabel('Mã tủ (Code) *').fill('K-CYCLE-02');
     await page.getByLabel('Tên tủ *').fill('Kiosk Chu Kỳ 2');
     await page.getByLabel('Hardware ID (Serial) *').fill('SN-CYCLE-002');
@@ -978,7 +955,7 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     await expect(directionsLink).toHaveAttribute('href', /google\.com\/maps\/dir/);
 
     // Start visit
-    await page.getByRole('button', { name: /Bắt đầu khảo sát & Lắp đặt/ }).click();
+    await page.getByRole('button', { name: 'Bắt đầu lắp đặt' }).click();
     await expect(page.getByText('Đã bắt đầu công việc tại điểm: Tiệm Hoa Hồng Đỏ')).toBeVisible();
 
     // Upload Photo Evidence (PNG simulation)
@@ -999,7 +976,7 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
       .getByLabel('Nội dung báo cáo chi tiết:')
       .fill('Đã kết nối nguồn điện ổn định, khóa tủ hoạt động bình thường.');
     await page.getByRole('button', { name: /Nộp báo cáo hoàn thành/ }).click();
-    await expect(page.getByText('Đã nộp báo cáo thành công!')).toBeVisible();
+    await expect(page.getByText(/Đã nộp báo cáo lắp đặt cho Tiệm Hoa Hồng Đỏ/)).toBeVisible();
   });
 
   test('Admin manual refund: queue with masked bank, two-step separation of duty, and approve/confirm payout', async ({

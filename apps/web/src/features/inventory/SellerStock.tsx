@@ -9,7 +9,6 @@ import type { components } from '../../../../../packages/contracts/src/generated
 import { queryClient, request, type Session } from '@/shared/lib/api';
 import ReportFault from '../incidents/ReportFault';
 import ReturnFlowers from '../orders/ReturnFlowers';
-import SlotZoneSelector from './SlotZoneSelector';
 import RemoveSlotBouquet from './RemoveSlotBouquet';
 import { Modal } from '@/shared/components/Modal';
 import './styles/seller-stock.css';
@@ -169,7 +168,6 @@ export default function SellerStock({ session }: { session: Session }) {
 
   const selectedSlot = matchingEmpty.find((slot) => slot.id === selectedSlotId);
   const detailSlot = allSlots.find((slot) => slot.id === detailSlotId);
-  const unclassifiedEmpty = empty.filter((slot) => slotZone(slot) === 'UNKNOWN');
   const available = products.data?.filter((product) => product.status === 'ACTIVE') || [];
   const selectedProduct = available.find((product) => product.id === selectedProductId);
   const slotsLoading = !!selectedKioskId && (slots.isPending || slots.isFetching);
@@ -211,7 +209,7 @@ export default function SellerStock({ session }: { session: Session }) {
       </h2>
       {!canStock && (
         <p className="quiet stock-banner-notice stock-banner-warning">
-          Shop cần có gói đang hoạt động để nạp hoa. Bạn vẫn có thể xem các ô đang quản lý.
+          Shop cần có kỳ thuê đang hoạt động để nạp hoa. Bạn vẫn có thể xem các ô đang quản lý.
         </p>
       )}
 
@@ -366,21 +364,10 @@ export default function SellerStock({ session }: { session: Session }) {
                     ? `${walkInSlots.length} ô đã chọn Walk-in, nhưng chưa ô nào trống để nạp bó mới.`
                     : 'Kiosk này chưa có ô nào được chọn làm Walk-in.'}
                 </p>
-                {unclassifiedEmpty.length > 0 && (
-                  <>
-                    <p>
-                      Trong {unclassifiedSlots.length} ô chưa phân loại, có{' '}
-                      {unclassifiedEmpty.length} ô trống có thể chuyển sang Walk-in.
-                    </p>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setDetailSlotId(unclassifiedEmpty[0].id)}
-                    >
-                      Phân loại ô {unclassifiedEmpty[0].slotCode}
-                    </Button>
-                  </>
-                )}
+                <p>
+                  Loại ô được chốt theo hồ sơ thuê. Ô chưa phân loại không thể nạp hoa; liên hệ đội
+                  vận hành để kiểm tra.
+                </p>
               </div>
             )}
             {matchingEmpty.length > 0 && !slots.isError && (
@@ -559,7 +546,7 @@ export default function SellerStock({ session }: { session: Session }) {
                                 ? 'Ô trống sẵn sàng nạp hoa'
                                 : zType === 'PREORDER'
                                   ? 'Ô dành cho đơn đặt trước'
-                                  : 'Chưa chọn hình thức bán'}
+                                  : 'Chưa phân loại · không thể nạp hoa'}
                           </span>
                           <span className="stock-slot-product-sub">
                             {hasBouquet
@@ -670,19 +657,7 @@ export default function SellerStock({ session }: { session: Session }) {
                         Chọn ô này để nạp hoa
                       </Button>
                     )}
-                  <SlotZoneSelector
-                    kioskId={selectedKioskId}
-                    slotId={detailSlot.id}
-                    slotCode={detailSlot.slotCode}
-                    zone={detailSlot.zone}
-                    canEdit={
-                      session.role === 'SELLER' &&
-                      detailSlot.status === 'RENTED_EMPTY' &&
-                      !detailSlot.bouquetId &&
-                      !slotsLoading &&
-                      !stock.isPending
-                    }
-                  />
+
                   <RemoveSlotBouquet kioskId={selectedKioskId} slot={detailSlot} />
                   <ReturnFlowers slot={detailSlot} sellerId={sellerId} />
                   <ReportFault slot={detailSlot} sellerId={sellerId} />

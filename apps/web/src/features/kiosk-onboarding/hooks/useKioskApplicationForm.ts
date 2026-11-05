@@ -4,8 +4,9 @@ import type { CreateKioskApplicationRequest } from '../../installations/installa
 import type { KioskLocationSource } from '../onboarding.types';
 import { validateKioskApplicationDraft } from '../onboarding.utils';
 
-export function useKioskApplicationForm() {
-  const [selectedPackageId, setSelectedPackageId] = useState<string>('');
+export function useKioskApplicationForm(pricingVersion = 0, additional = false) {
+  const [walkInSlots, setWalkInSlots] = useState(1);
+  const [preorderSlots, setPreorderSlots] = useState(0);
   const [shopName, setShopName] = useState('');
   const [phone, setPhone] = useState('');
   const [contactEmail, setContactEmail] = useState('');
@@ -129,7 +130,10 @@ export function useKioskApplicationForm() {
 
   const validateAndGetPayload = (): CreateKioskApplicationRequest | null => {
     const result = validateKioskApplicationDraft({
-      packageId: selectedPackageId,
+      walkInSlots,
+      preorderSlots,
+      pricingVersion,
+      additional,
       shopName,
       phone,
       contactEmail,
@@ -156,8 +160,10 @@ export function useKioskApplicationForm() {
   };
 
   return {
-    selectedPackageId,
-    setSelectedPackageId,
+    walkInSlots,
+    setWalkInSlots,
+    preorderSlots,
+    setPreorderSlots,
     shopName,
     setShopName,
     phone,

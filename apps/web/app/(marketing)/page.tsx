@@ -1,6 +1,5 @@
 import Layout from '@/features/marketing/MarketingLayout';
-import Registration from '@/features/marketing/Registration';
-import { LandingPackagesProvider, LandingPricing } from '@/features/marketing/LandingPackages';
+import { LandingPricing } from '@/features/marketing/LandingPricing';
 import StorefrontFlowers from '@/features/marketing/StorefrontFlowers';
 import '@/features/marketing/styles/home-storefront.css';
 
@@ -106,35 +105,18 @@ export default function Page() {
               </a>
             </div>
             <details className="home-partner-details">
-              <summary>Xem gói thuê & đăng ký tư vấn</summary>
-              <LandingPackagesProvider>
-                <section
-                  id="goi-thue"
-                  className="pricing-section section"
-                  aria-labelledby="pricing-title"
-                >
-                  <div className="section-intro">
-                    <h2 id="pricing-title">Gói thuê kiosk</h2>
-                    <p>Phí thuê hằng năm và số ô theo từng gói.</p>
-                  </div>
-                  <LandingPricing />
-                </section>
-                <section
-                  id="dang-ky"
-                  className="section registration-section"
-                  aria-labelledby="registration-title"
-                  tabIndex={-1}
-                >
-                  <div>
-                    <h2 id="registration-title">Tư vấn thuê kiosk</h2>
-                    <p>
-                      Để lại thông tin để FloraBot liên hệ tư vấn gói phù hợp. Gửi yêu cầu tư vấn
-                      không mất phí.
-                    </p>
-                  </div>
-                  <Registration />
-                </section>
-              </LandingPackagesProvider>
+              <summary>Tính phí thuê theo số ô</summary>
+              <section
+                id="goi-thue"
+                className="pricing-section section"
+                aria-labelledby="pricing-title"
+              >
+                <div className="section-intro">
+                  <h2 id="pricing-title">Phí thuê ô kiosk</h2>
+                  <p>Chọn số ô từng loại để xem phí thuê một năm.</p>
+                </div>
+                <LandingPricing />
+              </section>
             </details>
           </section>
         </div>

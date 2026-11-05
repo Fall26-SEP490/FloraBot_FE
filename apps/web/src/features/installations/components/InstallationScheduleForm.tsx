@@ -18,7 +18,7 @@ interface InstallationScheduleFormProps {
   techniciansQuery: UseQueryResult<AccountDirectoryItem[], Error>;
   eligibleKiosks: EligibleKioskResponse[];
   eligibleKiosksQuery: UseQueryResult<EligibleKioskResponse[], Error>;
-  onOpenEnroll: (slotCount: number) => void;
+  onOpenEnroll: (application: KioskApplicationResponse) => void;
   onSubmit: () => void;
   isPending: boolean;
 }
@@ -57,7 +57,7 @@ export function InstallationScheduleForm({
       <h3>Xếp lịch lắp đặt</h3>
       <p>
         Chọn một kỹ thuật viên đang hoạt động và một tủ kiosk trống có đủ {appDetail.totalSlots} ô.
-        Chủ shop phân loại hình thức bán sau khi được cấp kiosk.
+        Phân bổ loại ô giữ nguyên theo hồ sơ đã thanh toán.
       </p>
 
       <div className="form-fields-grid-2">
@@ -94,13 +94,15 @@ export function InstallationScheduleForm({
         <div className="kiosk-form-field">
           <div className="field-label-with-action">
             <label htmlFor={kioskSelectId}>Tủ kiosk cấp phát</label>
-            <button
-              type="button"
-              className="link-inline-btn"
-              onClick={() => onOpenEnroll(Number(appDetail.totalSlots))}
-            >
-              + Thêm tủ mới
-            </button>
+            {appDetail.status === 'CONFIRMED' && (
+              <button
+                type="button"
+                className="link-inline-btn"
+                onClick={() => onOpenEnroll(appDetail)}
+              >
+                + Tạo tủ theo hồ sơ
+              </button>
+            )}
           </div>
           <select
             id={kioskSelectId}
@@ -117,7 +119,8 @@ export function InstallationScheduleForm({
               )}
             {eligibleKiosks.map((k) => (
               <option key={k.id} value={k.id}>
-                {k.code} - {k.name} ({k.slotCount} ô) [{k.status}]
+                {k.code} - {k.name} ({k.slotCount} ô: {k.walkInSlots} Walk-in · {k.preorderSlots}{' '}
+                Pre-order) [{k.status}]
               </option>
             ))}
           </select>

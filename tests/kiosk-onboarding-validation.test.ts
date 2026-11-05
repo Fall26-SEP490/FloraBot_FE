@@ -3,7 +3,9 @@ import { validateKioskApplicationDraft } from '../apps/web/src/features/kiosk-on
 import type { KioskApplicationFormDraft } from '../apps/web/src/features/kiosk-onboarding/onboarding.types';
 
 const validDraft: KioskApplicationFormDraft = {
-  packageId: 'pkg-standard',
+  walkInSlots: 2,
+  preorderSlots: 2,
+  pricingVersion: 1,
   shopName: 'Tiệm Hoa Hướng Dương',
   phone: '0901234567',
   contactEmail: 'contact@huongduong.vn',
@@ -32,7 +34,9 @@ describe('validateKioskApplicationDraft Unit Tests', () => {
     expect(result.isValid).toBe(true);
     expect(result.errors).toEqual({});
     expect(result.sanitizedPayload).toEqual({
-      packageId: 'pkg-standard',
+      walkInSlots: 2,
+      preorderSlots: 2,
+      pricingVersion: 1,
       shopName: 'Tiệm Hoa Hướng Dương',
       phone: '0901234567',
       contactEmail: 'contact@huongduong.vn',
@@ -45,10 +49,10 @@ describe('validateKioskApplicationDraft Unit Tests', () => {
     });
   });
 
-  it('rejects missing packageId', () => {
-    const result = validateKioskApplicationDraft({ ...validDraft, packageId: '' });
+  it('rejects a missing pricing version', () => {
+    const result = validateKioskApplicationDraft({ ...validDraft, pricingVersion: 0 });
     expect(result.isValid).toBe(false);
-    expect(result.errors.package).toBe('Vui lòng chọn một gói thuê kiosk.');
+    expect(result.errors.slots).toBe('Vui lòng tải và xác nhận bảng giá trước khi gửi.');
   });
 
   describe('Shop Name Validation', () => {
@@ -287,5 +291,45 @@ describe('validateKioskApplicationDraft Unit Tests', () => {
         'Số tài khoản chỉ bao gồm chữ số hoặc chữ cái không dấu.',
       );
     });
+  });
+});
+
+describe('Slot allocation boundaries', () => {
+  it.each([
+    [0, 0],
+    [-1, 2],
+    [1.5, 1],
+    [50, 1],
+    [NaN, 1],
+    [Infinity, 0],
+  ])('rejects %s Walk-in and %s Pre-order', (walkInSlots, preorderSlots) => {
+    expect(
+      validateKioskApplicationDraft({ ...validDraft, walkInSlots, preorderSlots }).isValid,
+    ).toBe(false);
+  });
+  it.each([
+    [1, 0],
+    [0, 1],
+    [50, 0],
+    [0, 50],
+    [25, 25],
+  ])('accepts %s Walk-in and %s Pre-order', (walkInSlots, preorderSlots) => {
+    expect(
+      validateKioskApplicationDraft({ ...validDraft, walkInSlots, preorderSlots }).isValid,
+    ).toBe(true);
+  });
+  it('uses the existing seller profile for additional rental', () => {
+    expect(
+      validateKioskApplicationDraft({
+        ...validDraft,
+        additional: true,
+        shopName: '',
+        phone: '',
+        contactEmail: '',
+        bankName: '',
+        bankHolder: '',
+        bankAccountNumber: '',
+      }).isValid,
+    ).toBe(true);
   });
 });

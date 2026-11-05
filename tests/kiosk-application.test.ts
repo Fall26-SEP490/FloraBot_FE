@@ -3,10 +3,7 @@ import {
   validatePayosCheckoutUrl,
   parseAndValidateCoordinate,
 } from '../apps/web/src/features/installations/installations.utils';
-import {
-  KIOSK_PACKAGE_DEFAULTS,
-  KIOSK_STATUS_LABELS,
-} from '../apps/web/src/features/installations/installations.constants';
+import { KIOSK_STATUS_LABELS } from '../apps/web/src/features/installations/installations.constants';
 
 describe('Annual Kiosk Onboarding Unit Tests', () => {
   describe('validatePayosCheckoutUrl (fail-closed security validation)', () => {
@@ -126,31 +123,6 @@ describe('Annual Kiosk Onboarding Unit Tests', () => {
   });
 
   describe('Package Catalog & Capacities Integrity', () => {
-    it('defines exact Trial (1W+1P=2), Pro (4W+4P=8), Max (6W+6P=12) 1-year packages', () => {
-      const [trial, pro, max] = KIOSK_PACKAGE_DEFAULTS;
-
-      expect(trial.name).toBe('Trial');
-      expect(trial.annualFee).toBe(10000);
-      expect(trial.walkInSlots).toBe(1);
-      expect(trial.preorderSlots).toBe(1);
-      expect(trial.totalSlots).toBe(2);
-      expect(trial.termMonths).toBe(12);
-
-      expect(pro.name).toBe('Pro');
-      expect(pro.annualFee).toBe(15000);
-      expect(pro.walkInSlots).toBe(4);
-      expect(pro.preorderSlots).toBe(4);
-      expect(pro.totalSlots).toBe(8);
-      expect(pro.termMonths).toBe(12);
-
-      expect(max.name).toBe('Max');
-      expect(max.annualFee).toBe(20000);
-      expect(max.walkInSlots).toBe(6);
-      expect(max.preorderSlots).toBe(6);
-      expect(max.totalSlots).toBe(12);
-      expect(max.termMonths).toBe(12);
-    });
-
     it('contains friendly Vietnamese labels for all lifecycle statuses', () => {
       expect(KIOSK_STATUS_LABELS.AWAITING_PAYMENT).toBe('Chờ thanh toán phí thuê');
       expect(KIOSK_STATUS_LABELS.PAID_REVIEW).toBe('Đã thanh toán - Chờ duyệt');

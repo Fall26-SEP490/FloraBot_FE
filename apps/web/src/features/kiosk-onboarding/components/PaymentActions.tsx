@@ -23,10 +23,11 @@ export function PaymentActions({
 }: PaymentActionsProps) {
   return (
     <div className="status-action-box" data-action="payment">
-      <h3>Thanh toán phí thuê gói {packageName}</h3>
+      <h3>Thanh toán phí thuê kiosk</h3>
+      <p>{packageName}</p>
       <p>
-        Số tiền: <strong>{Number(annualFee).toLocaleString('vi-VN')} đ</strong> (cho thời hạn trọn
-        gói 1 năm, tính từ khi bàn giao).
+        Số tiền: <strong>{Number(annualFee).toLocaleString('vi-VN')} đ</strong> (cho thời hạn 1 năm,
+        tính từ khi bàn giao).
       </p>
 
       {paymentLinkError && (

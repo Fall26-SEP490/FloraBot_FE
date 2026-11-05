@@ -1,0 +1,109 @@
+.slot-demand {
+  border: 0;
+  padding: 0;
+  margin: 1rem 0;
+  min-width: 0;
+}
+.slot-demand legend {
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+.slot-demand-inputs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+.slot-demand-inputs > div {
+  display: grid;
+  gap: 0.6rem;
+  align-content: start;
+}
+.slot-demand label {
+  font-weight: 600;
+}
+.slot-demand p {
+  margin: 0;
+}
+.slot-demand-inputs p,
+.slot-demand-note {
+  color: #495f4e;
+  font-size: 0.9rem;
+}
+.slot-demand input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #64735f;
+  border-radius: 8px;
+  background: #fff;
+  color: #183e2b;
+  font: inherit;
+}
+.slot-demand-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  border-top: 1px solid #c9d9c8;
+  padding: 1rem 0;
+  margin-top: 1.25rem;
+  font-variant-numeric: tabular-nums;
+}
+.slot-demand-total strong {
+  font-size: 1.25rem;
+}
+.slot-demand .slot-demand-note {
+  margin-top: 0.25rem;
+}
+.kiosk-pricing-settings {
+  padding: 1.25rem;
+  border: 1px solid #c9d9c8;
+  border-radius: 12px;
+  background: #fff;
+  margin-bottom: 1.5rem;
+}
+.kiosk-pricing-settings summary {
+  cursor: pointer;
+  font-weight: 600;
+  min-height: 44px;
+  align-content: center;
+}
+.kiosk-pricing-settings form {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.kiosk-pricing-settings label {
+  display: grid;
+  gap: 0.5rem;
+}
+.kiosk-pricing-settings input {
+  min-height: 48px;
+  max-width: 100%;
+  padding: 0.6rem;
+  border: 1px solid #64735f;
+  border-radius: 8px;
+  font: inherit;
+}
+@media (max-width: 600px) {
+  .slot-demand-inputs {
+    grid-template-columns: 1fr;
+  }
+}
+
+.rental-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-height: 44px;
+  cursor: pointer;
+}
+.rental-consent input[type='checkbox'] {
+  width: 20px;
+  height: 20px;
+  min-height: 20px;
+  flex: 0 0 20px;
+  margin: 0.2rem 0 0;
+  accent-color: #174b35;
+}

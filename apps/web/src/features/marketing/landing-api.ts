@@ -1,4 +1,4 @@
-import { parseCatalogPage, parseLocations, parsePackages } from './landing-data';
+import { parseCatalogPage, parseLocations } from './landing-data';
 async function getPublicData(path: string): Promise<unknown> {
   const response = await fetch(`/api${path}`, {
     credentials: 'omit',
@@ -8,8 +8,6 @@ async function getPublicData(path: string): Promise<unknown> {
   if (!response.ok) throw new Error('Chưa tải được dữ liệu. Vui lòng thử lại.');
   return response.json();
 }
-export const fetchLandingPackages = async () =>
-  parsePackages(await getPublicData('/kiosk-packages'));
 export const fetchLandingLocations = async () =>
   parseLocations(await getPublicData('/kiosk-locations'));
 export async function fetchLandingCatalog(page: number) {

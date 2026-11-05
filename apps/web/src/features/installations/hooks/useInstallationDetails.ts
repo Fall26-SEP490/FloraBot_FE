@@ -41,12 +41,12 @@ export function useInstallationDetails({
   const activeTechnicians = (techniciansQuery.data || []).filter((t) => t.status === 'ACTIVE');
 
   const eligibleKiosksQuery = useQuery({
-    queryKey: ['eligible-kiosks', session.id, appDetail?.packageId],
+    queryKey: ['eligible-kiosks', session.id, appDetail?.id],
     queryFn: () =>
       request<EligibleKioskResponse[]>(
-        `/operations/eligible-kiosks?packageId=${appDetail?.packageId}`,
+        `/operations/eligible-kiosks?applicationId=${appDetail?.id}`,
       ),
-    enabled: isManager && needsSchedule && !!appDetail?.packageId,
+    enabled: isManager && needsSchedule && !!appDetail?.id,
   });
 
   const eligibleKiosks = eligibleKiosksQuery.data || [];
@@ -57,7 +57,7 @@ export function useInstallationDetails({
       queryKey: ['operations-kiosk-application-detail', session.id, appId],
     });
     void queryClient.invalidateQueries({
-      queryKey: ['eligible-kiosks', session.id, appDetail?.packageId],
+      queryKey: ['eligible-kiosks', session.id, appDetail?.id],
     });
   };
 

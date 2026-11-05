@@ -26,14 +26,14 @@ void i18n.use(initReactI18next).init({
           CLOSED: 'Đã đóng',
         },
         banner: {
-          PENDING: 'Hồ sơ shop đang chờ duyệt. Bạn chưa cần thanh toán gói.',
-          APPROVED: 'Shop đã được duyệt. Thanh toán gói thuê để bắt đầu mở bán.',
+          PENDING: 'Hồ sơ shop đang chờ xử lý. Vui lòng theo dõi tiến độ hồ sơ thuê kiosk.',
+          APPROVED: 'Shop đã được duyệt. Kiểm tra hồ sơ thuê kiosk để xem bước tiếp theo.',
           PAST_DUE:
-            'Gói hết hạn ngày {{date}}. Kiosk đã ngừng bán hoa của shop; gia hạn và thanh toán để mở bán lại.',
+            'Kỳ thuê hết hạn ngày {{date}}. Liên hệ FloraBot để được hỗ trợ trước khi tiếp tục bán hoa.',
           SUSPENDED: 'Shop đang tạm ngưng. Vui lòng liên hệ đội ngũ vận hành để được hỗ trợ.',
           CLOSED: 'Shop đã đóng. Vui lòng liên hệ đội ngũ vận hành nếu cần hỗ trợ.',
           EXPIRING:
-            'Gói thuê hết hạn ngày {{date}}. Bạn nên gia hạn để việc bán hoa không bị gián đoạn.',
+            'Kỳ thuê sắp hết hạn ngày {{date}}. Liên hệ FloraBot để được hỗ trợ kỳ thuê tiếp theo.',
           UNKNOWN: 'Chưa xác định được trạng thái gói. Hãy tải lại thông tin trước khi thao tác.',
         },
       },

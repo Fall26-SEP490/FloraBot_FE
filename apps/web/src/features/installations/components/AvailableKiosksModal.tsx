@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Boxes, Button, Plus, RefreshCw, Search } from '@florabot/ui';
+import { Boxes, Button, RefreshCw, Search } from '@florabot/ui';
 import { queryClient, request, type Session } from '@/shared/lib/api';
 import { Modal } from '../../../shared/components/Modal';
 import type { EligibleKioskResponse } from '../installations.types';
@@ -13,15 +13,9 @@ interface AvailableKiosksModalProps {
   open: boolean;
   onClose: () => void;
   session: Session;
-  onOpenEnroll: (slotCount?: number) => void;
 }
 
-export function AvailableKiosksModal({
-  open,
-  onClose,
-  session,
-  onOpenEnroll,
-}: AvailableKiosksModalProps) {
+export function AvailableKiosksModal({ open, onClose, session }: AvailableKiosksModalProps) {
   const [deleteTarget, setDeleteTarget] = useState<EligibleKioskResponse | null>(null);
   const [deleteSuccess, setDeleteSuccess] = useState('');
   const [lastDeleteId, setLastDeleteId] = useState<string | null>(null);
@@ -62,10 +56,6 @@ export function AvailableKiosksModal({
           .toLocaleLowerCase('vi')
           .includes(searchTerm.trim().toLocaleLowerCase('vi'))),
   );
-  const openEnroll = () => {
-    onClose();
-    onOpenEnroll(slotFilter === 'ALL' ? 2 : Number(slotFilter));
-  };
 
   if (!isManager) return null;
 
@@ -94,10 +84,7 @@ export function AvailableKiosksModal({
             </strong>
             <p>Tủ OFFLINE vẫn có thể được phân công trước khi kết nối.</p>
           </div>
-          <Button onClick={openEnroll}>
-            <Plus size={16} aria-hidden="true" />
-            Thêm tủ mới
-          </Button>
+          <p>Tạo tủ từ hồ sơ đã thanh toán và xác nhận.</p>
         </div>
         <div className="inventory-filters">
           <div className="kiosk-form-field">
@@ -166,7 +153,7 @@ export function AvailableKiosksModal({
                 : 'Thử thay đổi từ khóa hoặc chọn tất cả quy mô ô.'}
             </p>
             {allKiosks.length === 0 ? (
-              <Button onClick={openEnroll}>Đăng ký thiết bị tủ mới</Button>
+              <p>Mở hồ sơ đã xác nhận để tạo tủ theo đúng phân bổ đã đăng ký.</p>
             ) : (
               <Button
                 variant="outline"

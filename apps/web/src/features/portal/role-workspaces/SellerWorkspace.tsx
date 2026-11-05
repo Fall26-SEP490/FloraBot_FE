@@ -125,7 +125,7 @@ function SubscriptionBanner({ session }: { session: Session }) {
             }
           }}
         >
-          {status === 'APPROVED' ? 'Đăng ký gói' : 'Gia hạn gói thuê'}
+          Xem hồ sơ thuê kiosk
         </Link>
       )}
     </aside>

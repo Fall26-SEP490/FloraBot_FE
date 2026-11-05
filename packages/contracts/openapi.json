@@ -8151,16 +8151,67 @@
         "tags": [
           "Identity"
         ],
+        "summary": "Xem đơn giá thuê một năm cho từng loại ô kiosk",
         "responses": {
           "200": {
             "description": "OK",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/KioskPackageResponse"
-                  }
+                  "$ref": "#/components/schemas/KioskSlotPricingResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/operations/kiosk-pricing": {
+      "put": {
+        "tags": [
+          "KioskOps"
+        ],
+        "summary": "Operations Manager cập nhật đơn giá thuê một năm cho từng loại ô",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateKioskSlotPricingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KioskSlotPricingResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -8671,6 +8722,14 @@
         "parameters": [
           {
             "name": "packageId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "applicationId",
             "in": "query",
             "schema": {
               "type": "string",
@@ -9477,56 +9536,6 @@
         "responses": {
           "200": {
             "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/me/kiosks/{kioskId}/slots/{slotId}/zone": {
-      "put": {
-        "tags": [
-          "KioskOps"
-        ],
-        "summary": "Seller phân loại ô trống thuộc kiosk mình quản lý",
-        "parameters": [
-          {
-            "name": "kioskId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "slotId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SellerSetSlotZoneRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SellerSlotZoneResponse"
-                }
-              }
-            }
           }
         }
       }
@@ -12782,7 +12791,10 @@
         "type": "object",
         "properties": {
           "packageId": {
-            "type": "string",
+            "type": [
+              "null",
+              "string"
+            ],
             "format": "uuid"
           },
           "installationAddress": {
@@ -12805,6 +12817,33 @@
               "string"
             ],
             "format": "double"
+          },
+          "walkInSlots": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "preorderSlots": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "pricingVersion": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -12825,7 +12864,10 @@
         "type": "object",
         "properties": {
           "packageId": {
-            "type": "string",
+            "type": [
+              "null",
+              "string"
+            ],
             "format": "uuid"
           },
           "shopName": {
@@ -12866,6 +12908,33 @@
           },
           "bankAccountNumber": {
             "type": "string"
+          },
+          "walkInSlots": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "preorderSlots": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "pricingVersion": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -13542,6 +13611,33 @@
           },
           "status": {
             "type": "string"
+          },
+          "walkInSlots": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 0
+          },
+          "preorderSlots": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 0
+          },
+          "unclassifiedSlots": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 0
           }
         },
         "additionalProperties": false
@@ -13552,8 +13648,7 @@
           "name",
           "hardwareId",
           "mqttClientId",
-          "region",
-          "slotCount"
+          "region"
         ],
         "type": "object",
         "properties": {
@@ -13581,10 +13676,18 @@
           "slotCount": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
+              "null",
               "integer",
               "string"
             ],
             "format": "int32"
+          },
+          "applicationId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         },
         "additionalProperties": false
@@ -13623,6 +13726,31 @@
           },
           "apiKey": {
             "type": "string"
+          },
+          "walkInSlots": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 0
+          },
+          "preorderSlots": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 0
+          },
+          "applicationId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         },
         "additionalProperties": false
@@ -14089,7 +14217,13 @@
           "handoverAt",
           "handoverBy",
           "sellerId",
-          "canVoluntaryCancel"
+          "canVoluntaryCancel",
+          "walkInSlots",
+          "preorderSlots",
+          "pricingMode",
+          "walkInAnnualPrice",
+          "preorderAnnualPrice",
+          "pricingVersion"
         ],
         "type": "object",
         "properties": {
@@ -14272,6 +14406,54 @@
           },
           "canVoluntaryCancel": {
             "type": "boolean"
+          },
+          "walkInSlots": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "preorderSlots": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "pricingMode": {
+            "type": "string"
+          },
+          "walkInAnnualPrice": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "preorderAnnualPrice": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "pricingVersion": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -14498,58 +14680,6 @@
         },
         "additionalProperties": false
       },
-      "KioskPackageResponse": {
-        "required": [
-          "id",
-          "name",
-          "annualFee",
-          "totalSlots",
-          "termMonths",
-          "status",
-          "description"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string"
-          },
-          "annualFee": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int64"
-          },
-          "totalSlots": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "termMonths": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "status": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
       "KioskPickupOrder": {
         "required": [
           "id",
@@ -14596,6 +14726,82 @@
           },
           "accountNumber": {
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "KioskSlotPricingResponse": {
+        "required": [
+          "walkInAnnualPrice",
+          "preorderAnnualPrice",
+          "version",
+          "configured",
+          "updatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "walkInAnnualPrice": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "preorderAnnualPrice": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "version": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "configured": {
+            "type": "boolean"
+          },
+          "updatedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "termMonths": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 12
+          },
+          "minSlots": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 1
+          },
+          "maxSlots": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 50
           }
         },
         "additionalProperties": false
@@ -16557,18 +16763,6 @@
         },
         "additionalProperties": false
       },
-      "SellerSetSlotZoneRequest": {
-        "required": [
-          "zone"
-        ],
-        "type": "object",
-        "properties": {
-          "zone": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
       "SellerSlotResponse": {
         "required": [
           "id",
@@ -16682,28 +16876,6 @@
               "null",
               "string"
             ]
-          }
-        },
-        "additionalProperties": false
-      },
-      "SellerSlotZoneResponse": {
-        "required": [
-          "kioskId",
-          "slotId",
-          "zone"
-        ],
-        "type": "object",
-        "properties": {
-          "kioskId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "slotId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "zone": {
-            "type": "string"
           }
         },
         "additionalProperties": false
@@ -18353,6 +18525,41 @@
               "string"
             ],
             "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateKioskSlotPricingRequest": {
+        "required": [
+          "walkInAnnualPrice",
+          "preorderAnnualPrice",
+          "expectedVersion"
+        ],
+        "type": "object",
+        "properties": {
+          "walkInAnnualPrice": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "preorderAnnualPrice": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "expectedVersion": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         },
         "additionalProperties": false

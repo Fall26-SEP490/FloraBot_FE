@@ -30,7 +30,16 @@ export function useKioskApplicationActions(sessionData: Session | undefined) {
   // Submit application mutation
   const applyMutation = useMutation({
     mutationFn: (data: CreateKioskApplicationRequest) =>
-      request<KioskApplicationResponse>('/member/kiosk-applications', data),
+      sessionData?.role === 'SELLER'
+        ? request<KioskApplicationResponse>('/me/kiosk-applications', {
+            installationAddress: data.installationAddress,
+            latitude: data.latitude,
+            longitude: data.longitude,
+            walkInSlots: data.walkInSlots,
+            preorderSlots: data.preorderSlots,
+            pricingVersion: data.pricingVersion,
+          })
+        : request<KioskApplicationResponse>('/member/kiosk-applications', data),
     onSuccess: (created) => {
       setSubmitError('');
       queryClient.setQueryData(['current-kiosk-application', sessionData?.id], created);
@@ -42,8 +51,12 @@ export function useKioskApplicationActions(sessionData: Session | undefined) {
       if (err instanceof ApiError) {
         if (err.status === 409) {
           setSubmitError(
-            'Bạn đã có một hồ sơ thuê kiosk đang được xử lý hoặc tài khoản đã là Chủ shop.',
+            `${err.message} Hãy xem lại bảng giá và hồ sơ hiện tại trước khi gửi lại.`,
           );
+          void queryClient.invalidateQueries({ queryKey: ['kiosk-slot-pricing'] });
+          void queryClient.invalidateQueries({
+            queryKey: ['current-kiosk-application', sessionData?.id],
+          });
         } else {
           setSubmitError(err.message);
         }

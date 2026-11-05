@@ -1,5 +1,18 @@
 # FloraBot design system
 
+## Slot rental surfaces — November 5
+
+Operate mode. Rental now starts with two labelled numeric fields: Walk-in and
+Pre-order demand. Show each annual unit price beside its explanation, then the
+total slots, annual fee and 12-month term from handover. Quantity and zone are
+fixed after submission; keep that constraint beside the final confirmation.
+Reuse white surfaces, forest-green controls, Be Vietnam Pro and native form
+controls. On phones, stack the two slot inputs; desktop uses two columns.
+Manager pricing is a disclosure above the installation queue. Enrollment belongs
+to a confirmed application and displays its immutable allocation. Historical
+application prices are displayed from their saved snapshot. See
+`docs/kiosk-slot-pricing.md` for behavior and verification boundaries.
+
 ## Shared site shell - October 11
 
 The root Next layout now owns the query provider and shared public header/footer.
