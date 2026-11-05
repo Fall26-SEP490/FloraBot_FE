@@ -7,7 +7,9 @@ import { ApiError, sessionQuery, type Session } from '@/shared/lib/api';
 import { ApplicationStatusPanel } from './components/ApplicationStatusPanel';
 import { CancelApplicationDialog } from './components/CancelApplicationDialog';
 import { KioskApplicationForm } from './components/KioskApplicationForm';
-import { KioskPackageCatalog } from './components/KioskPackageCatalog';
+import { SlotDemandFields } from '../kiosk-pricing/SlotDemandFields';
+import { pricingReady, rentalTotal, rentalMoney } from '../kiosk-pricing/kiosk-pricing';
+import { useState } from 'react';
 import { TerminalApplicationPanel } from './components/TerminalApplicationPanel';
 import { useKioskApplication } from './hooks/useKioskApplication';
 import { useKioskApplicationActions } from './hooks/useKioskApplicationActions';
@@ -22,15 +24,22 @@ function CustomerKioskContent({
   sessionData: Session | undefined;
   isPending: boolean;
 }) {
-  const { packagesQuery, applicationQuery, appData, isTerminalStatus, hasActiveApplication } =
+  const { pricingQuery, applicationQuery, appData, isTerminalStatus, hasActiveApplication } =
     useKioskApplication(sessionData);
 
-  const form = useKioskApplicationForm();
+  const additional = sessionData?.role === 'SELLER';
+  const [acceptedPricingVersion, setAcceptedPricingVersion] = useState<number | null>(null);
+  const pricing = pricingQuery.data;
+  const form = useKioskApplicationForm(acceptedPricingVersion ?? 0, additional);
+  const total = rentalTotal(pricing, form.walkInSlots, form.preorderSlots);
+  const canSubmit =
+    pricingReady(pricing) && total !== null && acceptedPricingVersion === pricing?.version;
   const geo = useKioskGeolocation(form.handleGpsLocationSelect, form.installationAddress);
   const actions = useKioskApplicationActions(sessionData);
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canSubmit) return;
     const payload = form.validateAndGetPayload();
     if (!payload) return;
     actions.applyMutation.mutate(payload);
@@ -163,10 +172,9 @@ function CustomerKioskContent({
         </nav>
         <div className="kiosk-lease-heading">
           <div>
-            <span className="kiosk-lease-eyebrow">ĐỒNG HÀNH CÙNG FLORABOT</span>
             <h1>Mở điểm bán hoa của bạn</h1>
             <p className="kiosk-onboarding-lead">
-              Chọn gói thuê, đề xuất vị trí và gửi hồ sơ để bắt đầu kinh doanh cùng FloraBot.
+              Chọn số ô, xem phí thuê và đăng ký địa điểm lắp đặt.
             </p>
           </div>
           <p className="kiosk-lease-term">
@@ -207,27 +215,41 @@ function CustomerKioskContent({
         />
       )}
 
-      {/* Catalog & Registration Form (only for CUSTOMER role when no active application) */}
-      {!hasActiveApplication && sessionData.role === 'CUSTOMER' && (
+      {/* Demand and registration for first rental or seller additional rental */}
+      {!hasActiveApplication && (sessionData.role === 'CUSTOMER' || additional) && (
         <>
-          <KioskPackageCatalog
-            packages={packagesQuery.data}
-            isLoading={packagesQuery.isLoading}
-            isError={packagesQuery.isError}
-            onRefetch={() => void packagesQuery.refetch()}
-            selectedPackageId={form.selectedPackageId}
-            onSelectPackage={(id) => {
-              form.setSelectedPackageId(id);
-              form.clearFieldError('package');
-            }}
-            error={form.formErrors.package}
-          />
+          <section className="kiosk-packages-section" aria-labelledby="slot-demand-heading">
+            <h2 id="slot-demand-heading">1. Chọn số ô và xem phí thuê</h2>
+            {pricingQuery.isPending && <p role="status">Đang tải bảng giá…</p>}
+            {pricingQuery.isError && (
+              <div role="alert">
+                <p>Chưa tải được bảng giá.</p>
+                <Button onClick={() => void pricingQuery.refetch()}>Tải lại bảng giá</Button>
+              </div>
+            )}
+            {pricingQuery.isSuccess && !pricingReady(pricing) && (
+              <p role="status">Chưa có bảng giá. Vui lòng quay lại sau khi quản lý cấu hình.</p>
+            )}
+            {pricingReady(pricing) && (
+              <SlotDemandFields
+                pricing={pricing!}
+                walkInSlots={form.walkInSlots}
+                preorderSlots={form.preorderSlots}
+                onChange={(walk, pre) => {
+                  form.setWalkInSlots(walk);
+                  form.setPreorderSlots(pre);
+                  setAcceptedPricingVersion(null);
+                }}
+                disabled={actions.applyMutation.isPending}
+              />
+            )}
+            {form.formErrors.slots && <p role="alert">{form.formErrors.slots}</p>}
+          </section>
 
           <div className="kiosk-registration-layout">
             <aside className="kiosk-registration-guide" aria-label="Hướng dẫn đăng ký">
-              <span className="kiosk-lease-eyebrow">BƯỚC TIẾP THEO</span>
               <h2>Chuẩn bị điểm bán của bạn</h2>
-              <p>Hoàn thiện thông tin để FloraBot xem xét vị trí và liên hệ với bạn.</p>
+              <p>Gửi hồ sơ và thanh toán phí thuê. Quản lý xác nhận trước khi lên lịch lắp đặt.</p>
               <ol>
                 <li>
                   <strong>Thông tin cửa hàng</strong>
@@ -247,6 +269,37 @@ function CustomerKioskContent({
               </p>
             </aside>
             <KioskApplicationForm
+              additional={additional}
+              rentalReview={
+                <div className="slot-demand-total">
+                  <p>
+                    Tổng phí:{' '}
+                    <strong>
+                      {total === null ? 'Chưa xác định' : rentalMoney(total) + '/năm'}
+                    </strong>{' '}
+                    · 12 tháng từ bàn giao.
+                  </p>
+                  {pricingReady(pricing) && (
+                    <label className="rental-consent">
+                      <input
+                        type="checkbox"
+                        checked={acceptedPricingVersion === pricing?.version}
+                        disabled={total === null || actions.applyMutation.isPending}
+                        onChange={(e) =>
+                          setAcceptedPricingVersion(e.target.checked ? pricing!.version : null)
+                        }
+                      />{' '}
+                      Tôi xác nhận số ô, phân bổ cố định và tổng phí theo bảng giá hiện tại.
+                    </label>
+                  )}
+                  {acceptedPricingVersion !== null &&
+                    acceptedPricingVersion !== pricing?.version && (
+                      <p role="alert">
+                        Bảng giá đã thay đổi. Vui lòng xem và xác nhận lại tổng phí.
+                      </p>
+                    )}
+                </div>
+              }
               shopInfo={{
                 shopName: form.shopName,
                 onShopNameChange: (val) => {
@@ -307,27 +360,11 @@ function CustomerKioskContent({
               submitError={actions.submitError}
               errorBannerRef={actions.errorBannerRef}
               isPending={actions.applyMutation.isPending}
+              disabled={!canSubmit}
               onSubmit={handleFormSubmit}
             />
           </div>
         </>
-      )}
-
-      {/* Already SELLER notice (if no active onboarding in progress) */}
-      {!hasActiveApplication && sessionData.role === 'SELLER' && (
-        <div role="status" className="status-action-box active-success-banner" data-action="active">
-          <h3>Tài khoản đã là Chủ shop (SELLER)</h3>
-          <p>
-            Tài khoản của bạn hiện đã sở hữu vai trò Chủ shop. Quy trình đăng ký thuê kiosk mới chỉ
-            áp dụng cho tài khoản Khách hàng (CUSTOMER). Vui lòng chuyển sang Bảng điều khiển Chủ
-            shop để quản lý hoa và vận hành kiosk.
-          </p>
-          <div style={{ marginTop: '1rem' }}>
-            <Link href="/seller" className="button button-primary">
-              Đến Bảng điều khiển Chủ shop
-            </Link>
-          </div>
-        </div>
       )}
 
       {/* Cancel Confirmation Dialog */}

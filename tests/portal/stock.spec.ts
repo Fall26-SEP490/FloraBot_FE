@@ -307,15 +307,13 @@ test('Expired seller can inspect a selected kiosk but cannot stock', async ({ pa
     page
       .locator('.seller-stock')
       .getByText(
-        'Shop cần có gói đang hoạt động để nạp hoa. Bạn vẫn có thể xem các ô đang quản lý.',
+        'Shop cần có kỳ thuê đang hoạt động để nạp hoa. Bạn vẫn có thể xem các ô đang quản lý.',
       ),
   ).toBeVisible();
   await expect(page.getByRole('button', { name: 'Nạp hoa vào ô' })).toHaveCount(0);
 });
 
-test('Seller classifies empty slots, blocks held slots and stocks only WALK_IN', async ({
-  page,
-}) => {
+test('Seller cannot change slot types and stocks only WALK_IN', async ({ page }) => {
   const sellerId = '20000000-0000-0000-0000-000000000099';
   const kioskId = '50000000-0000-0000-0000-000000000099';
   const productId = '30000000-0000-0000-0000-000000000099';
@@ -398,19 +396,9 @@ test('Seller classifies empty slots, blocks held slots and stocks only WALK_IN',
   await expect.poll(() => writes.length).toBe(1);
   expect(writes[0]).toEqual({ productId, slotId: slots[0].id });
   await section.getByRole('button', { name: 'Xem chi tiết ô W03' }).click();
-  const zoneChoice = section.getByLabel('Hình thức bán cho ô W03');
-  await zoneChoice.selectOption('PREORDER');
-  await section.getByRole('button', { name: 'Lưu hình thức bán' }).click();
-  await expect.poll(() => zoneWrites.length).toBe(1);
-  expect(zoneWrites[0]).toEqual({ zone: 'PREORDER' });
-  await expect(zoneChoice).toHaveValue('PREORDER');
-  await page.keyboard.press('Escape');
-  await section.getByRole('button', { name: 'Xem chi tiết ô P04' }).click();
-  const heldChoice = section.getByLabel('Hình thức bán cho ô P04');
-  await heldChoice.selectOption('WALK_IN');
-  await section.getByRole('button', { name: 'Lưu hình thức bán' }).click();
-  await expect(heldChoice).toHaveCount(0);
-  await expect(section.getByRole('alert')).toContainText('Ô đang bị giữ.');
+  await expect(page.getByLabel('Hình thức bán cho ô W03')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Lưu hình thức bán' })).toHaveCount(0);
+  expect(zoneWrites).toEqual([]);
   await page.keyboard.press('Escape');
   slots[0].zone = undefined;
   await section.getByRole('button', { name: 'Làm mới', exact: true }).click();
@@ -422,11 +410,6 @@ test('Seller classifies empty slots, blocks held slots and stocks only WALK_IN',
   await expect(slot).toHaveCount(0);
   await expect(section.getByLabel('2. Chọn mẫu hoa')).toHaveCount(0);
   await section.getByRole('button', { name: 'Xem chi tiết ô A01' }).click();
-  const firstZone = section.getByLabel('Hình thức bán cho ô A01');
-  await firstZone.selectOption('WALK_IN');
-  await section.getByRole('button', { name: 'Lưu hình thức bán' }).click();
-  await page.keyboard.press('Escape');
-  await expect(slot).toBeEnabled();
-  await slot.selectOption(slots[0].id);
-  await expect(section.getByRole('button', { name: 'Nạp hoa vào ô' })).toBeEnabled();
+  await expect(page.getByLabel('Hình thức bán cho ô A01')).toHaveCount(0);
+  expect(zoneWrites).toEqual([]);
 });

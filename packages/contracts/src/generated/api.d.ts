@@ -8290,6 +8290,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Xem đơn giá thuê một năm cho từng loại ô kiosk */
         get: {
             parameters: {
                 query?: never;
@@ -8305,12 +8306,77 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["KioskPackageResponse"][];
+                        "application/json": components["schemas"]["KioskSlotPricingResponse"];
                     };
                 };
             };
         };
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/operations/kiosk-pricing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Operations Manager cập nhật đơn giá thuê một năm cho từng loại ô */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateKioskSlotPricingRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["KioskSlotPricingResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
         post?: never;
         delete?: never;
         options?: never;
@@ -8875,6 +8941,7 @@ export interface paths {
             parameters: {
                 query?: {
                     packageId?: string;
+                    applicationId?: string;
                 };
                 header?: never;
                 path?: never;
@@ -9739,49 +9806,6 @@ export interface paths {
                 };
             };
         };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/me/kiosks/{kioskId}/slots/{slotId}/zone": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Seller phân loại ô trống thuộc kiosk mình quản lý */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    kioskId: string;
-                    slotId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["SellerSetSlotZoneRequest"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SellerSlotZoneResponse"];
-                    };
-                };
-            };
-        };
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -11073,16 +11097,22 @@ export interface components {
         };
         CreateAdditionalKioskApplicationRequest: {
             /** Format: uuid */
-            packageId: string;
+            packageId: null | string;
             installationAddress: string;
             /** Format: double */
             latitude: null | number | string;
             /** Format: double */
             longitude: null | number | string;
+            /** Format: int32 */
+            walkInSlots?: null | number | string;
+            /** Format: int32 */
+            preorderSlots?: null | number | string;
+            /** Format: int32 */
+            pricingVersion?: null | number | string;
         };
         CreateKioskApplicationRequest: {
             /** Format: uuid */
-            packageId: string;
+            packageId: null | string;
             shopName: string;
             phone: string;
             contactEmail: string;
@@ -11094,6 +11124,12 @@ export interface components {
             bankName: string;
             bankHolder: string;
             bankAccountNumber: string;
+            /** Format: int32 */
+            walkInSlots?: null | number | string;
+            /** Format: int32 */
+            preorderSlots?: null | number | string;
+            /** Format: int32 */
+            pricingVersion?: null | number | string;
         };
         CreateProductRequest: {
             /** Format: uuid */
@@ -11259,6 +11295,21 @@ export interface components {
             /** Format: int32 */
             slotCount: number | string;
             status: string;
+            /**
+             * Format: int32
+             * @default 0
+             */
+            walkInSlots: number | string;
+            /**
+             * Format: int32
+             * @default 0
+             */
+            preorderSlots: number | string;
+            /**
+             * Format: int32
+             * @default 0
+             */
+            unclassifiedSlots: number | string;
         };
         EnrollKioskRequest: {
             code: string;
@@ -11267,7 +11318,9 @@ export interface components {
             mqttClientId: null | string;
             region: null | string;
             /** Format: int32 */
-            slotCount: number | string;
+            slotCount?: null | number | string;
+            /** Format: uuid */
+            applicationId?: null | string;
         };
         EnrollKioskResponse: {
             /** Format: uuid */
@@ -11278,6 +11331,18 @@ export interface components {
             slotCount: number | string;
             status: string;
             apiKey: string;
+            /**
+             * Format: int32
+             * @default 0
+             */
+            walkInSlots: number | string;
+            /**
+             * Format: int32
+             * @default 0
+             */
+            preorderSlots: number | string;
+            /** Format: uuid */
+            applicationId?: null | string;
         };
         EvidenceUploadResponse: {
             reference: string;
@@ -11437,6 +11502,17 @@ export interface components {
             /** Format: uuid */
             sellerId: null | string;
             canVoluntaryCancel: boolean;
+            /** Format: int32 */
+            walkInSlots: null | number | string;
+            /** Format: int32 */
+            preorderSlots: null | number | string;
+            pricingMode: string;
+            /** Format: int64 */
+            walkInAnnualPrice: null | number | string;
+            /** Format: int64 */
+            preorderAnnualPrice: null | number | string;
+            /** Format: int32 */
+            pricingVersion: null | number | string;
         };
         KioskCatalogResponse: {
             /** Format: uuid */
@@ -11491,19 +11567,6 @@ export interface components {
             distanceKm: null | number | string;
             directionsUrl: null | string;
         };
-        KioskPackageResponse: {
-            /** Format: uuid */
-            id: string;
-            name: string;
-            /** Format: int64 */
-            annualFee: number | string;
-            /** Format: int32 */
-            totalSlots: number | string;
-            /** Format: int32 */
-            termMonths: number | string;
-            status: string;
-            description: string;
-        };
         KioskPickupOrder: {
             /** Format: uuid */
             id: string;
@@ -11517,6 +11580,32 @@ export interface components {
             bankName: string;
             holder: string;
             accountNumber: string;
+        };
+        KioskSlotPricingResponse: {
+            /** Format: int64 */
+            walkInAnnualPrice: null | number | string;
+            /** Format: int64 */
+            preorderAnnualPrice: null | number | string;
+            /** Format: int32 */
+            version: number | string;
+            configured: boolean;
+            /** Format: date-time */
+            updatedAt: null | string;
+            /**
+             * Format: int32
+             * @default 12
+             */
+            termMonths: number | string;
+            /**
+             * Format: int32
+             * @default 1
+             */
+            minSlots: number | string;
+            /**
+             * Format: int32
+             * @default 50
+             */
+            maxSlots: number | string;
         };
         LoginRequest: {
             email: string;
@@ -12015,9 +12104,6 @@ export interface components {
             maxSlots: number | string;
             status: string;
         };
-        SellerSetSlotZoneRequest: {
-            zone: string;
-        };
         SellerSlotResponse: {
             /** Format: uuid */
             id: string;
@@ -12044,13 +12130,6 @@ export interface components {
             orderCode?: null | string;
             orderStatus?: null | string;
             paymentStatus?: null | string;
-        };
-        SellerSlotZoneResponse: {
-            /** Format: uuid */
-            kioskId: string;
-            /** Format: uuid */
-            slotId: string;
-            zone: string;
         };
         SellerStaffChatItem: {
             /** Format: uuid */
@@ -12464,6 +12543,14 @@ export interface components {
             latitude: null | number | string;
             /** Format: double */
             longitude: null | number | string;
+        };
+        UpdateKioskSlotPricingRequest: {
+            /** Format: int64 */
+            walkInAnnualPrice: number | string;
+            /** Format: int64 */
+            preorderAnnualPrice: number | string;
+            /** Format: int32 */
+            expectedVersion: number | string;
         };
         UpdateProductPriceRequest: {
             /** Format: uuid */

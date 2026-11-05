@@ -15,10 +15,12 @@ export type KioskApplicationStatus =
   | 'REFUNDED';
 
 // Generated OpenAPI Schemas (25 DTOs)
-export type KioskPackageResponse = components['schemas']['KioskPackageResponse'];
-export type KioskPackage = KioskPackageResponse;
+export type KioskSlotPricingResponse = components['schemas']['KioskSlotPricingResponse'];
 
-export type CreateKioskApplicationRequest = components['schemas']['CreateKioskApplicationRequest'];
+export type CreateKioskApplicationRequest = Omit<
+  components['schemas']['CreateKioskApplicationRequest'],
+  'packageId'
+>;
 export type KioskApplicationResponse = components['schemas']['KioskApplicationResponse'];
 export type PaymentLinkResponse = components['schemas']['PaymentLinkResponse'];
 

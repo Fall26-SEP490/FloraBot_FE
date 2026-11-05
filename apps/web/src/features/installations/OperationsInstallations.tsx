@@ -2,9 +2,14 @@
 
 import { useCallback, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import ManagerKioskPricing from '../kiosk-pricing/ManagerKioskPricing';
 import { Check, CircleAlert } from '@florabot/ui';
 import { queryClient, type Session } from '@/shared/lib/api';
-import type { EnrollKioskResponse, ProvisionedKeyInfo } from './installations.types';
+import type {
+  EnrollKioskResponse,
+  KioskApplicationResponse,
+  ProvisionedKeyInfo,
+} from './installations.types';
 import { useInstallationList } from './hooks/useInstallationList';
 import { InstallationList } from './components/InstallationList';
 import { InstallationDetails } from './components/InstallationDetails';
@@ -33,7 +38,7 @@ export default function OperationsInstallations({ session }: OperationsInstallat
   const [inventoryModalOpen, setInventoryModalOpen] = useState(
     searchParams.get('inventory') === '1',
   );
-  const [enrollSlotCount, setEnrollSlotCount] = useState(1);
+  const [enrollApplication, setEnrollApplication] = useState<KioskApplicationResponse | null>(null);
   const [enrollSuccess, setEnrollSuccess] = useState<string | null>(null);
 
   // Once-only Provisioned Key Modal State (Memory only, never persisted)
@@ -54,8 +59,8 @@ export default function OperationsInstallations({ session }: OperationsInstallat
     }
   };
 
-  const handleOpenEnroll = (slotCount = 1) => {
-    setEnrollSlotCount(slotCount);
+  const handleOpenEnroll = (application: KioskApplicationResponse) => {
+    setEnrollApplication(application);
     setEnrollSuccess(null);
     setEnrollModalOpen(true);
   };
@@ -87,6 +92,7 @@ export default function OperationsInstallations({ session }: OperationsInstallat
 
   return (
     <div className="operations-installations-view">
+      {isManager && <ManagerKioskPricing />}
       {!isManager && (
         <div role="status" className="installation-readonly-notice">
           <CircleAlert size={18} aria-hidden="true" />
@@ -119,7 +125,6 @@ export default function OperationsInstallations({ session }: OperationsInstallat
         selectedAppId={selectedAppId}
         onSelectApp={handleSelectApp}
         onRefresh={handleRefresh}
-        onOpenEnroll={() => handleOpenEnroll(1)}
         onOpenInventory={() => setInventoryModalOpen(true)}
       />
 
@@ -140,7 +145,7 @@ export default function OperationsInstallations({ session }: OperationsInstallat
         open={enrollModalOpen}
         onClose={closeEnroll}
         session={session}
-        initialSlotCount={enrollSlotCount}
+        application={enrollApplication}
         onSuccess={handleEnrollSuccess}
       />
 
@@ -148,7 +153,6 @@ export default function OperationsInstallations({ session }: OperationsInstallat
         open={inventoryModalOpen}
         onClose={() => setInventoryModalOpen(false)}
         session={session}
-        onOpenEnroll={handleOpenEnroll}
       />
 
       {provisionedKeyInfo && <ProvisionedKeyModal info={provisionedKeyInfo} onClose={closeKey} />}

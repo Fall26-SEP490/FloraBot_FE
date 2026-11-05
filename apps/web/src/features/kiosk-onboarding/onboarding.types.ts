@@ -3,7 +3,10 @@ import type { CreateKioskApplicationRequest } from '../installations/installatio
 export type KioskLocationSource = 'none' | 'suggestion' | 'map' | 'gps';
 
 export interface KioskApplicationFormDraft {
-  packageId: string;
+  walkInSlots: number;
+  preorderSlots: number;
+  pricingVersion: number;
+  additional?: boolean;
   shopName: string;
   phone: string;
   contactEmail: string;

@@ -1,34 +1,39 @@
+import { ApplicationRentalSummary } from '../../kiosk-pricing/ApplicationRentalSummary';
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Button, CircleAlert } from '@florabot/ui';
 import { ApiError, queryClient, request, type Session } from '@/shared/lib/api';
 import { Modal } from '../../../shared/components/Modal';
 import { KIOSK_REGIONS } from '../installations.constants';
-import type { EnrollKioskRequest, EnrollKioskResponse } from '../installations.types';
+import type {
+  EnrollKioskRequest,
+  EnrollKioskResponse,
+  KioskApplicationResponse,
+} from '../installations.types';
 import { validateEnrollKioskForm } from '../installations.utils';
 
 interface EnrollKioskModalProps {
   open: boolean;
   onClose: () => void;
   session: Session;
-  initialSlotCount?: number;
+  application: KioskApplicationResponse | null;
   onSuccess: (created: EnrollKioskResponse) => void;
 }
 
 interface EnrollKioskFormProps {
   session: Session;
   onClose: () => void;
-  initialSlotCount: number;
+  application: KioskApplicationResponse;
   onSuccess: (created: EnrollKioskResponse) => void;
 }
 
-function EnrollKioskForm({ session, onClose, initialSlotCount, onSuccess }: EnrollKioskFormProps) {
+function EnrollKioskForm({ session, onClose, application, onSuccess }: EnrollKioskFormProps) {
   const [newKioskCode, setNewKioskCode] = useState('');
   const [newKioskName, setNewKioskName] = useState('');
   const [newHardwareId, setNewHardwareId] = useState('');
   const [newMqttClientId, setNewMqttClientId] = useState('');
   const [newRegion, setNewRegion] = useState('HCM');
-  const [slotCount, setSlotCount] = useState(initialSlotCount);
+  const slotCount = Number(application.totalSlots);
   const [enrollError, setEnrollError] = useState('');
 
   const enrollKioskMutation = useMutation({
@@ -62,13 +67,17 @@ function EnrollKioskForm({ session, onClose, initialSlotCount, onSuccess }: Enro
       return;
     }
 
+    if (application.status !== 'CONFIRMED') {
+      setEnrollError('Chỉ tạo tủ cho hồ sơ đã thanh toán và xác nhận.');
+      return;
+    }
     enrollKioskMutation.mutate({
+      applicationId: application.id,
       code: newKioskCode.trim(),
       name: newKioskName.trim(),
       hardwareId: newHardwareId.trim(),
       mqttClientId: newMqttClientId.trim() || null,
       region: newRegion,
-      slotCount,
     });
   };
 
@@ -153,22 +162,8 @@ function EnrollKioskForm({ session, onClose, initialSlotCount, onSuccess }: Enro
         <p className="quiet">Nhập Client ID thật của thiết bị nếu đã cấu hình MQTT.</p>
       </div>
 
-      <div className="kiosk-form-field">
-        <label htmlFor="new-slot-count">Tổng số ô tủ (1–50)</label>
-        <input
-          id="new-slot-count"
-          type="number"
-          min={1}
-          max={50}
-          step={1}
-          value={slotCount}
-          onChange={(e) => setSlotCount(Number(e.target.value))}
-          required
-        />
-        <p className="quiet">
-          Chủ shop chọn hình thức bán cho từng ô trống sau khi được cấp kiosk.
-        </p>
-      </div>
+      <ApplicationRentalSummary application={application} />
+      <p>Số ô và loại ô được tạo theo hồ sơ, không thể chỉnh tại bước này.</p>
 
       <div className="kiosk-modal-actions">
         <Button
@@ -191,7 +186,7 @@ export function EnrollKioskModal({
   open,
   onClose,
   session,
-  initialSlotCount = 1,
+  application,
   onSuccess,
 }: EnrollKioskModalProps) {
   return (
@@ -199,15 +194,15 @@ export function EnrollKioskModal({
       open={open}
       title="Đăng ký thiết bị kiosk mới"
       onClose={onClose}
-      description="Nhập thông tin trên thiết bị để đưa tủ vào kho khả dụng."
+      description="Tạo thiết bị theo số ô và phân bổ đã chốt trong hồ sơ thuê."
       className="installation-modal"
       size="lg"
     >
-      {open && (
+      {open && application && (
         <EnrollKioskForm
           session={session}
           onClose={onClose}
-          initialSlotCount={initialSlotCount}
+          application={application}
           onSuccess={onSuccess}
         />
       )}

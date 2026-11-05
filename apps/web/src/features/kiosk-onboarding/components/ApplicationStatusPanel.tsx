@@ -1,3 +1,7 @@
+import {
+  ApplicationRentalSummary,
+  rentalAllocation,
+} from '../../kiosk-pricing/ApplicationRentalSummary';
 import { Button, CircleAlert } from '@florabot/ui';
 import type { KioskApplicationResponse } from '../../installations/installations.types';
 import { KIOSK_STATUS_LABELS } from '../../installations/installations.constants';
@@ -47,9 +51,7 @@ export function ApplicationStatusPanel({
           </span>
           <h2 id="application-status-heading">Hồ sơ thuê: {appData.shopName}</h2>
           <p className="status-meta">
-            Mã hồ sơ: <code>{appData.id.slice(0, 8)}</code> · Gói:{' '}
-            <strong>{appData.packageName}</strong> (
-            {Number(appData.annualFee).toLocaleString('vi-VN')} đ/năm) · Tạo lúc:{' '}
+            Mã hồ sơ: <code>{appData.id.slice(0, 8)}</code> · Tạo lúc:{' '}
             {new Date(appData.createdAt).toLocaleDateString('vi-VN')}
           </p>
         </div>
@@ -60,6 +62,7 @@ export function ApplicationStatusPanel({
         )}
       </div>
 
+      <ApplicationRentalSummary application={appData} />
       {/* Progress Timeline */}
       <ApplicationTimeline status={appData.status} scheduledDate={appData.scheduledDate} />
 
@@ -87,7 +90,7 @@ export function ApplicationStatusPanel({
       {/* State Specific Callouts */}
       {appData.status === 'AWAITING_PAYMENT' && (
         <PaymentActions
-          packageName={appData.packageName}
+          packageName={rentalAllocation(appData)}
           annualFee={appData.annualFee}
           validatedCheckoutUrl={validatedCheckoutUrl}
           paymentLinkError={paymentLinkError}

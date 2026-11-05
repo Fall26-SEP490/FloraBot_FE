@@ -1,4 +1,5 @@
-import { Button, Boxes, CircleAlert, ClipboardList, Eye, Plus, RefreshCw } from '@florabot/ui';
+import { rentalAllocation } from '../../kiosk-pricing/ApplicationRentalSummary';
+import { Button, Boxes, CircleAlert, ClipboardList, Eye, RefreshCw } from '@florabot/ui';
 import type { KioskApplicationPage, KioskApplicationResponse } from '../installations.types';
 import { managerApplicationAction } from '../operations-presentation';
 import { KIOSK_STATUS_LABELS, OPERATIONS_STAGE_TABS } from '../installations.constants';
@@ -22,8 +23,8 @@ function InstallationListItem({
         <strong>{item.shopName}</strong>
         <div className="table-sub-text">{item.phone}</div>
       </td>
-      <td data-label="Gói thuê">
-        <strong>{item.packageName}</strong>
+      <td data-label="Số ô thuê">
+        <strong>{rentalAllocation(item)}</strong>
         <div className="table-sub-text">Tổng số ô: {item.totalSlots}</div>
       </td>
       <td data-label="Địa chỉ lắp đặt">
@@ -65,9 +66,7 @@ interface InstallationListProps {
   selectedAppId?: string | null;
   onSelectApp: (appId: string | null, triggerButton: HTMLButtonElement) => void;
   onRefresh: () => void;
-  onOpenEnroll: () => void;
   onOpenInventory?: () => void;
-  enrollPending?: boolean;
 }
 
 export function InstallationList({
@@ -83,9 +82,7 @@ export function InstallationList({
   selectedAppId,
   onSelectApp,
   onRefresh,
-  onOpenEnroll,
   onOpenInventory,
-  enrollPending,
 }: InstallationListProps) {
   return (
     <section className="operations-queue-section" aria-labelledby="queue-heading">
@@ -101,9 +98,6 @@ export function InstallationList({
                 <Boxes size={17} aria-hidden="true" /> Kho tủ khả dụng
               </Button>
             )}
-            <Button variant="outline" onClick={onOpenEnroll} disabled={enrollPending}>
-              <Plus size={17} aria-hidden="true" /> Thêm tủ mới
-            </Button>
           </div>
         )}
       </div>
@@ -177,7 +171,7 @@ export function InstallationList({
               <thead>
                 <tr>
                   <th scope="col">Shop & Liên hệ</th>
-                  <th scope="col">Gói thuê</th>
+                  <th scope="col">Số ô thuê</th>
                   <th scope="col">Địa chỉ lắp đặt</th>
                   <th scope="col">Ngày tạo</th>
                   <th scope="col">Trạng thái</th>

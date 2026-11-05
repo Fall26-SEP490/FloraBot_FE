@@ -1,16 +1,10 @@
+import { kioskPricingQuery } from '../../kiosk-pricing/kiosk-pricing';
 import { useQuery } from '@tanstack/react-query';
 import { ApiError, request, type Session } from '@/shared/lib/api';
-import type {
-  KioskApplicationResponse,
-  KioskPackageResponse,
-} from '../../installations/installations.types';
+import type { KioskApplicationResponse } from '../../installations/installations.types';
 
 export function useKioskApplication(sessionData: Session | undefined) {
-  // Load packages from GET /api/kiosk-packages (real server data, no silent mock fallback)
-  const packagesQuery = useQuery({
-    queryKey: ['kiosk-packages'],
-    queryFn: () => request<KioskPackageResponse[]>('/kiosk-packages'),
-  });
+  const pricingQuery = useQuery(kioskPricingQuery);
 
   // Current application query scoped by authenticated identity
   const applicationQuery = useQuery({
@@ -37,10 +31,14 @@ export function useKioskApplication(sessionData: Session | undefined) {
       appData.status === 'REFUNDED'),
   );
 
-  const hasActiveApplication = Boolean(appData && !isTerminalStatus);
+  const hasActiveApplication = Boolean(
+    appData &&
+    !isTerminalStatus &&
+    !(sessionData?.role === 'SELLER' && appData.status === 'ACTIVE'),
+  );
 
   return {
-    packagesQuery,
+    pricingQuery,
     applicationQuery,
     appData,
     isTerminalStatus,

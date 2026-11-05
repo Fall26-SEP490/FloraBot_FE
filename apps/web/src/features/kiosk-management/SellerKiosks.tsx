@@ -759,8 +759,8 @@ export default function SellerKiosks({ session }: SellerKiosksProps) {
           <MapPin size={36} aria-hidden="true" />
           <h2>Chưa có kiosk nào được phân bổ</h2>
           <p>
-            Shop của bạn hiện chưa được phân bổ tủ kiosk nào. Vui lòng kiểm tra gói thuê ô tủ hoặc
-            liên hệ quản trị viên hệ thống để được hỗ trợ phân bổ tủ.
+            Shop của bạn hiện chưa được phân bổ tủ kiosk nào. Vui lòng kiểm tra hồ sơ thuê kiosk
+            hoặc liên hệ quản trị viên hệ thống để được hỗ trợ phân bổ tủ.
           </p>
           <Button
             variant="outline"

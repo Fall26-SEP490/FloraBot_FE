@@ -446,8 +446,8 @@ export default function SellerOverview({ session }: { session: Session }) {
           <Link className={styles.subscription} href="/seller/subscriptions">
             <Store size={20} aria-hidden="true" />
             <span>
-              <strong>Gói thuê của shop</strong>
-              <small>Xem gói, kỳ thuê và trạng thái thanh toán</small>
+              <strong>Hồ sơ thuê kiosk</strong>
+              <small>Xem phí đã chốt hoặc đăng ký thuê thêm</small>
             </span>
             <ArrowRight size={16} aria-hidden="true" />
           </Link>

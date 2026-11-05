@@ -1,8 +1,9 @@
+import { ApplicationRentalSummary } from '../../kiosk-pricing/ApplicationRentalSummary';
 import { useEffect, useRef } from 'react';
 import { Button, Check, CircleAlert, RefreshCw, X } from '@florabot/ui';
 import { ApiError, type Session } from '@/shared/lib/api';
 import { KIOSK_STATUS_LABELS } from '../installations.constants';
-import type { ProvisionedKeyInfo } from '../installations.types';
+import type { KioskApplicationResponse, ProvisionedKeyInfo } from '../installations.types';
 import { formatDateVN, getOperationsActiveStep } from '../installations.utils';
 import { useInstallationActions } from '../hooks/useInstallationActions';
 import { useInstallationDetails } from '../hooks/useInstallationDetails';
@@ -13,7 +14,7 @@ interface InstallationDetailsProps {
   session: Session;
   isManager: boolean;
   onClose: () => void;
-  onOpenEnroll: (slotCount: number) => void;
+  onOpenEnroll: (application: KioskApplicationResponse) => void;
   onShowProvisionedKey: (info: ProvisionedKeyInfo) => void;
   onInvalidateQueue: () => void;
 }
@@ -182,15 +183,12 @@ export function InstallationDetails({
               </dl>
               <details className="manager-registration">
                 {' '}
-                <summary>Thông tin gói thuê và hồ sơ đăng ký</summary>
+                <summary>Phân bổ ô, phí thuê và thông tin đăng ký</summary>
                 <dl className="detail-info-grid">
                   <div>
-                    <dt>Gói đăng ký</dt>
+                    <dt>Nhu cầu thuê</dt>
                     <dd>
-                      <strong>{appDetail.packageName}</strong> (
-                      {Number(appDetail.annualFee).toLocaleString('vi-VN')} đ/năm)
-                      <br />
-                      Tổng số ô: {appDetail.totalSlots}
+                      <ApplicationRentalSummary application={appDetail} />
                     </dd>
                   </div>
                   <div>
@@ -232,12 +230,9 @@ export function InstallationDetails({
               <h3 className="installation-section-title">Thông tin đăng ký</h3>
               <dl className="detail-info-grid">
                 <div>
-                  <dt>Gói đăng ký</dt>
+                  <dt>Nhu cầu thuê</dt>
                   <dd>
-                    <strong>{appDetail.packageName}</strong> (
-                    {Number(appDetail.annualFee).toLocaleString('vi-VN')} đ/năm)
-                    <br />
-                    Tổng số ô: {appDetail.totalSlots}
+                    <ApplicationRentalSummary application={appDetail} />
                   </dd>
                 </div>
                 <div>

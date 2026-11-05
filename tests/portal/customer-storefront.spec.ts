@@ -141,7 +141,18 @@ for (const width of [390, 1440]) {
           y: element.getBoundingClientRect().y,
         })),
       );
-      expect(Math.abs(cards[0].y - cards[1].y)).toBeLessThan(1);
+      await page.mouse.move(0, 0);
+      await expect
+        .poll(async () =>
+          page
+            .locator('.flower-card')
+            .evaluateAll((elements) =>
+              Math.abs(
+                elements[0].getBoundingClientRect().y - elements[1].getBoundingClientRect().y,
+              ),
+            ),
+        )
+        .toBeLessThan(1);
       expect(cards[1].x).toBeGreaterThan(cards[0].x);
     }
     expect(
@@ -220,108 +231,71 @@ test('Loading and broken images are explicit without blocking navigation', async
     .toBeGreaterThan(0);
   await expect(preview).toContainText('245.000');
 });
-const rentalPackage = {
-  id: '20000000-0000-0000-0000-00000000000a',
-  name: 'Gói API kiểm chứng',
-  annualFee: 770000,
-  totalSlots: 7,
-  termMonths: 18,
-  status: 'ACTIVE',
-  description: 'Gói do API trả về',
+
+const rentalPricing = {
+  walkInAnnualPrice: 100000,
+  preorderAnnualPrice: 120000,
+  version: 1,
+  configured: true,
+  updatedAt: '2026-11-04T03:00:00Z',
+  termMonths: 12,
+  minSlots: 1,
+  maxSlots: 50,
 };
-test('Moving partner pricing retains the exact asynchronous API packageId in Registration', async ({
-  page,
-}) => {
-  await setup(page);
-  let release = () => {};
-  const gate = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-  await page.route('**/api/kiosk-packages', async (route) => {
-    await gate;
-    await route.fulfill({ json: [rentalPackage] });
-  });
-  await page.goto('/');
-  await page.locator('.home-partner-details > summary').click();
-  await expect(page.locator('#goi-thue').getByRole('status')).toContainText('Đang tải gói thuê');
-  await expect(page.locator('#package')).toHaveValue('');
-  release();
-  const pricing = page.locator('#goi-thue');
-  await expect(pricing).toContainText('770.000');
-  await expect(pricing).toContainText('7 ô');
-  await expect(pricing).toContainText('18 tháng');
-  await pricing.getByRole('link', { name: `Chọn ${rentalPackage.name}`, exact: true }).click();
-  await expect(page.locator('#package')).toHaveValue(rentalPackage.id);
-});
 for (const status of [200, 503]) {
-  test(`Package ${status === 200 ? 'empty' : 'error'} keeps flowers available and prevents a fake package selection`, async ({
+  test(`Missing slot pricing (${status}) keeps flowers available without inventing a price`, async ({
     page,
   }) => {
     await setup(page);
     await page.route('**/api/kiosk-packages', (route) =>
-      route.fulfill({ status, json: status === 200 ? [] : { detail: 'Unavailable' } }),
+      route.fulfill({
+        status,
+        json:
+          status === 200
+            ? {
+                ...rentalPricing,
+                configured: false,
+                walkInAnnualPrice: null,
+                preorderAnnualPrice: null,
+                version: 0,
+                updatedAt: null,
+              }
+            : { detail: 'Unavailable' },
+      }),
     );
     await page.goto('/');
     await expect(page.locator('#mau-hoa .storefront-flower')).toHaveCount(3);
     await page.locator('.home-partner-details > summary').click();
     await expect(page.locator('#goi-thue')).toContainText(
-      status === 200 ? 'Hiện chưa có gói thuê' : 'Chưa tải được gói thuê',
+      status === 200 ? 'Chưa có bảng giá' : 'Chưa tải được bảng giá',
     );
-    await expect(page.locator('#package')).toHaveValue('');
-    await expect(page.getByRole('button', { name: 'Đăng ký tư vấn', exact: true })).toBeDisabled();
+    await expect(
+      page.locator('#goi-thue').getByRole('link', { name: 'Đăng ký thuê kiosk →' }),
+    ).toHaveCount(0);
   });
 }
-
 for (const width of [390, 1440]) {
-  test(`Shop package comparison stays readable and selects the second API package at ${width}px`, async ({
+  test(`Public rental calculator shows live per-slot prices at ${width}px`, async ({
     page,
-  }) => {
+  }, info) => {
     await page.setViewportSize({ width, height: 1000 });
-    await setup(page);
-    const packages = [
-      rentalPackage,
-      {
-        ...rentalPackage,
-        id: '20000000-0000-0000-0000-00000000000b',
-        name: 'Gói API mở rộng',
-        annualFee: 1590000,
-        totalSlots: 12,
-        termMonths: 24,
-        description: 'Điều kiện riêng của gói mở rộng từ API.',
-      },
-      {
-        ...rentalPackage,
-        id: '20000000-0000-0000-0000-00000000000c',
-        name: 'Gói API không mô tả',
-        annualFee: 2100000,
-        totalSlots: 16,
-        description: '',
-      },
-    ];
-    await page.route('**/api/kiosk-packages', (route) => route.fulfill({ json: packages }));
+    const state = await setup(page);
+    await page.route('**/api/kiosk-packages', (route) => route.fulfill({ json: rentalPricing }));
     await page.goto('/');
     await page.locator('.home-partner-details > summary').click();
-    const pricing = page.getByRole('region', { name: 'Gói thuê kiosk', exact: true });
-    await expect(pricing.locator('.plan')).toHaveCount(3);
-    await expect(page.locator('#cach-hoat-dong .step-art')).toHaveCount(0);
-    await expect(page.locator('#dat-truoc h2')).toHaveText('Đặt hoa trong 3 bước');
-    const plan = pricing.getByRole('article', { name: packages[1].name, exact: true });
-    await expect(plan).toContainText('1.590.000');
-    await expect(plan.locator('.plan-facts')).toContainText('12 ô');
-    await expect(plan.locator('.plan-facts')).toContainText('24 tháng');
-    const description = plan.getByText(packages[1].description, { exact: true });
-    await expect(description).toBeHidden();
-    await plan.locator('summary').click();
-    await expect(description).toBeVisible();
-    await plan.locator('summary').click();
-    await expect(pricing.locator('.plan').last().locator('details')).toHaveCount(0);
-    expect(await pricing.evaluate((el) => getComputedStyle(el).backgroundImage)).toBe('none');
+    const pricing = page.locator('#goi-thue');
+    await pricing.getByLabel('Ô bán sẵn (Walk-in)', { exact: true }).fill('2');
+    await pricing.getByLabel('Ô đặt trước (Pre-order)', { exact: true }).fill('2');
+    await expect(pricing).toContainText('440.000');
+    await expect(pricing.getByRole('link', { name: 'Đăng ký thuê kiosk →' })).toHaveAttribute(
+      'href',
+      '/thue-kiosk',
+    );
+    expect(state.writes).toEqual([]);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
     await pricing.scrollIntoViewIfNeeded();
-    await page.screenshot({ path: test.info().outputPath(`pricing-${width}.png`) });
-    await plan.getByRole('link', { name: `Chọn ${packages[1].name}`, exact: true }).click();
-    await expect(page.locator('#package')).toHaveValue(packages[1].id);
+    await page.screenshot({ path: info.outputPath(`slot-calculator-${width}.png`) });
   });
 }
