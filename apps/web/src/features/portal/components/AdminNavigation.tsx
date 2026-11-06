@@ -49,6 +49,7 @@ const groups = [
     items: [
       ['reconciliation', ListChecks],
       ['reports', LayoutDashboard],
+      ['payment-channels', Banknote],
     ],
   },
 ] as const;

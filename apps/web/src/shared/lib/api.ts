@@ -20,6 +20,7 @@ export class ApiError extends Error {
   constructor(
     public status: number,
     message: string,
+    public code?: string,
   ) {
     super(message);
   }
@@ -93,7 +94,11 @@ export async function request<T>(
         : 'Yêu cầu bị từ chối. Hãy tải lại trang; nếu lỗi còn tiếp diễn, liên hệ hỗ trợ.';
     throw new ApiError(
       response.status,
-      problem.detail ||
+      (problem.detail === 'missing_seller_channel'
+        ? 'Shop chưa cấu hình kênh nhận tiền PayOS. Bạn chưa bị tính tiền; vui lòng liên hệ shop.'
+        : problem.detail === 'channel_not_active'
+          ? 'Kênh nhận tiền của shop chưa sẵn sàng. Bạn chưa bị tính tiền; hãy thử lại sau.'
+          : problem.detail) ||
         problem.error ||
         firstValidationError ||
         problem.message ||
@@ -104,6 +109,7 @@ export async function request<T>(
             : response.status === 429
               ? 'Bạn thao tác hơi nhanh. Hãy thử lại sau một phút.'
               : 'Chưa xử lý được yêu cầu. Bạn thử lại nhé.'),
+      problem.detail,
     );
   }
   return response.status === 204 ? (undefined as T) : (response.json() as Promise<T>);

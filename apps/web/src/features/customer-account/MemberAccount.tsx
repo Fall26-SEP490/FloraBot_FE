@@ -15,6 +15,8 @@ import { preorderPaymentReturn } from '../orders/payment-return';
 import { CustomerChatSection } from '@/features/chat/CustomerChatSection';
 import { getCustomerUnreadCount } from '@/features/chat/api';
 import { sessionQuery } from '@/shared/lib/api';
+import { request } from '@/shared/lib/api';
+import type { components } from '../../../../../packages/contracts/src/generated/api';
 import { fetchMemberProfile, fetchMemberHistory } from './customer-account.api';
 import {
   type TabKey,
@@ -89,6 +91,14 @@ export default function MemberAccount() {
     queryKey: ['member-profile', session.data?.id],
     queryFn: fetchMemberProfile,
   });
+  const loyalty = useQuery({
+    queryKey: ['member-shop-loyalty', session.data?.id],
+    enabled: isCustomer,
+    queryFn: () =>
+      request<components['schemas']['MemberLoyaltyPageResponse']>(
+        '/member/loyalty?page=1&pageSize=20',
+      ),
+  });
 
   const [page, setPage] = useState(1);
   const history = useQuery({
@@ -134,13 +144,33 @@ export default function MemberAccount() {
             <div className="account-home-points">
               <Flower2 size={20} aria-hidden="true" />
               <div>
-                <span>Điểm tích lũy</span>
-                <strong>
-                  {profile.isSuccess ? profile.data.loyaltyPoints.toLocaleString('vi-VN') : '—'}
-                </strong>
+                <span>Điểm theo từng shop</span>
+                {loyalty.isPending ? (
+                  <strong>Đang tải…</strong>
+                ) : loyalty.isError ? (
+                  <strong>Chưa tải được</strong>
+                ) : loyalty.data?.items.length ? (
+                  <div>
+                    {loyalty.data.items.map((item) => (
+                      <p key={item.sellerId}>
+                        <strong>
+                          {item.shopName}: {Number(item.balance).toLocaleString('vi-VN')} điểm
+                        </strong>
+                      </p>
+                    ))}
+                  </div>
+                ) : (
+                  <strong>Chưa có điểm</strong>
+                )}
+                {profile.isSuccess && Number(profile.data.loyaltyPoints) > 0 && (
+                  <small>
+                    Điểm cũ toàn hệ thống:{' '}
+                    {Number(profile.data.loyaltyPoints).toLocaleString('vi-VN')}
+                  </small>
+                )}
               </div>
-              {profile.isError && (
-                <Button variant="outline" onClick={() => void profile.refetch()}>
+              {loyalty.isError && (
+                <Button variant="outline" onClick={() => void loyalty.refetch()}>
                   Thử lại
                 </Button>
               )}

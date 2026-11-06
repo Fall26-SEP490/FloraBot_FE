@@ -66,37 +66,6 @@ for (const width of [390, 1440]) {
     expect(model.writes).toEqual([]);
   });
 
-  test(`Seller missing bank leads directly to bank disclosure without writing at ${width}`, async ({
-    page,
-  }) => {
-    const model = await setupSellerUsability(page);
-    await page.setViewportSize({ width, height: 950 });
-    await page.route('**/api/sellers/*/bank', (route) =>
-      route.fulfill({
-        json: { status: 'MISSING', bankName: null, holder: null, accountSuffix: null },
-      }),
-    );
-    await page.goto('/seller/wallet');
-    await page.getByRole('button', { name: 'Mở tài khoản nhận tiền', exact: true }).click();
-    await expect(page.locator('#seller-bank-details')).toHaveAttribute('open', '');
-    await expect(page.locator('#seller-bank-details > summary')).toBeFocused();
-    await expect(
-      page.getByRole('button', { name: 'Khai báo tài khoản nhận tiền', exact: true }),
-    ).toBeVisible();
-    expect(
-      (
-        await new AxeBuilder({ page })
-          .include('#wallet')
-          .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
-          .analyze()
-      ).violations,
-    ).toEqual([]);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
-      true,
-    );
-    expect(model.writes).toEqual([]);
-  });
-
   test(`Seller accessories filter the correct kiosk and preserve restock review at ${width}`, async ({
     page,
   }) => {
@@ -169,34 +138,6 @@ for (const width of [390, 1440]) {
     expect(model.writes).toEqual([]);
   });
 }
-
-test('Seller cannot withdraw when server has not recorded balance, including a configured bank', async ({
-  page,
-}) => {
-  const model = await setupSellerUsability(page);
-  await page.route('**/api/sellers/*/wallet', (route) =>
-    route.fulfill({
-      json: {
-        balance: null,
-        bankConfigured: true,
-        minimumWithdrawal: 50000,
-        entries: [],
-        withdrawals: [],
-        hasMoreEntries: false,
-        hasMoreWithdrawals: false,
-      },
-    }),
-  );
-  await page.goto('/seller/wallet');
-  await expect(page.locator('.wallet-balances dd')).toHaveText(['—', '—']);
-  await expect(
-    page.getByText('Chưa ghi nhận số dư ví. Bạn chưa thể gửi yêu cầu rút tiền.', { exact: true }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole('button', { name: 'Kiểm tra yêu cầu rút', exact: true }),
-  ).toBeDisabled();
-  expect(model.writes).toEqual([]);
-});
 
 for (const missing of ['staff', 'kiosk'] as const) {
   test(`Seller assignment explains missing ${missing} with a useful destination`, async ({

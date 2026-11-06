@@ -274,7 +274,11 @@ function OrderActions({
         setNotice('Đã cập nhật yêu cầu.');
       }
     } catch (cause) {
-      if (!(cause instanceof ApiError) || cause.status >= 500 || cause.status === 408) {
+      if (
+        !(cause instanceof ApiError) ||
+        ((cause.status >= 500 || cause.status === 408) &&
+          !(kind === 'payment-link' && cause.code === 'missing_seller_channel'))
+      ) {
         setUncertain(true);
         try {
           sessionStorage.setItem(uncertaintyKey, '1');

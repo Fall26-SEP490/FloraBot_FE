@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { randomBytes, randomInt, randomUUID } from 'node:crypto';
+import { randomBytes, randomInt } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { uploadEvidence } from './evidence';
 import { getBackendRoot, loginAdminWithPacing, loginSellerWithPacing } from './helpers';
@@ -148,68 +148,8 @@ test('Real registration, admin approval, provisioning and seller subscription', 
   const foreign = await page.request.get('/api/sellers/20000000-0000-0000-0000-000000000001/slots');
   expect(foreign.status()).toBe(404);
   await page.goto('/seller/wallet');
-  const wallet = page.locator('#wallet');
-  await expect(wallet).toContainText('Shop chưa có đầy đủ thông tin tài khoản nhận tiền');
-  expect(
-    (await page.request.get('/api/sellers/20000000-0000-0000-0000-000000000001/wallet')).status(),
-  ).toBe(404);
-  await wallet.locator('.bank-details summary').click();
-  await wallet.getByRole('button', { name: 'Khai báo tài khoản nhận tiền', exact: true }).click();
-  await wallet.getByLabel('Tên ngân hàng', { exact: true }).fill('Browser Test Bank');
-  await wallet.getByLabel('Tên chủ tài khoản', { exact: true }).fill('TEST SHOP');
-  await wallet.getByLabel('Số tài khoản ngân hàng', { exact: true }).fill('00012345678');
-  await wallet.getByRole('button', { name: 'Kiểm tra thông tin tài khoản' }).click();
-  const bankSave = page.waitForResponse((response) =>
-    response.url().endsWith('/flows/set_seller_bank'),
-  );
-  await wallet.getByRole('button', { name: 'Xác nhận lưu tài khoản' }).click();
-  expect((await bankSave).status()).toBe(200);
-  await expect(wallet.locator('.bank-summary')).toContainText('Đã che, kết thúc bằng 5678');
-  const bankRead = await page.request.get(`/api/sellers/${seller.id}/bank`);
-  expect(bankRead.headers()['cache-control']).toBe('no-store');
-  expect(await bankRead.text()).not.toContain('00012345678');
-  await wallet.locator('.bank-details summary').click();
-  // Fund only this disposable browser fixture; no transfer or real bank account is involved.
-  const funding = spawnSync(
-    'docker',
-    [
-      'compose',
-      'exec',
-      '-T',
-      'postgres',
-      'psql',
-      '-U',
-      'florabot',
-      '-d',
-      'florabot_browser_tests',
-      '-v',
-      'ON_ERROR_STOP=1',
-      '-q',
-    ],
-    {
-      cwd: backend,
-      encoding: 'utf8',
-      windowsHide: true,
-      timeout: 30_000,
-      input: `BEGIN;
-      INSERT INTO payment.ledger_entries(journal_id,account,seller_id,amount,ref_type,ref_id,memo) VALUES
-      ('${seller.id}','GATEWAY_CLEARING',NULL,200000,'ORDER','${seller.id}','Browser test fixture'),
-      ('${seller.id}','SELLER_AVAILABLE','${seller.id}',-200000,'ORDER','${seller.id}','Browser test fixture');
-      COMMIT;`,
-    },
-  );
-  expect(funding.status, 'Isolated wallet fixture must be balanced').toBe(0);
-  await wallet.getByRole('button', { name: 'Cập nhật ví' }).click();
-  await wallet.getByLabel('Số tiền muốn rút (đồng)').fill('100000');
-  await wallet.getByRole('button', { name: 'Kiểm tra yêu cầu rút' }).click();
-  const withdrawal = page.waitForResponse((response) =>
-    response.url().endsWith('/flows/request_withdrawal'),
-  );
-  await wallet.getByRole('button', { name: 'Xác nhận yêu cầu rút' }).click();
-  expect((await withdrawal).status()).toBe(200);
-  await expect(wallet.getByRole('status')).toContainText('Đã gửi yêu cầu');
-  await expect(wallet.getByText('Chờ duyệt', { exact: true })).toBeVisible();
-  await expect(wallet.locator('.wallet-balances')).toContainText('200.000');
+  await expect(page).toHaveURL(/\/seller\/commerce$/);
+  await expect(page.getByText('Chưa có kênh PayOS của shop.')).toBeVisible();
   await page.goto('/seller/subscriptions');
   const subscription = page.locator('.subscriptions');
   await subscription.getByRole('button', { name: /Đăng ký/ }).click();
@@ -339,89 +279,4 @@ test('Real registration, admin approval, provisioning and seller subscription', 
   expect(((await closed.json()) as { incident: { status: string } }).incident.status).toBe(
     'RESOLVED_FIXED',
   );
-
-  await page.goto('/admin/withdrawals');
-  const payouts = page.locator('.admin-withdrawals');
-  await payouts.locator('summary').filter({ hasText: shopName }).click();
-  await payouts.getByRole('button', { name: 'Duyệt yêu cầu', exact: true }).click();
-  await payouts.getByRole('button', { name: 'Kiểm tra thao tác' }).click();
-  await payouts.getByRole('button', { name: 'Xác nhận thao tác' }).click();
-  await expect(payouts.getByRole('status')).toContainText('Đã duyệt yêu cầu');
-  await payouts.getByLabel('Trạng thái yêu cầu rút tiền').selectOption('APPROVED');
-  await payouts.locator('summary').filter({ hasText: shopName }).click();
-  await expect(
-    payouts.getByText('Bước chi cần một admin khác người đã duyệt yêu cầu.'),
-  ).toBeVisible();
-  await expect(payouts.getByRole('button', { name: 'Xem tài khoản để chi' })).toHaveCount(0);
-  const payerId = randomUUID();
-  const payerEmail = `payer-${payerId}@example.invalid`;
-  const payerSetup = spawnSync(
-    'docker',
-    [
-      'compose',
-      'exec',
-      '-T',
-      'postgres',
-      'psql',
-      '-U',
-      'florabot',
-      '-d',
-      'florabot_browser_tests',
-      '-v',
-      'ON_ERROR_STOP=1',
-      '-q',
-    ],
-    {
-      cwd: backend,
-      encoding: 'utf8',
-      windowsHide: true,
-      input: `INSERT INTO identity.users(id,email,password_hash,full_name,role) VALUES('${payerId}','${payerEmail}','!unprovisioned','Browser payer','ADMIN');`,
-    },
-  );
-  expect(payerSetup.status).toBe(0);
-  provision(payerId, payerEmail, password);
-  await page.getByRole('button', { name: /Mở menu người dùng/ }).click();
-  await page.getByRole('button', { name: 'Đăng xuất' }).click();
-  await page.goto('/admin/login');
-  await loginAdminWithPacing(page, payerEmail, password);
-  await page.goto('/admin/withdrawals');
-  await payouts.getByLabel('Trạng thái yêu cầu rút tiền').selectOption('APPROVED');
-  await payouts.locator('summary').filter({ hasText: shopName }).click();
-  await payouts.getByRole('button', { name: 'Xem tài khoản để chi' }).click();
-  await expect(payouts.getByText('00012345678', { exact: true })).toBeVisible();
-  await payouts.getByRole('button', { name: 'Ghi nhận đã chuyển khoản' }).click();
-  // This records only a synthetic transfer in the disposable ledger; no bank/provider is called.
-  await uploadEvidence(payouts);
-  await payouts.getByRole('checkbox').check();
-  await payouts.getByRole('button', { name: 'Kiểm tra thao tác' }).click();
-  const payout = page.waitForResponse((response) =>
-    response.url().endsWith('/flows/pay_withdrawal'),
-  );
-  await payouts.getByRole('button', { name: 'Xác nhận thao tác' }).click();
-  expect((await payout).status()).toBe(200);
-  await expect(
-    payouts.getByRole('status').filter({ hasText: 'Đã ghi nhận chuyển tiền' }),
-  ).toBeVisible();
-  await payouts.getByLabel('Trạng thái yêu cầu rút tiền').selectOption('PAID');
-  await payouts.locator('summary').filter({ hasText: shopName }).click();
-  await expect(payouts.getByText('00012345678', { exact: true })).toHaveCount(0);
-  const paidRecord = spawnSync(
-    'docker',
-    [
-      'compose',
-      'exec',
-      '-T',
-      'postgres',
-      'psql',
-      '-U',
-      'florabot',
-      '-d',
-      'florabot_browser_tests',
-      '-tAc',
-      `SELECT count(*) FROM payment.withdrawal_requests WHERE seller_id='${seller.id}' AND status='PAID' AND approved_by='10000000-0000-0000-0000-000000000001' AND paid_by='${payerId}'`,
-    ],
-    { cwd: backend, encoding: 'utf8', windowsHide: true },
-  );
-  expect(paidRecord.status).toBe(0);
-  expect(paidRecord.stdout.trim()).toBe('1');
 });

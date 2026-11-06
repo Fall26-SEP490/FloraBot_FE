@@ -1,0 +1,235 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { Button } from '@florabot/ui';
+import type { components } from '../../../../../packages/contracts/src/generated/api';
+import EvidenceUpload from '@/shared/components/EvidenceUpload';
+import { queryClient, request, type Session } from '@/shared/lib/api';
+import './business-v2.css';
+
+type Page = components['schemas']['SellerRefundPageResponse'];
+type Detail = components['schemas']['SellerRefundDetailResponse'];
+type Bank = components['schemas']['RefundBankResponse'];
+const money = (value: number | string) => `${Number(value).toLocaleString('vi-VN')} đ`;
+
+function RefundCard({ id, sellerId }: { id: string; sellerId: string }) {
+  const base = `/sellers/${sellerId}/refunds/${id}`;
+  const [bank, setBank] = useState<Bank | null>(null);
+  const [reason, setReason] = useState('');
+  const [providerReference, setProviderReference] = useState('');
+  const [transferredAt, setTransferredAt] = useState('');
+  const [evidenceTicket, setEvidenceTicket] = useState('');
+  const [confirmed, setConfirmed] = useState(false);
+  const [notice, setNotice] = useState('');
+  const detail = useQuery({
+    queryKey: ['seller-refund-detail', id],
+    queryFn: () => request<Detail>(base),
+  });
+  useEffect(() => {
+    const hide = () => {
+      if (document.hidden) setBank(null);
+    };
+    document.addEventListener('visibilitychange', hide);
+    return () => document.removeEventListener('visibilitychange', hide);
+  }, []);
+  useEffect(() => {
+    if (!bank) return;
+    const timer = window.setTimeout(() => setBank(null), 60_000);
+    return () => window.clearTimeout(timer);
+  }, [bank]);
+  const reveal = useMutation({
+    mutationFn: () =>
+      request<Bank>(`${base}/bank-details`, { reason: reason.trim() }, true, 'POST'),
+    onSuccess: setBank,
+  });
+  const submit = useMutation({
+    mutationFn: () => {
+      if (!bank || !detail.data)
+        throw new Error('Cần mở lại tài khoản nhận hoàn tiền trước khi xác nhận.');
+      return request(
+        `${base}/submit-transfer`,
+        {
+          amount: Number(detail.data.amount),
+          currency: 'VND',
+          bankName: bank.bankName,
+          bankHolder: bank.holder,
+          accountNumber: bank.account,
+          providerReference: providerReference.trim(),
+          transferredAt: new Date(transferredAt).toISOString(),
+          evidenceTicket,
+        },
+        true,
+        'POST',
+      );
+    },
+    onSuccess: async () => {
+      setBank(null);
+      setEvidenceTicket('');
+      setConfirmed(false);
+      setNotice('Đã gửi chứng từ chuyển khoản để quản trị viên đối chiếu.');
+      await queryClient.invalidateQueries({ queryKey: ['seller-refund-detail', id] });
+      await queryClient.invalidateQueries({ queryKey: ['seller-refunds', sellerId] });
+    },
+  });
+  if (detail.isPending) return <p role="status">Đang tải khoản hoàn…</p>;
+  if (detail.isError || !detail.data)
+    return <p role="alert">{detail.error?.message || 'Không tìm thấy khoản hoàn.'}</p>;
+  const item = detail.data;
+  return (
+    <div className="business-refund-detail">
+      <h3>
+        Đơn {item.orderCode} · {money(item.amount)}
+      </h3>
+      <p>
+        Trạng thái: <strong>{item.status}</strong>
+        {item.isApproved ? ' · Đã được duyệt' : ' · Chờ duyệt'}
+      </p>
+      {item.reason && <p>Lý do: {item.reason}</p>}
+      {item.submission && (
+        <p>
+          Chứng từ đã gửi: {item.submission.providerReference} · {item.submission.status}
+        </p>
+      )}
+      {item.canAccessBank && !item.submission && (
+        <div className="business-form">
+          <label htmlFor={`bank-reason-${id}`}>Lý do xem tài khoản nhận hoàn</label>
+          <input
+            id={`bank-reason-${id}`}
+            minLength={5}
+            maxLength={500}
+            value={reason}
+            onChange={(event) => setReason(event.target.value)}
+          />
+          <Button
+            variant="outline"
+            disabled={reason.trim().length < 5 || reveal.isPending}
+            onClick={() => reveal.mutate()}
+          >
+            Xem tài khoản nhận tiền
+          </Button>
+        </div>
+      )}
+      {bank && (
+        <div className="business-note">
+          <p>
+            Ngân hàng: <strong>{bank.bankName}</strong>
+          </p>
+          <p>
+            Chủ tài khoản: <strong>{bank.holder}</strong>
+          </p>
+          <p>
+            Số tài khoản: <strong>{bank.account}</strong>
+          </p>
+          <p>Thông tin này tự ẩn sau 60 giây hoặc khi rời tab.</p>
+        </div>
+      )}
+      {item.canSubmitTransfer && bank && !item.submission && (
+        <div className="business-form">
+          <p>Chỉ gửi xác nhận sau khi bạn đã tự chuyển khoản đúng số tiền và tài khoản trên.</p>
+          <label htmlFor={`refund-reference-${id}`}>Mã giao dịch ngân hàng</label>
+          <input
+            id={`refund-reference-${id}`}
+            minLength={3}
+            maxLength={100}
+            value={providerReference}
+            onChange={(event) => setProviderReference(event.target.value)}
+          />
+          <label htmlFor={`refund-time-${id}`}>Thời điểm chuyển khoản</label>
+          <input
+            id={`refund-time-${id}`}
+            type="datetime-local"
+            value={transferredAt}
+            onChange={(event) => setTransferredAt(event.target.value)}
+          />
+          <EvidenceUpload
+            id={`refund-proof-${id}`}
+            endpoint={`/api/sellers/${sellerId}/refunds/${id}/evidence/upload`}
+            onReference={setEvidenceTicket}
+          />
+          <label>
+            <input
+              type="checkbox"
+              checked={confirmed}
+              onChange={(event) => setConfirmed(event.target.checked)}
+            />{' '}
+            Tôi đã chuyển đúng {money(item.amount)} và đối chiếu tài khoản người nhận.
+          </label>
+          <Button
+            disabled={
+              submit.isPending ||
+              !confirmed ||
+              !evidenceTicket ||
+              providerReference.trim().length < 3 ||
+              !transferredAt
+            }
+            onClick={() => submit.mutate()}
+          >
+            Gửi xác nhận chuyển khoản
+          </Button>
+        </div>
+      )}
+      {notice && <p role="status">{notice}</p>}
+      {(reveal.isError || submit.isError) && (
+        <p role="alert">{reveal.error?.message || submit.error?.message}</p>
+      )}
+    </div>
+  );
+}
+
+export default function SellerRefunds({ session }: { session: Session }) {
+  const sellerId = session.sellerId;
+  const [page, setPage] = useState(1);
+  const refunds = useQuery({
+    queryKey: ['seller-refunds', sellerId, page],
+    enabled: Boolean(sellerId),
+    queryFn: () => request<Page>(`/sellers/${sellerId}/refunds?page=${page}&pageSize=10`),
+  });
+  if (!sellerId) return <p role="alert">Tài khoản chưa liên kết với shop.</p>;
+  return (
+    <section className="business-panel">
+      <div className="business-heading">
+        <div>
+          <h2>Hoàn tiền trực tiếp</h2>
+          <p>Khoản hoàn đã duyệt cần được shop chuyển khoản và gửi chứng từ để đối chiếu.</p>
+        </div>
+        <Button variant="outline" onClick={() => void refunds.refetch()}>
+          Làm mới
+        </Button>
+      </div>
+      {refunds.isPending ? (
+        <p role="status">Đang tải khoản hoàn…</p>
+      ) : refunds.isError ? (
+        <p role="alert">{refunds.error.message}</p>
+      ) : refunds.data?.items.length ? (
+        <div className="business-card-list">
+          {refunds.data.items.map((item) => (
+            <details className="business-card" key={item.id}>
+              <summary>
+                Đơn {item.orderCode} · {money(item.amount)} · {item.status}
+              </summary>
+              <RefundCard id={item.id} sellerId={sellerId} />
+            </details>
+          ))}
+        </div>
+      ) : (
+        <p>Chưa có khoản hoàn trực tiếp.</p>
+      )}
+      {refunds.data && (
+        <div className="business-pagination">
+          <Button variant="outline" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+            Trước
+          </Button>
+          <span>Trang {page}</span>
+          <Button
+            variant="outline"
+            disabled={!refunds.data.hasMore}
+            onClick={() => setPage(page + 1)}
+          >
+            Sau
+          </Button>
+        </div>
+      )}
+    </section>
+  );
+}

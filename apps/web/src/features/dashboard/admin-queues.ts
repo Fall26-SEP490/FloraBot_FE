@@ -18,10 +18,10 @@ export const adminQueues = [
   },
   {
     key: 'withdrawals',
-    title: 'Yêu cầu rút tiền của shop',
+    title: 'Yêu cầu rút tiền tồn đọng',
     endpoint: '/admin/withdrawals?status=PENDING&page=1',
     description: 'Kiểm tra yêu cầu, duyệt hoặc từ chối và ghi nhận khoản đã chuyển.',
-    action: 'Xử lý rút tiền',
+    action: 'Xử lý yêu cầu cũ',
     group: 'review',
   },
   {

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import PortalClient from '../../portal-client';
 import { workspaceSections } from '../../../src/features/portal/config/workspaceSections';
 export async function generateMetadata({
@@ -13,6 +13,7 @@ export async function generateMetadata({
 }
 export default async function Page({ params }: { params: Promise<{ section: string }> }) {
   const { section } = await params;
+  if (section === 'wallet') redirect('/seller/commerce');
   if (!workspaceSections.SELLER.some(([key]) => key === section)) notFound();
   return <PortalClient screen="seller" section={section} />;
 }

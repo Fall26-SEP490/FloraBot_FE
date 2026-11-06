@@ -3,7 +3,7 @@ export const workspaceSections = {
     [
       'approvals',
       'Trung tâm duyệt',
-      'Kiểm tra phản ánh, hoàn tiền và yêu cầu rút tiền. Các hồ sơ vận hành được theo dõi riêng.',
+      'Kiểm tra phản ánh, hoàn tiền và yêu cầu rút tiền tồn đọng. Các hồ sơ vận hành được theo dõi riêng.',
     ],
     [
       'accounts',
@@ -36,8 +36,13 @@ export const workspaceSections = {
       'Hoàn tiền thuê kiosk',
       'Kiểm tra và xử lý hoàn tiền đơn đăng ký thuê kiosk hàng năm.',
     ],
-    ['withdrawals', 'Rút tiền', 'Duyệt yêu cầu và ghi nhận khoản đã chi cho shop.'],
+    ['withdrawals', 'Rút tiền tồn đọng', 'Xử lý yêu cầu rút tiền từ giao dịch cũ của shop.'],
     ['reconciliation', 'Đối soát', 'Kiểm tra giao dịch và kết quả đối soát.'],
+    [
+      'payment-channels',
+      'Kênh thanh toán shop',
+      'Gắn cấu hình PayOS và xác thực kênh nhận tiền cho từng shop.',
+    ],
     [
       'reports',
       'Báo cáo vận hành',
@@ -68,10 +73,17 @@ export const workspaceSections = {
     ],
     ['subscriptions', 'Thuê kiosk', 'Xem phí thuê đã chốt và đăng ký thuê thêm kiosk.'],
     [
-      'wallet',
-      'Ví & rút tiền',
-      'Theo dõi tiền bán hoa, tài khoản ngân hàng và tiến độ yêu cầu rút tiền.',
+      'commerce',
+      'Thanh toán & doanh số',
+      'Theo dõi kênh nhận tiền, giao dịch và tích điểm của shop.',
     ],
+    [
+      'refunds',
+      'Hoàn tiền trực tiếp',
+      'Chuyển khoản hoàn tiền đã duyệt và gửi chứng từ đối chiếu.',
+    ],
+    ['seasonal', 'Doanh số theo mùa', 'Xem dữ liệu bán thực tế và dự báo có điều kiện.'],
+    ['terminations', 'Chấm dứt thuê kiosk', 'Gửi yêu cầu chấm dứt và theo dõi tiến độ bàn giao.'],
   ],
   OPERATIONS_MANAGER: [
     ['sellers', 'Quản lý shop hoa', 'Thông tin shop, tài khoản chủ shop và lịch sử trạng thái.'],
@@ -87,6 +99,7 @@ export const workspaceSections = {
       'Tiếp nhận hồ sơ thuê kiosk, xác nhận liên hệ, phân công kỹ thuật và nghiệm thu bàn giao.',
     ],
     ['technicians', 'Kỹ thuật viên', 'Tạo tài khoản và quản lý trạng thái Kỹ thuật viên.'],
+    ['terminations', 'Chấm dứt thuê kiosk', 'Xét duyệt yêu cầu và ghi nhận bàn giao kiosk.'],
   ],
 } as const;
 export type WorkspaceRole = keyof typeof workspaceSections;

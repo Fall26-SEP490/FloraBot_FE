@@ -100,16 +100,6 @@ const guides: Record<string, Guide> = {
     href: '/seller/orders',
     action: 'Xem đơn đặt trước',
   },
-  wallet: {
-    title: 'Phân biệt số dư và yêu cầu rút tiền',
-    steps: [
-      'Có thể rút là phần tiền đủ điều kiện; tiền đang chờ chưa thể rút.',
-      'Kiểm tra tài khoản nhận tiền của shop, nhập số tiền và xem lại trước khi gửi yêu cầu.',
-      'Gửi yêu cầu chưa có nghĩa là đã nhận tiền. Theo dõi trạng thái xử lý và lịch sử ngay bên dưới.',
-    ],
-    href: '/seller/orders',
-    action: 'Đối chiếu với đơn đặt trước',
-  },
   subscriptions: {
     title: 'Xem gói và thanh toán kỳ thuê',
     steps: [
