@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { mockPayos } from './payos.fixture';
 
 const sellerId = '20000000-0000-0000-0000-000000000001';
 const kioskId = '40000000-0000-0000-0000-000000000001';
@@ -65,6 +66,19 @@ async function common(
   await page.route('**/hub/**', (route) => route.fulfill({ status: 503 }));
   await page.route('**/api/**', async (route) => {
     const path = new URL(route.request().url()).pathname.replace('/api', '');
+    if (path.endsWith('/preorder-availability'))
+      return route.fulfill({
+        json: {
+          kioskId,
+          available: true,
+          totalPreorderCapacity: 4,
+          occupiedPreorderCount: 0,
+          availablePreorderCapacity: 4,
+          status: 'AVAILABLE',
+          message: 'Có thể đặt trước',
+          isEstimateOnly: true,
+        },
+      });
     if (route.request().method() === 'POST' && mutate) {
       const result = await mutate(path, route.request().postDataJSON() ?? {});
       if (result !== undefined) {
@@ -211,11 +225,14 @@ test('Customer request → seller quote → customer acceptance/payment → sell
     .getByRole('checkbox', { name: 'Tôi đồng ý với giá, ghi chú và lịch nhận của shop.' })
     .check();
   await page.getByRole('button', { name: 'Đồng ý báo giá', exact: true }).click();
-  await page.route('https://pay.payos.vn/**', (route) =>
-    route.fulfill({ contentType: 'text/html', body: '<h1>Payment test page</h1>' }),
-  );
+  await mockPayos(page);
   await page.getByRole('button', { name: 'Thanh toán ngay', exact: true }).click();
-  await expect(page).toHaveURL('https://pay.payos.vn/web/test-order');
+  await expect(
+    page
+      .getByRole('dialog', { name: 'Thanh toán đơn hoa' })
+      .getByTitle('Thanh toán bảo mật qua PayOS'),
+  ).toBeVisible();
+  await expect(page).toHaveURL(/tai-khoan/);
   expect(writes.filter((path) => path.endsWith('/payment-link'))).toHaveLength(1);
   await page.goto('/tai-khoan#web-orders');
   expect(

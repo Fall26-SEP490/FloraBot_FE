@@ -110,7 +110,7 @@ for (const width of [390, 1078, 1440]) {
       page.getByRole('heading', { name: 'Hồ sơ thuê: Tiệm hoa đồng nai', exact: true }),
     ).toBeVisible();
     await expect(
-      page.getByRole('button', { name: 'Tạo liên kết thanh toán payOS', exact: true }),
+      page.getByRole('button', { name: 'Thanh toán phí thuê', exact: true }),
     ).toBeVisible();
     expect(state.writes).toEqual([]);
   });

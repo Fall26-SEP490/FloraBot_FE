@@ -3,7 +3,6 @@ import { Banknote, Button, CircleAlert, RefreshCw } from '@florabot/ui';
 interface PaymentActionsProps {
   packageName: string;
   annualFee: number | string;
-  validatedCheckoutUrl: string | null;
   paymentLinkError: string;
   isGeneratingLink: boolean;
   isReconciling: boolean;
@@ -14,7 +13,6 @@ interface PaymentActionsProps {
 export function PaymentActions({
   packageName,
   annualFee,
-  validatedCheckoutUrl,
   paymentLinkError,
   isGeneratingLink,
   isReconciling,
@@ -37,35 +35,20 @@ export function PaymentActions({
         </div>
       )}
 
-      {validatedCheckoutUrl && (
-        <div className="payment-ready-box" role="status">
-          <p>Liên kết thanh toán payOS đã sẵn sàng:</p>
-          <a
-            href={validatedCheckoutUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="button button-primary payos-checkout-link"
-          >
-            <Banknote size={18} aria-hidden="true" />
-            Mở trang thanh toán pay.payos.vn (Tab mới)
-          </a>
-        </div>
-      )}
-
       <div className="action-buttons-row">
         <Button onClick={onGenerateLink} disabled={isGeneratingLink}>
           <Banknote size={18} aria-hidden="true" />
-          {isGeneratingLink ? 'Đang tạo liên kết...' : 'Tạo liên kết thanh toán payOS'}
+          {isGeneratingLink ? 'Đang mở thanh toán…' : 'Thanh toán phí thuê'}
         </Button>
         <Button variant="outline" onClick={onReconcile} disabled={isReconciling}>
           <RefreshCw className={isReconciling ? 'kiosk-spin' : ''} size={18} aria-hidden="true" />
-          Kiểm tra thanh toán (Đối soát máy chủ)
+          Kiểm tra thanh toán
         </Button>
       </div>
 
       <p className="kiosk-help-text">
-        FloraBot xác thực thanh toán trực tiếp qua máy chủ cổng payOS. Trình duyệt không tự quyết
-        định trạng thái thanh toán từ query trả về.
+        Thanh toán qua PayOS ngay trên FloraBot. Trạng thái hồ sơ được cập nhật sau khi xác nhận
+        giao dịch.
       </p>
     </div>
   );

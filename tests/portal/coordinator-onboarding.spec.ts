@@ -197,9 +197,7 @@ test.describe('Coordinator onboarding acceptance boundaries', () => {
       const currentUrl = page.url();
       const popups: Page[] = [];
       page.on('popup', (popup) => popups.push(popup));
-      await page
-        .getByRole('button', { name: 'Tạo liên kết thanh toán payOS', exact: true })
-        .click();
+      await page.getByRole('button', { name: 'Thanh toán phí thuê', exact: true }).click();
       await expect(page.locator('.kiosk-onboarding-container').getByRole('alert')).toBeVisible();
       await expect(page.getByRole('link', { name: /Mở trang thanh toán/ })).toHaveCount(0);
       expect(page.url()).toBe(currentUrl);
@@ -214,7 +212,7 @@ test.describe('Coordinator onboarding acceptance boundaries', () => {
     await page.goto('/thue-kiosk?status=PAID&code=00&orderCode=808080&cancel=false');
     await expect(page.locator('.kiosk-status-pill')).toHaveText('Chờ thanh toán phí thuê');
     await expect(
-      page.getByRole('button', { name: 'Tạo liên kết thanh toán payOS', exact: true }),
+      page.getByRole('button', { name: 'Thanh toán phí thuê', exact: true }),
     ).toBeVisible();
     await expect(page.getByRole('button', { name: /Vào quản lý Shop/ })).toHaveCount(0);
     expect(calls.reconcile).toBe(0);

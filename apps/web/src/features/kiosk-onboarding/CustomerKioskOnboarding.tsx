@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import PayosCheckout from '@/shared/components/PayosCheckout';
 import { useQuery } from '@tanstack/react-query';
 import { Button, CircleAlert, RefreshCw } from '@florabot/ui';
 import { ApiError, sessionQuery, type Session } from '@/shared/lib/api';
@@ -193,7 +194,6 @@ function CustomerKioskContent({
             actions.setCancelReason('');
           }}
           reconcileNotice={actions.reconcileNotice}
-          validatedCheckoutUrl={actions.validatedCheckoutUrl}
           paymentLinkError={actions.paymentLinkError}
           isGeneratingLink={actions.paymentLinkMutation.isPending}
           isReconciling={actions.reconcileMutation.isPending}
@@ -204,6 +204,22 @@ function CustomerKioskContent({
           onRefreshSession={actions.handleActiveSessionRefresh}
         />
       )}
+
+      {appData?.status === 'AWAITING_PAYMENT' &&
+        actions.checkoutApplicationId === appData.id &&
+        actions.validatedCheckoutUrl && (
+          <PayosCheckout
+            checkoutUrl={actions.validatedCheckoutUrl}
+            title="Thanh toán phí thuê kiosk"
+            description={`${appData.shopName} · ${rentalMoney(Number(appData.annualFee))}`}
+            onClose={(result) => {
+              actions.setValidatedCheckoutUrl(null);
+              if (result === 'success') actions.reconcileMutation.mutate(appData.id);
+              else void applicationQuery.refetch();
+            }}
+            onRefresh={() => actions.reconcileMutation.mutate(appData.id)}
+          />
+        )}
 
       {/* Terminal State Panels: CANCELLED, REJECTED, REFUNDED */}
       {isTerminalStatus && appData && (

@@ -20,6 +20,7 @@ export function useKioskApplication(sessionData: Session | undefined) {
       }
     },
     enabled: !!sessionData,
+    refetchInterval: (query) => (query.state.data?.status === 'AWAITING_PAYMENT' ? 5000 : false),
   });
 
   const appData = applicationQuery.data;

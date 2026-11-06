@@ -18,8 +18,9 @@ export function useKioskApplicationActions(sessionData: Session | undefined) {
   const [cancelReason, setCancelReason] = useState('');
   const [cancelError, setCancelError] = useState('');
 
-  // Payment link state (fail-closed, no auto fallback navigation)
+  // Validated checkout opens the embedded payment dialog.
   const [validatedCheckoutUrl, setValidatedCheckoutUrl] = useState<string | null>(null);
+  const [checkoutApplicationId, setCheckoutApplicationId] = useState<string | null>(null);
   const [paymentLinkError, setPaymentLinkError] = useState('');
   const [reconcileNotice, setReconcileNotice] = useState('');
   const [refreshError, setRefreshError] = useState<string | null>(null);
@@ -73,7 +74,8 @@ export function useKioskApplicationActions(sessionData: Session | undefined) {
   const paymentLinkMutation = useMutation({
     mutationFn: (applicationId: string) =>
       request<PaymentLinkResponse>(`/member/kiosk-applications/${applicationId}/payment-link`, {}),
-    onSuccess: (data) => {
+    onSuccess: (data, applicationId) => {
+      setCheckoutApplicationId(applicationId);
       setPaymentLinkError('');
       const validation = validatePayosCheckoutUrl(data.checkoutUrl);
       if (validation.valid && validation.url) {
@@ -211,6 +213,8 @@ export function useKioskApplicationActions(sessionData: Session | undefined) {
     cancelError,
     setCancelError,
     validatedCheckoutUrl,
+    checkoutApplicationId,
+    setValidatedCheckoutUrl,
     paymentLinkError,
     reconcileNotice,
     refreshError,

@@ -5,7 +5,7 @@ import { X } from '@florabot/ui';
 // Modal foundation styles are provided globally via site.css (@import './modal.css')
 
 const focusableSelector =
-  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+  'iframe, button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 export type ModalSize = 'sm' | 'md' | 'lg';
 

@@ -4,48 +4,7 @@ import {
   TIME_WINDOW_REGEX,
 } from './installations.constants';
 
-export function validatePayosCheckoutUrl(rawUrl: string): {
-  valid: boolean;
-  url?: string;
-  error?: string;
-} {
-  if (!rawUrl || typeof rawUrl !== 'string') {
-    return { valid: false, error: 'Địa chỉ thanh toán không hợp lệ.' };
-  }
-  const trimmed = rawUrl.trim();
-  if (!trimmed) {
-    return { valid: false, error: 'Địa chỉ thanh toán không được để trống.' };
-  }
-  try {
-    const parsed = new URL(trimmed);
-
-    // Reject userinfo unconditionally (e.g. https://user:pass@pay.payos.vn)
-    if (parsed.username || parsed.password) {
-      return {
-        valid: false,
-        error: 'Địa chỉ thanh toán chứa thông tin xác thực người dùng không an toàn.',
-      };
-    }
-
-    // Production security constraint: EXACT https: and EXACT pay.payos.vn host
-    if (parsed.protocol !== 'https:') {
-      return { valid: false, error: 'Chỉ chấp nhận liên kết thanh toán HTTPS bảo mật.' };
-    }
-    if (parsed.hostname !== 'pay.payos.vn') {
-      return {
-        valid: false,
-        error: 'Tên miền không thuộc cổng thanh toán payOS được ủy quyền (yêu cầu pay.payos.vn).',
-      };
-    }
-    if (parsed.port && parsed.port !== '443') {
-      return { valid: false, error: 'Cổng kết nối không tiêu chuẩn bị từ chối.' };
-    }
-
-    return { valid: true, url: parsed.toString() };
-  } catch {
-    return { valid: false, error: 'Định dạng liên kết thanh toán không hợp lệ.' };
-  }
-}
+export { validatePayosCheckoutUrl } from '@/shared/lib/payos-checkout';
 
 export function parseAndValidateCoordinate(
   input: string,
