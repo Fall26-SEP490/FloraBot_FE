@@ -103,7 +103,9 @@ function OrderActions({
       return false;
     }
   });
-  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
+  const [paymentLink, setPaymentLink] = useState<
+    components['schemas']['PaymentLinkResponse'] | null
+  >(null);
   const [checking, setChecking] = useState(false);
   const sending = useRef(false);
   const [error, setError] = useState('');
@@ -256,16 +258,25 @@ function OrderActions({
     setError('');
     setNotice('');
     try {
-      const result = await request<{ checkoutUrl?: string; orderCode?: number }>(
+      const result = await request<components['schemas']['PaymentLinkResponse']>(
         `${base}/${row.id}/${kind}`,
         body,
       );
       if (kind === 'payment-link') {
         const validation = validatePayosCheckoutUrl(result.checkoutUrl || '');
-        if (!validation.valid || !validation.url)
+        const amount = Number(result.amount);
+        const orderCode = Number(result.orderCode);
+        if (
+          !validation.valid ||
+          !validation.url ||
+          !Number.isSafeInteger(amount) ||
+          amount <= 0 ||
+          !Number.isSafeInteger(orderCode) ||
+          orderCode <= 0
+        )
           throw new Error('Liên kết thanh toán không hợp lệ.');
-        if (result.orderCode != null) rememberPreorderPayment(row.id, page, result.orderCode);
-        setCheckoutUrl(validation.url);
+        rememberPreorderPayment(row.id, page, orderCode);
+        setPaymentLink({ ...result, checkoutUrl: validation.url });
       } else {
         setAction(null);
         setConfirm(false);
@@ -275,7 +286,10 @@ function OrderActions({
       if (
         !(cause instanceof ApiError) ||
         ((cause.status >= 500 || cause.status === 408) &&
-          !(kind === 'payment-link' && cause.code === 'missing_seller_channel'))
+          !(
+            kind === 'payment-link' &&
+            ['missing_seller_channel', 'seller_channel_unavailable'].includes(cause.code ?? '')
+          ))
       ) {
         setUncertain(true);
         try {
@@ -353,27 +367,40 @@ function OrderActions({
         !['DISPUTED', 'DISPENSE_FAILED'].includes(row.orderStatus ?? '') &&
         progress}
       {mode === 'member' && <CustomerQuoteDetails row={row} now={now} />}
-      {mode === 'member' && row.orderStatus === 'AWAITING_PAYMENT' && checkoutUrl && (
-        <PayosCheckout
-          checkoutUrl={checkoutUrl}
-          title="Thanh toán đơn hoa"
-          description={
-            row.quotedPrice == null
-              ? row.shopName || 'Đơn đặt hoa'
-              : `${row.shopName || 'Đơn đặt hoa'} · ${money(row.quotedPrice)}`
-          }
-          onClose={(result) => {
-            setCheckoutUrl(null);
-            setNotice(
-              result === 'success'
-                ? 'Đang cập nhật trạng thái thanh toán từ hệ thống. Nếu đã trả tiền, chờ xác nhận trước khi thanh toán lại.'
-                : 'Đã đóng màn hình thanh toán. Xem trạng thái đơn bên dưới.',
-            );
-            void onReload();
-          }}
-          onRefresh={() => void onReload()}
-        />
-      )}
+      {mode === 'member' &&
+        row.orderStatus === 'AWAITING_PAYMENT' &&
+        !paymentExpired &&
+        paymentLink && (
+          <PayosCheckout
+            checkoutUrl={paymentLink.checkoutUrl}
+            title="Thanh toán đơn hoa"
+            description={[
+              row.shopName || 'Đơn đặt hoa',
+              money(Number(paymentLink.amount)),
+              paymentLink.recipientAccountMasked
+                ? [
+                    'Tài khoản nhận của shop',
+                    paymentLink.recipientName,
+                    paymentLink.recipientAccountMasked,
+                  ]
+                    .filter(Boolean)
+                    .join(' ')
+                : null,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+            onClose={(result) => {
+              setPaymentLink(null);
+              setNotice(
+                result === 'success'
+                  ? 'Đang cập nhật trạng thái thanh toán từ hệ thống. Nếu đã trả tiền, chờ xác nhận trước khi thanh toán lại.'
+                  : 'Đã đóng màn hình thanh toán. Xem trạng thái đơn bên dưới.',
+              );
+              void onReload();
+            }}
+            onRefresh={() => void onReload()}
+          />
+        )}
       {mode === 'admin' && (
         <>
           <p>
