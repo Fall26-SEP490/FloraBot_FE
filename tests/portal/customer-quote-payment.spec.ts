@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { mockPayos } from './payos.fixture';
 const id = '70000000-0000-0000-0000-000000000001';
 const makeRow = () => ({
   id,
@@ -108,7 +109,7 @@ for (const width of [390, 1440]) {
     ).toContainText('Số tiền cần thanh toán');
     await expect(
       page.getByRole('region', { name: 'Thông tin thanh toán', exact: true }),
-    ).toContainText('mở trang payOS');
+    ).toContainText('thanh toán qua PayOS ngay tại đây');
     await expect(page.getByRole('button', { name: 'Thanh toán ngay', exact: true })).toBeEnabled();
     expect(state.writes).toEqual([{ path: `/api/member/preorders/${id}/accept`, body: original }]);
   });
@@ -209,4 +210,134 @@ test('A refreshed quote cannot be confirmed with an older review snapshot', asyn
   ).toBeVisible();
   await expect(page.getByRole('button', { name: 'Đồng ý báo giá', exact: true })).toBeDisabled();
   expect(state.writes).toEqual([]);
+});
+
+for (const width of [390, 1440]) {
+  test(`One click opens embedded order payment without leaving FloraBot at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    const state = await fixture(page);
+    state.row = {
+      ...state.row,
+      state: 'ORDERED',
+      orderId: 'order-1',
+      orderStatus: 'AWAITING_PAYMENT',
+    };
+    await mockPayos(page);
+    let links = 0;
+    await page.route(`**/api/member/preorders/${id}/payment-link`, async (route) => {
+      links++;
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      return route.fulfill({
+        json: { checkoutUrl: 'https://pay.payos.vn/web/test-order', orderCode: 123456 },
+      });
+    });
+    await page.goto(`/tai-khoan?requestId=${id}#web-orders`);
+    const originalUrl = page.url();
+    await page.getByRole('button', { name: 'Thanh toán ngay', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'Thanh toán đơn hoa' });
+    await expect(dialog.getByTitle('Thanh toán bảo mật qua PayOS')).toBeVisible();
+    await expect(page).toHaveURL(originalUrl);
+    expect(page.context().pages()).toHaveLength(1);
+    expect(links).toBe(1);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    expect(
+      (
+        await new AxeBuilder({ page })
+          .include('.payos-checkout-modal')
+          .withTags(['wcag2a', 'wcag2aa'])
+          .analyze()
+      ).violations,
+    ).toEqual([]);
+    await page.screenshot({ path: test.info().outputPath(`payos-${width}.png`) });
+    await dialog.getByRole('button', { name: 'Kiểm tra thanh toán', exact: true }).click();
+    expect(links).toBe(1);
+    // A provider success callback only refreshes authoritative BE state.
+    await page.evaluate(() =>
+      (
+        window as unknown as { payosTestConfig: { onSuccess: () => void } }
+      ).payosTestConfig.onSuccess(),
+    );
+    await expect(dialog).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Thanh toán ngay', exact: true })).toBeVisible();
+    expect(state.row.orderStatus).toBe('AWAITING_PAYMENT');
+  });
+}
+
+test('PayOS script can be retried with the same link and a callback never cancels the flower order', async ({
+  page,
+}) => {
+  const state = await fixture(page);
+  state.row = {
+    ...state.row,
+    state: 'ORDERED',
+    orderId: 'order-1',
+    orderStatus: 'AWAITING_PAYMENT',
+  };
+  await mockPayos(page);
+  await page.route('https://cdn.payos.vn/**', (route) => route.abort());
+  let links = 0;
+  await page.route(`**/api/member/preorders/${id}/payment-link`, (route) => {
+    links++;
+    return route.fulfill({
+      json: { checkoutUrl: 'https://pay.payos.vn/web/test-order', orderCode: 123456 },
+    });
+  });
+  await page.goto(`/tai-khoan?requestId=${id}#web-orders`);
+  await page.getByRole('button', { name: 'Thanh toán ngay', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Thanh toán đơn hoa' });
+  await expect(dialog.getByRole('alert')).toContainText('Chưa tải được màn hình PayOS');
+  await page.unroute('https://cdn.payos.vn/**');
+  await dialog.getByRole('button', { name: 'Tải lại màn hình' }).click();
+  await expect(dialog.getByTitle('Thanh toán bảo mật qua PayOS')).toBeVisible();
+  expect(links).toBe(1);
+  await page.evaluate(() =>
+    (window as unknown as { payosTestConfig: { onCancel: () => void } }).payosTestConfig.onCancel(),
+  );
+  await expect(dialog).toHaveCount(0);
+  expect(state.writes).toEqual([]);
+  await expect(page.getByRole('button', { name: 'Thanh toán ngay', exact: true })).toBeVisible();
+});
+
+test('Official PayOS CDN SDK embeds the checkout with the current return URL and cleans up on close', async ({
+  page,
+  request,
+}) => {
+  const state = await fixture(page);
+  state.row = {
+    ...state.row,
+    state: 'ORDERED',
+    orderId: 'order-1',
+    orderStatus: 'AWAITING_PAYMENT',
+  };
+  await mockPayos(page);
+  const sdkResponse = await request.get(
+    'https://cdn.payos.vn/payos-checkout/v1/stable/payos-initialize.js',
+  );
+  expect(sdkResponse.ok()).toBe(true);
+  await page.route('https://cdn.payos.vn/payos-checkout/v1/stable/payos-initialize.js', (route) =>
+    route.fulfill({ response: sdkResponse }),
+  );
+  await page.route(`**/api/member/preorders/${id}/payment-link`, (route) =>
+    route.fulfill({
+      json: { checkoutUrl: 'https://pay.payos.vn/web/test-order', orderCode: 123456 },
+    }),
+  );
+  await page.goto(`/tai-khoan?requestId=${id}#web-orders`);
+  const returnUrl = page.url();
+  await page.getByRole('button', { name: 'Thanh toán ngay', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Thanh toán đơn hoa' });
+  const iframe = dialog.getByTitle('Thanh toán bảo mật qua PayOS');
+  await expect(iframe).toBeVisible();
+  const src = new URL((await iframe.getAttribute('src'))!);
+  expect(src.origin).toBe('https://pay.payos.vn');
+  expect(src.pathname).toBe('/embedded/test-order');
+  expect(src.searchParams.get('redirect_uri')).toBe(returnUrl);
+  await dialog.getByRole('button', { name: 'Đóng hộp thoại', exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(page.locator('iframe[src*="pay.payos.vn"]')).toHaveCount(0);
+  await expect(page).toHaveURL(returnUrl);
 });

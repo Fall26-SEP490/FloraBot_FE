@@ -14,7 +14,6 @@ interface ApplicationStatusPanelProps {
   appData: KioskApplicationResponse;
   onOpenCancelDialog: () => void;
   reconcileNotice: string;
-  validatedCheckoutUrl: string | null;
   paymentLinkError: string;
   isGeneratingLink: boolean;
   isReconciling: boolean;
@@ -29,7 +28,6 @@ export function ApplicationStatusPanel({
   appData,
   onOpenCancelDialog,
   reconcileNotice,
-  validatedCheckoutUrl,
   paymentLinkError,
   isGeneratingLink,
   isReconciling,
@@ -92,7 +90,6 @@ export function ApplicationStatusPanel({
         <PaymentActions
           packageName={rentalAllocation(appData)}
           annualFee={appData.annualFee}
-          validatedCheckoutUrl={validatedCheckoutUrl}
           paymentLinkError={paymentLinkError}
           isGeneratingLink={isGeneratingLink}
           isReconciling={isReconciling}

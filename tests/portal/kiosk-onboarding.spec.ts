@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { mockPayos } from './payos.fixture';
 
 const packagesMock = {
   walkInAnnualPrice: 5000,
@@ -324,17 +325,23 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     await expect(page.getByText('Chờ thanh toán phí thuê')).toBeVisible();
 
     // Test Payment link 503 handling:
-    await page.getByRole('button', { name: 'Tạo liên kết thanh toán payOS' }).click();
+    await page.getByRole('button', { name: 'Thanh toán phí thuê' }).click();
     await expect(page.getByText('Cổng thanh toán payOS đang bảo trì')).toBeVisible();
 
-    // Retry Payment link -> returns valid https://pay.payos.vn link
-    await page.getByRole('button', { name: 'Tạo liên kết thanh toán payOS' }).click();
+    await mockPayos(page);
+    // Retry opens the checkout immediately after the payment-link response.
+    await page.getByRole('button', { name: 'Thanh toán phí thuê' }).click();
     await expect(
-      page.getByRole('link', { name: /Mở trang thanh toán pay\.payos\.vn/ }),
+      page
+        .getByRole('dialog', { name: 'Thanh toán phí thuê kiosk' })
+        .getByTitle('Thanh toán bảo mật qua PayOS'),
     ).toBeVisible();
 
     // Test Server Reconciliation:
-    await page.getByRole('button', { name: 'Kiểm tra thanh toán (Đối soát máy chủ)' }).click();
+    await page
+      .getByRole('dialog', { name: 'Thanh toán phí thuê kiosk' })
+      .getByRole('button', { name: 'Kiểm tra thanh toán', exact: true })
+      .click();
     await expect(page.getByText('Đã thanh toán - Chờ duyệt')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Đã thanh toán thành công' })).toBeVisible();
 

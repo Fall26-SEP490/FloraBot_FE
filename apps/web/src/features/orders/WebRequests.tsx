@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import PayosCheckout from '@/shared/components/PayosCheckout';
+import { validatePayosCheckoutUrl } from '@/shared/lib/payos-checkout';
 import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -101,6 +103,7 @@ function OrderActions({
       return false;
     }
   });
+  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
   const sending = useRef(false);
   const [error, setError] = useState('');
@@ -258,16 +261,11 @@ function OrderActions({
         body,
       );
       if (kind === 'payment-link') {
-        const url = new URL(result.checkoutUrl || '');
-        if (
-          url.protocol !== 'https:' ||
-          url.hostname !== 'pay.payos.vn' ||
-          url.username ||
-          url.password
-        )
+        const validation = validatePayosCheckoutUrl(result.checkoutUrl || '');
+        if (!validation.valid || !validation.url)
           throw new Error('Liên kết thanh toán không hợp lệ.');
         if (result.orderCode != null) rememberPreorderPayment(row.id, page, result.orderCode);
-        window.location.assign(url.href);
+        setCheckoutUrl(validation.url);
       } else {
         setAction(null);
         setConfirm(false);
@@ -355,6 +353,27 @@ function OrderActions({
         !['DISPUTED', 'DISPENSE_FAILED'].includes(row.orderStatus ?? '') &&
         progress}
       {mode === 'member' && <CustomerQuoteDetails row={row} now={now} />}
+      {mode === 'member' && row.orderStatus === 'AWAITING_PAYMENT' && checkoutUrl && (
+        <PayosCheckout
+          checkoutUrl={checkoutUrl}
+          title="Thanh toán đơn hoa"
+          description={
+            row.quotedPrice == null
+              ? row.shopName || 'Đơn đặt hoa'
+              : `${row.shopName || 'Đơn đặt hoa'} · ${money(row.quotedPrice)}`
+          }
+          onClose={(result) => {
+            setCheckoutUrl(null);
+            setNotice(
+              result === 'success'
+                ? 'Đang cập nhật trạng thái thanh toán từ hệ thống. Nếu đã trả tiền, chờ xác nhận trước khi thanh toán lại.'
+                : 'Đã đóng màn hình thanh toán. Xem trạng thái đơn bên dưới.',
+            );
+            void onReload();
+          }}
+          onRefresh={() => void onReload()}
+        />
+      )}
       {mode === 'admin' && (
         <>
           <p>

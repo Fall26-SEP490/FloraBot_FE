@@ -22,7 +22,7 @@ export function CustomerQuoteDetails({ row, now }: { row: WebOrder; now: number 
         <span>{paying ? 'Số tiền cần thanh toán' : quoting ? 'Giá shop báo' : 'Giá đã chốt'}</span>
         <strong>{hasPrice ? money(row.quotedPrice!) : 'Chưa có báo giá'}</strong>
         {quoting && <p>Đồng ý báo giá trước, thanh toán sau.</p>}
-        {paying && <p>Chọn “Thanh toán ngay” để mở trang payOS.</p>}
+        {paying && <p>Chọn “Thanh toán ngay” để thanh toán qua PayOS ngay tại đây.</p>}
       </div>
       <dl className={styles.quoteFacts}>
         <div>
