@@ -13466,6 +13466,8 @@ export interface components {
             amount: number | string;
             checkoutUrl: string;
             qrCode?: null | string;
+            recipientName?: null | string;
+            recipientAccountMasked?: null | string;
         };
         PayOsWebhook: {
             data: components["schemas"]["JsonElement"];

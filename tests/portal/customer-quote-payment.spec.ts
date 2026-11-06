@@ -230,7 +230,13 @@ for (const width of [390, 1440]) {
       links++;
       await new Promise((resolve) => setTimeout(resolve, 250));
       return route.fulfill({
-        json: { checkoutUrl: 'https://pay.payos.vn/web/test-order', orderCode: 123456 },
+        json: {
+          checkoutUrl: 'https://pay.payos.vn/web/test-order',
+          orderCode: 123456,
+          amount: 360000,
+          recipientName: 'TIEM HOA AN NHIEN',
+          recipientAccountMasked: '******7766',
+        },
       });
     });
     await page.goto(`/tai-khoan?requestId=${id}#web-orders`);
@@ -238,6 +244,8 @@ for (const width of [390, 1440]) {
     await page.getByRole('button', { name: 'Thanh toán ngay', exact: true }).click();
     const dialog = page.getByRole('dialog', { name: 'Thanh toán đơn hoa' });
     await expect(dialog.getByTitle('Thanh toán bảo mật qua PayOS')).toBeVisible();
+    await expect(dialog).toContainText('360.000');
+    await expect(dialog).toContainText('TIEM HOA AN NHIEN ******7766');
     await expect(page).toHaveURL(originalUrl);
     expect(page.context().pages()).toHaveLength(1);
     expect(links).toBe(1);
@@ -267,6 +275,29 @@ for (const width of [390, 1440]) {
   });
 }
 
+test('Preorder cannot open a payment link while the seller channel is unavailable', async ({
+  page,
+}) => {
+  const state = await fixture(page);
+  state.row = {
+    ...state.row,
+    state: 'ORDERED',
+    orderId: 'order-1',
+    orderStatus: 'AWAITING_PAYMENT',
+  };
+  await page.route(`**/api/member/preorders/${id}/payment-link`, (route) =>
+    route.fulfill({ status: 503, json: { detail: 'seller_channel_unavailable' } }),
+  );
+  await page.goto(`/tai-khoan?requestId=${id}#web-orders`);
+  const pay = page.getByRole('button', { name: 'Thanh toán ngay', exact: true });
+  await pay.click();
+  await expect(
+    page.getByRole('region', { name: 'Đơn đặt trước' }).getByRole('alert'),
+  ).toContainText('Kênh nhận tiền của shop chưa sẵn sàng');
+  await expect(page.getByRole('dialog', { name: 'Thanh toán đơn hoa' })).toHaveCount(0);
+  await expect(pay).toBeEnabled();
+});
+
 test('PayOS script can be retried with the same link and a callback never cancels the flower order', async ({
   page,
 }) => {
@@ -283,7 +314,11 @@ test('PayOS script can be retried with the same link and a callback never cancel
   await page.route(`**/api/member/preorders/${id}/payment-link`, (route) => {
     links++;
     return route.fulfill({
-      json: { checkoutUrl: 'https://pay.payos.vn/web/test-order', orderCode: 123456 },
+      json: {
+        checkoutUrl: 'https://pay.payos.vn/web/test-order',
+        orderCode: 123456,
+        amount: 380000,
+      },
     });
   });
   await page.goto(`/tai-khoan?requestId=${id}#web-orders`);
@@ -323,7 +358,11 @@ test('Official PayOS CDN SDK embeds the checkout with the current return URL and
   );
   await page.route(`**/api/member/preorders/${id}/payment-link`, (route) =>
     route.fulfill({
-      json: { checkoutUrl: 'https://pay.payos.vn/web/test-order', orderCode: 123456 },
+      json: {
+        checkoutUrl: 'https://pay.payos.vn/web/test-order',
+        orderCode: 123456,
+        amount: 380000,
+      },
     }),
   );
   await page.goto(`/tai-khoan?requestId=${id}#web-orders`);

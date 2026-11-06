@@ -17699,6 +17699,18 @@
               "null",
               "string"
             ]
+          },
+          "recipientName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "recipientAccountMasked": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         },
         "additionalProperties": false

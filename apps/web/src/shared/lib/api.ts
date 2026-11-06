@@ -76,6 +76,7 @@ export async function request<T>(
   if (!response.ok) {
     const problem = (await response.json().catch(() => ({}))) as {
       detail?: string;
+      title?: string;
       error?: string;
       message?: string;
       errors?: Record<string, string[] | string>;
@@ -96,9 +97,11 @@ export async function request<T>(
       response.status,
       (problem.detail === 'missing_seller_channel'
         ? 'Shop chưa cấu hình kênh nhận tiền PayOS. Bạn chưa bị tính tiền; vui lòng liên hệ shop.'
-        : problem.detail === 'channel_not_active'
+        : problem.detail === 'channel_not_active' || problem.detail === 'seller_channel_unavailable'
           ? 'Kênh nhận tiền của shop chưa sẵn sàng. Bạn chưa bị tính tiền; hãy thử lại sau.'
-          : problem.detail) ||
+          : problem.detail === 'legacy_checkout' || problem.detail === 'checkout_not_payable'
+            ? problem.title
+            : problem.detail) ||
         problem.error ||
         firstValidationError ||
         problem.message ||
