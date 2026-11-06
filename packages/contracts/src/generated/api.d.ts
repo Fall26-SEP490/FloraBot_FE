@@ -7302,6 +7302,33 @@ export interface paths {
                         "application/json": components["schemas"]["CustomerPointsResponse"];
                     };
                 };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
             };
         };
         put?: never;
@@ -9934,6 +9961,1336 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/payments/channels/{versionId}/webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: {
+                    attempt?: string;
+                };
+                header?: never;
+                path: {
+                    versionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PayOsWebhook"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sellers/{sellerId}/payment-channel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sellerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SellerPaymentChannelResponse"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sellerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["BindPaymentChannelRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SellerPaymentChannelResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sellers/{sellerId}/payment-channel/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sellerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChannelVerificationResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sellers/{sellerId}/payment-channel/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sellerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateChannelStatusRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SellerPaymentChannelResponse"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/admin/payment-channels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminPaymentChannelItemResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sellers/{sellerId}/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    status?: string;
+                    orderCode?: number | string;
+                    from?: string;
+                    to?: string;
+                    page?: number | string;
+                    pageSize?: number | string;
+                };
+                header?: never;
+                path: {
+                    sellerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SellerPaymentsListResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sellers/{sellerId}/payments/{paymentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sellerId: string;
+                    paymentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SellerPaymentDetailResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sellers/{sellerId}/payments/{paymentId}/reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sellerId: string;
+                    paymentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReconcilePaymentResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sellers/{sellerId}/reports/sales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    from?: string;
+                    to?: string;
+                    kioskId?: string;
+                };
+                header?: never;
+                path: {
+                    sellerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SellerSalesReportResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sellers/{sellerId}/loyalty-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lấy cài đặt tích điểm của shop (chỉ chủ shop đang hoạt động) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sellerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SellerLoyaltySettingsResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        /** Bật/tắt chương trình tích điểm của shop (tỷ lệ cố định 1%, mặc định tắt) */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sellerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateSellerLoyaltySettingsRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SellerLoyaltySettingsResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/member/loyalty": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Xem danh sách số dư điểm của thành viên tại các shop */
+        get: {
+            parameters: {
+                query?: {
+                    page?: number | string;
+                    pageSize?: number | string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MemberLoyaltyPageResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/member/loyalty/{sellerId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Xem số dư điểm và thông tin tích điểm của thành viên tại một shop cụ thể */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sellerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ShopLoyaltyBalanceItem"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sellers/{sellerId}/refunds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Danh sách các khoản hoàn tiền trực tiếp của shop */
+        get: {
+            parameters: {
+                query?: {
+                    status?: string;
+                    page?: number | string;
+                    pageSize?: number | string;
+                };
+                header?: never;
+                path: {
+                    sellerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SellerRefundPageResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sellers/{sellerId}/refunds/{refundId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Chi tiết khoản hoàn tiền trực tiếp của shop */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sellerId: string;
+                    refundId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SellerRefundDetailResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sellers/{sellerId}/refunds/{refundId}/bank-details": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Xem thông tin tài khoản ngân hàng của khách để chuyển tiền hoàn (bắt buộc nêu lý do) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sellerId: string;
+                    refundId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SellerBankAccessRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RefundBankResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sellers/{sellerId}/refunds/{refundId}/evidence/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sellerId: string;
+                    refundId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "image/png": string;
+                    "image/jpeg": string;
+                    "image/webp": string;
+                };
+            };
+            responses: {
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Payload Too Large */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unsupported Media Type */
+                415: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Service Unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sellers/{sellerId}/refunds/{refundId}/submit-transfer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Gửi thông tin xác nhận chuyển khoản hoàn tiền trực tiếp của người bán (chờ Admin duyệt) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sellerId: string;
+                    refundId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SellerSubmitTransferRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SellerRefundTransferSubmissionResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/refunds/{refundId}/seller-submission": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin xem chi tiết chuyển khoản hoàn tiền trực tiếp của người bán gửi duyệt */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    refundId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sellers/{sellerId}/kiosks/{kioskId}/termination-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sellerId: string;
+                    kioskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateKioskTerminationRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["KioskTerminationResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sellers/{sellerId}/kiosks/{kioskId}/termination-requests/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sellerId: string;
+                    kioskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["KioskTerminationResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/operations/kiosk-termination-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    status?: string;
+                    page?: number | string;
+                    limit?: number | string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["KioskTerminationPage"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/operations/kiosk-termination-requests/{id}/evidence/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EvidenceUploadResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/operations/kiosk-termination-requests/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ReviewKioskTerminationRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["KioskTerminationResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/operations/kiosk-termination-requests/{id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CompleteKioskTerminationRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["KioskTerminationResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/kiosks/{kioskId}/preorder-availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    pickupAt?: string;
+                };
+                header?: never;
+                path: {
+                    kioskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["KioskPreorderAvailabilityResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sellers/{sellerId}/subscriptions/{subscriptionId}/payment-link": {
         parameters: {
             query?: never;
@@ -10058,6 +11415,240 @@ export interface paths {
         get: operations["read_gift_survey"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sellers/{sellerId}/ai/seasonal-sales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Thống kê doanh số bán hàng theo mùa và ngày lễ */
+        get: {
+            parameters: {
+                query?: {
+                    from?: string;
+                    to?: string;
+                    year?: number | string;
+                    month?: number | string;
+                    season?: string;
+                    holiday?: string;
+                };
+                header?: never;
+                path: {
+                    sellerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SeasonalSalesResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sellers/{sellerId}/ai/sales.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tải dữ liệu bán hàng định dạng CSV (bảo vệ công thức và loại bỏ PII) */
+        get: {
+            parameters: {
+                query?: {
+                    from?: string;
+                    to?: string;
+                };
+                header?: never;
+                path: {
+                    sellerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sellers/{sellerId}/ai/seasonal-forecast": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Dự báo nhu cầu bán hàng theo mùa bằng mô hình Poisson và giải thích Gemini */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sellerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SeasonalForecastRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SeasonalForecastResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -10869,6 +12460,21 @@ export interface components {
             /** Format: int32 */
             slotCount: number | string;
         };
+        AdminPaymentChannelItemResponse: {
+            /** Format: uuid */
+            sellerId: string;
+            shopName: string;
+            /** Format: int32 */
+            currentVersion: number | string;
+            state: string;
+            expectedBankBin: string;
+            expectedBankAccountMasked: string;
+            expectedBankName: null | string;
+            /** Format: date-time */
+            verifiedAt: null | string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
         AdminRefundDetail: {
             refund: components["schemas"]["AdminRefundResponse"];
             bankStatus: string;
@@ -11043,8 +12649,16 @@ export interface components {
             googleEnabled: boolean;
             registrationEmailEnabled: boolean;
         };
+        BindPaymentChannelRequest: {
+            secretRef: string;
+        };
         CancelKioskApplicationRequest: {
             reason: null | string;
+        };
+        ChannelVerificationResponse: {
+            verified: boolean;
+            state: string;
+            message: string;
         };
         CheckoutOrderResponse: {
             /** Format: uuid */
@@ -11068,6 +12682,10 @@ export interface components {
             /** Format: date-time */
             payBefore: string;
             orders: components["schemas"]["CheckoutOrderResponse"][];
+        };
+        CompleteKioskTerminationRequest: {
+            notes: null | string;
+            evidenceReference: null | string;
         };
         ConfirmKioskApplicationRequest: {
             note: string;
@@ -11130,6 +12748,9 @@ export interface components {
             preorderSlots?: null | number | string;
             /** Format: int32 */
             pricingVersion?: null | number | string;
+        };
+        CreateKioskTerminationRequest: {
+            reason: string;
         };
         CreateProductRequest: {
             /** Format: uuid */
@@ -11372,6 +12993,33 @@ export interface components {
             /** Format: uuid */
             batchId?: null | string;
         };
+        ForecastProductItem: {
+            /** Format: uuid */
+            productId: string;
+            name: string;
+            status: string;
+            /** Format: int64 */
+            price: number | string;
+            tags: string[];
+            /** Format: date */
+            availableSince: string;
+            photos: string[];
+            /** Format: int32 */
+            observedInvoiceCount: number | string;
+            /** Format: int32 */
+            observedUnits: number | string;
+            /** Format: int32 */
+            sameSeasonInvoiceCount: number | string;
+            /** Format: double */
+            forecastInvoiceCount: null | number | string;
+            /** Format: double */
+            forecastUnits: null | number | string;
+            modelStatus: string;
+            annualSeasonalityValidated: boolean;
+            validation: null | components["schemas"]["ProductForecastValidation"];
+            explanation: string;
+            explanationSource: string;
+        };
         ForgetCustomerRequest: Record<string, never>;
         GatewayReconciliationResult: {
             result: components["schemas"]["GatewayReconciliationRow"][];
@@ -11404,6 +13052,12 @@ export interface components {
         };
         GoogleAuthRequest: {
             idToken: string;
+        };
+        HolidayInfo: {
+            code: string;
+            name: string;
+            /** Format: date */
+            day: string;
         };
         IncidentEvidenceResponse: {
             items: components["schemas"]["IncidentPhoto"][];
@@ -11576,10 +13230,37 @@ export interface components {
             /** Format: date-time */
             pickupBefore: string;
         };
+        KioskPreorderAvailabilityResponse: {
+            /** Format: uuid */
+            kioskId: string;
+            kioskCode: null | string;
+            kioskName: null | string;
+            available: boolean;
+            /** Format: int32 */
+            totalPreorderCapacity: number | string;
+            /** Format: int32 */
+            occupiedPreorderCount: number | string;
+            /** Format: int32 */
+            availablePreorderCapacity: number | string;
+            status: string;
+            message: string;
+            /** @default true */
+            isEstimateOnly: boolean;
+        };
         KioskRefundBankResponse: {
             bankName: string;
             holder: string;
             accountNumber: string;
+        };
+        KioskSalesSummary: {
+            /** Format: uuid */
+            kioskId: string;
+            kioskCode: string;
+            kioskName: string;
+            /** Format: int64 */
+            grossPaid: number | string;
+            /** Format: int32 */
+            orderCount: number | string;
         };
         KioskSlotPricingResponse: {
             /** Format: int64 */
@@ -11607,6 +13288,50 @@ export interface components {
              */
             maxSlots: number | string;
         };
+        KioskTerminationPage: {
+            items: components["schemas"]["KioskTerminationResponse"][];
+            /** Format: int32 */
+            page: number | string;
+            /** Format: int32 */
+            limit: number | string;
+            hasMore: boolean;
+        };
+        KioskTerminationResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            kioskId: string;
+            kioskCode: null | string;
+            kioskName: null | string;
+            /** Format: uuid */
+            sellerId: string;
+            shopName: null | string;
+            status: string;
+            reason: string;
+            /** Format: date-time */
+            requestedAt: string;
+            /** Format: uuid */
+            requestedBy: string;
+            reviewAction: null | string;
+            reviewReason: null | string;
+            /** Format: date-time */
+            reviewedAt: null | string;
+            /** Format: uuid */
+            reviewedBy: null | string;
+            /** Format: uuid */
+            correlatedTaskId: null | string;
+            /** Format: date-time */
+            completedAt: null | string;
+            /** Format: uuid */
+            completedBy: null | string;
+            completionNotes: null | string;
+            /** Format: int32 */
+            version: number | string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
         LoginRequest: {
             email: string;
             password: string;
@@ -11616,6 +13341,14 @@ export interface components {
             accountHolder: null | string;
             accountLast4: null | string;
             hasBank: boolean;
+        };
+        MemberLoyaltyPageResponse: {
+            items: components["schemas"]["ShopLoyaltyBalanceItem"][];
+            /** Format: int32 */
+            page: number | string;
+            /** Format: int32 */
+            pageSize: number | string;
+            hasMore: boolean;
         };
         MemberProfile: {
             /** Format: uuid */
@@ -11810,6 +13543,20 @@ export interface components {
             detail?: null | string;
             instance?: null | string;
         };
+        ProductForecastValidation: {
+            /** Format: int32 */
+            trainingDays: number | string;
+            /** Format: int32 */
+            holdoutDays: number | string;
+            /** Format: double */
+            mae: null | number | string;
+            /** Format: double */
+            baselineMae: null | number | string;
+            /** Format: double */
+            wape: null | number | string;
+            /** Format: double */
+            baselineWape: null | number | string;
+        };
         ProductIdResponse: {
             /** Format: uuid */
             id: string;
@@ -11925,6 +13672,17 @@ export interface components {
             p_date: string;
             p_statement?: unknown;
         };
+        ReconcilePaymentResponse: {
+            /** Format: uuid */
+            paymentId: string;
+            previousStatus: string;
+            currentStatus: string;
+            providerStatus: string;
+            /** Format: int64 */
+            amount: number | string;
+            transactionReference: null | string;
+            transitioned: boolean;
+        };
         RefundBankResponse: {
             bankName: string;
             holder: string;
@@ -12030,6 +13788,10 @@ export interface components {
         RevealBankResponse: {
             accountNumber: string;
         };
+        ReviewKioskTerminationRequest: {
+            action: string;
+            reason: string;
+        };
         ReworkKioskApplicationRequest: {
             reason: string;
         };
@@ -12041,6 +13803,68 @@ export interface components {
             timeWindow: string;
             /** Format: uuid */
             kioskId: string;
+        };
+        SeasonalForecastRequest: {
+            /** Format: int32 */
+            year: number | string;
+            /** Format: int32 */
+            month: number | string;
+            /** Format: date */
+            historyFrom: string;
+            /** Format: date */
+            historyTo?: null | string;
+        };
+        SeasonalForecastResponse: {
+            /** Format: uuid */
+            sellerId: string;
+            contractVersion: string;
+            aggregationLevel: string;
+            dataSource: string;
+            /** Format: date */
+            historyStart: string;
+            /** Format: date */
+            historyEnd: string;
+            /** Format: date */
+            forecastStart: string;
+            /** Format: date */
+            forecastEnd: string;
+            season: string;
+            holidays: components["schemas"]["HolidayInfo"][];
+            warnings: string[];
+            products: components["schemas"]["ForecastProductItem"][];
+        };
+        SeasonalSalesProduct: {
+            /** Format: uuid */
+            productId: string;
+            name: string;
+            status: string;
+            /** Format: int64 */
+            price: number | string;
+            tags: string[];
+            /** Format: date */
+            availableSince: string;
+            photos: string[];
+            /** Format: int32 */
+            totalInvoices: number | string;
+            /** Format: int32 */
+            totalUnits: number | string;
+        };
+        SeasonalSalesResponse: {
+            /** Format: uuid */
+            sellerId: string;
+            /** Format: date */
+            from: string;
+            /** Format: date */
+            to: string;
+            season: null | string;
+            holiday: null | string;
+            /** Format: int32 */
+            totalInvoices: number | string;
+            /** Format: int32 */
+            totalUnits: number | string;
+            products: components["schemas"]["SeasonalSalesProduct"][];
+            /** @default PRODUCT */
+            aggregationLevel: string;
         };
         SellerAccessoryResponse: {
             /** Format: uuid */
@@ -12074,6 +13898,9 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        SellerBankAccessRequest: {
+            reason: string;
+        };
         SellerBankResponse: {
             status: string;
             bankName: null | string;
@@ -12096,6 +13923,13 @@ export interface components {
             locationComplete: boolean;
             canEditLocation: boolean;
         };
+        SellerLoyaltySettingsResponse: {
+            /** Format: uuid */
+            sellerId: string;
+            enabled: boolean;
+            /** Format: double */
+            earnRatePercent: number | string;
+        };
         SellerPackageResponse: {
             name: string;
             /** Format: int64 */
@@ -12103,6 +13937,166 @@ export interface components {
             /** Format: int32 */
             maxSlots: number | string;
             status: string;
+        };
+        SellerPaymentChannelResponse: {
+            /** Format: uuid */
+            sellerId: string;
+            /** Format: int32 */
+            version: number | string;
+            state: string;
+            expectedBankBin: string;
+            expectedBankAccountMasked: string;
+            expectedBankName: null | string;
+            /** Format: date-time */
+            verifiedAt: null | string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        SellerPaymentDetailResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            sellerId: string;
+            /** Format: uuid */
+            channelId: null | string;
+            /** Format: int32 */
+            channelVersion: null | number | string;
+            /** Format: int64 */
+            orderCode: null | number | string;
+            /** Format: int64 */
+            amount: number | string;
+            status: string;
+            purpose: string;
+            gateway: string;
+            gatewayTxnId: null | string;
+            receiverSnapshotMasked: unknown;
+            /** Format: date-time */
+            paidAt: null | string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            reconciled: boolean;
+            orders: components["schemas"]["CheckoutOrderResponse"][];
+        };
+        SellerPaymentListItem: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            orderCode: null | number | string;
+            /** Format: int64 */
+            amount: number | string;
+            status: string;
+            /** Format: date-time */
+            paidAt: null | string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: int32 */
+            channelVersion: null | number | string;
+            receiverAccountMasked: null | string;
+            /** Format: uuid */
+            checkoutId: null | string;
+        };
+        SellerPaymentsListResponse: {
+            payments: components["schemas"]["SellerPaymentListItem"][];
+            /** Format: int32 */
+            totalCount: number | string;
+            /** Format: int32 */
+            page: number | string;
+            /** Format: int32 */
+            pageSize: number | string;
+        };
+        SellerRefundDetailResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            orderId: string;
+            orderCode: string;
+            /** Format: int64 */
+            amount: number | string;
+            status: string;
+            reason: null | string;
+            /** Format: date-time */
+            createdAt: string;
+            isApproved: boolean;
+            canAccessBank: boolean;
+            canSubmitTransfer: boolean;
+            submission: null | components["schemas"]["SellerRefundSubmissionDetail"];
+        };
+        SellerRefundPageResponse: {
+            items: components["schemas"]["SellerRefundSummary"][];
+            /** Format: int32 */
+            page: number | string;
+            /** Format: int32 */
+            pageSize: number | string;
+            hasMore: boolean;
+        };
+        SellerRefundSubmissionDetail: {
+            /** Format: uuid */
+            id: string;
+            providerReference: string;
+            /** Format: date-time */
+            transferredAt: string;
+            status: string;
+            note: null | string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: uuid */
+            reviewedBy: null | string;
+            /** Format: date-time */
+            reviewedAt: null | string;
+        };
+        SellerRefundSummary: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            orderId: string;
+            orderCode: string;
+            /** Format: int64 */
+            amount: number | string;
+            status: string;
+            submissionStatus: null | string;
+            reason: null | string;
+            /** Format: date-time */
+            createdAt: string;
+            isApproved: boolean;
+            /** Format: date-time */
+            transferredAt: null | string;
+        };
+        SellerRefundTransferSubmissionResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            refundId: string;
+            providerReference: string;
+            status: string;
+            /** Format: date-time */
+            transferredAt: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        SellerSalesReportResponse: {
+            /** Format: uuid */
+            sellerId: string;
+            /** Format: date-time */
+            from: null | string;
+            /** Format: date-time */
+            to: null | string;
+            /** Format: int64 */
+            grossPaid: number | string;
+            /** Format: int64 */
+            totalRefunded: number | string;
+            /** Format: int64 */
+            netReceipts: number | string;
+            /** Format: int32 */
+            paidOrders: number | string;
+            /** Format: int32 */
+            unclaimedOrders: number | string;
+            /** Format: int64 */
+            pendingAmount: number | string;
+            byKiosk: components["schemas"]["KioskSalesSummary"][];
         };
         SellerSlotResponse: {
             /** Format: uuid */
@@ -12206,6 +14200,19 @@ export interface components {
             page: number | string;
             hasMore: boolean;
         };
+        SellerSubmitTransferRequest: {
+            /** Format: int64 */
+            amount: number | string;
+            currency: string;
+            bankName: string;
+            bankHolder: string;
+            accountNumber: string;
+            providerReference: string;
+            /** Format: date-time */
+            transferredAt: string;
+            evidenceTicket: string;
+            note?: null | string;
+        };
         SessionResponse: {
             /** Format: uuid */
             id: string;
@@ -12244,6 +14251,18 @@ export interface components {
         };
         SetSellerToneRequest: {
             p_tone: string;
+        };
+        ShopLoyaltyBalanceItem: {
+            /** Format: uuid */
+            sellerId: string;
+            shopName: string;
+            /** Format: int64 */
+            balance: number | string;
+            /** Format: int64 */
+            debt: number | string;
+            loyaltyEnabled: boolean;
+            /** Format: double */
+            earnRatePercent: number | string;
         };
         StaffDeliveryScope: {
             /** Format: uuid */
@@ -12537,6 +14556,9 @@ export interface components {
         UpdateAccountStatusRequest: {
             status: string;
         };
+        UpdateChannelStatusRequest: {
+            status: string;
+        };
         UpdateKioskLocationRequest: {
             address: null | string;
             /** Format: double */
@@ -12570,6 +14592,9 @@ export interface components {
             widthCm: number | string;
             /** Format: double */
             heightCm: number | string;
+        };
+        UpdateSellerLoyaltySettingsRequest: {
+            enabled: boolean;
         };
         UpdateSellerShopRequest: {
             shopName: string;

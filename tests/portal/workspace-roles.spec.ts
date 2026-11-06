@@ -259,8 +259,8 @@ test.describe('FloraBot Identity Foundation - Workspace and Roles', () => {
     await page.goto('/seller');
     await expect(page).toHaveURL(/\/staff$/);
 
-    // Test direct owner wallet redirected to /staff
-    await page.goto('/seller/wallet');
+    // Test direct owner commerce redirected to /staff
+    await page.goto('/seller/commerce');
     await expect(page).toHaveURL(/\/staff$/);
 
     // Test direct admin route redirected to /staff

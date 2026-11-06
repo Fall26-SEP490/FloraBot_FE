@@ -454,9 +454,10 @@ export default function AdminWithdrawals() {
   });
   return (
     <section className="admin-withdrawals" aria-labelledby="admin-withdrawals-title">
-      <h2 id="admin-withdrawals-title">Yêu cầu rút tiền của shop</h2>
+      <h2 id="admin-withdrawals-title">Yêu cầu rút tiền tồn đọng</h2>
       <p>
-        Duyệt và chi bằng hai tài khoản admin khác nhau. Mỗi khoản chi cần chứng từ để đối chiếu.
+        Chỉ xử lý yêu cầu từ ví giao dịch cũ. Đơn hoa mới được thanh toán trực tiếp cho seller.
+        Duyệt và chi bằng hai tài khoản admin khác nhau; mỗi khoản chi cần chứng từ.
       </p>
       <AdminFilterBar
         actions={

@@ -12,7 +12,6 @@ const sections = [
   ['staff', 'Nhân viên shop', '.account-management-workspace'],
   ['chats', 'Tin nhắn khách hàng', '.staff-chat-section'],
   ['staff-chats', 'Tin nhắn nhân viên', '.staff-chat-section'],
-  ['wallet', 'Ví & rút tiền', '#wallet'],
   ['subscriptions', 'Gói thuê', '#subscriptions'],
 ] as const;
 for (const width of [390, 1440])
@@ -50,9 +49,11 @@ for (const width of [390, 1440])
     if (width === 390)
       await page.getByRole('button', { name: 'Mở danh mục quản lý', exact: true }).click();
     const nav = page.getByRole('navigation', { name: 'Điều hướng quản lý' });
-    await expect(nav.getByRole('link')).toHaveCount(12);
-    await nav.getByLabel('Tìm chức năng cửa hàng').fill('rut tien');
-    await expect(nav.getByRole('link', { name: 'Ví & rút tiền', exact: true })).toBeVisible();
+    await expect(nav.getByRole('link')).toHaveCount(15);
+    await nav.getByLabel('Tìm chức năng cửa hàng').fill('thanh toan');
+    await expect(
+      nav.getByRole('link', { name: 'Thanh toán & doanh số', exact: true }),
+    ).toBeVisible();
     await expect(nav.getByRole('link', { name: 'Mẫu hoa', exact: true })).toHaveCount(0);
     await nav.getByRole('button', { name: 'Xóa tìm chức năng' }).click();
     await nav.getByLabel('Tìm chức năng cửa hàng').fill('nap hoa');

@@ -1,0 +1,95 @@
+import { expect, test } from '@playwright/test';
+
+const sellerId = '20000000-0000-0000-0000-000000000099';
+
+test.beforeEach(async ({ page }) => {
+  await page.route('**/api/auth/me', (route) =>
+    route.fulfill({
+      json: {
+        id: 'seller-user',
+        name: 'Shop hoa',
+        role: 'SELLER',
+        sellerId,
+        sellerStatus: 'ACTIVE',
+        packageExpiresAt: '2099-12-31',
+      },
+    }),
+  );
+  await page.route(`**/api/sellers/${sellerId}/reports/sales`, (route) =>
+    route.fulfill({
+      json: {
+        sellerId,
+        from: null,
+        to: null,
+        grossPaid: 200000,
+        totalRefunded: 0,
+        netReceipts: 200000,
+        paidOrders: 1,
+        unclaimedOrders: 0,
+        pendingAmount: 0,
+        byKiosk: [],
+      },
+    }),
+  );
+  await page.route(`**/api/sellers/${sellerId}/payments?*`, (route) =>
+    route.fulfill({
+      json: {
+        payments: [],
+        totalCount: 0,
+        page: 1,
+        pageSize: 10,
+      },
+    }),
+  );
+  await page.route(`**/api/sellers/${sellerId}/loyalty-settings`, (route) =>
+    route.fulfill({
+      json: {
+        sellerId,
+        enabled: false,
+        earnRatePercent: 1,
+      },
+    }),
+  );
+});
+
+test('Old wallet URL opens direct seller receipts without withdrawal actions', async ({ page }) => {
+  let walletCalls = 0;
+  await page.route(`**/api/sellers/${sellerId}/wallet`, (route) => {
+    walletCalls++;
+    return route.abort();
+  });
+  await page.route(`**/api/sellers/${sellerId}/payment-channel`, (route) =>
+    route.fulfill({ status: 404, json: { message: 'No channel' } }),
+  );
+  await page.goto('/seller/wallet');
+  await expect(page).toHaveURL(/\/seller\/commerce$/);
+  await expect(page.getByRole('heading', { name: 'Thanh toán & doanh số' })).toBeVisible();
+  await expect(page.getByText('Chưa có kênh PayOS của shop.')).toBeVisible();
+  await expect(page.getByText('200.000 đ').first()).toBeVisible();
+  await expect(page.getByRole('button', { name: /rút tiền/i })).toHaveCount(0);
+  expect(walletCalls).toBe(0);
+});
+
+test('Seller sees own active channel and shop receipts', async ({ page }) => {
+  await page.route(`**/api/sellers/${sellerId}/payment-channel`, (route) =>
+    route.fulfill({
+      json: {
+        sellerId,
+        version: 1,
+        state: 'ACTIVE',
+        expectedBankBin: '9704',
+        expectedBankAccountMasked: '***1234',
+        expectedBankName: 'Ngân hàng thử nghiệm',
+        verifiedAt: '2026-11-05T00:00:00Z',
+        createdAt: '2026-11-05T00:00:00Z',
+        updatedAt: '2026-11-05T00:00:00Z',
+      },
+    }),
+  );
+  await page.goto('/seller/commerce');
+  await expect(page.getByText('Đã kích hoạt')).toBeVisible();
+  await expect(page.getByText('***1234')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Tiền bán hoa nhận trực tiếp' })).toBeVisible();
+  await expect(page.getByText('200.000 đ').first()).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Ví giao dịch cũ' })).toHaveCount(0);
+});

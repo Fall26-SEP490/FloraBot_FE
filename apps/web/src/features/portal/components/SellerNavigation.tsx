@@ -8,7 +8,7 @@ import {
   Users,
   ListChecks,
   MapPin,
-  Wallet,
+  Banknote,
   Store,
   Package,
   MessageSquare,
@@ -45,8 +45,11 @@ const groups = [
   {
     title: 'Tiền & gói thuê',
     items: [
-      ['wallet', Wallet],
+      ['commerce', Banknote],
+      ['refunds', Banknote],
+      ['seasonal', ClipboardList],
       ['subscriptions', Store],
+      ['terminations', Store],
     ],
   },
 ] as const;
@@ -149,7 +152,7 @@ export default function SellerNavigation({
       ))}
       {matches.length === 0 && (
         <p className="seller-nav-empty" role="status">
-          Không tìm thấy mục phù hợp. Thử “báo giá”, “nạp hoa” hoặc “rút tiền”.
+          Không tìm thấy mục phù hợp. Thử “báo giá”, “nạp hoa” hoặc “thanh toán”.
         </p>
       )}
     </>

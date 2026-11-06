@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import {
   ArrowRight,
+  Banknote,
   Boxes,
   Check,
   ClipboardList,
@@ -11,10 +12,9 @@ import {
   MessageSquare,
   Store,
   Users,
-  Wallet,
 } from '@florabot/ui';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
-import { request, type Session } from '@/shared/lib/api';
+import { ApiError, request, type Session } from '@/shared/lib/api';
 import type { OrderFilter, OrderPage, WebOrder } from '../orders/orders.types';
 import {
   needsOrderAction,
@@ -87,10 +87,25 @@ export default function SellerOverview({ session }: { session: Session }) {
       return data;
     },
   });
-  const wallet = useQuery({
+  const sales = useQuery({
     ...options,
-    queryKey: ['dashboard-wallet', session.id, base],
-    queryFn: () => request<components['schemas']['WalletResponse']>(`${base}/wallet`),
+    queryKey: ['seller-direct-sales', session.sellerId],
+    queryFn: () =>
+      request<components['schemas']['SellerSalesReportResponse']>(`${base}/reports/sales`),
+  });
+  const channel = useQuery({
+    ...options,
+    queryKey: ['seller-payment-channel', session.sellerId],
+    queryFn: async () => {
+      try {
+        return await request<components['schemas']['SellerPaymentChannelResponse']>(
+          `${base}/payment-channel`,
+        );
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 404) return null;
+        throw error;
+      }
+    },
   });
   const staff = useQuery({
     ...options,
@@ -128,7 +143,7 @@ export default function SellerOverview({ session }: { session: Session }) {
     },
   });
   const [view, setView] = useState<'attention' | 'all'>('attention');
-  const queries = [orders, products, wallet, staff, inbox];
+  const queries = [orders, products, sales, channel, staff, inbox];
   const busy = queries.some((query) => query.isFetching);
   const items = orders.data?.items ?? [];
   const actionItems = items.filter((row) => needsOrderAction(row, 'seller'));
@@ -390,38 +405,36 @@ export default function SellerOverview({ session }: { session: Session }) {
           </section>
         </div>
         <aside className={styles.aside} aria-label="Thông tin vận hành cửa hàng">
-          <section className={styles.card} aria-labelledby="seller-wallet-title">
+          <section className={styles.card} aria-labelledby="seller-payments-title">
             <div className={styles.heading}>
-              <h2 id="seller-wallet-title">Tiền bán hoa</h2>
-              <Wallet size={20} aria-hidden="true" />
+              <h2 id="seller-payments-title">Thanh toán của shop</h2>
+              <Banknote size={20} aria-hidden="true" />
             </div>
             <dl className={styles.balances}>
               <div>
-                <dt>Có thể rút</dt>
+                <dt>Đã thanh toán</dt>
                 <dd>
-                  {wallet.isPending
-                    ? '…'
-                    : wallet.isError
-                      ? '—'
-                      : currency(wallet.data?.balance?.availableBalance)}
+                  {sales.isPending ? '…' : sales.isError ? '—' : currency(sales.data?.grossPaid)}
                 </dd>
               </div>
               <div>
-                <dt>Đang chờ</dt>
+                <dt>Thực nhận sau hoàn</dt>
                 <dd>
-                  {wallet.isPending
-                    ? '…'
-                    : wallet.isError
-                      ? '—'
-                      : currency(wallet.data?.balance?.pendingBalance)}
+                  {sales.isPending ? '…' : sales.isError ? '—' : currency(sales.data?.netReceipts)}
                 </dd>
               </div>
             </dl>
-            {wallet.isSuccess && !wallet.data.balance && (
-              <p className={styles.footnote}>Chưa ghi nhận số dư ví.</p>
-            )}
-            <Link className={styles.textLink} href="/seller/wallet">
-              Xem ví và yêu cầu rút <ArrowRight size={16} aria-hidden="true" />
+            <p className={styles.footnote}>
+              {channel.isPending
+                ? 'Đang kiểm tra kênh nhận tiền…'
+                : channel.isError
+                  ? 'Chưa tải được trạng thái kênh nhận tiền.'
+                  : channel.data?.state === 'ACTIVE'
+                    ? 'Kênh PayOS của shop đang hoạt động.'
+                    : 'Kênh PayOS chưa sẵn sàng nhận thanh toán mới.'}
+            </p>
+            <Link className={styles.textLink} href="/seller/commerce">
+              Xem giao dịch và kênh thanh toán <ArrowRight size={16} aria-hidden="true" />
             </Link>
           </section>
           <section className={styles.card} aria-labelledby="seller-team-title">

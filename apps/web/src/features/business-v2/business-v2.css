@@ -1,0 +1,147 @@
+.business-stack {
+  display: grid;
+  gap: 1.25rem;
+}
+.business-panel {
+  background: #fff;
+  border: 1px solid #dbe5da;
+  border-radius: 18px;
+  padding: clamp(1rem, 2vw, 1.5rem);
+  color: #173d2c;
+}
+.business-panel h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.35rem;
+}
+.business-panel p {
+  line-height: 1.55;
+}
+.business-heading,
+.business-inline,
+.business-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.business-heading {
+  margin-bottom: 1.25rem;
+}
+.business-heading p {
+  margin: 0;
+  color: #5d7367;
+}
+.business-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+.business-facts > div {
+  border: 1px solid #e0e8df;
+  background: #f8faf7;
+  border-radius: 12px;
+  padding: 0.9rem;
+  min-width: 0;
+}
+.business-facts span {
+  display: block;
+  color: #64796a;
+  font-size: 0.85rem;
+  margin-bottom: 0.3rem;
+}
+.business-facts strong {
+  overflow-wrap: anywhere;
+}
+.business-note {
+  border-left: 3px solid #b58a47;
+  background: #fbf8ee;
+  border-radius: 0 8px 8px 0;
+  padding: 0.75rem 1rem;
+}
+.business-table-scroll {
+  overflow-x: auto;
+}
+.business-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+.business-table th,
+.business-table td {
+  border-bottom: 1px solid #e0e8df;
+  padding: 0.75rem 0.5rem;
+  white-space: nowrap;
+}
+.business-table th {
+  color: #4d6656;
+  font-size: 0.85rem;
+}
+.business-pagination {
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+.business-form {
+  display: grid;
+  gap: 0.8rem;
+  max-width: 36rem;
+}
+.business-form label {
+  font-weight: 600;
+}
+.business-form input,
+.business-form select,
+.business-form textarea {
+  width: 100%;
+  min-height: 2.7rem;
+  border: 1px solid #cbdacb;
+  border-radius: 9px;
+  background: white;
+  padding: 0.65rem 0.8rem;
+  color: #173d2c;
+}
+.business-form input[type='checkbox'] {
+  width: auto;
+  min-height: 0;
+  margin-right: 0.5rem;
+}
+.business-form textarea {
+  min-height: 6rem;
+  resize: vertical;
+}
+.business-card-list {
+  display: grid;
+  gap: 0.85rem;
+}
+.business-card {
+  border: 1px solid #e0e8df;
+  border-radius: 12px;
+  padding: 1rem;
+}
+.business-card h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1.05rem;
+}
+.business-card p {
+  margin: 0.35rem 0;
+}
+.business-card summary {
+  cursor: pointer;
+  color: #20553b;
+  font-weight: 600;
+}
+.business-card details {
+  margin-top: 0.75rem;
+}
+.business-refund-detail {
+  padding-top: 1rem;
+}
+@media (max-width: 600px) {
+  .business-panel {
+    border-radius: 12px;
+  }
+  .business-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

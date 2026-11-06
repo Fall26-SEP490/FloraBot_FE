@@ -69,9 +69,12 @@ const SellerAccessories = dynamic(() => import('../../inventory/SellerAccessorie
   loading: () => <p role="status">Đang tải danh mục phụ kiện…</p>,
 });
 
-const Wallet = dynamic(() => import('../../finance/components/wallet/Wallet'), {
-  loading: () => <p role="status">Đang tải ví và giao dịch…</p>,
-});
+const SellerCommerce = dynamic(() => import('../../business-v2/SellerCommerce'));
+const SellerSeasonal = dynamic(() => import('../../business-v2/SellerSeasonal'));
+const SellerTerminations = dynamic(() =>
+  import('../../business-v2/KioskTerminations').then((mod) => mod.SellerTerminations),
+);
+const SellerRefunds = dynamic(() => import('../../business-v2/SellerRefunds'));
 
 const StaffTasks = dynamic(() => import('../../task-management/TaskManagement'), {
   loading: () => <p role="status">Đang tải danh sách công việc…</p>,
@@ -262,7 +265,10 @@ export default function SellerWorkspace({ section = 'overview' }: { section?: st
           {section === 'subscriptions' && <Subscriptions session={session.data} />}
           {section === 'stock' && <SellerStock session={session.data} />}
           {section === 'accessories' && <SellerAccessories session={session.data} />}
-          {section === 'wallet' && <Wallet session={session.data} />}
+          {section === 'commerce' && <SellerCommerce session={session.data} />}
+          {section === 'seasonal' && <SellerSeasonal session={session.data} />}
+          {section === 'terminations' && <SellerTerminations session={session.data} />}
+          {section === 'refunds' && <SellerRefunds session={session.data} />}
           {section === 'tasks' && session.data.sellerId && (
             <StaffTasks
               actorRole="SELLER"

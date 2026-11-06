@@ -8,6 +8,7 @@ import { Button, Check, MapPin, MessageSquare } from '@florabot/ui';
 import { ApiError, queryClient, request, sessionQuery } from '@/shared/lib/api';
 import type { CatalogItem, CatalogResponse } from '../catalog.types';
 import { canOrderOnWeb, formatPrice, isWalkIn } from '../catalog.utils';
+import type { components } from '../../../../../../packages/contracts/src/generated/api';
 
 interface FlowerRequestFormProps {
   item: CatalogItem;
@@ -58,6 +59,18 @@ export function FlowerRequestForm({
   const eligibleKiosks = kiosks.data ?? [item];
   const selectedKiosk = eligibleKiosks.find((entry) => entry.kioskId === kioskId);
   const [pickup, setPickup] = useState('');
+  const pickupDateForEstimate = pickup ? new Date(pickup) : null;
+  const availability = useQuery({
+    queryKey: ['preorder-availability', kioskId, pickup],
+    enabled: Boolean(
+      kioskId && pickupDateForEstimate && Number.isFinite(pickupDateForEstimate.getTime()),
+    ),
+    queryFn: () =>
+      request<components['schemas']['KioskPreorderAvailabilityResponse']>(
+        `/kiosks/${kioskId}/preorder-availability?pickupAt=${encodeURIComponent(new Date(pickup).toISOString())}`,
+      ),
+    staleTime: 15_000,
+  });
   const [instructions, setInstructions] = useState('');
   const [confirmed, setConfirmed] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -99,6 +112,10 @@ export function FlowerRequestForm({
     setBriefError('');
     if (!selectedKiosk || kiosks.isPending || kiosks.isError) {
       setError('Chưa xác minh được tủ nhận hoa. Hãy tải lại danh sách tủ.');
+      return;
+    }
+    if (availability.data && !availability.data.available) {
+      setError(availability.data.message || 'Tủ nhận hiện không còn sức chứa đặt trước.');
       return;
     }
     const pickupDate = new Date(pickup);
@@ -304,6 +321,22 @@ export function FlowerRequestForm({
                 id={`pickup-error-${item.productId}`}
               >
                 {pickupError}
+              </p>
+            )}
+            {availability.isFetching && <p role="status">Đang kiểm tra sức chứa tủ…</p>}
+            {availability.data && (
+              <p
+                className={availability.data.available ? 'quiet' : 'flower-request-field-error'}
+                role="status"
+              >
+                {availability.data.available
+                  ? `Ước tính còn ${availability.data.availablePreorderCapacity} ô đặt trước. Sức chứa sẽ được xác nhận khi bạn chấp nhận báo giá.`
+                  : availability.data.message}
+              </p>
+            )}
+            {availability.isError && (
+              <p role="status" className="quiet">
+                Chưa kiểm tra được sức chứa. Hệ thống sẽ xác nhận lại khi bạn duyệt báo giá.
               </p>
             )}
           </div>

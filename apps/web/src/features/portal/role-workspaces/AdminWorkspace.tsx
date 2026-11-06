@@ -96,6 +96,7 @@ const AdminReconciliation = dynamic(
 const AdminReports = dynamic(() => import('../../dashboard/components/AdminReports'), {
   loading: () => <p role="status">Đang tải báo cáo tổng quan…</p>,
 });
+const AdminPaymentChannels = dynamic(() => import('../../business-v2/AdminPaymentChannels'));
 
 function PortalUpdates() {
   useEffect(startPortalUpdates, []);
@@ -234,6 +235,7 @@ export default function AdminWorkspace({ section = 'overview' }: { section?: str
           {section === 'incidents' && <AdminIncidents />}
           {section === 'complaints' && <AdminComplaints />}
           {section === 'refunds' && <AdminRefunds />}
+          {section === 'payment-channels' && <AdminPaymentChannels />}
           {section === 'kiosk-refunds' && (
             <AdminKioskRefunds
               key={`${session.data.id}:${session.data.role}`}

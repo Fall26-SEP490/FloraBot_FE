@@ -67,15 +67,20 @@ for (const role of ['ADMIN', 'SELLER', 'SELLER_STAFF'] as const) {
               { id: 'p2', status: 'DRAFT' },
             ],
           });
-        if (path.endsWith('/wallet'))
+        if (path.endsWith('/reports/sales'))
           return route.fulfill({
             json: {
-              balance: { availableBalance: 1250000, pendingBalance: 350000 },
-              entries: [],
-              bankConfigured: true,
-              withdrawals: [],
+              grossPaid: 1250000,
+              totalRefunded: 0,
+              netReceipts: 1250000,
+              paidOrders: 3,
+              unclaimedOrders: 0,
+              pendingAmount: 0,
+              byKiosk: [],
             },
           });
+        if (path.endsWith('/payment-channel'))
+          return route.fulfill({ status: 404, json: { message: 'Chưa có kênh PayOS.' } });
         if (path.endsWith('/preorders'))
           return route.fulfill({
             json: {
@@ -107,7 +112,7 @@ for (const role of ['ADMIN', 'SELLER', 'SELLER_STAFF'] as const) {
       }
       if (role === 'ADMIN')
         await expect(page.getByText('Cửa ô A02 chưa đóng sau lượt nhận hoa')).toBeVisible();
-      if (role === 'SELLER') await expect(page.getByText(/1\.250\.000/)).toBeVisible();
+      if (role === 'SELLER') await expect(page.getByText(/1\.250\.000/).first()).toBeVisible();
       if (role === 'SELLER_STAFF')
         await expect(
           page.getByRole('heading', { name: 'Giao hoa · Tủ Đại học FPT' }),
@@ -187,7 +192,7 @@ test('One failed overview feed stays recoverable without hiding other data', asy
   await expect(panel.getByText('Chưa có mục nào trong danh sách')).toBeVisible();
 });
 
-test('Empty wallet does not fabricate a financial balance', async ({ page }) => {
+test('Missing PayOS channel does not fabricate a payment balance', async ({ page }) => {
   await page.route('**/hub/**', (route) => route.fulfill({ status: 503 }));
   await page.route('**/api/auth/me', (route) =>
     route.fulfill({
@@ -205,14 +210,17 @@ test('Empty wallet does not fabricate a financial balance', async ({ page }) => 
   await page.route('**/api/sellers/shop/preorders?*', (route) =>
     route.fulfill({ json: { items: [], hasMore: false } }),
   );
-  await page.route('**/api/sellers/shop/wallet', (route) =>
-    route.fulfill({ json: { balance: null } }),
+  await page.route('**/api/sellers/shop/reports/sales', (route) =>
+    route.fulfill({ json: { grossPaid: 0, netReceipts: 0, totalRefunded: 0, paidOrders: 0 } }),
+  );
+  await page.route('**/api/sellers/shop/payment-channel', (route) =>
+    route.fulfill({ status: 404, json: { message: 'Chưa có kênh thanh toán.' } }),
   );
   await page.goto('/seller');
-  await expect(page.getByText('Chưa ghi nhận số dư ví.')).toBeVisible();
+  await expect(page.getByText('Kênh PayOS chưa sẵn sàng nhận thanh toán mới.')).toBeVisible();
   await expect(
-    page.getByRole('region', { name: 'Tiền bán hoa', exact: true }).getByText(/0\s*₫/),
-  ).toHaveCount(0);
+    page.getByRole('link', { name: /Xem giao dịch và kênh thanh toán/ }),
+  ).toHaveAttribute('href', '/seller/commerce');
   await page.setViewportSize({ width: 320, height: 1000 });
   await page.addStyleTag({ content: ':root { font-size: 36px !important; }' });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
