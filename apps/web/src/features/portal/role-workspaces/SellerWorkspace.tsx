@@ -140,6 +140,34 @@ function PortalUpdates() {
   return null;
 }
 
+const sellerHubGroups: readonly (readonly [string, string][])[] = [
+  [
+    ['chats', 'Khách hàng'],
+    ['staff-chats', 'Nội bộ nhân viên'],
+  ],
+  [
+    ['products', 'Mẫu hoa'],
+    ['accessories', 'Phụ kiện đi kèm'],
+  ],
+  [
+    ['stock', 'Hoa tại tủ'],
+    ['kiosks', 'Vị trí kiosk'],
+  ],
+  [
+    ['tasks', 'Giao việc'],
+    ['staff', 'Nhân viên shop'],
+  ],
+  [
+    ['commerce', 'Doanh số & PayOS'],
+    ['refunds', 'Hoàn tiền'],
+    ['seasonal', 'Dự báo theo mùa'],
+  ],
+  [
+    ['subscriptions', 'Gói thuê hiện tại'],
+    ['terminations', 'Chấm dứt thuê'],
+  ],
+];
+
 export default function SellerWorkspace({ section = 'overview' }: { section?: string }) {
   const { t } = useTranslation();
   const session = useQuery({ ...sessionQuery, refetchInterval: 60_000 });
@@ -175,6 +203,7 @@ export default function SellerWorkspace({ section = 'overview' }: { section?: st
         <Link href={accountPath(session.data.role)}>Về khu vực của bạn</Link>
       </main>
     );
+  const hubTabs = sellerHubGroups.find((group) => group.some(([key]) => key === section));
   return (
     <>
       <WorkspaceHeader
@@ -187,71 +216,34 @@ export default function SellerWorkspace({ section = 'overview' }: { section?: st
         <WorkspaceNavigation key={section} workspaceRole="SELLER" section={section} />
         <main id="main" className="workspace dashboard-content seller-content">
           <PortalUpdates />
-          <nav className="seller-breadcrumb" aria-label="Vị trí hiện tại">
-            {section === 'overview' ? (
-              <span>Cửa hàng của bạn</span>
-            ) : (
-              <>
-                <Link href="/seller">Tổng quan cửa hàng</Link>
-                <span aria-hidden="true">/</span>
-                <span aria-current="page">
-                  {workspaceSections.SELLER.find(([key]) => key === section)?.[1]}
-                </span>
-              </>
-            )}
-          </nav>
-          <div className="dashboard-page-heading">
-            <div>
+          <div className="dashboard-page-heading seller-page-bar">
+            <div className="seller-page-title-group">
               <h1>
                 {section === 'overview'
                   ? 'Tổng quan cửa hàng'
                   : workspaceSections['SELLER'].find(([key]) => key === section)?.[1]}
               </h1>
-              <p>
-                {section === 'overview'
-                  ? `Chào ${session.data.name}, xem việc cần làm và xử lý đơn của shop tại đây.`
-                  : workspaceSections['SELLER'].find(([key]) => key === section)?.[2]}
-              </p>
+              {hubTabs && (
+                <nav className="seller-hub-tabs" aria-label="Chuyển mục liên quan">
+                  {hubTabs.map(([tabKey, tabLabel]) => (
+                    <Link
+                      key={tabKey}
+                      href={`/seller/${tabKey}`}
+                      className="seller-hub-tab"
+                      aria-current={section === tabKey ? 'page' : undefined}
+                    >
+                      {tabLabel}
+                    </Link>
+                  ))}
+                </nav>
+              )}
             </div>
+            <SellerGuide key={section} section={section} />
           </div>
           <SubscriptionBanner session={session.data} />
-          {!['overview', 'orders'].includes(section) && (
-            <SellerGuide key={section} section={section} />
-          )}
-          {section === 'overview' && (
-            <>
-              <DashboardOverview session={session.data} />
-              <SellerGuide section="overview" />
-              <details className="workspace-profile">
-                <summary>Thông tin tài khoản và quyền truy cập</summary>
-                <dl className="account-details">
-                  <div>
-                    <dt>Tài khoản</dt>
-                    <dd>{session.data.name}</dd>
-                  </div>
-                  <div>
-                    <dt>Vai trò</dt>
-                    <dd>Chủ shop</dd>
-                  </div>
-                  <div>
-                    <dt>Ngày hết hạn gói</dt>
-                    <dd>
-                      {session.data.packageExpiresAt
-                        ? new Date(
-                            `${session.data.packageExpiresAt}T00:00:00+07:00`,
-                          ).toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })
-                        : 'Chưa có kỳ thuê đang hoạt động'}
-                    </dd>
-                  </div>
-                </dl>
-              </details>
-            </>
-          )}
+          {section === 'overview' && <DashboardOverview session={session.data} />}
           {section === 'orders' && (
-            <>
-              <WebRequests mode="seller" sellerId={session.data.sellerId || undefined} />
-              <SellerGuide section="orders" />
-            </>
+            <WebRequests mode="seller" sellerId={session.data.sellerId || undefined} />
           )}
           {section === 'chats' && <SellerChatSection session={session.data} />}
           {section === 'staff-chats' && (

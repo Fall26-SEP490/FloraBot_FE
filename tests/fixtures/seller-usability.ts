@@ -140,6 +140,43 @@ export async function setupSellerUsability(page: Page) {
         ]),
       });
     if (path.endsWith('/photos')) return route.fulfill({ json: paged([]) });
+    if (path === `/sellers/${shopId}/reports/sales`)
+      return route.fulfill({
+        json: {
+          sellerId: shopId,
+          from: null,
+          to: null,
+          grossPaid: 1350000,
+          totalRefunded: 100000,
+          netReceipts: 1250000,
+          paidOrders: 3,
+          unclaimedOrders: 0,
+          pendingAmount: 0,
+          byKiosk: [],
+        },
+      });
+    if (path === `/sellers/${shopId}/payment-channel`)
+      return route.fulfill({
+        json: {
+          sellerId: shopId,
+          version: 1,
+          state: 'ACTIVE',
+          expectedBankBin: '9704',
+          expectedBankAccountMasked: '***1234',
+          expectedBankName: 'Vietcombank',
+        },
+      });
+    if (path === `/sellers/${shopId}/payments`) return route.fulfill({ json: paged([]) });
+    if (path === `/sellers/${shopId}/loyalty-settings`)
+      return route.fulfill({
+        json: {
+          sellerId: shopId,
+          enabled: true,
+          earnRatePercent: 1,
+          minRedeemPoints: 10000,
+          maxRedeemPercent: 20,
+        },
+      });
     if (path === `/sellers/${shopId}/wallet`)
       return route.fulfill({
         json: {
