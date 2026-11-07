@@ -96,7 +96,9 @@ const AdminReconciliation = dynamic(
 const AdminReports = dynamic(() => import('../../dashboard/components/AdminReports'), {
   loading: () => <p role="status">Đang tải báo cáo tổng quan…</p>,
 });
-const AdminPaymentChannels = dynamic(() => import('../../business-v2/AdminPaymentChannels'));
+const AdminPaymentChannels = dynamic(
+  () => import('../../finance/components/payment-channels/AdminPaymentChannels'),
+);
 
 function PortalUpdates() {
   useEffect(startPortalUpdates, []);

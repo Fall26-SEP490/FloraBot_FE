@@ -7,7 +7,14 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { Button, CircleAlert, Check, Eye, EyeOff, ArrowRight, RotateCcw } from '@florabot/ui';
-import { ApiError, logoutSession, queryClient, sessionQuery, type Session } from '@/shared/lib/api';
+import {
+  ApiError,
+  logoutSession,
+  queryClient,
+  request,
+  sessionQuery,
+  type Session,
+} from '@/shared/lib/api';
 import { getRoleLabel } from '@/features/portal/config/roleRoutes';
 import { workspaceBase } from '@/features/portal/config/workspaceSections';
 import { ConfirmDialog, Modal } from '../../shared/components/Modal';
@@ -34,6 +41,215 @@ import { phonePattern, emailPattern, asciiAlphanumeric, hasControlChars } from '
 import { basicPayload, basicValues, validBirthDate, vietnamToday } from './profile.utils';
 import { profileSections, useProfileNavigation } from './useProfileNavigation';
 import { useProfileDraftGuard } from './useProfileDraftGuard';
+
+interface SellerShopProfileData {
+  id: string;
+  shopName: string;
+  phone: string | null;
+  contactEmail: string | null;
+  address: string | null;
+  status: string;
+}
+
+function SellerShopProfileSection() {
+  const [open, setOpen] = useState(false);
+  const [shopNameDraft, setShopNameDraft] = useState<string | null>(null);
+  const [phoneDraft, setPhoneDraft] = useState<string | null>(null);
+  const [contactEmailDraft, setContactEmailDraft] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState('');
+  const [error, setError] = useState('');
+
+  const shopQuery = useQuery({
+    queryKey: ['seller-shop-profile'],
+    queryFn: () => request<SellerShopProfileData>('/me/shop'),
+    enabled: open,
+  });
+
+  const shopName = shopNameDraft ?? shopQuery.data?.shopName ?? '';
+  const phone = phoneDraft ?? shopQuery.data?.phone ?? '';
+  const contactEmail = contactEmailDraft ?? shopQuery.data?.contactEmail ?? '';
+
+  async function handleSaveShop(event: React.FormEvent) {
+    event.preventDefault();
+    if (saving) return;
+    const trimmedName = shopName.trim();
+    const trimmedPhone = phone.trim();
+    const trimmedEmail = contactEmail.trim();
+    if (trimmedName.length < 2 || trimmedName.length > 120) {
+      setError('Tên cửa hàng phải từ 2 đến 120 ký tự.');
+      return;
+    }
+    setSaving(true);
+    setError('');
+    setNotice('');
+    try {
+      const updated = await request<SellerShopProfileData>(
+        '/me/shop',
+        {
+          shopName: trimmedName,
+          phone: trimmedPhone,
+          contactEmail: trimmedEmail,
+        },
+        true,
+        'PATCH',
+      );
+      queryClient.setQueryData(['seller-shop-profile'], updated);
+      setNotice('Đã cập nhật hồ sơ cửa hàng.');
+    } catch (cause) {
+      setError(cause instanceof ApiError ? cause.message : 'Chưa lưu được hồ sơ cửa hàng.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <section aria-labelledby="seller-shop-heading" className="profile-section">
+      <div className="profile-section-heading">
+        <h2 id="seller-shop-heading">Hồ sơ cửa hàng (Shop hoa)</h2>
+        <p>Quản lý tên hiển thị, số điện thoại kinh doanh và email liên hệ của shop.</p>
+      </div>
+      <details
+        className="profile-security-disclosure"
+        open={open}
+        onToggle={(e) => setOpen(e.currentTarget.open)}
+      >
+        <summary>Xem và cập nhật thông tin cửa hàng</summary>
+        {open && (
+          <div style={{ marginTop: '0.75rem' }}>
+            {shopQuery.isPending && <p role="status">Đang tải thông tin cửa hàng…</p>}
+            {shopQuery.isError && (
+              <p role="alert" className="profile-status-message profile-status-error">
+                {shopQuery.error instanceof ApiError
+                  ? shopQuery.error.message
+                  : 'Chưa tải được thông tin cửa hàng.'}
+              </p>
+            )}
+            {shopQuery.data && (
+              <form className="profile-form" onSubmit={(e) => void handleSaveShop(e)} noValidate>
+                <div className="profile-form-group">
+                  <label htmlFor="shop-profile-name">Tên cửa hàng *</label>
+                  <input
+                    id="shop-profile-name"
+                    type="text"
+                    maxLength={120}
+                    value={shopName}
+                    disabled={saving}
+                    onChange={(e) => setShopNameDraft(e.target.value)}
+                  />
+                </div>
+                <div className="profile-form-group">
+                  <label htmlFor="shop-profile-phone">Số điện thoại cửa hàng</label>
+                  <input
+                    id="shop-profile-phone"
+                    type="tel"
+                    maxLength={20}
+                    value={phone}
+                    disabled={saving}
+                    onChange={(e) => setPhoneDraft(e.target.value)}
+                  />
+                </div>
+                <div className="profile-form-group">
+                  <label htmlFor="shop-profile-email">Email liên hệ cửa hàng</label>
+                  <input
+                    id="shop-profile-email"
+                    type="email"
+                    maxLength={254}
+                    value={contactEmail}
+                    disabled={saving}
+                    onChange={(e) => setContactEmailDraft(e.target.value)}
+                  />
+                </div>
+                <div className="profile-form-group">
+                  <label htmlFor="shop-profile-address">Địa chỉ đăng ký (chỉ đọc)</label>
+                  <input
+                    id="shop-profile-address"
+                    type="text"
+                    readOnly
+                    disabled
+                    value={shopQuery.data.address || 'Theo vị trí kiosk'}
+                  />
+                </div>
+                {(error || notice) && (
+                  <p
+                    role={error ? 'alert' : 'status'}
+                    className={`profile-status-message ${error ? 'profile-status-error' : 'profile-status-success'}`}
+                  >
+                    {error || notice}
+                  </p>
+                )}
+                <div className="profile-actions">
+                  <Button type="submit" disabled={saving}>
+                    {saving ? 'Đang lưu…' : 'Lưu hồ sơ cửa hàng'}
+                  </Button>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
+      </details>
+    </section>
+  );
+}
+
+function CustomerCloseAccountSection({ onClosed }: { onClosed: () => void }) {
+  const [password, setPassword] = useState('');
+  const [closing, setClosing] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handleCloseAccount(event: React.FormEvent) {
+    event.preventDefault();
+    if (closing || !password) return;
+    setClosing(true);
+    setError('');
+    try {
+      await request('/account/close', { password }, false, 'POST');
+      onClosed();
+    } catch (cause) {
+      setError(
+        cause instanceof ApiError
+          ? cause.message
+          : 'Chưa thể đóng tài khoản lúc này. Vui lòng thử lại.',
+      );
+    } finally {
+      setClosing(false);
+    }
+  }
+
+  return (
+    <details className="profile-security-disclosure" style={{ marginTop: '1.25rem' }}>
+      <summary>Đóng tài khoản vĩnh viễn</summary>
+      <div className="profile-disclaimer-card" style={{ marginTop: '0.75rem' }}>
+        Tài khoản chỉ có thể đóng khi không còn đơn hàng đang xử lý, yêu cầu hoàn tiền, khiếu nại mở
+        hoặc hồ sơ thuê kiosk đang chờ. Sau khi đóng, toàn bộ phiên đăng nhập sẽ kết thúc.
+      </div>
+      {error && (
+        <p role="alert" className="profile-status-message profile-status-error">
+          {error}
+        </p>
+      )}
+      <form className="profile-form" onSubmit={(e) => void handleCloseAccount(e)} noValidate>
+        <div className="profile-form-group">
+          <label htmlFor="close-account-password">Nhập mật khẩu hiện tại để xác nhận đóng *</label>
+          <input
+            id="close-account-password"
+            type="password"
+            autoComplete="current-password"
+            value={password}
+            disabled={closing}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+        <div className="profile-actions">
+          <Button type="submit" variant="outline" disabled={closing || !password}>
+            {closing ? 'Đang xử lý…' : 'Xác nhận đóng tài khoản'}
+          </Button>
+        </div>
+      </form>
+    </details>
+  );
+}
 
 export default function PersonalProfile({ embedded = false }: { embedded?: boolean } = {}) {
   const session = useQuery(sessionQuery);
@@ -1378,6 +1594,9 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
               />
             </section>
 
+            {/* Section 4b: Seller Shop Profile */}
+            {role === 'SELLER' && <SellerShopProfileSection />}
+
             {/* Section 5: Security & Google Linking (Customer and Seller only) */}
             {isMember && (
               <section id="security" aria-labelledby="security-heading" className="profile-section">
@@ -1482,6 +1701,16 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
                 >
                   <GoogleAccountLink email={currentProfile.loginEmail || ''} />
                 </div>
+
+                {role === 'CUSTOMER' && (
+                  <CustomerCloseAccountSection
+                    onClosed={() => {
+                      draftGuard.allowLeave();
+                      queryClient.clear();
+                      window.location.replace('/dang-nhap');
+                    }}
+                  />
+                )}
               </section>
             )}
             {!isMember && (

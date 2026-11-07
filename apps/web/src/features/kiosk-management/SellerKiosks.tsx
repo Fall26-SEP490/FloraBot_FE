@@ -9,7 +9,11 @@ import { getGoongPlaceDetail, searchGoongPlaces } from '../kiosk-location/kiosk-
 import type { GoongPrediction } from '../kiosk-location/kiosk-location.types';
 import { TablePagination } from '../../shared/components/DataTable';
 import { clampPage, paginate } from '../../shared/pagination';
-import type { SellerKioskItem, UpdateKioskLocationPayload } from './kiosk-management.types';
+import type {
+  KioskLocationChangeResponse,
+  SellerKioskItem,
+  UpdateKioskLocationPayload,
+} from './kiosk-management.types';
 import {
   parseCoordinate,
   isValidLatitude,
@@ -46,6 +50,17 @@ function KioskCard({
   const [lonInput, setLonInput] = useState(
     kiosk.longitude !== null && kiosk.longitude !== undefined ? String(kiosk.longitude) : '',
   );
+  const [reason, setReason] = useState('');
+  const [historyOpen, setHistoryOpen] = useState(false);
+
+  const locationRequests = useQuery({
+    queryKey: ['kiosk-location-requests', sellerId, kiosk.id],
+    queryFn: () =>
+      request<KioskLocationChangeResponse[]>(
+        `/sellers/${sellerId}/kiosks/${kiosk.id}/location-requests`,
+      ),
+    enabled: historyOpen && isSellerRole && Boolean(sellerId),
+  });
 
   const [formError, setFormError] = useState('');
   const [successNotice, setSuccessNotice] = useState('');
@@ -138,8 +153,14 @@ function KioskCard({
     onSuccess: (updated) => {
       setSuccessNotice(`Đã lưu vị trí cho kiosk ${updated.name || updated.code} thành công.`);
       setFormError('');
+      setReason('');
       setLocationSource('saved');
       void queryClient.invalidateQueries({ queryKey: ['seller-kiosks', sellerId] });
+      if (historyOpen) {
+        void queryClient.invalidateQueries({
+          queryKey: ['kiosk-location-requests', sellerId, kiosk.id],
+        });
+      }
     },
     onError: (err: unknown) => {
       const msg =
@@ -261,6 +282,7 @@ function KioskCard({
       address: trimmedAddress,
       latitude: lat,
       longitude: lon,
+      ...(reason.trim() ? { reason: reason.trim() } : {}),
     });
   };
 
@@ -449,6 +471,24 @@ function KioskCard({
                   )}
                 </div>
 
+                {canEdit && (
+                  <div className="kiosk-field">
+                    <label htmlFor={`kiosk-location-reason-${kiosk.id}`}>
+                      Lý do thay đổi vị trí (tùy chọn)
+                    </label>
+                    <input
+                      id={`kiosk-location-reason-${kiosk.id}`}
+                      type="text"
+                      maxLength={500}
+                      disabled={saveMutation.isPending}
+                      value={reason}
+                      onChange={(e) => setReason(e.target.value)}
+                      placeholder="Ví dụ: Dời tủ sang mặt tiền mới…"
+                      className="kiosk-input"
+                    />
+                  </div>
+                )}
+
                 <p className="kiosk-location-selection" role="status">
                   {coordsValid
                     ? locationSource === 'saved'
@@ -569,6 +609,46 @@ function KioskCard({
           </form>
         )}
       </details>
+
+      {isSellerRole && (
+        <details
+          className="kiosk-location-editor"
+          open={historyOpen}
+          onToggle={(e) => setHistoryOpen(e.currentTarget.open)}
+        >
+          <summary>Lịch sử yêu cầu đổi vị trí kiosk</summary>
+          {historyOpen && (
+            <div style={{ marginTop: '0.75rem' }}>
+              {locationRequests.isPending && <p role="status">Đang tải lịch sử yêu cầu…</p>}
+              {locationRequests.isError && (
+                <p role="alert" className="error">
+                  Chưa tải được lịch sử yêu cầu đổi vị trí.
+                </p>
+              )}
+              {locationRequests.data && locationRequests.data.length === 0 && (
+                <p className="quiet">Chưa có yêu cầu đổi vị trí nào cho kiosk này.</p>
+              )}
+              {locationRequests.data && locationRequests.data.length > 0 && (
+                <ul className="admin-shop-list">
+                  {locationRequests.data.map((req) => (
+                    <li key={req.id} className="shop-profile">
+                      <p>
+                        <strong>{req.address}</strong> ({req.latitude}, {req.longitude}) ·{' '}
+                        <span>{req.status}</span>
+                      </p>
+                      <p className="quiet">
+                        Lý do: {req.reason} · Gửi lúc:{' '}
+                        {new Date(req.createdAt).toLocaleString('vi-VN')}
+                      </p>
+                      {req.reviewNote && <p>Phản hồi vận hành: {req.reviewNote}</p>}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </details>
+      )}
     </article>
   );
 }

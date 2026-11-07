@@ -49,7 +49,7 @@ const StaffTasks = dynamic(() => import('../../task-management/TaskManagement'),
   loading: () => <p role="status">Đang tải điều phối công việc…</p>,
 });
 const OperationsTerminations = dynamic(() =>
-  import('../../business-v2/KioskTerminations').then((mod) => mod.OperationsTerminations),
+  import('../../kiosk-management/KioskTerminations').then((mod) => mod.OperationsTerminations),
 );
 
 export default function OperationsWorkspace({ section = 'overview' }: { section?: string }) {

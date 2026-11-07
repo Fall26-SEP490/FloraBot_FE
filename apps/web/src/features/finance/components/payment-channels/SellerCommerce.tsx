@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
-import type { components } from '../../../../../packages/contracts/src/generated/api';
+import type { components } from '../../../../../../../packages/contracts/src/generated/api';
 import { ApiError, queryClient, request, type Session } from '@/shared/lib/api';
-import './business-v2.css';
+import '../../styles/commerce-subscriptions.css';
 
 type Channel = components['schemas']['SellerPaymentChannelResponse'];
 type Verification = components['schemas']['ChannelVerificationResponse'];
@@ -206,7 +206,7 @@ export default function SellerCommerce({ session }: { session: Session }) {
           <p role="alert">{errorText(payments.error)}</p>
         ) : (
           payments.data &&
-          (payments.data.payments.length ? (
+          ((payments.data.payments ?? []).length ? (
             <>
               <div className="business-table-scroll">
                 <table className="business-table">
@@ -221,7 +221,7 @@ export default function SellerCommerce({ session }: { session: Session }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {payments.data.payments.map((payment) => (
+                    {(payments.data.payments ?? []).map((payment) => (
                       <tr key={payment.id}>
                         <td>{payment.orderCode || payment.id.slice(0, 8)}</td>
                         <td>{currency(payment.amount)}</td>

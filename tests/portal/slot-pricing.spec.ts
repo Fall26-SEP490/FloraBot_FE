@@ -247,12 +247,11 @@ test('Manager sets two prices and enrolls a kiosk tied to confirmed application 
   const state = await setup(page, 'OPERATIONS_MANAGER');
   await page.goto('/operations/installations');
   await page.locator('.kiosk-pricing-settings > summary').click();
-  await page.getByLabel('Giá ô Walk-in (đ/ô/năm)').fill('150000');
+  await page.getByLabel('Đơn giá 1 ô / năm (đ/ô/năm)').fill('150000');
   await page.getByRole('button', { name: 'Lưu bảng giá', exact: true }).click();
   await expect.poll(() => state.writes.length).toBe(1);
   expect(state.writes[0].body).toEqual({
-    walkInAnnualPrice: 150000,
-    preorderAnnualPrice: 120000,
+    annualSlotPrice: 150000,
     expectedVersion: 1,
   });
   await page.getByRole('row').filter({ hasText: 'Shop kiểm thử' }).getByRole('button').click();

@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
-import type { components } from '../../../../../packages/contracts/src/generated/api';
+import type { components } from '../../../../../../packages/contracts/src/generated/api';
 import { request, type Session } from '@/shared/lib/api';
-import './business-v2.css';
+import '../../finance/styles/commerce-subscriptions.css';
 
 type Sales = components['schemas']['SeasonalSalesResponse'];
 type Forecast = components['schemas']['SeasonalForecastResponse'];
@@ -103,7 +103,7 @@ export default function SellerSeasonal({ session }: { session: Session }) {
                   </strong>
                 </div>
               </div>
-              {sales.data.products.length ? (
+              {(sales.data.products ?? []).length ? (
                 <div className="business-table-scroll">
                   <table className="business-table">
                     <thead>
@@ -114,7 +114,7 @@ export default function SellerSeasonal({ session }: { session: Session }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {sales.data.products.map((item) => (
+                      {(sales.data.products ?? []).map((item) => (
                         <tr key={item.productId}>
                           <td>{item.name}</td>
                           <td>{item.totalInvoices}</td>

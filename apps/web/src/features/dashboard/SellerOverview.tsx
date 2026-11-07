@@ -203,22 +203,18 @@ export default function SellerOverview({ session }: { session: Session }) {
         Chưa xác định được shop của tài khoản. Thử đăng nhập lại hoặc liên hệ đội ngũ vận hành.
       </p>
     );
+  const activeStaffCount = staff.isSuccess
+    ? staff.data.filter((item) => item.status === 'ACTIVE').length
+    : 0;
+  const queueClear =
+    orders.isSuccess &&
+    actionItems.length === 0 &&
+    !orders.data.hasMore &&
+    inbox.isSuccess &&
+    inbox.data.conversations === 0;
+
   return (
     <div className={styles.overview}>
-      <div className={styles.toolbar}>
-        <span className={styles.status} data-active={session.sellerStatus === 'ACTIVE'}>
-          <span aria-hidden="true" />
-          {shopStatus}
-        </span>
-        <button
-          className={styles.refresh}
-          disabled={busy}
-          onClick={() => queries.forEach((query) => void query.refetch())}
-        >
-          <RefreshCw size={17} aria-hidden="true" />
-          {busy ? 'Đang cập nhật…' : 'Làm mới dữ liệu'}
-        </button>
-      </div>
       {queries.some((query) => query.isError) && (
         <p role="alert" className={styles.error}>
           Một số dữ liệu chưa tải được. Chọn “Làm mới dữ liệu” để thử lại; các mục còn lại vẫn sử
@@ -246,64 +242,14 @@ export default function SellerOverview({ session }: { session: Session }) {
           </Link>
         </aside>
       )}
-      <section className={styles.workbench} aria-labelledby="seller-workbench-title">
-        <div className={styles.heading}>
-          <h2 id="seller-workbench-title">Việc cần làm</h2>
-          <Link href="/seller/orders">
-            Tất cả đơn <ArrowRight size={16} aria-hidden="true" />
-          </Link>
-        </div>
-        <nav className={styles.metrics} aria-label="Xem đơn theo tiến độ">
-          {metrics.map((metric) => (
-            <Link
-              href={`/seller/orders?filter=${metric.filter}`}
-              key={metric.label}
-              className={styles.metric}
-              data-action={metric.filter === 'requested' || metric.filter === 'preparing'}
-              data-has-items={orders.isSuccess && items.some(metric.match)}
-            >
-              <strong>
-                {orders.isError
-                  ? '—'
-                  : orders.isPending
-                    ? '…'
-                    : `${items.filter(metric.match).length}${orders.data?.hasMore ? '+' : ''}`}
-              </strong>
-              <span>{metric.label}</span>
-            </Link>
-          ))}
-        </nav>
-        <div className={styles.workbenchFooter}>
-          <Link href="/seller/chats" className={styles.inboxLink}>
-            <MessageSquare size={17} aria-hidden="true" />
-            <span>
-              Tin nhắn khách hàng{' '}
-              <small>
-                {inbox.isError
-                  ? 'Chưa tải được tin nhắn'
-                  : inbox.isPending
-                    ? 'Đang kiểm tra…'
-                    : `${inbox.data.hasMore ? 'Ít nhất ' : ''}${inbox.data.conversations} cuộc trò chuyện chưa đọc`}
-              </small>
-            </span>
-            <ArrowRight size={15} aria-hidden="true" />
-          </Link>
-          {(orders.isPending || orders.data?.hasMore) && (
-            <p className={styles.queueScope}>
-              {orders.isPending
-                ? 'Đang tải đơn đặt hoa…'
-                : `Đã tải ${orders.data?.loadedPages} trang; mở danh sách đơn để xem tiếp.`}
-            </p>
-          )}
-        </div>
-      </section>
+
       <div className={styles.layout}>
         <div className={styles.main}>
           <section className={styles.card} aria-labelledby="seller-orders-title">
             <div className={styles.heading}>
               <h2 id="seller-orders-title">Đơn cần theo dõi</h2>
               <Link href="/seller/orders">
-                Xem danh sách <ArrowRight size={16} aria-hidden="true" />
+                Tất cả đơn <ArrowRight size={16} aria-hidden="true" />
               </Link>
             </div>
             <div className={styles.tabs} role="group" aria-label="Lọc đơn đặt hoa">
@@ -340,25 +286,28 @@ export default function SellerOverview({ session }: { session: Session }) {
                     <Link
                       href={`/seller/orders?page=${row.overviewPage}&requestId=${encodeURIComponent(row.id)}`}
                     >
-                      <div className={styles.orderInfo}>
-                        <div className={styles.orderTop}>
+                      <span className={styles.recordIdentity}>
+                        <span className={styles.recordIcon} aria-hidden="true">
+                          <Flower2 size={20} />
+                        </span>
+                        <span className={styles.orderInfo}>
                           <strong>{row.productName || 'Hoa theo yêu cầu'}</strong>
-                          <span
-                            className={styles.badge}
-                            data-closed={orderClosed(row)}
-                            data-status={row.orderStatus || row.state}
-                          >
-                            {statusName(row)}
-                          </span>
-                        </div>
-                        <small>
-                          {row.orderCode || `#${row.id.slice(0, 8)}`} · {row.kioskName || 'Tủ nhận'}{' '}
-                          · Hẹn {pickupTime(row.pickupAt)} ·{' '}
-                          <strong>
-                            {row.quotedPrice == null ? 'Chưa báo giá' : currency(row.quotedPrice)}
-                          </strong>
-                        </small>
-                      </div>
+                          <small>
+                            {row.orderCode || `#${row.id.slice(0, 8)}`} ·{' '}
+                            {row.kioskName || 'Tủ nhận'} · Hẹn {pickupTime(row.pickupAt)} ·{' '}
+                            <strong>
+                              {row.quotedPrice == null ? 'Chưa báo giá' : currency(row.quotedPrice)}
+                            </strong>
+                          </small>
+                        </span>
+                      </span>
+                      <span
+                        className={styles.badge}
+                        data-closed={orderClosed(row)}
+                        data-status={row.orderStatus || row.state}
+                      >
+                        {statusName(row)}
+                      </span>
                       <span className={styles.openOrder}>
                         {sellerOrderActionLabel(row)} <ArrowRight size={15} aria-hidden="true" />
                       </span>
@@ -367,7 +316,9 @@ export default function SellerOverview({ session }: { session: Session }) {
                 ))}
               </ul>
             )}
+            <p className={styles.footnote}>Hiển thị tối đa 5 đơn đặt trước gần nhất.</p>
           </section>
+
           <section className={styles.card} aria-labelledby="seller-tools-title">
             <div className={styles.heading}>
               <h2 id="seller-tools-title">Thao tác nhanh</h2>
@@ -397,11 +348,118 @@ export default function SellerOverview({ session }: { session: Session }) {
             )}
           </section>
         </div>
-        <aside className={styles.aside} aria-label="Thông tin vận hành cửa hàng">
-          <section className={styles.card} aria-labelledby="seller-payments-title">
-            <div className={styles.heading}>
+
+        <aside className={styles.aside} aria-label="Hàng đợi và nguồn lực cửa hàng">
+          <section className={styles.workbench} aria-labelledby="seller-workbench-title">
+            <div className={styles.workbenchHeader}>
+              <h2 id="seller-workbench-title">Việc cần xử lý</h2>
+              <button
+                type="button"
+                className={styles.refreshIconBtn}
+                aria-label="Làm mới dữ liệu"
+                title="Làm mới dữ liệu"
+                disabled={busy}
+                onClick={() => queries.forEach((query) => void query.refetch())}
+              >
+                <RefreshCw size={16} aria-hidden="true" />
+              </button>
+            </div>
+            {queueClear && (
+              <p className={styles.queueClear} role="status">
+                <Check size={16} aria-hidden="true" />
+                Không có việc đang chờ
+              </p>
+            )}
+            <nav className={styles.metrics} aria-label="Xem đơn theo tiến độ">
+              {metrics.map((metric) => {
+                const hasItems = orders.isSuccess && items.some(metric.match);
+                return (
+                  <Link
+                    href={`/seller/orders?filter=${metric.filter}`}
+                    key={metric.label}
+                    className={styles.metric}
+                    data-action={metric.filter === 'requested' || metric.filter === 'preparing'}
+                    data-has-items={hasItems}
+                  >
+                    <span>{metric.label}</span>
+                    <strong>
+                      {orders.isError
+                        ? '—'
+                        : orders.isPending
+                          ? '…'
+                          : `${items.filter(metric.match).length}${orders.data?.hasMore ? '+' : ''}`}
+                    </strong>
+                    <ArrowRight size={15} aria-hidden="true" />
+                  </Link>
+                );
+              })}
+            </nav>
+            <div className={styles.workbenchFooter}>
+              <Link href="/seller/chats" className={styles.inboxLink}>
+                <MessageSquare size={16} aria-hidden="true" />
+                <span>
+                  Tin nhắn khách hàng
+                  <small>
+                    {inbox.isError
+                      ? 'Chưa tải được tin nhắn'
+                      : inbox.isPending
+                        ? 'Đang kiểm tra…'
+                        : `${inbox.data.hasMore ? 'Ít nhất ' : ''}${inbox.data.conversations} chưa đọc`}
+                  </small>
+                </span>
+                <strong>
+                  {inbox.isError ? '—' : inbox.isPending ? '…' : inbox.data.conversations}
+                </strong>
+                <ArrowRight size={15} aria-hidden="true" />
+              </Link>
+              {(orders.isPending || orders.data?.hasMore) && (
+                <p className={styles.queueScope}>
+                  {orders.isPending
+                    ? 'Đang tải đơn đặt hoa…'
+                    : `Đã tải ${orders.data?.loadedPages} trang; mở danh sách đơn để xem tiếp.`}
+                </p>
+              )}
+            </div>
+          </section>
+
+          <section className={styles.resourcesCard} aria-labelledby="seller-team-title">
+            <h2 id="seller-team-title">Nguồn lực &amp; vận hành</h2>
+            <Link href="/seller/staff" className={styles.resourceRow}>
+              <Users size={17} aria-hidden="true" />
+              <span>Nhân viên hoạt động</span>
+              <strong>
+                {staff.isError
+                  ? '—'
+                  : staff.isPending
+                    ? '…'
+                    : `${activeStaffCount}/${staff.data.length}`}
+              </strong>
+              <ArrowRight size={15} aria-hidden="true" />
+            </Link>
+            <Link href="/seller/products" className={styles.resourceRow}>
+              <Flower2 size={17} aria-hidden="true" />
+              <span>Mẫu hoa đang bán</span>
+              <strong>
+                {products.isError
+                  ? '—'
+                  : products.isPending
+                    ? '…'
+                    : `${activeProducts}/${products.data.length}`}
+              </strong>
+              <ArrowRight size={15} aria-hidden="true" />
+            </Link>
+            <Link href="/seller/subscriptions" className={styles.resourceRow}>
+              <Store size={17} aria-hidden="true" />
+              <span>Trạng thái cửa hàng</span>
+              <strong>{shopStatus}</strong>
+              <ArrowRight size={15} aria-hidden="true" />
+            </Link>
+          </section>
+
+          <section className={styles.resourcesCard} aria-labelledby="seller-payments-title">
+            <div className={styles.resourceHead}>
               <h2 id="seller-payments-title">Doanh số PayOS</h2>
-              <Banknote size={18} aria-hidden="true" />
+              <Banknote size={17} aria-hidden="true" />
             </div>
             <dl className={styles.balances}>
               <div>
@@ -426,33 +484,10 @@ export default function SellerOverview({ session }: { session: Session }) {
                     ? 'Kênh nhận tiền đang hoạt động'
                     : 'Kênh nhận tiền chưa sẵn sàng'}
             </p>
-            <Link className={styles.textLink} href="/seller/commerce">
-              Chi tiết giao dịch <ArrowRight size={15} aria-hidden="true" />
+            <Link className={styles.resourceRow} href="/seller/commerce">
+              <span>Chi tiết giao dịch &amp; kênh thu</span>
+              <ArrowRight size={15} aria-hidden="true" />
             </Link>
-          </section>
-          <section className={styles.card} aria-labelledby="seller-team-title">
-            <div className={styles.heading}>
-              <h2 id="seller-team-title">Vận hành shop</h2>
-              <Users size={18} aria-hidden="true" />
-            </div>
-            <p className={styles.team}>
-              {staff.isError
-                ? 'Chưa tải được nhân viên.'
-                : staff.isPending
-                  ? 'Đang tải…'
-                  : `${staff.data.filter((item) => item.status === 'ACTIVE').length}/${staff.data.length} nhân viên hoạt động`}
-            </p>
-            <div className={styles.quickLinks}>
-              <Link className={styles.textLink} href="/seller/staff">
-                Quản lý nhân viên <ArrowRight size={15} aria-hidden="true" />
-              </Link>
-              <Link className={styles.textLink} href="/seller/tasks">
-                Giao việc <ArrowRight size={15} aria-hidden="true" />
-              </Link>
-              <Link className={styles.textLink} href="/seller/subscriptions">
-                Gói thuê kiosk <ArrowRight size={15} aria-hidden="true" />
-              </Link>
-            </div>
           </section>
         </aside>
       </div>

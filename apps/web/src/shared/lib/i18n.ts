@@ -29,11 +29,11 @@ void i18n.use(initReactI18next).init({
           PENDING: 'Hồ sơ shop đang chờ xử lý. Vui lòng theo dõi tiến độ hồ sơ thuê kiosk.',
           APPROVED: 'Shop đã được duyệt. Kiểm tra hồ sơ thuê kiosk để xem bước tiếp theo.',
           PAST_DUE:
-            'Kỳ thuê hết hạn ngày {{date}}. Liên hệ FloraBot để được hỗ trợ trước khi tiếp tục bán hoa.',
+            'Kỳ thuê hết hạn ngày {{date}}. Gia hạn trực tuyến để tiếp tục nạp và bán hoa tại tủ.',
           SUSPENDED: 'Shop đang tạm ngưng. Vui lòng liên hệ đội ngũ vận hành để được hỗ trợ.',
           CLOSED: 'Shop đã đóng. Vui lòng liên hệ đội ngũ vận hành nếu cần hỗ trợ.',
           EXPIRING:
-            'Kỳ thuê sắp hết hạn ngày {{date}}. Liên hệ FloraBot để được hỗ trợ kỳ thuê tiếp theo.',
+            'Kỳ thuê sắp hết hạn ngày {{date}}. Gia hạn trực tuyến 12 tháng tại mục Thuê kiosk.',
           UNKNOWN: 'Chưa xác định được trạng thái gói. Hãy tải lại thông tin trước khi thao tác.',
         },
       },

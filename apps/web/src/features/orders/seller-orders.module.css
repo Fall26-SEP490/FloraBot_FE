@@ -591,7 +591,8 @@
 }
 
 .sellerOrders .filters {
-  border-radius: 12px;
+  border-radius: 14px;
+  border-color: #d4e1d1;
   overflow: visible;
 }
 .sellerOrders .filterHeading {
@@ -599,28 +600,46 @@
   flex-wrap: wrap;
 }
 .sellerOrders .tabs {
-  padding-inline: 22px;
-  gap: 8px;
+  margin: 0 22px;
+  padding: 4px;
+  gap: 4px;
   flex-wrap: wrap;
   border: 0;
+  border-radius: 12px;
+  background: #f1f6ee;
+  width: fit-content;
+  max-width: calc(100% - 44px);
   overflow: visible;
 }
 .sellerOrders .tabs button {
   border: 1px solid transparent;
-  border-radius: 7px;
-  padding: 8px 10px;
+  border-radius: 9px;
+  padding: 7px 11px;
   min-height: 44px;
-  font-size: 0.8rem;
+  font-size: 0.79rem;
+  font-weight: 600;
+  color: #4b6355;
+}
+.sellerOrders .tabs button span {
+  background: #e2ecdd;
+  color: #203e2d;
+  border-radius: 5px;
+  padding: 1px 6px;
 }
 .sellerOrders .tabs button[aria-pressed='true'] {
-  background: #eaf2e5;
-  border-color: #aac4ab;
-  color: #245b3e;
+  background: #ffffff;
+  border-color: #d4e1d1;
+  color: #20523b;
+  box-shadow: 0 2px 4px rgba(28, 67, 37, 0.05);
+}
+.sellerOrders .tabs button[aria-pressed='true'] span {
+  background: #eaf3e5;
+  color: #20523b;
 }
 .sellerOrders .searchBar {
   flex-wrap: wrap;
   padding: 16px 22px 20px;
-  border-top: 1px solid var(--order-line);
+  border-top: 1px solid #d4e1d1;
   margin-top: 14px;
 }
 .sellerOrders .searchBar input {

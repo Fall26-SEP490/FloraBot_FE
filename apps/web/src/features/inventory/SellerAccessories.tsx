@@ -66,6 +66,71 @@ function Restock({
       await refresh();
     }
   }
+  const [editOpen, setEditOpen] = useState(false);
+  const [editName, setEditName] = useState(item.name);
+  const [editPrice, setEditPrice] = useState(String(item.price));
+  const [crudBusy, setCrudBusy] = useState(false);
+  const [crudNotice, setCrudNotice] = useState('');
+  const [crudError, setCrudError] = useState('');
+
+  async function saveMetadata(event: React.FormEvent) {
+    event.preventDefault();
+    if (crudBusy) return;
+    const trimmedName = editName.trim();
+    const numericPrice = Number(editPrice);
+    if (!trimmedName || trimmedName.length > 200) {
+      setCrudError('Tên phụ kiện từ 1 đến 200 ký tự.');
+      return;
+    }
+    if (!Number.isFinite(numericPrice) || numericPrice < 0) {
+      setCrudError('Giá phụ kiện không được âm.');
+      return;
+    }
+    setCrudBusy(true);
+    setCrudError('');
+    setCrudNotice('');
+    try {
+      await request(
+        `/sellers/${sellerId}/accessories/${item.id}`,
+        { name: trimmedName, price: numericPrice },
+        false,
+        'PUT',
+      );
+      setCrudNotice('Đã cập nhật thông tin phụ kiện.');
+      await refresh();
+    } catch (cause) {
+      setCrudError(cause instanceof ApiError ? cause.message : 'Chưa lưu được phụ kiện.');
+    } finally {
+      setCrudBusy(false);
+    }
+  }
+
+  async function toggleStatus() {
+    if (crudBusy) return;
+    const nextStatus = item.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+    setCrudBusy(true);
+    setCrudError('');
+    setCrudNotice('');
+    try {
+      await request(
+        `/sellers/${sellerId}/accessories/${item.id}/status`,
+        { status: nextStatus },
+        false,
+        'PATCH',
+      );
+      setCrudNotice(
+        nextStatus === 'ACTIVE' ? 'Đã bật bán phụ kiện.' : 'Đã tạm ngừng bán phụ kiện.',
+      );
+      await refresh();
+    } catch (cause) {
+      setCrudError(
+        cause instanceof ApiError ? cause.message : 'Chưa đổi được trạng thái phụ kiện.',
+      );
+    } finally {
+      setCrudBusy(false);
+    }
+  }
+
   return (
     <li className="accessory-card">
       <div className="accessory-card-header">
@@ -99,6 +164,60 @@ function Restock({
           {kioskStatuses[item.kioskStatus] || `Trạng thái tủ: ${item.kioskStatus}`}
         </span>
       </p>
+
+      <details
+        className="accessory-edit-disclosure"
+        open={editOpen}
+        onToggle={(e) => setEditOpen(e.currentTarget.open)}
+      >
+        <summary>Chỉnh sửa thông tin hoặc trạng thái bán</summary>
+        {editOpen && (
+          <form className="accessory-restock-box" onSubmit={(e) => void saveMetadata(e)}>
+            <div className="accessory-restock-row">
+              <label htmlFor={`accessory-name-${item.id}`}>
+                Tên phụ kiện
+                <input
+                  id={`accessory-name-${item.id}`}
+                  value={editName}
+                  maxLength={200}
+                  disabled={crudBusy}
+                  onChange={(e) => setEditName(e.target.value)}
+                />
+              </label>
+              <label htmlFor={`accessory-price-${item.id}`}>
+                Giá bán (VND)
+                <input
+                  id={`accessory-price-${item.id}`}
+                  type="number"
+                  min={0}
+                  step={1000}
+                  value={editPrice}
+                  disabled={crudBusy}
+                  onChange={(e) => setEditPrice(e.target.value)}
+                />
+              </label>
+            </div>
+            <div className="stock-actions" style={{ marginTop: '0.5rem' }}>
+              <Button type="submit" disabled={crudBusy}>
+                {crudBusy ? 'Đang lưu…' : 'Lưu phụ kiện'}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={crudBusy}
+                onClick={() => void toggleStatus()}
+              >
+                {item.status === 'ACTIVE' ? 'Tắt bán phụ kiện' : 'Bật bán phụ kiện'}
+              </Button>
+            </div>
+            {(crudError || crudNotice) && (
+              <p role={crudError ? 'alert' : 'status'} className={crudError ? 'error' : undefined}>
+                {crudError || crudNotice}
+              </p>
+            )}
+          </form>
+        )}
+      </details>
 
       <form
         className="accessory-restock-box"
@@ -179,11 +298,64 @@ export default function SellerAccessories({ session }: { session: Session }) {
   const [loaded, setLoaded] = useState(false);
   const [search, setSearch] = useState('');
   const [kiosk, setKiosk] = useState('');
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newKioskId, setNewKioskId] = useState('');
+  const [newName, setNewName] = useState('');
+  const [newPrice, setNewPrice] = useState('');
+  const [creating, setCreating] = useState(false);
+  const [createNotice, setCreateNotice] = useState('');
+  const [createError, setCreateError] = useState('');
+
   const inventory = useQuery({
     queryKey: ['seller-accessories', session.sellerId],
     queryFn: () => request<Accessory[]>(`/sellers/${session.sellerId}/accessories`),
     enabled: loaded && !!session.sellerId,
   });
+  const sellerKiosks = useQuery({
+    queryKey: ['seller-kiosks', session.sellerId],
+    queryFn: () =>
+      request<components['schemas']['SellerKioskDto'][]>(`/sellers/${session.sellerId}/kiosks`),
+    enabled: createOpen && !!session.sellerId,
+  });
+
+  async function handleCreateAccessory(event: React.FormEvent) {
+    event.preventDefault();
+    if (!session.sellerId || creating) return;
+    const trimmedName = newName.trim();
+    const numericPrice = Number(newPrice);
+    if (!newKioskId) {
+      setCreateError('Chọn tủ kiosk áp dụng phụ kiện.');
+      return;
+    }
+    if (!trimmedName || trimmedName.length > 200) {
+      setCreateError('Tên phụ kiện từ 1 đến 200 ký tự.');
+      return;
+    }
+    if (newPrice.trim() === '' || !Number.isFinite(numericPrice) || numericPrice < 0) {
+      setCreateError('Giá phụ kiện không được âm.');
+      return;
+    }
+    setCreating(true);
+    setCreateError('');
+    setCreateNotice('');
+    try {
+      await request<{ id: string }>(
+        `/sellers/${session.sellerId}/accessories`,
+        { kioskId: newKioskId, name: trimmedName, price: numericPrice },
+        true,
+        'POST',
+      );
+      setNewName('');
+      setNewPrice('');
+      setCreateNotice(`Đã thêm phụ kiện ${trimmedName}.`);
+      setLoaded(true);
+      await inventory.refetch();
+    } catch (cause) {
+      setCreateError(cause instanceof ApiError ? cause.message : 'Chưa tạo được phụ kiện mới.');
+    } finally {
+      setCreating(false);
+    }
+  }
   const items = inventory.data ?? [];
   const fold = (value: string) =>
     value
@@ -220,6 +392,73 @@ export default function SellerAccessories({ session }: { session: Session }) {
           {loaded ? 'Làm mới tồn phụ kiện' : 'Xem tồn phụ kiện'}
         </Button>
       </div>
+
+      <details
+        className="accessory-create-disclosure"
+        open={createOpen}
+        onToggle={(e) => setCreateOpen(e.currentTarget.open)}
+      >
+        <summary>Thêm phụ kiện mới cho tủ</summary>
+        {createOpen && (
+          <form className="accessory-restock-box" onSubmit={(e) => void handleCreateAccessory(e)}>
+            <div className="accessory-filters">
+              <div>
+                <label htmlFor="new-accessory-kiosk">Tủ áp dụng</label>
+                <select
+                  id="new-accessory-kiosk"
+                  value={newKioskId}
+                  disabled={creating || sellerKiosks.isPending}
+                  onChange={(e) => setNewKioskId(e.target.value)}
+                >
+                  <option value="">Chọn tủ kiosk</option>
+                  {sellerKiosks.data?.map((k) => (
+                    <option key={k.id} value={k.id}>
+                      {k.name} · {k.code}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="new-accessory-name">Tên phụ kiện</label>
+                <input
+                  id="new-accessory-name"
+                  value={newName}
+                  maxLength={200}
+                  disabled={creating}
+                  onChange={(e) => setNewName(e.target.value)}
+                  placeholder="Ví dụ: Thiệp chúc mừng, Nơ lụa…"
+                />
+              </div>
+              <div>
+                <label htmlFor="new-accessory-price">Giá bán (VND)</label>
+                <input
+                  id="new-accessory-price"
+                  type="number"
+                  min={0}
+                  step={1000}
+                  value={newPrice}
+                  disabled={creating}
+                  onChange={(e) => setNewPrice(e.target.value)}
+                  placeholder="15000"
+                />
+              </div>
+            </div>
+            <div className="stock-actions" style={{ marginTop: '0.5rem' }}>
+              <Button type="submit" disabled={creating}>
+                {creating ? 'Đang thêm…' : 'Tạo phụ kiện'}
+              </Button>
+            </div>
+            {(createError || createNotice) && (
+              <p
+                role={createError ? 'alert' : 'status'}
+                className={createError ? 'error' : undefined}
+              >
+                {createError || createNotice}
+              </p>
+            )}
+          </form>
+        )}
+      </details>
 
       {!loaded && (
         <p className="seller-flow-notice" role="status">

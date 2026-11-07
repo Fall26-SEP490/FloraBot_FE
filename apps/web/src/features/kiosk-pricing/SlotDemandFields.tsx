@@ -69,7 +69,8 @@ export function SlotDemandFields({
         )}
       </div>
       <p className="slot-demand-note">
-        Số lượng và loại ô được chốt khi gửi hồ sơ, không đổi sau khi tạo tủ.
+        Sau khi kiosk hoạt động, bạn có thể gửi yêu cầu đổi số ô Walk-in / Pre-order (tổng số ô giữ
+        nguyên).
       </p>
     </fieldset>
   );

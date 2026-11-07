@@ -13,6 +13,180 @@ import { AdminKioskSlotDetails } from './AdminKioskSlotDetails';
 type Kiosk = components['schemas']['AdminKioskResponse'];
 type Seller = components['schemas']['AdminSellerResponse'];
 
+interface KioskManagerAssignmentItem {
+  kioskId: string;
+  kioskCode: string;
+  managerId: string;
+  managerName: string;
+  assignedAt: string;
+}
+
+interface KioskManagerAssignmentPage {
+  items: KioskManagerAssignmentItem[];
+  page: number;
+  hasMore: boolean;
+}
+
+interface ManagerAccountItem {
+  id: string;
+  fullName: string;
+  email: string;
+  status: string;
+}
+
+function KioskOperationsManagerPanel({ kiosks }: { kiosks: Kiosk[] }) {
+  const [open, setOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [selectedKioskId, setSelectedKioskId] = useState('');
+  const [selectedManagerId, setSelectedManagerId] = useState('');
+  const [notice, setNotice] = useState('');
+  const [error, setError] = useState('');
+
+  const assignments = useQuery({
+    queryKey: ['admin-kiosk-manager-assignments', page],
+    queryFn: () =>
+      request<KioskManagerAssignmentPage>(`/admin/kiosk-manager-assignments?page=${page}`),
+    enabled: open,
+  });
+
+  const managers = useQuery({
+    queryKey: ['admin-managers-list'],
+    queryFn: () => request<ManagerAccountItem[]>('/admin/managers'),
+    enabled: open,
+  });
+
+  const assignManager = useMutation({
+    mutationFn: () =>
+      request(
+        `/admin/kiosks/${selectedKioskId}/operations-manager`,
+        { managerId: selectedManagerId || null },
+        false,
+        'PUT',
+      ),
+    onSuccess: async () => {
+      setError('');
+      setNotice(
+        selectedManagerId
+          ? 'Đã phân công Quản lý vận hành phụ trách kiosk.'
+          : 'Đã gỡ phân công Quản lý vận hành khỏi kiosk.',
+      );
+      await queryClient.invalidateQueries({ queryKey: ['admin-kiosk-manager-assignments'] });
+    },
+    onError: (err: unknown) => {
+      setNotice('');
+      setError(
+        err instanceof Error ? err.message : 'Chưa cập nhật được phân công Quản lý vận hành.',
+      );
+    },
+  });
+
+  return (
+    <details
+      className="shop-profile"
+      style={{ marginTop: '1rem' }}
+      open={open}
+      onToggle={(e) => setOpen(e.currentTarget.open)}
+    >
+      <summary>
+        <strong>Phân công Quản lý vận hành phụ trách Kiosk</strong>
+      </summary>
+      {open && (
+        <div style={{ marginTop: '0.75rem' }}>
+          <form
+            className="approval-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (selectedKioskId && !assignManager.isPending) {
+                assignManager.mutate();
+              }
+            }}
+          >
+            <label htmlFor="ops-manager-kiosk">Chọn kiosk</label>
+            <select
+              id="ops-manager-kiosk"
+              value={selectedKioskId}
+              onChange={(e) => setSelectedKioskId(e.target.value)}
+            >
+              <option value="">Chọn kiosk</option>
+              {kiosks.map((k) => (
+                <option key={k.id} value={k.id}>
+                  {k.name} · {k.code}
+                </option>
+              ))}
+            </select>
+
+            <label htmlFor="ops-manager-account">
+              Quản lý vận hành phụ trách (để trống nếu muốn gỡ phân công)
+            </label>
+            <select
+              id="ops-manager-account"
+              value={selectedManagerId}
+              onChange={(e) => setSelectedManagerId(e.target.value)}
+            >
+              <option value="">— Không gán (Gỡ phân công) —</option>
+              {managers.data
+                ?.filter((m) => m.status === 'ACTIVE')
+                .map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.fullName} · {m.email}
+                  </option>
+                ))}
+            </select>
+
+            <Button type="submit" disabled={!selectedKioskId || assignManager.isPending}>
+              {assignManager.isPending ? 'Đang lưu…' : 'Lưu phân công vận hành'}
+            </Button>
+          </form>
+
+          {(error || notice) && (
+            <p role={error ? 'alert' : 'status'} className={error ? 'error' : undefined}>
+              {error || notice}
+            </p>
+          )}
+
+          {assignments.isPending && <p role="status">Đang tải danh sách phân công…</p>}
+          {assignments.data && assignments.data.items.length > 0 && (
+            <>
+              <ul className="admin-shop-list" style={{ marginTop: '0.75rem' }}>
+                {assignments.data.items.map((item) => (
+                  <li key={`${item.kioskId}-${item.managerId}`} className="shop-profile">
+                    <p>
+                      <strong>Kiosk {item.kioskCode}</strong> → Quản lý vận hành:{' '}
+                      <strong>{item.managerName}</strong>
+                    </p>
+                    <p className="quiet">
+                      Phân công lúc: {new Date(item.assignedAt).toLocaleString('vi-VN')}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+              <div className="stock-actions" style={{ marginTop: '0.5rem' }}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={page <= 1 || assignments.isFetching}
+                  onClick={() => setPage((p) => p - 1)}
+                >
+                  Trang trước
+                </Button>
+                <span>Trang {page}</span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!assignments.data.hasMore || assignments.isFetching}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  Trang sau
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </details>
+  );
+}
+
 const kioskStatuses: Record<string, string> = {
   ONLINE: 'Trực tuyến',
   OFFLINE: 'Mất kết nối',
@@ -286,6 +460,7 @@ export default function AdminSlots() {
           </li>
         ))}
       </ul>
+      <KioskOperationsManagerPanel kiosks={kiosks.data ?? []} />
     </section>
   );
 }
