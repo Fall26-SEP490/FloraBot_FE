@@ -9,6 +9,7 @@ import { Button } from '@florabot/ui';
 import { ApiError, logoutSession, sessionQuery, type Session } from '@/shared/lib/api';
 import { accountPath } from '@/features/portal/config/roleRoutes';
 import WorkspaceNavigation, { WorkspaceHeader } from '../components/WorkspaceNavigation';
+import { findSellerNavHub } from '../components/SellerNavigation';
 import SellerGuide from '../components/SellerGuide';
 import { workspaceSections } from '@/features/portal/config/workspaceSections';
 import { startPortalUpdates } from '@/shared/lib/realtime';
@@ -69,12 +70,14 @@ const SellerAccessories = dynamic(() => import('../../inventory/SellerAccessorie
   loading: () => <p role="status">Đang tải danh mục phụ kiện…</p>,
 });
 
-const SellerCommerce = dynamic(() => import('../../business-v2/SellerCommerce'));
-const SellerSeasonal = dynamic(() => import('../../business-v2/SellerSeasonal'));
-const SellerTerminations = dynamic(() =>
-  import('../../business-v2/KioskTerminations').then((mod) => mod.SellerTerminations),
+const SellerCommerce = dynamic(
+  () => import('../../finance/components/payment-channels/SellerCommerce'),
 );
-const SellerRefunds = dynamic(() => import('../../business-v2/SellerRefunds'));
+const SellerSeasonal = dynamic(() => import('../../product-management/components/SellerSeasonal'));
+const SellerTerminations = dynamic(() =>
+  import('../../kiosk-management/KioskTerminations').then((mod) => mod.SellerTerminations),
+);
+const SellerRefunds = dynamic(() => import('../../finance/components/refunds/SellerRefunds'));
 
 const StaffTasks = dynamic(() => import('../../task-management/TaskManagement'), {
   loading: () => <p role="status">Đang tải danh sách công việc…</p>,
@@ -84,7 +87,7 @@ const AccountManagement = dynamic(() => import('../../account-management/Account
   loading: () => <p role="status">Đang tải quản lý nhân sự…</p>,
 });
 
-function SubscriptionBanner({ session }: { session: Session }) {
+function SubscriptionBanner({ session, section }: { session: Session; section?: string }) {
   const { t } = useTranslation();
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -103,6 +106,7 @@ function SubscriptionBanner({ session }: { session: Session }) {
       : ['PENDING', 'APPROVED', 'PAST_DUE', 'SUSPENDED', 'CLOSED'].includes(status)
         ? status
         : 'UNKNOWN';
+  const onSubscriptionsPage = section === 'subscriptions' || section === 'terminations';
   return (
     <aside
       className={`subscription-banner ${status === 'PAST_DUE' ? 'subscription-overdue' : ''}`}
@@ -116,20 +120,8 @@ function SubscriptionBanner({ session }: { session: Session }) {
             'chưa xác định',
         })}
       </p>
-      {['APPROVED', 'PAST_DUE', 'ACTIVE'].includes(status) && (
-        <Link
-          href="/seller/subscriptions#subscriptions"
-          onClick={(event) => {
-            const target = document.getElementById('subscriptions');
-            if (target) {
-              event.preventDefault();
-              target.focus();
-              target.scrollIntoView({ block: 'start' });
-            }
-          }}
-        >
-          Xem hồ sơ thuê kiosk
-        </Link>
+      {!onSubscriptionsPage && ['APPROVED', 'PAST_DUE', 'ACTIVE'].includes(status) && (
+        <Link href="/seller/subscriptions">Gia hạn ngay</Link>
       )}
     </aside>
   );
@@ -139,34 +131,6 @@ function PortalUpdates() {
   useEffect(startPortalUpdates, []);
   return null;
 }
-
-const sellerHubGroups: readonly (readonly [string, string][])[] = [
-  [
-    ['chats', 'Khách hàng'],
-    ['staff-chats', 'Nội bộ nhân viên'],
-  ],
-  [
-    ['products', 'Mẫu hoa'],
-    ['accessories', 'Phụ kiện đi kèm'],
-  ],
-  [
-    ['stock', 'Hoa tại tủ'],
-    ['kiosks', 'Vị trí kiosk'],
-  ],
-  [
-    ['tasks', 'Giao việc'],
-    ['staff', 'Nhân viên shop'],
-  ],
-  [
-    ['commerce', 'Doanh số & PayOS'],
-    ['refunds', 'Hoàn tiền'],
-    ['seasonal', 'Dự báo theo mùa'],
-  ],
-  [
-    ['subscriptions', 'Gói thuê hiện tại'],
-    ['terminations', 'Chấm dứt thuê'],
-  ],
-];
 
 export default function SellerWorkspace({ section = 'overview' }: { section?: string }) {
   const { t } = useTranslation();
@@ -203,7 +167,8 @@ export default function SellerWorkspace({ section = 'overview' }: { section?: st
         <Link href={accountPath(session.data.role)}>Về khu vực của bạn</Link>
       </main>
     );
-  const hubTabs = sellerHubGroups.find((group) => group.some(([key]) => key === section));
+  const currentSection = workspaceSections['SELLER'].find(([key]) => key === section);
+  const activeHub = findSellerNavHub(section);
   return (
     <>
       <WorkspaceHeader
@@ -216,31 +181,33 @@ export default function SellerWorkspace({ section = 'overview' }: { section?: st
         <WorkspaceNavigation key={section} workspaceRole="SELLER" section={section} />
         <main id="main" className="workspace dashboard-content seller-content">
           <PortalUpdates />
-          <div className="dashboard-page-heading seller-page-bar">
-            <div className="seller-page-title-group">
-              <h1>
-                {section === 'overview'
-                  ? 'Tổng quan cửa hàng'
-                  : workspaceSections['SELLER'].find(([key]) => key === section)?.[1]}
-              </h1>
-              {hubTabs && (
-                <nav className="seller-hub-tabs" aria-label="Chuyển mục liên quan">
-                  {hubTabs.map(([tabKey, tabLabel]) => (
-                    <Link
-                      key={tabKey}
-                      href={`/seller/${tabKey}`}
-                      className="seller-hub-tab"
-                      aria-current={section === tabKey ? 'page' : undefined}
-                    >
-                      {tabLabel}
-                    </Link>
-                  ))}
-                </nav>
-              )}
+          <nav className="seller-breadcrumb" aria-label="Vị trí hiện tại">
+            {section === 'overview' ? (
+              <span>Vận hành cửa hàng</span>
+            ) : (
+              <Link href="/seller">Tổng quan cửa hàng</Link>
+            )}
+          </nav>
+          <div className="dashboard-page-heading">
+            <div>
+              <h1>{section === 'overview' ? 'Tổng quan cửa hàng' : currentSection?.[1]}</h1>
+              {section !== 'overview' && currentSection?.[2] && <p>{currentSection[2]}</p>}
             </div>
-            <SellerGuide key={section} section={section} />
           </div>
-          <SubscriptionBanner session={session.data} />
+          {activeHub?.tabs && (
+            <nav className="seller-stage-tabs" aria-label={`Phân mục ${activeHub.label}`}>
+              {activeHub.tabs.map(([tabKey, tabLabel]) => (
+                <Link
+                  key={tabKey}
+                  href={`/seller/${tabKey}`}
+                  aria-current={section === tabKey ? 'page' : undefined}
+                >
+                  {tabLabel}
+                </Link>
+              ))}
+            </nav>
+          )}
+          <SubscriptionBanner session={session.data} section={section} />
           {section === 'overview' && <DashboardOverview session={session.data} />}
           {section === 'orders' && (
             <WebRequests mode="seller" sellerId={session.data.sellerId || undefined} />
@@ -289,6 +256,7 @@ export default function SellerWorkspace({ section = 'overview' }: { section?: st
               sellerId={session.data.sellerId}
             />
           )}
+          <SellerGuide key={section} section={section} />
           {logout.isError && (
             <p role="alert" className="error">
               Chưa đăng xuất được. Bạn thử lại nhé.

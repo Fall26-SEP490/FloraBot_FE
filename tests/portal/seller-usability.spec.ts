@@ -12,7 +12,11 @@ const sections = [
   ['staff', 'Nhân viên shop', '.account-management-workspace'],
   ['chats', 'Tin nhắn khách hàng', '.staff-chat-section'],
   ['staff-chats', 'Tin nhắn nhân viên', '.staff-chat-section'],
+  ['commerce', 'Thanh toán & doanh số', '.business-panel'],
+  ['refunds', 'Hoàn tiền trực tiếp', '.business-panel'],
+  ['seasonal', 'Doanh số theo mùa', '.business-panel'],
   ['subscriptions', 'Thuê kiosk', '#subscriptions'],
+  ['terminations', 'Chấm dứt thuê kiosk', '.business-panel'],
 ] as const;
 for (const width of [390, 1440])
   for (const [section, title, selector] of sections) {
@@ -23,7 +27,7 @@ for (const width of [390, 1440])
       await page.setViewportSize({ width, height: 1000 });
       await page.goto(section === 'overview' ? '/seller' : '/seller/' + section);
       await expect(page.getByRole('heading', { level: 1, name: title, exact: true })).toBeVisible();
-      await expect(page.locator(selector)).toBeVisible();
+      await expect(page.locator(selector).first()).toBeVisible();
       await expect(page.locator('.seller-guide > summary')).toBeVisible();
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
         true,
@@ -54,7 +58,7 @@ for (const width of [390, 1440])
     await expect(
       nav.getByRole('link', { name: 'Thanh toán & doanh số', exact: true }),
     ).toBeVisible();
-    await expect(nav.getByRole('link', { name: 'Mẫu hoa', exact: true })).toHaveCount(0);
+    await expect(nav.getByRole('link', { name: 'Mẫu hoa & phụ kiện', exact: true })).toHaveCount(0);
     await nav.getByRole('button', { name: 'Xóa tìm chức năng' }).click();
     await nav.getByLabel('Tìm chức năng cửa hàng').fill('nap hoa');
     await expect(nav.getByRole('link', { name: 'Hoa tại tủ', exact: true })).toBeVisible();
@@ -99,15 +103,17 @@ for (const width of [390, 1440]) {
     if (width === 390)
       await page.getByRole('button', { name: 'Mở danh mục quản lý', exact: true }).click();
     const nav = page.getByRole('navigation', { name: 'Điều hướng quản lý' });
-    await nav
-      .getByRole('button', { name: 'Các mục trong Nhân viên & giao việc', exact: true })
+    await nav.getByRole('link', { name: 'Nhân viên & giao việc', exact: true }).click();
+    await expect(page).toHaveURL(/seller\/tasks$/);
+    await page
+      .getByRole('navigation', { name: 'Phân mục Nhân viên & giao việc' })
+      .getByRole('link', { name: 'Nhân viên shop', exact: true })
       .click();
-    await nav.getByRole('link', { name: 'Nhân viên shop', exact: true }).click();
     await expect(page).toHaveURL(/seller\/staff$/);
     if (width === 390)
       await page.getByRole('button', { name: 'Mở danh mục quản lý', exact: true }).click();
     await expect(nav.locator('[aria-current="page"]')).toHaveCount(1);
-    await expect(nav.locator('[aria-current="page"]')).toHaveAttribute('href', '/seller/staff');
+    await expect(nav.locator('[aria-current="page"]')).toHaveAttribute('href', '/seller/tasks');
     if (width === 390) await nav.getByLabel('Tìm chức năng cửa hàng').press('Escape');
     const help = page.locator('.seller-guide');
     await help.locator('summary').press('Enter');

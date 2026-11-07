@@ -28,7 +28,7 @@ const guides: Record<string, Guide> = {
     title: 'Hướng dẫn mẫu hoa',
     steps: [
       'Mẫu mới ở trạng thái bản nháp cho đến khi thêm ảnh và bật bán.',
-      'Chuyển sang tab Phụ kiện đi kèm để quản lý thiệp, túi quà.',
+      'Mở mục Phụ kiện để quản lý thiệp, túi quà đi kèm đơn đặt trước.',
     ],
     href: '/seller/stock',
     action: 'Quản lý hoa tại tủ',
@@ -91,7 +91,7 @@ const guides: Record<string, Guide> = {
     title: 'Trao đổi khách hàng',
     steps: [
       'Thống nhất mẫu hoa trong chat, sau đó gửi báo giá ở Đơn đặt trước.',
-      'Chuyển sang tab Nội bộ nhân viên để nhắn với đội ngũ.',
+      'Mở mục Tin nhắn nhân viên để trao đổi nội bộ với đội ngũ.',
     ],
     href: '/seller/orders',
     action: 'Mở đơn đặt trước',
@@ -100,7 +100,7 @@ const guides: Record<string, Guide> = {
     title: 'Hướng dẫn thanh toán',
     steps: [
       'Tiền bán hoa qua PayOS chuyển trực tiếp về tài khoản shop.',
-      'Chuyển tab Hoàn tiền hoặc Dự báo mùa để xem chi tiết.',
+      'Mở mục Hoàn tiền trực tiếp hoặc Doanh số theo mùa để xem chi tiết.',
     ],
     href: '/seller/refunds',
     action: 'Xem khoản hoàn',

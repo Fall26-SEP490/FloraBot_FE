@@ -45,8 +45,13 @@ export interface ProductKioskOption {
 }
 
 export type SellerKiosk = components['schemas']['SellerKioskDto'];
-export type PhotoPage = components['schemas']['ProductPhotoPage'];
-export type PhotoItem = components['schemas']['ProductPhotoResponse'];
+export type PhotoItem = components['schemas']['ProductPhotoResponse'] & {
+  isCover?: boolean;
+  sortOrder?: number;
+};
+export type PhotoPage = Omit<components['schemas']['ProductPhotoPage'], 'items'> & {
+  items: PhotoItem[];
+};
 
 export const PAGE_SIZE = 8;
 

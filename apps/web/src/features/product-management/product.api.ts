@@ -33,3 +33,9 @@ export const putProduct = (sellerId: string, productId: string, body: UpdateProd
 
 export const fetchProductPhotos = (productId: string, page: number) =>
   request<PhotoPage>(`/me/products/${productId}/photos?page=${page}`);
+
+export const reorderProductPhotos = (productId: string, photoIds: string[]) =>
+  request(`/me/products/${productId}/photos/order`, { photoIds }, false, 'PUT');
+
+export const deleteProductPhoto = (productId: string, photoId: string) =>
+  request(`/me/products/${productId}/photos/${photoId}`, undefined, false, 'DELETE');

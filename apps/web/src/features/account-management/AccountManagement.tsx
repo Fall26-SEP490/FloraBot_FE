@@ -115,6 +115,156 @@ function getInitials(name: string) {
   return `${parts[0].slice(0, 1)}${parts[parts.length - 1].slice(0, 1)}`.toLocaleUpperCase('vi-VN');
 }
 
+interface SellerStaffProfileDetail {
+  id: string;
+  sellerId: string;
+  email: string;
+  fullName: string;
+  phone: string | null;
+  address: string | null;
+  status: AccountStatus;
+}
+
+function SellerStaffProfileEditor({
+  sellerId,
+  staff,
+  onUpdated,
+}: {
+  sellerId: string;
+  staff: AccountDirectoryItem;
+  onUpdated: (updated: SellerStaffProfileDetail) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [fullNameDraft, setFullNameDraft] = useState<string | null>(null);
+  const [phoneDraft, setPhoneDraft] = useState<string | null>(null);
+  const [addressDraft, setAddressDraft] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+
+  const detail = useQuery({
+    queryKey: ['seller-staff-profile', sellerId, staff.id],
+    queryFn: () => request<SellerStaffProfileDetail>(`/sellers/${sellerId}/staff/${staff.id}`),
+    enabled: editing && Boolean(sellerId),
+  });
+
+  const fullName = fullNameDraft ?? detail.data?.fullName ?? staff.fullName;
+  const phone = phoneDraft ?? detail.data?.phone ?? staff.phone ?? '';
+  const address = addressDraft ?? detail.data?.address ?? '';
+
+  async function handleSave(event: React.FormEvent) {
+    event.preventDefault();
+    if (saving) return;
+    const trimmedName = fullName.trim();
+    const trimmedPhone = phone.trim();
+    const trimmedAddress = address.trim();
+    if (trimmedName.length < 2 || trimmedName.length > 100) {
+      setError('Họ và tên phải từ 2 đến 100 ký tự.');
+      return;
+    }
+    if (trimmedPhone && !phonePattern.test(trimmedPhone)) {
+      setError('Số điện thoại Việt Nam không hợp lệ.');
+      return;
+    }
+    setSaving(true);
+    setError('');
+    setNotice('');
+    try {
+      const updated = await request<SellerStaffProfileDetail>(
+        `/sellers/${sellerId}/staff/${staff.id}`,
+        {
+          fullName: trimmedName,
+          phone: trimmedPhone || null,
+          address: trimmedAddress || null,
+        },
+        true,
+        'PUT',
+      );
+      setNotice('Đã lưu thông tin nhân viên.');
+      setEditing(false);
+      onUpdated(updated);
+    } catch (cause) {
+      setError(cause instanceof ApiError ? cause.message : 'Chưa lưu được hồ sơ nhân viên.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div style={{ marginTop: '0.75rem' }}>
+      {notice && (
+        <p role="status" className="management-alert management-alert-success">
+          {notice}
+        </p>
+      )}
+      {!editing ? (
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            setEditing(true);
+            setNotice('');
+            setError('');
+          }}
+        >
+          Chỉnh sửa hồ sơ nhân viên
+        </Button>
+      ) : (
+        <form className="management-form" onSubmit={(e) => void handleSave(e)} noValidate>
+          <div className="management-field">
+            <label htmlFor={`staff-edit-name-${staff.id}`}>Họ và tên *</label>
+            <input
+              id={`staff-edit-name-${staff.id}`}
+              value={fullName}
+              maxLength={100}
+              disabled={saving}
+              onChange={(e) => setFullNameDraft(e.target.value)}
+            />
+          </div>
+          <div className="management-field">
+            <label htmlFor={`staff-edit-phone-${staff.id}`}>Số điện thoại</label>
+            <input
+              id={`staff-edit-phone-${staff.id}`}
+              value={phone}
+              maxLength={15}
+              disabled={saving}
+              onChange={(e) => setPhoneDraft(e.target.value)}
+            />
+          </div>
+          <div className="management-field">
+            <label htmlFor={`staff-edit-address-${staff.id}`}>Địa chỉ</label>
+            <input
+              id={`staff-edit-address-${staff.id}`}
+              value={address}
+              maxLength={300}
+              disabled={saving}
+              onChange={(e) => setAddressDraft(e.target.value)}
+            />
+          </div>
+          {error && (
+            <p role="alert" className="management-field-error">
+              {error}
+            </p>
+          )}
+          <div className="management-modal-actions">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={saving}
+              onClick={() => setEditing(false)}
+            >
+              Hủy
+            </Button>
+            <Button type="submit" disabled={saving}>
+              {saving ? 'Đang lưu…' : 'Lưu hồ sơ'}
+            </Button>
+          </div>
+        </form>
+      )}
+    </div>
+  );
+}
+
 export default function AccountManagement({
   actorRole,
   targetRole,
@@ -831,6 +981,25 @@ export default function AccountManagement({
                 </dd>
               </div>
             </dl>
+            {actorRole === 'SELLER' && sellerId && (
+              <SellerStaffProfileEditor
+                sellerId={sellerId}
+                staff={viewing}
+                onUpdated={(updated) => {
+                  setViewing((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          fullName: updated.fullName,
+                          phone: updated.phone,
+                        }
+                      : null,
+                  );
+                  void queryClient.invalidateQueries({ queryKey });
+                  void queryClient.invalidateQueries({ queryKey: ['staff-directory'] });
+                }}
+              />
+            )}
             <div className="management-modal-actions">
               <Button type="button" onClick={() => setViewing(null)} data-autofocus>
                 Đóng

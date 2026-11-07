@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Button, Flower2, ImageIcon, Plus, RefreshCw } from '@florabot/ui';
+import { Button, Eye, Flower2, ImageIcon, Plus, RefreshCw } from '@florabot/ui';
 import { ApiError, queryClient } from '@/shared/lib/api';
-import { fetchProductPhotos } from '../product.api';
+import { Modal } from '@/shared/components/Modal';
+import { fetchProductPhotos, reorderProductPhotos, deleteProductPhoto } from '../product.api';
 import type { PhotoPage, PhotoItem } from '../product.types';
 import { safeImage } from '../product.utils';
 
@@ -52,6 +53,7 @@ export default function ProductPhotos({
   const [cameraError, setCameraError] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [viewerPhotoId, setViewerPhotoId] = useState<string | null>(null);
   const input = useRef<HTMLInputElement>(null);
   const video = useRef<HTMLVideoElement>(null);
   const cameraStream = useRef<MediaStream | null>(null);
@@ -220,6 +222,64 @@ export default function ProductPhotos({
   }
 
   const items = photos.data?.items ?? [];
+  const viewerIndex = viewerPhotoId ? items.findIndex((item) => item.id === viewerPhotoId) : -1;
+  const viewerPhoto = viewerIndex >= 0 ? items[viewerIndex] : null;
+  const canReorderPage = page === 1 && !photos.data?.hasMore && items.length > 1;
+
+  async function handleReorder(orderedIds: string[], successText: string) {
+    if (!canEdit || pending || sending.current) return;
+    sending.current = true;
+    setPending(true);
+    setError('');
+    setMessage('');
+    try {
+      await reorderProductPhotos(productId, orderedIds);
+      setMessage(successText);
+      await queryClient.invalidateQueries({ queryKey: ['product-photos', sellerId, productId] });
+      await queryClient.invalidateQueries({ queryKey: ['products', sellerId] });
+    } catch (cause) {
+      setError(cause instanceof ApiError ? cause.message : 'Chưa đổi được thứ tự ảnh.');
+    } finally {
+      sending.current = false;
+      setPending(false);
+    }
+  }
+
+  async function handleSetCover(photoId: string) {
+    const orderedIds = [
+      photoId,
+      ...items.filter((item) => item.id !== photoId).map((item) => item.id),
+    ];
+    await handleReorder(orderedIds, 'Đã đặt làm ảnh bìa hiển thị lên catalog.');
+  }
+
+  async function handleMovePhoto(index: number, delta: -1 | 1) {
+    const targetIndex = index + delta;
+    if (targetIndex < 0 || targetIndex >= items.length) return;
+    const nextIds = items.map((item) => item.id);
+    const [moved] = nextIds.splice(index, 1);
+    nextIds.splice(targetIndex, 0, moved);
+    await handleReorder(nextIds, 'Đã cập nhật vị trí hiển thị ảnh trên catalog.');
+  }
+
+  async function handleHidePhoto(photoId: string) {
+    if (!canEdit || pending || sending.current) return;
+    sending.current = true;
+    setPending(true);
+    setError('');
+    setMessage('');
+    try {
+      await deleteProductPhoto(productId, photoId);
+      setMessage('Đã ẩn ảnh khỏi mẫu hoa và catalog.');
+      await queryClient.invalidateQueries({ queryKey: ['product-photos', sellerId, productId] });
+      await queryClient.invalidateQueries({ queryKey: ['products', sellerId] });
+    } catch (cause) {
+      setError(cause instanceof ApiError ? cause.message : 'Chưa ẩn được ảnh mẫu hoa.');
+    } finally {
+      sending.current = false;
+      setPending(false);
+    }
+  }
 
   return (
     <div className="product-photos-inline" aria-labelledby={`photos-title-${productId}`}>
@@ -304,16 +364,172 @@ export default function ProductPhotos({
 
       {items.length > 0 && (
         <ul className="product-photo-gallery">
-          {items.map((photo: PhotoItem, index: number) => (
-            <li key={photo.id}>
-              <StoredPhoto
-                url={photo.url}
-                label={`Ảnh ${(page - 1) * 20 + index + 1} của ${productName}`}
-              />
-            </li>
-          ))}
+          {items.map((photo: PhotoItem, index: number) => {
+            const isCover = photo.isCover ?? (page === 1 && index === 0);
+            const displayPosition = (page - 1) * 20 + index + 1;
+            return (
+              <li key={photo.id} className={`product-photo-item ${isCover ? 'is-cover' : ''}`}>
+                <button
+                  type="button"
+                  className="product-photo-media-btn"
+                  onClick={() => setViewerPhotoId(photo.id)}
+                  aria-label={`Xem kích thước đầy đủ ảnh ${displayPosition} của ${productName}`}
+                  title="Bấm để xem ảnh kích thước đầy đủ"
+                >
+                  <StoredPhoto
+                    url={photo.url}
+                    label={`Ảnh ${displayPosition} của ${productName}`}
+                  />
+                  {isCover ? (
+                    <small className="product-photo-cover-badge">Ảnh bìa · #1</small>
+                  ) : (
+                    <small className="product-photo-order-badge">#{displayPosition}</small>
+                  )}
+                  <span className="product-photo-zoom-pill" aria-hidden="true">
+                    <Eye size={12} />
+                    <span> Xem lớn</span>
+                  </span>
+                </button>
+                {canEdit && (
+                  <div className="product-photo-item-actions">
+                    {isCover ? (
+                      <span className="product-photo-cover-state">Đang làm ảnh bìa</span>
+                    ) : canReorderPage ? (
+                      <button
+                        type="button"
+                        className="product-photo-action-btn is-primary"
+                        disabled={pending}
+                        onClick={() => void handleSetCover(photo.id)}
+                      >
+                        Đặt ảnh bìa
+                      </button>
+                    ) : null}
+                    <div className="product-photo-bottom-row">
+                      {canReorderPage && (
+                        <>
+                          <button
+                            type="button"
+                            className="product-photo-icon-btn"
+                            disabled={pending || index === 0}
+                            aria-label={`Đưa ảnh ${displayPosition} lên trước`}
+                            title="Đưa lên vị trí trước"
+                            onClick={() => void handleMovePhoto(index, -1)}
+                          >
+                            ←
+                          </button>
+                          <button
+                            type="button"
+                            className="product-photo-icon-btn"
+                            disabled={pending || index === items.length - 1}
+                            aria-label={`Đưa ảnh ${displayPosition} ra sau`}
+                            title="Đưa xuống vị trí sau"
+                            onClick={() => void handleMovePhoto(index, 1)}
+                          >
+                            →
+                          </button>
+                        </>
+                      )}
+                      <button
+                        type="button"
+                        className="product-photo-action-btn is-danger"
+                        disabled={pending}
+                        onClick={() => void handleHidePhoto(photo.id)}
+                      >
+                        Ẩn ảnh
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
+
+      <Modal
+        open={Boolean(viewerPhoto)}
+        onClose={() => setViewerPhotoId(null)}
+        size="lg"
+        className="product-photo-lightbox-modal"
+        title={
+          viewerPhoto
+            ? `${productName} · Ảnh ${(page - 1) * 20 + viewerIndex + 1}/${items.length}`
+            : productName
+        }
+        description={
+          viewerPhoto && (viewerPhoto.isCover ?? (page === 1 && viewerIndex === 0))
+            ? 'Ảnh bìa đang hiển thị đại diện trên catalog và màn hình kiosk.'
+            : 'Xem ảnh kích thước đầy đủ và điều chỉnh vị trí hiển thị trên catalog.'
+        }
+      >
+        {viewerPhoto && (
+          <div className="product-photo-lightbox-body">
+            <div className="product-photo-lightbox-stage">
+              <img
+                src={viewerPhoto.url}
+                alt={`Ảnh kích thước đầy đủ ${(page - 1) * 20 + viewerIndex + 1} của ${productName}`}
+                className="product-photo-lightbox-img"
+                referrerPolicy="no-referrer"
+              />
+            </div>
+            <div className="product-photo-lightbox-toolbar">
+              <div className="product-photo-lightbox-nav">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={viewerIndex <= 0}
+                  onClick={() => setViewerPhotoId(items[viewerIndex - 1]?.id ?? null)}
+                >
+                  ← Ảnh trước
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={viewerIndex >= items.length - 1}
+                  onClick={() => setViewerPhotoId(items[viewerIndex + 1]?.id ?? null)}
+                >
+                  Ảnh sau →
+                </Button>
+                <a
+                  href={viewerPhoto.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="button button-outline product-photo-open-raw"
+                >
+                  Mở ảnh gốc
+                </a>
+              </div>
+              {canEdit && (
+                <div className="product-photo-lightbox-actions">
+                  {!(viewerPhoto.isCover ?? (page === 1 && viewerIndex === 0)) &&
+                    canReorderPage && (
+                      <Button
+                        type="button"
+                        disabled={pending}
+                        onClick={() => void handleSetCover(viewerPhoto.id)}
+                      >
+                        Đặt làm ảnh bìa
+                      </Button>
+                    )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={pending}
+                    onClick={async () => {
+                      const nextId =
+                        items[viewerIndex + 1]?.id ?? items[viewerIndex - 1]?.id ?? null;
+                      await handleHidePhoto(viewerPhoto.id);
+                      setViewerPhotoId(nextId);
+                    }}
+                  >
+                    Ẩn ảnh này
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </Modal>
 
       {(page > 1 || photos.data?.hasMore) && (
         <div className="product-photo-pagination">

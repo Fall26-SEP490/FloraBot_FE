@@ -95,6 +95,286 @@ function StockProductThumb({
   );
 }
 
+interface SlotLayoutRequestView {
+  id: string;
+  kioskId: string;
+  sellerId: string;
+  walkInSlots: number;
+  preorderSlots: number;
+  reason: string;
+  status: string;
+  createdAt: string;
+  reviewedAt: string | null;
+  reviewNote: string | null;
+}
+
+interface SellerInventoryHistoryItem {
+  seq: number;
+  bouquetId: string | null;
+  slotId: string | null;
+  kioskId: string | null;
+  slotCode: string | null;
+  movementType: string;
+  orderId: string | null;
+  orderCode: string | null;
+  performedBy: string | null;
+  actorName: string | null;
+  createdAt: string;
+}
+
+interface SellerInventoryHistoryPage {
+  items: SellerInventoryHistoryItem[];
+  page: number;
+  hasMore: boolean;
+}
+
+const layoutStatusLabels: Record<string, string> = {
+  PENDING: 'Chờ Quản lý vận hành duyệt',
+  APPROVED: 'Đã áp dụng',
+  REJECTED: 'Đã từ chối',
+};
+
+function KioskLayoutAndHistoryPanels({
+  kioskId,
+  totalSlots,
+  currentWalkIn,
+  currentPreorder,
+}: {
+  kioskId: string;
+  totalSlots: number;
+  currentWalkIn: number;
+  currentPreorder: number;
+}) {
+  const [layoutOpen, setLayoutOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [walkIn, setWalkIn] = useState(String(currentWalkIn));
+  const [preorder, setPreorder] = useState(String(currentPreorder));
+  const [reason, setReason] = useState('');
+  const [layoutNotice, setLayoutNotice] = useState('');
+  const [layoutError, setLayoutError] = useState('');
+  const [historyPage, setHistoryPage] = useState(1);
+
+  const layoutRequests = useQuery({
+    queryKey: ['kiosk-layout-requests', kioskId],
+    queryFn: () => request<SlotLayoutRequestView[]>(`/me/kiosks/${kioskId}/layout-requests`),
+    enabled: layoutOpen && !!kioskId,
+  });
+
+  const createLayoutRequest = useMutation({
+    mutationFn: () =>
+      request<SlotLayoutRequestView>(
+        `/me/kiosks/${kioskId}/layout-requests`,
+        {
+          walkInSlots: Number(walkIn),
+          preorderSlots: Number(preorder),
+          reason: reason.trim(),
+        },
+        true,
+        'POST',
+      ),
+    onSuccess: async () => {
+      setReason('');
+      setLayoutError('');
+      setLayoutNotice('Đã gửi yêu cầu đổi cơ cấu ô cho Quản lý vận hành xem xét.');
+      await queryClient.invalidateQueries({ queryKey: ['kiosk-layout-requests', kioskId] });
+    },
+    onError: (err: unknown) => {
+      setLayoutNotice('');
+      setLayoutError(err instanceof Error ? err.message : 'Chưa gửi được yêu cầu đổi cơ cấu ô.');
+    },
+  });
+
+  const history = useQuery({
+    queryKey: ['seller-inventory-history', kioskId, historyPage],
+    queryFn: () =>
+      request<SellerInventoryHistoryPage>(
+        `/me/inventory-history?kioskId=${encodeURIComponent(kioskId)}&page=${historyPage}`,
+      ),
+    enabled: historyOpen && !!kioskId,
+  });
+
+  const numWalk = Number(walkIn);
+  const numPre = Number(preorder);
+  const layoutValid =
+    Number.isInteger(numWalk) &&
+    Number.isInteger(numPre) &&
+    numWalk >= 0 &&
+    numPre >= 0 &&
+    (totalSlots === 0 || numWalk + numPre === totalSlots) &&
+    reason.trim().length >= 5 &&
+    reason.trim().length <= 500;
+
+  return (
+    <div
+      className="stock-extra-panels"
+      style={{ marginTop: '1rem', display: 'grid', gap: '0.75rem' }}
+    >
+      <details
+        className="stock-toolbar-card"
+        open={layoutOpen}
+        onToggle={(e) => setLayoutOpen(e.currentTarget.open)}
+      >
+        <summary>
+          <strong>Yêu cầu đổi cơ cấu ô (Walk-in / Pre-order)</strong> · Hiện tại: {currentWalkIn} ô
+          Walk-in / {currentPreorder} ô Pre-order
+        </summary>
+        {layoutOpen && (
+          <div style={{ marginTop: '0.75rem' }}>
+            <p className="quiet">
+              Tổng số ô phải giữ nguyên ({totalSlots} ô). Quản lý vận hành sẽ duyệt khi các ô cần
+              đổi đang trống và không có đơn chờ nhận.
+            </p>
+            <form
+              className="stock-fields"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (layoutValid && !createLayoutRequest.isPending) {
+                  createLayoutRequest.mutate();
+                }
+              }}
+            >
+              <div>
+                <label htmlFor={`layout-walkin-${kioskId}`}>Số ô Walk-in mong muốn</label>
+                <input
+                  id={`layout-walkin-${kioskId}`}
+                  type="number"
+                  min={0}
+                  max={totalSlots || 50}
+                  step={1}
+                  value={walkIn}
+                  onChange={(e) => {
+                    const nextWalk = e.target.value;
+                    setWalkIn(nextWalk);
+                    if (totalSlots > 0 && nextWalk !== '' && Number.isInteger(Number(nextWalk))) {
+                      setPreorder(String(Math.max(0, totalSlots - Number(nextWalk))));
+                    }
+                  }}
+                />
+              </div>
+              <div>
+                <label htmlFor={`layout-preorder-${kioskId}`}>Số ô Pre-order mong muốn</label>
+                <input
+                  id={`layout-preorder-${kioskId}`}
+                  type="number"
+                  min={0}
+                  max={totalSlots || 50}
+                  step={1}
+                  value={preorder}
+                  onChange={(e) => setPreorder(e.target.value)}
+                />
+              </div>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label htmlFor={`layout-reason-${kioskId}`}>Lý do thay đổi (5–500 ký tự)</label>
+                <textarea
+                  id={`layout-reason-${kioskId}`}
+                  rows={2}
+                  minLength={5}
+                  maxLength={500}
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder="Ví dụ: Tăng ô đặt trước dịp lễ 20/10…"
+                />
+              </div>
+              <div className="stock-actions">
+                <Button type="submit" disabled={!layoutValid || createLayoutRequest.isPending}>
+                  {createLayoutRequest.isPending ? 'Đang gửi…' : 'Gửi yêu cầu đổi cơ cấu ô'}
+                </Button>
+              </div>
+            </form>
+            {(layoutError || layoutNotice) && (
+              <p
+                role={layoutError ? 'alert' : 'status'}
+                className={layoutError ? 'error' : undefined}
+              >
+                {layoutError || layoutNotice}
+              </p>
+            )}
+            {layoutRequests.isPending && <p role="status">Đang tải lịch sử yêu cầu…</p>}
+            {layoutRequests.data && layoutRequests.data.length > 0 && (
+              <ul className="admin-shop-list" style={{ marginTop: '0.75rem' }}>
+                {layoutRequests.data.map((req) => (
+                  <li key={req.id} className="shop-profile">
+                    <p>
+                      <strong>
+                        {req.walkInSlots} ô Walk-in · {req.preorderSlots} ô Pre-order
+                      </strong>{' '}
+                      — {layoutStatusLabels[req.status] || req.status} (
+                      {new Date(req.createdAt).toLocaleString('vi-VN')})
+                    </p>
+                    <p className="quiet">Lý do: {req.reason}</p>
+                    {req.reviewNote && <p>Ghi chú duyệt: {req.reviewNote}</p>}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+      </details>
+
+      <details
+        className="stock-toolbar-card"
+        open={historyOpen}
+        onToggle={(e) => setHistoryOpen(e.currentTarget.open)}
+      >
+        <summary>
+          <strong>Lịch sử biến động hoa tại tủ</strong>
+        </summary>
+        {historyOpen && (
+          <div style={{ marginTop: '0.75rem' }}>
+            {history.isPending && <p role="status">Đang tải lịch sử biến động hoa…</p>}
+            {history.isError && (
+              <p role="alert" className="error">
+                Chưa tải được lịch sử biến động hoa tại tủ.
+              </p>
+            )}
+            {history.data && history.data.items.length === 0 && (
+              <p className="quiet">Chưa có bản ghi biến động hoa tại kiosk này.</p>
+            )}
+            {history.data && history.data.items.length > 0 && (
+              <>
+                <ul className="admin-shop-list">
+                  {history.data.items.map((entry) => (
+                    <li key={entry.seq} className="shop-profile">
+                      <p>
+                        <strong>{entry.movementType}</strong>
+                        {entry.slotCode ? ` · Ô ${entry.slotCode}` : ''}
+                        {entry.orderCode ? ` · Đơn ${entry.orderCode}` : ''}
+                      </p>
+                      <p className="quiet">
+                        Người thực hiện: {entry.actorName || 'Hệ thống'} ·{' '}
+                        {new Date(entry.createdAt).toLocaleString('vi-VN')}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+                <div className="stock-actions" style={{ marginTop: '0.5rem' }}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={historyPage <= 1 || history.isFetching}
+                    onClick={() => setHistoryPage((p) => p - 1)}
+                  >
+                    Trang trước
+                  </Button>
+                  <span>Trang {historyPage}</span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={!history.data.hasMore || history.isFetching}
+                    onClick={() => setHistoryPage((p) => p + 1)}
+                  >
+                    Trang sau
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </details>
+    </div>
+  );
+}
+
 export default function SellerStock({ session }: { session: Session }) {
   const sellerId = session.sellerId;
   const [selectedKioskChoice, setSelectedKioskChoice] = useState('');
@@ -667,6 +947,15 @@ export default function SellerStock({ session }: { session: Session }) {
           </section>
         )}
       </div>
+      {selectedKioskId && (
+        <KioskLayoutAndHistoryPanels
+          key={selectedKioskId}
+          kioskId={selectedKioskId}
+          totalSlots={allSlots.length}
+          currentWalkIn={walkInSlots.length}
+          currentPreorder={preorderSlots.length}
+        />
+      )}
     </section>
   );
 }

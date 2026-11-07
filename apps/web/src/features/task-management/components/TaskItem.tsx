@@ -48,6 +48,42 @@ export function TaskItem({
   const [error, setError] = useState('');
   const [uncertain, setUncertain] = useState(false);
   const [notice, setNotice] = useState('');
+  const [instructionsDraft, setInstructionsDraft] = useState(task.instructions);
+  const [editingInstructions, setEditingInstructions] = useState(false);
+  const canEditInstructions =
+    !isWorker &&
+    ['ASSIGNED', 'IN_PROGRESS'].includes(task.status) &&
+    ['SELLER', 'OPERATIONS_MANAGER', 'ADMIN'].includes(role);
+
+  async function saveInstructions(event: React.FormEvent) {
+    event.preventDefault();
+    if (busy || uncertain) return;
+    const trimmed = instructionsDraft.trim();
+    if (trimmed.length < 10 || trimmed.length > 2000) {
+      setError('Hướng dẫn công việc cần từ 10 đến 2.000 ký tự.');
+      return;
+    }
+    setBusy(true);
+    setError('');
+    setNotice('');
+    try {
+      await request(
+        `${apiBase}/${task.id}`,
+        { version: task.version, instructions: trimmed },
+        true,
+        'PATCH',
+      );
+      setNotice('Đã cập nhật hướng dẫn công việc.');
+      setEditingInstructions(false);
+      await queryClient.invalidateQueries({ queryKey: ['staff-tasks'] });
+    } catch (cause) {
+      setError(
+        cause instanceof ApiError ? cause.message : 'Chưa cập nhật được hướng dẫn công việc.',
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
   const choices = readOnly
     ? []
     : isManager
@@ -121,6 +157,37 @@ export function TaskItem({
           sellerId={sellerId}
           role={role}
         />
+      )}
+      {canEditInstructions && (
+        <details
+          open={editingInstructions}
+          onToggle={(e) => setEditingInstructions(e.currentTarget.open)}
+        >
+          <summary>Sửa hướng dẫn công việc</summary>
+          {editingInstructions && (
+            <form onSubmit={(e) => void saveInstructions(e)} noValidate>
+              <label htmlFor={`edit-instructions-${task.id}`}>
+                Hướng dẫn công việc (10–2.000 ký tự)
+              </label>
+              <textarea
+                id={`edit-instructions-${task.id}`}
+                rows={3}
+                minLength={10}
+                maxLength={2000}
+                disabled={busy}
+                value={instructionsDraft}
+                onChange={(e) => setInstructionsDraft(e.target.value)}
+              />
+              <Button
+                type="submit"
+                variant="outline"
+                disabled={busy || instructionsDraft.trim().length < 10}
+              >
+                {busy ? 'Đang lưu…' : 'Lưu hướng dẫn'}
+              </Button>
+            </form>
+          )}
+        </details>
       )}
       {task.report && (
         <p>

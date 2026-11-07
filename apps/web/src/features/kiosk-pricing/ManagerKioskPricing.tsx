@@ -14,16 +14,16 @@ import {
 import './kiosk-pricing.css';
 
 function PricingForm({ pricing, onSaved }: { pricing: KioskSlotPricing; onSaved: () => void }) {
-  const [walk, setWalk] = useState(String(pricing.walkInAnnualPrice ?? ''));
-  const [pre, setPre] = useState(String(pricing.preorderAnnualPrice ?? ''));
+  const [price, setPrice] = useState(
+    String(pricing.annualSlotPrice ?? pricing.walkInAnnualPrice ?? ''),
+  );
   const [message, setMessage] = useState('');
   const save = useMutation({
     mutationFn: () =>
       request<KioskSlotPricing>(
         '/operations/kiosk-pricing',
         {
-          walkInAnnualPrice: Number(walk),
-          preorderAnnualPrice: Number(pre),
+          annualSlotPrice: Number(price),
           expectedVersion: pricing.version,
         },
         true,
@@ -41,9 +41,7 @@ function PricingForm({ pricing, onSaved }: { pricing: KioskSlotPricing; onSaved:
       );
     },
   });
-  const valid = [walk, pre].every(
-    (value) => value.trim() !== '' && Number.isSafeInteger(Number(value)) && Number(value) > 0,
-  );
+  const valid = price.trim() !== '' && Number.isSafeInteger(Number(price)) && Number(price) > 0;
   return (
     <form
       onSubmit={(e) => {
@@ -51,31 +49,21 @@ function PricingForm({ pricing, onSaved }: { pricing: KioskSlotPricing; onSaved:
         if (valid) save.mutate();
       }}
     >
-      <p>Đơn giá cho một ô trong 12 tháng. Bảng giá mới chỉ áp dụng cho hồ sơ thuê mới.</p>
+      <p>
+        Đơn giá đồng nhất cho 1 ô (Walk-in hoặc Pre-order) trong 12 tháng. Bảng giá mới chỉ áp dụng
+        cho hồ sơ thuê mới và kỳ gia hạn tiếp theo.
+      </p>
       <div className="slot-demand-inputs">
         <label>
-          Giá ô Walk-in (đ/ô/năm)
+          Đơn giá 1 ô / năm (đ/ô/năm)
           <input
             type="number"
             min={1}
             max={Number.MAX_SAFE_INTEGER}
             step={1}
             required
-            value={walk}
-            onChange={(e) => setWalk(e.target.value)}
-            disabled={save.isPending}
-          />
-        </label>
-        <label>
-          Giá ô Pre-order (đ/ô/năm)
-          <input
-            type="number"
-            min={1}
-            max={Number.MAX_SAFE_INTEGER}
-            step={1}
-            required
-            value={pre}
-            onChange={(e) => setPre(e.target.value)}
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
             disabled={save.isPending}
           />
         </label>
@@ -111,7 +99,7 @@ export default function ManagerKioskPricing() {
       <summary>
         Bảng giá thuê ô kiosk
         {pricingReady(query.data)
-          ? ` · Walk-in ${rentalMoney(query.data!.walkInAnnualPrice!)} · Pre-order ${rentalMoney(query.data!.preorderAnnualPrice!)}/ô/năm`
+          ? ` · ${rentalMoney(query.data!.annualSlotPrice!)}/ô/năm`
           : ' · Chưa có bảng giá'}
       </summary>
       {query.isPending && <p role="status">Đang tải bảng giá…</p>}

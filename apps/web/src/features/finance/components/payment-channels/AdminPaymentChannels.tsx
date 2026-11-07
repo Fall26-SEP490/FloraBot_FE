@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
-import type { components } from '../../../../../packages/contracts/src/generated/api';
+import type { components } from '../../../../../../../packages/contracts/src/generated/api';
 import { queryClient, request } from '@/shared/lib/api';
-import './business-v2.css';
+import '../../styles/commerce-subscriptions.css';
 
 type Channel = components['schemas']['AdminPaymentChannelItemResponse'];
 type Verification = components['schemas']['ChannelVerificationResponse'];

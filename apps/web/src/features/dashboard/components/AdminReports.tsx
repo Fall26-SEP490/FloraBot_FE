@@ -65,6 +65,192 @@ function displayValue(value: unknown) {
   return typeof value === 'boolean' ? (value ? 'Có' : 'Không') : '—';
 }
 
+interface AuditLogEntry {
+  id: string;
+  actorType: string;
+  actorId: string | null;
+  action: string;
+  entityType: string;
+  entityId: string | null;
+  createdAt: string;
+  payloadRedacted: string;
+}
+
+interface AuditLogPage {
+  items: AuditLogEntry[];
+  page: number;
+  hasMore: boolean;
+}
+
+function AdminAuditLogsSection() {
+  const [open, setOpen] = useState(false);
+  const [actionFilter, setActionFilter] = useState('');
+  const [entityTypeFilter, setEntityTypeFilter] = useState('');
+  const [entityIdFilter, setEntityIdFilter] = useState('');
+  const [actorIdFilter, setActorIdFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const logs = useQuery({
+    queryKey: [
+      'admin-audit-logs',
+      actionFilter.trim(),
+      entityTypeFilter.trim(),
+      entityIdFilter.trim(),
+      actorIdFilter.trim(),
+      page,
+    ],
+    queryFn: () => {
+      const params = new URLSearchParams({ page: String(page) });
+      if (actionFilter.trim()) params.set('action', actionFilter.trim());
+      if (entityTypeFilter.trim()) params.set('entityType', entityTypeFilter.trim());
+      if (entityIdFilter.trim()) params.set('entityId', entityIdFilter.trim());
+      if (actorIdFilter.trim()) params.set('actorId', actorIdFilter.trim());
+      return request<AuditLogPage>(`/admin/audit-logs?${params.toString()}`);
+    },
+    enabled: open,
+  });
+
+  const detail = useQuery({
+    queryKey: ['admin-audit-log-detail', selectedId],
+    queryFn: () => request<AuditLogEntry>(`/admin/audit-logs/${selectedId}`),
+    enabled: open && Boolean(selectedId),
+  });
+
+  return (
+    <details
+      className="shop-profile"
+      style={{ marginTop: '1.5rem' }}
+      open={open}
+      onToggle={(e) => setOpen(e.currentTarget.open)}
+    >
+      <summary>
+        <strong>Nhật ký kiểm toán hệ thống (Audit Logs)</strong>
+      </summary>
+      {open && (
+        <div style={{ marginTop: '0.75rem' }}>
+          <AdminFilterBar label="Bộ lọc nhật ký kiểm toán">
+            <div>
+              <label htmlFor="audit-action-filter">Hành động (action)</label>
+              <input
+                id="audit-action-filter"
+                value={actionFilter}
+                onChange={(e) => {
+                  setActionFilter(e.target.value);
+                  setPage(1);
+                }}
+                placeholder="Ví dụ: ASSIGN_KIOSK…"
+              />
+            </div>
+            <div>
+              <label htmlFor="audit-entity-type">Loại thực thể (entityType)</label>
+              <input
+                id="audit-entity-type"
+                value={entityTypeFilter}
+                onChange={(e) => {
+                  setEntityTypeFilter(e.target.value);
+                  setPage(1);
+                }}
+                placeholder="Ví dụ: kiosk, order…"
+              />
+            </div>
+            <div>
+              <label htmlFor="audit-entity-id">Mã thực thể (entityId)</label>
+              <input
+                id="audit-entity-id"
+                value={entityIdFilter}
+                onChange={(e) => {
+                  setEntityIdFilter(e.target.value);
+                  setPage(1);
+                }}
+                placeholder="UUID thực thể…"
+              />
+            </div>
+            <div>
+              <label htmlFor="audit-actor-id">Mã tác nhân (actorId)</label>
+              <input
+                id="audit-actor-id"
+                value={actorIdFilter}
+                onChange={(e) => {
+                  setActorIdFilter(e.target.value);
+                  setPage(1);
+                }}
+                placeholder="UUID người thực hiện…"
+              />
+            </div>
+          </AdminFilterBar>
+
+          {logs.isPending && <p role="status">Đang tải nhật ký kiểm toán…</p>}
+          {logs.isError && (
+            <p role="alert" className="error">
+              Chưa tải được nhật ký kiểm toán.
+            </p>
+          )}
+          {logs.data && logs.data.items.length === 0 && (
+            <p role="status">Không có bản ghi nhật ký kiểm toán khớp bộ lọc.</p>
+          )}
+          {logs.data && logs.data.items.length > 0 && (
+            <>
+              <ul className="admin-shop-list">
+                {logs.data.items.map((item) => (
+                  <li key={item.id} className="shop-profile">
+                    <p>
+                      <strong>{item.action}</strong> · {item.entityType}
+                      {item.entityId ? ` (${item.entityId})` : ''}
+                    </p>
+                    <p className="quiet">
+                      Tác nhân: {item.actorType} {item.actorId || ''} ·{' '}
+                      {new Date(item.createdAt).toLocaleString('vi-VN')}
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setSelectedId(selectedId === item.id ? null : item.id)}
+                    >
+                      {selectedId === item.id ? 'Ẩn chi tiết' : 'Xem chi tiết'}
+                    </Button>
+                    {selectedId === item.id && detail.data && (
+                      <pre
+                        style={{
+                          marginTop: '0.5rem',
+                          padding: '0.5rem',
+                          overflowX: 'auto',
+                          fontSize: '0.8rem',
+                        }}
+                      >
+                        {detail.data.payloadRedacted}
+                      </pre>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              <nav aria-label="Phân trang nhật ký kiểm toán" className="stock-actions">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={page <= 1 || logs.isFetching}
+                  onClick={() => setPage((p) => p - 1)}
+                >
+                  Trang trước
+                </Button>
+                <span>Trang {page}</span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!logs.data.hasMore || logs.isFetching}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  Trang sau
+                </Button>
+              </nav>
+            </>
+          )}
+        </div>
+      )}
+    </details>
+  );
+}
+
 export default function AdminReports({ session }: { session: Session }) {
   const [report, setReport] = useState<ReportName>('v_admin_queue');
   const [page, setPage] = useState(1);
@@ -184,6 +370,7 @@ export default function AdminReports({ session }: { session: Session }) {
           </nav>
         </>
       )}
+      <AdminAuditLogsSection />
     </section>
   );
 }

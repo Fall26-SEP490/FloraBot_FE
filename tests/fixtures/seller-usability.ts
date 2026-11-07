@@ -166,7 +166,8 @@ export async function setupSellerUsability(page: Page) {
           expectedBankName: 'Vietcombank',
         },
       });
-    if (path === `/sellers/${shopId}/payments`) return route.fulfill({ json: paged([]) });
+    if (path === `/sellers/${shopId}/payments`)
+      return route.fulfill({ json: { payments: [], page: 1, pageSize: 10, hasMore: false } });
     if (path === `/sellers/${shopId}/loyalty-settings`)
       return route.fulfill({
         json: {
@@ -221,6 +222,22 @@ export async function setupSellerUsability(page: Page) {
       return route.fulfill({ json: path.endsWith('/staff-tasks') ? paged([]) : [] });
     if (path.endsWith('/seller-staff/chats') || path.endsWith('/chats'))
       return route.fulfill({ json: paged([]) });
+    if (path === '/member/kiosk-applications/current')
+      return route.fulfill({ status: 404, json: { detail: 'Chưa có hồ sơ thuê đang mở' } });
+    if (path === `/sellers/${shopId}/refunds`) return route.fulfill({ json: paged([]) });
+    if (path === `/sellers/${shopId}/ai/seasonal-sales`)
+      return route.fulfill({
+        json: {
+          sellerId: shopId,
+          from: '2025-11-07',
+          to: '2026-11-07',
+          totalInvoices: 12,
+          totalUnits: 15,
+          products: [],
+        },
+      });
+    if (path.endsWith('/termination-requests/current'))
+      return route.fulfill({ status: 404, json: { detail: 'Chưa có yêu cầu chấm dứt' } });
     if (path.endsWith('/accessories')) return route.fulfill({ json: [] });
     return route.fulfill({ status: 501, json: { detail: 'Chưa khai báo GET mock: ' + path } });
   });

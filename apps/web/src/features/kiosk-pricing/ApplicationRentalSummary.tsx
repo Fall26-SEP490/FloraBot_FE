@@ -11,23 +11,22 @@ export function rentalAllocation(
     ? `${app.walkInSlots ?? 'Chưa rõ'} ô Walk-in · ${app.preorderSlots ?? 'Chưa rõ'} ô Pre-order`
     : `${app.packageName} · ${app.totalSlots} ô (hồ sơ cũ)`;
 }
+type ApplicationWithUniformPrice = KioskApplicationResponse & {
+  annualSlotPrice?: number | null;
+};
+
 export function ApplicationRentalSummary({
   application: app,
 }: {
-  application: KioskApplicationResponse;
+  application: ApplicationWithUniformPrice;
 }) {
+  const unitPrice = app.annualSlotPrice ?? app.walkInAnnualPrice ?? app.preorderAnnualPrice ?? null;
   return (
     <div>
       <strong>{rentalAllocation(app)}</strong>
       {app.pricingMode === 'SLOT_PRICING' && (
         <p>
-          Walk-in:{' '}
-          {app.walkInAnnualPrice == null ? 'Chưa có đơn giá' : rentalMoney(app.walkInAnnualPrice)}
-          /ô/năm · Pre-order:{' '}
-          {app.preorderAnnualPrice == null
-            ? 'Chưa có đơn giá'
-            : rentalMoney(app.preorderAnnualPrice)}
-          /ô/năm
+          Đơn giá ô: {unitPrice == null ? 'Chưa có đơn giá' : `${rentalMoney(unitPrice)}/ô/năm`}
         </p>
       )}
       <p>

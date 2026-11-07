@@ -3,13 +3,21 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
-import type { components } from '../../../../../packages/contracts/src/generated/api';
+import type { components } from '../../../../../../../packages/contracts/src/generated/api';
 import EvidenceUpload from '@/shared/components/EvidenceUpload';
 import { queryClient, request, type Session } from '@/shared/lib/api';
-import './business-v2.css';
+import '../../styles/commerce-subscriptions.css';
 
 type Page = components['schemas']['SellerRefundPageResponse'];
-type Detail = components['schemas']['SellerRefundDetailResponse'];
+type BaseDetail = components['schemas']['SellerRefundDetailResponse'];
+type Detail = Omit<BaseDetail, 'submission'> & {
+  submission?:
+    | (NonNullable<BaseDetail['submission']> & {
+        attemptCount?: number;
+        reviewReason?: string | null;
+      })
+    | null;
+};
 type Bank = components['schemas']['RefundBankResponse'];
 const money = (value: number | string) => `${Number(value).toLocaleString('vi-VN')} đ`;
 
@@ -87,11 +95,19 @@ function RefundCard({ id, sellerId }: { id: string; sellerId: string }) {
       </p>
       {item.reason && <p>Lý do: {item.reason}</p>}
       {item.submission && (
-        <p>
-          Chứng từ đã gửi: {item.submission.providerReference} · {item.submission.status}
-        </p>
+        <div>
+          <p>
+            Chứng từ đã gửi: {item.submission.providerReference} · {item.submission.status}
+            {item.submission.attemptCount != null
+              ? ` · Lần gửi ${item.submission.attemptCount}/4`
+              : ''}
+          </p>
+          {item.submission.reviewReason && (
+            <p role="alert">Lý do quản trị viên từ chối chứng từ: {item.submission.reviewReason}</p>
+          )}
+        </div>
       )}
-      {item.canAccessBank && !item.submission && (
+      {item.canAccessBank && (!item.submission || item.submission.status === 'REJECTED') && (
         <div className="business-form">
           <label htmlFor={`bank-reason-${id}`}>Lý do xem tài khoản nhận hoàn</label>
           <input
@@ -124,51 +140,57 @@ function RefundCard({ id, sellerId }: { id: string; sellerId: string }) {
           <p>Thông tin này tự ẩn sau 60 giây hoặc khi rời tab.</p>
         </div>
       )}
-      {item.canSubmitTransfer && bank && !item.submission && (
-        <div className="business-form">
-          <p>Chỉ gửi xác nhận sau khi bạn đã tự chuyển khoản đúng số tiền và tài khoản trên.</p>
-          <label htmlFor={`refund-reference-${id}`}>Mã giao dịch ngân hàng</label>
-          <input
-            id={`refund-reference-${id}`}
-            minLength={3}
-            maxLength={100}
-            value={providerReference}
-            onChange={(event) => setProviderReference(event.target.value)}
-          />
-          <label htmlFor={`refund-time-${id}`}>Thời điểm chuyển khoản</label>
-          <input
-            id={`refund-time-${id}`}
-            type="datetime-local"
-            value={transferredAt}
-            onChange={(event) => setTransferredAt(event.target.value)}
-          />
-          <EvidenceUpload
-            id={`refund-proof-${id}`}
-            endpoint={`/api/sellers/${sellerId}/refunds/${id}/evidence/upload`}
-            onReference={setEvidenceTicket}
-          />
-          <label>
+      {item.canSubmitTransfer &&
+        bank &&
+        (!item.submission || item.submission.status === 'REJECTED') && (
+          <div className="business-form">
+            <p>
+              {item.submission?.status === 'REJECTED'
+                ? 'Chứng từ trước đó bị từ chối. Vui lòng kiểm tra lại và gửi chứng từ chuyển khoản mới (tối đa 3 lần gửi lại).'
+                : 'Chỉ gửi xác nhận sau khi bạn đã tự chuyển khoản đúng số tiền và tài khoản trên.'}
+            </p>
+            <label htmlFor={`refund-reference-${id}`}>Mã giao dịch ngân hàng</label>
             <input
-              type="checkbox"
-              checked={confirmed}
-              onChange={(event) => setConfirmed(event.target.checked)}
-            />{' '}
-            Tôi đã chuyển đúng {money(item.amount)} và đối chiếu tài khoản người nhận.
-          </label>
-          <Button
-            disabled={
-              submit.isPending ||
-              !confirmed ||
-              !evidenceTicket ||
-              providerReference.trim().length < 3 ||
-              !transferredAt
-            }
-            onClick={() => submit.mutate()}
-          >
-            Gửi xác nhận chuyển khoản
-          </Button>
-        </div>
-      )}
+              id={`refund-reference-${id}`}
+              minLength={3}
+              maxLength={100}
+              value={providerReference}
+              onChange={(event) => setProviderReference(event.target.value)}
+            />
+            <label htmlFor={`refund-time-${id}`}>Thời điểm chuyển khoản</label>
+            <input
+              id={`refund-time-${id}`}
+              type="datetime-local"
+              value={transferredAt}
+              onChange={(event) => setTransferredAt(event.target.value)}
+            />
+            <EvidenceUpload
+              id={`refund-proof-${id}`}
+              endpoint={`/api/sellers/${sellerId}/refunds/${id}/evidence/upload`}
+              onReference={setEvidenceTicket}
+            />
+            <label>
+              <input
+                type="checkbox"
+                checked={confirmed}
+                onChange={(event) => setConfirmed(event.target.checked)}
+              />{' '}
+              Tôi đã chuyển đúng {money(item.amount)} và đối chiếu tài khoản người nhận.
+            </label>
+            <Button
+              disabled={
+                submit.isPending ||
+                !confirmed ||
+                !evidenceTicket ||
+                providerReference.trim().length < 3 ||
+                !transferredAt
+              }
+              onClick={() => submit.mutate()}
+            >
+              Gửi xác nhận chuyển khoản
+            </Button>
+          </div>
+        )}
       {notice && <p role="status">{notice}</p>}
       {(reveal.isError || submit.isError) && (
         <p role="alert">{reveal.error?.message || submit.error?.message}</p>

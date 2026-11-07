@@ -34,6 +34,8 @@ type SellerSubmission = {
   transferredAt: string;
   evidenceAttachmentId: string | null;
   status: string;
+  attemptCount?: number;
+  reviewReason?: string | null;
 };
 
 const schema = z.object({
@@ -69,6 +71,35 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
   const [saving, setSaving] = useState(false);
   const [uncertain, setUncertain] = useState(false);
   const [error, setError] = useState('');
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+
+  async function rejectSellerProof(event: React.FormEvent) {
+    event.preventDefault();
+    if (saving || uncertain || rejectReason.trim().length < 5) return;
+    setSaving(true);
+    setError('');
+    try {
+      await request(
+        `/admin/refunds/${id}/seller-submission/reject`,
+        { reason: rejectReason.trim() },
+        true,
+        'POST',
+      );
+      setRejectReason('');
+      setRejectOpen(false);
+      onNotice('Đã từ chối chứng từ hoàn tiền của shop để shop bổ sung lại.');
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['admin-refund-seller-submission', id] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-refund', id] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-refunds'] }),
+      ]);
+    } catch (cause) {
+      setError(cause instanceof ApiError ? cause.message : 'Chưa từ chối được chứng từ hoàn tiền.');
+    } finally {
+      if (mounted.current) setSaving(false);
+    }
+  }
   const epoch = useRef(0);
   const mounted = useRef(true);
   const sending = useRef(false);
@@ -327,10 +358,49 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
                   {data.canAccessBank &&
                     sellerSubmission.data?.status === 'PENDING_REVIEW' &&
                     !action && (
-                      <Button onClick={(event) => start('pay', event.currentTarget)}>
-                        Đối chiếu và xác nhận shop đã hoàn
-                      </Button>
+                      <div className="stock-actions">
+                        <Button onClick={(event) => start('pay', event.currentTarget)}>
+                          Đối chiếu và xác nhận shop đã hoàn
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={saving}
+                          onClick={() => setRejectOpen((prev) => !prev)}
+                        >
+                          Từ chối chứng từ shop gửi
+                        </Button>
+                      </div>
                     )}
+                  {rejectOpen && sellerSubmission.data?.status === 'PENDING_REVIEW' && !action && (
+                    <form onSubmit={(e) => void rejectSellerProof(e)} noValidate>
+                      <label htmlFor={`reject-seller-proof-${id}`}>
+                        Lý do từ chối chứng từ của shop (5–1.000 ký tự)
+                      </label>
+                      <textarea
+                        id={`reject-seller-proof-${id}`}
+                        minLength={5}
+                        maxLength={1000}
+                        rows={2}
+                        value={rejectReason}
+                        disabled={saving}
+                        onChange={(e) => setRejectReason(e.target.value)}
+                      />
+                      <div className="stock-actions">
+                        <Button type="submit" disabled={saving || rejectReason.trim().length < 5}>
+                          {saving ? 'Đang gửi…' : 'Xác nhận từ chối chứng từ'}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={saving}
+                          onClick={() => setRejectOpen(false)}
+                        >
+                          Hủy
+                        </Button>
+                      </div>
+                    </form>
+                  )}
                   {action && (
                     <form noValidate onSubmit={form.handleSubmit(() => setReview(true))}>
                       {action === 'pay' && (
