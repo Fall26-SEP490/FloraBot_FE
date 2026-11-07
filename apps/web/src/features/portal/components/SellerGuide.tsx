@@ -1,121 +1,170 @@
 import Link from 'next/link';
+import { useEffect, useRef } from 'react';
 import { ChevronDown, HelpCircle } from '@florabot/ui';
 
 type Guide = { title: string; steps: string[]; href: string; action: string };
 const guides: Record<string, Guide> = {
   overview: {
-    title: 'Mới dùng FloraBot? Xem cách vận hành shop',
+    title: 'Hướng dẫn nhanh',
     steps: [
-      'Tạo mẫu hoa trong danh mục, thêm ảnh và bật bán khi thông tin đã đầy đủ.',
-      'Đơn đặt trước: báo giá, chờ khách xác nhận và thanh toán, rồi chuẩn bị và nạp hoa từ chi tiết đơn.',
-      'Hoa bán tại tủ: vào Hoa tại tủ, chọn đúng tủ và ô trước khi ghi nhận nạp. Tạo mẫu chưa có nghĩa là đã có bó hoa trong tủ.',
+      'Tạo mẫu hoa và bật bán khi đủ ảnh, giá.',
+      'Đơn đặt trước: báo giá → khách thanh toán → nạp hoa vào ô.',
+      'Hoa tại tủ: chọn đúng tủ và ô trống để nạp. Tạo mẫu chưa có nghĩa là đã có bó hoa trong tủ.',
     ],
     href: '/seller/products',
-    action: 'Bắt đầu với mẫu hoa',
+    action: 'Tạo mẫu hoa',
   },
   orders: {
-    title: 'Xử lý đơn đặt trước như thế nào?',
+    title: 'Hướng dẫn đơn đặt trước',
     steps: [
-      'Chọn “Cần xử lý” để xem các đơn cần shop phản hồi của shop.',
-      'Mở chi tiết để kiểm tra yêu cầu, báo giá và lịch nhận. Chờ hệ thống xác nhận thanh toán trước khi chuẩn bị.',
-      'Khi hoa đã đặt đúng ô, ghi nhận nạp từ chính đơn này. Có thể giao việc cho nhân viên ở mục Giao việc nhân viên.',
+      'Chọn “Cần xử lý” để phản hồi yêu cầu mới.',
+      'Chờ xác nhận thanh toán trước khi chuẩn bị hoa.',
+      'Ghi nhận nạp hoa trực tiếp từ chi tiết đơn.',
     ],
     href: '/seller/tasks',
-    action: 'Giao việc cho nhân viên',
+    action: 'Giao việc nhân viên',
   },
   products: {
-    title: 'Mẫu hoa khác bó hoa trong tủ thế nào?',
+    title: 'Hướng dẫn mẫu hoa',
     steps: [
-      'Mẫu hoa lưu tên, ảnh, giá và kích thước để khách tham khảo và đặt trước.',
-      'Mẫu mới là bản nháp. Mở chi tiết để thêm ảnh, kiểm tra thông tin rồi bật bán.',
-      'Bó hoa thực tế được ghi nhận riêng khi nạp. Với đơn đã thanh toán, nạp từ chi tiết đơn; với hoa bán trực tiếp, dùng Hoa tại tủ.',
+      'Mẫu mới ở trạng thái bản nháp cho đến khi thêm ảnh và bật bán.',
+      'Chuyển sang tab Phụ kiện đi kèm để quản lý thiệp, túi quà.',
     ],
     href: '/seller/stock',
     action: 'Quản lý hoa tại tủ',
   },
-  stock: {
-    title: 'Chọn đúng cách nạp hoa',
+  accessories: {
+    title: 'Hướng dẫn phụ kiện',
     steps: [
-      'Chọn tủ cần quản lý, sau đó kiểm tra khu vực, trạng thái ô và mẫu hoa.',
-      'Bó gắn với đơn đặt trước đã thanh toán cần được nạp từ chi tiết đơn để liên kết đúng đơn.',
-      'Chỉ xác nhận sau khi đã đặt hoa vào đúng ô. Mở chi tiết ô để xem thông tin bó, thu hồi hoặc báo sự cố khi được phép.',
+      'Phụ kiện áp dụng cho đơn đặt trước tại từng tủ.',
+      'Chỉ xác nhận bổ sung sau khi đã đặt phụ kiện vào tủ.',
+    ],
+    href: '/seller/products',
+    action: 'Xem mẫu hoa',
+  },
+  stock: {
+    title: 'Hướng dẫn nạp hoa',
+    steps: [
+      'Chọn tủ và ô trống trước khi ghi nhận nạp bó hoa.',
+      'Đơn đặt trước đã thanh toán cần nạp từ chi tiết đơn.',
     ],
     href: '/seller/orders?filter=preparing',
-    action: 'Xem đơn đang chuẩn bị',
+    action: 'Đơn đang chuẩn bị',
   },
   kiosks: {
-    title: 'Thông tin vị trí này dùng để làm gì?',
+    title: 'Hướng dẫn vị trí tủ',
     steps: [
-      'Địa chỉ và ghim bản đồ giúp khách tìm đúng điểm nhận hoa.',
-      'Chọn đúng tủ, kiểm tra địa chỉ và tọa độ rồi lưu. Thay thông tin trên web không tự di chuyển thiết bị.',
-      'Khi cần chuyển vị trí lắp đặt thực tế, trao đổi với Quản lý vận hành trước.',
+      'Cập nhật địa chỉ và ghim bản đồ để khách tìm điểm nhận hoa.',
+      'Liên hệ Quản lý vận hành khi cần di dời tủ vật lý.',
     ],
     href: '/seller/stock',
-    action: 'Xem hoa trong tủ',
+    action: 'Xem hoa tại tủ',
   },
   tasks: {
-    title: 'Giao việc cho nhân viên theo thứ tự nào?',
+    title: 'Hướng dẫn giao việc',
     steps: [
-      'Chọn công việc giao hoa và nhân viên được phân công cho đúng tủ.',
-      'Theo dõi tiến độ và ảnh báo cáo trong chi tiết công việc.',
-      'Tạo tài khoản nhân viên tại Nhân viên shop; trao đổi trong Tin nhắn nhân viên.',
+      'Chọn nhân viên và tủ Kiosk cần giao hoa.',
+      'Xem ảnh nghiệm thu trong chi tiết công việc.',
     ],
     href: '/seller/staff',
-    action: 'Quản lý nhân viên shop',
+    action: 'Danh sách nhân viên',
   },
   staff: {
-    title: 'Tài khoản nhân viên dùng để làm gì?',
+    title: 'Hướng dẫn nhân sự',
     steps: [
-      'Mỗi nhân viên dùng tài khoản riêng để nhận việc và báo cáo tiến độ.',
-      'Tạo tài khoản tại đây, sau đó phân công giao hoa ở mục Giao việc nhân viên.',
-      'Khóa hoặc vô hiệu hóa tài khoản sẽ ảnh hưởng quyền làm việc của nhân viên. Kiểm tra người nhận trước khi xác nhận.',
+      'Mỗi nhân viên dùng tài khoản riêng để nhận việc và gửi báo cáo.',
+      'Khóa tài khoản khi nhân viên nghỉ việc hoặc không còn được phép truy cập shop.',
     ],
     href: '/seller/tasks',
-    action: 'Mở giao việc nhân viên',
+    action: 'Giao việc nhân viên',
   },
   'staff-chats': {
-    title: 'Trao đổi với nhân viên của shop',
+    title: 'Trao đổi nội bộ',
     steps: [
-      'Chọn nhân viên để mở cuộc trò chuyện và xem lịch sử tin nhắn.',
-      'Gửi nội dung hoặc ảnh để phối hợp công việc. Tin nhắn không thay thế thao tác phân công hay xác nhận hoàn thành.',
+      'Chọn nhân viên để nhắn tin và gửi ảnh hiện trường.',
+      'Dùng mục Giao việc để phân công nhiệm vụ chính thức.',
     ],
     href: '/seller/tasks',
-    action: 'Theo dõi công việc',
+    action: 'Giao việc nhân viên',
   },
   chats: {
-    title: 'Trao đổi với khách và xử lý đơn',
+    title: 'Trao đổi khách hàng',
     steps: [
-      'Chọn cuộc trò chuyện để xem khách đang quan tâm mẫu hoa nào.',
-      'Thống nhất mong muốn trong chat; báo giá và lịch nhận cần được ghi nhận ở chi tiết đơn đặt trước.',
+      'Thống nhất mẫu hoa trong chat, sau đó gửi báo giá ở Đơn đặt trước.',
+      'Chuyển sang tab Nội bộ nhân viên để nhắn với đội ngũ.',
     ],
     href: '/seller/orders',
     action: 'Mở đơn đặt trước',
   },
-  accessories: {
-    title: 'Bổ sung phụ kiện vào đúng tủ',
+  commerce: {
+    title: 'Hướng dẫn thanh toán',
     steps: [
-      'Phụ kiện áp dụng cho đơn đặt trước. Chọn xem tồn để tải số lượng hiện có tại từng tủ.',
-      'Nhập lượng vừa bổ sung, kiểm tra lại rồi xác nhận. Chỉ ghi nhận sau khi đã đặt phụ kiện vào tủ.',
+      'Tiền bán hoa qua PayOS chuyển trực tiếp về tài khoản shop.',
+      'Chuyển tab Hoàn tiền hoặc Dự báo mùa để xem chi tiết.',
     ],
-    href: '/seller/orders',
-    action: 'Xem đơn đặt trước',
+    href: '/seller/refunds',
+    action: 'Xem khoản hoàn',
+  },
+  refunds: {
+    title: 'Hướng dẫn hoàn tiền',
+    steps: ['Mở thông tin tài khoản khách, chuyển khoản và tải ảnh chứng từ.'],
+    href: '/seller/commerce',
+    action: 'Về doanh số',
+  },
+  seasonal: {
+    title: 'Dự báo mùa vụ',
+    steps: ['Chọn khoảng ngày lịch sử để xem số lượng bán và ước tính tháng tới.'],
+    href: '/seller/commerce',
+    action: 'Về doanh số',
   },
   subscriptions: {
-    title: 'Xem gói và thanh toán kỳ thuê',
-    steps: [
-      'Kiểm tra gói đang được cấp cho shop và các kỳ thuê hiện có.',
-      'Nếu được phép đăng ký hoặc gia hạn, xem lại số kỳ và phí trước khi tạo liên kết thanh toán.',
-      'Sau khi thanh toán, quay lại và cập nhật trạng thái. Gói chỉ kích hoạt khi hệ thống xác nhận đã nhận tiền.',
-    ],
+    title: 'Hướng dẫn thuê tủ',
+    steps: ['Phí thuê tính theo số ô Walk-in và Pre-order trong kỳ 12 tháng.'],
     href: '/seller/kiosks',
     action: 'Xem tủ của shop',
   },
+  terminations: {
+    title: 'Chấm dứt thuê tủ',
+    steps: ['Gửi yêu cầu và lý do; shop vẫn quản lý tủ cho đến khi bàn giao xong.'],
+    href: '/seller/subscriptions',
+    action: 'Xem gói thuê',
+  },
 };
 export default function SellerGuide({ section }: { section: string }) {
+  const disclosure = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    const element = disclosure.current;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && element?.open) {
+        event.preventDefault();
+        event.stopPropagation();
+        element.open = false;
+        element.querySelector('summary')?.focus();
+      }
+    };
+    const closeOutside = (event: PointerEvent) => {
+      if (disclosure.current && !disclosure.current.contains(event.target as Node)) {
+        disclosure.current.open = false;
+      }
+    };
+    const closeOnBlur = (event: FocusEvent) => {
+      if (element && !element.contains(event.relatedTarget as Node | null)) {
+        element.open = false;
+      }
+    };
+    document.addEventListener('pointerdown', closeOutside);
+    element?.addEventListener('keydown', closeOnEscape);
+    element?.addEventListener('focusout', closeOnBlur);
+    return () => {
+      document.removeEventListener('pointerdown', closeOutside);
+      element?.removeEventListener('keydown', closeOnEscape);
+      element?.removeEventListener('focusout', closeOnBlur);
+    };
+  }, []);
   const guide = guides[section];
   if (!guide) return null;
   return (
-    <details className="seller-guide">
+    <details className="seller-guide" ref={disclosure}>
       <summary>
         <HelpCircle size={18} aria-hidden="true" />
         <span>{guide.title}</span>

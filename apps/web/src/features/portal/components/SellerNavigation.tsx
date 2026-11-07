@@ -14,50 +14,89 @@ import {
   MessageSquare,
   Search,
   X,
+  ChevronDown,
 } from '@florabot/ui';
 import { workspaceSections } from '../config/workspaceSections';
 
-const groups = [
+const primaryGroups = [
   {
-    title: 'Đơn hàng & khách',
+    title: 'Bán hàng',
     items: [
-      ['orders', ClipboardList],
-      ['chats', MessageSquare],
+      ['orders', ClipboardList, ['orders']],
+      ['chats', MessageSquare, ['chats', 'staff-chats']],
     ],
   },
   {
-    title: 'Hoa & tủ',
+    title: 'Sản phẩm & Tủ',
     items: [
-      ['products', Flower2],
-      ['stock', Boxes],
-      ['accessories', Package],
-      ['kiosks', MapPin],
+      ['products', Flower2, ['products', 'accessories']],
+      ['stock', Boxes, ['stock', 'kiosks']],
     ],
   },
   {
-    title: 'Nhân viên',
-    items: [
-      ['tasks', ListChecks],
-      ['staff', Users],
-      ['staff-chats', MessageSquare],
-    ],
+    title: 'Đội ngũ',
+    items: [['tasks', ListChecks, ['tasks', 'staff']]],
   },
   {
-    title: 'Tiền & gói thuê',
+    title: 'Tài chính & Thuê tủ',
     items: [
-      ['commerce', Banknote],
-      ['refunds', Banknote],
-      ['seasonal', ClipboardList],
-      ['subscriptions', Store],
-      ['terminations', Store],
+      ['commerce', Banknote, ['commerce', 'refunds', 'seasonal']],
+      ['subscriptions', Store, ['subscriptions', 'terminations']],
     ],
   },
 ] as const;
+
+const searchGroups = [
+  {
+    title: 'Bán hàng',
+    items: [
+      ['orders', ClipboardList, ['orders']],
+      ['chats', MessageSquare, ['chats']],
+      ['staff-chats', MessageSquare, ['staff-chats']],
+    ],
+  },
+  {
+    title: 'Sản phẩm & Tủ',
+    items: [
+      ['products', Flower2, ['products']],
+      ['accessories', Package, ['accessories']],
+      ['stock', Boxes, ['stock']],
+      ['kiosks', MapPin, ['kiosks']],
+    ],
+  },
+  {
+    title: 'Đội ngũ',
+    items: [
+      ['tasks', ListChecks, ['tasks']],
+      ['staff', Users, ['staff']],
+    ],
+  },
+  {
+    title: 'Tài chính & Thuê tủ',
+    items: [
+      ['commerce', Banknote, ['commerce']],
+      ['refunds', Banknote, ['refunds']],
+      ['seasonal', ClipboardList, ['seasonal']],
+      ['subscriptions', Store, ['subscriptions']],
+      ['terminations', Store, ['terminations']],
+    ],
+  },
+] as const;
+
 const searchTerms: Record<string, string> = {
-  stock: 'nạp hoa thu hồi hoa lấy hoa báo sự cố',
-  products: 'tạo mẫu thêm hoa sản phẩm ảnh giá',
+  stock: 'nạp hoa thu hồi hoa lấy hoa báo sự cố vị trí kiosk',
+  products: 'tạo mẫu thêm hoa sản phẩm ảnh giá phụ kiện',
   orders: 'báo giá chuẩn bị đơn',
-  tasks: 'giao hoa phân công',
+  tasks: 'giao hoa phân công nhân viên',
+  commerce: 'thanh toán doanh số hoàn tiền mùa dự báo',
+  subscriptions: 'thuê kiosk gói thuê chấm dứt',
+};
+const hubLabels: Record<string, string> = {
+  chats: 'Tin nhắn',
+  products: 'Mẫu hoa & phụ kiện',
+  stock: 'Hoa & vị trí tủ',
+  tasks: 'Nhân viên & giao việc',
+  commerce: 'Thanh toán & doanh số',
 };
 const normalize = (value: string) =>
   value
@@ -79,11 +118,14 @@ export default function SellerNavigation({
   unreadChatsCount: number;
 }) {
   const [search, setSearch] = useState('');
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const needle = normalize(search);
-  const matches = groups
+  const sourceGroups = needle ? searchGroups : primaryGroups;
+  const matches = sourceGroups
     .map((group) => ({
       ...group,
       items: group.items.filter(([key]) => {
+        if (!needle) return true;
         const item = workspaceSections.SELLER.find(([id]) => id === key)!;
         return normalize(`${group.title} ${item[1]} ${item[2]} ${searchTerms[key] || ''}`).includes(
           needle,
@@ -110,7 +152,7 @@ export default function SellerNavigation({
         <input
           id="seller-nav-search"
           type="search"
-          placeholder="Tìm việc cần làm…"
+          placeholder="Tìm nhanh…"
           value={search}
           autoComplete="off"
           onChange={(event) => setSearch(event.target.value)}
@@ -125,34 +167,68 @@ export default function SellerNavigation({
       {matches.map((group) => (
         <div className="workspace-nav-group" key={group.title}>
           <p>{group.title}</p>
-          {group.items.map(([key, Icon]) => {
+          {group.items.map(([key, Icon, activeKeys]) => {
             const item = workspaceSections.SELLER.find(([id]) => id === key)!;
+            const isCurrent = (activeKeys as readonly string[]).includes(section);
+            const children = needle ? [] : activeKeys.filter((id) => id !== key);
+            const isOpen = expanded[key] ?? isCurrent;
+            const label = !needle ? hubLabels[key] || item[1] : item[1];
             return (
-              <Link
-                href={`/seller/${key}`}
-                key={key}
-                onClick={closeMenu}
-                onKeyDown={onEscape}
-                aria-current={section === key ? 'page' : undefined}
-              >
-                <Icon size={18} aria-hidden="true" />
-                <span>{item[1]}</span>
-                {key === 'chats' && unreadChatsCount > 0 && (
-                  <span
-                    className="workspace-badge"
-                    aria-label={`${unreadChatsCount} tin nhắn chưa đọc`}
+              <div key={key} className="seller-nav-item">
+                <div className="seller-nav-row" data-active={isCurrent}>
+                  <Link
+                    href={`/seller/${key}`}
+                    onClick={closeMenu}
+                    onKeyDown={onEscape}
+                    aria-current={section === key ? 'page' : undefined}
                   >
-                    {unreadChatsCount > 99 ? '99+' : unreadChatsCount}
-                  </span>
+                    <Icon size={18} aria-hidden="true" />
+                    <span>{label}</span>
+                    {key === 'chats' && unreadChatsCount > 0 && (
+                      <span
+                        className="workspace-badge"
+                        aria-label={`${unreadChatsCount} tin nhắn chưa đọc`}
+                      >
+                        {unreadChatsCount > 99 ? '99+' : unreadChatsCount}
+                      </span>
+                    )}
+                  </Link>
+                  {children.length > 0 && (
+                    <button
+                      type="button"
+                      aria-label={`Các mục trong ${label}`}
+                      aria-expanded={isOpen}
+                      aria-controls={`seller-nav-${key}`}
+                      onClick={() => setExpanded((current) => ({ ...current, [key]: !isOpen }))}
+                      onKeyDown={onEscape}
+                    >
+                      <ChevronDown size={17} aria-hidden="true" />
+                    </button>
+                  )}
+                </div>
+                {children.length > 0 && (
+                  <div id={`seller-nav-${key}`} className="seller-nav-children" hidden={!isOpen}>
+                    {children.map((child) => (
+                      <Link
+                        key={child}
+                        href={`/seller/${child}`}
+                        onClick={closeMenu}
+                        onKeyDown={onEscape}
+                        aria-current={section === child ? 'page' : undefined}
+                      >
+                        {workspaceSections.SELLER.find(([id]) => id === child)?.[1]}
+                      </Link>
+                    ))}
+                  </div>
                 )}
-              </Link>
+              </div>
             );
           })}
         </div>
       ))}
       {matches.length === 0 && (
         <p className="seller-nav-empty" role="status">
-          Không tìm thấy mục phù hợp. Thử “báo giá”, “nạp hoa” hoặc “thanh toán”.
+          Không tìm thấy mục phù hợp.
         </p>
       )}
     </>

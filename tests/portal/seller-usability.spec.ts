@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { setupSellerUsability, sampleRequest, kioskId } from '../fixtures/seller-usability';
+import { setupSellerUsability, sampleRequest, kioskId, shopId } from '../fixtures/seller-usability';
 const sections = [
   ['overview', 'Tổng quan cửa hàng', '[aria-labelledby="seller-orders-title"]'],
   ['orders', 'Đơn đặt trước', '#web-orders'],
@@ -12,7 +12,7 @@ const sections = [
   ['staff', 'Nhân viên shop', '.account-management-workspace'],
   ['chats', 'Tin nhắn khách hàng', '.staff-chat-section'],
   ['staff-chats', 'Tin nhắn nhân viên', '.staff-chat-section'],
-  ['subscriptions', 'Gói thuê', '#subscriptions'],
+  ['subscriptions', 'Thuê kiosk', '#subscriptions'],
 ] as const;
 for (const width of [390, 1440])
   for (const [section, title, selector] of sections) {
@@ -49,7 +49,7 @@ for (const width of [390, 1440])
     if (width === 390)
       await page.getByRole('button', { name: 'Mở danh mục quản lý', exact: true }).click();
     const nav = page.getByRole('navigation', { name: 'Điều hướng quản lý' });
-    await expect(nav.getByRole('link')).toHaveCount(15);
+    await expect(nav.getByRole('link')).toHaveCount(8);
     await nav.getByLabel('Tìm chức năng cửa hàng').fill('thanh toan');
     await expect(
       nav.getByRole('link', { name: 'Thanh toán & doanh số', exact: true }),
@@ -62,7 +62,7 @@ for (const width of [390, 1440])
     await nav.getByLabel('Tìm chức năng cửa hàng').fill('zzzz');
     await expect(nav.getByRole('status')).toContainText('Không tìm thấy');
     await nav.getByRole('button', { name: 'Xóa tìm chức năng' }).click();
-    await nav.getByRole('link', { name: 'Mẫu hoa', exact: true }).click();
+    await nav.getByRole('link', { name: 'Mẫu hoa & phụ kiện', exact: true }).click();
     await expect(page).toHaveURL(/seller\/products$/);
     if (width === 390) {
       await page.getByRole('button', { name: 'Mở danh mục quản lý', exact: true }).click();
@@ -88,6 +88,74 @@ test('Seller overview opens and focuses the exact request on its correct API pag
   expect(model.reads).toContain('/sellers/' + sampleRequest.sellerId + '/preorders?page=2');
   expect(model.writes).toEqual([]);
 });
+
+for (const width of [390, 1440]) {
+  test(`Seller discovers related pages and help closes predictably at ${width}`, async ({
+    page,
+  }) => {
+    await setupSellerUsability(page);
+    await page.setViewportSize({ width, height: 1000 });
+    await page.goto('/seller');
+    if (width === 390)
+      await page.getByRole('button', { name: 'Mở danh mục quản lý', exact: true }).click();
+    const nav = page.getByRole('navigation', { name: 'Điều hướng quản lý' });
+    await nav
+      .getByRole('button', { name: 'Các mục trong Nhân viên & giao việc', exact: true })
+      .click();
+    await nav.getByRole('link', { name: 'Nhân viên shop', exact: true }).click();
+    await expect(page).toHaveURL(/seller\/staff$/);
+    if (width === 390)
+      await page.getByRole('button', { name: 'Mở danh mục quản lý', exact: true }).click();
+    await expect(nav.locator('[aria-current="page"]')).toHaveCount(1);
+    await expect(nav.locator('[aria-current="page"]')).toHaveAttribute('href', '/seller/staff');
+    if (width === 390) await nav.getByLabel('Tìm chức năng cửa hàng').press('Escape');
+    const help = page.locator('.seller-guide');
+    await help.locator('summary').press('Enter');
+    await expect(help).toContainText('không còn được phép truy cập shop');
+    await help.getByRole('link').focus();
+    await page.keyboard.press('Escape');
+    await expect(help).not.toHaveAttribute('open');
+    await expect(help.locator('summary')).toBeFocused();
+    await help.locator('summary').click();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    await page.getByRole('heading', { level: 1 }).click();
+    await expect(help).not.toHaveAttribute('open');
+  });
+}
+
+for (const state of ['MISSING', 'PAUSED', 'PENDING_VERIFICATION', 'ACTIVE', 'ERROR']) {
+  test(`Seller overview reports payment readiness: ${state}`, async ({ page }) => {
+    const model = await setupSellerUsability(page);
+    await page.route(`**/api/sellers/${shopId}/payment-channel`, (route) =>
+      route.fulfill({
+        status: state === 'MISSING' ? 404 : state === 'ERROR' ? 503 : 200,
+        json: state === 'ERROR' ? { detail: 'Unavailable' } : { state, sellerId: shopId },
+      }),
+    );
+    await page.goto('/seller');
+    const notice = page.getByRole('status', { name: 'Kênh nhận tiền cần thiết lập' });
+    if (state === 'ACTIVE' || state === 'ERROR') {
+      await expect(
+        page.getByText(
+          state === 'ACTIVE'
+            ? 'Kênh nhận tiền đang hoạt động'
+            : 'Chưa kiểm tra được kênh nhận tiền. Thử làm mới dữ liệu.',
+          { exact: true },
+        ),
+      ).toBeVisible();
+      await expect(notice).toHaveCount(0);
+    } else {
+      await expect(notice).toBeVisible();
+      await expect(notice.getByRole('link')).toHaveAttribute(
+        'href',
+        '/seller/commerce#seller-channel-title',
+      );
+    }
+    expect(model.writes).toEqual([]);
+  });
+}
 test('Seller can reset order filters and only one set of product status filters is shown', async ({
   page,
 }) => {
