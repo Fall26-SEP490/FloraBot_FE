@@ -104,7 +104,7 @@ export async function setupSellerUsability(page: Page) {
           : paged([sampleRequest]),
       });
     }
-    if (path === `/sellers/${shopId}/kiosks`)
+    if (path === `/sellers/${shopId}/kiosks` || path === '/me/kiosks')
       return route.fulfill({
         json: list([
           {

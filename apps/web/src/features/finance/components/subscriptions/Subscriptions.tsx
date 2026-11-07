@@ -4,11 +4,15 @@ import Link from 'next/link';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button, MapPin } from '@florabot/ui';
 import { ApiError, request, type Session } from '@/shared/lib/api';
+import type { components } from '../../../../../../../packages/contracts/src/generated/api';
 import type { KioskApplicationResponse } from '../../../installations/installations.types';
 import type { SellerKioskItem } from '../../../kiosk-management/kiosk-management.types';
 import { ApplicationRentalSummary } from '../../../kiosk-pricing/ApplicationRentalSummary';
 import { rentalMoney } from '../../../kiosk-pricing/kiosk-pricing';
 import '../../styles/commerce-subscriptions.css';
+
+type SubscriptionOverviewResponse = components['schemas']['SubscriptionOverviewResponse'];
+type SubscriptionResponse = components['schemas']['SubscriptionResponse'];
 
 interface KioskRenewalResponse {
   subscriptionId: string;
@@ -32,10 +36,20 @@ const kioskStatusLabel: Record<string, string> = {
   MAINTENANCE: 'Đang bảo trì',
 };
 
-function KioskRenewalCard({ kiosk, sellerId }: { kiosk: SellerKioskItem; sellerId: string }) {
+function KioskRenewalCard({
+  kiosk,
+  sellerId,
+  subscriptions = [],
+}: {
+  kiosk: SellerKioskItem;
+  sellerId: string;
+  subscriptions?: SubscriptionResponse[];
+}) {
   const [renewal, setRenewal] = useState<KioskRenewalResponse | null>(null);
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [error, setError] = useState('');
+
+  const activeSub = subscriptions.find((s) => s.kioskId === kiosk.id && s.status === 'ACTIVE');
 
   const createRenewal = useMutation({
     mutationFn: () =>
@@ -89,6 +103,19 @@ function KioskRenewalCard({ kiosk, sellerId }: { kiosk: SellerKioskItem; sellerI
           <p className="subscription-kiosk-address">
             <MapPin size={14} aria-hidden="true" />
             <span>{kiosk.address}</span>
+          </p>
+        )}
+        {activeSub && (
+          <p
+            className="subscription-kiosk-contract-info"
+            style={{ marginTop: '0.35rem', fontSize: '0.84rem', color: '#2d5a3f' }}
+          >
+            Hạn kỳ hiện tại:{' '}
+            <strong>
+              {new Date(activeSub.periodFrom).toLocaleDateString('vi-VN')} –{' '}
+              {new Date(activeSub.periodTo).toLocaleDateString('vi-VN')}
+            </strong>{' '}
+            ({rentalMoney(activeSub.price)})
           </p>
         )}
       </div>
@@ -162,7 +189,20 @@ export default function Subscriptions({ session }: { session: Session }) {
 
   const kiosks = useQuery({
     queryKey: ['seller-kiosks', session.sellerId],
-    queryFn: () => request<SellerKioskItem[]>(`/sellers/${session.sellerId}/kiosks`),
+    queryFn: async () => {
+      try {
+        return await request<SellerKioskItem[]>('/me/kiosks');
+      } catch {
+        return await request<SellerKioskItem[]>(`/sellers/${session.sellerId}/kiosks`);
+      }
+    },
+    enabled: Boolean(session.sellerId),
+  });
+
+  const subscriptionsQuery = useQuery({
+    queryKey: ['seller-subscriptions-overview', session.sellerId],
+    queryFn: () =>
+      request<SubscriptionOverviewResponse>(`/sellers/${session.sellerId}/subscriptions`),
     enabled: Boolean(session.sellerId),
   });
 
@@ -171,6 +211,8 @@ export default function Subscriptions({ session }: { session: Session }) {
         timeZone: 'Asia/Ho_Chi_Minh',
       })
     : 'Theo từng tủ';
+
+  const subList = subscriptionsQuery.data?.subscriptions ?? [];
 
   return (
     <section id="subscriptions" className="subscriptions business-panel" tabIndex={-1}>
@@ -229,10 +271,66 @@ export default function Subscriptions({ session }: { session: Session }) {
           {kiosks.data && kiosks.data.length > 0 && (
             <div className="subscription-kiosk-list">
               {kiosks.data.map((kiosk) => (
-                <KioskRenewalCard key={kiosk.id} kiosk={kiosk} sellerId={session.sellerId!} />
+                <KioskRenewalCard
+                  key={kiosk.id}
+                  kiosk={kiosk}
+                  sellerId={session.sellerId!}
+                  subscriptions={subList}
+                />
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {session.sellerId && subList.length > 0 && (
+        <div className="subscription-kiosk-section">
+          <div className="subscription-section-head">
+            <h3>Lịch sử hợp đồng thuê kiosk (Kỳ 12 tháng)</h3>
+            <span>Hợp đồng năm gắn với từng kiosk đang vận hành</span>
+          </div>
+          <div className="business-table-scroll">
+            <table className="business-table">
+              <thead>
+                <tr>
+                  <th>Kiosk</th>
+                  <th>Kỳ thuê 12 tháng</th>
+                  <th>Phí thuê</th>
+                  <th>Trạng thái</th>
+                </tr>
+              </thead>
+              <tbody>
+                {subList.map((sub) => {
+                  const matchedKiosk = (kiosks.data ?? []).find((k) => k.id === sub.kioskId);
+                  return (
+                    <tr key={sub.id}>
+                      <td>
+                        <strong>
+                          {matchedKiosk?.name || matchedKiosk?.code || sub.packageName || 'Kiosk'}
+                        </strong>
+                      </td>
+                      <td>
+                        {new Date(sub.periodFrom).toLocaleDateString('vi-VN')} –{' '}
+                        {new Date(sub.periodTo).toLocaleDateString('vi-VN')}
+                      </td>
+                      <td>{rentalMoney(sub.price)}</td>
+                      <td>
+                        <span className="subscription-status" data-status={sub.status}>
+                          {sub.status === 'ACTIVE'
+                            ? 'Đang hiệu lực'
+                            : sub.status === 'PENDING_PAYMENT'
+                              ? 'Chờ thanh toán'
+                              : sub.status === 'EXPIRED'
+                                ? 'Hết hạn'
+                                : sub.status}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -249,6 +347,11 @@ export default function Subscriptions({ session }: { session: Session }) {
         <div className="subscription-application-card">
           <h3>Hồ sơ đăng ký thuê gần nhất</h3>
           <ApplicationRentalSummary application={application.data} />
+          <div style={{ marginTop: '0.85rem' }}>
+            <Link href="/thue-kiosk" className="button button-outline">
+              Xem hồ sơ hoặc thuê thêm kiosk
+            </Link>
+          </div>
         </div>
       )}
     </section>
