@@ -332,6 +332,30 @@
 .lease-seller-link:hover {
   color: #163626;
 }
+.lease-seller-bank-row {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: #fff;
+  border: 1px solid #cce0d1;
+  border-radius: 10px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.lease-seller-bank-row.is-ready {
+  border-left: 4px solid #2d5a3f;
+  background: #fbfdfb;
+}
+.lease-seller-bank-badge {
+  font-weight: 700;
+  color: #24563d;
+}
+.lease-seller-bank-embedded {
+  margin-top: 14px;
+}
+
 @media (max-width: 900px) {
   .kiosk-onboarding-container .kiosk-registration-layout {
     grid-template-columns: 1fr;

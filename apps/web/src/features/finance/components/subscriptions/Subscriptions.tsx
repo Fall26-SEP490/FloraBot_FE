@@ -49,7 +49,9 @@ function KioskRenewalCard({
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [error, setError] = useState('');
 
-  const activeSub = subscriptions.find((s) => s.kioskId === kiosk.id && s.status === 'ACTIVE');
+  const currentSub = subscriptions.find(
+    (s) => s.kioskId === kiosk.id && (s.status === 'ACTIVE' || s.status === 'PAST_DUE'),
+  );
 
   const createRenewal = useMutation({
     mutationFn: () =>
@@ -105,17 +107,21 @@ function KioskRenewalCard({
             <span>{kiosk.address}</span>
           </p>
         )}
-        {activeSub && (
+        {currentSub && (
           <p
             className="subscription-kiosk-contract-info"
-            style={{ marginTop: '0.35rem', fontSize: '0.84rem', color: '#2d5a3f' }}
+            style={{
+              marginTop: '0.35rem',
+              fontSize: '0.84rem',
+              color: currentSub.status === 'PAST_DUE' ? '#a81c1c' : '#2d5a3f',
+            }}
           >
-            Hạn kỳ hiện tại:{' '}
+            {currentSub.status === 'PAST_DUE' ? 'Kỳ thuê đã hết hạn: ' : 'Hạn kỳ hiện tại: '}
             <strong>
-              {new Date(activeSub.periodFrom).toLocaleDateString('vi-VN')} –{' '}
-              {new Date(activeSub.periodTo).toLocaleDateString('vi-VN')}
+              {new Date(currentSub.periodFrom).toLocaleDateString('vi-VN')} –{' '}
+              {new Date(currentSub.periodTo).toLocaleDateString('vi-VN')}
             </strong>{' '}
-            ({rentalMoney(activeSub.price)})
+            ({rentalMoney(currentSub.price)})
           </p>
         )}
       </div>
@@ -320,7 +326,7 @@ export default function Subscriptions({ session }: { session: Session }) {
                             ? 'Đang hiệu lực'
                             : sub.status === 'PENDING_PAYMENT'
                               ? 'Chờ thanh toán'
-                              : sub.status === 'EXPIRED'
+                              : sub.status === 'EXPIRED' || sub.status === 'PAST_DUE'
                                 ? 'Hết hạn'
                                 : sub.status}
                         </span>

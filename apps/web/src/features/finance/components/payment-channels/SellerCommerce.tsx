@@ -5,6 +5,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import type { components } from '../../../../../../../packages/contracts/src/generated/api';
 import { ApiError, queryClient, request, type Session } from '@/shared/lib/api';
+import ShopBankSection from './ShopBankSection';
 import '../../styles/commerce-subscriptions.css';
 
 type Channel = components['schemas']['SellerPaymentChannelResponse'];
@@ -90,11 +91,18 @@ export default function SellerCommerce({ session }: { session: Session }) {
   if (!sellerId) return <p role="alert">Tài khoản chưa liên kết với shop.</p>;
   return (
     <div className="business-stack">
+      {/* 1. Ngân hàng shop: dùng làm thông tin nhận hoàn phí thuê kiosk */}
+      <ShopBankSection sellerId={sellerId} />
+
+      {/* 2. Kênh PayOS Seller: dùng nhận tiền bán hoa từ kiosk */}
       <section className="business-panel" aria-labelledby="seller-channel-title">
         <div className="business-heading">
           <div>
-            <h2 id="seller-channel-title">Kênh nhận tiền của shop</h2>
-            <p>PayOS chuyển tiền đơn hoa về tài khoản đã cấu hình cho shop.</p>
+            <h2 id="seller-channel-title">Kênh nhận tiền PayOS (Nhận tiền bán hoa)</h2>
+            <p>
+              PayOS chuyển tiền đơn hoa về tài khoản đã cấu hình cho shop. Kênh PayOS ACTIVE không
+              thay thế ngân hàng shop dùng nhận hoàn phí thuê.
+            </p>
           </div>
           <Button
             variant="outline"

@@ -1,6 +1,9 @@
 import type { RefObject } from 'react';
 import Link from 'next/link';
 import { Button, CircleAlert } from '@florabot/ui';
+import ShopBankSection, {
+  type SellerBankResponse,
+} from '@/features/finance/components/payment-channels/ShopBankSection';
 import { KioskLocationFields } from './KioskLocationFields';
 import { PayoutAccountFields } from './PayoutAccountFields';
 
@@ -18,6 +21,8 @@ export interface ShopInfoFieldsProps {
 
 interface KioskApplicationFormProps {
   additional?: boolean;
+  sellerId?: string;
+  sellerBank?: SellerBankResponse | null;
   rentalReview?: React.ReactNode;
   shopInfo: ShopInfoFieldsProps;
   location: React.ComponentProps<typeof KioskLocationFields>;
@@ -32,6 +37,8 @@ interface KioskApplicationFormProps {
 export function KioskApplicationForm({
   shopInfo,
   additional = false,
+  sellerId,
+  sellerBank,
   rentalReview,
   location,
   payout,
@@ -77,12 +84,37 @@ export function KioskApplicationForm({
               </div>
             </div>
             <p className="lease-seller-desc">
-              Kiosk mới sẽ được bổ sung vào cửa hàng này. Thông tin liên hệ và tài khoản nhận tiền
-              được tự động áp dụng từ hồ sơ shop đã lưu.{' '}
+              Kiosk mới sẽ được bổ sung vào cửa hàng này. Thông tin liên hệ và tài khoản nhận hoàn
+              phí thuê được tự động áp dụng từ hồ sơ shop.{' '}
               <Link href="/seller" className="lease-seller-link">
                 Quản lý shop
               </Link>
             </p>
+
+            {sellerBank?.status === 'READY' && (
+              <div className="lease-seller-bank-row is-ready">
+                <span className="lease-seller-bank-badge">✓ Ngân hàng hoàn phí đã sẵn sàng:</span>
+                <strong>{sellerBank.bankName}</strong> · <span>{sellerBank.holder}</span> ·{' '}
+                <code>••••{sellerBank.accountSuffix}</code>
+                <Link
+                  href="/seller/commerce"
+                  className="lease-seller-link"
+                  style={{ marginLeft: 'auto' }}
+                >
+                  Thay đổi tại Ví shop ↗
+                </Link>
+              </div>
+            )}
+
+            {sellerId && sellerBank && sellerBank.status !== 'READY' && (
+              <div className="lease-seller-bank-embedded">
+                <ShopBankSection
+                  sellerId={sellerId}
+                  variant="embedded"
+                  title="Khai báo tài khoản ngân hàng của shop (Bắt buộc trước khi thuê)"
+                />
+              </div>
+            )}
           </div>
         )}
         {!additional && (

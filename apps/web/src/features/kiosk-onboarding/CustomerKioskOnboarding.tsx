@@ -4,7 +4,8 @@ import Link from 'next/link';
 import PayosCheckout from '@/shared/components/PayosCheckout';
 import { useQuery } from '@tanstack/react-query';
 import { Button, CircleAlert, RefreshCw } from '@florabot/ui';
-import { ApiError, sessionQuery, type Session } from '@/shared/lib/api';
+import { ApiError, request, sessionQuery, type Session } from '@/shared/lib/api';
+import type { SellerBankResponse } from '@/features/finance/components/payment-channels/ShopBankSection';
 import { ApplicationStatusPanel } from './components/ApplicationStatusPanel';
 import { CancelApplicationDialog } from './components/CancelApplicationDialog';
 import { KioskApplicationForm } from './components/KioskApplicationForm';
@@ -29,6 +30,13 @@ function CustomerKioskContent({
     useKioskApplication(sessionData);
 
   const additional = sessionData?.role === 'SELLER';
+  const sellerId = sessionData?.sellerId;
+  const sellerBankQuery = useQuery({
+    queryKey: ['seller-shop-bank', sellerId],
+    queryFn: () => request<SellerBankResponse>(`/sellers/${sellerId}/bank`),
+    enabled: Boolean(additional && sellerId),
+  });
+
   const [acceptedPricingVersion, setAcceptedPricingVersion] = useState<number | null>(null);
   const pricing = pricingQuery.data;
   const form = useKioskApplicationForm(acceptedPricingVersion ?? 0, additional);
@@ -41,6 +49,13 @@ function CustomerKioskContent({
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
+    if (additional && sellerBankQuery.data && sellerBankQuery.data.status !== 'READY') {
+      actions.setSubmitError(
+        'Hồ sơ shop chưa có tài khoản ngân hàng nhận hoàn phí thuê (cần ở trạng thái Sẵn sàng - READY). Vui lòng cập nhật thông tin ngân hàng shop bên dưới trước khi gửi đơn.',
+      );
+      actions.errorBannerRef.current?.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
     const payload = form.validateAndGetPayload();
     if (!payload) return;
     actions.applyMutation.mutate(payload);
@@ -296,6 +311,8 @@ function CustomerKioskContent({
           </div>
           <KioskApplicationForm
             additional={additional}
+            sellerId={additional ? sellerId || undefined : undefined}
+            sellerBank={sellerBankQuery.data}
             rentalReview={
               <div className="kiosk-rental-review">
                 <span className="lease-review-label">KIỂM TRA TRƯỚC KHI GỬI</span>

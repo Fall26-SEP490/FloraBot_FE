@@ -135,4 +135,56 @@ describe('Annual Kiosk Onboarding Unit Tests', () => {
       expect(KIOSK_STATUS_LABELS.REFUNDED).toBe('Đã hoàn tiền');
     });
   });
+
+  describe('Seller Shop Bank Requirements & Distinction', () => {
+    it('requires READY status before additional kiosk application can proceed', () => {
+      const isBankEligibleForRental = (status?: string | null) => status === 'READY';
+
+      expect(isBankEligibleForRental('READY')).toBe(true);
+      expect(isBankEligibleForRental('MISSING')).toBe(false);
+      expect(isBankEligibleForRental('NEEDS_UPDATE')).toBe(false);
+      expect(isBankEligibleForRental(null)).toBe(false);
+      expect(isBankEligibleForRental(undefined)).toBe(false);
+    });
+
+    it('validates seller bank flow payload constraints correctly', () => {
+      const validateSellerBankPayload = (
+        p_bank: string,
+        p_holder: string,
+        p_account_enc: string,
+      ) => {
+        const trimmedBank = p_bank.trim();
+        const trimmedHolder = p_holder.trim().toUpperCase();
+        const trimmedAccount = p_account_enc.trim();
+
+        if (!trimmedBank || trimmedBank.length < 2 || trimmedBank.length > 120) return false;
+        if (!trimmedHolder || trimmedHolder.length < 2 || trimmedHolder.length > 120) return false;
+        if (!trimmedAccount || trimmedAccount.length < 4 || trimmedAccount.length > 34)
+          return false;
+        if (!/^[A-Za-z0-9]+$/.test(trimmedAccount)) return false;
+
+        return {
+          p_bank: trimmedBank,
+          p_holder: trimmedHolder,
+          p_account_enc: trimmedAccount,
+        };
+      };
+
+      const valid = validateSellerBankPayload('MB Bank', 'Ta Minh Hoang', '0123456789');
+      expect(valid).toEqual({
+        p_bank: 'MB Bank',
+        p_holder: 'TA MINH HOANG',
+        p_account_enc: '0123456789',
+      });
+
+      // Spaces in account
+      expect(validateSellerBankPayload('MB Bank', 'Hoang', '0123 456 789')).toBe(false);
+      // Special characters in account
+      expect(validateSellerBankPayload('MB Bank', 'Hoang', '0123-456')).toBe(false);
+      // Empty bank
+      expect(validateSellerBankPayload('', 'Hoang', '0123456789')).toBe(false);
+      // Short account
+      expect(validateSellerBankPayload('MB Bank', 'Hoang', '123')).toBe(false);
+    });
+  });
 });

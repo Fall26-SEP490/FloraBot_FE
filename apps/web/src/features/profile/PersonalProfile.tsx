@@ -39,6 +39,7 @@ import type {
 } from './profile.types';
 import { phonePattern, emailPattern, asciiAlphanumeric, hasControlChars } from './profile.schemas';
 import { basicPayload, basicValues, validBirthDate, vietnamToday } from './profile.utils';
+import ShopBankSection from '../finance/components/payment-channels/ShopBankSection';
 import { profileSections, useProfileNavigation } from './useProfileNavigation';
 import { useProfileDraftGuard } from './useProfileDraftGuard';
 
@@ -1326,7 +1327,7 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
 
               <div className="profile-disclaimer-card">
                 {role === 'SELLER'
-                  ? 'Tài khoản cá nhân này độc lập với tài khoản nhận tiền trong Ví shop.'
+                  ? 'Tài khoản cá nhân này độc lập với Ngân hàng shop (dùng nhận hoàn phí thuê kiosk) và Kênh PayOS (dùng nhận tiền bán hoa). Sửa tài khoản tại đây không cập nhật ngân hàng shop.'
                   : 'Thông tin được che khi hiển thị. Hãy kiểm tra chính xác trước khi lưu.'}
               </div>
 
@@ -1594,8 +1595,15 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
               />
             </section>
 
-            {/* Section 4b: Seller Shop Profile */}
-            {role === 'SELLER' && <SellerShopProfileSection />}
+            {/* Section 4b: Seller Shop Profile & Shop Bank */}
+            {role === 'SELLER' && (
+              <>
+                <SellerShopProfileSection />
+                {session.data?.sellerId && (
+                  <ShopBankSection sellerId={session.data.sellerId} variant="embedded" />
+                )}
+              </>
+            )}
 
             {/* Section 5: Security & Google Linking (Customer and Seller only) */}
             {isMember && (

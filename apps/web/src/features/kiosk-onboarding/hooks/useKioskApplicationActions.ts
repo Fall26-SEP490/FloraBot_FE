@@ -223,6 +223,7 @@ export function useKioskApplicationActions(sessionData: Session | undefined) {
 
   return {
     submitError,
+    setSubmitError,
     errorBannerRef,
     cancelDialogOpen,
     setCancelDialogOpen,
