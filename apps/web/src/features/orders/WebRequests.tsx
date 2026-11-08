@@ -404,6 +404,9 @@ function OrderActions({
               void onReload();
             }}
             onRefresh={() => void onReload()}
+            onRetryQr={() => void send('payment-link', {})}
+            isLoadingQr={busy || uncertain}
+            qrError={error}
           />
         )}
       {mode === 'admin' && (

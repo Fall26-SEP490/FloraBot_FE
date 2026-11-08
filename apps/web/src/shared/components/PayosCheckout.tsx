@@ -18,6 +18,9 @@ export interface PayosCheckoutProps {
   description: string;
   onClose: (result: 'success' | 'cancel' | 'close') => void;
   onRefresh: () => void;
+  onRetryQr: () => void;
+  isLoadingQr?: boolean;
+  qrError?: string;
 }
 
 export default function PayosCheckout({
@@ -31,9 +34,12 @@ export default function PayosCheckout({
   description,
   onClose,
   onRefresh,
+  onRetryQr,
+  isLoadingQr = false,
+  qrError,
 }: PayosCheckoutProps) {
   const validation = validatePayosCheckoutUrl(checkoutUrl);
-  const qrValue = qrCode?.trim() || validation.url || checkoutUrl;
+  const qrValue = qrCode?.trim();
   const hasBankQr = Boolean(qrCode?.trim()?.startsWith('000201'));
 
   return createPortal(
@@ -48,25 +54,41 @@ export default function PayosCheckout({
       <div className="payos-native-checkout">
         <div className="payos-qr-section">
           <div className="payos-qr-box">
-            {validation.valid && qrValue ? (
+            {validation.valid && hasBankQr && qrValue ? (
               <QRCodeSVG
                 value={qrValue}
                 size={230}
                 marginSize={3}
                 title="Mã QR thanh toán PayOS"
+                role="img"
+                aria-label="Mã QR thanh toán PayOS"
                 className="payos-qr-svg"
               />
             ) : (
               <p className="payos-qr-error" role="alert">
-                {validation.error || 'Địa chỉ thanh toán không hợp lệ.'}
+                {!validation.valid
+                  ? validation.error
+                  : 'Chưa có mã VietQR ngân hàng hợp lệ. Vui lòng tải lại mã để thanh toán.'}
               </p>
             )}
           </div>
-          <p className="payos-qr-instruction">
-            {hasBankQr
-              ? 'Mở ứng dụng ngân hàng quét mã VietQR để thanh toán'
-              : 'Quét mã bằng camera hoặc ứng dụng ngân hàng để thanh toán'}
-          </p>
+          {hasBankQr && validation.valid && (
+            <p className="payos-qr-instruction">
+              Mở ứng dụng ngân hàng quét mã VietQR để thanh toán
+            </p>
+          )}
+          {validation.valid && !hasBankQr && (
+            <>
+              {qrError && (
+                <p className="payos-qr-error" role="alert">
+                  {qrError}
+                </p>
+              )}
+              <Button variant="outline" onClick={onRetryQr} disabled={isLoadingQr}>
+                {isLoadingQr ? 'Đang tải mã QR…' : 'Tải lại mã QR'}
+              </Button>
+            </>
+          )}
         </div>
 
         <div className="payos-payment-details">
@@ -80,8 +102,8 @@ export default function PayosCheckout({
           )}
           {orderCode != null && (
             <div className="payos-detail-row">
-              <span className="payos-detail-label">Mã giao dịch / Nội dung</span>
-              <span className="payos-detail-value payos-code">FloraBot {orderCode}</span>
+              <span className="payos-detail-label">Mã giao dịch</span>
+              <span className="payos-detail-value payos-code">{orderCode}</span>
             </div>
           )}
           {(recipientName || recipientAccountMasked) && (
@@ -91,19 +113,6 @@ export default function PayosCheckout({
                 {[recipientName, recipientAccountMasked].filter(Boolean).join(' · ')}
               </span>
             </div>
-          )}
-        </div>
-
-        <div className="payos-direct-tab-wrap">
-          {validation.valid && validation.url && (
-            <a
-              href={validation.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="button button-outline payos-direct-tab-link"
-            >
-              Mở trang thanh toán PayOS (Mở tab mới) ↗
-            </a>
           )}
         </div>
 

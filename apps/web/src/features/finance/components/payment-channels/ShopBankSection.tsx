@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import { ApiError, queryClient, request } from '@/shared/lib/api';
@@ -29,6 +29,7 @@ export function ShopBankSection({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [actionError, setActionError] = useState('');
   const [actionSuccess, setActionSuccess] = useState('');
+  const pendingBank = useRef<SetSellerBankRequest | null>(null);
 
   const bankQuery = useQuery({
     queryKey: ['seller-shop-bank', sellerId],
@@ -45,13 +46,19 @@ export function ShopBankSection({
   }, [bankQuery.data, onBankReadyChange]);
 
   const saveBankMutation = useMutation({
-    mutationFn: (payload: SetSellerBankRequest) =>
-      request<{ success?: boolean }>(
+    mutationFn: async () => {
+      const payload = pendingBank.current;
+      pendingBank.current = null;
+      if (!payload) throw new Error('Vui lòng nhập lại số tài khoản.');
+      return request<{ success?: boolean }>(
         `/sellers/${sellerId}/flows/set_seller_bank`,
         payload,
         true,
         'POST',
-      ),
+      );
+    },
+    retry: false,
+    gcTime: 0,
     onSuccess: async () => {
       // Clear raw account number immediately from state (never persist in form memory)
       setAccountRaw('');
@@ -69,6 +76,10 @@ export function ShopBankSection({
           ? err.message
           : 'Chưa lưu được thông tin ngân hàng shop. Vui lòng kiểm tra lại.',
       );
+    },
+    onSettled: () => {
+      pendingBank.current = null;
+      setAccountRaw('');
     },
   });
 
@@ -91,6 +102,8 @@ export function ShopBankSection({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    e.stopPropagation();
+    if (saveBankMutation.isPending) return;
     setActionError('');
     setActionSuccess('');
 
@@ -126,11 +139,13 @@ export function ShopBankSection({
     }
 
     setFieldErrors({});
-    saveBankMutation.mutate({
+    pendingBank.current = {
       p_bank: trimmedBank,
       p_holder: trimmedHolder,
       p_account_enc: trimmedAccount,
-    });
+    };
+    setAccountRaw('');
+    saveBankMutation.mutate();
   }
 
   const showForm = !isReady || isEditing;

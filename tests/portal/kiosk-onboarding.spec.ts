@@ -160,6 +160,7 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
             orderCode: 888123,
             amount: 10000,
             checkoutUrl: 'https://pay.payos.vn/web/demo888123',
+            qrCode: '000201TEST-KIOSK-RENTAL-QR',
           },
         });
       }
@@ -192,7 +193,7 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/thue-kiosk');
 
-    await expect(page.getByRole('heading', { name: '1. Chọn số ô và xem phí thuê' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Cấu hình kiosk của bạn' })).toBeVisible();
 
     // Accessibility check on catalog & form
     const a11yResult = await new AxeBuilder({ page })
@@ -204,7 +205,7 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
 
     // Select Trial package
     await page.getByLabel('Ô đặt trước (Pre-order)', { exact: true }).fill('1');
-    await page.getByRole('checkbox', { name: /Tôi xác nhận số ô/ }).check();
+    await page.getByRole('checkbox', { name: /Tôi đã kiểm tra số ô/ }).check();
 
     // Verify manual Latitude & Longitude inputs are removed from UI
     await expect(page.getByLabel('Vĩ độ (Latitude)')).toHaveCount(0);
@@ -334,8 +335,9 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     await expect(
       page
         .getByRole('dialog', { name: 'Thanh toán phí thuê kiosk' })
-        .getByTitle('Thanh toán bảo mật qua PayOS'),
+        .getByRole('img', { name: 'Mã QR thanh toán PayOS' }),
     ).toBeVisible();
+    await expect(page.locator('a[href^="https://pay.payos.vn"]')).toHaveCount(0);
 
     // Test Server Reconciliation:
     await page
@@ -973,7 +975,6 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
       buffer: Buffer.from('fake-png-binary-data'),
     });
 
-    await page.getByRole('button', { name: 'Tải ảnh lên' }).click();
     await expect(
       page.getByText('Đã tải lên và đính kèm ảnh kiosk-photo.png thành công.'),
     ).toBeVisible();

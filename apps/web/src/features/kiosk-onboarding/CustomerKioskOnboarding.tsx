@@ -206,11 +206,6 @@ function CustomerKioskContent({
       {hasActiveApplication && appData && (
         <ApplicationStatusPanel
           appData={appData}
-          checkoutUrl={
-            actions.checkoutApplicationId === appData.id
-              ? actions.latestCheckoutUrl || actions.validatedCheckoutUrl
-              : null
-          }
           onOpenCancelDialog={() => {
             actions.setCancelDialogOpen(true);
             actions.setCancelError('');
@@ -246,6 +241,9 @@ function CustomerKioskContent({
               else void applicationQuery.refetch();
             }}
             onRefresh={() => actions.reconcileMutation.mutate(appData.id)}
+            onRetryQr={() => actions.paymentLinkMutation.mutate(appData.id)}
+            isLoadingQr={actions.paymentLinkMutation.isPending}
+            qrError={actions.paymentLinkError}
           />
         )}
 

@@ -213,7 +213,7 @@ test('A refreshed quote cannot be confirmed with an older review snapshot', asyn
 });
 
 for (const width of [390, 1440]) {
-  test(`One click opens embedded order payment without leaving FloraBot at ${width}px`, async ({
+  test(`One click opens bank QR payment without leaving FloraBot at ${width}px`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 });
@@ -234,6 +234,7 @@ for (const width of [390, 1440]) {
           checkoutUrl: 'https://pay.payos.vn/web/test-order',
           orderCode: 123456,
           amount: 360000,
+          qrCode: '000201010212TEST-BANK-QR',
           recipientName: 'TIEM HOA AN NHIEN',
           recipientAccountMasked: '******7766',
         },
@@ -243,9 +244,12 @@ for (const width of [390, 1440]) {
     const originalUrl = page.url();
     await page.getByRole('button', { name: 'Thanh toán ngay', exact: true }).click();
     const dialog = page.getByRole('dialog', { name: 'Thanh toán đơn hoa' });
-    await expect(dialog.getByTitle('Thanh toán bảo mật qua PayOS')).toBeVisible();
+    await expect(
+      dialog.getByRole('img', { name: 'Mã QR thanh toán PayOS', exact: true }),
+    ).toBeVisible();
     await expect(dialog).toContainText('360.000');
-    await expect(dialog).toContainText('TIEM HOA AN NHIEN ******7766');
+    await expect(dialog).toContainText('TIEM HOA AN NHIEN · ******7766');
+    await expect(dialog.getByRole('link')).toHaveCount(0);
     await expect(page).toHaveURL(originalUrl);
     expect(page.context().pages()).toHaveLength(1);
     expect(links).toBe(1);
@@ -263,12 +267,9 @@ for (const width of [390, 1440]) {
     await page.screenshot({ path: test.info().outputPath(`payos-${width}.png`) });
     await dialog.getByRole('button', { name: 'Kiểm tra thanh toán', exact: true }).click();
     expect(links).toBe(1);
-    // A provider success callback only refreshes authoritative BE state.
-    await page.evaluate(() =>
-      (
-        window as unknown as { payosTestConfig: { onSuccess: () => void } }
-      ).payosTestConfig.onSuccess(),
-    );
+    // Refresh never treats a client action as payment success.
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole('button', { name: 'Đóng', exact: true }).click();
     await expect(dialog).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Thanh toán ngay', exact: true })).toBeVisible();
     expect(state.row.orderStatus).toBe('AWAITING_PAYMENT');
@@ -298,85 +299,44 @@ test('Preorder cannot open a payment link while the seller channel is unavailabl
   await expect(pay).toBeEnabled();
 });
 
-test('PayOS script can be retried with the same link and a callback never cancels the flower order', async ({
-  page,
-}) => {
-  const state = await fixture(page);
-  state.row = {
-    ...state.row,
-    state: 'ORDERED',
-    orderId: 'order-1',
-    orderStatus: 'AWAITING_PAYMENT',
-  };
-  await mockPayos(page);
-  await page.route('https://cdn.payos.vn/**', (route) => route.abort());
-  let links = 0;
-  await page.route(`**/api/member/preorders/${id}/payment-link`, (route) => {
-    links++;
-    return route.fulfill({
-      json: {
-        checkoutUrl: 'https://pay.payos.vn/web/test-order',
-        orderCode: 123456,
-        amount: 380000,
-      },
-    });
-  });
-  await page.goto(`/tai-khoan?requestId=${id}#web-orders`);
-  await page.getByRole('button', { name: 'Thanh toán ngay', exact: true }).click();
-  const dialog = page.getByRole('dialog', { name: 'Thanh toán đơn hoa' });
-  await expect(dialog.getByRole('alert')).toContainText('Chưa tải được màn hình PayOS');
-  await page.unroute('https://cdn.payos.vn/**');
-  await dialog.getByRole('button', { name: 'Tải lại màn hình' }).click();
-  await expect(dialog.getByTitle('Thanh toán bảo mật qua PayOS')).toBeVisible();
-  expect(links).toBe(1);
-  await page.evaluate(() =>
-    (window as unknown as { payosTestConfig: { onCancel: () => void } }).payosTestConfig.onCancel(),
+for (const qrCode of [null, 'https://pay.payos.vn/web/not-a-bank-qr']) {
+  test(
+    'Missing or non-bank QR retries inline without opening PayOS: ' + qrCode,
+    async ({ page }) => {
+      const state = await fixture(page);
+      state.row = {
+        ...state.row,
+        state: 'ORDERED',
+        orderId: 'order-1',
+        orderStatus: 'AWAITING_PAYMENT',
+      };
+      let attempts = 0;
+      await page.route('**/api/member/preorders/' + id + '/payment-link', (route) => {
+        attempts++;
+        return route.fulfill({
+          json: {
+            checkoutUrl: 'https://pay.payos.vn/web/test-order',
+            orderCode: 123456,
+            amount: 380000,
+            qrCode: attempts === 1 ? qrCode : '000201RETRIED-BANK-QR',
+          },
+        });
+      });
+      await page.goto('/tai-khoan?requestId=' + id + '#web-orders');
+      await page.getByRole('button', { name: 'Thanh toán ngay', exact: true }).click();
+      const dialog = page.getByRole('dialog', { name: 'Thanh toán đơn hoa' });
+      await expect(dialog.getByRole('alert')).toContainText('Chưa có mã VietQR');
+      await expect(dialog.locator('svg.payos-qr-svg')).toHaveCount(0);
+      await expect(dialog.getByRole('link')).toHaveCount(0);
+      await dialog.getByRole('button', { name: 'Tải lại mã QR', exact: true }).click();
+      await expect(dialog.getByRole('img', { name: 'Mã QR thanh toán PayOS' })).toBeVisible();
+      expect(attempts).toBe(2);
+      expect(page.context().pages()).toHaveLength(1);
+      await dialog.getByRole('button', { name: 'Kiểm tra thanh toán', exact: true }).click();
+      await expect(dialog).toBeVisible();
+      expect(state.row.orderStatus).toBe('AWAITING_PAYMENT');
+      await dialog.getByRole('button', { name: 'Đóng', exact: true }).click();
+      expect(state.writes).toEqual([]);
+    },
   );
-  await expect(dialog).toHaveCount(0);
-  expect(state.writes).toEqual([]);
-  await expect(page.getByRole('button', { name: 'Thanh toán ngay', exact: true })).toBeVisible();
-});
-
-test('Official PayOS CDN SDK embeds the checkout with the current return URL and cleans up on close', async ({
-  page,
-  request,
-}) => {
-  const state = await fixture(page);
-  state.row = {
-    ...state.row,
-    state: 'ORDERED',
-    orderId: 'order-1',
-    orderStatus: 'AWAITING_PAYMENT',
-  };
-  await mockPayos(page);
-  const sdkResponse = await request.get(
-    'https://cdn.payos.vn/payos-checkout/v1/stable/payos-initialize.js',
-  );
-  expect(sdkResponse.ok()).toBe(true);
-  await page.route('https://cdn.payos.vn/payos-checkout/v1/stable/payos-initialize.js', (route) =>
-    route.fulfill({ response: sdkResponse }),
-  );
-  await page.route(`**/api/member/preorders/${id}/payment-link`, (route) =>
-    route.fulfill({
-      json: {
-        checkoutUrl: 'https://pay.payos.vn/web/test-order',
-        orderCode: 123456,
-        amount: 380000,
-      },
-    }),
-  );
-  await page.goto(`/tai-khoan?requestId=${id}#web-orders`);
-  const returnUrl = page.url();
-  await page.getByRole('button', { name: 'Thanh toán ngay', exact: true }).click();
-  const dialog = page.getByRole('dialog', { name: 'Thanh toán đơn hoa' });
-  const iframe = dialog.getByTitle('Thanh toán bảo mật qua PayOS');
-  await expect(iframe).toBeVisible();
-  const src = new URL((await iframe.getAttribute('src'))!);
-  expect(src.origin).toBe('https://pay.payos.vn');
-  expect(src.pathname).toBe('/embedded/test-order');
-  expect(src.searchParams.get('redirect_uri')).toBe(returnUrl);
-  await dialog.getByRole('button', { name: 'Đóng hộp thoại', exact: true }).click();
-  await expect(dialog).toHaveCount(0);
-  await expect(page.locator('iframe[src*="pay.payos.vn"]')).toHaveCount(0);
-  await expect(page).toHaveURL(returnUrl);
-});
+}

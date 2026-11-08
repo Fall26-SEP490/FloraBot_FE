@@ -3,7 +3,6 @@ import { Banknote, Button, CircleAlert, RefreshCw } from '@florabot/ui';
 interface PaymentActionsProps {
   packageName: string;
   annualFee: number | string;
-  checkoutUrl?: string | null;
   paymentLinkError: string;
   isGeneratingLink: boolean;
   isReconciling: boolean;
@@ -14,7 +13,6 @@ interface PaymentActionsProps {
 export function PaymentActions({
   packageName,
   annualFee,
-  checkoutUrl,
   paymentLinkError,
   isGeneratingLink,
   isReconciling,
@@ -40,18 +38,8 @@ export function PaymentActions({
       <div className="action-buttons-row">
         <Button onClick={onGenerateLink} disabled={isGeneratingLink}>
           <Banknote size={18} aria-hidden="true" />
-          {isGeneratingLink ? 'Đang mở thanh toán…' : 'Thanh toán phí thuê'}
+          {isGeneratingLink ? 'Đang tải mã QR…' : 'Thanh toán phí thuê'}
         </Button>
-        {checkoutUrl && (
-          <a
-            href={checkoutUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="button button-outline"
-          >
-            Mở cổng PayOS (Tab mới) ↗
-          </a>
-        )}
         <Button variant="outline" onClick={onReconcile} disabled={isReconciling}>
           <RefreshCw className={isReconciling ? 'kiosk-spin' : ''} size={18} aria-hidden="true" />
           Kiểm tra thanh toán
@@ -59,8 +47,8 @@ export function PaymentActions({
       </div>
 
       <p className="kiosk-help-text">
-        Thanh toán qua PayOS ngay trên FloraBot. Trạng thái hồ sơ được cập nhật sau khi xác nhận
-        giao dịch.
+        Quét mã QR bằng ứng dụng ngân hàng ngay trên FloraBot. Trạng thái hồ sơ được cập nhật sau
+        khi xác nhận giao dịch.
       </p>
     </div>
   );

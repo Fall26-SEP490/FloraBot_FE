@@ -1,5 +1,5 @@
 import { useState, type RefObject } from 'react';
-import { Button, CircleAlert, ClipboardList, Plus } from '@florabot/ui';
+import { Button, CircleAlert, ClipboardList, RefreshCw } from '@florabot/ui';
 import type { StaffEvidenceItem } from '../installations.types';
 
 function TechEvidenceThumbnail({
@@ -73,8 +73,8 @@ export function TechnicianEvidenceSection({
     <div className="evidence-upload-block">
       <h4>1. Tải ảnh minh chứng hiện trường (bắt buộc)</h4>
       <p className="kiosk-help-text">
-        Ảnh chụp thực tế tủ sau khi lắp ráp, kết nối nguồn điện và góc chụp rõ tem/mã QR tủ. Tối đa
-        5 MB mỗi ảnh.
+        Chọn ảnh để tự động tải lên và đính kèm vào hồ sơ. Dùng ảnh chụp thực tế tủ sau khi lắp đặt,
+        rõ tem/mã QR. PNG, JPEG hoặc WebP, tối đa 5 MB mỗi ảnh.
       </p>
 
       <div className="file-input-row">
@@ -91,6 +91,8 @@ export function TechnicianEvidenceSection({
           accept="image/png,image/jpeg,image/webp"
           onChange={(e) => {
             const file = e.target.files?.[0] || null;
+            // Let the same file be selected again after an error or a cancelled picker.
+            e.target.value = '';
             onSelectFile(file);
           }}
         />
@@ -107,18 +109,21 @@ export function TechnicianEvidenceSection({
             disabled={uploading || submitPending}
             onClick={() => fileInputRef.current?.click()}
           >
-            {selectedFile ? 'Thay ảnh' : 'Chọn ảnh'}
+            {uploading
+              ? 'Đang tải ảnh…'
+              : selectedFile
+                ? 'Chọn ảnh khác'
+                : evidenceItems.length
+                  ? 'Thêm ảnh'
+                  : 'Chọn ảnh'}
           </Button>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onUploadPhoto}
-          disabled={!selectedFile || uploading || submitPending}
-        >
-          <Plus size={16} aria-hidden="true" />
-          {uploading ? 'Đang tải...' : 'Tải ảnh lên'}
-        </Button>
+        {selectedFile && !uploading && (
+          <Button type="button" variant="outline" onClick={onUploadPhoto} disabled={submitPending}>
+            <RefreshCw size={16} aria-hidden="true" />
+            Thử tải lại ảnh
+          </Button>
+        )}
       </div>
 
       {uploadStatus && (

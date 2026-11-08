@@ -22,6 +22,7 @@ async function installationFixture(page: Page, initialStatus = 'SCHEDULED') {
     writes: [] as { role: string; path: string }[],
     attachIds: [] as string[],
     uploadCount: 0,
+    uploadDelayMs: 0,
     attachFailures: 0,
     loseAttachResponse: false,
     evidenceReadFailure: false,
@@ -90,6 +91,8 @@ async function installationFixture(page: Page, initialStatus = 'SCHEDULED') {
       if (model.denyDetail) return route.fulfill({ status: 404, json: {} });
       if (path.endsWith('/evidence/upload')) {
         model.uploadCount++;
+        if (model.uploadDelayMs)
+          await new Promise((resolve) => setTimeout(resolve, model.uploadDelayMs));
         expect(request.headers()['content-type']).toBe('image/png');
         return route.fulfill({
           json: {
@@ -183,7 +186,6 @@ for (const width of [390, 1440]) {
     const submit = page.getByRole('button', { name: 'Nộp báo cáo hoàn thành', exact: true });
     await expect(submit).toBeDisabled();
     await page.locator('input[type=file]').setInputFiles(photo);
-    await page.getByRole('button', { name: 'Tải ảnh lên', exact: true }).click();
     await expect(
       page.getByText('Đã tải lên và đính kèm ảnh test-installation.png thành công.'),
     ).toBeVisible();
@@ -217,9 +219,8 @@ test('Attachment retry reuses the uploaded ticket and ID and keeps the report dr
   const draft = page.getByLabel('Nội dung báo cáo chi tiết:');
   await draft.fill('Báo cáo đang soạn trước khi tải ảnh.');
   await page.locator('input[type=file]').setInputFiles(photo);
-  await page.getByRole('button', { name: 'Tải ảnh lên', exact: true }).click();
   await expect(page.getByText('Đính kèm tạm thời gián đoạn.', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Tải ảnh lên', exact: true }).click();
+  await page.getByRole('button', { name: 'Thử tải lại ảnh', exact: true }).click();
   await expect(
     page.getByText('Đã tải lên và đính kèm ảnh test-installation.png thành công.'),
   ).toBeVisible();
@@ -236,7 +237,6 @@ test('A lost attachment response is reconciled by GET without a duplicate upload
   model.loseAttachResponse = true;
   await page.goto('/technician/installations');
   await page.locator('input[type=file]').setInputFiles(photo);
-  await page.getByRole('button', { name: 'Tải ảnh lên', exact: true }).click();
   await expect(
     page.getByText('Đã tải lên và đính kèm ảnh test-installation.png thành công.'),
   ).toBeVisible();
@@ -293,7 +293,7 @@ for (const failure of ['list403', 'detail404']) {
       ),
     ).toBeVisible();
     await expect(page.getByRole('button', { name: /Bắt đầu lắp đặt/ })).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Tải ảnh lên', exact: true })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Thử tải lại ảnh', exact: true })).toHaveCount(0);
     expect(model.writes).toHaveLength(0);
   });
 }
@@ -332,3 +332,46 @@ for (const missing of ['photo', 'report']) {
     expect(model.customerRole).toBe('CUSTOMER');
   });
 }
+
+test('Selecting evidence uploads automatically and blocks report submission until attached', async ({
+  page,
+}) => {
+  const model = await installationFixture(page, 'INSTALLING');
+  model.uploadDelayMs = 600;
+  await page.goto('/technician/installations');
+  await page
+    .getByLabel('Nội dung báo cáo chi tiết:')
+    .fill('Đã hoàn thành lắp đặt và kiểm tra thiết bị.');
+  const submit = page.getByRole('button', { name: 'Nộp báo cáo hoàn thành', exact: true });
+  await page.locator('input[type=file]').setInputFiles(photo);
+  await expect(page.getByRole('button', { name: 'Đang tải ảnh…', exact: true })).toBeDisabled();
+  await expect(submit).toBeDisabled();
+  await expect(
+    page.getByText('Đã tải lên và đính kèm ảnh test-installation.png thành công.'),
+  ).toBeVisible();
+  await expect(submit).toBeEnabled();
+  expect(model.uploadCount).toBe(1);
+  expect(model.photos).toHaveLength(1);
+  await expect(page.getByRole('button', { name: 'Tải ảnh lên', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Thêm ảnh', exact: true })).toBeEnabled();
+});
+
+test('Invalid evidence does not upload and allows choosing a valid replacement', async ({
+  page,
+}) => {
+  const model = await installationFixture(page, 'INSTALLING');
+  await page.goto('/technician/installations');
+  const input = page.locator('input[type=file]');
+  await input.setInputFiles({
+    name: 'invalid.txt',
+    mimeType: 'text/plain',
+    buffer: Buffer.from('invalid'),
+  });
+  await expect(page.getByRole('button', { name: 'Thử tải lại ảnh', exact: true })).toBeVisible();
+  expect(model.uploadCount).toBe(0);
+  await input.setInputFiles(photo);
+  await expect(
+    page.getByText('Đã tải lên và đính kèm ảnh test-installation.png thành công.'),
+  ).toBeVisible();
+  expect(model.uploadCount).toBe(1);
+});

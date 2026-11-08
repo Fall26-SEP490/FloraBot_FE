@@ -64,9 +64,8 @@ export function useTechnicianActions({
     return evidence.some((item) => item.id === id);
   };
 
-  const handleUploadPhoto = async () => {
-    if (!selectedFile || uploadBusy.current) return;
-    const file = selectedFile;
+  const handleUploadPhoto = async (file = selectedFile) => {
+    if (!file || uploadBusy.current) return;
     const validation = validateEvidenceFile(file);
     if (!validation.valid) {
       setUploadStatus(validation.error || 'Ảnh minh chứng không hợp lệ.');

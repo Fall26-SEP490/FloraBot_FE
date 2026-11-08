@@ -69,6 +69,16 @@ export function KioskApplicationForm({
         </div>
       )}
 
+      {additional && sellerId && sellerBank && sellerBank.status !== 'READY' && (
+        <div className="lease-seller-bank-embedded">
+          <ShopBankSection
+            sellerId={sellerId}
+            variant="embedded"
+            title="Khai báo tài khoản ngân hàng của shop (Bắt buộc trước khi thuê)"
+          />
+        </div>
+      )}
+
       <form noValidate onSubmit={onSubmit} className="kiosk-application-form">
         {additional && (
           <div className="lease-seller-card" role="region" aria-label="Cửa hàng đăng ký">
@@ -103,16 +113,6 @@ export function KioskApplicationForm({
                 >
                   Thay đổi tại Ví shop ↗
                 </Link>
-              </div>
-            )}
-
-            {sellerId && sellerBank && sellerBank.status !== 'READY' && (
-              <div className="lease-seller-bank-embedded">
-                <ShopBankSection
-                  sellerId={sellerId}
-                  variant="embedded"
-                  title="Khai báo tài khoản ngân hàng của shop (Bắt buộc trước khi thuê)"
-                />
               </div>
             )}
           </div>
