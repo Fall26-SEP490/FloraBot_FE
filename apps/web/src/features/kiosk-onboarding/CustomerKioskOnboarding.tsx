@@ -233,6 +233,11 @@ function CustomerKioskContent({
         actions.validatedCheckoutUrl && (
           <PayosCheckout
             checkoutUrl={actions.validatedCheckoutUrl}
+            qrCode={actions.latestPaymentData?.qrCode}
+            amount={actions.latestPaymentData?.amount ?? appData.annualFee}
+            orderCode={actions.latestPaymentData?.orderCode}
+            recipientName={actions.latestPaymentData?.recipientName}
+            recipientAccountMasked={actions.latestPaymentData?.recipientAccountMasked}
             title="Thanh toán phí thuê kiosk"
             description={`${appData.shopName} · ${rentalMoney(Number(appData.annualFee))}`}
             onClose={(result) => {

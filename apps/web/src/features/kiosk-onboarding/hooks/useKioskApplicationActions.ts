@@ -21,6 +21,7 @@ export function useKioskApplicationActions(sessionData: Session | undefined) {
   // Validated checkout opens the embedded payment dialog.
   const [validatedCheckoutUrl, setValidatedCheckoutUrl] = useState<string | null>(null);
   const [latestCheckoutUrl, setLatestCheckoutUrl] = useState<string | null>(null);
+  const [latestPaymentData, setLatestPaymentData] = useState<PaymentLinkResponse | null>(null);
   const [checkoutApplicationId, setCheckoutApplicationId] = useState<string | null>(null);
   const [paymentLinkError, setPaymentLinkError] = useState('');
   const [reconcileNotice, setReconcileNotice] = useState('');
@@ -94,6 +95,7 @@ export function useKioskApplicationActions(sessionData: Session | undefined) {
     onSuccess: (data, applicationId) => {
       setCheckoutApplicationId(applicationId);
       setPaymentLinkError('');
+      setLatestPaymentData(data);
       const validation = validatePayosCheckoutUrl(data.checkoutUrl);
       if (validation.valid && validation.url) {
         setValidatedCheckoutUrl(validation.url);
@@ -101,6 +103,7 @@ export function useKioskApplicationActions(sessionData: Session | undefined) {
       } else {
         setValidatedCheckoutUrl(null);
         setLatestCheckoutUrl(null);
+        setLatestPaymentData(null);
         setPaymentLinkError(
           validation.error || 'Địa chỉ thanh toán payOS không thuộc máy chủ được cấp phép.',
         );
@@ -236,6 +239,7 @@ export function useKioskApplicationActions(sessionData: Session | undefined) {
     setCancelError,
     validatedCheckoutUrl,
     latestCheckoutUrl,
+    latestPaymentData,
     checkoutApplicationId,
     setValidatedCheckoutUrl,
     paymentLinkError,
