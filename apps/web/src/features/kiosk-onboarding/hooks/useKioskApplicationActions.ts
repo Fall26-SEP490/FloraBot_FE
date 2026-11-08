@@ -20,6 +20,7 @@ export function useKioskApplicationActions(sessionData: Session | undefined) {
 
   // Validated checkout opens the embedded payment dialog.
   const [validatedCheckoutUrl, setValidatedCheckoutUrl] = useState<string | null>(null);
+  const [latestPaymentData, setLatestPaymentData] = useState<PaymentLinkResponse | null>(null);
   const [checkoutApplicationId, setCheckoutApplicationId] = useState<string | null>(null);
   const [paymentLinkError, setPaymentLinkError] = useState('');
   const [reconcileNotice, setReconcileNotice] = useState('');
@@ -58,6 +59,17 @@ export function useKioskApplicationActions(sessionData: Session | undefined) {
           void queryClient.invalidateQueries({
             queryKey: ['current-kiosk-application', sessionData?.id],
           });
+        } else if (
+          err.message === 'Seller is not active' ||
+          err.message === 'Seller is not eligible to request a kiosk'
+        ) {
+          setSubmitError(
+            'Tài khoản cửa hàng chưa kích hoạt hoặc không đủ điều kiện thuê thêm kiosk. Vui lòng kiểm tra lại trạng thái shop tại mục Gói & Thuê kiosk.',
+          );
+        } else if (err.message === 'Contact, location or bank profile is incomplete') {
+          setSubmitError(
+            'Hồ sơ cửa hàng chưa có đủ thông tin ngân hàng hoặc thông tin liên hệ. Vui lòng vào Cài đặt Shop để cập nhật tài khoản nhận tiền.',
+          );
         } else {
           setSubmitError(err.message);
         }
@@ -73,15 +85,22 @@ export function useKioskApplicationActions(sessionData: Session | undefined) {
   // Get payment link mutation (fail-closed security validation)
   const paymentLinkMutation = useMutation({
     mutationFn: (applicationId: string) =>
-      request<PaymentLinkResponse>(`/member/kiosk-applications/${applicationId}/payment-link`, {}),
+      request<PaymentLinkResponse>(
+        `/member/kiosk-applications/${applicationId}/payment-link`,
+        undefined,
+        true,
+        'POST',
+      ),
     onSuccess: (data, applicationId) => {
       setCheckoutApplicationId(applicationId);
       setPaymentLinkError('');
+      setLatestPaymentData(data);
       const validation = validatePayosCheckoutUrl(data.checkoutUrl);
       if (validation.valid && validation.url) {
         setValidatedCheckoutUrl(validation.url);
       } else {
         setValidatedCheckoutUrl(null);
+        setLatestPaymentData(null);
         setPaymentLinkError(
           validation.error || 'Địa chỉ thanh toán payOS không thuộc máy chủ được cấp phép.',
         );
@@ -112,7 +131,9 @@ export function useKioskApplicationActions(sessionData: Session | undefined) {
     mutationFn: (applicationId: string) =>
       request<KioskApplicationResponse>(
         `/member/kiosk-applications/${applicationId}/reconcile`,
-        {},
+        undefined,
+        true,
+        'POST',
       ),
     onSuccess: (updated) => {
       const status = updated.status;
@@ -205,6 +226,7 @@ export function useKioskApplicationActions(sessionData: Session | undefined) {
 
   return {
     submitError,
+    setSubmitError,
     errorBannerRef,
     cancelDialogOpen,
     setCancelDialogOpen,
@@ -213,6 +235,7 @@ export function useKioskApplicationActions(sessionData: Session | undefined) {
     cancelError,
     setCancelError,
     validatedCheckoutUrl,
+    latestPaymentData,
     checkoutApplicationId,
     setValidatedCheckoutUrl,
     paymentLinkError,

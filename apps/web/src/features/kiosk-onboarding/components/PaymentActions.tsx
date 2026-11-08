@@ -38,7 +38,7 @@ export function PaymentActions({
       <div className="action-buttons-row">
         <Button onClick={onGenerateLink} disabled={isGeneratingLink}>
           <Banknote size={18} aria-hidden="true" />
-          {isGeneratingLink ? 'Đang mở thanh toán…' : 'Thanh toán phí thuê'}
+          {isGeneratingLink ? 'Đang tải mã QR…' : 'Thanh toán phí thuê'}
         </Button>
         <Button variant="outline" onClick={onReconcile} disabled={isReconciling}>
           <RefreshCw className={isReconciling ? 'kiosk-spin' : ''} size={18} aria-hidden="true" />
@@ -47,8 +47,8 @@ export function PaymentActions({
       </div>
 
       <p className="kiosk-help-text">
-        Thanh toán qua PayOS ngay trên FloraBot. Trạng thái hồ sơ được cập nhật sau khi xác nhận
-        giao dịch.
+        Quét mã QR bằng ứng dụng ngân hàng ngay trên FloraBot. Trạng thái hồ sơ được cập nhật sau
+        khi xác nhận giao dịch.
       </p>
     </div>
   );

@@ -39,7 +39,6 @@ export function TechnicianJobDetailCard({
     selectedFile,
     setSelectedFile,
     uploadStatus,
-    setUploadStatus,
     actionError,
     setActionError,
     actionSuccess,
@@ -225,13 +224,14 @@ export function TechnicianJobDetailCard({
             fileInputRef={fileInputRef}
             selectedFile={selectedFile}
             onSelectFile={(file) => {
+              if (!file) return;
               setSelectedFile(file);
-              setUploadStatus('');
+              void handleUploadPhoto(file);
             }}
             uploadStatus={uploadStatus}
             uploading={uploading}
             submitPending={submitReportMutation.isPending}
-            onUploadPhoto={handleUploadPhoto}
+            onUploadPhoto={() => void handleUploadPhoto()}
             evidenceItems={evidenceItems}
             evidenceLoading={evidenceQuery.isPending}
             evidenceError={evidenceQuery.isError}

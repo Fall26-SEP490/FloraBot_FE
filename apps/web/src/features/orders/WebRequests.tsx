@@ -373,6 +373,11 @@ function OrderActions({
         paymentLink && (
           <PayosCheckout
             checkoutUrl={paymentLink.checkoutUrl}
+            qrCode={paymentLink.qrCode}
+            amount={paymentLink.amount}
+            orderCode={paymentLink.orderCode}
+            recipientName={paymentLink.recipientName}
+            recipientAccountMasked={paymentLink.recipientAccountMasked}
             title="Thanh toán đơn hoa"
             description={[
               row.shopName || 'Đơn đặt hoa',
@@ -399,6 +404,9 @@ function OrderActions({
               void onReload();
             }}
             onRefresh={() => void onReload()}
+            onRetryQr={() => void send('payment-link', {})}
+            isLoadingQr={busy || uncertain}
+            qrError={error}
           />
         )}
       {mode === 'admin' && (

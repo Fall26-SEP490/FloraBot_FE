@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button, MapPin } from '@florabot/ui';
 import { ApiError, request, type Session } from '@/shared/lib/api';
+import PayosCheckout from '@/shared/components/PayosCheckout';
+import { validatePayosCheckoutUrl } from '@/shared/lib/payos-checkout';
 import type { components } from '../../../../../../../packages/contracts/src/generated/api';
 import type { KioskApplicationResponse } from '../../../installations/installations.types';
 import type { SellerKioskItem } from '../../../kiosk-management/kiosk-management.types';
@@ -14,21 +16,8 @@ import '../../styles/commerce-subscriptions.css';
 type SubscriptionOverviewResponse = components['schemas']['SubscriptionOverviewResponse'];
 type SubscriptionResponse = components['schemas']['SubscriptionResponse'];
 
-interface KioskRenewalResponse {
-  subscriptionId: string;
-  kioskId: string;
-  sellerId: string;
-  amount: number;
-  periodFrom: string;
-  periodTo: string;
-  status: string;
-  paymentLinkPath: string;
-}
-
-interface RenewalPaymentLinkResponse {
-  checkoutUrl?: string | null;
-  status?: string;
-}
+type KioskRenewalResponse = components['schemas']['KioskRenewalResponse'];
+type RenewalPaymentLinkResponse = components['schemas']['PaymentLinkResponse'];
 
 const kioskStatusLabel: Record<string, string> = {
   ONLINE: 'Đang hoạt động',
@@ -40,25 +29,38 @@ function KioskRenewalCard({
   kiosk,
   sellerId,
   subscriptions = [],
+  subscriptionsReady,
+  onRefresh,
 }: {
   kiosk: SellerKioskItem;
   sellerId: string;
   subscriptions?: SubscriptionResponse[];
+  subscriptionsReady: boolean;
+  onRefresh: () => Promise<unknown>;
 }) {
-  const [renewal, setRenewal] = useState<KioskRenewalResponse | null>(null);
-  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
+  const [payment, setPayment] = useState<{
+    subscriptionId: string;
+    data: RenewalPaymentLinkResponse;
+  } | null>(null);
+  const [notice, setNotice] = useState('');
+  const renewal = subscriptions.find(
+    (s) => s.kioskId === kiosk.id && s.status === 'PENDING_PAYMENT',
+  );
   const [error, setError] = useState('');
 
-  const activeSub = subscriptions.find((s) => s.kioskId === kiosk.id && s.status === 'ACTIVE');
+  const currentSub = subscriptions.find(
+    (s) => s.kioskId === kiosk.id && (s.status === 'ACTIVE' || s.status === 'PAST_DUE'),
+  );
 
   const createRenewal = useMutation({
     mutationFn: () =>
-      request<KioskRenewalResponse>(`/me/kiosks/${kiosk.id}/renewals`, {}, true, 'POST'),
-    onSuccess: (data) => {
-      setRenewal(data);
+      request<KioskRenewalResponse>(`/me/kiosks/${kiosk.id}/renewals`, undefined, true, 'POST'),
+    onSuccess: async () => {
       setError('');
+      await onRefresh();
     },
-    onError: (err: unknown) => {
+    onError: async (err: unknown) => {
+      await onRefresh();
       setError(
         err instanceof ApiError ? err.message : 'Chưa tạo được yêu cầu gia hạn cho kiosk này.',
       );
@@ -69,15 +71,21 @@ function KioskRenewalCard({
     mutationFn: (subscriptionId: string) =>
       request<RenewalPaymentLinkResponse>(
         `/sellers/${sellerId}/subscriptions/${subscriptionId}/payment-link`,
-        {},
+        undefined,
         true,
         'POST',
       ),
-    onSuccess: (data) => {
-      setError('');
-      if (data.checkoutUrl) {
-        setCheckoutUrl(data.checkoutUrl);
+    onSuccess: (data, subscriptionId) => {
+      const validation = validatePayosCheckoutUrl(data.checkoutUrl || '');
+      if (!validation.valid || !validation.url) {
+        setError(
+          validation.error || 'Chưa nhận được liên kết thanh toán hợp lệ. Vui lòng thử lại.',
+        );
+        return;
       }
+      setError('');
+      setNotice('');
+      setPayment({ subscriptionId, data: { ...data, checkoutUrl: validation.url } });
     },
     onError: (err: unknown) => {
       setError(
@@ -87,7 +95,7 @@ function KioskRenewalCard({
   });
 
   return (
-    <article className="subscription-kiosk-card">
+    <article className="subscription-kiosk-card" aria-label={kiosk.name || kiosk.code}>
       <div className="subscription-kiosk-main">
         <div className="subscription-kiosk-badges">
           <span className="subscription-kiosk-code">{kiosk.code}</span>
@@ -105,17 +113,21 @@ function KioskRenewalCard({
             <span>{kiosk.address}</span>
           </p>
         )}
-        {activeSub && (
+        {currentSub && (
           <p
             className="subscription-kiosk-contract-info"
-            style={{ marginTop: '0.35rem', fontSize: '0.84rem', color: '#2d5a3f' }}
+            style={{
+              marginTop: '0.35rem',
+              fontSize: '0.84rem',
+              color: currentSub.status === 'PAST_DUE' ? '#a81c1c' : '#2d5a3f',
+            }}
           >
-            Hạn kỳ hiện tại:{' '}
+            {currentSub.status === 'PAST_DUE' ? 'Kỳ thuê đã hết hạn: ' : 'Hạn kỳ hiện tại: '}
             <strong>
-              {new Date(activeSub.periodFrom).toLocaleDateString('vi-VN')} –{' '}
-              {new Date(activeSub.periodTo).toLocaleDateString('vi-VN')}
+              {new Date(currentSub.periodFrom).toLocaleDateString('vi-VN')} –{' '}
+              {new Date(currentSub.periodTo).toLocaleDateString('vi-VN')}
             </strong>{' '}
-            ({rentalMoney(activeSub.price)})
+            ({rentalMoney(currentSub.price)})
           </p>
         )}
       </div>
@@ -125,13 +137,14 @@ function KioskRenewalCard({
           <Button
             type="button"
             variant="outline"
-            disabled={createRenewal.isPending}
+            disabled={!subscriptionsReady || createRenewal.isPending}
             onClick={() => createRenewal.mutate()}
           >
             {createRenewal.isPending ? 'Đang tạo kỳ gia hạn…' : 'Gia hạn thêm 12 tháng'}
           </Button>
         ) : (
           <div className="subscription-renewal-box">
+            <strong>Đang chờ thanh toán gia hạn</strong>
             <div className="subscription-renewal-meta">
               <span>
                 Kỳ mới:{' '}
@@ -140,31 +153,47 @@ function KioskRenewalCard({
                   {new Date(renewal.periodTo).toLocaleDateString('vi-VN')}
                 </strong>
               </span>
-              <strong className="subscription-renewal-amount">{rentalMoney(renewal.amount)}</strong>
+              <strong className="subscription-renewal-amount">{rentalMoney(renewal.price)}</strong>
             </div>
             <div className="subscription-renewal-buttons">
               <Button
                 type="button"
                 disabled={createPaymentLink.isPending}
-                onClick={() => createPaymentLink.mutate(renewal.subscriptionId)}
+                onClick={() => createPaymentLink.mutate(renewal.id)}
               >
-                {createPaymentLink.isPending ? 'Đang tạo link…' : 'Thanh toán qua PayOS'}
+                {createPaymentLink.isPending ? 'Đang tải mã QR…' : 'Tiếp tục thanh toán'}
               </Button>
-              {checkoutUrl && (
-                <a
-                  href={checkoutUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="button button-outline"
-                >
-                  Mở cổng PayOS ↗
-                </a>
-              )}
             </div>
           </div>
         )}
       </div>
 
+      {renewal && payment?.subscriptionId === renewal.id && (
+        <PayosCheckout
+          checkoutUrl={payment.data.checkoutUrl}
+          qrCode={payment.data.qrCode}
+          amount={payment.data.amount}
+          orderCode={payment.data.orderCode}
+          title="Thanh toán gia hạn kiosk"
+          description={kiosk.name || kiosk.code}
+          recipientName={payment.data.recipientName}
+          recipientAccountMasked={payment.data.recipientAccountMasked}
+          onRetryQr={() => createPaymentLink.mutate(renewal.id)}
+          isLoadingQr={createPaymentLink.isPending}
+          qrError={error}
+          onClose={() => {
+            setPayment(null);
+            void onRefresh();
+          }}
+          onRefresh={() => {
+            setNotice(
+              'Đang cập nhật trạng thái từ hệ thống. Thanh toán được xác nhận bởi máy chủ.',
+            );
+            void onRefresh();
+          }}
+        />
+      )}
+      {notice && <p role="status">{notice}</p>}
       {error && (
         <p role="alert" className="error subscription-kiosk-error">
           {error}
@@ -206,13 +235,14 @@ export default function Subscriptions({ session }: { session: Session }) {
     enabled: Boolean(session.sellerId),
   });
 
-  const expiryText = session.packageExpiresAt
-    ? new Date(`${session.packageExpiresAt}T00:00:00+07:00`).toLocaleDateString('vi-VN', {
-        timeZone: 'Asia/Ho_Chi_Minh',
-      })
-    : 'Theo từng tủ';
-
   const subList = subscriptionsQuery.data?.subscriptions ?? [];
+  const nearestExpiry = subList
+    .filter((s) => s.status === 'ACTIVE')
+    .map((s) => s.periodTo)
+    .sort()[0];
+  const expiryText = nearestExpiry
+    ? new Date(nearestExpiry).toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })
+    : 'Theo từng tủ';
 
   return (
     <section id="subscriptions" className="subscriptions business-panel" tabIndex={-1}>
@@ -268,6 +298,15 @@ export default function Subscriptions({ session }: { session: Session }) {
           {kiosks.data && kiosks.data.length === 0 && (
             <p className="seller-empty-state">Shop hiện chưa có kiosk nào đang hoạt động.</p>
           )}
+          {subscriptionsQuery.isError && (
+            <div role="alert">
+              <p>Chưa tải được kỳ thuê hiện tại. Tải lại để tiếp tục gia hạn.</p>
+              <Button onClick={() => void subscriptionsQuery.refetch()}>Tải lại kỳ thuê</Button>
+            </div>
+          )}
+          {subscriptionsQuery.isPending && (
+            <p role="status">Đang kiểm tra kỳ thuê và yêu cầu gia hạn…</p>
+          )}
           {kiosks.data && kiosks.data.length > 0 && (
             <div className="subscription-kiosk-list">
               {kiosks.data.map((kiosk) => (
@@ -276,6 +315,8 @@ export default function Subscriptions({ session }: { session: Session }) {
                   kiosk={kiosk}
                   sellerId={session.sellerId!}
                   subscriptions={subList}
+                  subscriptionsReady={subscriptionsQuery.isSuccess}
+                  onRefresh={() => subscriptionsQuery.refetch()}
                 />
               ))}
             </div>
@@ -320,7 +361,7 @@ export default function Subscriptions({ session }: { session: Session }) {
                             ? 'Đang hiệu lực'
                             : sub.status === 'PENDING_PAYMENT'
                               ? 'Chờ thanh toán'
-                              : sub.status === 'EXPIRED'
+                              : sub.status === 'EXPIRED' || sub.status === 'PAST_DUE'
                                 ? 'Hết hạn'
                                 : sub.status}
                         </span>

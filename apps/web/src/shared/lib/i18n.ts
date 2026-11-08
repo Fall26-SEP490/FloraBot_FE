@@ -33,7 +33,7 @@ void i18n.use(initReactI18next).init({
           SUSPENDED: 'Shop đang tạm ngưng. Vui lòng liên hệ đội ngũ vận hành để được hỗ trợ.',
           CLOSED: 'Shop đã đóng. Vui lòng liên hệ đội ngũ vận hành nếu cần hỗ trợ.',
           EXPIRING:
-            'Kỳ thuê sắp hết hạn ngày {{date}}. Gia hạn trực tuyến 12 tháng tại mục Thuê kiosk.',
+            'Kỳ thuê sắp hết hạn ngày {{date}}. Nhấn "Gia hạn ngay" hoặc vào mục Gói & Thuê kiosk để gia hạn trực tuyến 12 tháng.',
           UNKNOWN: 'Chưa xác định được trạng thái gói. Hãy tải lại thông tin trước khi thao tác.',
         },
       },

@@ -1,6 +1,9 @@
 import type { RefObject } from 'react';
 import Link from 'next/link';
 import { Button, CircleAlert } from '@florabot/ui';
+import ShopBankSection, {
+  type SellerBankResponse,
+} from '@/features/finance/components/payment-channels/ShopBankSection';
 import { KioskLocationFields } from './KioskLocationFields';
 import { PayoutAccountFields } from './PayoutAccountFields';
 
@@ -18,6 +21,8 @@ export interface ShopInfoFieldsProps {
 
 interface KioskApplicationFormProps {
   additional?: boolean;
+  sellerId?: string;
+  sellerBank?: SellerBankResponse | null;
   rentalReview?: React.ReactNode;
   shopInfo: ShopInfoFieldsProps;
   location: React.ComponentProps<typeof KioskLocationFields>;
@@ -32,6 +37,8 @@ interface KioskApplicationFormProps {
 export function KioskApplicationForm({
   shopInfo,
   additional = false,
+  sellerId,
+  sellerBank,
   rentalReview,
   location,
   payout,
@@ -44,8 +51,15 @@ export function KioskApplicationForm({
   return (
     <section className="kiosk-form-section" aria-labelledby="application-form-heading">
       <div className="section-title-wrap">
-        <h2 id="application-form-heading">2. Thông tin đăng ký</h2>
-        <p>Các mục có dấu * là bắt buộc. Kiểm tra thông tin trước khi gửi hồ sơ.</p>
+        <span className="lease-form-eyebrow">02 · HỒ SƠ THUÊ KIOSK</span>
+        <h2 id="application-form-heading">
+          {additional ? 'Kiosk mới sẽ đặt ở đâu?' : 'Thông tin đăng ký'}
+        </h2>
+        <p>
+          {additional
+            ? 'Thông tin cửa hàng được dùng lại từ hồ sơ shop. Bạn chỉ cần chọn địa điểm lắp đặt mới.'
+            : 'Điền thông tin cửa hàng và vị trí lắp đặt. Các mục có dấu * là bắt buộc.'}
+        </p>
       </div>
 
       {submitError && (
@@ -55,7 +69,54 @@ export function KioskApplicationForm({
         </div>
       )}
 
+      {additional && sellerId && sellerBank && sellerBank.status !== 'READY' && (
+        <div className="lease-seller-bank-embedded">
+          <ShopBankSection
+            sellerId={sellerId}
+            variant="embedded"
+            title="Khai báo tài khoản ngân hàng của shop (Bắt buộc trước khi thuê)"
+          />
+        </div>
+      )}
+
       <form noValidate onSubmit={onSubmit} className="kiosk-application-form">
+        {additional && (
+          <div className="lease-seller-card" role="region" aria-label="Cửa hàng đăng ký">
+            <div className="lease-seller-header">
+              <span className="lease-seller-icon" aria-hidden="true">
+                🏪
+              </span>
+              <div>
+                <span className="lease-seller-badge">CỬA HÀNG ĐĂNG KÝ THUÊ THÊM</span>
+                <strong className="lease-seller-name">
+                  {shopInfo.shopName || 'Cửa hàng của bạn'}
+                </strong>
+              </div>
+            </div>
+            <p className="lease-seller-desc">
+              Kiosk mới sẽ được bổ sung vào cửa hàng này. Thông tin liên hệ và tài khoản nhận hoàn
+              phí thuê được tự động áp dụng từ hồ sơ shop.{' '}
+              <Link href="/seller" className="lease-seller-link">
+                Quản lý shop
+              </Link>
+            </p>
+
+            {sellerBank?.status === 'READY' && (
+              <div className="lease-seller-bank-row is-ready">
+                <span className="lease-seller-bank-badge">✓ Ngân hàng hoàn phí đã sẵn sàng:</span>
+                <strong>{sellerBank.bankName}</strong> · <span>{sellerBank.holder}</span> ·{' '}
+                <code>••••{sellerBank.accountSuffix}</code>
+                <Link
+                  href="/seller/commerce"
+                  className="lease-seller-link"
+                  style={{ marginLeft: 'auto' }}
+                >
+                  Thay đổi tại Ví shop ↗
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
         {!additional && (
           <fieldset className="kiosk-form-group">
             <legend>Thông tin cửa hàng hoa</legend>
@@ -136,10 +197,18 @@ export function KioskApplicationForm({
         <KioskLocationFields {...location} />
         {!additional && <PayoutAccountFields {...payout} />}
         {additional && (
-          <p>Thông tin shop, liên hệ và tài khoản nhận tiền lấy từ hồ sơ shop hiện tại.</p>
+          <p className="lease-profile-note">
+            Hồ sơ này sử dụng thông tin liên hệ và tài khoản ngân hàng đã lưu của shop.{' '}
+            <Link href="/seller">Về trang quản lý shop</Link>
+          </p>
         )}
         {rentalReview}
 
+        {disabled && !isPending && (
+          <p className="lease-submit-hint">
+            Chọn số ô hợp lệ và đánh dấu xác nhận phí thuê để có thể gửi hồ sơ.
+          </p>
+        )}
         <div className="kiosk-form-actions">
           <Button type="submit" disabled={isPending || disabled} className="submit-application-btn">
             {isPending ? 'Đang gửi hồ sơ...' : 'Nộp hồ sơ thuê kiosk'}
