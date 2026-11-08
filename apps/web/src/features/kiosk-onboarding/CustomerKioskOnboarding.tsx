@@ -206,6 +206,11 @@ function CustomerKioskContent({
       {hasActiveApplication && appData && (
         <ApplicationStatusPanel
           appData={appData}
+          checkoutUrl={
+            actions.checkoutApplicationId === appData.id
+              ? actions.latestCheckoutUrl || actions.validatedCheckoutUrl
+              : null
+          }
           onOpenCancelDialog={() => {
             actions.setCancelDialogOpen(true);
             actions.setCancelError('');

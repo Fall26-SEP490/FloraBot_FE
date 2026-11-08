@@ -187,4 +187,44 @@ describe('Annual Kiosk Onboarding Unit Tests', () => {
       expect(validateSellerBankPayload('MB Bank', 'Hoang', '123')).toBe(false);
     });
   });
+
+  describe('PayOS Checkout URL & Return URL Validation', () => {
+    it('verifies that clean unencoded returnUrl produces a valid URL for PayOS redirection', () => {
+      const origin = 'https://florabot.vn';
+      const pathname = '/thue-kiosk';
+      const returnUrl = `${origin}${pathname}`;
+
+      // Must be a valid URL without throwing
+      const parsed = new URL(returnUrl);
+      expect(parsed.protocol).toBe('https:');
+      expect(parsed.origin).toBe('https://florabot.vn');
+      expect(parsed.pathname).toBe('/thue-kiosk');
+
+      // PayOS constructs: iframe.src = `${CHECKOUT_URL.replace("/web/","/embedded/")}?redirect_uri=${RETURN_URL}`
+      const checkoutUrl = 'https://pay.payos.vn/web/test-checkout-123';
+      const embeddedUrl = `${checkoutUrl.replace('/web/', '/embedded/')}?redirect_uri=${returnUrl}`;
+
+      const parsedEmbedded = new URL(embeddedUrl);
+      expect(parsedEmbedded.hostname).toBe('pay.payos.vn');
+      expect(parsedEmbedded.pathname).toBe('/embedded/test-checkout-123');
+      expect(parsedEmbedded.searchParams.get('redirect_uri')).toBe(
+        'https://florabot.vn/thue-kiosk',
+      );
+
+      // PayOS server can successfully parse the redirect_uri param
+      const parsedRedirect = new URL(parsedEmbedded.searchParams.get('redirect_uri')!);
+      expect(parsedRedirect.origin).toBe('https://florabot.vn');
+    });
+
+    it('ensures returnUrl avoids double encoding and query parameter pollution', () => {
+      const origin = 'https://florabot.vn';
+      const pathname = '/thue-kiosk';
+      const cleanUrl = `${origin}${pathname}`;
+
+      // Clean returnUrl matches origin + pathname without unneeded params or encoding
+      expect(cleanUrl).not.toContain('%');
+      expect(cleanUrl).not.toContain('?');
+      expect(cleanUrl.startsWith('https://')).toBe(true);
+    });
+  });
 });

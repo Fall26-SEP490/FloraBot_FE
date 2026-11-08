@@ -12,6 +12,7 @@ import { PaymentActions } from './PaymentActions';
 
 interface ApplicationStatusPanelProps {
   appData: KioskApplicationResponse;
+  checkoutUrl?: string | null;
   onOpenCancelDialog: () => void;
   reconcileNotice: string;
   paymentLinkError: string;
@@ -26,6 +27,7 @@ interface ApplicationStatusPanelProps {
 
 export function ApplicationStatusPanel({
   appData,
+  checkoutUrl,
   onOpenCancelDialog,
   reconcileNotice,
   paymentLinkError,
@@ -90,6 +92,7 @@ export function ApplicationStatusPanel({
         <PaymentActions
           packageName={rentalAllocation(appData)}
           annualFee={appData.annualFee}
+          checkoutUrl={checkoutUrl}
           paymentLinkError={paymentLinkError}
           isGeneratingLink={isGeneratingLink}
           isReconciling={isReconciling}

@@ -38,8 +38,12 @@ export default function PayosCheckout({
     void loadPayosCheckout()
       .then((sdk) => {
         if (disposed) return;
+        const returnUrl =
+          typeof window !== 'undefined'
+            ? `${window.location.origin}${window.location.pathname}`
+            : '';
         const controller = sdk.usePayOS({
-          RETURN_URL: encodeURIComponent(window.location.href),
+          RETURN_URL: returnUrl,
           ELEMENT_ID: id,
           CHECKOUT_URL: validated.url!,
           embedded: true,
@@ -89,7 +93,19 @@ export default function PayosCheckout({
       size="lg"
       className="payos-checkout-modal"
     >
-      <p className="payos-checkout-note">Quét mã QR hoặc chọn cách thanh toán trên PayOS.</p>
+      <div className="payos-checkout-header-actions">
+        <p className="payos-checkout-note">Quét mã QR hoặc chọn cách thanh toán trên PayOS.</p>
+        {validation.valid && validation.url && (
+          <a
+            href={validation.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="button button-outline payos-direct-tab-link"
+          >
+            Mở cổng PayOS (Tab mới) ↗
+          </a>
+        )}
+      </div>
       {loading && validation.valid && <p role="status">Đang mở màn hình thanh toán…</p>}
       {(!validation.valid || error) && (
         <div className="payos-checkout-error" role="alert">
@@ -106,8 +122,13 @@ export default function PayosCheckout({
               >
                 Tải lại màn hình
               </Button>
-              <a className="button button-outline" href={validation.url}>
-                Mở trang PayOS
+              <a
+                className="button button-outline"
+                href={validation.url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Mở trang PayOS (Tab mới) ↗
               </a>
             </div>
           )}
@@ -116,9 +137,21 @@ export default function PayosCheckout({
       <div id={id} className="payos-checkout-frame" hidden={!validation.valid || Boolean(error)} />
       <div className="payos-checkout-footer">
         <p>Nếu đã chuyển tiền, kiểm tra trạng thái trước khi thanh toán lại.</p>
-        <Button variant="outline" onClick={onRefresh}>
-          Kiểm tra thanh toán
-        </Button>
+        <div className="payos-checkout-footer-buttons">
+          {validation.valid && validation.url && (
+            <a
+              href={validation.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="button button-outline"
+            >
+              Mở cổng PayOS ↗
+            </a>
+          )}
+          <Button variant="outline" onClick={onRefresh}>
+            Kiểm tra thanh toán
+          </Button>
+        </div>
       </div>
     </Modal>,
     document.body,
