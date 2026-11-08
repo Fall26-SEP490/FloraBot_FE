@@ -23,10 +23,10 @@ export function PayoutAccountFields({
 }: PayoutAccountFieldsProps) {
   return (
     <fieldset className="kiosk-form-group">
-      <legend>Tài khoản nhận doanh thu</legend>
+      <legend>Tài khoản nhận hoàn phí thuê kiosk</legend>
       <p className="kiosk-group-note">
-        Dùng để nhận doanh thu bán hoa sau đối soát. Thông tin này không cấp quyền trích nợ tài
-        khoản.
+        Dùng khi hồ sơ cần hoàn phí thuê bằng chuyển khoản. Phí thuê được thanh toán cho FloraBot;
+        kênh PayOS nhận tiền bán hoa của shop được cấu hình riêng.
       </p>
 
       <div className="form-fields-grid-2">

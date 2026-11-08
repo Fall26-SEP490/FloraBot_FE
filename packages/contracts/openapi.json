@@ -1960,6 +1960,92 @@
         }
       }
     },
+    "/api/sellers/{sellerId}/staff/{staffId}": {
+      "get": {
+        "tags": [
+          "Identity"
+        ],
+        "parameters": [
+          {
+            "name": "sellerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "staffId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SellerStaffProfile"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Identity"
+        ],
+        "parameters": [
+          {
+            "name": "sellerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "staffId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditSellerStaffProfile"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SellerStaffProfile"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/account/profile": {
       "get": {
         "tags": [
@@ -2307,6 +2393,114 @@
           },
           "403": {
             "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/account/close": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CloseCustomerAccountRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me/shop": {
+      "get": {
+        "tags": [
+          "Identity"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SellerShopProfileResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Identity"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSellerShopProfileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SellerShopProfileResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -4616,28 +4810,6 @@
         }
       }
     },
-    "/api/packages": {
-      "get": {
-        "tags": [
-          "FloraBot.Api"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PackageResponse"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/sellers/{sellerId}": {
       "get": {
         "tags": [
@@ -5856,6 +6028,463 @@
         }
       }
     },
+    "/api/me/staff-tasks/{taskId}": {
+      "patch": {
+        "tags": [
+          "KioskOps"
+        ],
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditStaffTaskInstructions"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffTaskResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/operations/staff-tasks/{taskId}": {
+      "patch": {
+        "tags": [
+          "KioskOps"
+        ],
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditStaffTaskInstructions"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffTaskResult"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "StaffTaskDetails"
+        ],
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffTaskDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/staff-tasks/{taskId}": {
+      "patch": {
+        "tags": [
+          "KioskOps"
+        ],
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditStaffTaskInstructions"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffTaskResult"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "StaffTaskDetails"
+        ],
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffTaskDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/kiosk-manager-assignments": {
+      "get": {
+        "tags": [
+          "KioskOps"
+        ],
+        "parameters": [
+          {
+            "name": "managerId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/kiosks/{kioskId}/operations-manager": {
+      "put": {
+        "tags": [
+          "KioskOps"
+        ],
+        "parameters": [
+          {
+            "name": "kioskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignKioskManagerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KioskManagerAssignment"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/audit-logs": {
+      "get": {
+        "tags": [
+          "Audit"
+        ],
+        "parameters": [
+          {
+            "name": "actorId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/audit-logs/{id}": {
+      "get": {
+        "tags": [
+          "Audit"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditEntry"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me/inventory-history": {
+      "get": {
+        "tags": [
+          "KioskOps"
+        ],
+        "parameters": [
+          {
+            "name": "kioskId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "slotId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "bouquetId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SellerInventoryHistoryPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/staff/tasks/{taskId}/stock": {
       "get": {
         "tags": [
@@ -5925,90 +6554,6 @@
       }
     },
     "/api/staff/tasks/{taskId}": {
-      "get": {
-        "tags": [
-          "StaffTaskDetails"
-        ],
-        "parameters": [
-          {
-            "name": "taskId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": [
-                "integer",
-                "string"
-              ],
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StaffTaskDetail"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/admin/staff-tasks/{taskId}": {
-      "get": {
-        "tags": [
-          "StaffTaskDetails"
-        ],
-        "parameters": [
-          {
-            "name": "taskId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": [
-                "integer",
-                "string"
-              ],
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StaffTaskDetail"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/operations/staff-tasks/{taskId}": {
       "get": {
         "tags": [
           "StaffTaskDetails"
@@ -7153,6 +7698,158 @@
             }
           }
         }
+      },
+      "post": {
+        "tags": [
+          "KioskOps"
+        ],
+        "parameters": [
+          {
+            "name": "sellerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSellerAccessory"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/sellers/{sellerId}/accessories/{id}": {
+      "get": {
+        "tags": [
+          "KioskOps"
+        ],
+        "parameters": [
+          {
+            "name": "sellerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SellerAccessoryResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "KioskOps"
+        ],
+        "parameters": [
+          {
+            "name": "sellerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSellerAccessory"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/sellers/{sellerId}/accessories/{id}/status": {
+      "patch": {
+        "tags": [
+          "KioskOps"
+        ],
+        "parameters": [
+          {
+            "name": "sellerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeAccessoryStatus"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
       }
     },
     "/api/kiosk-locations": {
@@ -7300,7 +7997,7 @@
         "tags": [
           "KioskOps"
         ],
-        "summary": "Cập nhật địa chỉ và tọa độ ghim bản đồ cho kiosk do shop quản lý toàn quyền",
+        "summary": "Gửi yêu cầu đổi địa chỉ và tọa độ kiosk tới Operations Manager",
         "parameters": [
           {
             "name": "sellerId",
@@ -7337,7 +8034,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SellerKioskDto"
+                  "$ref": "#/components/schemas/KioskLocationChangeResponse"
                 }
               }
             }
@@ -7378,6 +8075,109 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sellers/{sellerId}/kiosks/{kioskId}/location-requests": {
+      "get": {
+        "tags": [
+          "KioskOps"
+        ],
+        "parameters": [
+          {
+            "name": "sellerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "kioskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/operations/kiosk-location-requests": {
+      "get": {
+        "tags": [
+          "KioskOps"
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/operations/kiosk-location-requests/{id}/review": {
+      "post": {
+        "tags": [
+          "KioskOps"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewKioskLocationChangeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KioskLocationChangeResponse"
                 }
               }
             }
@@ -7535,6 +8335,94 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/me/products/{productId}/photos/order": {
+      "put": {
+        "tags": [
+          "Catalog"
+        ],
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderProductPhotosRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me/products/{productId}/photos/{photoId}": {
+      "delete": {
+        "tags": [
+          "Catalog"
+        ],
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "photoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
           }
         }
       }
@@ -8181,7 +9069,7 @@
         "tags": [
           "Identity"
         ],
-        "summary": "Xem đơn giá thuê một năm cho từng loại ô kiosk",
+        "summary": "Xem đơn giá thuê một năm cho mỗi ô kiosk",
         "responses": {
           "200": {
             "description": "OK",
@@ -8201,7 +9089,7 @@
         "tags": [
           "KioskOps"
         ],
-        "summary": "Operations Manager cập nhật đơn giá thuê một năm cho từng loại ô",
+        "summary": "Operations Manager cập nhật đơn giá thuê một năm chung cho mọi ô",
         "requestBody": {
           "content": {
             "application/json": {
@@ -9570,6 +10458,180 @@
         }
       }
     },
+    "/api/me/kiosks/{kioskId}/layout-requests": {
+      "post": {
+        "tags": [
+          "KioskOps"
+        ],
+        "parameters": [
+          {
+            "name": "kioskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestSlotLayout"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "KioskOps"
+        ],
+        "parameters": [
+          {
+            "name": "kioskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SlotLayoutRequestView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/operations/kiosk-layout-requests": {
+      "get": {
+        "tags": [
+          "KioskOps"
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SlotLayoutRequestView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/operations/kiosk-layout-requests/{requestId}/review": {
+      "post": {
+        "tags": [
+          "KioskOps"
+        ],
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewSlotLayout"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/me/kiosks/{kioskId}/slots/{slotId}/bouquet": {
       "delete": {
         "tags": [
@@ -10828,6 +11890,76 @@
         }
       }
     },
+    "/api/admin/refunds/{refundId}/seller-submission/reject": {
+      "post": {
+        "tags": [
+          "Payment"
+        ],
+        "parameters": [
+          {
+            "name": "refundId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectSellerRefundEvidenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/sellers/{sellerId}/kiosks/{kioskId}/termination-requests": {
       "post": {
         "tags": [
@@ -10902,6 +12034,64 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KioskTerminationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sellers/{sellerId}/kiosks/{kioskId}/termination-requests/{id}/withdraw": {
+      "post": {
+        "tags": [
+          "KioskTermination"
+        ],
+        "parameters": [
+          {
+            "name": "sellerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "kioskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WithdrawKioskTerminationRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK",
@@ -11175,6 +12365,66 @@
         }
       }
     },
+    "/api/me/kiosks/{kioskId}/renewals": {
+      "post": {
+        "tags": [
+          "Identity"
+        ],
+        "parameters": [
+          {
+            "name": "kioskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KioskRenewalResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/kiosks/{kioskId}/checkouts/{checkoutId}": {
       "get": {
         "tags": [
@@ -11207,6 +12457,51 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CheckoutResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/kiosks/{kioskId}/checkouts/{checkoutId}/cancel": {
+      "post": {
+        "tags": [
+          "Payment"
+        ],
+        "parameters": [
+          {
+            "name": "kioskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "checkoutId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -11642,47 +12937,6 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/SetSellerToneRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/FlowResult"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/sellers/{sellerId}/flows/subscribe": {
-      "post": {
-        "tags": [
-          "Identity"
-        ],
-        "operationId": "subscribe",
-        "parameters": [
-          {
-            "name": "sellerId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SubscribeRequest"
               }
             }
           },
@@ -14275,6 +15529,22 @@
         },
         "additionalProperties": false
       },
+      "AssignKioskManagerRequest": {
+        "required": [
+          "managerId"
+        ],
+        "type": "object",
+        "properties": {
+          "managerId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
       "AssignKioskRequest": {
         "required": [
           "p_kiosk",
@@ -14386,6 +15656,88 @@
         },
         "additionalProperties": false
       },
+      "AuditEntry": {
+        "required": [
+          "id",
+          "actorType",
+          "actorId",
+          "action",
+          "entityType",
+          "entityId",
+          "createdAt",
+          "payloadRedacted"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "actorType": {
+            "type": "string"
+          },
+          "actorId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "action": {
+            "type": "string"
+          },
+          "entityType": {
+            "type": "string"
+          },
+          "entityId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "payloadRedacted": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AuditPage": {
+        "required": [
+          "items",
+          "page",
+          "hasMore"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditEntry"
+            }
+          },
+          "page": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "hasMore": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
       "AuthConfigResponse": {
         "required": [
           "googleClientId",
@@ -14432,6 +15784,18 @@
               "null",
               "string"
             ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "ChangeAccessoryStatus": {
+        "required": [
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -14542,6 +15906,18 @@
             "items": {
               "$ref": "#/components/schemas/CheckoutOrderResponse"
             }
+          }
+        },
+        "additionalProperties": false
+      },
+      "CloseCustomerAccountRequest": {
+        "required": [
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -14938,6 +16314,32 @@
               "null",
               "string"
             ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateSellerAccessory": {
+        "required": [
+          "kioskId",
+          "name",
+          "price"
+        ],
+        "type": "object",
+        "properties": {
+          "kioskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "price": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
           }
         },
         "additionalProperties": false
@@ -15481,6 +16883,53 @@
           "id": {
             "type": "string",
             "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "EditSellerStaffProfile": {
+        "required": [
+          "fullName",
+          "phone",
+          "address"
+        ],
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "address": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "EditStaffTaskInstructions": {
+        "required": [
+          "version",
+          "instructions"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "instructions": {
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -16652,6 +18101,87 @@
         },
         "additionalProperties": false
       },
+      "KioskLocationChangeResponse": {
+        "required": [
+          "id",
+          "kioskId",
+          "sellerId",
+          "address",
+          "latitude",
+          "longitude",
+          "reason",
+          "status",
+          "createdAt",
+          "reviewedBy",
+          "reviewedAt",
+          "reviewNote"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kioskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sellerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "address": {
+            "type": "string"
+          },
+          "latitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "longitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reviewedBy": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "reviewedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "reviewNote": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
       "KioskLocationItem": {
         "required": [
           "id",
@@ -16724,6 +18254,46 @@
               "null",
               "string"
             ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "KioskManagerAssignment": {
+        "required": [
+          "kioskId",
+          "kioskCode",
+          "managerId",
+          "managerName",
+          "assignedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "kioskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kioskCode": {
+            "type": "string"
+          },
+          "managerId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "managerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "assignedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         },
         "additionalProperties": false
@@ -16848,6 +18418,56 @@
         },
         "additionalProperties": false
       },
+      "KioskRenewalResponse": {
+        "required": [
+          "subscriptionId",
+          "kioskId",
+          "sellerId",
+          "amount",
+          "periodFrom",
+          "periodTo",
+          "status",
+          "paymentLinkPath"
+        ],
+        "type": "object",
+        "properties": {
+          "subscriptionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kioskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sellerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "amount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "periodFrom": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "periodTo": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string"
+          },
+          "paymentLinkPath": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "KioskSalesSummary": {
         "required": [
           "kioskId",
@@ -16889,24 +18509,14 @@
       },
       "KioskSlotPricingResponse": {
         "required": [
-          "walkInAnnualPrice",
-          "preorderAnnualPrice",
+          "annualSlotPrice",
           "version",
           "configured",
           "updatedAt"
         ],
         "type": "object",
         "properties": {
-          "walkInAnnualPrice": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "null",
-              "integer",
-              "string"
-            ],
-            "format": "int64"
-          },
-          "preorderAnnualPrice": {
+          "annualSlotPrice": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "null",
@@ -17588,41 +19198,6 @@
         },
         "additionalProperties": false
       },
-      "PackageResponse": {
-        "required": [
-          "id",
-          "name",
-          "monthlyFee",
-          "maxSlots"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string"
-          },
-          "monthlyFee": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int64"
-          },
-          "maxSlots": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          }
-        },
-        "additionalProperties": false
-      },
       "PasswordChange": {
         "required": [
           "currentPassword",
@@ -18135,6 +19710,19 @@
           },
           "sha256": {
             "type": "string"
+          },
+          "isCover": {
+            "type": "boolean",
+            "default": false
+          },
+          "sortOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 0
           }
         },
         "additionalProperties": false
@@ -18690,6 +20278,18 @@
         },
         "additionalProperties": false
       },
+      "RejectSellerRefundEvidenceRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "RejectWithdrawalRequest": {
         "required": [
           "p_w",
@@ -18787,6 +20387,22 @@
         },
         "additionalProperties": false
       },
+      "ReorderProductPhotosRequest": {
+        "required": [
+          "photoIds"
+        ],
+        "type": "object",
+        "properties": {
+          "photoIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
       "ReportDeviceFaultRequest": {
         "required": [
           "p_kiosk",
@@ -18837,6 +20453,36 @@
             "format": "uuid"
           },
           "p_tracking": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RequestSlotLayout": {
+        "required": [
+          "walkInSlots",
+          "preorderSlots",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "walkInSlots": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "preorderSlots": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "reason": {
             "type": "string"
           }
         },
@@ -18963,6 +20609,25 @@
         },
         "additionalProperties": false
       },
+      "ReviewKioskLocationChangeRequest": {
+        "required": [
+          "decision",
+          "note"
+        ],
+        "type": "object",
+        "properties": {
+          "decision": {
+            "type": "string"
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
       "ReviewKioskTerminationRequest": {
         "required": [
           "action",
@@ -18975,6 +20640,32 @@
           },
           "reason": {
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReviewSlotLayout": {
+        "required": [
+          "preorderSlotIds",
+          "note"
+        ],
+        "type": "object",
+        "properties": {
+          "preorderSlotIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         },
         "additionalProperties": false
@@ -19422,6 +21113,109 @@
         },
         "additionalProperties": false
       },
+      "SellerInventoryEvent": {
+        "required": [
+          "seq",
+          "bouquetId",
+          "slotId",
+          "kioskId",
+          "slotCode",
+          "movementType",
+          "orderId",
+          "orderCode",
+          "performedBy",
+          "actorName",
+          "createdAt"
+        ],
+        "type": "object",
+        "properties": {
+          "seq": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "bouquetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kioskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slotCode": {
+            "type": "string"
+          },
+          "movementType": {
+            "type": "string"
+          },
+          "orderId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "orderCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "performedBy": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "actorName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SellerInventoryHistoryPage": {
+        "required": [
+          "items",
+          "page",
+          "hasMore"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SellerInventoryEvent"
+            }
+          },
+          "page": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "hasMore": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
       "SellerKioskDto": {
         "required": [
           "id",
@@ -19523,7 +21317,7 @@
       "SellerPackageResponse": {
         "required": [
           "name",
-          "monthlyFee",
+          "annualFee",
           "maxSlots",
           "status"
         ],
@@ -19532,7 +21326,7 @@
           "name": {
             "type": "string"
           },
-          "monthlyFee": {
+          "annualFee": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -19950,7 +21744,9 @@
           "note",
           "createdAt",
           "reviewedBy",
-          "reviewedAt"
+          "reviewedAt",
+          "attemptCount",
+          "reviewReason"
         ],
         "type": "object",
         "properties": {
@@ -19991,6 +21787,20 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "attemptCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "reviewReason": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         },
         "additionalProperties": false
@@ -20183,6 +21993,45 @@
             "items": {
               "$ref": "#/components/schemas/KioskSalesSummary"
             }
+          }
+        },
+        "additionalProperties": false
+      },
+      "SellerShopProfileResponse": {
+        "required": [
+          "id",
+          "shopName",
+          "phone",
+          "contactEmail",
+          "address",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "shopName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "contactEmail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "address": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -20546,6 +22395,50 @@
         },
         "additionalProperties": false
       },
+      "SellerStaffProfile": {
+        "required": [
+          "id",
+          "sellerId",
+          "email",
+          "fullName",
+          "phone",
+          "address",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sellerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "address": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "SellerStatusHistoryItem": {
         "required": [
           "id",
@@ -20868,6 +22761,75 @@
               "string"
             ],
             "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SlotLayoutRequestView": {
+        "required": [
+          "id",
+          "kioskId",
+          "sellerId",
+          "walkInSlots",
+          "preorderSlots",
+          "reason",
+          "status",
+          "createdAt",
+          "reviewedAt",
+          "reviewNote"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kioskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sellerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "walkInSlots": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "preorderSlots": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reviewedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "reviewNote": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         },
         "additionalProperties": false
@@ -21678,30 +23640,6 @@
         },
         "additionalProperties": false
       },
-      "SubscribeRequest": {
-        "required": [
-          "p_months"
-        ],
-        "type": "object",
-        "properties": {
-          "p_months": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "p_from": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "date"
-          }
-        },
-        "additionalProperties": false
-      },
       "SubscriptionOverviewResponse": {
         "required": [
           "package",
@@ -22061,27 +23999,24 @@
               "string"
             ],
             "format": "double"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         },
         "additionalProperties": false
       },
       "UpdateKioskSlotPricingRequest": {
         "required": [
-          "walkInAnnualPrice",
-          "preorderAnnualPrice",
+          "annualSlotPrice",
           "expectedVersion"
         ],
         "type": "object",
         "properties": {
-          "walkInAnnualPrice": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int64"
-          },
-          "preorderAnnualPrice": {
+          "annualSlotPrice": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -22184,6 +24119,27 @@
         },
         "additionalProperties": false
       },
+      "UpdateSellerAccessory": {
+        "required": [
+          "name",
+          "price"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "price": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
       "UpdateSellerLoyaltySettingsRequest": {
         "required": [
           "enabled"
@@ -22192,6 +24148,35 @@
         "properties": {
           "enabled": {
             "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateSellerShopProfileRequest": {
+        "required": [
+          "shopName",
+          "phone",
+          "contactEmail"
+        ],
+        "type": "object",
+        "properties": {
+          "shopName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "phone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "contactEmail": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         },
         "additionalProperties": false
@@ -23031,6 +25016,27 @@
           }
         },
         "additionalProperties": false
+      },
+      "WithdrawKioskTerminationRequest": {
+        "required": [
+          "version",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
       }
     }
   },
@@ -23066,10 +25072,13 @@
       "name": "StaffTasks"
     },
     {
-      "name": "StaffStock"
+      "name": "StaffTaskDetails"
     },
     {
-      "name": "StaffTaskDetails"
+      "name": "Audit"
+    },
+    {
+      "name": "StaffStock"
     },
     {
       "name": "StaffEvidence"

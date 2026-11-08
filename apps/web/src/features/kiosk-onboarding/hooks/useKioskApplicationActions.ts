@@ -58,6 +58,17 @@ export function useKioskApplicationActions(sessionData: Session | undefined) {
           void queryClient.invalidateQueries({
             queryKey: ['current-kiosk-application', sessionData?.id],
           });
+        } else if (
+          err.message === 'Seller is not active' ||
+          err.message === 'Seller is not eligible to request a kiosk'
+        ) {
+          setSubmitError(
+            'Tài khoản cửa hàng chưa kích hoạt hoặc không đủ điều kiện thuê thêm kiosk. Vui lòng kiểm tra lại trạng thái shop tại mục Gói & Thuê kiosk.',
+          );
+        } else if (err.message === 'Contact, location or bank profile is incomplete') {
+          setSubmitError(
+            'Hồ sơ cửa hàng chưa có đủ thông tin ngân hàng hoặc thông tin liên hệ. Vui lòng vào Cài đặt Shop để cập nhật tài khoản nhận tiền.',
+          );
         } else {
           setSubmitError(err.message);
         }
@@ -73,7 +84,12 @@ export function useKioskApplicationActions(sessionData: Session | undefined) {
   // Get payment link mutation (fail-closed security validation)
   const paymentLinkMutation = useMutation({
     mutationFn: (applicationId: string) =>
-      request<PaymentLinkResponse>(`/member/kiosk-applications/${applicationId}/payment-link`, {}),
+      request<PaymentLinkResponse>(
+        `/member/kiosk-applications/${applicationId}/payment-link`,
+        undefined,
+        true,
+        'POST',
+      ),
     onSuccess: (data, applicationId) => {
       setCheckoutApplicationId(applicationId);
       setPaymentLinkError('');
@@ -112,7 +128,9 @@ export function useKioskApplicationActions(sessionData: Session | undefined) {
     mutationFn: (applicationId: string) =>
       request<KioskApplicationResponse>(
         `/member/kiosk-applications/${applicationId}/reconcile`,
-        {},
+        undefined,
+        true,
+        'POST',
       ),
     onSuccess: (updated) => {
       const status = updated.status;

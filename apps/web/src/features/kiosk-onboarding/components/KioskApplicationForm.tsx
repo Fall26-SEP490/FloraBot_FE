@@ -44,8 +44,15 @@ export function KioskApplicationForm({
   return (
     <section className="kiosk-form-section" aria-labelledby="application-form-heading">
       <div className="section-title-wrap">
-        <h2 id="application-form-heading">2. Thông tin đăng ký</h2>
-        <p>Các mục có dấu * là bắt buộc. Kiểm tra thông tin trước khi gửi hồ sơ.</p>
+        <span className="lease-form-eyebrow">02 · HỒ SƠ THUÊ KIOSK</span>
+        <h2 id="application-form-heading">
+          {additional ? 'Kiosk mới sẽ đặt ở đâu?' : 'Thông tin đăng ký'}
+        </h2>
+        <p>
+          {additional
+            ? 'Thông tin cửa hàng được dùng lại từ hồ sơ shop. Bạn chỉ cần chọn địa điểm lắp đặt mới.'
+            : 'Điền thông tin cửa hàng và vị trí lắp đặt. Các mục có dấu * là bắt buộc.'}
+        </p>
       </div>
 
       {submitError && (
@@ -136,10 +143,18 @@ export function KioskApplicationForm({
         <KioskLocationFields {...location} />
         {!additional && <PayoutAccountFields {...payout} />}
         {additional && (
-          <p>Thông tin shop, liên hệ và tài khoản nhận tiền lấy từ hồ sơ shop hiện tại.</p>
+          <p className="lease-profile-note">
+            Hồ sơ này sử dụng thông tin liên hệ và tài khoản ngân hàng đã lưu của shop.{' '}
+            <Link href="/seller">Về trang quản lý shop</Link>
+          </p>
         )}
         {rentalReview}
 
+        {disabled && !isPending && (
+          <p className="lease-submit-hint">
+            Chọn số ô hợp lệ và đánh dấu xác nhận phí thuê để có thể gửi hồ sơ.
+          </p>
+        )}
         <div className="kiosk-form-actions">
           <Button type="submit" disabled={isPending || disabled} className="submit-application-btn">
             {isPending ? 'Đang gửi hồ sơ...' : 'Nộp hồ sơ thuê kiosk'}

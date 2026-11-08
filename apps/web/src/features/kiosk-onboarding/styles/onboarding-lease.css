@@ -1,0 +1,328 @@
+/* Keep the public rental layout independent from staff pricing and workspace forms. */
+.kiosk-onboarding-container {
+  max-width: 1240px;
+  padding-top: 32px;
+}
+.kiosk-onboarding-container .kiosk-onboarding-header {
+  margin-bottom: 28px;
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.kiosk-onboarding-container .kiosk-breadcrumb {
+  margin-bottom: 24px;
+}
+.kiosk-onboarding-container .kiosk-lease-eyebrow {
+  color: #52715c;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  margin-bottom: 10px;
+}
+.kiosk-onboarding-container .kiosk-lease-heading h1 {
+  font-size: clamp(27px, 3vw, 36px);
+  line-height: 1.22;
+  max-width: 720px;
+}
+.kiosk-onboarding-container .kiosk-lease-term {
+  border: 1px solid #dbe5dc;
+  border-radius: 12px;
+  background: #fff;
+  padding: 14px 18px;
+  font-size: 14px;
+}
+.kiosk-onboarding-container .kiosk-registration-layout {
+  grid-template-columns: minmax(300px, 350px) minmax(0, 1fr);
+  gap: 24px;
+}
+.kiosk-lease-sidebar {
+  position: sticky;
+  top: 96px;
+  min-width: 0;
+}
+.kiosk-onboarding-container .kiosk-packages-section {
+  margin: 0;
+  padding: 24px;
+  background: #fff;
+  border: 1px solid #dce5dd;
+  border-radius: 18px;
+  box-shadow: 0 4px 20px #193d2d04;
+}
+.lease-section-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.lease-section-heading > span {
+  display: grid;
+  place-items: center;
+  flex: 0 0 32px;
+  height: 32px;
+  border-radius: 10px;
+  color: #fff;
+  background: #24563d;
+  font-size: 12px;
+  font-weight: 700;
+}
+.lease-section-heading h2 {
+  margin: 0 0 5px;
+  font-size: 17px;
+  line-height: 1.4;
+}
+.lease-section-heading p {
+  color: #5c7063;
+  font-size: 12px;
+  margin: 0;
+}
+.kiosk-onboarding-container .slot-demand {
+  margin: 24px 0 0;
+}
+.kiosk-onboarding-container .slot-demand legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.kiosk-onboarding-container .slot-demand-inputs {
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+.kiosk-onboarding-container .slot-demand-inputs > div {
+  padding: 16px;
+  background: #f7f9f5;
+  border: 1px solid #e2e9df;
+  border-radius: 12px;
+  gap: 6px;
+}
+.kiosk-onboarding-container .slot-demand-inputs label {
+  font-size: 14px;
+}
+.kiosk-onboarding-container .slot-demand-inputs p {
+  font-size: 12px;
+  line-height: 1.6;
+}
+.kiosk-onboarding-container .slot-demand-inputs strong {
+  font-size: 12px;
+  color: #45634e;
+}
+.slot-quantity-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+.slot-quantity-control button {
+  flex: 0 0 44px;
+  height: 44px;
+  border: 1px solid #cbd9cd;
+  border-radius: 8px;
+  background: white;
+  color: #204c35;
+  font: inherit;
+  font-size: 22px;
+  cursor: pointer;
+}
+.slot-quantity-control button:hover:not(:disabled) {
+  background: #e9f0e5;
+  border-color: #527b60;
+}
+.slot-quantity-control button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.slot-quantity-control button:focus-visible {
+  outline: 3px solid #527b60;
+  outline-offset: 2px;
+}
+.slot-quantity-control input {
+  min-width: 0;
+  text-align: center;
+  font-weight: 700;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.slot-quantity-control input::-webkit-inner-spin-button,
+.slot-quantity-control input::-webkit-outer-spin-button {
+  appearance: none;
+  margin: 0;
+}
+.kiosk-onboarding-container .slot-demand-total {
+  display: grid;
+  gap: 8px;
+  margin-top: 20px;
+  padding: 18px 0 12px;
+  border-color: #e1e8df;
+}
+.kiosk-onboarding-container .slot-demand-total span {
+  font-size: 12px;
+  color: #526a5a;
+}
+.kiosk-onboarding-container .slot-demand-total strong {
+  font-size: 27px;
+  color: #214e36;
+  letter-spacing: -0.03em;
+}
+.kiosk-onboarding-container .slot-demand .slot-demand-note {
+  font-size: 12px;
+  line-height: 1.7;
+}
+.kiosk-onboarding-container .kiosk-registration-guide {
+  position: static;
+  padding: 24px 8px 0;
+}
+.kiosk-onboarding-container .kiosk-registration-guide h2 {
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+.kiosk-onboarding-container .kiosk-registration-guide ol {
+  margin: 0 0 20px;
+  gap: 18px;
+}
+.kiosk-onboarding-container .kiosk-registration-guide li {
+  padding-left: 32px;
+}
+.kiosk-onboarding-container .kiosk-registration-guide li strong {
+  font-size: 12px;
+}
+.kiosk-onboarding-container .kiosk-registration-guide li span,
+.kiosk-onboarding-container .kiosk-registration-guide .kiosk-guide-note {
+  font-size: 12px;
+}
+.kiosk-onboarding-container .kiosk-form-section {
+  padding: 28px;
+  box-shadow: 0 4px 20px #193d2d04;
+}
+.lease-form-eyebrow,
+.lease-review-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #567360;
+  margin-bottom: 10px;
+}
+.kiosk-onboarding-container .section-title-wrap h2 {
+  font-size: 23px;
+}
+.kiosk-onboarding-container .section-title-wrap p {
+  font-size: 13px;
+}
+.kiosk-onboarding-container .kiosk-application-form {
+  gap: 22px;
+}
+.kiosk-onboarding-container .kiosk-form-group {
+  padding-top: 16px;
+}
+.kiosk-onboarding-container .kiosk-picker-map {
+  height: 260px;
+}
+.kiosk-onboarding-container .kiosk-picker-embed {
+  min-height: 260px;
+}
+.lease-profile-note {
+  background: #f5f8f3;
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 12px;
+  line-height: 1.8;
+  color: #526a5a;
+  margin: 0;
+}
+.lease-profile-note a {
+  color: #24563d;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.kiosk-rental-review {
+  padding: 20px;
+  border: 1px solid #dce6d7;
+  border-radius: 12px;
+  background: #f6f9f2;
+}
+.kiosk-rental-review > p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.lease-review-price {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+  font-size: 13px;
+}
+.lease-review-price strong {
+  font-size: 24px;
+  letter-spacing: -0.025em;
+}
+.kiosk-rental-review .lease-payment-note {
+  font-size: 12px;
+  color: #526a5a;
+}
+.kiosk-rental-review .rental-consent {
+  border-top: 1px solid #dce6d7;
+  padding-top: 16px;
+  margin-top: 16px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.lease-submit-hint {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #5b6d60;
+  margin: 0;
+}
+.kiosk-onboarding-container .kiosk-form-actions {
+  padding-top: 0;
+  border: 0;
+}
+.kiosk-onboarding-container .kiosk-form-actions .submit-application-btn {
+  flex: 1;
+  min-height: 48px;
+  justify-content: center;
+}
+@media (max-width: 900px) {
+  .kiosk-onboarding-container .kiosk-registration-layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .kiosk-lease-sidebar {
+    position: static;
+  }
+  .kiosk-onboarding-container .slot-demand-inputs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .kiosk-onboarding-container .kiosk-registration-guide {
+    display: none;
+  }
+}
+@media (max-width: 540px) {
+  .kiosk-onboarding-container {
+    padding: 22px 16px 48px;
+  }
+  .kiosk-onboarding-container .kiosk-lease-heading {
+    gap: 16px;
+  }
+  .kiosk-onboarding-container .kiosk-lease-term {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .kiosk-onboarding-container .kiosk-lease-term span {
+    display: inline;
+    margin-left: 8px;
+  }
+  .kiosk-onboarding-container .kiosk-packages-section,
+  .kiosk-onboarding-container .kiosk-form-section {
+    padding: 20px 16px;
+  }
+  .kiosk-onboarding-container .slot-demand-inputs {
+    grid-template-columns: 1fr;
+  }
+  .kiosk-onboarding-container .slot-demand-inputs > div {
+    padding: 14px;
+  }
+  .kiosk-onboarding-container .kiosk-rental-review {
+    padding: 16px;
+  }
+}

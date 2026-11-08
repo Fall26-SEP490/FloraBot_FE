@@ -53,7 +53,7 @@ function KioskRenewalCard({
 
   const createRenewal = useMutation({
     mutationFn: () =>
-      request<KioskRenewalResponse>(`/me/kiosks/${kiosk.id}/renewals`, {}, true, 'POST'),
+      request<KioskRenewalResponse>(`/me/kiosks/${kiosk.id}/renewals`, undefined, true, 'POST'),
     onSuccess: (data) => {
       setRenewal(data);
       setError('');
@@ -69,7 +69,7 @@ function KioskRenewalCard({
     mutationFn: (subscriptionId: string) =>
       request<RenewalPaymentLinkResponse>(
         `/sellers/${sellerId}/subscriptions/${subscriptionId}/payment-link`,
-        {},
+        undefined,
         true,
         'POST',
       ),

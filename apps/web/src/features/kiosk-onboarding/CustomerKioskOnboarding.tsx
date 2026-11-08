@@ -173,9 +173,12 @@ function CustomerKioskContent({
         </nav>
         <div className="kiosk-lease-heading">
           <div>
-            <h1>Mở điểm bán hoa của bạn</h1>
+            <span className="kiosk-lease-eyebrow">FLORABOT · THUÊ KIOSK</span>
+            <h1>{additional ? 'Thêm một điểm bán, mở rộng shop' : 'Mở điểm bán hoa của bạn'}</h1>
             <p className="kiosk-onboarding-lead">
-              Chọn số ô, xem phí thuê và đăng ký địa điểm lắp đặt.
+              {additional
+                ? 'Chọn số ô và địa điểm mới. Mỗi kiosk có hợp đồng thuê riêng.'
+                : 'Thiết kế số ô phù hợp, chọn vị trí và bắt đầu kinh doanh cùng FloraBot.'}
             </p>
           </div>
           <p className="kiosk-lease-term">
@@ -233,154 +236,161 @@ function CustomerKioskContent({
 
       {/* Demand and registration for first rental or seller additional rental */}
       {!hasActiveApplication && (sessionData.role === 'CUSTOMER' || additional) && (
-        <>
-          <section className="kiosk-packages-section" aria-labelledby="slot-demand-heading">
-            <h2 id="slot-demand-heading">1. Chọn số ô và xem phí thuê</h2>
-            {pricingQuery.isPending && <p role="status">Đang tải bảng giá…</p>}
-            {pricingQuery.isError && (
-              <div role="alert">
-                <p>Chưa tải được bảng giá.</p>
-                <Button onClick={() => void pricingQuery.refetch()}>Tải lại bảng giá</Button>
+        <div className="kiosk-registration-layout">
+          <div className="kiosk-lease-sidebar">
+            <section className="kiosk-packages-section" aria-labelledby="slot-demand-heading">
+              <div className="lease-section-heading">
+                <span aria-hidden="true">01</span>
+                <div>
+                  <h2 id="slot-demand-heading">Cấu hình kiosk của bạn</h2>
+                  <p>Chọn tổng từ 1 đến 50 ô.</p>
+                </div>
               </div>
-            )}
-            {pricingQuery.isSuccess && !pricingReady(pricing) && (
-              <p role="status">Chưa có bảng giá. Vui lòng quay lại sau khi quản lý cấu hình.</p>
-            )}
-            {pricingReady(pricing) && (
-              <SlotDemandFields
-                pricing={pricing!}
-                walkInSlots={form.walkInSlots}
-                preorderSlots={form.preorderSlots}
-                onChange={(walk, pre) => {
-                  form.setWalkInSlots(walk);
-                  form.setPreorderSlots(pre);
-                  setAcceptedPricingVersion(null);
-                }}
-                disabled={actions.applyMutation.isPending}
-              />
-            )}
-            {form.formErrors.slots && <p role="alert">{form.formErrors.slots}</p>}
-          </section>
+              {pricingQuery.isPending && <p role="status">Đang tải bảng giá…</p>}
+              {pricingQuery.isError && (
+                <div role="alert">
+                  <p>Chưa tải được bảng giá.</p>
+                  <Button onClick={() => void pricingQuery.refetch()}>Tải lại bảng giá</Button>
+                </div>
+              )}
+              {pricingQuery.isSuccess && !pricingReady(pricing) && (
+                <p role="status">Chưa có bảng giá. Vui lòng quay lại sau khi quản lý cấu hình.</p>
+              )}
+              {pricingReady(pricing) && (
+                <SlotDemandFields
+                  showSteppers
+                  pricing={pricing!}
+                  walkInSlots={form.walkInSlots}
+                  preorderSlots={form.preorderSlots}
+                  onChange={(walk, pre) => {
+                    form.setWalkInSlots(walk);
+                    form.setPreorderSlots(pre);
+                    setAcceptedPricingVersion(null);
+                  }}
+                  disabled={actions.applyMutation.isPending}
+                />
+              )}
+              {form.formErrors.slots && <p role="alert">{form.formErrors.slots}</p>}
+            </section>
 
-          <div className="kiosk-registration-layout">
             <aside className="kiosk-registration-guide" aria-label="Hướng dẫn đăng ký">
-              <h2>Chuẩn bị điểm bán của bạn</h2>
-              <p>Gửi hồ sơ và thanh toán phí thuê. Quản lý xác nhận trước khi lên lịch lắp đặt.</p>
+              <h2>Sau khi gửi hồ sơ</h2>
               <ol>
                 <li>
-                  <strong>Thông tin cửa hàng</strong>
-                  <span>Tên shop và kênh liên hệ.</span>
+                  <strong>Thanh toán phí thuê</strong>
+                  <span>Thanh toán cho FloraBot qua PayOS.</span>
                 </li>
                 <li>
-                  <strong>Vị trí lắp đặt</strong>
-                  <span>Địa chỉ cụ thể và ghim bản đồ.</span>
+                  <strong>Xác nhận & lắp đặt</strong>
+                  <span>Quản lý kiểm tra hồ sơ và hẹn lịch kỹ thuật.</span>
                 </li>
                 <li>
-                  <strong>Tài khoản nhận tiền</strong>
-                  <span>Thông tin ngân hàng của shop.</span>
+                  <strong>Bàn giao kiosk</strong>
+                  <span>Kỳ thuê 12 tháng bắt đầu từ ngày bàn giao.</span>
                 </li>
               </ol>
               <p className="kiosk-guide-note">
                 Sau khi nộp, bạn có thể theo dõi thanh toán và tiến độ lắp đặt ngay tại đây.
               </p>
             </aside>
-            <KioskApplicationForm
-              additional={additional}
-              rentalReview={
-                <div className="slot-demand-total">
-                  <p>
-                    Tổng phí:{' '}
-                    <strong>
-                      {total === null ? 'Chưa xác định' : rentalMoney(total) + '/năm'}
-                    </strong>{' '}
-                    · 12 tháng từ bàn giao.
-                  </p>
-                  {pricingReady(pricing) && (
-                    <label className="rental-consent">
-                      <input
-                        type="checkbox"
-                        checked={acceptedPricingVersion === pricing?.version}
-                        disabled={total === null || actions.applyMutation.isPending}
-                        onChange={(e) =>
-                          setAcceptedPricingVersion(e.target.checked ? pricing!.version : null)
-                        }
-                      />{' '}
-                      Tôi xác nhận số ô, phân bổ cố định và tổng phí theo bảng giá hiện tại.
-                    </label>
-                  )}
-                  {acceptedPricingVersion !== null &&
-                    acceptedPricingVersion !== pricing?.version && (
-                      <p role="alert">
-                        Bảng giá đã thay đổi. Vui lòng xem và xác nhận lại tổng phí.
-                      </p>
-                    )}
-                </div>
-              }
-              shopInfo={{
-                shopName: form.shopName,
-                onShopNameChange: (val) => {
-                  form.setShopName(val);
-                  form.clearFieldError('shopName');
-                },
-                shopNameError: form.formErrors.shopName,
-                phone: form.phone,
-                onPhoneChange: (val) => {
-                  form.setPhone(val);
-                  form.clearFieldError('phone');
-                },
-                phoneError: form.formErrors.phone,
-                contactEmail: form.contactEmail,
-                onContactEmailChange: (val) => {
-                  form.setContactEmail(val);
-                  form.clearFieldError('contactEmail');
-                },
-                contactEmailError: form.formErrors.contactEmail,
-              }}
-              location={{
-                installationAddress: form.installationAddress,
-                addressSelected: form.addressSelected,
-                addressEditedAfterSelect: form.addressEditedAfterSelect,
-                locationSource: form.locationSource,
-                onAddressChange: form.handleAddressChange,
-                onSuggestionSelect: form.handleSuggestionSelect,
-                addressError: form.formErrors.installationAddress,
-                latitude: form.latitude,
-                longitude: form.longitude,
-                onLocationSelect: form.handleLocationSelect,
-                coordinatesError: form.formErrors.coordinates,
-                gpsLoading: geo.gpsLoading,
-                gpsMessage: geo.gpsMessage,
-                gpsError: geo.gpsError,
-                onRequestGps: geo.requestGps,
-              }}
-              payout={{
-                bankName: form.bankName,
-                onBankNameChange: (val) => {
-                  form.setBankName(val);
-                  form.clearFieldError('bankName');
-                },
-                bankNameError: form.formErrors.bankName,
-                bankHolder: form.bankHolder,
-                onBankHolderChange: (val) => {
-                  form.setBankHolder(val);
-                  form.clearFieldError('bankHolder');
-                },
-                bankHolderError: form.formErrors.bankHolder,
-                bankAccountNumber: form.bankAccountNumber,
-                onBankAccountNumberChange: (val) => {
-                  form.setBankAccountNumber(val);
-                  form.clearFieldError('bankAccountNumber');
-                },
-                bankAccountNumberError: form.formErrors.bankAccountNumber,
-              }}
-              submitError={actions.submitError}
-              errorBannerRef={actions.errorBannerRef}
-              isPending={actions.applyMutation.isPending}
-              disabled={!canSubmit}
-              onSubmit={handleFormSubmit}
-            />
           </div>
-        </>
+          <KioskApplicationForm
+            additional={additional}
+            rentalReview={
+              <div className="kiosk-rental-review">
+                <span className="lease-review-label">KIỂM TRA TRƯỚC KHI GỬI</span>
+                <p>
+                  {form.walkInSlots || 0} ô bán sẵn · {form.preorderSlots || 0} ô đặt trước
+                </p>
+                <div className="lease-review-price">
+                  <span>Phí thuê 12 tháng</span>
+                  <strong>{total === null ? 'Chưa xác định' : rentalMoney(total)}</strong>
+                </div>
+                <p className="lease-payment-note">
+                  Phí thuê thanh toán cho FloraBot. Tiền bán hoa nhận qua kênh PayOS riêng của shop.
+                </p>
+                {pricingReady(pricing) && (
+                  <label className="rental-consent">
+                    <input
+                      type="checkbox"
+                      checked={acceptedPricingVersion === pricing?.version}
+                      disabled={total === null || actions.applyMutation.isPending}
+                      onChange={(e) =>
+                        setAcceptedPricingVersion(e.target.checked ? pricing!.version : null)
+                      }
+                    />{' '}
+                    Tôi đã kiểm tra số ô, phân bổ Walk-in / Pre-order và tổng phí thuê.
+                  </label>
+                )}
+                {acceptedPricingVersion !== null && acceptedPricingVersion !== pricing?.version && (
+                  <p role="alert">Bảng giá đã thay đổi. Vui lòng xem và xác nhận lại tổng phí.</p>
+                )}
+              </div>
+            }
+            shopInfo={{
+              shopName: form.shopName,
+              onShopNameChange: (val) => {
+                form.setShopName(val);
+                form.clearFieldError('shopName');
+              },
+              shopNameError: form.formErrors.shopName,
+              phone: form.phone,
+              onPhoneChange: (val) => {
+                form.setPhone(val);
+                form.clearFieldError('phone');
+              },
+              phoneError: form.formErrors.phone,
+              contactEmail: form.contactEmail,
+              onContactEmailChange: (val) => {
+                form.setContactEmail(val);
+                form.clearFieldError('contactEmail');
+              },
+              contactEmailError: form.formErrors.contactEmail,
+            }}
+            location={{
+              installationAddress: form.installationAddress,
+              addressSelected: form.addressSelected,
+              addressEditedAfterSelect: form.addressEditedAfterSelect,
+              locationSource: form.locationSource,
+              onAddressChange: form.handleAddressChange,
+              onSuggestionSelect: form.handleSuggestionSelect,
+              addressError: form.formErrors.installationAddress,
+              latitude: form.latitude,
+              longitude: form.longitude,
+              onLocationSelect: form.handleLocationSelect,
+              coordinatesError: form.formErrors.coordinates,
+              gpsLoading: geo.gpsLoading,
+              gpsMessage: geo.gpsMessage,
+              gpsError: geo.gpsError,
+              onRequestGps: geo.requestGps,
+            }}
+            payout={{
+              bankName: form.bankName,
+              onBankNameChange: (val) => {
+                form.setBankName(val);
+                form.clearFieldError('bankName');
+              },
+              bankNameError: form.formErrors.bankName,
+              bankHolder: form.bankHolder,
+              onBankHolderChange: (val) => {
+                form.setBankHolder(val);
+                form.clearFieldError('bankHolder');
+              },
+              bankHolderError: form.formErrors.bankHolder,
+              bankAccountNumber: form.bankAccountNumber,
+              onBankAccountNumberChange: (val) => {
+                form.setBankAccountNumber(val);
+                form.clearFieldError('bankAccountNumber');
+              },
+              bankAccountNumberError: form.formErrors.bankAccountNumber,
+            }}
+            submitError={actions.submitError}
+            errorBannerRef={actions.errorBannerRef}
+            isPending={actions.applyMutation.isPending}
+            disabled={!canSubmit}
+            onSubmit={handleFormSubmit}
+          />
+        </div>
       )}
 
       {/* Cancel Confirmation Dialog */}
