@@ -328,7 +328,7 @@ function CustomerKioskContent({
               </div>
             }
             shopInfo={{
-              shopName: form.shopName,
+              shopName: additional ? appData?.shopName || sessionData?.name || '' : form.shopName,
               onShopNameChange: (val) => {
                 form.setShopName(val);
                 form.clearFieldError('shopName');

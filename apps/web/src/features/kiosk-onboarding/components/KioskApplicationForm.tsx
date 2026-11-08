@@ -63,6 +63,28 @@ export function KioskApplicationForm({
       )}
 
       <form noValidate onSubmit={onSubmit} className="kiosk-application-form">
+        {additional && (
+          <div className="lease-seller-card" role="region" aria-label="Cửa hàng đăng ký">
+            <div className="lease-seller-header">
+              <span className="lease-seller-icon" aria-hidden="true">
+                🏪
+              </span>
+              <div>
+                <span className="lease-seller-badge">CỬA HÀNG ĐĂNG KÝ THUÊ THÊM</span>
+                <strong className="lease-seller-name">
+                  {shopInfo.shopName || 'Cửa hàng của bạn'}
+                </strong>
+              </div>
+            </div>
+            <p className="lease-seller-desc">
+              Kiosk mới sẽ được bổ sung vào cửa hàng này. Thông tin liên hệ và tài khoản nhận tiền
+              được tự động áp dụng từ hồ sơ shop đã lưu.{' '}
+              <Link href="/seller" className="lease-seller-link">
+                Quản lý shop
+              </Link>
+            </p>
+          </div>
+        )}
         {!additional && (
           <fieldset className="kiosk-form-group">
             <legend>Thông tin cửa hàng hoa</legend>
