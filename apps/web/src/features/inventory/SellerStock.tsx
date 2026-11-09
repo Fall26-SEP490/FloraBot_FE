@@ -10,6 +10,7 @@ import { queryClient, request, type Session } from '@/shared/lib/api';
 import ReportFault from '../incidents/ReportFault';
 import ReturnFlowers from '../orders/ReturnFlowers';
 import RemoveSlotBouquet from './RemoveSlotBouquet';
+import SlotMaintenance, { rememberMaintenance, startMaintenance } from './SlotMaintenance';
 import { Modal } from '@/shared/components/Modal';
 import './styles/seller-stock.css';
 import { slotNeedsAttention, slotSaleState, slotWarning, type SellerSlot } from './slot-state';
@@ -380,6 +381,7 @@ export default function SellerStock({ session }: { session: Session }) {
   const [selectedKioskChoice, setSelectedKioskChoice] = useState('');
   const [slotFilter, setSlotFilter] = useState<SlotFilter>('ALL');
   const [message, setMessage] = useState('');
+  const [stockReason, setStockReason] = useState('Nạp hoa bán trực tiếp');
   const [detailSlotId, setDetailSlotId] = useState<string | null>(null);
   const closeSlotDetails = useCallback(() => setDetailSlotId(null), []);
   const notice = useRef<HTMLParagraphElement>(null);
@@ -414,17 +416,41 @@ export default function SellerStock({ session }: { session: Session }) {
   });
 
   const stock = useMutation({
-    mutationFn: (values: z.infer<typeof schema>) =>
-      request('/me/flows/stock_bouquet', {
+    mutationFn: async (values: z.infer<typeof schema>) => {
+      const slot = slots.data?.find((item) => item.id === values.slotId);
+      if (!slot) throw new Error('Ô không còn trong danh sách. Tải lại dữ liệu ô.');
+      if (slot.sensorEnabled) {
+        if (!slot.sensorReady)
+          throw new Error('Ô chưa được admin xác minh đủ cảm biến cửa và hoa.');
+        const session = await startMaintenance({
+          kioskId: selectedKioskId,
+          slot,
+          action: 'LOAD',
+          productId: values.productId,
+          reason: stockReason,
+        });
+        rememberMaintenance(sellerId!, session);
+        return { kind: 'maintenance' as const, session };
+      }
+      await request('/me/flows/stock_bouquet', {
         productId: values.productId,
         slotId: values.slotId,
-      } satisfies components['schemas']['StockBouquetRequest']),
-    onSuccess: (_result, values) => {
+      } satisfies components['schemas']['StockBouquetRequest']);
+      return { kind: 'legacy' as const };
+    },
+    onSuccess: (result, values) => {
       const slot = slots.data?.find((item) => item.id === values.slotId);
       const product = products.data?.find((item) => item.id === values.productId);
-      setMessage(
-        `Đã ghi nhận ${product?.name || 'bó hoa'} vào ô ${slot?.slotCode || ''} tại ${slot?.kioskName || 'kiosk đã chọn'}. ${zoneLabels[slot ? slotZone(slot) : 'UNKNOWN']}. Mã bó hoa được hệ thống tạo tự động.`,
-      );
+      if (result.kind === 'maintenance') {
+        setMessage(
+          `Đã bắt đầu phiên nạp hoa vào ô ${slot?.slotCode || ''}. Theo dõi cửa và cảm biến trong chi tiết ô.`,
+        );
+        setDetailSlotId(values.slotId);
+      } else {
+        setMessage(
+          `Đã ghi nhận ${product?.name || 'bó hoa'} vào ô ${slot?.slotCode || ''} tại ${slot?.kioskName || 'kiosk đã chọn'}. ${zoneLabels[slot ? slotZone(slot) : 'UNKNOWN']}. Mã bó hoa được hệ thống tạo tự động.`,
+        );
+      }
       form.reset({ slotId: '', productId: values.productId });
     },
     onSettled: () =>
@@ -469,7 +495,8 @@ export default function SellerStock({ session }: { session: Session }) {
     slots.isError ||
     products.isError ||
     !matchingEmpty.length ||
-    !available.length;
+    !available.length ||
+    (!!selectedSlot?.sensorEnabled && (!selectedSlot.sensorReady || stockReason.trim().length < 5));
 
   const filteredSlots = allSlots.filter((slot) => {
     if (slotFilter === 'WALK_IN_EMPTY') {
@@ -512,6 +539,7 @@ export default function SellerStock({ session }: { session: Session }) {
                   setDetailSlotId(null);
                   form.reset({ slotId: '', productId: '' });
                   stock.reset();
+                  setStockReason('Nạp hoa bán trực tiếp');
                   setMessage('');
                 }}
               >
@@ -632,7 +660,10 @@ export default function SellerStock({ session }: { session: Session }) {
             <div className="stock-form-heading">
               <div>
                 <h3>Nạp hoa vào tủ</h3>
-                <p>Chọn ô Walk-in trống và mẫu hoa để ghi nhận một bó hoa.</p>
+                <p>
+                  Chọn ô Walk-in trống và mẫu hoa. Ô có cảm biến sẽ mở cửa và xác nhận sau khi đặt
+                  hoa thật.
+                </p>
               </div>
               <span className="stock-form-badge">Walk-in</span>
             </div>
@@ -740,9 +771,27 @@ export default function SellerStock({ session }: { session: Session }) {
                     Bật bán ít nhất một sản phẩm trong danh mục trước khi nạp hoa.
                   </p>
                 )}
+                {selectedSlot?.sensorEnabled && (
+                  <div className="stock-maintenance-reason">
+                    <label htmlFor="stock-maintenance-reason">Lý do nạp hoa</label>
+                    <textarea
+                      id="stock-maintenance-reason"
+                      value={stockReason}
+                      maxLength={500}
+                      onChange={(event) => setStockReason(event.target.value)}
+                    />
+                    {!selectedSlot.sensorReady && (
+                      <p role="note">Ô chưa được admin xác minh đủ cảm biến cửa và hoa.</p>
+                    )}
+                  </div>
+                )}
                 <div className="stock-actions">
                   <Button type="submit" disabled={blocked || !selectedSlot || !selectedProduct}>
-                    {stock.isPending ? 'Đang ghi nhận…' : 'Nạp hoa vào ô'}
+                    {stock.isPending
+                      ? 'Đang xử lý…'
+                      : selectedSlot?.sensorEnabled
+                        ? 'Mở ô để nạp hoa'
+                        : 'Nạp hoa vào ô'}
                   </Button>
                 </div>
               </>
@@ -938,8 +987,20 @@ export default function SellerStock({ session }: { session: Session }) {
                       </Button>
                     )}
 
-                  <RemoveSlotBouquet kioskId={selectedKioskId} slot={detailSlot} />
-                  <ReturnFlowers slot={detailSlot} sellerId={sellerId} />
+                  {detailSlot.sensorEnabled ? (
+                    <SlotMaintenance
+                      sellerId={sellerId}
+                      kioskId={selectedKioskId}
+                      slot={detailSlot}
+                      products={available}
+                      canStock={canStock}
+                    />
+                  ) : (
+                    <>
+                      <RemoveSlotBouquet kioskId={selectedKioskId} slot={detailSlot} />
+                      <ReturnFlowers slot={detailSlot} sellerId={sellerId} />
+                    </>
+                  )}
                   <ReportFault slot={detailSlot} sellerId={sellerId} />
                 </div>
               )}

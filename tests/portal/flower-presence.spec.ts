@@ -2,6 +2,52 @@ import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { setupAdminSurfaces } from '../fixtures/admin-surfaces';
 
+test('Admin can verify and enable sensors on a Walk-in slot', async ({ page }) => {
+  await setupAdminSurfaces(page);
+  await page.route('**/api/admin/slots', (route) =>
+    route.fulfill({
+      json: [
+        { id: 'walk-in', kioskId: 'ui-kiosk', slotCode: 'S01', zone: 'WALK_IN', status: 'STOCKED' },
+        {
+          id: 'preorder',
+          kioskId: 'ui-kiosk',
+          slotCode: 'S03',
+          zone: 'PREORDER',
+          status: 'RENTED_EMPTY',
+        },
+      ],
+    }),
+  );
+  let settings: { enabled: boolean; doorVerified: boolean; presenceVerified: boolean } | null =
+    null;
+  await page.route('**/api/admin/kiosks/ui-kiosk/slots/walk-in/sensor-capabilities', (route) => {
+    if (route.request().method() === 'PUT') settings = route.request().postDataJSON();
+    return settings ? route.fulfill({ json: settings }) : route.fulfill({ status: 204 });
+  });
+
+  await page.goto('/admin/slots');
+  await page.getByLabel('Lọc phân bổ', { exact: true }).selectOption('ALL');
+  await page.locator('.admin-shop-list > li > details > summary').first().click();
+  await page.getByRole('button', { name: 'Xem các ô tủ', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Cấu hình cảm biến ô S03' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Cấu hình cảm biến ô S01' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Cấu hình cảm biến ô S01' });
+  const enable = dialog.getByRole('checkbox', { name: 'Bật giám sát cho ô' });
+  await expect(enable).toBeDisabled();
+  await dialog.getByRole('checkbox', { name: 'Đã kiểm tra cảm biến cửa' }).check();
+  await expect(enable).toBeDisabled();
+  await dialog.getByRole('checkbox', { name: 'Đã kiểm tra cảm biến hoa' }).check();
+  await enable.check();
+  await dialog.getByRole('button', { name: 'Lưu cấu hình' }).click();
+  await expect(dialog.getByRole('status')).toHaveText('Đã lưu cấu hình cảm biến.');
+  expect(settings).toEqual({ enabled: true, doorVerified: true, presenceVerified: true });
+
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Cấu hình cảm biến ô S01' }).click();
+  await expect(enable).toBeChecked();
+  await expect(dialog.getByRole('button', { name: 'Lưu cấu hình' })).toBeDisabled();
+});
+
 for (const width of [390, 1440]) {
   test(`Flower sensors show independent states and hide stale or failed data at ${width}`, async ({
     page,

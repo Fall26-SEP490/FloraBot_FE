@@ -60,6 +60,35 @@
   background: #f8faf7;
   overflow-wrap: anywhere;
 }
+.admin-kiosk-slot-actions {
+  display: grid;
+  justify-items: start;
+  gap: 0.35rem;
+}
+.admin-slot-sensor-form,
+.admin-slot-sensor-form fieldset {
+  display: grid;
+  gap: 0.75rem;
+}
+.admin-slot-sensor-form fieldset {
+  padding: 0.75rem;
+  border: 1px solid #dbe5da;
+  border-radius: 10px;
+}
+.admin-slot-sensor-form label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.admin-slot-sensor-form input[type='checkbox'] {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 1rem;
+  margin: 0;
+}
+.admin-slot-sensor-form > button {
+  justify-self: start;
+}
 @media (max-width: 700px) {
   .admin-approval-grid {
     grid-template-columns: minmax(0, 1fr);

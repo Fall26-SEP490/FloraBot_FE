@@ -8,6 +8,9 @@ export type SellerSlot = components['schemas']['SellerSlotResponse'] & {
   orderCode?: string | null;
   orderStatus?: string | null;
   paymentStatus?: string | null;
+  sensorEnabled?: boolean;
+  sensorReady?: boolean;
+  manualRetryEnabled?: boolean;
 };
 
 type SlotState = Pick<

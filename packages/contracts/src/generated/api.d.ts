@@ -2429,6 +2429,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * Seller xem hồ sơ shop, kể cả khi kỳ thuê đã hết hạn
+         * @description Chỉ chủ shop có tài khoản ACTIVE và Seller ACTIVE hoặc PAST_DUE. Hiệu lực thuê kiosk được kiểm tra riêng ở các thao tác bán hàng.
+         */
         get: {
             parameters: {
                 query?: never;
@@ -2454,6 +2458,10 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
+        /**
+         * Seller cập nhật thông tin chung của shop, kể cả khi kỳ thuê đã hết hạn
+         * @description Chỉ chủ shop có tài khoản ACTIVE và Seller ACTIVE hoặc PAST_DUE. Email liên hệ mới vẫn cần được xác minh; ngân hàng shop cập nhật qua API set_seller_bank hiện có.
+         */
         patch: {
             parameters: {
                 query?: never;
@@ -10906,6 +10914,804 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/me/kiosks/{kioskId}/slots/{slotId}/maintenance-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bắt đầu phiên bảo trì tự phục vụ cho ô tủ (Load, Remove, Replace)
+         * @description Khóa ô chuyển sang LOCKED, phát lệnh SELLER_ACCESS và thiết lập phiên bảo trì.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kioskId: string;
+                    slotId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["StartSlotMaintenanceRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SlotMaintenanceSessionResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/kiosks/{kioskId}/slots/{slotId}/maintenance-sessions/{sessionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Xem chi tiết trạng thái phiên bảo trì ô tủ */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kioskId: string;
+                    slotId: string;
+                    sessionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SlotMaintenanceSessionResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/kiosks/{kioskId}/slots/{slotId}/maintenance-sessions/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tìm phiên bảo trì chưa hoàn tất của ô để tiếp tục sau khi tải lại trang */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kioskId: string;
+                    slotId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SlotMaintenanceSessionResponse"];
+                    };
+                };
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/kiosks/{kioskId}/slots/{slotId}/maintenance-sessions/{sessionId}/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Đồng bộ và kiểm tra tiến trình phiên bảo trì dựa trên cảm biến cửa và hoa */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kioskId: string;
+                    slotId: string;
+                    sessionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SlotMaintenanceSessionResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/kiosks/{kioskId}/slots/{slotId}/maintenance-sessions/{sessionId}/open-next": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mở cửa bước tiếp theo (nạp hoa mới) trong quy trình đổi hoa REPLACE */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kioskId: string;
+                    slotId: string;
+                    sessionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SlotMaintenanceSessionResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/kiosks/{kioskId}/slots/{slotId}/maintenance-sessions/{sessionId}/open-for-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mở cửa kiểm tra ô trong trạng thái NeedsInspection */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kioskId: string;
+                    slotId: string;
+                    sessionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["OpenForCheckRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SlotMaintenanceSessionResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/kiosks/{kioskId}/slots/{slotId}/maintenance-sessions/{sessionId}/report-issue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Báo lỗi trong phiên bảo trì để chuyển sang NeedsInspection */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kioskId: string;
+                    slotId: string;
+                    sessionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ReportIssueRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SlotMaintenanceSessionResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/kiosks/{kioskId}/slots/{slotId}/sensor-capabilities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Đọc cấu hình cảm biến hiện tại của ô tủ (Admin) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kioskId: string;
+                    slotId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SlotSensorCapabilityResponse"];
+                    };
+                };
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        /** Cấu hình năng lực cảm biến cho ô tủ (Admin) */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kioskId: string;
+                    slotId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateSensorCapabilityRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SlotSensorCapabilityResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/kiosks/{kioskId}/slots/{slotId}/manual-unlock-retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Cấu hình quyền thử lại lệnh mở khóa thủ công (Admin)
+         * @description Bật hoặc tắt supports_manual_retry cho ô tủ sau khi xác nhận phiên bản firmware và cảm biến cửa.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kioskId: string;
+                    slotId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ManualUnlockRetryEnrollmentRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SlotSensorCapabilityResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/kiosks/{kioskId}/slots/{slotId}/maintenance-sessions/{sessionId}/retry-unlock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kioskId: string;
+                    slotId: string;
+                    sessionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ManualUnlockRetryRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ManualUnlockRetryResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/kiosks/{kioskId}/pickup/orders/{orderId}/commands/{cmdId}/retry-unlock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kioskId: string;
+                    orderId: string;
+                    cmdId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ManualUnlockRetryRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ManualUnlockRetryResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/payments/webhook": {
         parameters: {
             query?: never;
@@ -14622,6 +15428,28 @@ export interface components {
             email: string;
             password: string;
         };
+        ManualUnlockRetryEnrollmentRequest: {
+            enabled: boolean;
+            firmwareVerified: boolean;
+        };
+        ManualUnlockRetryRequest: {
+            /** Format: uuid */
+            requestId: string;
+            trackingToken?: null | string;
+        };
+        ManualUnlockRetryResponse: {
+            /** Format: uuid */
+            requestId: string;
+            /** Format: uuid */
+            commandId: string;
+            state: string;
+            /** Format: int64 */
+            requestedAt: number | string;
+            /** Format: int64 */
+            expiresAt: number | string;
+            /** Format: int64 */
+            remainingSeconds: number | string;
+        };
         MaskedBankSummary: {
             bankName: null | string;
             accountHolder: null | string;
@@ -14664,6 +15492,9 @@ export interface components {
             p_tracking: string;
             p_reason: string;
             p_photo: string;
+        };
+        OpenForCheckRequest: {
+            reason: string;
         };
         OpenMemberShopRequest: {
             shopName: string;
@@ -15039,6 +15870,9 @@ export interface components {
             p_slot: string;
             p_desc: string;
             p_photo: string;
+        };
+        ReportIssueRequest: {
+            reason: string;
         };
         RequestContactEmailInput: {
             email: string;
@@ -15469,6 +16303,12 @@ export interface components {
             orderCode?: null | string;
             orderStatus?: null | string;
             paymentStatus?: null | string;
+            /** @default false */
+            sensorEnabled: boolean;
+            /** @default false */
+            sensorReady: boolean;
+            /** @default false */
+            manualRetryEnabled: boolean;
         };
         SellerStaffChatItem: {
             /** Format: uuid */
@@ -15638,6 +16478,51 @@ export interface components {
             /** Format: date-time */
             reviewedAt: null | string;
             reviewNote: null | string;
+        };
+        SlotMaintenanceSessionResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            kioskId: string;
+            /** Format: uuid */
+            slotId: string;
+            action: string;
+            stage: string;
+            substate: null | string;
+            /** Format: uuid */
+            currentCmdId: null | string;
+            /** Format: date-time */
+            phaseStartedAt: string;
+            /** Format: date-time */
+            expiresAt: string;
+            inspectionReason: null | string;
+            /** Format: date-time */
+            inspectedAt: null | string;
+            /** Format: uuid */
+            oldBouquetId: null | string;
+            /** Format: uuid */
+            newProductId: null | string;
+            /** Format: uuid */
+            newBouquetId: null | string;
+            availableActions: string[];
+            /** Format: int32 */
+            retryAfterSeconds?: null | number | string;
+        };
+        SlotSensorCapabilityResponse: {
+            /** Format: uuid */
+            slotId: string;
+            /** Format: uuid */
+            kioskId: string;
+            /** Format: int32 */
+            relayChannel: number | string;
+            enabled: boolean;
+            doorVerified: boolean;
+            presenceVerified: boolean;
+            supportsManualRetry: boolean;
+            /** Format: uuid */
+            enrolledBy: null | string;
+            /** Format: date-time */
+            updatedAt: string;
         };
         StaffDeliveryScope: {
             /** Format: uuid */
@@ -15836,6 +16721,16 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        StartSlotMaintenanceRequest: {
+            /** Format: uuid */
+            id: string;
+            action: string;
+            /** Format: uuid */
+            expectedBouquetId: null | string;
+            /** Format: uuid */
+            productId: null | string;
+            reason: string;
+        };
         StockBouquetRequest: {
             /** Format: uuid */
             productId: string;
@@ -15982,6 +16877,11 @@ export interface components {
         UpdateSellerStatusRequest: {
             status: string;
             reason: string;
+        };
+        UpdateSensorCapabilityRequest: {
+            enabled: boolean;
+            doorVerified: boolean;
+            presenceVerified: boolean;
         };
         UpdateUserProfileRequest: {
             fullName: string;
