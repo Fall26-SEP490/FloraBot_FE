@@ -5,7 +5,12 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import { loadCatalog } from '@/features/catalog/catalog.data';
-import { canOrderOnWeb, isWalkIn, purchaseLabel } from '@/features/catalog/catalog.utils';
+import {
+  isPreorder,
+  isPreorderSoldOut,
+  isWalkIn,
+  purchaseLabel,
+} from '@/features/catalog/catalog.utils';
 import { fetchLandingCatalog } from './landing-api';
 import { priceVnd, safePublicUrl } from './landing-data';
 
@@ -17,12 +22,12 @@ export default function StorefrontFlowers() {
   });
   const items = catalog.data ?? [];
   const groups = [
-    { title: 'Hoa đặt trước', href: '/dat-hoa?mode=custom', flowers: items.filter(canOrderOnWeb) },
+    { title: 'Hoa đặt trước', href: '/dat-hoa?mode=custom', flowers: items.filter(isPreorder) },
     { title: 'Hoa mua tại kiosk', href: '/dat-hoa?mode=stock', flowers: items.filter(isWalkIn) },
     {
       title: 'Mẫu hoa khác',
       href: '/dat-hoa',
-      flowers: items.filter((item) => !isWalkIn(item) && !canOrderOnWeb(item)),
+      flowers: items.filter((item) => !isWalkIn(item) && !isPreorder(item)),
     },
   ];
 
@@ -110,9 +115,12 @@ export default function StorefrontFlowers() {
                           <p className="storefront-flower-price">
                             {priceVnd(item.price)}{' '}
                             <small>
-                              {isWalkIn(item) ? 'Giá tại tủ' : canOrderOnWeb(item) ? 'Giá mẫu' : ''}
+                              {isWalkIn(item) ? 'Giá tại tủ' : isPreorder(item) ? 'Giá mẫu' : ''}
                             </small>
                           </p>
+                          {isPreorderSoldOut(item) && (
+                            <p className="storefront-flower-availability">Hết hàng</p>
+                          )}
                           <p className="storefront-flower-shop" title={item.shopName}>
                             {[item.shopName, item.kioskName].filter(Boolean).join(' · ')}
                           </p>

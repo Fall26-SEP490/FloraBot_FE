@@ -2818,6 +2818,7 @@ export interface paths {
             };
         };
         put?: never;
+        /** @description Chỉ nhận preorder CUSTOM theo mẫu hoa đang ACTIVE và còn tồn tại shop. Nếu quantity = 0, trả 409 với detail PREORDER_PRODUCT_OUT_OF_STOCK. Số lượng không bị giữ chỗ khi tạo yêu cầu; được trừ khi Seller/nhân viên nạp hoa vào kiosk. */
         post: {
             parameters: {
                 query?: never;
@@ -2838,6 +2839,15 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["FlowResult"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
                     };
                 };
             };
@@ -4575,6 +4585,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** @description preorderAvailable cho biết mẫu còn tồn tại shop và có thể tạo preorder mới; số lượng cụ thể không được công khai trong catalog. */
         get: {
             parameters: {
                 query?: {
@@ -17949,6 +17960,7 @@ export interface components {
             zone: null | string;
             photo: null | string;
             bouquets: string[];
+            preorderAvailable: boolean;
         };
         WebCatalogPage: {
             items: components["schemas"]["WebCatalogItem"][];

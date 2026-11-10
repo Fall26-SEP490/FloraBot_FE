@@ -16,7 +16,7 @@ import {
 } from '@florabot/ui';
 import { ApiError, queryClient, request, sessionQuery } from '@/shared/lib/api';
 import type { CatalogItem, CatalogResponse } from '../catalog.types';
-import { canOrderOnWeb, formatPrice, isWalkIn } from '../catalog.utils';
+import { formatPrice, isPreorder, isPreorderSoldOut, isWalkIn } from '../catalog.utils';
 import type { components } from '../../../../../../packages/contracts/src/generated/api';
 
 interface FlowerRequestFormProps {
@@ -40,7 +40,7 @@ export function FlowerRequestForm({
   const [kioskId, setKioskId] = useState(item.kioskId);
   const kiosks = useQuery({
     queryKey: ['catalog-pickup-kiosks', item.productId, item.sellerId],
-    enabled: !item.isDemoSample && canOrderOnWeb(item),
+    enabled: !item.isDemoSample && isPreorder(item),
     queryFn: async () => {
       const matches = new Map<string, CatalogItem>();
       let page = 1;
@@ -53,7 +53,7 @@ export function FlowerRequestForm({
           if (
             entry.productId === item.productId &&
             entry.sellerId === item.sellerId &&
-            canOrderOnWeb(entry)
+            isPreorder(entry)
           ) {
             matches.set(entry.kioskId, entry);
           }
@@ -84,6 +84,9 @@ export function FlowerRequestForm({
   const [confirmed, setConfirmed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [uncertain, setUncertain] = useState(false);
+  const [stockConflict, setStockConflict] = useState(false);
+  // A retry of an unconfirmed request can still succeed with its existing request ID.
+  const soldOut = !uncertain && (stockConflict || isPreorderSoldOut(selectedKiosk ?? item));
   const [error, setError] = useState('');
   const [pickupError, setPickupError] = useState('');
   const [briefError, setBriefError] = useState('');
@@ -115,7 +118,7 @@ export function FlowerRequestForm({
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
-    if (sending.current || !confirmed || !canOrderOnWeb(item)) return;
+    if (sending.current || !confirmed || !isPreorder(item) || soldOut) return;
     setError('');
     setPickupError('');
     setBriefError('');
@@ -166,11 +169,27 @@ export function FlowerRequestForm({
       setDone(true);
       await queryClient.invalidateQueries({ queryKey: ['web-orders'] });
     } catch (cause) {
-      setError(
-        cause instanceof ApiError
-          ? cause.message
-          : 'Chưa xác nhận được kết quả. Kiểm tra tài khoản hoặc gửi lại cùng yêu cầu.',
-      );
+      if (
+        cause instanceof ApiError &&
+        cause.status === 409 &&
+        cause.code === 'PREORDER_PRODUCT_OUT_OF_STOCK'
+      ) {
+        setStockConflict(true);
+        void Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['web-catalog'] }),
+          queryClient.invalidateQueries({ queryKey: ['web-catalog-detail', item.productId] }),
+          queryClient.invalidateQueries({ queryKey: ['landing-catalog-preview'] }),
+          queryClient.invalidateQueries({
+            queryKey: ['catalog-pickup-kiosks', item.productId, item.sellerId],
+          }),
+        ]);
+      } else {
+        setError(
+          cause instanceof ApiError
+            ? cause.message
+            : 'Chưa xác nhận được kết quả. Kiểm tra tài khoản hoặc gửi lại cùng yêu cầu.',
+        );
+      }
       if (cause instanceof ApiError && cause.status >= 400 && cause.status < 500) {
         pending.current = null;
         setUncertain(false);
@@ -183,7 +202,7 @@ export function FlowerRequestForm({
     }
   }
 
-  if (!canOrderOnWeb(item)) {
+  if (!isPreorder(item)) {
     return (
       <div className="flower-request-notice">
         <p role="note">
@@ -452,6 +471,11 @@ export function FlowerRequestForm({
           {error}
         </p>
       </div>
+      {soldOut && (
+        <p role="alert" className="flower-request-stock-alert">
+          Mẫu hoa đã hết hàng. Bạn có thể nhắn shop hoặc chọn mẫu khác.
+        </p>
+      )}
       <div className="flower-request-footer">
         {onOpenChat && (
           <Button
@@ -467,7 +491,7 @@ export function FlowerRequestForm({
         )}
         <Button
           type="submit"
-          disabled={busy || !confirmed || kiosks.isPending || kiosks.isError}
+          disabled={busy || soldOut || !confirmed || kiosks.isPending || kiosks.isError}
           className="flower-request-submit-btn"
         >
           {busy ? 'Đang gửi…' : uncertain ? 'Gửi lại cùng yêu cầu' : 'Gửi yêu cầu để shop báo giá'}

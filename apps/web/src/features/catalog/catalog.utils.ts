@@ -12,15 +12,26 @@ export function isWalkIn(item: Pick<CatalogItem, 'zone'>): boolean {
   return item.zone === 'WALK_IN';
 }
 
-export function canOrderOnWeb(item: Pick<CatalogItem, 'zone'>): boolean {
+export function isPreorder(item: Pick<CatalogItem, 'zone'>): boolean {
   // /shop/catalog reads v_web_catalog: its bouquet IDs already exclude WALK_IN.
   // An explicit zone takes precedence if the API includes kiosk-only entries.
   return item.zone == null || item.zone === 'PREORDER';
 }
 
-export function purchaseLabel(item: Pick<CatalogItem, 'zone'>): string {
+type PreorderStatus = Pick<CatalogItem, 'zone' | 'preorderAvailable'>;
+
+export function isPreorderSoldOut(item: PreorderStatus): boolean {
+  return isPreorder(item) && item.preorderAvailable === false;
+}
+
+export function canOrderOnWeb(item: PreorderStatus): boolean {
+  return isPreorder(item) && !isPreorderSoldOut(item);
+}
+
+export function purchaseLabel(item: PreorderStatus): string {
   if (isWalkIn(item)) return 'Chỉ mua tại kiosk';
-  return canOrderOnWeb(item) ? 'Đặt trước' : 'Chưa xác định hình thức mua';
+  if (isPreorderSoldOut(item)) return 'Hết hàng';
+  return isPreorder(item) ? 'Đặt trước' : 'Chưa xác định hình thức mua';
 }
 
 export function matchesOccasion(item: CatalogItem, occasion: string): boolean {
@@ -53,7 +64,7 @@ export function matchesPrice(price: number, filter: PriceFilter): boolean {
 
 export function matchesAvailability(item: CatalogItem, filter: AvailabilityFilter): boolean {
   if (filter === 'stock') return isWalkIn(item);
-  if (filter === 'custom') return canOrderOnWeb(item);
+  if (filter === 'custom') return isPreorder(item);
   return true;
 }
 
@@ -116,7 +127,7 @@ export function computeFilterCounts(items: CatalogItem[]) {
   let custom = 0;
   items.forEach((item) => {
     if (matchesAvailability(item, 'stock')) stock++;
-    else if (canOrderOnWeb(item)) custom++;
+    else if (isPreorder(item)) custom++;
   });
   const availabilityCounts: AvailabilityCounts = { stock, custom };
 

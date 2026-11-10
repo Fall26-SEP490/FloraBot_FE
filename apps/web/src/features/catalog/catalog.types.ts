@@ -12,6 +12,7 @@ export type CatalogItem = {
   bouquets: string[];
   // Older catalog responses may omit zone; current responses identify the sales channel.
   zone?: string | null;
+  preorderAvailable?: boolean;
   occasion?: string;
   tags?: string[];
   isDemoSample?: boolean;

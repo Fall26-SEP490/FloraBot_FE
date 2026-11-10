@@ -17,14 +17,22 @@ const flower = {
   bouquets: [],
   zone: 'PREORDER',
 };
-async function fixture(page: Page) {
-  const state = { writes: [] as Record<string, unknown>[] };
+async function fixture(page: Page, stock?: { available: boolean; rejectNext?: boolean }) {
+  const state = { writes: [] as Record<string, unknown>[], catalogReads: 0 };
   await page.route('**/hub/**', (route) => route.abort());
   await page.route('**/api/**', (route) => {
     const req = route.request();
     const path = new URL(req.url()).pathname;
     if (path === '/api/member/preorders' && req.method() === 'POST') {
       state.writes.push(req.postDataJSON());
+      if (stock?.rejectNext) {
+        stock.available = false;
+        stock.rejectNext = false;
+        return route.fulfill({
+          status: 409,
+          json: { detail: 'PREORDER_PRODUCT_OUT_OF_STOCK' },
+        });
+      }
       return route.fulfill({ status: 201, json: {} });
     }
     if (req.method() !== 'GET') return route.abort();
@@ -32,22 +40,35 @@ async function fixture(page: Page) {
       return route.fulfill({
         json: { id: 'customer-product-test', name: 'Khách test', role: 'CUSTOMER' },
       });
-    if (path === '/api/shop/catalog')
+    if (path === '/api/shop/catalog') {
+      state.catalogReads++;
       return route.fulfill({
         json: {
           items: [
-            flower,
+            { ...flower, preorderAvailable: stock?.available },
             {
               ...flower,
               kioskId: otherKioskId,
               kioskName: 'Tủ nhận thứ hai',
               address: '219 Nguyễn Văn Tăng, TP.HCM',
+              preorderAvailable: stock?.available,
             },
+            ...(stock
+              ? [
+                  {
+                    ...flower,
+                    name: 'Bó hoa mua tại tủ',
+                    zone: 'WALK_IN',
+                    preorderAvailable: false,
+                  },
+                ]
+              : []),
           ],
           page: 1,
           hasMore: false,
         },
       });
+    }
     return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
   });
   return state;
@@ -158,5 +179,49 @@ test('Product quotation rejects a date beyond 30 days without creating an order'
   await dialog.getByRole('checkbox').check();
   await dialog.getByRole('button', { name: 'Gửi yêu cầu để shop báo giá', exact: true }).click();
   await expect(dialog.getByRole('alert').filter({ hasText: 'tối đa 30 ngày tới' })).toBeVisible();
+  expect(state.writes).toEqual([]);
+});
+
+test('A preorder that sells out during quotation refreshes the catalog and blocks another submit', async ({
+  page,
+}) => {
+  const state = await fixture(page, { available: true, rejectNext: true });
+  const dialog = await open(page);
+  await dialog.getByLabel('Tủ nhận hoa', { exact: true }).selectOption(kioskId);
+  await dialog.getByLabel('Thời gian mong muốn nhận hoa', { exact: true }).fill(await future(page));
+  const brief = dialog.getByLabel('Dịp tặng, màu hoa, ngân sách và lời nhắn', { exact: true });
+  await brief.fill('Hoa hồng tông pastel, ngân sách 400.000 đồng');
+  await dialog.getByRole('checkbox').check();
+  const readsBeforeSubmit = state.catalogReads;
+  const submit = dialog.getByRole('button', { name: 'Gửi yêu cầu để shop báo giá', exact: true });
+  await submit.click();
+  await expect(dialog.getByRole('alert').filter({ hasText: 'Mẫu hoa đã hết hàng' })).toBeVisible();
+  await expect(submit).toBeDisabled();
+  await expect(brief).toHaveValue('Hoa hồng tông pastel, ngân sách 400.000 đồng');
+  await expect.poll(() => state.catalogReads).toBeGreaterThan(readsBeforeSubmit);
+  await expect(page.getByRole('button', { name: 'Yêu cầu báo giá', exact: true })).toBeDisabled();
+  expect(state.writes).toHaveLength(1);
+});
+
+test('Sold-out preorder stays visible on home and catalog while Walk-in still links to its kiosk', async ({
+  page,
+}) => {
+  const state = await fixture(page, { available: false });
+  await page.goto('/');
+  const preorder = page.getByRole('link', {
+    name: `${flower.name} · Hết hàng · ${flower.kioskName}`,
+  });
+  await expect(preorder.getByText('Hết hàng', { exact: true })).toBeVisible();
+  await page.goto('/dat-hoa?mode=custom');
+  const preorderCard = page.locator('.flower-card').filter({ hasText: flower.kioskName });
+  await expect(preorderCard.getByText('Hết hàng', { exact: true })).toBeVisible();
+  await expect(preorderCard.getByRole('button', { name: 'Yêu cầu báo giá' })).toHaveCount(0);
+  await page.goto('/dat-hoa?mode=stock');
+  const walkIn = page.locator('.flower-card').filter({ hasText: 'Bó hoa mua tại tủ' });
+  await expect(walkIn.getByText('Chỉ mua tại kiosk', { exact: true })).toBeVisible();
+  await expect(walkIn.getByRole('link', { name: 'Xem kiosk' })).toHaveAttribute(
+    'href',
+    `/tim-kiosk?kiosk=${kioskId}`,
+  );
   expect(state.writes).toEqual([]);
 });
