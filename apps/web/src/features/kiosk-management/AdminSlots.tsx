@@ -9,6 +9,7 @@ import type { components } from '../../../../../packages/contracts/src/generated
 import { queryClient, request } from '@/shared/lib/api';
 import { ConfirmDialog } from '../../shared/components/Modal';
 import { AdminKioskSlotDetails } from './AdminKioskSlotDetails';
+import { Esp32ConfigurationPanel } from './Esp32ConfigurationPanel';
 
 type Kiosk = components['schemas']['AdminKioskResponse'];
 type Seller = components['schemas']['AdminSellerResponse'];
@@ -16,9 +17,9 @@ type Seller = components['schemas']['AdminSellerResponse'];
 interface KioskManagerAssignmentItem {
   kioskId: string;
   kioskCode: string;
-  managerId: string;
-  managerName: string;
-  assignedAt: string;
+  managerId: string | null;
+  managerName: string | null;
+  assignedAt: string | null;
 }
 
 interface KioskManagerAssignmentPage {
@@ -56,17 +57,13 @@ function KioskOperationsManagerPanel({ kiosks }: { kiosks: Kiosk[] }) {
   });
 
   const assignManager = useMutation({
-    mutationFn: () =>
-      request(
-        `/admin/kiosks/${selectedKioskId}/operations-manager`,
-        { managerId: selectedManagerId || null },
-        false,
-        'PUT',
-      ),
-    onSuccess: async () => {
+    mutationFn: ({ kioskId, managerId }: { kioskId: string; managerId: string | null }) =>
+      request(`/admin/kiosks/${kioskId}/operations-manager`, { managerId }, true, 'PUT'),
+    onSuccess: async (_, { managerId }) => {
       setError('');
+      setSelectedManagerId('');
       setNotice(
-        selectedManagerId
+        managerId
           ? 'Đã phân công Quản lý vận hành phụ trách kiosk.'
           : 'Đã gỡ phân công Quản lý vận hành khỏi kiosk.',
       );
@@ -96,8 +93,11 @@ function KioskOperationsManagerPanel({ kiosks }: { kiosks: Kiosk[] }) {
             className="approval-form"
             onSubmit={(e) => {
               e.preventDefault();
-              if (selectedKioskId && !assignManager.isPending) {
-                assignManager.mutate();
+              if (selectedKioskId && selectedManagerId && !assignManager.isPending) {
+                assignManager.mutate({
+                  kioskId: selectedKioskId,
+                  managerId: selectedManagerId === 'unassign' ? null : selectedManagerId,
+                });
               }
             }}
           >
@@ -105,7 +105,13 @@ function KioskOperationsManagerPanel({ kiosks }: { kiosks: Kiosk[] }) {
             <select
               id="ops-manager-kiosk"
               value={selectedKioskId}
-              onChange={(e) => setSelectedKioskId(e.target.value)}
+              disabled={assignManager.isPending}
+              onChange={(e) => {
+                setSelectedKioskId(e.target.value);
+                setSelectedManagerId('');
+                setNotice('');
+                setError('');
+              }}
             >
               <option value="">Chọn kiosk</option>
               {kiosks.map((k) => (
@@ -115,15 +121,17 @@ function KioskOperationsManagerPanel({ kiosks }: { kiosks: Kiosk[] }) {
               ))}
             </select>
 
-            <label htmlFor="ops-manager-account">
-              Quản lý vận hành phụ trách (để trống nếu muốn gỡ phân công)
-            </label>
+            <label htmlFor="ops-manager-account">Quản lý vận hành phụ trách</label>
             <select
               id="ops-manager-account"
               value={selectedManagerId}
+              disabled={!selectedKioskId || assignManager.isPending}
               onChange={(e) => setSelectedManagerId(e.target.value)}
             >
-              <option value="">— Không gán (Gỡ phân công) —</option>
+              <option value="" disabled>
+                Chọn quản lý hoặc thao tác
+              </option>
+              <option value="unassign">Gỡ phân công hiện tại</option>
               {managers.data
                 ?.filter((m) => m.status === 'ACTIVE')
                 .map((m) => (
@@ -133,7 +141,15 @@ function KioskOperationsManagerPanel({ kiosks }: { kiosks: Kiosk[] }) {
                 ))}
             </select>
 
-            <Button type="submit" disabled={!selectedKioskId || assignManager.isPending}>
+            {managers.isError && (
+              <p role="alert">
+                Chưa tải được danh sách quản lý. Mở lại mục này hoặc tải lại trang để thử lại.
+              </p>
+            )}
+            <Button
+              type="submit"
+              disabled={!selectedKioskId || !selectedManagerId || assignManager.isPending}
+            >
               {assignManager.isPending ? 'Đang lưu…' : 'Lưu phân công vận hành'}
             </Button>
           </form>
@@ -145,18 +161,33 @@ function KioskOperationsManagerPanel({ kiosks }: { kiosks: Kiosk[] }) {
           )}
 
           {assignments.isPending && <p role="status">Đang tải danh sách phân công…</p>}
-          {assignments.data && assignments.data.items.length > 0 && (
+          {assignments.isError && (
+            <div role="alert">
+              <p>Chưa tải được danh sách phân công.</p>
+              <Button type="button" variant="outline" onClick={() => void assignments.refetch()}>
+                Tải lại danh sách phân công
+              </Button>
+            </div>
+          )}
+          {assignments.data && assignments.data.items.length === 0 && page === 1 && (
+            <p>Chưa có kiosk trong danh sách.</p>
+          )}
+          {assignments.data && (
             <>
               <ul className="admin-shop-list" style={{ marginTop: '0.75rem' }}>
                 {assignments.data.items.map((item) => (
-                  <li key={`${item.kioskId}-${item.managerId}`} className="shop-profile">
+                  <li key={item.kioskId} className="shop-profile">
                     <p>
-                      <strong>Kiosk {item.kioskCode}</strong> → Quản lý vận hành:{' '}
-                      <strong>{item.managerName}</strong>
+                      <strong>Kiosk {item.kioskCode}</strong> ·{' '}
+                      {item.managerName
+                        ? `Phụ trách: ${item.managerName}`
+                        : 'Chưa có quản lý phụ trách'}
                     </p>
-                    <p className="quiet">
-                      Phân công lúc: {new Date(item.assignedAt).toLocaleString('vi-VN')}
-                    </p>
+                    {item.assignedAt && (
+                      <p className="quiet">
+                        Phân công lúc: {new Date(item.assignedAt).toLocaleString('vi-VN')}
+                      </p>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -299,7 +330,7 @@ function Assignment({
   );
 }
 
-export default function AdminSlots() {
+export default function AdminSlots({ actorId }: { actorId: string }) {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [ownership, setOwnership] = useState('UNASSIGNED');
@@ -441,6 +472,7 @@ export default function AdminSlots() {
                   </div>
                 </dl>
                 <AdminKioskSlotDetails kioskId={kiosk.id} kioskCode={kiosk.code} />
+                <Esp32ConfigurationPanel actorId={actorId} scope="admin" resourceId={kiosk.id} />
                 {sellers.isPending ? (
                   <p role="status">Đang tải shop…</p>
                 ) : sellers.data?.length ? (

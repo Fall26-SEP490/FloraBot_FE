@@ -79,7 +79,7 @@ for (const width of [390, 1440]) {
     await section.getByLabel('Tìm mã kiosk, tên kiosk hoặc shop').fill('không tìm thấy');
     await expect(section.getByText('Không có kiosk phù hợp với bộ lọc hiện tại.')).toBeVisible();
     await section.getByLabel('Tìm mã kiosk, tên kiosk hoặc shop').fill('FPT-01');
-    await section.locator('summary').click();
+    await section.locator('summary.admin-disclosure-summary').click();
 
     await section.getByRole('button', { name: 'Gán kiosk cho shop' }).click();
     await expect(section.getByLabel('Shop quản lý toàn bộ kiosk')).toBeFocused();
@@ -109,7 +109,7 @@ for (const width of [390, 1440]) {
     ).toBeFocused();
     await expect(section.locator('li')).toHaveCount(0);
     await section.getByLabel('Lọc phân bổ').selectOption('ASSIGNED');
-    await section.locator('summary').click();
+    await section.locator('summary.admin-disclosure-summary').click();
     await expect(section.getByText('Tiệm Hoa Ban Mai', { exact: true })).toBeVisible();
     await expect(
       section.getByRole('button', { name: 'Chuyển kiosk sang shop khác' }),
@@ -117,3 +117,62 @@ for (const width of [390, 1440]) {
     expect(attempts).toBe(2);
   });
 }
+
+test('Admin explicitly assigns and removes a kiosk manager', async ({ page }) => {
+  const kiosk = { id: 'kiosk-1', name: 'Tủ Dĩ An', code: 'K-DIAN', status: 'ONLINE', slotCount: 2 };
+  const manager = {
+    id: 'manager-1',
+    fullName: 'An Điều Phối',
+    email: 'manager@example.test',
+    status: 'ACTIVE',
+  };
+  let managerId: string | null = null;
+  const changes: (string | null)[] = [];
+  await page.route('**/api/**', (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (path === '/api/auth/me') {
+      return route.fulfill({ json: { id: 'admin-1', name: 'Admin', role: 'ADMIN' } });
+    }
+    if (path === '/api/admin/kiosks') return route.fulfill({ json: [kiosk] });
+    if (path === '/api/admin/managers') return route.fulfill({ json: [manager] });
+    if (path === '/api/admin/kiosk-manager-assignments') {
+      return route.fulfill({
+        json: {
+          page: 1,
+          hasMore: false,
+          items: [
+            {
+              kioskId: kiosk.id,
+              kioskCode: kiosk.code,
+              managerId,
+              managerName: managerId ? manager.fullName : null,
+              assignedAt: managerId ? '2026-11-08T01:00:00Z' : null,
+            },
+          ],
+        },
+      });
+    }
+    if (path === '/api/admin/kiosks/kiosk-1/operations-manager') {
+      expect(route.request().method()).toBe('PUT');
+      managerId = route.request().postDataJSON().managerId;
+      changes.push(managerId);
+      return route.fulfill({ json: { kioskId: kiosk.id, managerId } });
+    }
+    return route.fulfill({ json: [] });
+  });
+
+  await page.goto('/admin/slots');
+  await page.getByText('Phân công Quản lý vận hành phụ trách Kiosk', { exact: true }).click();
+  await expect(page.getByText('Chưa có quản lý phụ trách')).toBeVisible();
+  await page.getByLabel('Chọn kiosk', { exact: true }).selectOption(kiosk.id);
+  const save = page.getByRole('button', { name: 'Lưu phân công vận hành' });
+  const managerSelect = page.getByLabel('Quản lý vận hành phụ trách', { exact: true });
+  await expect(save).toBeDisabled();
+  await managerSelect.selectOption(manager.id);
+  await save.click();
+  await expect(page.getByText('Phụ trách: An Điều Phối', { exact: false })).toBeVisible();
+  await managerSelect.selectOption({ label: 'Gỡ phân công hiện tại' });
+  await save.click();
+  await expect(page.getByText('Chưa có quản lý phụ trách')).toBeVisible();
+  expect(changes).toEqual([manager.id, null]);
+});

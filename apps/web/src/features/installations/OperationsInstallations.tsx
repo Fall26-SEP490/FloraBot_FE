@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import ManagerKioskPricing from '../kiosk-pricing/ManagerKioskPricing';
+import { Esp32ConfigurationPanel } from '../kiosk-management/Esp32ConfigurationPanel';
 import { Check, CircleAlert } from '@florabot/ui';
 import { queryClient, type Session } from '@/shared/lib/api';
 import type {
@@ -40,6 +41,7 @@ export default function OperationsInstallations({ session }: OperationsInstallat
   );
   const [enrollApplication, setEnrollApplication] = useState<KioskApplicationResponse | null>(null);
   const [enrollSuccess, setEnrollSuccess] = useState<string | null>(null);
+  const [enrolledKioskId, setEnrolledKioskId] = useState<string | null>(null);
 
   // Once-only Provisioned Key Modal State (Memory only, never persisted)
   const [provisionedKeyInfo, setProvisionedKeyInfo] = useState<ProvisionedKeyInfo | null>(null);
@@ -62,11 +64,13 @@ export default function OperationsInstallations({ session }: OperationsInstallat
   const handleOpenEnroll = (application: KioskApplicationResponse) => {
     setEnrollApplication(application);
     setEnrollSuccess(null);
+    setEnrolledKioskId(null);
     setEnrollModalOpen(true);
   };
 
   const handleEnrollSuccess = (created: EnrollKioskResponse) => {
     setEnrollModalOpen(false);
+    setEnrolledKioskId(created.id);
     setEnrollSuccess(
       `Đã ghi nhận thiết bị Kiosk mới: ${created.code} (${created.name}) - Ban đầu: OFFLINE.`,
     );
@@ -110,6 +114,16 @@ export default function OperationsInstallations({ session }: OperationsInstallat
           <Check size={18} aria-hidden="true" />
           <span>{enrollSuccess}</span>
         </div>
+      )}
+
+      {isManager && enrolledKioskId && (
+        <Esp32ConfigurationPanel
+          key={enrolledKioskId}
+          actorId={session.id}
+          scope="manager"
+          resourceId={enrolledKioskId}
+          initiallyOpen
+        />
       )}
 
       <InstallationList

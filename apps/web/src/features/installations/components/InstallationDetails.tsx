@@ -1,4 +1,5 @@
 import { ApplicationRentalSummary } from '../../kiosk-pricing/ApplicationRentalSummary';
+import { Esp32ConfigurationPanel } from '../../kiosk-management/Esp32ConfigurationPanel';
 import { useEffect, useRef } from 'react';
 import { Button, Check, CircleAlert, RefreshCw, X } from '@florabot/ui';
 import { ApiError, type Session } from '@/shared/lib/api';
@@ -142,6 +143,14 @@ export function InstallationDetails({
 
       {appDetail && (
         <div className="detail-panel-content">
+          {appDetail.assignedKioskId && (
+            <Esp32ConfigurationPanel
+              key={appDetail.assignedKioskId}
+              actorId={session.id}
+              scope={isManager ? 'manager' : 'admin'}
+              resourceId={appDetail.assignedKioskId}
+            />
+          )}
           <ol
             className="installation-progress operations-detail-progress"
             aria-label="Tiến độ hồ sơ"

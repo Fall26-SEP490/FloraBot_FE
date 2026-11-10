@@ -8,6 +8,7 @@ import { Modal } from '../../../shared/components/Modal';
 import type { EligibleKioskResponse } from '../installations.types';
 import { DeleteKioskModal } from './DeleteKioskModal';
 import { FlowerPresencePanel } from '../../kiosk-management/FlowerPresencePanel';
+import { Esp32ConfigurationPanel } from '../../kiosk-management/Esp32ConfigurationPanel';
 
 interface AvailableKiosksModalProps {
   open: boolean;
@@ -190,6 +191,11 @@ export function AvailableKiosksModal({ open, onClose, session }: AvailableKiosks
                         <strong>{kiosk.name}</strong>
                         <code>{kiosk.code}</code>
                         <FlowerPresencePanel kioskId={kiosk.id} />
+                        <Esp32ConfigurationPanel
+                          actorId={session.id}
+                          scope="manager"
+                          resourceId={kiosk.id}
+                        />
                       </td>
                       <td data-label="Quy mô">
                         <span className="inventory-slot-count">{kiosk.slotCount} ô</span>

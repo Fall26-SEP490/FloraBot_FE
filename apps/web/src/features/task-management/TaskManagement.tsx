@@ -91,7 +91,7 @@ export function TaskManagement(props: StaffTasksProps) {
       : role === 'SELLER'
         ? 'Phân công giao hoa cho nhân viên shop và theo dõi tiến độ nạp hoa tại tủ.'
         : role === 'ADMIN'
-          ? 'Theo dõi trạng thái công việc toàn hệ thống ở chế độ chỉ đọc. Việc phân công và duyệt báo cáo do Quản lý vận hành và chủ shop thực hiện.'
+          ? 'Theo dõi công việc toàn hệ thống và cập nhật hướng dẫn khi công việc đang mở. Quản lý vận hành và chủ shop phụ trách phân công và duyệt báo cáo.'
           : role === 'TECHNICIAN'
             ? 'Bắt đầu công việc, ghi nhận kết quả và gửi báo cáo để Quản lý vận hành duyệt.'
             : 'Bắt đầu công việc, nạp hoa vào ô tủ và gửi báo cáo để chủ shop theo dõi.';
@@ -213,10 +213,13 @@ export function TaskManagement(props: StaffTasksProps) {
       </div>
       {tasks.isPending ? (
         <p role="status">Đang tải công việc…</p>
-      ) : tasks.isError ? (
+      ) : !tasks.data ? (
         <p role="alert">Chưa tải được công việc. Kiểm tra kết nối và thử tải lại.</p>
       ) : (
         <>
+          {tasks.isError && (
+            <p role="status">Chưa tải được công việc mới nhất. Đang hiển thị danh sách đã tải.</p>
+          )}
           {tasks.data.items.length === 0 ? (
             <div className="operations-empty">
               <ClipboardList size={36} aria-hidden="true" />
@@ -249,7 +252,7 @@ export function TaskManagement(props: StaffTasksProps) {
           ) : (
             tasks.data.items.map((task) => (
               <TaskItem
-                key={`${task.id}-${task.version}-${reload}`}
+                key={`${task.id}-${role === 'TECHNICIAN' ? task.status : task.version}-${reload}`}
                 task={task}
                 mode={mode}
                 role={role}

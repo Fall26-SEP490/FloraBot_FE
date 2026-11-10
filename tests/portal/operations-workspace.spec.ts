@@ -226,8 +226,13 @@ test('Enrollment modal traps focus and restores it on Escape without writing dat
   page,
 }) => {
   const writes = await setup(page);
-  await page.goto('/operations/installations');
-  const trigger = page.getByRole('button', { name: 'Thêm tủ mới', exact: true });
+  await page.route('**/api/operations/kiosk-applications/app-operations', (route) =>
+    route.fulfill({
+      json: { application: { ...application, status: 'CONFIRMED' }, evidencePhotos: [] },
+    }),
+  );
+  await page.goto('/operations/installations?application=app-operations');
+  const trigger = page.getByRole('button', { name: '+ Tạo tủ theo hồ sơ', exact: true });
   await trigger.click();
   const dialog = page.getByRole('dialog', { name: 'Đăng ký thiết bị kiosk mới' });
   await expect(dialog).toBeVisible();
@@ -292,3 +297,92 @@ for (const width of [390, 1440]) {
     expect(writes).toEqual([]);
   });
 }
+
+test('Manager reviews location and slot layout using their distinct backend contracts', async ({
+  page,
+}) => {
+  await setup(page);
+  const kioskId = 'kiosk-1';
+  const slotId = '40000000-0000-0000-0000-000000000031';
+  const requestDetails = { id: 'request-1', kioskId, reason: 'Cập nhật theo yêu cầu của shop' };
+  let locationReviewed = false;
+  let layoutReviewed = false;
+  await page.route('**/api/operations/kiosk-termination-requests?*', (route) =>
+    route.fulfill({ json: { items: [], page: 1, hasMore: false } }),
+  );
+  await page.route('**/api/operations/kiosk-location-requests?*', (route) => {
+    const status = new URL(route.request().url()).searchParams.get('status');
+    if (status !== 'REQUESTED') return route.fulfill({ status: 400, json: {} });
+    return route.fulfill({
+      json: locationReviewed
+        ? []
+        : [
+            {
+              ...requestDetails,
+              status: 'REQUESTED',
+              address: '21 Nguyễn Huệ',
+              latitude: 10.77,
+              longitude: 106.7,
+            },
+          ],
+    });
+  });
+  await page.route('**/api/operations/kiosk-location-requests/request-1/review', (route) => {
+    expect(route.request().method()).toBe('POST');
+    expect(route.request().postDataJSON()).toEqual({
+      decision: 'REJECTED',
+      note: 'Thiếu xác nhận địa chỉ',
+    });
+    locationReviewed = true;
+    return route.fulfill({ json: { ...requestDetails, status: 'REJECTED' } });
+  });
+  await page.route('**/api/operations/kiosk-layout-requests?*', (route) => {
+    expect(new URL(route.request().url()).searchParams.get('status')).toBe('PENDING');
+    return route.fulfill({
+      json: layoutReviewed
+        ? []
+        : [
+            {
+              ...requestDetails,
+              status: 'PENDING',
+              walkInSlots: 1,
+              preorderSlots: 1,
+            },
+          ],
+    });
+  });
+  await page.route('**/api/kiosks/kiosk-1/flower-presence', (route) =>
+    route.fulfill({
+      json: {
+        slots: [
+          { slotId, slotCode: 'A01' },
+          { slotId: '40000000-0000-0000-0000-000000000032', slotCode: 'A02' },
+        ],
+      },
+    }),
+  );
+  await page.route('**/api/operations/kiosk-layout-requests/request-1/review', (route) => {
+    expect(route.request().postDataJSON()).toEqual({ preorderSlotIds: [slotId], note: null });
+    layoutReviewed = true;
+    return route.fulfill({ json: { status: 'APPROVED' } });
+  });
+
+  await page.goto('/operations/terminations');
+  await page.getByText('Yêu cầu đổi vị trí kiosk chờ duyệt', { exact: true }).click();
+  await expect(page.getByText('21 Nguyễn Huệ')).toBeVisible();
+  const rejectLocation = page.getByRole('button', { name: 'Từ chối', exact: true });
+  await expect(rejectLocation).toBeDisabled();
+  await page.getByLabel(/Ghi chú xem xét \(lý do từ chối/).fill('Thiếu xác nhận địa chỉ');
+  await rejectLocation.click();
+  await expect(page.getByText('Không có yêu cầu đổi vị trí kiosk đang chờ duyệt.')).toBeVisible();
+
+  await page
+    .getByText('Yêu cầu đổi cơ cấu ô (Walk-in / Pre-order) chờ duyệt', { exact: true })
+    .click();
+  const approveLayout = page.getByRole('button', { name: 'Duyệt đổi cơ cấu ô' });
+  await expect(approveLayout).toBeDisabled();
+  await page.getByRole('checkbox', { name: 'Ô A01' }).check();
+  await expect(page.getByRole('checkbox', { name: 'Ô A02' })).toBeDisabled();
+  await approveLayout.click();
+  await expect(page.getByText('Không có yêu cầu đổi cơ cấu ô đang chờ duyệt.')).toBeVisible();
+});

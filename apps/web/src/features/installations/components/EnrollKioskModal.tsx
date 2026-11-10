@@ -56,6 +56,7 @@ function EnrollKioskForm({ session, onClose, application, onSuccess }: EnrollKio
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (enrollKioskMutation.isPending) return;
     const validation = validateEnrollKioskForm({
       code: newKioskCode,
       name: newKioskName,
@@ -86,8 +87,8 @@ function EnrollKioskForm({ session, onClose, application, onSuccess }: EnrollKio
       <div className="status-notice notice-info">
         <CircleAlert size={16} aria-hidden="true" />
         <p>
-          Tủ mới có trạng thái <strong>OFFLINE</strong> và có thể được phân công lắp đặt. Khóa thiết
-          bị chỉ hiển thị một lần sau khi lưu; hãy giữ lại để cấu hình phần cứng.
+          Tủ mới ở trạng thái <strong>OFFLINE</strong>. Sau khi đăng ký, mở Cấu hình ESP32 để theo
+          dõi tiến độ. Khóa API cho màn hình kiosk chỉ hiển thị một lần sau khi lưu.
         </p>
       </div>
 
@@ -157,9 +158,12 @@ function EnrollKioskForm({ session, onClose, application, onSuccess }: EnrollKio
           type="text"
           value={newMqttClientId}
           onChange={(e) => setNewMqttClientId(e.target.value)}
-          placeholder="Để trống nếu chưa dùng MQTT"
+          placeholder="Để trống để hệ thống tự điền nếu đã bật tự cấp"
         />
-        <p className="quiet">Nhập Client ID thật của thiết bị nếu đã cấu hình MQTT.</p>
+        <p className="quiet">
+          Khi VPS bật tự cấp, Client ID là <code>esp32-{newHardwareId.trim() || 'HardwareId'}</code>
+          .
+        </p>
       </div>
 
       <ApplicationRentalSummary application={application} />

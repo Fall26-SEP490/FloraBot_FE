@@ -28,7 +28,7 @@ const statusLabel: Record<string, string> = {
   REQUESTED: 'Chờ xem xét',
   ACCEPTED: 'Đã chấp thuận, chờ bàn giao',
   REJECTED: 'Đã từ chối',
-  WITHDRAWN: 'Đã rút yêu cầu',
+  CANCELLED: 'Đã rút yêu cầu',
   COMPLETED: 'Đã bàn giao',
 };
 const textError = (error: unknown) =>
@@ -320,12 +320,14 @@ function ManagerLocationRequestCard({ item }: { item: KioskLocationChangeRespons
         Địa chỉ mới: <strong>{item.address}</strong> ({item.latitude}, {item.longitude})
       </p>
       <p>Lý do: {item.reason}</p>
-      {item.status === 'PENDING' && (
+      {item.status === 'REQUESTED' && (
         <div className="business-form">
-          <label htmlFor={`loc-review-note-${item.id}`}>Ghi chú xem xét</label>
-          <textarea
+          <label htmlFor={`loc-review-note-${item.id}`}>
+            Ghi chú xem xét (lý do từ chối ít nhất 5 ký tự)
+          </label>
+          <input
             id={`loc-review-note-${item.id}`}
-            maxLength={500}
+            maxLength={1000}
             value={note}
             onChange={(e) => setNote(e.target.value)}
           />
@@ -335,7 +337,7 @@ function ManagerLocationRequestCard({ item }: { item: KioskLocationChangeRespons
             </Button>
             <Button
               variant="outline"
-              disabled={review.isPending}
+              disabled={review.isPending || note.trim().length < 5}
               onClick={() => review.mutate('REJECTED')}
             >
               Từ chối
@@ -351,24 +353,30 @@ function ManagerLocationRequestCard({ item }: { item: KioskLocationChangeRespons
 }
 
 function ManagerLayoutRequestCard({ item }: { item: SlotLayoutRequestView }) {
-  const [preorderIdsInput, setPreorderIdsInput] = useState('');
+  const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
   const [note, setNote] = useState('');
   const [notice, setNotice] = useState('');
+  const slotDirectory = useQuery({
+    queryKey: ['flower-presence', item.kioskId],
+    queryFn: () =>
+      request<components['schemas']['FlowerPresenceResponse']>(
+        `/kiosks/${item.kioskId}/flower-presence`,
+      ),
+    enabled: item.status === 'PENDING' && item.preorderSlots > 0,
+  });
+  const slots = slotDirectory.data?.slots ?? [];
+  const preorderSlotIds = selectedSlots.filter((id) => slots.some((slot) => slot.slotId === id));
+  const validSelection =
+    item.preorderSlots === 0 ||
+    (!slotDirectory.isError && preorderSlotIds.length === item.preorderSlots);
   const review = useMutation({
-    mutationFn: (approve: boolean) => {
-      const parsedIds = approve
-        ? preorderIdsInput
-            .split(/[\s,]+/)
-            .map((s) => s.trim())
-            .filter(Boolean)
-        : null;
-      return request<SlotLayoutRequestView>(
+    mutationFn: (approve: boolean) =>
+      request<{ status: 'APPROVED' | 'REJECTED' }>(
         `/operations/kiosk-layout-requests/${item.id}/review`,
-        { preorderSlotIds: parsedIds, note: note.trim() || null },
+        { preorderSlotIds: approve ? preorderSlotIds : null, note: note.trim() || null },
         true,
         'POST',
-      );
-    },
+      ),
     onSuccess: async () => {
       setNotice('Đã cập nhật kết quả duyệt cơ cấu ô kiosk.');
       await queryClient.invalidateQueries({ queryKey: ['operations-layout-requests'] });
@@ -383,16 +391,62 @@ function ManagerLayoutRequestCard({ item }: { item: SlotLayoutRequestView }) {
       <p>Lý do của shop: {item.reason}</p>
       {item.status === 'PENDING' && (
         <div className="business-form">
-          <label htmlFor={`layout-slot-ids-${item.id}`}>
-            Danh sách ID ô Pre-order ({item.preorderSlots} ô, cách nhau bởi dấu phẩy khi duyệt)
+          {item.preorderSlots === 0 ? (
+            <p>Tất cả ô sẽ chuyển sang Walk-in. Các ô đổi loại phải trống và không giữ đơn.</p>
+          ) : (
+            <fieldset aria-describedby={`layout-slot-hint-${item.id}`}>
+              <legend>Chọn {item.preorderSlots} ô Pre-order</legend>
+              <p id={`layout-slot-hint-${item.id}`}>
+                Đã chọn {preorderSlotIds.length}/{item.preorderSlots} ô. Các ô đổi loại phải trống
+                và không giữ đơn.
+              </p>
+              {slotDirectory.isPending ? (
+                <p role="status">Đang tải danh sách ô…</p>
+              ) : slotDirectory.isError ? (
+                <>
+                  <p role="alert">Chưa tải được danh sách ô của kiosk.</p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => void slotDirectory.refetch()}
+                  >
+                    Tải lại danh sách ô
+                  </Button>
+                </>
+              ) : slots.length ? (
+                <div className="business-inline">
+                  {slots.map((slot) => {
+                    const checked = preorderSlotIds.includes(slot.slotId);
+                    return (
+                      <label key={slot.slotId}>
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          disabled={
+                            review.isPending ||
+                            (!checked && preorderSlotIds.length >= item.preorderSlots)
+                          }
+                          onChange={(event) => {
+                            setSelectedSlots(
+                              event.target.checked
+                                ? [...preorderSlotIds, slot.slotId]
+                                : preorderSlotIds.filter((id) => id !== slot.slotId),
+                            );
+                          }}
+                        />{' '}
+                        Ô {slot.slotCode}
+                      </label>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p>Chưa có danh sách ô cho kiosk này.</p>
+              )}
+            </fieldset>
+          )}
+          <label htmlFor={`layout-review-note-${item.id}`}>
+            Ghi chú xem xét (bắt buộc khi từ chối)
           </label>
-          <input
-            id={`layout-slot-ids-${item.id}`}
-            value={preorderIdsInput}
-            onChange={(e) => setPreorderIdsInput(e.target.value)}
-            placeholder="Nhập các UUID của ô Pre-order…"
-          />
-          <label htmlFor={`layout-review-note-${item.id}`}>Ghi chú xem xét</label>
           <textarea
             id={`layout-review-note-${item.id}`}
             maxLength={500}
@@ -400,12 +454,15 @@ function ManagerLayoutRequestCard({ item }: { item: SlotLayoutRequestView }) {
             onChange={(e) => setNote(e.target.value)}
           />
           <div className="business-inline">
-            <Button disabled={review.isPending} onClick={() => review.mutate(true)}>
+            <Button
+              disabled={review.isPending || !validSelection}
+              onClick={() => review.mutate(true)}
+            >
               Duyệt đổi cơ cấu ô
             </Button>
             <Button
               variant="outline"
-              disabled={review.isPending}
+              disabled={review.isPending || !note.trim()}
               onClick={() => review.mutate(false)}
             >
               Từ chối
@@ -435,7 +492,9 @@ export function OperationsTerminations() {
   const locationRequests = useQuery({
     queryKey: ['operations-location-requests'],
     queryFn: () =>
-      request<KioskLocationChangeResponse[]>('/operations/kiosk-location-requests?status=PENDING'),
+      request<KioskLocationChangeResponse[]>(
+        '/operations/kiosk-location-requests?status=REQUESTED',
+      ),
     enabled: locationOpen,
   });
   const layoutRequests = useQuery({
@@ -468,6 +527,7 @@ export function OperationsTerminations() {
         <option value="REQUESTED">Chờ xem xét</option>
         <option value="ACCEPTED">Chờ bàn giao</option>
         <option value="REJECTED">Đã từ chối</option>
+        <option value="CANCELLED">Đã rút yêu cầu</option>
         <option value="COMPLETED">Đã bàn giao</option>
       </select>
       {records.isPending ? (

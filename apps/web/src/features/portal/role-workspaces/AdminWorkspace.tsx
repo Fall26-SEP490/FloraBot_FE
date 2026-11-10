@@ -233,7 +233,7 @@ export default function AdminWorkspace({ section = 'overview' }: { section?: str
               canReassign={false}
             />
           )}
-          {section === 'slots' && <AdminSlots />}
+          {section === 'slots' && <AdminSlots actorId={session.data.id} />}
           {section === 'incidents' && <AdminIncidents />}
           {section === 'complaints' && <AdminComplaints />}
           {section === 'refunds' && <AdminRefunds />}

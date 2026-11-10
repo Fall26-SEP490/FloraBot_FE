@@ -47,13 +47,17 @@ export function TaskItem({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [uncertain, setUncertain] = useState(false);
+  const [conflictVersion, setConflictVersion] = useState<number | null>(null);
+  const needsLatestVersion = conflictVersion === task.version;
   const [notice, setNotice] = useState('');
   const [instructionsDraft, setInstructionsDraft] = useState(task.instructions);
   const [editingInstructions, setEditingInstructions] = useState(false);
   const canEditInstructions =
     !isWorker &&
     ['ASSIGNED', 'IN_PROGRESS'].includes(task.status) &&
-    ['SELLER', 'OPERATIONS_MANAGER', 'ADMIN'].includes(role);
+    (role === 'ADMIN' ||
+      (role === 'OPERATIONS_MANAGER' && task.kind === 'INCIDENT') ||
+      (role === 'SELLER' && task.kind === 'DELIVERY'));
 
   async function saveInstructions(event: React.FormEvent) {
     event.preventDefault();
@@ -99,17 +103,34 @@ export function TaskItem({
             ? ['SUBMITTED']
             : []
         : [];
+  async function refreshTask() {
+    setBusy(true);
+    setError('');
+    try {
+      await queryClient.invalidateQueries({ queryKey: ['staff-tasks'] }, { throwOnError: true });
+    } catch {
+      setError('Chưa tải được công việc. Kiểm tra kết nối rồi thử lại.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function submit(values: { report: string; status: string }) {
-    if (busy || uncertain) return;
+    if (busy || uncertain || needsLatestVersion) return;
     setBusy(true);
     setError('');
     setNotice('');
+    setConflictVersion(null);
     try {
       await request(`${apiBase}/${task.id}/transition`, { ...values, version: task.version });
       form.reset();
       setNotice('Đã cập nhật công việc.');
       await queryClient.invalidateQueries({ queryKey: ['staff-tasks'] });
     } catch (cause) {
+      if (isTechnician && cause instanceof ApiError && cause.status === 409) {
+        setConflictVersion(task.version);
+        return;
+      }
       const ambiguous = !(cause instanceof ApiError) || cause.status >= 500 || cause.status === 409;
       setUncertain(ambiguous);
       setError(
@@ -218,6 +239,22 @@ export function TaskItem({
           apiBase={apiBase}
         />
       )}
+      {conflictVersion !== null &&
+        (needsLatestVersion ? (
+          <div>
+            <p role="alert">Công việc đã thay đổi. Tải lại để xem hướng dẫn và trạng thái mới.</p>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={busy}
+              onClick={() => void refreshTask()}
+            >
+              {busy ? 'Đang tải…' : 'Tải hướng dẫn mới'}
+            </Button>
+          </div>
+        ) : (
+          <p role="status">Đã tải công việc mới nhất. Kiểm tra hướng dẫn trước khi gửi lại.</p>
+        ))}
       {choices.length > 0 && (
         <form noValidate onSubmit={form.handleSubmit(submit)}>
           <label htmlFor={`action-${task.id}`}>Bước tiếp theo</label>
@@ -249,7 +286,7 @@ export function TaskItem({
           <p id={`report-error-${task.id}`} className="error">
             {form.formState.errors.report?.message}
           </p>
-          <Button type="submit" disabled={busy || uncertain}>
+          <Button type="submit" disabled={busy || uncertain || needsLatestVersion}>
             {busy
               ? 'Đang cập nhật…'
               : isTechnician
