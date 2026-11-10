@@ -3,6 +3,7 @@ import AxeBuilder from '@axe-core/playwright';
 
 const row = {
   id: 'refund-1',
+  payerRole: 'ADMIN',
   orderId: 'order-1',
   orderCode: 'FB-REFUND-1',
   amount: 100000,
@@ -76,7 +77,7 @@ for (const width of [390, 1440])
     });
     await page.goto('/admin/refunds');
     const section = page.locator('.admin-refunds');
-    await section.locator('summary').click();
+    await section.locator('.admin-shop-list summary').click();
     await expect(
       section.getByRole('button', { name: 'Ghi nhận đã chi hoàn', exact: true }),
     ).toBeDisabled();
@@ -164,13 +165,13 @@ test('Automatic refund approval does not allow the approver to pay', async ({ pa
   });
   await page.goto('/admin/refunds');
   const section = page.locator('.admin-refunds');
-  await section.locator('summary').click();
+  await section.locator('.admin-shop-list summary').click();
   await section.getByRole('button', { name: 'Duyệt khoản hoàn', exact: true }).click();
   await expect(section.locator('h4')).toBeFocused();
   expect(approved).toBe(false);
   await section.getByRole('button', { name: 'Xác nhận khoản hoàn' }).click();
   await expect(section.getByRole('status')).toHaveText(
-    'Đã duyệt khoản hoàn. Bước chi hoặc xác nhận chuyển khoản cần một admin khác.',
+    'Đã duyệt khoản hoàn giao dịch cũ. Một admin khác thực hiện chi và ghi nhận chứng từ.',
   );
   await expect(
     section.getByRole('button', { name: 'Xem tài khoản nhận hoàn', exact: true }),
@@ -214,7 +215,7 @@ test('Lost payout response blocks repeat until explicit reload discovers payment
   });
   await page.goto('/admin/refunds');
   const section = page.locator('.admin-refunds');
-  await section.locator('summary').click();
+  await section.locator('.admin-shop-list summary').click();
   await section.getByRole('button', { name: 'Xem tài khoản nhận hoàn', exact: true }).click();
   await section.getByRole('button', { name: 'Ghi nhận đã chi hoàn', exact: true }).click();
   await section
@@ -258,7 +259,7 @@ test('A bank response arriving after the tab is hidden is discarded', async ({ p
   });
   await page.goto('/admin/refunds');
   const section = page.locator('.admin-refunds');
-  await section.locator('summary').click();
+  await section.locator('.admin-shop-list summary').click();
   await section.getByRole('button', { name: 'Xem tài khoản nhận hoàn', exact: true }).click();
   await expect.poll(() => started).toBe(true);
   await page.evaluate(() => {
@@ -276,8 +277,8 @@ test('A bank response arriving after the tab is hidden is discarded', async ({ p
   });
   await section.getByRole('button', { name: 'Xem tài khoản nhận hoàn', exact: true }).click();
   await expect(section.getByText(bank.account, { exact: true })).toBeVisible();
-  await section.locator('summary').click();
-  await section.locator('summary').click();
+  await section.locator('.admin-shop-list summary').click();
+  await section.locator('.admin-shop-list summary').click();
   await expect(section.getByText(bank.account, { exact: true })).toHaveCount(0);
 });
 
@@ -312,7 +313,7 @@ test('Failed private proof upload cannot record a payout and retries explicitly'
   });
   await page.goto('/admin/refunds');
   const section = page.locator('.admin-refunds');
-  await section.locator('summary').click();
+  await section.locator('.admin-shop-list summary').click();
   await section.getByRole('button', { name: 'Xem tài khoản nhận hoàn', exact: true }).click();
   await section.getByRole('button', { name: 'Ghi nhận đã chi hoàn', exact: true }).click();
   await section
@@ -365,9 +366,185 @@ test('Completed refund exposes only the authorized proof reader', async ({ page 
   );
   await page.goto('/admin/refunds');
   const section = page.locator('.admin-refunds');
-  await section.locator('summary').click();
+  await section.locator('.admin-shop-list summary').click();
   await expect(section.getByRole('link', { name: /Xem chứng từ 1/ })).toHaveAttribute(
     'href',
     '/api/admin/evidence/11111111-1111-4111-8111-111111111111',
   );
+});
+
+for (const width of [390, 1440]) {
+  test(`Seller-funded refund approval waits for the shop transfer at ${width}`, async ({
+    page,
+  }) => {
+    await setup(page);
+    await page.setViewportSize({ width, height: 1000 });
+    let approved = false;
+    const writes: string[] = [];
+    const directRow = { ...row, payerRole: 'SELLER' };
+    await page.route('**/api/admin/refunds?*', (route) =>
+      route.fulfill({
+        json: { items: [{ ...directRow, requiresApproval: !approved }], page: 1, hasMore: false },
+      }),
+    );
+    await page.route('**/api/admin/refunds/refund-1', (route) =>
+      route.fulfill({
+        json: {
+          refund: { ...directRow, requiresApproval: !approved },
+          bankStatus: 'NEEDS_UPDATE',
+          canApprove: !approved,
+          canAccessBank: false,
+          canReviewSellerTransfer: false,
+        },
+      }),
+    );
+    await page.route('**/api/admin/flows/*', (route) => {
+      writes.push(new URL(route.request().url()).pathname);
+      expect(route.request().postDataJSON()).toEqual({ p_refund: row.id });
+      approved = true;
+      return route.fulfill({ json: { result: null } });
+    });
+    await page.goto('/admin/refunds');
+    const section = page.locator('.admin-refunds');
+    await section.locator('.admin-shop-list summary').click();
+    await section.getByRole('button', { name: 'Duyệt khoản hoàn', exact: true }).click();
+    await section.getByRole('button', { name: 'Xác nhận khoản hoàn', exact: true }).click();
+    await expect(section.getByRole('status')).toContainText('Shop chuyển khoản cho khách');
+    await expect(section.getByText(/Chờ shop mở Hoàn tiền trực tiếp/)).toBeVisible();
+    await expect(section.getByText(/Khách cần bổ sung hoặc cập nhật/)).toBeVisible();
+    await expect(
+      section.getByRole('button', { name: /Xem tài khoản nhận hoàn|Ghi nhận đã chi hoàn/ }),
+    ).toHaveCount(0);
+    expect(writes).toEqual(['/api/admin/flows/approve_refund']);
+    expect(
+      (
+        await new AxeBuilder({ page })
+          .include('#main')
+          .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+          .analyze()
+      ).violations,
+    ).toEqual([]);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+  });
+}
+
+test('Admin reviews a Seller transfer without using the legacy bank payout', async ({ page }) => {
+  await setup(page);
+  let submissionStatus = 'PENDING_REVIEW';
+  let bankReads = 0;
+  let confirmations = 0;
+  const directRow = { ...row, payerRole: undefined };
+  await page.route('**/api/admin/refunds?*', (route) =>
+    route.fulfill({ json: { items: [directRow], page: 1, hasMore: false } }),
+  );
+  await page.route('**/api/admin/refunds/refund-1', (route) =>
+    route.fulfill({
+      json: {
+        refund: directRow,
+        bankStatus: 'READY',
+        canApprove: false,
+        canAccessBank: true,
+      },
+    }),
+  );
+  await page.route('**/api/admin/refunds/refund-1/seller-submission', (route) =>
+    route.fulfill({
+      json: {
+        id: 'seller-proof',
+        shopName: 'Shop hoàn tiền',
+        submitterName: 'Người bán',
+        amount: 100000,
+        currency: 'VND',
+        receiverBankName: 'Test Bank',
+        receiverBankHolder: 'TEST HOLDER',
+        providerReference: 'SELLER-TRANSFER-1',
+        transferredAt: '2026-11-10T01:00:00Z',
+        evidenceAttachmentId: 'proof-1',
+        status: submissionStatus,
+      },
+    }),
+  );
+  await page.route('**/api/admin/refunds/refund-1/bank-details', (route) => {
+    bankReads++;
+    return route.fulfill({ status: 409 });
+  });
+  await page.route('**/api/admin/flows/confirm_refund', (route) => {
+    confirmations++;
+    expect(route.request().postDataJSON()).toEqual({
+      p_refund: row.id,
+      p_proof_url: 'evidence:v1:financial-proof',
+    });
+    return route.fulfill({ json: { result: null } });
+  });
+  await page.goto('/admin/refunds');
+  const section = page.locator('.admin-refunds');
+  await section.locator('.admin-shop-list summary').click();
+  await expect(section.getByText('SELLER-TRANSFER-1', { exact: false })).toBeVisible();
+  await expect(
+    section.getByRole('button', { name: /Xem tài khoản nhận hoàn|Ghi nhận đã chi hoàn/ }),
+  ).toHaveCount(0);
+  await section
+    .getByRole('button', { name: 'Đối chiếu và xác nhận shop đã hoàn', exact: true })
+    .click();
+  await section.getByLabel('Ảnh minh chứng').setInputFiles({
+    name: 'admin-check.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from('test proof'),
+  });
+  await section.getByRole('button', { name: 'Tải ảnh minh chứng', exact: true }).click();
+  await expect(section.getByText(/Đã lưu ảnh admin-check.png/)).toBeVisible();
+  await section.getByRole('checkbox').check();
+  await section.getByRole('button', { name: 'Kiểm tra chứng từ hoàn', exact: true }).click();
+  await section.getByRole('button', { name: 'Xác nhận khoản hoàn', exact: true }).click();
+  await expect(section.getByRole('status')).toHaveText(
+    'Đã xác nhận khoản hoàn do shop chuyển khoản.',
+  );
+  expect(confirmations).toBe(1);
+  expect(bankReads).toBe(0);
+  submissionStatus = 'REJECTED';
+  await section.getByRole('button', { name: 'Tải lại khoản hoàn', exact: true }).click();
+  await expect(section.getByText(/Chứng từ đã bị từ chối/)).toBeVisible();
+  await expect(
+    section.getByRole('button', { name: 'Đối chiếu và xác nhận shop đã hoàn', exact: true }),
+  ).toHaveCount(0);
+});
+
+test('An older API without refund payer metadata cannot expose an Admin payout', async ({
+  page,
+}) => {
+  await setup(page);
+  const oldRow = { ...row, payerRole: undefined };
+  await page.route('**/api/admin/refunds?*', (route) =>
+    route.fulfill({ json: { items: [oldRow], page: 1, hasMore: false } }),
+  );
+  await page.route('**/api/admin/refunds/refund-1', (route) =>
+    route.fulfill({
+      json: { refund: oldRow, bankStatus: 'READY', canApprove: false, canAccessBank: true },
+    }),
+  );
+  await page.goto('/admin/refunds');
+  const section = page.locator('.admin-refunds');
+  await section.locator('.admin-shop-list summary').click();
+  await expect(section.getByRole('alert')).toHaveCount(0);
+  await expect(
+    section.getByText(/Với đơn thanh toán trực tiếp cho shop, shop chuyển khoản/),
+  ).toBeVisible();
+  await expect(
+    section.getByRole('button', { name: /Xem tài khoản nhận hoàn|Ghi nhận đã chi hoàn/ }),
+  ).toHaveCount(0);
+});
+
+test('Retired withdrawals have no menu or refund link and the route returns 404', async ({
+  page,
+}) => {
+  await setup(page);
+  await page.route('**/api/admin/refunds?*', (route) =>
+    route.fulfill({ json: { items: [], page: 1, hasMore: false } }),
+  );
+  await page.goto('/admin/refunds');
+  await expect(page.locator('a[href="/admin/withdrawals"]')).toHaveCount(0);
+  const response = await page.goto('/admin/withdrawals');
+  expect(response?.status()).toBe(404);
 });

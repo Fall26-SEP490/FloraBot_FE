@@ -79,13 +79,6 @@ const AdminKioskRefunds = dynamic(
   },
 );
 
-const AdminWithdrawals = dynamic(
-  () => import('../../finance/components/withdrawals/AdminWithdrawals'),
-  {
-    loading: () => <p role="status">Đang tải yêu cầu rút tiền…</p>,
-  },
-);
-
 const AdminReconciliation = dynamic(
   () => import('../../finance/components/reconciliation/AdminReconciliation'),
   {
@@ -244,7 +237,6 @@ export default function AdminWorkspace({ section = 'overview' }: { section?: str
               session={session.data}
             />
           )}
-          {section === 'withdrawals' && <AdminWithdrawals />}
           {section === 'reconciliation' && <AdminReconciliation />}
           {section === 'reports' && <AdminReports session={session.data} />}
           {logout.isError && (

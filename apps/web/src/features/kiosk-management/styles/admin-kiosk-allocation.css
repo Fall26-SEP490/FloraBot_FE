@@ -1,0 +1,401 @@
+.admin-content .admin-slots {
+  display: grid;
+  gap: 20px;
+}
+
+.allocation-toolbar,
+.allocation-results,
+.allocation-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.allocation-switch {
+  display: inline-flex;
+  padding: 4px;
+  gap: 4px;
+  border: 1px solid var(--admin-line);
+  border-radius: 12px;
+  background: var(--admin-soft);
+}
+
+.allocation-switch button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--admin-ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.allocation-switch button[aria-pressed='true'] {
+  background: var(--admin-ink);
+  color: white;
+}
+
+.allocation-switch button:not([aria-pressed='true']):hover {
+  background: white;
+  border-color: var(--admin-line);
+}
+
+.allocation-switch button:focus-visible {
+  outline: 2px solid var(--admin-ink);
+  outline-offset: 2px;
+}
+
+.allocation-switch svg,
+.allocation-toolbar svg,
+.allocation-search svg {
+  flex: none;
+}
+
+.allocation-view {
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+  border-top: 1px solid var(--admin-line);
+  padding-top: 18px;
+}
+
+.allocation-section-heading h2,
+.allocation-section-heading p,
+.allocation-subheading,
+.allocation-results p {
+  margin: 0;
+}
+
+.allocation-section-heading h2 {
+  font-size: 1.12rem;
+}
+
+.allocation-section-heading p,
+.allocation-results p {
+  color: var(--admin-muted);
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+
+.allocation-section-heading p {
+  margin-top: 5px;
+}
+
+.allocation-filters,
+.allocation-manager-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) repeat(2, minmax(0, 1fr));
+  align-items: end;
+  gap: 12px;
+}
+
+.allocation-manager-form {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) auto;
+  padding: 16px;
+  border: 1px solid var(--admin-line);
+  border-radius: 12px;
+  background: #f4f7f2;
+}
+
+.allocation-filters label,
+.allocation-manager-form label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.8rem;
+}
+
+.admin-content .admin-slots :is(input[type='search'], select) {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  margin: 0;
+  background: white;
+}
+
+.allocation-search > div {
+  position: relative;
+}
+
+.allocation-search svg {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--admin-muted);
+}
+
+.admin-content .admin-slots .allocation-search input {
+  padding-inline-start: 37px;
+}
+
+.allocation-results {
+  min-height: 32px;
+}
+
+.admin-slots .allocation-feedback {
+  margin: 0;
+  padding: 9px 12px;
+  border: 1px solid var(--admin-line);
+  border-radius: 8px;
+  background: #f0f6ed;
+}
+
+.admin-slots .allocation-feedback:empty {
+  position: absolute;
+  padding: 0;
+  border: 0;
+}
+
+.allocation-empty {
+  padding: 20px;
+  border: 1px dashed #a8b9a6;
+  border-radius: 12px;
+  color: var(--admin-muted);
+}
+
+.allocation-empty p {
+  margin: 0 0 10px;
+}
+
+.admin-content .admin-slots .allocation-kiosk-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.admin-content .admin-slots .allocation-kiosk-list .admin-disclosure-summary {
+  min-height: 72px;
+  gap: 8px 16px;
+  padding: 13px 16px;
+}
+
+.admin-content .admin-slots .allocation-kiosk-list .admin-disclosure-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 0;
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+}
+
+.admin-content
+  .admin-slots
+  .allocation-kiosk-list
+  :is(
+    .admin-disclosure-main,
+    .admin-disclosure-meta,
+    .admin-disclosure-meta > span,
+    .admin-disclosure-toggle,
+    .admin-disclosure-toggle > span
+  ) {
+  padding: 0;
+  background: transparent;
+}
+
+.admin-content .admin-slots .allocation-kiosk-list .admin-disclosure-status[data-status='ONLINE'] {
+  color: #24533b;
+  background: #e9f4e7;
+}
+
+.admin-content
+  .admin-slots
+  .allocation-kiosk-list
+  .admin-disclosure-status[data-status='MAINTENANCE'] {
+  color: #78501a;
+  background: #fff3d9;
+}
+
+.allocation-kiosk-list .admin-disclosure-meta > span + span::before {
+  content: '·';
+  margin-inline: 8px;
+}
+
+.allocation-kiosk-code {
+  font-weight: 600;
+}
+
+.allocation-kiosk-body {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: 20px;
+  padding: 18px 16px;
+}
+
+.allocation-kiosk-body > section {
+  min-width: 0;
+}
+
+.allocation-kiosk-body h3,
+.allocation-subheading {
+  margin: 0 0 10px;
+  color: var(--admin-ink);
+  font-size: 0.88rem;
+}
+
+.allocation-kiosk-tools {
+  border-inline-start: 1px solid var(--admin-line);
+  padding-inline-start: 20px;
+}
+
+.allocation-shop-form {
+  display: grid;
+  gap: 8px;
+}
+
+.allocation-shop-form p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.allocation-shop-form > button {
+  justify-self: start;
+}
+
+.admin-content .admin-slots .esp32-configuration {
+  margin: 9px 0 0;
+  padding: 0 12px;
+  border-color: var(--admin-line);
+  background: #f7faf6;
+}
+
+.admin-content .admin-slots .esp32-configuration > summary {
+  display: list-item;
+  padding-inline: 0;
+  background: transparent;
+}
+
+.admin-content .admin-slots .esp32-configuration[open] {
+  padding-bottom: 12px;
+}
+
+.allocation-manager-list {
+  list-style: none;
+  padding: 0;
+  margin: -8px 0 0;
+}
+
+.allocation-manager-list > li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--admin-line);
+  overflow-wrap: anywhere;
+}
+
+.allocation-manager-list > li:first-child {
+  border-top: 1px solid var(--admin-line);
+}
+
+.allocation-manager-list > li > div {
+  display: grid;
+  gap: 3px;
+  font-size: 0.84rem;
+}
+
+.allocation-manager-list :is(strong + span, small) {
+  font-size: 0.76rem;
+  color: var(--admin-muted);
+}
+
+.allocation-pagination {
+  justify-content: center;
+}
+
+@media (max-width: 1150px) {
+  .allocation-kiosk-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .allocation-kiosk-tools {
+    border-inline-start: 0;
+    border-top: 1px solid var(--admin-line);
+    padding-inline-start: 0;
+    padding-top: 16px;
+  }
+
+  .allocation-manager-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .allocation-manager-form > button {
+    justify-self: start;
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-content .admin-slots {
+    gap: 14px;
+  }
+
+  .allocation-toolbar > *,
+  .allocation-switch button {
+    flex: 1 1 auto;
+  }
+
+  .allocation-switch button {
+    padding-inline: 8px;
+  }
+
+  .allocation-toolbar > button {
+    width: 100%;
+  }
+
+  .allocation-filters,
+  .allocation-manager-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .allocation-search,
+  .allocation-manager-form > div {
+    grid-column: 1 / -1;
+  }
+
+  .admin-content .admin-slots .allocation-kiosk-list .admin-disclosure-summary {
+    padding: 12px;
+  }
+
+  .admin-content .admin-slots .allocation-kiosk-list .admin-disclosure-main {
+    flex-basis: 100%;
+  }
+
+  .allocation-kiosk-body {
+    padding: 14px 12px;
+  }
+
+  .allocation-manager-list > li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .allocation-manager-list > li > div:nth-child(2) {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .allocation-manager-list > li > button {
+    grid-column: 2;
+    grid-row: 1 / 3;
+  }
+}
+
+@media (max-width: 440px) {
+  .allocation-filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

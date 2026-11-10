@@ -183,7 +183,7 @@ for (const width of [390, 1440]) {
     const model = await setup(page);
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/admin/slots');
-    await page.locator('.admin-slots summary').click();
+    await page.locator('.allocation-kiosk-list summary.admin-disclosure-summary').click();
     expect(model.slotReads).toBe(0);
     await page.getByRole('button', { name: 'Xem các ô tủ', exact: true }).click();
     await expect(page.getByText('Chưa tải được các ô của kiosk.', { exact: true })).toBeVisible();

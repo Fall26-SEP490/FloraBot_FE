@@ -1,6 +1,25 @@
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
+test('Admin function groups collapse and the active group opens automatically', async ({
+  page,
+}) => {
+  await setup(page);
+  await page.goto('/admin');
+  const nav = page.getByRole('navigation', { name: 'Điều hướng quản lý', exact: true });
+  await expect(nav.getByRole('link')).toHaveCount(1);
+  const group = nav.locator('.admin-nav-function-group').filter({ hasText: 'Theo dõi vận hành' });
+  await group.locator('summary').press('Enter');
+  await expect(
+    nav.getByRole('link', { name: 'Giám sát đơn đặt trước', exact: true }),
+  ).toBeVisible();
+  await group.locator('summary').press('Enter');
+  await expect(nav.getByRole('link', { name: 'Giám sát đơn đặt trước', exact: true })).toBeHidden();
+  await page.goto('/admin/approvals');
+  await expect(nav.getByRole('link', { name: 'Trung tâm duyệt', exact: true })).toBeVisible();
+  await expect(nav.getByRole('link', { name: 'Giám sát đơn đặt trước', exact: true })).toBeHidden();
+});
+
 async function setup(page: Page) {
   let release = () => {};
   const pendingRefund = new Promise<void>((resolve) => {
@@ -75,11 +94,13 @@ async function setup(page: Page) {
           hasMore: false,
         },
       });
+    if (path === '/api/admin/refunds/r1/seller-submission') return route.fulfill({ status: 404 });
     if (path === '/api/admin/refunds/r1')
       return route.fulfill({
         json: {
           refund: {
             id: 'r1',
+            payerRole: 'SELLER',
             orderCode: 'TEST-001',
             amount: 250000,
             status: 'PENDING',
@@ -138,7 +159,11 @@ for (const width of [390, 834, 1440]) {
     const toggle = page.getByRole('button', { name: 'Mở danh mục quản lý', exact: true });
     if (width <= 900) await toggle.click();
     const nav = page.getByRole('navigation', { name: 'Điều hướng quản lý', exact: true });
-    await expect(nav.getByRole('link')).toHaveCount(16);
+    await expect(nav.locator('a')).toHaveCount(16);
+    await expect(nav.locator('a[href="/admin/payment-channels"]')).toHaveAttribute(
+      'href',
+      '/admin/payment-channels',
+    );
     const search = page.getByRole('searchbox', { name: 'Tìm chức năng quản trị', exact: true });
     await search.fill('hoan tien');
     await expect(nav.getByRole('link', { name: 'Hoàn tiền', exact: true })).toBeVisible();
@@ -148,7 +173,7 @@ for (const width of [390, 834, 1440]) {
     await search.fill('khongcotronghethong');
     await expect(nav.getByRole('status')).toContainText('Không tìm thấy chức năng');
     await page.getByRole('button', { name: 'Xóa tìm chức năng', exact: true }).click();
-    await expect(nav.getByRole('link')).toHaveCount(16);
+    await expect(nav.locator('a')).toHaveCount(16);
     if (width <= 900) {
       await search.press('Escape');
       await expect(
@@ -178,7 +203,7 @@ test('Admin queues isolate failures, filter requests, and preserve oversight', a
   await expect(refund.getByLabel('1+ yêu cầu đang hiển thị')).toBeVisible();
   await expect(review.getByRole('article')).toHaveCount(1);
   await page.getByRole('button', { name: 'Tất cả', exact: true }).click();
-  await expect(review.getByRole('article')).toHaveCount(5);
+  await expect(review.getByRole('article')).toHaveCount(4);
   expect(model.writes).toEqual([]);
 });
 
@@ -199,7 +224,7 @@ test('Admin refund disclosure remains keyboard operable and explains its next ac
 }) => {
   const model = await setup(page);
   await page.goto('/admin/refunds');
-  const summary = page.locator('.admin-refunds summary');
+  const summary = page.locator('.admin-refunds .admin-shop-list summary');
   await expect(summary).toContainText('Xem chi tiết');
   await summary.press('Enter');
   await expect(summary).toContainText('Ẩn chi tiết');

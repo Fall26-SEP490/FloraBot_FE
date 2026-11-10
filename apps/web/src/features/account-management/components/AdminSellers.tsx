@@ -40,9 +40,8 @@ export default function AdminSellers() {
       <h2 id="admin-sellers-title">Hồ sơ các shop hoa</h2>
       <div className="status-notice notice-info">
         <p>
-          Shop thuê kiosk theo kỳ 12 tháng cho từng tủ. Hồ sơ đăng ký mở shop và thuê kiosk nằm ở
-          mục <Link href="/admin/installations">Hồ sơ thuê kiosk</Link>; Quản lý vận hành xác nhận,
-          phân công kỹ thuật viên và bàn giao. Danh sách bên dưới là các shop đã có trong hệ thống.
+          Đăng ký mở shop mới được theo dõi ở mục{' '}
+          <Link href="/admin/installations">Hồ sơ thuê kiosk</Link>.
         </p>
       </div>
       <AdminFilterBar

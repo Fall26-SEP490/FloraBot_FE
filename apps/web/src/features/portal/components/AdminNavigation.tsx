@@ -5,7 +5,6 @@ import {
   ClipboardList,
   Store,
   Boxes,
-  Wallet,
   CircleAlert,
   Banknote,
   ListChecks,
@@ -23,7 +22,6 @@ const groups = [
       ['complaints', CircleAlert],
       ['refunds', Banknote],
       ['kiosk-refunds', Banknote],
-      ['withdrawals', Wallet],
     ],
   },
   {
@@ -113,8 +111,12 @@ export default function AdminNavigation({
         )}
       </div>
       {filtered.map((group) => (
-        <div className="workspace-nav-group" key={group.title}>
-          <p>{group.title}</p>
+        <details
+          className="workspace-nav-group admin-nav-function-group"
+          key={`${group.title}:${Boolean(needle)}`}
+          open={Boolean(needle) || group.items.some(([key]) => key === section)}
+        >
+          <summary onKeyDown={onEscape}>{group.title}</summary>
           {group.items.map(([key, Icon]) => {
             const item = workspaceSections.ADMIN.find(([id]) => id === key)!;
             return (
@@ -130,7 +132,7 @@ export default function AdminNavigation({
               </Link>
             );
           })}
-        </div>
+        </details>
       ))}
       {filtered.length === 0 && (
         <p className="admin-nav-empty" role="status">

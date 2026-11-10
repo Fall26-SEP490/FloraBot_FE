@@ -4,7 +4,7 @@ export const adminQueues = [
     title: 'Hoàn tiền đơn hoa',
     endpoint: '/admin/refunds?status=PENDING&page=1',
     description:
-      'Kiểm tra khoản hoàn. Người duyệt và người xác nhận chi phải là hai quản trị viên khác nhau.',
+      'Duyệt yêu cầu và đối chiếu chứng từ shop hoàn tiền. Giao dịch cũ có người chi riêng.',
     action: 'Xử lý hoàn tiền đơn hoa',
     group: 'review',
   },
@@ -14,14 +14,6 @@ export const adminQueues = [
     endpoint: '/admin/kiosk-applications/refunds',
     description: 'Kiểm tra hồ sơ hoàn phí thuê và chứng từ trước khi xác nhận chi.',
     action: 'Xử lý hoàn tiền thuê kiosk',
-    group: 'review',
-  },
-  {
-    key: 'withdrawals',
-    title: 'Yêu cầu rút tiền tồn đọng',
-    endpoint: '/admin/withdrawals?status=PENDING&page=1',
-    description: 'Kiểm tra yêu cầu, duyệt hoặc từ chối và ghi nhận khoản đã chuyển.',
-    action: 'Xử lý yêu cầu cũ',
     group: 'review',
   },
   {

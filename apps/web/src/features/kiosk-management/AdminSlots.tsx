@@ -1,15 +1,16 @@
-import { AdminFilterBar, AdminDisclosureSummary } from '@/features/portal/components/AdminUi';
+import { AdminDisclosureSummary } from '@/features/portal/components/AdminUi';
 import { useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button } from '@florabot/ui';
+import { Button, RefreshCw, Search, Store, Users } from '@florabot/ui';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
 import { queryClient, request } from '@/shared/lib/api';
 import { ConfirmDialog } from '../../shared/components/Modal';
 import { AdminKioskSlotDetails } from './AdminKioskSlotDetails';
 import { Esp32ConfigurationPanel } from './Esp32ConfigurationPanel';
+import './styles/admin-kiosk-allocation.css';
 
 type Kiosk = components['schemas']['AdminKioskResponse'];
 type Seller = components['schemas']['AdminSellerResponse'];
@@ -36,7 +37,6 @@ interface ManagerAccountItem {
 }
 
 function KioskOperationsManagerPanel({ kiosks }: { kiosks: Kiosk[] }) {
-  const [open, setOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [selectedKioskId, setSelectedKioskId] = useState('');
   const [selectedManagerId, setSelectedManagerId] = useState('');
@@ -47,13 +47,11 @@ function KioskOperationsManagerPanel({ kiosks }: { kiosks: Kiosk[] }) {
     queryKey: ['admin-kiosk-manager-assignments', page],
     queryFn: () =>
       request<KioskManagerAssignmentPage>(`/admin/kiosk-manager-assignments?page=${page}`),
-    enabled: open,
   });
 
   const managers = useQuery({
     queryKey: ['admin-managers-list'],
     queryFn: () => request<ManagerAccountItem[]>('/admin/managers'),
-    enabled: open,
   });
 
   const assignManager = useMutation({
@@ -77,144 +75,171 @@ function KioskOperationsManagerPanel({ kiosks }: { kiosks: Kiosk[] }) {
     },
   });
 
+  const managerSelect = useRef<HTMLSelectElement>(null);
+  function selectKiosk(kioskId: string) {
+    setSelectedKioskId(kioskId);
+
+    setSelectedManagerId('');
+    setNotice('');
+    setError('');
+  }
+
   return (
-    <details
-      className="shop-profile"
-      style={{ marginTop: '1rem' }}
-      open={open}
-      onToggle={(e) => setOpen(e.currentTarget.open)}
+    <section
+      id="kiosk-manager-view"
+      className="allocation-view"
+      aria-labelledby="kiosk-manager-heading"
     >
-      <summary>
-        <strong>Phân công Quản lý vận hành phụ trách Kiosk</strong>
-      </summary>
-      {open && (
-        <div style={{ marginTop: '0.75rem' }}>
-          <form
-            className="approval-form"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (selectedKioskId && selectedManagerId && !assignManager.isPending) {
-                assignManager.mutate({
-                  kioskId: selectedKioskId,
-                  managerId: selectedManagerId === 'unassign' ? null : selectedManagerId,
-                });
-              }
+      <div className="allocation-section-heading">
+        <h2 id="kiosk-manager-heading">Phân công quản lý</h2>
+        <p>Chọn kiosk và người phụ trách vận hành, lắp đặt và xử lý sự cố.</p>
+      </div>
+      <form
+        className="allocation-manager-form"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (selectedKioskId && selectedManagerId && !assignManager.isPending) {
+            assignManager.mutate({
+              kioskId: selectedKioskId,
+              managerId: selectedManagerId === 'unassign' ? null : selectedManagerId,
+            });
+          }
+        }}
+      >
+        <div>
+          <label htmlFor="ops-manager-kiosk">Chọn kiosk</label>
+          <select
+            id="ops-manager-kiosk"
+            value={selectedKioskId}
+            disabled={assignManager.isPending}
+            onChange={(e) => selectKiosk(e.target.value)}
+          >
+            <option value="">Chọn kiosk</option>
+            {kiosks.map((k) => (
+              <option key={k.id} value={k.id}>
+                {k.name} · {k.code}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="ops-manager-account">Quản lý vận hành phụ trách</label>
+          <select
+            id="ops-manager-account"
+            ref={managerSelect}
+            value={selectedManagerId}
+            disabled={!selectedKioskId || assignManager.isPending}
+            onChange={(e) => {
+              setSelectedManagerId(e.target.value);
+              setNotice('');
+              setError('');
             }}
           >
-            <label htmlFor="ops-manager-kiosk">Chọn kiosk</label>
-            <select
-              id="ops-manager-kiosk"
-              value={selectedKioskId}
-              disabled={assignManager.isPending}
-              onChange={(e) => {
-                setSelectedKioskId(e.target.value);
-                setSelectedManagerId('');
-                setNotice('');
-                setError('');
-              }}
-            >
-              <option value="">Chọn kiosk</option>
-              {kiosks.map((k) => (
-                <option key={k.id} value={k.id}>
-                  {k.name} · {k.code}
+            <option value="" disabled>
+              {managers.isPending ? 'Đang tải quản lý…' : 'Chọn quản lý hoặc thao tác'}
+            </option>
+            <option value="unassign">Gỡ phân công hiện tại</option>
+            {managers.data
+              ?.filter((m) => m.status === 'ACTIVE')
+              .map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.fullName} · {m.email}
                 </option>
               ))}
-            </select>
-
-            <label htmlFor="ops-manager-account">Quản lý vận hành phụ trách</label>
-            <select
-              id="ops-manager-account"
-              value={selectedManagerId}
-              disabled={!selectedKioskId || assignManager.isPending}
-              onChange={(e) => setSelectedManagerId(e.target.value)}
-            >
-              <option value="" disabled>
-                Chọn quản lý hoặc thao tác
-              </option>
-              <option value="unassign">Gỡ phân công hiện tại</option>
-              {managers.data
-                ?.filter((m) => m.status === 'ACTIVE')
-                .map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.fullName} · {m.email}
-                  </option>
-                ))}
-            </select>
-
-            {managers.isError && (
-              <p role="alert">
-                Chưa tải được danh sách quản lý. Mở lại mục này hoặc tải lại trang để thử lại.
-              </p>
-            )}
-            <Button
-              type="submit"
-              disabled={!selectedKioskId || !selectedManagerId || assignManager.isPending}
-            >
-              {assignManager.isPending ? 'Đang lưu…' : 'Lưu phân công vận hành'}
-            </Button>
-          </form>
-
-          {(error || notice) && (
-            <p role={error ? 'alert' : 'status'} className={error ? 'error' : undefined}>
-              {error || notice}
-            </p>
-          )}
-
-          {assignments.isPending && <p role="status">Đang tải danh sách phân công…</p>}
-          {assignments.isError && (
-            <div role="alert">
-              <p>Chưa tải được danh sách phân công.</p>
-              <Button type="button" variant="outline" onClick={() => void assignments.refetch()}>
-                Tải lại danh sách phân công
-              </Button>
-            </div>
-          )}
-          {assignments.data && assignments.data.items.length === 0 && page === 1 && (
-            <p>Chưa có kiosk trong danh sách.</p>
-          )}
-          {assignments.data && (
-            <>
-              <ul className="admin-shop-list" style={{ marginTop: '0.75rem' }}>
-                {assignments.data.items.map((item) => (
-                  <li key={item.kioskId} className="shop-profile">
-                    <p>
-                      <strong>Kiosk {item.kioskCode}</strong> ·{' '}
-                      {item.managerName
-                        ? `Phụ trách: ${item.managerName}`
-                        : 'Chưa có quản lý phụ trách'}
-                    </p>
-                    {item.assignedAt && (
-                      <p className="quiet">
-                        Phân công lúc: {new Date(item.assignedAt).toLocaleString('vi-VN')}
-                      </p>
-                    )}
-                  </li>
-                ))}
-              </ul>
-              <div className="stock-actions" style={{ marginTop: '0.5rem' }}>
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={page <= 1 || assignments.isFetching}
-                  onClick={() => setPage((p) => p - 1)}
-                >
-                  Trang trước
-                </Button>
-                <span>Trang {page}</span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={!assignments.data.hasMore || assignments.isFetching}
-                  onClick={() => setPage((p) => p + 1)}
-                >
-                  Trang sau
-                </Button>
-              </div>
-            </>
-          )}
+          </select>
+        </div>
+        <Button
+          type="submit"
+          disabled={!selectedKioskId || !selectedManagerId || assignManager.isPending}
+        >
+          {assignManager.isPending ? 'Đang lưu…' : 'Lưu phân công vận hành'}
+        </Button>
+      </form>
+      {managers.isError && (
+        <div role="alert">
+          <p>Chưa tải được danh sách quản lý.</p>
+          <Button type="button" variant="outline" onClick={() => void managers.refetch()}>
+            Tải lại danh sách quản lý
+          </Button>
         </div>
       )}
-    </details>
+      {(error || notice) && (
+        <p role={error ? 'alert' : 'status'} className={error ? 'error' : 'allocation-feedback'}>
+          {error || notice}
+        </p>
+      )}
+
+      <h3 className="allocation-subheading">Quản lý đang phụ trách</h3>
+      {assignments.isPending && <p role="status">Đang tải danh sách phân công…</p>}
+      {assignments.isError && (
+        <div role="alert">
+          <p>Chưa tải được danh sách phân công.</p>
+          <Button type="button" variant="outline" onClick={() => void assignments.refetch()}>
+            Tải lại danh sách phân công
+          </Button>
+        </div>
+      )}
+      {assignments.data?.items.length === 0 && <p>Chưa có kiosk ở trang này.</p>}
+      {!!assignments.data?.items.length && (
+        <ul className="allocation-manager-list">
+          {assignments.data.items.map((item) => (
+            <li key={item.kioskId}>
+              <div>
+                <strong>
+                  {kiosks.find((kiosk) => kiosk.id === item.kioskId)?.name ?? item.kioskCode}
+                </strong>
+                <span>{item.kioskCode}</span>
+              </div>
+              <div>
+                <span>
+                  {item.managerName
+                    ? `Phụ trách: ${item.managerName}`
+                    : 'Chưa có quản lý phụ trách'}
+                </span>
+                {item.assignedAt && (
+                  <small>Phân công lúc {new Date(item.assignedAt).toLocaleString('vi-VN')}</small>
+                )}
+              </div>
+              {kiosks.some((kiosk) => kiosk.id === item.kioskId) && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  aria-label={`Chọn quản lý cho ${item.kioskCode}`}
+                  disabled={assignManager.isPending}
+                  onClick={() => {
+                    selectKiosk(item.kioskId);
+                    requestAnimationFrame(() => managerSelect.current?.focus());
+                  }}
+                >
+                  Chọn quản lý
+                </Button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+      {assignments.data && (page > 1 || assignments.data.hasMore) && (
+        <nav className="allocation-pagination" aria-label="Phân trang quản lý phụ trách">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={page <= 1 || assignments.isFetching}
+            onClick={() => setPage(page - 1)}
+          >
+            Trang trước
+          </Button>
+          <span>Trang {page}</span>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={!assignments.data.hasMore || assignments.isFetching}
+            onClick={() => setPage(page + 1)}
+          >
+            Trang sau
+          </Button>
+        </nav>
+      )}
+    </section>
   );
 }
 
@@ -273,7 +298,7 @@ function Assignment({
   return (
     <>
       <form
-        className="approval-form"
+        className="allocation-shop-form"
         noValidate
         onSubmit={form.handleSubmit((values) => setPendingValues(values))}
       >
@@ -298,8 +323,7 @@ function Assignment({
           </p>
         )}
         <p id={`kiosk-help-${kiosk.id}`} className="quiet">
-          Thao tác áp dụng cho toàn bộ {kiosk.slotCount} ô. Hệ thống chỉ cho phép chuyển shop khi
-          các ô không có hoa, không bị giữ và không bị khóa.
+          Gán toàn bộ {kiosk.slotCount} ô. Khi chuyển shop, các ô phải trống, không bị giữ hay khóa.
         </p>
         {!canAssign && (
           <p className="quiet">Kiosk đang bảo trì hoặc ngừng hoạt động nên chưa thể phân bổ.</p>
@@ -331,6 +355,7 @@ function Assignment({
 }
 
 export default function AdminSlots({ actorId }: { actorId: string }) {
+  const [view, setView] = useState<'shop' | 'manager'>('shop');
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [ownership, setOwnership] = useState('UNASSIGNED');
@@ -343,40 +368,119 @@ export default function AdminSlots({ actorId }: { actorId: string }) {
   const sellers = useQuery({
     queryKey: ['admin-sellers', 'ACTIVE'],
     queryFn: () => request<Seller[]>('/admin/sellers?status=ACTIVE'),
+    enabled: view === 'shop',
   });
   const normalizedSearch = search.trim().toLocaleLowerCase('vi');
   const visible = kiosks.data?.filter(
     (kiosk) =>
       (!status || kiosk.status === status) &&
-      (ownership === 'ALL' ||
-        (ownership === 'ASSIGNED' ? kiosk.sellerId !== null : kiosk.sellerId === null)) &&
+      (ownership === 'ALL' || (ownership === 'ASSIGNED' ? !!kiosk.sellerId : !kiosk.sellerId)) &&
       `${kiosk.code} ${kiosk.name} ${kiosk.sellerName ?? ''}`
         .toLocaleLowerCase('vi')
         .includes(normalizedSearch),
   );
+  const hasFilters = !!search || !!status || ownership !== 'UNASSIGNED';
+  const refresh = () => {
+    void kiosks.refetch();
+    if (view === 'shop') void sellers.refetch();
+  };
 
   return (
-    <section className="admin-slots" aria-labelledby="admin-slots-title">
-      <h2 id="admin-slots-title">Phân bổ kiosk cho shop</h2>
-      <p>
-        Mỗi kiosk chỉ thuộc một shop. Khi gán thành công, shop được quản lý toàn bộ các ô trong
-        kiosk thay vì nhận từng ô riêng lẻ.
-      </p>
-      <AdminFilterBar
-        actions={
-          <>
-            {' '}
-            <Button
-              onClick={() => {
-                void kiosks.refetch();
-                void sellers.refetch();
-              }}
-              disabled={kiosks.isFetching || sellers.isFetching}
-            >
-              Làm mới danh sách kiosk
-            </Button>
-            {(search || status || ownership !== 'UNASSIGNED') && (
+    <section className="admin-slots" aria-label="Phân bổ kiosk">
+      <div className="allocation-toolbar">
+        <div className="allocation-switch" role="group" aria-label="Chọn nhóm thao tác kiosk">
+          <button type="button" aria-pressed={view === 'shop'} onClick={() => setView('shop')}>
+            <Store size={18} aria-hidden="true" /> Gán shop
+          </button>
+          <button
+            type="button"
+            aria-pressed={view === 'manager'}
+            onClick={() => setView('manager')}
+          >
+            <Users size={18} aria-hidden="true" /> Phân công quản lý
+          </button>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={refresh}
+          disabled={kiosks.isFetching || (view === 'shop' && sellers.isFetching)}
+        >
+          <RefreshCw size={16} aria-hidden="true" />
+          Làm mới danh sách kiosk
+        </Button>
+      </div>
+
+      {kiosks.isError && (
+        <p className="error" role="alert">
+          Chưa tải được kiosk. Chọn “Làm mới danh sách kiosk” để thử lại.
+        </p>
+      )}
+
+      {view === 'manager' ? (
+        <KioskOperationsManagerPanel kiosks={kiosks.data ?? []} />
+      ) : (
+        <section
+          id="kiosk-shop-view"
+          className="allocation-view"
+          aria-labelledby="admin-slots-title"
+        >
+          <div className="allocation-section-heading">
+            <h2 id="admin-slots-title">Danh sách kiosk</h2>
+            <p>Chọn một kiosk để xem các ô hoặc gán toàn bộ tủ cho một shop.</p>
+          </div>
+          <div className="allocation-filters" role="group" aria-label="Bộ lọc kiosk">
+            <div className="allocation-search">
+              <label htmlFor="kiosk-search">Tìm mã kiosk, tên kiosk hoặc shop</label>
+              <div>
+                <Search size={17} aria-hidden="true" />
+                <input
+                  id="kiosk-search"
+                  type="search"
+                  placeholder="Nhập mã, tên kiosk hoặc shop"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="kiosk-ownership">Lọc phân bổ</label>
+              <select
+                id="kiosk-ownership"
+                value={ownership}
+                onChange={(event) => setOwnership(event.target.value)}
+              >
+                <option value="UNASSIGNED">Chưa gán shop</option>
+                <option value="ASSIGNED">Đã gán shop</option>
+                <option value="ALL">Tất cả kiosk</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="kiosk-status">Lọc trạng thái kiosk</label>
+              <select
+                id="kiosk-status"
+                value={status}
+                onChange={(event) => setStatus(event.target.value)}
+              >
+                <option value="">Tất cả trạng thái</option>
+                {Object.entries(kioskStatuses).map(([value, name]) => (
+                  <option key={value} value={value}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="allocation-results">
+            <p role="status">
+              {kiosks.isPending
+                ? 'Đang tải danh sách kiosk…'
+                : visible && `${visible.length} / ${kiosks.data?.length} kiosk`}
+            </p>
+            {hasFilters && (
               <Button
+                type="button"
                 variant="outline"
                 onClick={() => {
                   setSearch('');
@@ -387,112 +491,89 @@ export default function AdminSlots({ actorId }: { actorId: string }) {
                 Đặt lại bộ lọc
               </Button>
             )}
-          </>
-        }
-      >
-        <div>
-          <label htmlFor="kiosk-search">Tìm mã kiosk, tên kiosk hoặc shop</label>
-          <input
-            id="kiosk-search"
-            type="search"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-        </div>
-        <div>
-          <label htmlFor="kiosk-ownership">Lọc phân bổ</label>
-          <select
-            id="kiosk-ownership"
-            value={ownership}
-            onChange={(event) => setOwnership(event.target.value)}
-          >
-            <option value="UNASSIGNED">Chưa gán shop</option>
-            <option value="ASSIGNED">Đã gán shop</option>
-            <option value="ALL">Tất cả kiosk</option>
-          </select>
-        </div>
-        <div>
-          <label htmlFor="kiosk-status">Lọc trạng thái kiosk</label>
-          <select
-            id="kiosk-status"
-            value={status}
-            onChange={(event) => setStatus(event.target.value)}
-          >
-            <option value="">Tất cả trạng thái</option>
-            {Object.entries(kioskStatuses).map(([value, name]) => (
-              <option key={value} value={value}>
-                {name}
-              </option>
-            ))}
-          </select>
-        </div>
-      </AdminFilterBar>
-      <p className="quiet">
-        Chỉ shop đang hoạt động và có gói hợp lệ mới được nhận kiosk. Hệ thống kiểm tra hạn mức số ô
-        trước khi xác nhận.
-      </p>
-      <p role="status" ref={notice} tabIndex={-1}>
-        {confirmation}
-      </p>
-      {kiosks.isPending && <p role="status">Đang tải danh sách kiosk…</p>}
-      {kiosks.isError && (
-        <p className="error" role="alert">
-          Chưa tải được kiosk. Chọn “Làm mới danh sách kiosk” để thử lại.
-        </p>
+          </div>
+          <p role="status" ref={notice} tabIndex={-1} className="allocation-feedback">
+            {confirmation}
+          </p>
+          {sellers.isError && (
+            <p className="error" role="alert">
+              Chưa tải được shop đang hoạt động. Chọn “Làm mới danh sách kiosk” để thử lại.
+            </p>
+          )}
+          {visible?.length === 0 && (
+            <div className="allocation-empty">
+              <p>Không có kiosk phù hợp với bộ lọc hiện tại.</p>
+              {ownership !== 'ALL' && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setSearch('');
+                    setStatus('');
+                    setOwnership('ALL');
+                  }}
+                >
+                  Xem tất cả kiosk
+                </Button>
+              )}
+            </div>
+          )}
+          {!!visible?.length && (
+            <ul className="admin-shop-list allocation-kiosk-list">
+              {visible.map((kiosk) => (
+                <li key={kiosk.id}>
+                  <details name="admin-kiosk-allocation">
+                    <AdminDisclosureSummary
+                      statusCode={kiosk.status}
+                      title={kiosk.name}
+                      meta={
+                        <>
+                          <span className="allocation-kiosk-code">{kiosk.code}</span>
+                          <span>{kiosk.slotCount} ô</span>
+                          <span>
+                            {kiosk.sellerName || (kiosk.sellerId ? 'Đã gán shop' : 'Chưa gán shop')}
+                          </span>
+                        </>
+                      }
+                      status={kioskStatuses[kiosk.status] || kiosk.status}
+                    />
+                    <div className="allocation-kiosk-body">
+                      <section aria-label="Phân bổ cho shop">
+                        <h3>Phân bổ cho shop</h3>
+                        {sellers.isPending ? (
+                          <p role="status">Đang tải shop…</p>
+                        ) : sellers.data?.length ? (
+                          <Assignment
+                            kiosk={kiosk}
+                            sellers={sellers.data}
+                            onAssigned={(message) => {
+                              setConfirmation(message);
+                              notice.current?.focus();
+                            }}
+                          />
+                        ) : (
+                          !sellers.isError && (
+                            <p>Chưa có shop đang hoạt động và đủ điều kiện nhận kiosk.</p>
+                          )
+                        )}
+                      </section>
+                      <section className="allocation-kiosk-tools" aria-label="Ô tủ và thiết bị">
+                        <h3>Ô tủ và thiết bị</h3>
+                        <AdminKioskSlotDetails kioskId={kiosk.id} kioskCode={kiosk.code} />
+                        <Esp32ConfigurationPanel
+                          actorId={actorId}
+                          scope="admin"
+                          resourceId={kiosk.id}
+                        />
+                      </section>
+                    </div>
+                  </details>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       )}
-      {sellers.isError && (
-        <p className="error" role="alert">
-          Chưa tải được shop đang hoạt động. Chọn “Làm mới danh sách kiosk” để thử lại.
-        </p>
-      )}
-      {visible?.length === 0 && <p>Không có kiosk phù hợp với bộ lọc hiện tại.</p>}
-      <ul className="admin-shop-list">
-        {visible?.map((kiosk) => (
-          <li key={kiosk.id}>
-            <details>
-              <AdminDisclosureSummary
-                statusCode={kiosk.status}
-                title={kiosk.name}
-                meta={kiosk.code}
-                status={kioskStatuses[kiosk.status] || kiosk.status}
-              />
-              <div className="shop-profile">
-                <dl>
-                  <div>
-                    <dt>Số ô</dt>
-                    <dd>{kiosk.slotCount}</dd>
-                  </div>
-                  <div>
-                    <dt>Shop đang quản lý</dt>
-                    <dd>{kiosk.sellerName || 'Chưa có'}</dd>
-                  </div>
-                  <div>
-                    <dt>Trạng thái</dt>
-                    <dd>{kioskStatuses[kiosk.status] || kiosk.status}</dd>
-                  </div>
-                </dl>
-                <AdminKioskSlotDetails kioskId={kiosk.id} kioskCode={kiosk.code} />
-                <Esp32ConfigurationPanel actorId={actorId} scope="admin" resourceId={kiosk.id} />
-                {sellers.isPending ? (
-                  <p role="status">Đang tải shop…</p>
-                ) : sellers.data?.length ? (
-                  <Assignment
-                    kiosk={kiosk}
-                    sellers={sellers.data}
-                    onAssigned={(message) => {
-                      setConfirmation(message);
-                      notice.current?.focus();
-                    }}
-                  />
-                ) : (
-                  <p>Chưa có shop đang hoạt động và đủ điều kiện nhận kiosk.</p>
-                )}
-              </div>
-            </details>
-          </li>
-        ))}
-      </ul>
-      <KioskOperationsManagerPanel kiosks={kiosks.data ?? []} />
     </section>
   );
 }

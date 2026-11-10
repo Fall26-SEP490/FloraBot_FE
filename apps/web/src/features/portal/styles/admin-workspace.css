@@ -322,6 +322,28 @@
 .workspace-portal-root.platform-workspace[data-platform-role='admin'] .admin-text-link svg {
   flex-shrink: 0;
 }
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  .admin-nav-function-group
+  > summary {
+  min-height: 48px;
+  padding: 14px 12px;
+  color: #e3eee5;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 8px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  .admin-nav-function-group
+  > summary:hover {
+  background: #294e40;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  .admin-nav-function-group
+  > summary:focus-visible {
+  outline: 2px solid #dce8bf;
+  outline-offset: -2px;
+}
 .workspace-portal-root.platform-workspace[data-platform-role='admin'] .admin-queue-list {
   min-width: 0;
 }
@@ -513,40 +535,8 @@
   border: 0;
   border-radius: 0;
 }
-.workspace-portal-root.platform-workspace[data-platform-role='admin']
-  .admin-review-section
-  > .admin-queue-list,
-.workspace-portal-root.platform-workspace[data-platform-role='admin']
-  .admin-monitor-section
-  > .admin-queue-list {
-  padding: 0 24px;
-  border: 1px solid var(--admin-line);
-  border-radius: 14px;
-  background: var(--admin-surface);
-}
-.workspace-portal-root.platform-workspace[data-platform-role='admin']
-  :is(.admin-review-section, .admin-monitor-section)
-  > .admin-queue-list
-  > .admin-queue-item:first-child {
-  border-top: 0;
-}
-.workspace-portal-root.platform-workspace[data-platform-role='admin']
-  :is(.admin-review-section, .admin-monitor-section)
-  > .admin-queue-list
-  > .admin-queue-item:last-child {
-  border-bottom: 0;
-}
 .workspace-portal-root.platform-workspace[data-platform-role='admin'] .admin-queue-toolbar {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 14px;
-  margin: 0 0 18px;
-}
-.workspace-portal-root.platform-workspace[data-platform-role='admin'] .admin-queue-toolbar p {
-  margin: 0;
-  max-width: 48ch;
+  margin-bottom: 14px;
 }
 .workspace-portal-root.platform-workspace[data-platform-role='admin'] .admin-segmented {
   display: inline-flex;
@@ -581,7 +571,7 @@
   background: #f8faf7;
 }
 .workspace-portal-root.platform-workspace[data-platform-role='admin'] .admin-monitor-section {
-  margin-top: 32px;
+  margin-top: 20px;
 }
 .workspace-portal-root.platform-workspace[data-platform-role='admin'] .admin-shop-list > li {
   border-radius: 12px;
@@ -751,15 +741,6 @@
   .workspace-portal-root.platform-workspace[data-platform-role='admin'] .admin-team-counts div {
     align-items: center;
     padding-top: 12px;
-  }
-  .workspace-portal-root.platform-workspace[data-platform-role='admin']
-    :is(.admin-review-section, .admin-monitor-section)
-    > .admin-queue-list {
-    padding-inline: 16px;
-  }
-  .workspace-portal-root.platform-workspace[data-platform-role='admin'] .admin-queue-toolbar {
-    align-items: start;
-    flex-direction: column;
   }
   .workspace-portal-root.platform-workspace[data-platform-role='admin']
     .admin-refunds
