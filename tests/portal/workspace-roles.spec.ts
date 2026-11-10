@@ -175,7 +175,10 @@ test.describe('FloraBot Identity Foundation - Workspace and Roles', () => {
     await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
 
     await expect(page).toHaveURL(/\/technician$/);
-    await expect(page.getByRole('heading', { name: 'Chào Trần Kỹ Thuật' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Công việc kỹ thuật', level: 1 })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Mở menu người dùng của Trần Kỹ Thuật' }),
+    ).toBeVisible();
     await expect(page.getByText('Kỹ thuật viên').first()).toBeVisible();
     // Technician never has stock forms or legacy staff guide
     await expect(page.getByText('Nạp hoa và xem kết quả')).toHaveCount(0);

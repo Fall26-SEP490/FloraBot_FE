@@ -10,6 +10,7 @@ for (const width of [390, 1440])
     let completed = false;
     let attempt: unknown;
     let calls = 0;
+    let codeRequests = 0;
     await page.route('**/api/staff/tasks?*', (route) =>
       route.fulfill({
         json: {
@@ -30,6 +31,30 @@ for (const width of [390, 1440])
         },
       }),
     );
+    await page.route('**/api/staff/tasks/task?*', (route) =>
+      route.fulfill({
+        json: {
+          kioskStatus: 'ONLINE',
+          incident: null,
+          slotCode: 'S01',
+          slotStatus: 'FAULT',
+          history: [],
+        },
+      }),
+    );
+    await page.route('**/api/staff/tasks/task/repair-access', (route) => {
+      expect(route.request().method()).toBe('POST');
+      expect(route.request().postData()).toBeNull();
+      codeRequests++;
+      if (codeRequests === 1) return route.fulfill({ status: 404 });
+      return route.fulfill({
+        json: {
+          id: 'challenge',
+          code: '013582',
+          expiresAt: new Date(Date.now() + 120_000).toISOString(),
+        },
+      });
+    });
     await page.route('**/api/staff/tasks/task/resolve-incident', (route) => {
       calls++;
       if (calls === 1) {
@@ -42,9 +67,23 @@ for (const width of [390, 1440])
     });
     await page.goto('/technician');
     await page.locator('.technician-task-body > summary').click();
-    const panel = page.locator('.staff-resolution');
+    const access = page.getByRole('region', { name: 'Mã xác nhận sửa ô tủ' });
+    await expect(page.getByRole('button', { name: 'Gửi báo cáo', exact: true })).toHaveCount(0);
+    const codeButton = access.getByRole('button', { name: 'Lấy mã sửa ô tủ' });
+    await codeButton.click();
+    await expect(access.getByRole('alert')).toContainText('Kiểm tra chủ shop đã duyệt');
+    await codeButton.click();
+    await expect(access.getByRole('status')).toContainText('013582');
+    expect(
+      await page.evaluate(() => {
+        return [...Object.values(localStorage), ...Object.values(sessionStorage)]
+          .join(' ')
+          .includes('013582');
+      }),
+    ).toBe(false);
+    const panel = page.locator('details.staff-resolution');
     await panel.locator('summary').click();
-    await panel.getByRole('button', { name: 'Đóng sự cố và gửi báo cáo' }).click();
+    await panel.getByRole('button', { name: 'Gửi báo cáo sửa ô tủ' }).click();
     await expect(panel.getByText('Mô tả ít nhất 10 ký tự.')).toBeVisible();
     await expect(panel.getByText('Xác nhận đã kiểm tra thực tế tại tủ.')).toBeVisible();
     expect(calls).toBe(0);
@@ -61,10 +100,12 @@ for (const width of [390, 1440])
       ).violations,
     ).toEqual([]);
     await page.screenshot({ path: `artifacts/staff-resolution-${width}.png`, fullPage: true });
-    await panel.getByRole('button', { name: 'Đóng sự cố và gửi báo cáo' }).click();
+    await panel.getByRole('button', { name: 'Gửi báo cáo sửa ô tủ' }).click();
     await expect(panel.getByRole('alert')).toContainText('Chưa xác nhận được kết quả');
     await page.reload();
     await page.locator('.technician-task-body > summary').click();
+    await expect(codeButton).toBeVisible();
+    await expect(access.getByText('013582')).toHaveCount(0);
     await panel.locator('summary').click();
     await panel.getByRole('button', { name: 'Kiểm tra kết quả xử lý' }).click();
     await expect(panel).toHaveCount(0);

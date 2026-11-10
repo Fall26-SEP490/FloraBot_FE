@@ -37,6 +37,7 @@ export type TaskDetail = {
   incident: {
     kind: string;
     status: string;
+    slotId?: string | null;
     reason: string;
     decision: string | null;
     createdAt: string;

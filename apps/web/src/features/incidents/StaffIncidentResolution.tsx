@@ -16,6 +16,7 @@ export default function StaffIncidentResolution({
   sellerId,
   version,
   active,
+  slotRepair = false,
   apiBase = '/staff/tasks',
 }: StaffIncidentResolutionProps) {
   const scopeKey = sellerId ? `seller:${sellerId}` : apiBase;
@@ -59,10 +60,11 @@ export default function StaffIncidentResolution({
   if (!active && !attempt) return null;
   return (
     <details className="staff-resolution">
-      <summary>Ghi nhận đã sửa sự cố</summary>
+      <summary>{slotRepair ? 'Báo cáo kết quả sửa ô tủ' : 'Ghi nhận đã sửa sự cố'}</summary>
       <p>
-        Chỉ xác nhận sau khi kiểm tra tại tủ. Thao tác đóng sự cố, khôi phục trạng thái ô theo dữ
-        liệu và gửi báo cáo chờ Quản lý vận hành duyệt.
+        {slotRepair
+          ? 'Sau khi xác nhận mã tại kiosk, kiểm tra ô rồi đóng cửa. Gửi báo cáo khi tủ đã ghi nhận cửa đóng và tình trạng hoa. Quản lý vận hành sẽ duyệt và đóng sự cố.'
+          : 'Chỉ xác nhận sau khi kiểm tra tại tủ. Thao tác ghi nhận kết quả xử lý và gửi báo cáo cho Quản lý vận hành.'}
       </p>
       <p>
         Khoản hoàn tiền đang chờ do quản trị viên xử lý riêng. Thao tác này không mở cửa tủ hay chi
@@ -112,7 +114,7 @@ export default function StaffIncidentResolution({
             {form.formState.errors.confirm?.message}
           </p>
           <Button disabled={busy} type="submit">
-            Đóng sự cố và gửi báo cáo
+            {slotRepair ? 'Gửi báo cáo sửa ô tủ' : 'Ghi nhận và gửi báo cáo'}
           </Button>
         </form>
       )}

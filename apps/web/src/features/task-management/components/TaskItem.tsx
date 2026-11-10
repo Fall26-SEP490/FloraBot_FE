@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import { ApiError, queryClient, request } from '@/shared/lib/api';
 import StaffIncidentResolution from '../../incidents/StaffIncidentResolution';
@@ -8,7 +9,8 @@ import { TASK_STATUS_LABELS } from '../task-management.constants';
 import type { ActiveTaskRole, Task } from '../task-management.types';
 import StaffEvidence from './StaffEvidence';
 import StaffReassignment from './StaffReassignment';
-import StaffTaskDetails from './StaffTaskDetails';
+import StaffTaskDetails, { staffTaskDetailsQuery } from './StaffTaskDetails';
+import TechnicianRepairAccess from './TechnicianRepairAccess';
 import StaffPreorderFulfillment from './StaffPreorderFulfillment';
 
 export function TaskItem({
@@ -43,6 +45,29 @@ export function TaskItem({
           ? 'Xem báo cáo'
           : 'Xem chi tiết';
   const isManager = mode === 'manager';
+  const [taskOpen, setTaskOpen] = useState(false);
+  const needsRepairContext =
+    isTechnician && task.kind === 'INCIDENT' && task.status === 'IN_PROGRESS';
+  const repairDetails = useQuery({
+    ...staffTaskDetailsQuery(
+      task.id,
+      apiBase,
+      sellerId ? `seller:${sellerId}` : apiBase,
+      actorId,
+      task.version,
+    ),
+    enabled: needsRepairContext && taskOpen,
+  });
+  const slotRepair =
+    needsRepairContext &&
+    repairDetails.isSuccess &&
+    Boolean(repairDetails.data.incident?.slotId || repairDetails.data.slotCode);
+  const reviewingIncident =
+    isManager &&
+    role === 'OPERATIONS_MANAGER' &&
+    task.kind === 'INCIDENT' &&
+    task.status === 'SUBMITTED';
+
   const form = useForm<{ report: string; status: string }>();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -107,7 +132,13 @@ export function TaskItem({
     setBusy(true);
     setError('');
     try {
-      await queryClient.invalidateQueries({ queryKey: ['staff-tasks'] }, { throwOnError: true });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['staff-tasks'] }, { throwOnError: true }),
+        queryClient.invalidateQueries(
+          { queryKey: ['staff-detail', task.id] },
+          { throwOnError: true },
+        ),
+      ]);
     } catch {
       setError('Chưa tải được công việc. Kiểm tra kết nối rồi thử lại.');
     } finally {
@@ -129,6 +160,18 @@ export function TaskItem({
     } catch (cause) {
       if (isTechnician && cause instanceof ApiError && cause.status === 409) {
         setConflictVersion(task.version);
+        return;
+      }
+      if (
+        reviewingIncident &&
+        values.status === 'COMPLETED' &&
+        cause instanceof ApiError &&
+        cause.status === 409
+      ) {
+        setUncertain(true);
+        setError(
+          'Chưa duyệt được báo cáo. Tải lại công việc và kiểm tra kết quả xác minh tại tủ trước khi duyệt lại.',
+        );
         return;
       }
       const ambiguous = !(cause instanceof ApiError) || cause.status >= 500 || cause.status === 409;
@@ -228,17 +271,35 @@ export function TaskItem({
           />
         </>
       )}
-      {isWorker && role === 'TECHNICIAN' && actorId && task.kind === 'INCIDENT' && (
-        <StaffIncidentResolution
-          taskId={task.id}
-          actorId={actorId}
-          sellerId={sellerId}
-          role={role}
-          version={task.version}
-          active={task.status === 'IN_PROGRESS'}
-          apiBase={apiBase}
-        />
+      {needsRepairContext && taskOpen && repairDetails.isPending && (
+        <p role="status">Đang kiểm tra ô tủ của công việc…</p>
       )}
+      {needsRepairContext && taskOpen && repairDetails.isError && (
+        <div>
+          <p role="alert">Chưa kiểm tra được ô tủ. Tải lại trước khi gửi báo cáo.</p>
+          <Button type="button" variant="outline" onClick={() => void repairDetails.refetch()}>
+            Tải lại thông tin ô tủ
+          </Button>
+        </div>
+      )}
+      {slotRepair && taskOpen && repairDetails.data.slotStatus === 'FAULT' && (
+        <TechnicianRepairAccess taskId={task.id} slotCode={repairDetails.data.slotCode} />
+      )}
+      {isTechnician &&
+        actorId &&
+        task.kind === 'INCIDENT' &&
+        (!needsRepairContext || repairDetails.isSuccess) && (
+          <StaffIncidentResolution
+            taskId={task.id}
+            actorId={actorId}
+            sellerId={sellerId}
+            role={role}
+            version={task.version}
+            active={task.status === 'IN_PROGRESS'}
+            slotRepair={slotRepair}
+            apiBase={apiBase}
+          />
+        )}
       {conflictVersion !== null &&
         (needsLatestVersion ? (
           <div>
@@ -255,7 +316,13 @@ export function TaskItem({
         ) : (
           <p role="status">Đã tải công việc mới nhất. Kiểm tra hướng dẫn trước khi gửi lại.</p>
         ))}
-      {choices.length > 0 && (
+      {reviewingIncident && (
+        <p>
+          Đối chiếu báo cáo và bằng chứng của kỹ thuật viên trước khi duyệt. Với sự cố gắn ô tủ, hệ
+          thống sẽ kiểm tra lại tín hiệu cửa và cảm biến trước khi đóng sự cố.
+        </p>
+      )}
+      {choices.length > 0 && (!needsRepairContext || (repairDetails.isSuccess && !slotRepair)) && (
         <form noValidate onSubmit={form.handleSubmit(submit)}>
           <label htmlFor={`action-${task.id}`}>Bước tiếp theo</label>
           <select
@@ -314,7 +381,10 @@ export function TaskItem({
       </p>
       <p>{task.instructions}</p>
       {isTechnician ? (
-        <details className="technician-task-body">
+        <details
+          className="technician-task-body"
+          onToggle={(event) => setTaskOpen(event.currentTarget.open)}
+        >
           <summary>
             {nextLabel}
             <span className="sr-only"> · {task.kioskName}</span>

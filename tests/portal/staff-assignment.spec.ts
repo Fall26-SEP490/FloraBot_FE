@@ -207,3 +207,55 @@ test('Admin can oversee tasks without assigning staff or reviewing reports', asy
     ),
   ).toBeVisible();
 });
+
+test('Manager sees a repair verification conflict and can retry after reloading', async ({
+  page,
+}) => {
+  const task = {
+    id: 'task-to-review',
+    kind: 'INCIDENT',
+    status: 'SUBMITTED',
+    version: 3,
+    assigneeName: 'Kỹ thuật viên',
+    kioskName: 'Tủ FPT',
+    address: 'Thủ Đức',
+    instructions: 'Kiểm tra cửa tủ theo phân công.',
+    report: 'Đã kiểm tra cửa và cảm biến.',
+  };
+  let writes = 0;
+  await page.route('**/api/**', (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (path === '/api/auth/me') {
+      return route.fulfill({ json: { id: 'mgr-1', name: 'Quản lý', role: 'OPERATIONS_MANAGER' } });
+    }
+    if (path === '/api/operations/staff-tasks') {
+      return route.fulfill({ json: { items: [task], page: 1, hasMore: false } });
+    }
+    if (path === '/api/operations/staff-tasks/task-to-review/transition') {
+      expect(route.request().postDataJSON()).toMatchObject({
+        status: 'COMPLETED',
+        version: task.version,
+      });
+      writes++;
+      if (writes === 1) return route.fulfill({ status: 409 });
+      task.status = 'COMPLETED';
+      task.version++;
+      return route.fulfill({ json: { id: task.id, version: task.version } });
+    }
+    return route.fulfill({ json: [] });
+  });
+
+  await page.goto('/operations/tasks');
+  const card = page.locator('article').filter({ hasText: 'Đã kiểm tra cửa và cảm biến.' });
+  await expect(card.getByText(/hệ thống sẽ kiểm tra lại tín hiệu cửa/)).toBeVisible();
+  await card.getByLabel('Nội dung cập nhật').fill('Đã đối chiếu báo cáo sửa và tín hiệu tại tủ.');
+  const confirm = card.getByRole('button', { name: 'Xác nhận cập nhật' });
+  await confirm.click();
+  await expect(card.getByRole('alert')).toContainText('Chưa duyệt được báo cáo');
+  await expect(confirm).toBeDisabled();
+  await page.getByRole('button', { name: 'Tải lại công việc' }).click();
+  await card.getByLabel('Nội dung cập nhật').fill('Đã đối chiếu báo cáo sửa và tín hiệu tại tủ.');
+  await confirm.click();
+  await expect(confirm).toHaveCount(0);
+  expect(writes).toBe(2);
+});

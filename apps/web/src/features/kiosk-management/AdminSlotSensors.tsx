@@ -7,6 +7,7 @@ import type { components } from '../../../../../packages/contracts/src/generated
 
 type Configuration = components['schemas']['SlotSensorCapabilityResponse'];
 type SensorSettings = components['schemas']['UpdateSensorCapabilityRequest'];
+type RetrySettings = components['schemas']['ManualUnlockRetryEnrollmentRequest'];
 
 const initialSettings: SensorSettings = {
   enabled: false,
@@ -26,7 +27,8 @@ export function AdminSlotSensors({
   onClose: () => void;
 }) {
   const queryClient = useQueryClient();
-  const path = `/admin/kiosks/${kioskId}/slots/${slotId}/sensor-capabilities`;
+  const slotPath = `/admin/kiosks/${kioskId}/slots/${slotId}`;
+  const path = `${slotPath}/sensor-capabilities`;
   const queryKey = ['admin-slot-sensors', kioskId, slotId];
   const configuration = useQuery({
     queryKey,
@@ -34,6 +36,7 @@ export function AdminSlotSensors({
     staleTime: 0,
   });
   const [draft, setDraft] = useState<SensorSettings | null>(null);
+  const [firmwareVerified, setFirmwareVerified] = useState(false);
   const saved = configuration.data ?? initialSettings;
   const values = draft ?? saved;
   const verified = values.doorVerified && values.presenceVerified;
@@ -50,15 +53,34 @@ export function AdminSlotSensors({
       void queryClient.invalidateQueries({ queryKey: ['seller-kiosk-slots'] });
     },
   });
+  const retryAccess = useMutation({
+    mutationFn: (settings: RetrySettings) =>
+      request<Configuration>(`${slotPath}/manual-unlock-retry`, settings, true, 'PUT'),
+    onSuccess: (result) => {
+      queryClient.setQueryData(queryKey, result);
+      setFirmwareVerified(false);
+      void queryClient.invalidateQueries({ queryKey: ['seller-kiosk-slots'] });
+    },
+  });
+  const busy = save.isPending || retryAccess.isPending;
+  const retryEnabled = configuration.data?.supportsManualRetry ?? false;
+  const canChangeRetry =
+    Boolean(configuration.data) &&
+    !configuration.isFetching &&
+    !busy &&
+    !changed &&
+    (retryEnabled || (saved.doorVerified && firmwareVerified));
   const canSave =
     configuration.isSuccess &&
     !configuration.isFetching &&
-    !save.isPending &&
+    !busy &&
     changed &&
     (!values.enabled || verified);
 
   function update(field: keyof SensorSettings, checked: boolean) {
     save.reset();
+    retryAccess.reset();
+    setFirmwareVerified(false);
     setDraft({
       enabled: values.enabled,
       doorVerified: values.doorVerified,
@@ -68,12 +90,7 @@ export function AdminSlotSensors({
   }
 
   return (
-    <Modal
-      open
-      title={`Cấu hình cảm biến ô ${slotCode}`}
-      onClose={onClose}
-      closeDisabled={save.isPending}
-    >
+    <Modal open title={`Cấu hình cảm biến ô ${slotCode}`} onClose={onClose} closeDisabled={busy}>
       {configuration.isPending && <p role="status">Đang tải cấu hình cảm biến…</p>}
       {configuration.isError && (
         <>
@@ -96,7 +113,7 @@ export function AdminSlotSensors({
           <p>
             <strong>Giám sát hiện tại</strong> · {saved.enabled ? 'Đang bật' : 'Đang tắt'}
           </p>
-          <fieldset disabled={save.isPending}>
+          <fieldset disabled={busy}>
             <legend>Xác minh phần cứng tại ô</legend>
             <label>
               <input
@@ -142,6 +159,59 @@ export function AdminSlotSensors({
           {save.isSuccess && <p role="status">Đã lưu cấu hình cảm biến.</p>}
           <Button type="submit" disabled={!canSave}>
             {save.isPending ? 'Đang lưu…' : 'Lưu cấu hình'}
+          </Button>
+        </form>
+      )}
+      {configuration.isSuccess && configuration.data && (
+        <form
+          className="admin-slot-sensor-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (canChangeRetry) {
+              save.reset();
+              retryAccess.mutate({
+                enabled: !retryEnabled,
+                firmwareVerified: !retryEnabled && firmwareVerified,
+              });
+            }
+          }}
+        >
+          <fieldset disabled={busy || changed || configuration.isFetching}>
+            <legend>Quyền thử lại lệnh mở cửa</legend>
+            <p>Hiện tại: {retryEnabled ? 'Đang bật' : 'Đang tắt'}</p>
+            {!retryEnabled && (
+              <label>
+                <input
+                  type="checkbox"
+                  checked={firmwareVerified}
+                  disabled={!saved.doorVerified}
+                  onChange={(event) => {
+                    retryAccess.reset();
+                    setFirmwareVerified(event.target.checked);
+                  }}
+                />
+                Đã kiểm tra đúng bộ điều khiển và firmware hỗ trợ thử mở lại
+              </label>
+            )}
+            {!retryEnabled && !saved.doorVerified && (
+              <p className="quiet">Lưu xác minh cảm biến cửa trước khi bật quyền.</p>
+            )}
+            {changed && <p className="quiet">Lưu thay đổi cảm biến trước khi cập nhật quyền.</p>}
+          </fieldset>
+          {retryAccess.isError && (
+            <p role="alert" className="error">
+              {retryAccess.error.message}
+            </p>
+          )}
+          {retryAccess.isSuccess && (
+            <p role="status">{retryEnabled ? 'Đã bật' : 'Đã tắt'} quyền thử mở lại.</p>
+          )}
+          <Button type="submit" variant="outline" disabled={!canChangeRetry}>
+            {retryAccess.isPending
+              ? 'Đang cập nhật…'
+              : retryEnabled
+                ? 'Tắt quyền thử mở lại'
+                : 'Bật quyền thử mở lại'}
           </Button>
         </form>
       )}

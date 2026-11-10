@@ -4993,6 +4993,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * Danh sách mẫu hoa và tồn bó tại shop
+         * @description quantity là số bó còn tại shop; không bao gồm các bó đã nạp trong kiosk và không được tính từ số ô tủ.
+         */
         get: {
             parameters: {
                 query?: never;
@@ -5014,6 +5018,10 @@ export interface paths {
             };
         };
         put?: never;
+        /**
+         * Tạo mẫu hoa và khai báo tồn bó tại shop
+         * @description quantity là số bó còn tại shop, số nguyên không âm; bỏ qua mặc định 0. Nạp thành công vào kiosk hoặc fulfill preorder trừ một bó. Thu hồi không tự cộng lại.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -8559,6 +8567,10 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
+        /**
+         * Sửa mẫu hoa và tồn bó tại shop
+         * @description quantity là tồn thực tế tại shop, số nguyên không âm. Bỏ qua hoặc null giữ nguyên tồn hiện tại; gửi số mới là chốt lại tồn, không phải cộng thêm.
+         */
         put: {
             parameters: {
                 query?: never;
@@ -9808,6 +9820,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** @description Kiosk được tạo OFFLINE. Khi bật tự cấp ESP32, yêu cầu cấp MQTT/HMAC được lưu cùng transaction; provisioning PENDING/PROVISIONING/READY/FAILED tách biệt trạng thái ONLINE. Không trả bí mật ESP32 trong response đăng ký. */
         post: {
             parameters: {
                 query?: never;
@@ -10643,6 +10656,588 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/operations/kiosks/{id}/esp32-config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read ESP32 metadata for a currently assigned Operations Manager kiosk.
+         * @description Cache-Control: no-store. No MQTT password or HMAC is read or returned. canDownload describes role/scope and public deployment readiness, not secret-store completeness. Foreign/missing/ended installations return the same 404. Current role and assignment are rechecked on every request. Error responses have a stable code extension.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Esp32ConfigMetadata"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/kiosk-installations/{installationId}/esp32-config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read ESP32 metadata for the assigned Technician's live installation (SCHEDULED, INSTALLING, AWAITING_HANDOVER).
+         * @description Cache-Control: no-store. No MQTT password or HMAC is read or returned. canDownload describes role/scope and public deployment readiness, not secret-store completeness. Foreign/missing/ended installations return the same 404. Current role and assignment are rechecked on every request. Error responses have a stable code extension.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    installationId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Esp32ConfigMetadata"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/kiosks/{id}/esp32-config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin oversight metadata only. Admin cannot download ESP32 secrets.
+         * @description Cache-Control: no-store. No MQTT password or HMAC is read or returned. canDownload describes role/scope and public deployment readiness, not secret-store completeness. Foreign/missing/ended installations return the same 404. Current role and assignment are rechecked on every request. Error responses have a stable code extension.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Esp32ConfigMetadata"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/operations/kiosks/{id}/esp32-config/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Download the assigned kiosk's config.local.h after verifying the current Operations Manager password.
+         * @description JSON body {password}: current account password, verified for this download only. Returns attachment config.local.h, Cache-Control: no-store; Wi-Fi fields are blank. Admin/other roles: 403. Foreign/missing/ended installation: 404. Wrong/missing password: 401 ESP32_CONFIG_REAUTHENTICATION_FAILED. 409 codes: ESP32_CONFIG_DEPLOYMENT_NOT_CONFIGURED, ESP32_CONFIG_NOT_PROVISIONED, ESP32_CONFIG_HMAC_MISMATCH. No secret values are included in errors or audit payloads.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": null | components["schemas"]["Esp32ConfigDownloadRequest"];
+                };
+            };
+            responses: {
+                /** @description Private config.local.h attachment; fill in local Wi-Fi before flashing. */
+                200: {
+                    headers: {
+                        /** @description attachment; filename=config.local.h */
+                        "Content-Disposition"?: string;
+                        /** @description no-store */
+                        "Cache-Control"?: string;
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/x-c++hdr": string;
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/kiosk-installations/{installationId}/esp32-config/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Download config.local.h after verifying the assigned Technician's current password and live installation.
+         * @description JSON body {password}: current account password, verified for this download only. Returns attachment config.local.h, Cache-Control: no-store; Wi-Fi fields are blank. Admin/other roles: 403. Foreign/missing/ended installation: 404. Wrong/missing password: 401 ESP32_CONFIG_REAUTHENTICATION_FAILED. 409 codes: ESP32_CONFIG_DEPLOYMENT_NOT_CONFIGURED, ESP32_CONFIG_NOT_PROVISIONED, ESP32_CONFIG_HMAC_MISMATCH. No secret values are included in errors or audit payloads.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    installationId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": null | components["schemas"]["Esp32ConfigDownloadRequest"];
+                };
+            };
+            responses: {
+                /** @description Private config.local.h attachment; fill in local Wi-Fi before flashing. */
+                200: {
+                    headers: {
+                        /** @description attachment; filename=config.local.h */
+                        "Content-Disposition"?: string;
+                        /** @description no-store */
+                        "Cache-Control"?: string;
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/x-c++hdr": string;
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/operations/kiosks/{id}/esp32-config/provision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Queue or retry ESP32 provisioning for the currently assigned kiosk/installation
+         * @description No request body or secrets. Current Manager/assigned live Technician only. New enrollment queues automatically when enabled. Retry keeps the original device credentials; READY/in-flight work is not reset. Poll the existing esp32-config GET. No heartbeat or ONLINE status is fabricated.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Accepted */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Esp32ProvisioningStatus"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/kiosk-installations/{installationId}/esp32-config/provision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Queue or retry ESP32 provisioning for the currently assigned kiosk/installation
+         * @description No request body or secrets. Current Manager/assigned live Technician only. New enrollment queues automatically when enabled. Retry keeps the original device credentials; READY/in-flight work is not reset. Poll the existing esp32-config GET. No heartbeat or ONLINE status is fabricated.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    installationId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Accepted */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Esp32ProvisioningStatus"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/me/kiosks/{kioskId}/layout-requests": {
         parameters: {
             query?: never;
@@ -10923,10 +11518,6 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * Bắt đầu phiên bảo trì tự phục vụ cho ô tủ (Load, Remove, Replace)
-         * @description Khóa ô chuyển sang LOCKED, phát lệnh SELLER_ACCESS và thiết lập phiên bảo trì.
-         */
         post: {
             parameters: {
                 query?: never;
@@ -10937,51 +11528,8 @@ export interface paths {
                 };
                 cookie?: never;
             };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["StartSlotMaintenanceRequest"];
-                };
-            };
+            requestBody?: never;
             responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SlotMaintenanceSessionResponse"];
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Forbidden */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
                 /** @description Conflict */
                 409: {
                     headers: {
@@ -11190,7 +11738,6 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Mở cửa bước tiếp theo (nạp hoa mới) trong quy trình đổi hoa REPLACE */
         post: {
             parameters: {
                 query?: never;
@@ -11204,36 +11751,6 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SlotMaintenanceSessionResponse"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Forbidden */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
                 /** @description Conflict */
                 409: {
                     headers: {
@@ -11260,7 +11777,6 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Mở cửa kiểm tra ô trong trạng thái NeedsInspection */
         post: {
             parameters: {
                 query?: never;
@@ -11272,51 +11788,8 @@ export interface paths {
                 };
                 cookie?: never;
             };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["OpenForCheckRequest"];
-                };
-            };
+            requestBody?: never;
             responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SlotMaintenanceSessionResponse"];
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Forbidden */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
                 /** @description Conflict */
                 409: {
                     headers: {
@@ -11541,6 +12014,391 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/me/maintenance-access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["MaintenanceAccessRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MaintenanceAccessIssued"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/kiosks/{kioskId}/maintenance-access/pending": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kioskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MaintenanceAccessPending"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/kiosks/{kioskId}/maintenance-access/{id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kioskId: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ConfirmMaintenanceAccessRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AcceptedMaintenanceAccess"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/inventory-tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AssignInventoryTask"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StaffTaskResult"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/tasks/{taskId}/inventory-maintenance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    taskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StaffInventoryScope"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/tasks/{taskId}/inventory-maintenance/access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    taskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["StaffInventoryOperation"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MaintenanceAccessIssued"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/technical-repairs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TechnicalRepairRow"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/technical-repairs/{taskId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    taskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TechnicalRepairApproval"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/tasks/{taskId}/repair-access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    taskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MaintenanceAccessIssued"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/kiosks/{kioskId}/slots/{slotId}/manual-unlock-retry": {
         parameters: {
             query?: never;
@@ -11646,19 +12504,15 @@ export interface paths {
                 };
                 cookie?: never;
             };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["ManualUnlockRetryRequest"];
-                };
-            };
+            requestBody?: never;
             responses: {
-                /** @description OK */
-                200: {
+                /** @description Conflict */
+                409: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["ManualUnlockRetryResponse"];
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
                     };
                 };
             };
@@ -14282,6 +15136,10 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AcceptedMaintenanceAccess: {
+            /** @default ACCEPTED */
+            status: string;
+        };
         AccountDetailResponse: {
             /** Format: uuid */
             id: string;
@@ -14610,6 +15468,22 @@ export interface components {
             /** Format: uuid */
             p_w: string;
         };
+        AssignInventoryTask: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            assigneeId: string;
+            /** Format: uuid */
+            kioskId: string;
+            /** Format: uuid */
+            slotId: string;
+            action: string;
+            /** Format: uuid */
+            expectedBouquetId: null | string;
+            /** Format: uuid */
+            productId: null | string;
+            instructions: string;
+        };
         AssignKioskManagerRequest: {
             /** Format: uuid */
             managerId: null | string;
@@ -14723,6 +15597,9 @@ export interface components {
             reference: string;
             evidenceReference: string;
         };
+        ConfirmMaintenanceAccessRequest: {
+            code: string;
+        };
         ConfirmRefundRequest: {
             /** Format: uuid */
             p_refund: string;
@@ -14795,6 +15672,11 @@ export interface components {
             widthCm: number | string;
             /** Format: double */
             heightCm: number | string;
+            /**
+             * Format: int32
+             * @default 0
+             */
+            quantity: number | string;
         };
         CreateRefundRequest: {
             /** Format: uuid */
@@ -15010,6 +15892,36 @@ export interface components {
             preorderSlots: number | string;
             /** Format: uuid */
             applicationId?: null | string;
+            provisioning?: null | components["schemas"]["Esp32ProvisioningStatus"];
+        };
+        Esp32ConfigDownloadRequest: {
+            password: null | string;
+        };
+        Esp32ConfigMetadata: {
+            /** Format: uuid */
+            kioskId: string;
+            kioskCode: string;
+            status: string;
+            hardwareId: string;
+            mqttClientId: string;
+            firmwareMqttClientId: string;
+            mqttClientIdsMatch: boolean;
+            mqttHost: null | string;
+            /** Format: int32 */
+            mqttTlsPort: null | number | string;
+            caCertificatePem: null | string;
+            canDownload: boolean;
+            requiresReauthentication: boolean;
+            downloadUnavailableCode: null | string;
+            provisioning?: null | components["schemas"]["Esp32ProvisioningStatus"];
+        };
+        Esp32ProvisioningStatus: {
+            state: string;
+            errorCode: null | string;
+            /** Format: int32 */
+            attempts: number | string;
+            /** Format: date-time */
+            readyAt: null | string;
         };
         EvidenceUploadResponse: {
             reference: string;
@@ -15428,6 +16340,38 @@ export interface components {
             email: string;
             password: string;
         };
+        MaintenanceAccessIssued: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        MaintenanceAccessPending: {
+            /** Format: uuid */
+            id: string;
+            slotCode: string;
+            operation: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        MaintenanceAccessRequest: {
+            /** Format: uuid */
+            kioskId: string;
+            /** Format: uuid */
+            slotId: string;
+            operation: string;
+            /** Format: uuid */
+            sessionId: string;
+            action: null | string;
+            /** Format: uuid */
+            expectedBouquetId: null | string;
+            /** Format: uuid */
+            productId: null | string;
+            reason: null | string;
+            /** Format: uuid */
+            requestId?: null | string;
+        };
         ManualUnlockRetryEnrollmentRequest: {
             enabled: boolean;
             firmwareVerified: boolean;
@@ -15492,9 +16436,6 @@ export interface components {
             p_tracking: string;
             p_reason: string;
             p_photo: string;
-        };
-        OpenForCheckRequest: {
-            reason: string;
         };
         OpenMemberShopRequest: {
             shopName: string;
@@ -15709,6 +16650,11 @@ export interface components {
             widthCm?: null | number | string;
             /** Format: double */
             heightCm?: null | number | string;
+            /**
+             * Format: int32
+             * @default 0
+             */
+            quantity: number | string;
         };
         ProvisionKioskKeyResponse: {
             /** Format: uuid */
@@ -16580,6 +17526,28 @@ export interface components {
             /** Format: int32 */
             version: number | string;
         };
+        StaffInventoryOperation: {
+            operation: string;
+            reason: null | string;
+        };
+        StaffInventoryScope: {
+            /** Format: uuid */
+            kioskId: string;
+            /** Format: uuid */
+            slotId: string;
+            slotCode: string;
+            /** Format: uuid */
+            sellerId: string;
+            action: string;
+            /** Format: uuid */
+            expectedBouquetId: null | string;
+            /** Format: uuid */
+            productId: null | string;
+            instructions: string;
+            status: string;
+            sessionStage: null | string;
+            sessionSubstate: null | string;
+        };
         StaffPreorderCandidate: {
             /** Format: uuid */
             requestId: string;
@@ -16721,16 +17689,6 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
-        StartSlotMaintenanceRequest: {
-            /** Format: uuid */
-            id: string;
-            action: string;
-            /** Format: uuid */
-            expectedBouquetId: null | string;
-            /** Format: uuid */
-            productId: null | string;
-            reason: string;
-        };
         StockBouquetRequest: {
             /** Format: uuid */
             productId: string;
@@ -16765,6 +17723,19 @@ export interface components {
             status: string;
             /** Format: uuid */
             kioskId: null | string;
+        };
+        TechnicalRepairApproval: {
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        TechnicalRepairRow: {
+            /** Format: uuid */
+            id: string;
+            kioskName: string;
+            slotCode: string;
+            reason: string;
+            /** Format: date-time */
+            expiresAt: null | string;
         };
         TechnicianInstallationDetail: {
             /** Format: uuid */
@@ -16855,6 +17826,8 @@ export interface components {
             widthCm: number | string;
             /** Format: double */
             heightCm: number | string;
+            /** Format: int32 */
+            quantity?: null | number | string;
         };
         UpdateSellerAccessory: {
             name: string;
