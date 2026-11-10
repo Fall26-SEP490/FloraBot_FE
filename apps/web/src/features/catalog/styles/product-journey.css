@@ -1,21 +1,54 @@
-/* Flower Detail Page */
+/* ==========================================================================
+   FLORABOT LUXURY PRODUCT DETAIL PAGE (REFINED BOUTIQUE STYLE)
+   ========================================================================== */
+
 .flower-detail-page {
   box-sizing: border-box;
-  max-width: var(--customer-page-width, 1160px);
-  margin: 1.5rem auto 3rem;
+  max-width: var(--customer-page-width, 1080px);
+  margin: 1rem auto 3.5rem;
   padding-inline: var(--customer-page-gutter, 1.5rem);
   min-height: 0;
   background: transparent;
 }
+
+/* 1. Breadcrumbs */
+.flower-detail-breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  font-size: 0.82rem;
+  color: #738a7a;
+  margin-bottom: 0.85rem;
+}
+.flower-detail-breadcrumb a.breadcrumb-link {
+  color: #587060;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.flower-detail-breadcrumb a.breadcrumb-link:hover {
+  color: #183e2b;
+  text-decoration: underline;
+}
+.flower-detail-breadcrumb .breadcrumb-separator {
+  color: #cbd5cb;
+  font-size: 0.72rem;
+}
+.flower-detail-breadcrumb .breadcrumb-current {
+  color: #183e2b;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
 .flower-detail-back {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  min-height: 24px;
-  margin-bottom: 1rem;
-  padding: 0.25rem 0;
-  color: var(--color-muted, #45654a);
-  font-size: 0.88rem;
+  min-height: 32px;
+  margin-bottom: 1.25rem;
+  padding: 0;
+  color: #4b6b55;
+  font-size: 0.84rem;
   font-weight: 600;
   text-decoration: none;
   background: transparent;
@@ -23,334 +56,482 @@
   transition: all 0.15s ease;
 }
 .flower-detail-back:hover {
-  color: var(--color-ink, #204b2e);
+  color: #183e2b;
   text-decoration: underline;
   transform: translateX(-2px);
 }
+
+.flower-detail-feedback {
+  padding: 2.5rem;
+  text-align: center;
+  background: #fbf9f6;
+  border: 1px solid #ebe6df;
+  border-radius: 12px;
+  color: #4b6b55;
+}
+.flower-detail-feedback.flower-detail-error {
+  border-color: #f0cfcb;
+  background: #fdf5f4;
+  color: #a82e2e;
+}
+
+/* 2. Main Article Layout */
 .flower-detail {
   background: transparent;
   padding: 0;
 }
+
 .flower-detail-layout {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(1.75rem, 4vw, 3rem);
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.15fr);
+  gap: clamp(1.75rem, 4vw, 3.25rem);
   align-items: start;
 }
+
+/* 3. Hero Flower Media */
+.flower-detail-gallery {
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 90px;
+}
+
 .flower-detail-media {
   position: relative;
   margin: 0;
   overflow: hidden;
-  border-radius: 12px;
-  background: #f4f7f2;
-  border: 0;
-  width: 100%;
-}
-.flower-detail-media img {
-  display: block;
+  border-radius: 14px;
+  background: #f4f6f2;
+  border: 1px solid #e2eae1;
   width: 100%;
   aspect-ratio: 1 / 1;
-  object-fit: contain;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px -10px rgba(24, 62, 43, 0.08);
 }
+
+.flower-detail-media img.flower-detail-main-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+
+.flower-detail-media:hover img.flower-detail-main-img {
+  transform: scale(1.02);
+}
+
 .flower-detail-media figcaption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
   padding: 0.65rem 0.85rem;
-  color: var(--color-muted, #45654a);
-  background: #f7faf5;
-  font-size: 0.8rem;
-  border-top: 1px solid #e8efe6;
+  color: #45654a;
+  background: rgba(247, 250, 245, 0.94);
+  font-size: 0.78rem;
+  border-top: 1px solid #e0e8dc;
   text-align: center;
   line-height: 1.4;
+  backdrop-filter: blur(4px);
 }
+
+/* 4. Buy Box / Product Information (Chữ gọn gàng theo mẫu) */
 .flower-detail-content {
   min-width: 0;
   display: flex;
   flex-direction: column;
 }
+
 .flower-detail-header-meta {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 0.45rem;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.35rem;
 }
+
 .flower-detail-badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.2rem 0.6rem;
-  border-radius: 6px;
-  background: #eaf5e6;
-  color: #174b27;
-  font-size: 0.75rem;
-  font-weight: 700;
-  border: 1px solid #c8ddc4;
-}
-.flower-detail-badge-occasion {
-  background: #fff8e6;
-  color: #7a5400;
-  border-color: #ffd666;
-}
-.flower-detail-content h1 {
-  margin: 0.15rem 0 0.5rem;
-  color: var(--color-ink, #204b2e);
-  font-family: Georgia, serif;
-  font-size: clamp(1.75rem, 3vw, 2.6rem);
-  font-weight: 500;
-  line-height: 1.25;
-  letter-spacing: -0.02em;
-  overflow-wrap: anywhere;
-}
-.flower-detail-pricing {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.65rem;
-  margin: 0.35rem 0 0.45rem;
-  padding: 0;
-  background: transparent;
-  border: none;
-}
-.flower-detail-price {
-  font-size: 1.85rem;
-  font-weight: 800;
-  color: #164624;
-  letter-spacing: -0.02em;
-}
-.flower-detail-price-sub {
-  font-size: 0.85rem;
-  color: #55775d;
-  font-weight: 600;
-}
-.flower-detail-divider {
-  border-top: 1px dashed #dce8d9;
-  margin: 0.75rem 0 1rem;
-}
-.flower-detail-product-copy {
-  margin: 0.75rem 0;
-  color: #3b5643;
-  line-height: 1.6;
-  font-size: 0.9rem;
-  white-space: pre-line;
-  overflow-wrap: anywhere;
-}
-.flower-detail-location {
-  margin: 0 0 1.25rem;
-  padding: 0.85rem 1rem;
-  background: #f9fbf8;
-  border-radius: 10px;
-  border: 0;
-}
-.flower-detail-location h2 {
-  margin: 0 0 0.6rem;
-  color: #1b4928;
-  font-size: 0.82rem;
-  font-weight: 700;
-}
-.flower-detail-location-body {
-  display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
-}
-.flower-detail-info-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  color: var(--color-ink, #204b2e);
-}
-.flower-detail-info-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background: #eef5e9;
-  color: #1c4b29;
-  flex: 0 0 36px;
-  border: 1px solid #d5e6cf;
-}
-.flower-detail-info-content,
-.flower-detail-info-row > div:not(.flower-detail-info-icon) {
-  min-width: 0;
-  flex: 1;
-}
-.flower-detail-info-content span,
-.flower-detail-info-row span {
-  display: block;
-  color: #55775d;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  background: #edf4ee;
+  color: #183e2b;
   font-size: 0.72rem;
   font-weight: 700;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  border: 1px solid #d0e0d3;
 }
-.flower-detail-info-content strong,
-.flower-detail-info-row strong {
-  display: block;
-  color: #164624;
-  font-size: 0.92rem;
-  font-weight: 700;
-  margin-top: 0.1rem;
+
+.flower-detail-badge-occasion {
+  background: #fbf5e8;
+  color: #8c6314;
+  border-color: #f1ddb3;
+}
+
+/* Tiêu đề hoa: Kích thước thanh thoát, gọn gàng đúng mẫu, chuẩn tiếng Việt không lỗi dấu */
+.flower-detail-title {
+  margin: 0.15rem 0 0.35rem;
+  color: #1a1a1a;
+  font-family:
+    'Be Vietnam Pro',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  font-size: clamp(1.35rem, 2vw, 1.6rem);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+  text-transform: capitalize;
   overflow-wrap: anywhere;
-}
-.flower-detail-info-content p,
-.flower-detail-info-row p {
-  margin: 0.15rem 0 0;
-  color: #4b6b52;
-  font-size: 0.84rem;
-  line-height: 1.45;
-  overflow-wrap: anywhere;
-}
-.flower-detail-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-block: 1rem 1.25rem;
-}
-.flower-detail-actions .button {
-  flex: 1 1 0;
-  min-height: 44px;
-  height: 44px;
-  padding: 0 1.15rem;
-  font-size: 0.92rem;
-  font-weight: 700;
-  border-radius: 8px;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  box-sizing: border-box;
-}
-.flower-detail-note {
-  font-size: 0.82rem;
-  color: #55775d;
-  line-height: 1.45;
-  margin: 0;
-  padding: 0;
-  background: transparent;
-  border: none;
-}
-
-.flower-detail-guide {
-  display: grid;
-  gap: 0.65rem;
-  margin: 1.25rem 0 0;
-  padding: 1rem 0 0;
-  border-top: 1px solid #e3ebdf;
-  list-style: none;
-  color: #476451;
-  font-size: 0.8rem;
-}
-
-.flower-detail-guide li {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-}
-
-.flower-detail-guide span {
-  display: grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  flex: 0 0 24px;
-  border-radius: 50%;
-  background: #edf4e9;
-  color: #254d33;
-  font-size: 0.7rem;
-  font-weight: 700;
-}
-.flower-detail-demo-note {
-  font-size: 0.82rem;
-  color: #708a76;
-  margin-top: 0.5rem;
-  font-style: italic;
-}
-@media (max-width: 899px) {
-  .flower-detail-page {
-    padding-inline: var(--customer-page-gutter, 1rem);
-    margin-top: 1rem;
-    margin-bottom: 2.5rem;
-  }
-  .flower-detail-layout {
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
-  }
-  .flower-detail-media {
-    max-width: 100%;
-    border-radius: 12px;
-  }
-  .flower-detail-media img {
-    aspect-ratio: 4 / 3;
-    max-height: 440px;
-  }
-}
-@media (max-width: 480px) {
-  .flower-detail-actions {
-    flex-direction: column;
-    width: 100%;
-  }
-  .flower-detail-actions .button {
-    width: 100%;
-    flex: none;
-  }
 }
 
 .flower-detail-shop {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin: 0.5rem 0 0.85rem;
-  color: #476451;
-  font-size: 0.9rem;
-  overflow-wrap: anywhere;
+  gap: 0.4rem;
+  margin: 0 0 0.75rem;
+  color: #556e5c;
+  font-size: 0.85rem;
 }
+
 .flower-detail-shop svg {
   flex-shrink: 0;
+  color: #183e2b;
 }
-.flower-detail-help {
-  margin: 0.75rem 0 0;
-  font-size: 0.85rem;
-  color: #476451;
-  line-height: 1.6;
+
+/* Khối giá */
+.flower-detail-pricing {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.65rem;
+  margin: 0 0 0.95rem;
 }
-.flower-detail-help a {
+
+.flower-detail-price {
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: #183e2b;
+  letter-spacing: -0.02em;
+  font-family:
+    'Be Vietnam Pro',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+}
+
+.flower-detail-price-sub {
+  font-size: 0.84rem;
+  color: #64816c;
+  font-weight: 500;
+}
+
+/* Dải 3 cam kết nhỏ gọn (3 cột tinh tế như mẫu ảnh) */
+.flower-detail-perks {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  padding: 0.85rem 0.95rem;
+  background: #faf8f5;
+  border: 1px solid #ece6dc;
+  border-radius: 8px;
+  margin-bottom: 1.15rem;
+}
+
+.perk-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.3rem;
+}
+
+.perk-icon-wrap {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid #e5dfd4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #183e2b;
+  flex-shrink: 0;
+}
+
+.perk-text strong {
+  display: block;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #183e2b;
+  line-height: 1.3;
+}
+
+.perk-text span {
+  display: block;
+  font-size: 0.7rem;
+  color: #667d6c;
+  margin-top: 1px;
+  line-height: 1.25;
+}
+
+.flower-detail-note {
+  margin: 0 0 1.15rem;
+  font-size: 0.84rem;
+  color: #55725f;
+  line-height: 1.45;
+}
+
+/* 5. Action CTAs (Chiều cao 44px thanh thoát) */
+.flower-detail-actions {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: stretch;
+  gap: 0.75rem;
+  margin-bottom: 1.35rem;
+}
+
+.flower-detail-chat-btn.button,
+.flower-detail-chat-btn {
+  flex: 1 1 0;
+  min-height: 44px;
+  height: 44px;
+  border: 1.5px solid #d2ded5;
+  color: #1e3b28;
+  background: #ffffff;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  font-weight: 600;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.flower-detail-chat-btn:hover:not(:disabled) {
+  background: #f2f7f3;
+  border-color: #183e2b;
+}
+
+.flower-detail-cta-btn.button,
+.flower-detail-cta-btn {
+  flex: 1.4 1 0;
   min-height: 44px;
-  color: #204b2e;
+  height: 44px;
+  background: #183e2b !important;
+  color: #ffffff !important;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 3px 10px rgba(24, 62, 43, 0.2);
+}
+
+.flower-detail-cta-btn:hover {
+  background: #0f2b1d !important;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(24, 62, 43, 0.28);
+}
+
+/* 6. Location Section */
+.flower-detail-location {
+  margin: 0 0 1.15rem;
+  padding: 0.9rem 1.05rem;
+  background: #f7faf7;
+  border-radius: 8px;
+  border: 1px solid #e1ebe2;
+}
+
+.flower-detail-location h2 {
+  margin: 0 0 0.55rem;
+  color: #183e2b;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-family:
+    'Be Vietnam Pro',
+    -apple-system,
+    sans-serif;
+}
+
+.flower-detail-location-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.flower-detail-info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.flower-detail-info-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: #183e2b;
+  color: #ffffff;
+  flex: 0 0 32px;
+}
+
+.flower-detail-info-content strong {
+  display: block;
+  color: #183e2b;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.flower-detail-info-content p {
+  margin: 0.15rem 0 0;
+  color: #55705e;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+/* 7. Description Section */
+.flower-detail-description {
+  margin: 0 0 1.15rem;
+  padding: 0.95rem 1.05rem;
+  background: #faf8f5;
+  border: 1px solid #ede8e1;
+  border-radius: 8px;
+}
+
+.flower-detail-description h2 {
+  margin: 0 0 0.5rem;
+  color: #183e2b;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-family:
+    'Be Vietnam Pro',
+    -apple-system,
+    sans-serif;
+}
+
+.flower-detail-product-copy {
+  margin: 0;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  color: #41594a;
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+
+/* 8. Help Links & Demo Notes */
+.flower-detail-help {
+  margin: 0.35rem 0 0;
+  font-size: 0.82rem;
+  color: #5d7866;
+  line-height: 1.55;
+}
+
+.flower-detail-help a {
+  color: #183e2b;
+  font-weight: 600;
   text-underline-offset: 3px;
 }
-.flower-detail-back {
-  min-height: 44px;
+
+.flower-detail-demo-note {
+  font-size: 0.78rem;
+  color: #708a76;
+  margin-top: 0.35rem;
+  font-style: italic;
 }
-@media (max-width: 580px) {
-  .flower-detail-media img {
-    aspect-ratio: 4 / 3;
-    max-height: 240px;
-    object-fit: contain;
-  }
+
+/* 9. Responsive Breakpoints */
+@media (max-width: 992px) {
   .flower-detail-layout {
-    gap: 1rem;
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
   }
-  .flower-detail-content h1 {
-    font-size: 1.6rem;
+  .flower-detail-gallery {
+    position: static;
   }
-  .flower-detail-shop {
-    margin-block: 0.35rem 0.65rem;
-    font-size: 0.85rem;
+  .flower-detail-media {
+    aspect-ratio: 1 / 1;
+    max-width: 480px;
+    margin-inline: auto;
   }
-  .flower-detail-actions {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 0.5rem;
+}
+
+@media (max-width: 600px) {
+  .flower-detail-page {
+    margin-top: 0.35rem;
+    margin-bottom: 2rem;
   }
-  .flower-detail-actions .button {
-    flex: 1 1 140px;
-    min-height: 48px;
-    height: auto;
-    padding: 0.65rem 0.85rem;
+  .flower-detail-media {
+    max-width: 290px;
+    aspect-ratio: 4 / 3.3;
+    margin-inline: auto;
+    border-radius: 10px;
+  }
+  .flower-detail-title {
+    font-size: 1.3rem;
   }
   .flower-detail-price {
-    font-size: 1.65rem;
+    font-size: 1.35rem;
+  }
+  .flower-detail-actions {
+    flex-direction: column-reverse; /* Nút Báo giá sẽ ở trên, nút Chat ở dưới */
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  .flower-detail-cta-btn.button,
+  .flower-detail-cta-btn,
+  .flower-detail-chat-btn.button,
+  .flower-detail-chat-btn {
+    width: 100%;
+    flex: none;
+    min-height: 42px;
+    height: 42px;
+  }
+  .flower-detail-perks {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 0.65rem 0.5rem;
+    gap: 0.25rem;
+    margin-bottom: 0.85rem;
+  }
+  .perk-col {
+    gap: 0.15rem;
+  }
+  .perk-icon-wrap {
+    width: 26px;
+    height: 26px;
+  }
+  .perk-icon-wrap svg {
+    width: 13px;
+    height: 13px;
+  }
+  .perk-text strong {
+    font-size: 0.68rem;
+  }
+  .perk-text span {
+    font-size: 0.6rem;
   }
 }

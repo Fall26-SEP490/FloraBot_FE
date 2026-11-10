@@ -247,7 +247,7 @@ export default function CustomerKioskLocator() {
                   type="text"
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
-                  placeholder="Tìm tên kiosk, mã tủ hoặc địa chỉ..."
+                  placeholder="Tìm tên, địa chỉ hoặc mã tủ..."
                   className="customer-quick-search-input"
                   aria-label="Tìm nhanh kiosk"
                 />
@@ -612,7 +612,7 @@ export default function CustomerKioskLocator() {
                         <li
                           key={kiosk.id}
                           id={`kiosk-item-${kiosk.id}`}
-                          className={`customer-kiosk-item ${selectedKioskId === kiosk.id ? 'is-selected' : ''}`}
+                          className={`customer-kiosk-item ${selectedKioskId === kiosk.id ? 'is-selected' : ''} ${!hasCoordinates ? 'is-unmapped' : ''}`}
                         >
                           <div className="customer-item-card-inner">
                             <div className="customer-item-main">
@@ -630,7 +630,8 @@ export default function CustomerKioskLocator() {
                                     title={statusLabel}
                                     aria-label={statusLabel}
                                   >
-                                    <span className="sr-only">{statusLabel}</span>
+                                    <span className="customer-status-dot" aria-hidden="true" />
+                                    <span className="customer-status-text">{statusLabel}</span>
                                   </span>
                                 </div>
                               </div>
@@ -648,19 +649,30 @@ export default function CustomerKioskLocator() {
                                 {/* Compact status notice when not online */}
                                 {isMaintenance && (
                                   <p className="customer-maintenance-notice" role="note">
-                                    Kiosk đang trong quá trình bảo trì kỹ thuật.
+                                    <CircleAlert
+                                      size={13}
+                                      aria-hidden="true"
+                                      className="customer-notice-icon"
+                                    />
+                                    <span>Kiosk đang trong quá trình bảo trì kỹ thuật.</span>
                                   </p>
                                 )}
 
                                 {isOffline && (
                                   <p className="customer-offline-notice" role="note">
-                                    Kiosk hiện tạm ngưng nhận hoa tại tủ.
+                                    <CircleAlert
+                                      size={13}
+                                      aria-hidden="true"
+                                      className="customer-notice-icon"
+                                    />
+                                    <span>Kiosk hiện tạm ngưng nhận hoa tại tủ.</span>
                                   </p>
                                 )}
 
                                 {!hasCoordinates && (
                                   <span className="customer-no-coords-note">
-                                    Chưa có tọa độ trên bản đồ
+                                    <MapPin size={12} aria-hidden="true" />
+                                    <span>Chưa có tọa độ trên bản đồ</span>
                                   </span>
                                 )}
 
@@ -824,7 +836,10 @@ export default function CustomerKioskLocator() {
                         title={getKioskStatusLabel(selectedKiosk.status)}
                         aria-label={getKioskStatusLabel(selectedKiosk.status)}
                       >
-                        <span className="sr-only">{getKioskStatusLabel(selectedKiosk.status)}</span>
+                        <span className="customer-status-dot" aria-hidden="true" />
+                        <span className="customer-status-text">
+                          {getKioskStatusLabel(selectedKiosk.status)}
+                        </span>
                       </span>
                       <button
                         type="button"

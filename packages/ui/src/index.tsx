@@ -75,6 +75,8 @@ export {
   LayoutGrid,
   List,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   QrCode,
   KeyRound,
   Sparkles,

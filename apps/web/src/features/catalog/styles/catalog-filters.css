@@ -172,10 +172,10 @@
 }
 
 .catalog-option-checkbox {
-  width: 17px;
-  height: 17px;
+  width: 18px;
+  height: 18px;
   border-radius: 4px;
-  border: 1.5px solid #a8caa0;
+  border: 1.5px solid #b5ccb1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -186,8 +186,8 @@
 }
 
 .catalog-filter-option.is-active .catalog-option-checkbox {
-  background: #174b35;
-  border-color: #174b35;
+  background: #183e2b;
+  border-color: #183e2b;
 }
 
 .catalog-option-text {
@@ -197,21 +197,32 @@
 }
 
 .catalog-filter-option.is-empty {
-  color: #3d5644;
+  opacity: 0.65;
+  color: #728c7b;
 }
 
 .catalog-filter-option.is-empty .catalog-option-text {
-  color: #3d5644;
+  color: #728c7b;
+}
+
+.catalog-filter-option.is-empty .catalog-option-checkbox {
+  border-color: #dbe6da;
 }
 
 .catalog-filter-option.is-empty:hover {
-  background-color: #f6faf5;
+  background-color: #f7faf6;
 }
 
 .catalog-option-count {
   margin-left: auto;
+  font-size: 0.76rem;
   font-variant-numeric: tabular-nums;
-  color: #4c6656;
+  color: #456150;
+}
+
+.catalog-filter-option.is-active .catalog-option-count {
+  color: #183e2b;
+  font-weight: 700;
 }
 .catalog-filter-option:disabled {
   cursor: default;

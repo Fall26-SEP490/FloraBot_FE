@@ -39,7 +39,7 @@
 
 .flower-request-heading {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
   flex-shrink: 0;
@@ -47,6 +47,21 @@
   border-bottom: 1px solid #e8efe6;
   background: #fff;
   margin: 0;
+}
+
+.flower-request-header-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #e2ebe0;
+  flex-shrink: 0;
+}
+
+.flower-request-header-name {
+  text-transform: capitalize;
+  font-weight: 600;
+  color: #183e2b;
 }
 
 .flower-request-body,
@@ -68,24 +83,50 @@
   overflow-y: auto;
   overscroll-behavior-y: contain;
   min-height: 0;
-  padding: 1.25rem 1.4rem;
+  padding: 1.15rem 1.4rem;
   scrollbar-width: thin;
 }
 
 .flower-request-intro {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem 1.25rem;
+  align-items: center;
   justify-content: space-between;
-  padding: 1rem;
-  margin-bottom: 1.25rem;
-  background: #f1f6ed;
-  border: 1px solid #dce8d5;
+  gap: 1rem;
+  padding: 0.85rem 1.15rem;
+  margin-bottom: 1rem;
+  background: #f4f8f3;
+  border: 1px solid #dce8d9;
   border-radius: 12px;
 }
 
-.flower-request-intro > div:first-child {
-  flex: 1 1 220px;
+.flower-request-intro-text {
+  flex: 1 1 auto;
+}
+
+.flower-request-intro-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #183e2b;
+  margin-bottom: 0.2rem;
+}
+
+.flower-request-intro-badge strong {
+  color: #183e2b;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.flower-request-intro-text p {
+  margin: 0;
+  color: #4b6350;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.flower-request-reference-price {
+  text-align: right;
+  flex-shrink: 0;
 }
 
 .flower-request-reference-price span {
@@ -95,7 +136,8 @@
 }
 
 .flower-request-reference-price strong {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
+  color: #183e2b;
 }
 
 .flower-request-field + .flower-request-field {
@@ -247,8 +289,49 @@
 }
 
 .flower-request form textarea {
-  min-height: 104px;
+  min-height: 84px;
   resize: vertical;
+}
+
+/* Quick Tags */
+.flower-request-quick-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.35rem 0 0.5rem;
+}
+
+.quick-tags-label {
+  font-size: 0.76rem;
+  color: #476451;
+  font-weight: 600;
+}
+
+.quick-tag-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.65rem;
+  border: 1px dashed #b8ccb5;
+  border-radius: 999px;
+  background: #f7faf6;
+  color: #183e2b;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.quick-tag-btn:hover {
+  background: #183e2b;
+  color: #ffffff;
+  border-style: solid;
+  border-color: #183e2b;
+}
+
+.quick-tag-btn:focus-visible {
+  outline: 2px solid #183e2b;
+  outline-offset: 1px;
 }
 
 .flower-request form input:not([type='checkbox']):not([type='radio']):focus,
@@ -432,6 +515,131 @@
   margin-top: 0.75rem;
   text-align: center;
   font-size: 0.85rem;
+}
+
+/* Guest Sign-in Card within Flower Request Modal */
+.flower-request:has(.flower-request-guest-card) {
+  width: min(100%, 450px);
+  border-radius: 16px;
+}
+
+.flower-request:has(.flower-request-guest-card) .flower-request-heading {
+  padding: 0.85rem 1.15rem;
+}
+
+.flower-request:has(.flower-request-guest-card) .flower-request-header-thumb {
+  width: 38px;
+  height: 38px;
+}
+
+.flower-request-guest-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1.15rem 1.25rem 1.35rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.flower-request-guest-icon-badge {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #edf5eb;
+  color: #183e2b;
+  margin-bottom: 0.75rem;
+  border: 1.5px solid #d4e8d0;
+  box-shadow: 0 2px 8px rgba(24, 62, 43, 0.06);
+}
+
+.flower-request-guest-title {
+  font-family: var(--font-display, 'Be Vietnam Pro', sans-serif);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #183e2b;
+  margin: 0 0 0.35rem;
+  line-height: 1.35;
+}
+
+.flower-request-guest-desc {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #4b6350;
+  margin: 0 0 0.85rem;
+}
+
+.flower-request-guest-trust-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  margin-bottom: 1.1rem;
+  background: #f6faf5;
+  border: 1px solid #e1ede0;
+  border-radius: 8px;
+  text-align: left;
+}
+
+.flower-request-trust-item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.78rem;
+  color: #31533b;
+  font-weight: 500;
+}
+
+.flower-request-trust-icon {
+  color: #183e2b;
+  flex-shrink: 0;
+}
+
+.flower-request-guest-login-btn.button {
+  width: 100%;
+  min-height: 42px !important;
+  height: 42px;
+  background: #183e2b !important;
+  color: #ffffff !important;
+  font-size: 0.9rem !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(24, 62, 43, 0.18);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none !important;
+  transition: all 0.2s ease;
+}
+
+.flower-request-guest-login-btn.button:hover {
+  background: #0f2b1e !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(24, 62, 43, 0.24);
+}
+
+.flower-request-guest-register-text {
+  font-size: 0.84rem;
+  color: #556c5c;
+  margin-top: 0.75rem;
+  margin-bottom: 0;
+}
+
+.flower-request-register-link {
+  color: #183e2b !important;
+  font-weight: 700 !important;
+  text-decoration: none !important;
+  border-bottom: 1.5px solid #183e2b;
+  padding-bottom: 1px;
+  transition: all 0.15s ease;
+}
+
+.flower-request-register-link:hover {
+  color: #2b6e49 !important;
+  border-color: #2b6e49;
 }
 
 .flower-request-notice {
@@ -636,7 +844,21 @@
   margin-top: 0.2rem;
 }
 .flower-request-pickup-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   margin-block: 0.75rem 0;
+  padding: 0.55rem 0.85rem;
+  background: #f6faf5;
+  border: 1px solid #e1ebe0;
+  border-radius: 8px;
+  color: #3b5a45;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+.flower-request-clock-icon {
+  color: #183e2b;
+  flex-shrink: 0;
 }
 @media (max-width: 640px) {
   .flower-request-backdrop {

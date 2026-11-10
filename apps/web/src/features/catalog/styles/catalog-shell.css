@@ -23,28 +23,42 @@ body:has(.flower-shop-page:not(.flower-detail-page)) {
   box-sizing: border-box;
 }
 
-/* Streamlined Minimalist Header */
+/* Streamlined Minimalist Header with Floral Overlay */
 .catalog-header-minimal {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
   align-items: center;
   gap: 1.5rem 3rem;
-  padding: clamp(1rem, 2vw, 1.75rem) 0;
-  margin-bottom: 1.5rem;
-  border-bottom: 1px solid #dce6d7;
+  padding: clamp(1.25rem, 2.5vw, 1.85rem) clamp(1.25rem, 2.5vw, 2rem);
+  margin-bottom: 2rem;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.93), rgba(255, 255, 255, 0.93)),
+    url('/images/generated/florabot-pattern.webp') center / 420px repeat;
+  border: 1px solid #e4ded4;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px -4px rgba(24, 62, 43, 0.06);
   color: #183e2b;
 }
 .catalog-header-minimal .catalog-hero-title {
-  color: inherit;
-  font-family: Georgia, serif;
-  font-weight: 500;
-  font-size: clamp(1.7rem, 2.4vw, 2.25rem);
-  margin: 0 0 0.65rem;
+  color: #183e2b;
+  font-family:
+    'Be Vietnam Pro',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.75rem, 2.4vw, 2.25rem);
+  letter-spacing: -0.02em;
+  margin: 0 0 0.5rem;
 }
 .catalog-header-minimal .catalog-hero-desc {
-  color: #526656;
+  color: #3b5a45;
   font-size: 0.95rem;
-  max-width: 43ch;
+  line-height: 1.55;
+  max-width: 45ch;
+  margin: 0;
 }
 .catalog-header-minimal .catalog-search-bar-wrap {
   margin: 0;
@@ -64,12 +78,15 @@ body:has(.flower-shop-page:not(.flower-detail-page)) {
 @media (max-width: 960px) {
   .catalog-header-minimal {
     grid-template-columns: minmax(0, 1fr);
-    gap: 1.15rem;
+    gap: 1.25rem;
+    padding: 1.25rem 1.25rem;
   }
 }
 @media (max-width: 580px) {
   .catalog-header-minimal {
-    padding: 1rem 0;
+    padding: 1.15rem 1rem;
+    border-radius: 12px;
+    margin-bottom: 1.25rem;
   }
   .catalog-header-minimal .catalog-hero-desc {
     font-size: 0.88rem;

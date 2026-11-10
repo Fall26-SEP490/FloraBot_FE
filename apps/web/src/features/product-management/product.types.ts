@@ -12,11 +12,13 @@ export interface ProductItem {
   lengthCm?: number | null;
   widthCm?: number | null;
   heightCm?: number | null;
+  quantity?: number | string;
 }
 
 export type Product = ProductItem;
 
 export interface CreateProductInput {
+  quantity: number;
   kioskId: string;
   name: string;
   description: string;
@@ -28,6 +30,7 @@ export interface CreateProductInput {
 }
 
 export interface UpdateProductMetadataInput {
+  quantity?: number;
   name: string;
   description: string;
   price: number;

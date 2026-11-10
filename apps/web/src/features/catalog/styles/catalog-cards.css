@@ -1,8 +1,8 @@
-/* Catalog Product Cards & Grid Layout */
+/* Catalog Product Cards & Grid Layout - Luxury Editorial / Laflora style */
 .flower-catalog-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 1.25rem;
   list-style: none;
   padding: 0;
   margin: 0 0 2rem;
@@ -18,32 +18,32 @@
 .flower-card {
   min-width: 0;
   background: #ffffff;
-  border: 1px solid #dce6d7;
-  border-radius: 12px;
+  border: 1px solid #edf0ea;
+  border-radius: 4px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   box-shadow: none;
+  transition:
+    transform 200ms ease,
+    box-shadow 200ms ease,
+    border-color 200ms ease;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .flower-card {
-    transition:
-      transform 180ms ease,
-      box-shadow 180ms ease;
-  }
   .flower-card:hover,
   .flower-card:focus-within {
-    transform: scale(1.025);
-    box-shadow: 0 8px 24px rgb(24 62 43 / 12%);
+    transform: translateY(-2px);
+    border-color: #d2ddd0;
+    box-shadow: 0 8px 24px rgba(24, 62, 43, 0.08);
   }
 }
 
 .flower-card-media {
   position: relative;
-  aspect-ratio: 1 / 1;
-  border-radius: 0;
-  background: #edf5eb;
+  aspect-ratio: 3 / 4;
+  border-radius: 4px 4px 0 0;
+  background: #f7f8f6;
   overflow: hidden;
   display: block;
   width: 100%;
@@ -65,49 +65,54 @@
   height: 100% !important;
   border-radius: 0 !important;
   object-fit: cover !important;
-  transition: transform 0.35s ease;
+  object-position: center !important;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .flower-card:hover .flower-card-img {
-  transform: scale(1.04);
+  transform: scale(1.03);
 }
 
 .flower-card-badges {
   position: absolute;
-  top: 0.5rem;
-  left: 0.5rem;
-  right: 0.5rem;
+  top: 0.6rem;
+  left: 0.6rem;
+  right: 0.6rem;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 0.35rem;
   pointer-events: none;
+  z-index: 2;
 }
 
 .flower-badge {
   display: inline-flex;
   align-items: center;
   padding: 0.22rem 0.55rem;
-  border-radius: 6px;
-  font-size: 0.72rem;
+  border-radius: 3px;
+  font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   backdrop-filter: blur(8px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .flower-badge-stock {
-  background: rgba(17, 52, 33, 0.92);
+  background: #183e2b;
   color: #ffffff;
+  border: none;
 }
 
 .flower-badge-custom {
-  background: rgba(255, 255, 255, 0.96);
-  color: #174b35;
-  border: 1px solid #c9dec6;
+  background: rgba(255, 255, 255, 0.95);
+  color: #183e2b;
+  border: 1px solid rgba(24, 62, 43, 0.15);
 }
 
 .flower-badge-occasion {
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.95);
   color: #8a3b14;
   font-weight: 600;
   border: 1px solid #fed7aa;
@@ -161,14 +166,16 @@
   display: flex;
   flex-direction: column;
   flex: 1;
+  background: #ffffff;
 }
 
 .flower-card-title {
   font-size: 0.95rem;
-  font-weight: 700;
-  color: #113421;
-  margin: 0 0 0.2rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 0.25rem;
   line-height: 1.35;
+  letter-spacing: -0.01em;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -219,10 +226,10 @@
   flex-direction: column;
   gap: 0.2rem;
   font-size: 0.76rem;
-  color: #385540;
+  color: #55695c;
   margin-top: 0;
-  padding-block: 0.6rem 0.45rem;
-  border-top: 1px solid #edf1e9;
+  padding-block: 0.45rem 0.4rem;
+  border-top: 1px solid #f1f4ee;
 }
 
 .flower-meta-item {
@@ -249,8 +256,8 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 0.35rem;
-  padding-top: 0.35rem;
-  margin-bottom: 0.5rem;
+  padding-top: 0.25rem;
+  margin-bottom: 0.45rem;
 }
 
 .flower-card-price-row > div {
@@ -261,7 +268,7 @@
 }
 
 .flower-card-price {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-variant-numeric: tabular-nums;
   font-weight: 700;
   color: #183e2b;
@@ -269,8 +276,8 @@
 
 .flower-card-price-label {
   display: block;
-  font-size: 0.75rem;
-  color: #34523e;
+  font-size: 0.74rem;
+  color: #6b7280;
 }
 
 .flower-card-actions {
@@ -285,11 +292,19 @@
   min-width: 0;
   min-height: 44px !important;
   height: auto !important;
-  font-size: 0.84rem !important;
-  font-weight: 700 !important;
+  font-size: 0.82rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
   padding: 0.45rem 0.65rem !important;
-  border-radius: 8px !important;
+  border-radius: 4px !important;
   white-space: normal !important;
+  background: #183e2b !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+.flower-card-select-btn.button:hover {
+  background: #112d1f !important;
 }
 
 .flower-card-chat-btn.button {
@@ -300,19 +315,19 @@
   font-size: 0.78rem !important;
   font-weight: 600 !important;
   padding: 0.35rem 0.5rem !important;
-  border-radius: 8px !important;
+  border-radius: 4px !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   gap: 0.3rem !important;
   white-space: nowrap !important;
-  border: 1px solid #c9dec6 !important;
-  color: #174b35 !important;
+  border: 1px solid #d2ded0 !important;
+  color: #183e2b !important;
   background: #ffffff !important;
 }
 
 .flower-card-chat-btn.button:hover {
-  background: #f2f8f0 !important;
-  border-color: #174b35 !important;
+  background: #f4f8f3 !important;
+  border-color: #183e2b !important;
   color: #113421 !important;
 }

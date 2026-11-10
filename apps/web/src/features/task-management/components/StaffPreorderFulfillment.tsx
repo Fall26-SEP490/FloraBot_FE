@@ -62,6 +62,7 @@ export default function StaffPreorderFulfillment({
         queryClient.invalidateQueries({ queryKey: ['staff-preorders', taskId] }),
         queryClient.invalidateQueries({ queryKey: ['staff-tasks'] }),
         queryClient.invalidateQueries({ queryKey: ['web-orders'] }),
+        queryClient.invalidateQueries({ queryKey: ['products'], refetchType: 'none' }),
       ]);
     } catch (cause) {
       const ambiguous = !(cause instanceof ApiError) || cause.status >= 500;

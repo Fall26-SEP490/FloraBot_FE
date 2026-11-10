@@ -379,6 +379,10 @@ export default function ProductManagement({ session }: { session: Session }) {
                       <strong className="product-price-strong">
                         {money(Number(product.price))}
                       </strong>
+                      <small>Tồn bó tại shop</small>
+                      <strong>
+                        {product.quantity == null ? 'Chưa có dữ liệu' : `${product.quantity} bó`}
+                      </strong>
                     </span>
                   </div>
 

@@ -8,3 +8,265 @@
 @import './customer-journey.css';
 
 @import './product-journey.css';
+
+/* Image-led catalog, while keeping purchase actions reachable on every device. */
+.flower-shop-page:not(.flower-detail-page) .flower-card {
+  position: relative;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+  background: transparent;
+  box-shadow: none;
+}
+.flower-shop-page:not(.flower-detail-page) .flower-card:hover,
+.flower-shop-page:not(.flower-detail-page) .flower-card:focus-within {
+  transform: none;
+  box-shadow: none;
+}
+.flower-shop-page:not(.flower-detail-page) .flower-card-media-wrap {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  border-radius: 10px;
+  background: #f7f8f6;
+  border: 1px solid #eaf0e8;
+  overflow: hidden;
+  transition:
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
+}
+.flower-shop-page:not(.flower-detail-page) .flower-card:hover .flower-card-media-wrap,
+.flower-shop-page:not(.flower-detail-page)
+  .flower-card:has(:focus-visible)
+  .flower-card-media-wrap {
+  box-shadow: 0 10px 28px -6px rgba(24, 62, 43, 0.16);
+}
+.flower-shop-page:not(.flower-detail-page) .flower-card-media {
+  aspect-ratio: 3 / 4;
+  border-radius: 0;
+  border: 0;
+  background: transparent;
+  overflow: hidden;
+  display: block;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+.flower-shop-page:not(.flower-detail-page) .flower-card-media::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 96px;
+  background: linear-gradient(to top, rgba(14, 38, 26, 0.6) 0%, rgba(14, 38, 26, 0) 100%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  z-index: 2;
+}
+.flower-shop-page:not(.flower-detail-page) .flower-card:hover .flower-card-media::after,
+.flower-shop-page:not(.flower-detail-page)
+  .flower-card:has(:focus-visible)
+  .flower-card-media::after {
+  opacity: 1;
+}
+.flower-shop-page:not(.flower-detail-page) .flower-card-body {
+  padding: 0.75rem 0 0;
+}
+.flower-shop-page:not(.flower-detail-page) .flower-card-title {
+  font-family:
+    'Be Vietnam Pro',
+    -apple-system,
+    sans-serif;
+  font-weight: 600;
+  font-size: 0.94rem;
+  color: #1a1a1a;
+  margin-bottom: 0.25rem;
+}
+.flower-shop-page:not(.flower-detail-page) .flower-card-title::first-letter {
+  text-transform: uppercase;
+}
+.flower-shop-page:not(.flower-detail-page) .flower-card-title a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.flower-shop-page:not(.flower-detail-page) .flower-card-title a:hover {
+  color: #183e2b;
+  text-decoration: underline;
+}
+.flower-shop-page:not(.flower-detail-page) .flower-card-price {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #183e2b;
+}
+.flower-shop-page:not(.flower-detail-page) .flower-card-price-label {
+  font-size: 0.78rem;
+  color: #3b5a45;
+  font-weight: 500;
+  margin-left: 0.35rem;
+}
+.flower-shop-page:not(.flower-detail-page) .flower-card-meta {
+  border: 0;
+  padding: 0 0 0.45rem;
+  color: #587060;
+  font-size: 0.78rem;
+  gap: 0.2rem;
+}
+.flower-shop-page:not(.flower-detail-page) .flower-card-price-row {
+  margin-bottom: 0.35rem;
+}
+
+/* Floating Actions on image overlay */
+.flower-shop-page:not(.flower-detail-page) .flower-card-actions {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  right: 10px;
+  z-index: 3;
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+  margin-top: 0;
+  padding-top: 0;
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.flower-shop-page:not(.flower-detail-page) .flower-card:hover .flower-card-actions,
+.flower-shop-page:not(.flower-detail-page) .flower-card:has(:focus-visible) .flower-card-actions {
+  opacity: 1;
+  transform: translateY(0);
+}
+.flower-shop-page:not(.flower-detail-page) .flower-card-select-btn.button {
+  flex: 1;
+  min-height: 44px !important;
+  height: 44px !important;
+  background: #183e2b !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  border-radius: 6px !important;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.24) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease !important;
+}
+.flower-shop-page:not(.flower-detail-page) .flower-card-select-btn.button:hover {
+  background: #0e271a !important;
+  transform: translateY(-1px);
+}
+.flower-shop-page:not(.flower-detail-page) .flower-card-chat-btn.button {
+  flex: 0 0 44px;
+  width: 44px !important;
+  min-height: 44px !important;
+  height: 44px !important;
+  background: #ffffff !important;
+  color: #183e2b !important;
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease !important;
+}
+.flower-shop-page:not(.flower-detail-page) .flower-card-chat-btn.button:hover {
+  background: #f0f6ef !important;
+  transform: translateY(-1px);
+}
+
+/* Pagination: Trang trước / Trang X / Trang sau */
+.stock-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  margin: 2.75rem 0 1.5rem;
+}
+.stock-actions .button {
+  height: 38px;
+  min-height: 38px;
+  padding: 0 1.25rem;
+  border-radius: 6px;
+  border: 1.5px solid #d8e4d5;
+  background: #ffffff;
+  color: #183e2b;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.stock-actions .button:hover:not(:disabled) {
+  background: #f2f7f1;
+  border-color: #183e2b;
+}
+.stock-actions .button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  border-color: #e5ece3;
+}
+.stock-actions span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  height: 38px;
+  padding: 0 0.95rem;
+  border-radius: 6px;
+  background: #183e2b;
+  color: #ffffff;
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+@media (min-width: 1280px) {
+  .flower-shop-page:not(.flower-detail-page) .flower-catalog-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (hover: none), (pointer: coarse) {
+  .flower-shop-page:not(.flower-detail-page) .flower-card-actions {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (max-width: 580px) {
+  .flower-shop-page:not(.flower-detail-page) .flower-card-media-wrap {
+    display: contents;
+  }
+  .flower-shop-page:not(.flower-detail-page) .flower-card-media {
+    border-radius: 10px;
+    border: 1px solid #eaf0e8;
+    background: #f7f8f6;
+    aspect-ratio: 3 / 4;
+    order: 1;
+  }
+  .flower-shop-page:not(.flower-detail-page) .flower-card-body {
+    order: 2;
+  }
+  .flower-shop-page:not(.flower-detail-page) .flower-card-actions {
+    position: static;
+    order: 3;
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    flex-direction: column;
+    margin-top: 0.4rem;
+    gap: 0.35rem;
+  }
+  .flower-shop-page:not(.flower-detail-page) .flower-card-chat-btn.button {
+    width: 100% !important;
+  }
+  .flower-shop-page:not(.flower-detail-page) .flower-card-media::after {
+    display: none;
+  }
+}

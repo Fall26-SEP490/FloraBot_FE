@@ -146,6 +146,7 @@ export function UserMenu({
               );
             })}
           </div>
+          <div className="user-menu-divider" role="separator" aria-hidden="true" />
           <button
             className="user-menu-logout"
             type="button"

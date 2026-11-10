@@ -38,60 +38,39 @@ export function FlowerCard({
 
   return (
     <li className="flower-card">
-      <Link
-        className="flower-card-media"
-        href={detailHref}
-        aria-label={`Xem chi tiết ${item.name}`}
-      >
-        <img
-          src={illustrative ? '/images/floral-white-online.webp' : item.photo!}
-          alt={
-            illustrative
-              ? 'Ảnh hoa minh họa, chưa có ảnh sản phẩm'
-              : `Mẫu ${item.name} từ ${item.shopName}`
-          }
-          loading="lazy"
-          className="flower-card-img"
-          onError={() => {
-            if (item.photo) setFailedPhoto(item.photo);
-          }}
-        />
-        {illustrative && <span className="flower-card-illustration">Ảnh minh họa</span>}
-        <div className="flower-card-badges">
-          <span className={`flower-badge ${walkIn ? 'flower-badge-stock' : 'flower-badge-custom'}`}>
-            {purchaseLabel(item)}
-          </span>
-          {item.occasion && (
-            <span className={`flower-badge flower-badge-occasion ${occBadgeClass}`}>
-              {item.occasion}
+      <div className="flower-card-media-wrap">
+        <Link
+          className="flower-card-media"
+          href={detailHref}
+          aria-label={`Xem chi tiết ${item.name}`}
+        >
+          <img
+            src={illustrative ? '/images/floral-white-online.webp' : item.photo!}
+            alt={
+              illustrative
+                ? 'Ảnh hoa minh họa, chưa có ảnh sản phẩm'
+                : `Mẫu ${item.name} từ ${item.shopName}`
+            }
+            loading="lazy"
+            className="flower-card-img"
+            onError={() => {
+              if (item.photo) setFailedPhoto(item.photo);
+            }}
+          />
+          {illustrative && <span className="flower-card-illustration">Ảnh minh họa</span>}
+          <div className="flower-card-badges">
+            <span
+              className={`flower-badge ${walkIn ? 'flower-badge-stock' : 'flower-badge-custom'}`}
+            >
+              {purchaseLabel(item)}
             </span>
-          )}
-        </div>
-      </Link>
-
-      <div className="flower-card-body">
-        <h2 className="flower-card-title">
-          <Link href={detailHref}>{item.name}</Link>
-        </h2>
-
-        <div className="flower-card-price-row">
-          <div>
-            <span className="flower-card-price">{formatPrice(item.price)} đ</span>
-            <span className="flower-card-price-label">{walkIn ? 'Giá tại tủ' : 'Giá mẫu'}</span>
+            {item.occasion && (
+              <span className={`flower-badge flower-badge-occasion ${occBadgeClass}`}>
+                {item.occasion}
+              </span>
+            )}
           </div>
-        </div>
-
-        <div className="flower-card-meta">
-          <span className="flower-meta-item" title={item.shopName}>
-            <Store size={14} aria-hidden="true" />
-            <span>{item.shopName}</span>
-          </span>
-          <span className="flower-meta-item" title={item.kioskName}>
-            <MapPin size={14} aria-hidden="true" />
-            <span>{item.kioskName}</span>
-          </span>
-          {walkIn && item.address && <span className="flower-meta-item">{item.address}</span>}
-        </div>
+        </Link>
 
         <div className="flower-card-actions">
           {canOrderOnWeb(item) && (
@@ -120,8 +99,33 @@ export function FlowerCard({
             aria-label="Nhắn tin với shop"
             onClick={() => void onOpenChat(item)}
           >
-            <MessageSquare size={14} aria-hidden="true" />
+            <MessageSquare size={16} aria-hidden="true" />
           </Button>
+        </div>
+      </div>
+
+      <div className="flower-card-body">
+        <h2 className="flower-card-title">
+          <Link href={detailHref}>{item.name}</Link>
+        </h2>
+
+        <div className="flower-card-price-row">
+          <div>
+            <span className="flower-card-price">{formatPrice(item.price)} đ</span>
+            <span className="flower-card-price-label">{walkIn ? 'Giá tại tủ' : 'Giá mẫu'}</span>
+          </div>
+        </div>
+
+        <div className="flower-card-meta">
+          <span className="flower-meta-item" title={item.shopName}>
+            <Store size={14} aria-hidden="true" />
+            <span>{item.shopName}</span>
+          </span>
+          <span className="flower-meta-item" title={item.kioskName}>
+            <MapPin size={14} aria-hidden="true" />
+            <span>{item.kioskName}</span>
+          </span>
+          {walkIn && item.address && <span className="flower-meta-item">{item.address}</span>}
         </div>
       </div>
     </li>

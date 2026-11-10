@@ -2,6 +2,58 @@ import { expect, test } from '@playwright/test';
 
 const sellerId = '20000000-0000-0000-0000-000000000099';
 
+for (const readableAfterSave of [true, false]) {
+  test(`Shop bank preserves saved names and checks read-back after save (${readableAfterSave})`, async ({
+    page,
+  }) => {
+    let saved = false;
+    await page.route(`**/api/sellers/${sellerId}/payment-channel`, (route) =>
+      route.fulfill({ status: 404, json: {} }),
+    );
+    await page.route(`**/api/sellers/${sellerId}/bank`, (route) =>
+      route.fulfill({
+        json: {
+          status: saved && readableAfterSave ? 'READY' : 'NEEDS_UPDATE',
+          bankName: 'MB Bank',
+          holder: 'TEST HOLDER',
+          accountSuffix: saved && readableAfterSave ? '5678' : null,
+        },
+      }),
+    );
+    await page.route(`**/api/sellers/${sellerId}/flows/set_seller_bank`, (route) => {
+      expect(route.request().postDataJSON()).toEqual({
+        p_bank: 'MB Bank',
+        p_holder: 'TEST HOLDER',
+        p_account_enc: '0012345678',
+      });
+      saved = true;
+      return route.fulfill({ json: { result: null } });
+    });
+    await page.goto('/seller/commerce');
+    const bank = page.locator('.shop-bank-section');
+    await expect(bank.getByLabel('Tên ngân hàng nhận hoàn phí')).toHaveValue('MB Bank');
+    await expect(bank.getByLabel('Tên chủ tài khoản')).toHaveValue('TEST HOLDER');
+    await expect(bank.getByLabel('Số tài khoản ngân hàng')).toHaveValue('');
+    await page.reload();
+    await expect(bank.getByLabel('Tên ngân hàng nhận hoàn phí')).toHaveValue('MB Bank');
+    await expect(bank.getByLabel('Tên chủ tài khoản')).toHaveValue('TEST HOLDER');
+    await bank.getByLabel('Số tài khoản ngân hàng').fill('0012345678');
+    await bank.getByRole('button', { name: 'Lưu tài khoản ngân hàng shop' }).click();
+    if (readableAfterSave) {
+      await expect(bank).toContainText('Đã lưu thông tin tài khoản ngân hàng của shop thành công.');
+      await page.reload();
+      await expect(bank).toContainText('5678');
+      await expect(bank.getByLabel('Số tài khoản ngân hàng')).toHaveCount(0);
+    } else {
+      await expect(bank.getByRole('alert')).toContainText('máy chủ chưa xác nhận tài khoản hợp lệ');
+      await expect(bank).not.toContainText(
+        'Đã lưu thông tin tài khoản ngân hàng của shop thành công.',
+      );
+      await expect(bank.getByLabel('Số tài khoản ngân hàng')).toHaveValue('');
+    }
+  });
+}
+
 test.beforeEach(async ({ page }) => {
   await page.route('**/api/auth/me', (route) =>
     route.fulfill({

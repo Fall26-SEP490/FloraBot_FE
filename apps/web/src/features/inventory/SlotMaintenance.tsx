@@ -131,6 +131,7 @@ export default function SlotMaintenance({
       // The completed session is still visible in query state.
     }
     void queryClient.invalidateQueries({ queryKey: ['seller-kiosk-slots', sellerId, kioskId] });
+    void queryClient.invalidateQueries({ queryKey: ['products', sellerId] });
   }, [session.data?.stage, sellerId, kioskId, slot.id]);
 
   const start = useMutation({
@@ -141,6 +142,7 @@ export default function SlotMaintenance({
       setReason('');
       void queryClient.invalidateQueries({ queryKey: ['seller-kiosk-slots', sellerId, kioskId] });
     },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['products', sellerId] }),
   });
   const advance = useMutation({
     mutationFn: ({ step, body }: { step: string; body?: object }) =>
@@ -157,6 +159,7 @@ export default function SlotMaintenance({
       }
       setIssueReason('');
     },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['products', sellerId] }),
   });
   const retry = useMutation({
     mutationFn: () =>

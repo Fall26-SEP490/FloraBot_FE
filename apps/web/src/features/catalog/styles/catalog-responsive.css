@@ -382,6 +382,6 @@
     grid-template-columns: minmax(0, 1fr);
   }
   .flower-catalog .flower-card-media {
-    aspect-ratio: 4 / 3;
+    aspect-ratio: 3 / 4;
   }
 }

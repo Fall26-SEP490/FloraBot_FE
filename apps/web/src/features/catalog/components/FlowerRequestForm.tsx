@@ -4,7 +4,16 @@ import { catalogReturnPath } from '../catalog.navigation';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { Button, Check, MapPin, MessageSquare } from '@florabot/ui';
+import {
+  Button,
+  Check,
+  CheckCircle2,
+  Clock,
+  LogIn,
+  MapPin,
+  MessageSquare,
+  ShieldCheck,
+} from '@florabot/ui';
 import { ApiError, queryClient, request, sessionQuery } from '@/shared/lib/api';
 import type { CatalogItem, CatalogResponse } from '../catalog.types';
 import { canOrderOnWeb, formatPrice, isWalkIn } from '../catalog.utils';
@@ -114,15 +123,15 @@ export function FlowerRequestForm({
       setError('Chưa xác minh được tủ nhận hoa. Hãy tải lại danh sách tủ.');
       return;
     }
-    if (availability.data && !availability.data.available) {
-      setError(availability.data.message || 'Tủ nhận hiện không còn sức chứa đặt trước.');
-      return;
-    }
     const pickupDate = new Date(pickup);
     const delay = pickupDate.getTime() - Date.now();
     if (!Number.isFinite(delay) || delay <= 0 || delay > 30 * 24 * 60 * 60 * 1000) {
       setPickupError('Chọn thời gian nhận trong tương lai, tối đa 30 ngày tới.');
       pickupRef.current?.focus();
+      return;
+    }
+    if (availability.data && availability.data.available === false) {
+      setError(availability.data.message || 'Tủ nhận hiện không còn sức chứa đặt trước.');
       return;
     }
     const brief = instructions.trim();
@@ -225,14 +234,38 @@ export function FlowerRequestForm({
     const returnUrl = `/dat-hoa/${encodeURIComponent(item.productId)}/${encodeURIComponent(item.kioskId)}?${params}`;
     const authQuery = `?returnUrl=${encodeURIComponent(returnUrl)}`;
     return (
-      <div className="flower-request-notice">
-        <p>Đăng nhập để gửi yêu cầu báo giá. Bạn sẽ quay lại đúng mẫu hoa này.</p>
-        <Link className="button button-primary" href={`/dang-nhap${authQuery}`}>
-          Đăng nhập để tiếp tục
-        </Link>
-        <p>
-          Chưa có tài khoản? <Link href={`/dang-ky${authQuery}`}>Tạo tài khoản</Link>
-        </p>
+      <div className="flower-request-guest-card">
+        <div className="flower-request-guest-icon-badge">
+          <LogIn size={26} aria-hidden="true" />
+        </div>
+        <div className="flower-request-guest-content">
+          <h3 className="flower-request-guest-title">Đăng nhập để gửi yêu cầu báo giá</h3>
+          <p className="flower-request-guest-desc">
+            Đăng nhập để nhận báo giá từ shop và theo dõi đơn đặt hoa của bạn.
+          </p>
+          <div className="flower-request-guest-trust-list">
+            <div className="flower-request-trust-item">
+              <ShieldCheck size={16} className="flower-request-trust-icon" aria-hidden="true" />
+              <span>Chưa cần thanh toán · Miễn phí gửi yêu cầu</span>
+            </div>
+            <div className="flower-request-trust-item">
+              <CheckCircle2 size={16} className="flower-request-trust-icon" aria-hidden="true" />
+              <span>Trao đổi mẫu và yêu cầu với shop</span>
+            </div>
+          </div>
+          <Link
+            className="button button-primary flower-request-guest-login-btn"
+            href={`/dang-nhap${authQuery}`}
+          >
+            Đăng nhập để tiếp tục →
+          </Link>
+          <p className="flower-request-guest-register-text">
+            Chưa có tài khoản?{' '}
+            <Link className="flower-request-register-link" href={`/dang-ky${authQuery}`}>
+              Tạo tài khoản mới
+            </Link>
+          </p>
+        </div>
       </div>
     );
   }
@@ -249,8 +282,11 @@ export function FlowerRequestForm({
     <form className="flower-request-form" noValidate onSubmit={(event) => void submit(event)}>
       <div className="flower-request-scroll">
         <div className="flower-request-intro">
-          <div>
-            <strong>Bạn chưa cần thanh toán</strong>
+          <div className="flower-request-intro-text">
+            <div className="flower-request-intro-badge">
+              <ShieldCheck size={15} aria-hidden="true" />
+              <strong>Bạn chưa cần thanh toán</strong>
+            </div>
             <p>Shop sẽ gửi báo giá và lịch nhận để bạn kiểm tra.</p>
           </div>
           <div className="flower-request-reference-price">
@@ -341,9 +377,33 @@ export function FlowerRequestForm({
             )}
           </div>
           <div className="flower-request-field">
-            <label htmlFor={`brief-${item.productId}`}>
-              Dịp tặng, màu hoa, ngân sách và lời nhắn
-            </label>
+            <div className="flower-request-field-header">
+              <label htmlFor={`brief-${item.productId}`}>
+                Dịp tặng, màu hoa, ngân sách và lời nhắn
+              </label>
+            </div>
+            <div className="flower-request-quick-tags" aria-label="Gợi ý nhanh lời nhắn">
+              <span className="quick-tags-label">Gợi ý nhanh:</span>
+              {[
+                'Sinh nhật bạn nữ, tone pastel',
+                'Kỷ niệm ngày cưới, hoa hồng đỏ sang',
+                'Chúc mừng khai trương, hoa tươi sáng',
+                'Tone ấm cúng tặng gia đình',
+              ].map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  className="quick-tag-btn"
+                  onClick={() => {
+                    setInstructions((prev) => (prev ? `${prev}, ${tag}` : tag));
+                    setBriefError('');
+                    briefRef.current?.focus();
+                  }}
+                >
+                  + {tag}
+                </button>
+              ))}
+            </div>
             <textarea
               id={`brief-${item.productId}`}
               ref={briefRef}
@@ -382,9 +442,12 @@ export function FlowerRequestForm({
             <span>Tôi đã kiểm tra tủ nhận và thông tin yêu cầu.</span>
           </label>
         </fieldset>
-        <p className="flower-request-pickup-hint">
-          Khi hoa sẵn sàng, mã OTP nhận hoa được gửi tới <strong>email đăng nhập của bạn</strong>.
-        </p>
+        <div className="flower-request-pickup-hint">
+          <Clock size={14} className="flower-request-clock-icon" aria-hidden="true" />
+          <span>
+            Khi hoa sẵn sàng, mã OTP nhận hoa được gửi tới <strong>email đăng nhập của bạn</strong>.
+          </span>
+        </div>
         <p role="alert" className="error">
           {error}
         </p>

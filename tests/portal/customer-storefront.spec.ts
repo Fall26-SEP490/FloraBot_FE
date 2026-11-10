@@ -74,9 +74,6 @@ for (const width of [390, 1440]) {
     await page.goto('/');
     const preview = page.getByRole('region', { name: 'Mẫu hoa từ các shop', exact: true });
     await expect(preview.locator('.storefront-flower')).toHaveCount(3);
-    await expect(
-      page.getByRole('navigation', { name: 'Chọn hoa theo ngân sách', exact: true }),
-    ).toHaveCount(1);
     await expect(page.locator('.gift-tool, .gift-demo')).toHaveCount(0);
     await expect(preview).toContainText(flower.name);
     await expect(preview).toContainText('245.000');
@@ -92,7 +89,6 @@ for (const width of [390, 1440]) {
     const previewPosition = await preview.boundingBox();
     const partnerPosition = await page.locator('#danh-cho-shop').boundingBox();
     expect(previewPosition!.y).toBeLessThan(partnerPosition!.y);
-    expect(previewPosition!.y).toBeLessThan(900);
     await expect(
       preview.getByRole('link', {
         name: `${flower.name} · Đặt trước · ${flower.kioskName}`,
@@ -109,8 +105,8 @@ for (const width of [390, 1440]) {
     await expect(page.getByRole('button', { name: 'Yêu cầu báo giá' })).toHaveCount(0);
     await page.goBack();
     await expect(
-      preview.getByRole('link', { name: 'Dưới 300.000 đ', exact: true }),
-    ).toHaveAttribute('href', '/dat-hoa?price=under300');
+      preview.getByRole('link', { name: 'Xem tất cả mẫu', exact: true }),
+    ).toHaveAttribute('href', '/dat-hoa');
     expect(
       (
         await new AxeBuilder({ page })
@@ -123,8 +119,8 @@ for (const width of [390, 1440]) {
       true,
     );
     await page.screenshot({ path: test.info().outputPath(`home-${width}.png`), fullPage: true });
-    await preview.getByRole('link', { name: 'Dưới 300.000 đ', exact: true }).click();
-    await expect(page).toHaveURL(/\/dat-hoa\?price=under300$/);
+    await preview.getByRole('link', { name: 'Xem tất cả mẫu', exact: true }).click();
+    await expect(page).toHaveURL(/\/dat-hoa$/);
     await expect(page.locator('.flower-card')).toHaveCount(3);
     await expect(page.locator('.flower-card').first()).toContainText(flower.kioskName);
     expect(state.pages).toContain(2);
@@ -265,7 +261,6 @@ for (const status of [200, 503]) {
     );
     await page.goto('/');
     await expect(page.locator('#mau-hoa .storefront-flower')).toHaveCount(3);
-    await page.locator('.home-partner-details > summary').click();
     await expect(page.locator('#goi-thue')).toContainText(
       status === 200 ? 'Chưa có bảng giá' : 'Chưa tải được bảng giá',
     );
@@ -282,11 +277,10 @@ for (const width of [390, 1440]) {
     const state = await setup(page);
     await page.route('**/api/kiosk-packages', (route) => route.fulfill({ json: rentalPricing }));
     await page.goto('/');
-    await page.locator('.home-partner-details > summary').click();
     const pricing = page.locator('#goi-thue');
-    await pricing.getByLabel('Ô bán sẵn (Walk-in)', { exact: true }).fill('2');
-    await pricing.getByLabel('Ô đặt trước (Pre-order)', { exact: true }).fill('2');
-    await expect(pricing).toContainText('440.000');
+    await expect(pricing.locator('.pricing-card')).toHaveCount(2);
+    await expect(pricing).toContainText('Ô bán sẵn');
+    await expect(pricing).toContainText('Ô đặt trước');
     await expect(pricing.getByRole('link', { name: 'Đăng ký thuê kiosk →' })).toHaveAttribute(
       'href',
       '/thue-kiosk',

@@ -33,18 +33,11 @@ export default function StorefrontFlowers() {
       aria-labelledby="storefront-flowers-title"
     >
       <div className="storefront-section-heading">
-        <div>
-          <h2 id="storefront-flowers-title">Mẫu hoa từ các shop</h2>
-        </div>
-        <Link className="text-link" href="/dat-hoa">
+        <h2 id="storefront-flowers-title">Mẫu hoa từ các shop</h2>
+        <Link href="/dat-hoa" className="collection-view-all-btn">
           Xem tất cả mẫu
         </Link>
       </div>
-      <nav className="storefront-budgets" aria-label="Chọn hoa theo ngân sách">
-        <Link href="/dat-hoa?price=under300">Dưới 300.000 đ</Link>
-        <Link href="/dat-hoa?price=300to600">300.000–600.000 đ</Link>
-        <Link href="/dat-hoa?price=600to1000">Trên 600.000–1.000.000 đ</Link>
-      </nav>
       <div className="storefront-results" aria-busy={catalog.isFetching}>
         {catalog.isPending && (
           <div className="storefront-feedback" role="status">
@@ -75,10 +68,9 @@ export default function StorefrontFlowers() {
           .map((group) => (
             <section className="storefront-collection" key={group.title}>
               <div className="collection-heading">
-                <h3>{group.title}</h3>
-                <Link href={group.href} aria-label={`Xem tất cả: ${group.title}`}>
-                  Xem tất cả →
-                </Link>
+                <div>
+                  <h3>{group.title}</h3>
+                </div>
               </div>
               <ul className="storefront-flower-grid">
                 {group.flowers.slice(0, 10).map((item) => {

@@ -97,8 +97,10 @@
   border-radius: 16px;
   background: #ffffff;
   color: #173824;
-  box-shadow: 0 18px 44px rgba(17, 52, 33, 0.18);
-  animation: sharedUserMenuIn 0.16s ease-out;
+  box-shadow:
+    0 4px 16px rgba(17, 52, 33, 0.08),
+    0 16px 36px rgba(17, 52, 33, 0.14);
+  animation: sharedUserMenuIn 0.16s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .user-menu-unread {
@@ -113,7 +115,7 @@
 .user-menu-links {
   display: grid;
   gap: 3px;
-  padding: 6px 0;
+  padding: 0;
 }
 
 .user-menu-links a,
@@ -123,21 +125,24 @@
   min-height: 42px;
   box-sizing: border-box;
   align-items: center;
-  gap: 9px;
-  padding: 9px 11px;
+  gap: 10px;
+  padding: 9px 12px;
   border: 0;
-  border-radius: 9px;
+  border-radius: 10px;
   background: transparent;
   color: #294f38;
-  font: 600 13px/1.4 var(--font-body);
+  font: 600 13.5px/1.4 var(--font-body);
   text-align: left;
   text-decoration: none;
   cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .user-menu-links a:hover,
 .user-menu-links a[aria-current='page'] {
-  background: #eef6eb;
+  background: #edf6ec;
   color: #174b35;
 }
 
@@ -147,14 +152,19 @@
   outline-offset: -2px;
 }
 
+.user-menu-divider {
+  height: 1px;
+  background: #e6ede4;
+  margin: 6px 4px;
+}
+
 .user-menu-logout {
-  border-top: 1px solid #e5eee3;
-  border-radius: 0 0 9px 9px;
+  border-radius: 10px;
   color: #8c312f;
 }
 
 .user-menu-logout:hover:not(:disabled) {
-  background: #fbf2f2;
+  background: #fdf2f2;
   color: #7a2423;
 }
 

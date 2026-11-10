@@ -417,6 +417,8 @@ export default function SellerStock({ session }: { session: Session }) {
 
   const stock = useMutation({
     mutationFn: async (values: z.infer<typeof schema>) => {
+      if (Number(products.data?.find((item) => item.id === values.productId)?.quantity) === 0)
+        throw new Error('Mẫu hoa đã hết tồn tại shop. Cập nhật tồn thực tế trước khi nạp.');
       const slot = slots.data?.find((item) => item.id === values.slotId);
       if (!slot) throw new Error('Ô không còn trong danh sách. Tải lại dữ liệu ô.');
       if (slot.sensorEnabled) {
@@ -454,9 +456,12 @@ export default function SellerStock({ session }: { session: Session }) {
       form.reset({ slotId: '', productId: values.productId });
     },
     onSettled: () =>
-      queryClient.invalidateQueries({
-        queryKey: ['seller-kiosk-slots', sellerId, selectedKioskId],
-      }),
+      Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ['seller-kiosk-slots', sellerId, selectedKioskId],
+        }),
+        queryClient.invalidateQueries({ queryKey: ['products', sellerId] }),
+      ]),
   });
 
   if (!sellerId) return null;
@@ -496,6 +501,7 @@ export default function SellerStock({ session }: { session: Session }) {
     products.isError ||
     !matchingEmpty.length ||
     !available.length ||
+    Number(selectedProduct?.quantity) === 0 ||
     (!!selectedSlot?.sensorEnabled && (!selectedSlot.sensorReady || stockReason.trim().length < 5));
 
   const filteredSlots = allSlots.filter((slot) => {
@@ -717,8 +723,13 @@ export default function SellerStock({ session }: { session: Session }) {
                     >
                       <option value="">Chọn sản phẩm</option>
                       {available.map((product) => (
-                        <option key={product.id} value={product.id}>
+                        <option
+                          key={product.id}
+                          value={product.id}
+                          disabled={Number(product.quantity) === 0}
+                        >
                           {product.name}
+                          {product.quantity == null ? '' : ` · Tồn shop: ${product.quantity} bó`}
                         </option>
                       ))}
                     </select>
@@ -736,6 +747,11 @@ export default function SellerStock({ session }: { session: Session }) {
                     </p>
                   </div>
                 </div>
+                {selectedProduct && Number(selectedProduct.quantity) === 0 && (
+                  <p role="status" className="error">
+                    Mẫu hoa đã hết tồn tại shop. Cập nhật tồn thực tế trong Mẫu hoa trước khi nạp.
+                  </p>
+                )}
                 {selectedSlot && selectedProduct && (
                   <div
                     className="shop-profile stock-review-card"

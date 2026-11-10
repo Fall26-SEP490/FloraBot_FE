@@ -9,7 +9,7 @@ body:has(.home-storefront) {
   padding: 0 0 56px;
 }
 .home-content {
-  max-width: 1400px;
+  max-width: 1680px;
   margin: 0 auto;
   padding: 0 var(--home-gutter);
 }
@@ -33,243 +33,976 @@ body:has(.home-storefront) {
   border-radius: 8px;
 }
 .home-hero {
-  width: 100%;
-  background: #f1f4e9;
-  border-radius: 0;
+  background: #faf8f5;
+  border-bottom: 1px solid #eae7e1;
   overflow: hidden;
 }
 .home-hero-inner {
+  display: grid;
+  grid-template-columns: minmax(360px, 1.15fr) minmax(320px, 1fr);
+  align-items: center;
   max-width: 1400px;
   margin: 0 auto;
-  padding-inline: var(--home-gutter);
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  padding: 0 clamp(20px, 4vw, 48px);
+  min-height: clamp(480px, 44vw, 580px);
+  gap: clamp(24px, 4vw, 56px);
+}
+.home-hero-garden {
+  position: relative;
+  display: flex;
   align-items: center;
-  min-height: clamp(240px, 22vw, 320px);
-  gap: clamp(20px, 4vw, 48px);
-}
-.home-hero-copy {
-  padding: clamp(32px, 4.5vw, 64px) 0;
-  align-self: center;
-}
-.home-hero-copy h1 {
-  margin: 0 0 16px;
-  font-size: clamp(1.75rem, 3.2vw, 2.65rem);
-  line-height: 1.25;
-  color: #183e2b;
-}
-.home-hero-copy p {
-  margin: 0 0 24px;
-  max-width: 44ch;
-  color: #495f4e;
-  font-size: 0.95rem;
-}
-.home-hero-location {
-  display: block;
-  width: fit-content;
-  padding-top: 12px;
-  min-height: 44px;
-  font-size: 0.85rem;
-  color: #294f38;
-  text-underline-offset: 4px;
-}
-.home-hero-image {
+  justify-content: center;
   width: 100%;
   height: 100%;
-  min-height: 220px;
-  max-height: 320px;
+  padding: 32px 0;
+}
+.hero-cabinet {
+  position: relative;
+  margin: 0;
+  width: 100%;
+  max-width: 580px;
+  height: clamp(340px, 32vw, 440px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 48px -12px rgba(18, 46, 31, 0.16);
+  background: #ffffff;
+  animation: none;
+}
+.home-hero .garden-photo {
+  position: absolute !important;
+  inset: 0 !important;
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  border-radius: 16px;
+  animation: none;
+  transition: transform 0.5s ease;
+}
+.hero-cabinet:hover .garden-photo {
+  transform: scale(1.02);
+}
+.home-hero-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: clamp(32px, 4vw, 56px) 0;
+  text-align: left;
+  z-index: 2;
+}
+.home-hero-eyebrow {
+  margin: 0 0 14px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #183e2b;
+}
+.marketing-site .home-hero-copy .home-hero-title {
+  margin: 0 0 16px;
+  font-family: 'Playfair Display', 'Palatino Linotype', 'Palatino', 'Times New Roman', serif;
+  font-size: clamp(2.2rem, 3.4vw, 3.6rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #162c1d;
+}
+.home-hero-subtitle {
+  max-width: 48ch;
+  margin: 0 0 24px;
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: #495e50;
+}
+.home-hero-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 16px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+.home-hero-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 30px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #ffffff;
+  background: #183e2b;
+  border: 1.5px solid #183e2b;
+  border-radius: 4px;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(24, 62, 43, 0.16);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.home-hero-cta:hover {
+  background: #102d1e;
+  border-color: #102d1e;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(24, 62, 43, 0.28);
+  transform: translateY(-1px);
+}
+.home-hero-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #183e2b;
+  text-decoration: none !important;
+  transition: opacity 0.15s ease;
+}
+.home-hero-location:hover {
+  opacity: 0.75;
+}
+.home-hero-badges {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 18px;
+  border-top: 1px solid #e5dfd5;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #556758;
+}
+.hero-badge-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.badge-stars {
+  color: #f59e0b;
+  font-size: 12px;
+  letter-spacing: 2px;
+}
+.badge-divider {
+  color: #cbd5e1;
+  font-weight: 700;
+}
+.home-brand-intro {
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.93), rgba(255, 255, 255, 0.93)),
+    url('/images/generated/florabot-pattern.webp') center / 440px repeat;
+  border-bottom: 1px solid #f0eee8;
+  padding: 44px var(--home-gutter) 36px;
+  text-align: center;
+}
+.brand-intro-content {
+  max-width: 820px;
+  margin: 0 auto;
+}
+.marketing-site .brand-intro-title {
+  font-family: 'Playfair Display', 'Palatino Linotype', 'Palatino', 'Times New Roman', serif;
+  font-size: clamp(1.25rem, 2vw, 1.65rem);
+  font-weight: 600;
+  color: #183e2b;
+  margin: 0 0 12px;
+  letter-spacing: -0.01em;
+}
+.brand-intro-text {
+  font-size: 13.5px;
+  line-height: 1.8;
+  color: #526356;
+  margin: 0 auto;
+}
+
+/* Section: Chọn hoa theo dịp (Shop by collections / Occasions) */
+.home-occasions {
+  padding: 44px 0 28px;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.94)),
+    url('/images/generated/florabot-pattern.webp') center / 460px repeat;
+  border-bottom: 1px solid #f0eee8;
+}
+.home-occasions-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+.occasions-kicker {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+.marketing-site .home-occasions-title {
+  font-family: 'Playfair Display', 'Palatino Linotype', 'Palatino', 'Times New Roman', serif;
+  font-size: clamp(1.4rem, 2.2vw, 1.85rem);
+  font-weight: 700;
+  color: #183e2b;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin: 0;
+}
+.home-occasions-carousel {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: clamp(16px, 2.6vw, 36px);
+  overflow-x: auto;
+  padding: 8px 12px 18px;
+  margin: 0 -12px;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+  -webkit-overflow-scrolling: touch;
+}
+.home-occasions-carousel::-webkit-scrollbar {
+  height: 4px;
+}
+.home-occasions-carousel::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.occasion-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  flex-shrink: 0;
+  cursor: pointer;
+  outline: none;
+}
+.occasion-avatar-wrap {
+  position: relative;
+  width: clamp(74px, 7vw, 96px);
+  height: clamp(74px, 7vw, 96px);
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid #eae8e3;
+  box-shadow: 0 4px 14px rgba(24, 62, 43, 0.08);
+  background: #fdfdfc;
+  transition:
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+.occasion-item:hover .occasion-avatar-wrap,
+.occasion-item:focus-visible .occasion-avatar-wrap {
+  border-color: #183e2b;
+  box-shadow: 0 8px 24px rgba(24, 62, 43, 0.2);
+  transform: translateY(-3px);
+}
+.occasion-avatar-img {
+  display: block;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  object-position: center;
-  border-radius: 12px;
+  transition: transform 0.4s ease;
 }
-@media (min-width: 601px) {
-  .home-hero-image {
-    grid-column: 1;
-    grid-row: 1;
-  }
-  .home-hero-copy {
-    grid-column: 2;
-    grid-row: 1;
+.occasion-item:hover .occasion-avatar-img,
+.occasion-item:focus-visible .occasion-avatar-img {
+  transform: scale(1.1);
+}
+.occasion-label {
+  font-family: 'Playfair Display', 'Palatino Linotype', Georgia, serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #243528;
+  margin-top: 10px;
+  text-align: center;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+  transition: color 0.15s ease;
+}
+.occasion-item:hover .occasion-label,
+.occasion-item:focus-visible .occasion-label {
+  color: #183e2b;
+  font-weight: 700;
+}
+
+.home-occasions-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+.occasions-arrow-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid #d8ded5;
+  background: #ffffff;
+  color: #4a5c4e;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+.occasions-arrow-btn:hover,
+.occasions-arrow-btn:focus-visible {
+  background: #183e2b;
+  border-color: #183e2b;
+  color: #ffffff;
+  transform: scale(1.08);
+  box-shadow: 0 3px 8px rgba(24, 62, 43, 0.18);
+}
+.occasions-arrow-btn:active {
+  transform: scale(0.95);
+}
+
+@media (max-width: 900px) {
+  .home-occasions-carousel {
+    justify-content: flex-start;
+    padding-left: var(--home-gutter);
+    padding-right: var(--home-gutter);
   }
 }
+
 .marketing-site .home-storefront .storefront-flowers {
   padding: 40px 0;
   background: #fff;
   scroll-margin-top: 100px;
 }
+.marketing-site .home-storefront .storefront-section-heading {
+  margin-bottom: 24px;
+}
 .marketing-site .home-storefront .storefront-section-heading h2 {
-  font-size: clamp(1.35rem, 2.3vw, 1.85rem);
-  margin-bottom: 6px;
-}
-.home-storefront .storefront-section-heading p {
-  font-size: 0.8rem;
-  max-width: 70ch;
-}
-.home-storefront .storefront-section-heading > .text-link {
-  font-size: 0.8rem;
+  font-family: 'Playfair Display', 'Palatino Linotype', 'Palatino', Georgia, serif;
+  font-size: clamp(1.4rem, 2.2vw, 1.85rem);
+  font-weight: 700;
+  color: #183e2b;
+  margin: 0;
+  letter-spacing: 0.01em;
 }
 .home-storefront .storefront-budgets {
-  margin-bottom: 24px;
-  gap: 8px;
+  display: none !important;
 }
-.home-storefront .storefront-budgets a {
-  border-radius: 999px;
-  background: #f7f8f5;
-  border-color: #e0e7dc;
-  font-size: 0.75rem;
+.storefront-flower-shop {
+  color: #4b6350 !important;
 }
-.home-storefront .storefront-budgets a:hover {
-  background: #edf3e8;
-  border-color: #78947d;
+.storefront-flower-shop {
+  color: #4b6350 !important;
 }
 .home-storefront .storefront-flower-grid {
-  gap: 28px 20px;
+  gap: 32px 24px;
 }
 .home-storefront .storefront-flower-photo {
-  border-radius: 12px;
+  border-radius: 6px;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+.home-storefront .storefront-flower:hover .storefront-flower-photo {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(24, 62, 43, 0.14);
+}
+.home-storefront .storefront-flower-copy {
+  text-align: center;
+  padding-top: 10px;
 }
 .storefront-collection + .storefront-collection {
-  margin-top: 2.5rem;
+  margin-top: 3.5rem;
 }
 .collection-heading {
   display: flex;
-  align-items: baseline;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #eae7e0;
+}
+.collection-kicker {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #718274;
+  margin-bottom: 4px;
 }
 .collection-heading h3 {
   margin: 0;
-  font-family: Georgia, serif;
-  font-size: clamp(1.25rem, 2vw, 1.65rem);
+  font-family: 'Playfair Display', 'Palatino Linotype', Georgia, serif;
+  font-size: clamp(1.35rem, 2vw, 1.75rem);
+  font-weight: 700;
+  color: #183e2b;
+  letter-spacing: 0.01em;
 }
-.collection-heading a,
-.storefront-flower-price small {
-  color: #49604d;
-  font-size: 0.8rem;
+.collection-view-all-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 8px 18px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #183e2b;
+  border: 1.5px solid #183e2b;
+  border-radius: 4px;
+  text-decoration: none;
+  background: transparent;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+.collection-view-all-btn:hover {
+  background: #183e2b;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(24, 62, 43, 0.18);
 }
 .marketing-site .home-storefront .storefront-flower-copy h4 {
-  font-size: 0.88rem;
-  font-weight: 400;
-  line-height: 1.5;
-  margin: 0.25rem 0;
+  font-family: 'Playfair Display', 'Palatino Linotype', Georgia, serif;
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  margin: 0.35rem 0 0.2rem;
+  color: #1a2e20;
 }
 .home-storefront .storefront-flower-price {
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #183e2b;
+}
+.home-storefront .storefront-flower-price small {
+  color: #647568;
+  font-size: 0.75rem;
+  font-weight: 400;
+  margin-left: 4px;
 }
 .home-storefront .storefront-flower-copy .storefront-flower-shop {
-  margin-top: 5px;
-  font-size: 0.72rem;
+  margin-top: 4px;
+  font-size: 11.5px;
+  color: #718274;
 }
 .home-storefront .storefront-more {
   margin-top: 28px;
 }
-.home-section-heading {
+
+/* Section: Đặt hoa trong 3 bước */
+.home-receive {
+  padding: clamp(36px, 5vw, 52px) clamp(24px, 4vw, 44px);
+  background: #faf8f5;
+  border: 1px solid #eae7e0;
+  border-radius: 20px;
+  box-shadow: 0 10px 32px -12px rgba(24, 62, 43, 0.07);
+  margin-block: 48px 36px;
+}
+.home-receive .home-section-heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid #eae7e0;
+  padding-bottom: 18px;
 }
-.home-section-heading .text-link {
-  font-size: 0.8rem;
-  flex-shrink: 0;
+.home-receive .home-section-heading h2 {
+  font-family: 'Playfair Display', 'Palatino Linotype', Georgia, serif;
+  font-size: clamp(1.35rem, 2.2vw, 1.8rem);
+  font-weight: 700;
+  color: #183e2b;
+  margin: 0;
+  letter-spacing: 0.01em;
 }
-.home-receive {
-  padding: 32px;
-  background: #f5f7f1;
-  border-radius: 16px;
+.home-receive .home-section-heading .text-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #183e2b;
+  text-decoration: none !important;
+  transition: opacity 0.2s ease;
+}
+.home-receive .home-section-heading .text-link:hover {
+  opacity: 0.75;
 }
 .home-steps {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 32px;
+  gap: 24px;
   padding: 0;
-  margin: 24px 0;
+  margin: 0;
   list-style: none;
 }
 .home-steps li {
   display: flex;
-  align-items: baseline;
-  gap: 12px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  background: #ffffff;
+  border: 1px solid #ebe8e2;
+  border-radius: 14px;
+  padding: 28px 24px;
+  box-shadow: 0 4px 16px -4px rgba(24, 62, 43, 0.04);
+  transition:
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+.home-steps li:hover {
+  transform: translateY(-3px);
+  border-color: #183e2b;
+  box-shadow: 0 10px 24px -6px rgba(24, 62, 43, 0.12);
 }
 .home-steps li > span {
-  color: #49634e;
-  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #183e2b;
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 .home-steps h3 {
-  margin: 0 0 6px;
-  font-size: 0.88rem;
+  margin: 0 0 8px;
+  font-family: 'Playfair Display', 'Palatino Linotype', Georgia, serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #183e2b;
+  line-height: 1.35;
 }
 .home-steps p {
   margin: 0;
-  font-size: 0.8rem;
-  color: #495f4e;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #556758;
 }
+
+/* Section: Câu hỏi thường gặp FAQ */
 .home-faq {
   display: grid;
-  grid-template-columns: 1fr 1.5fr;
-  gap: 48px;
-  padding: 48px 0;
+  grid-template-columns: minmax(280px, 1fr) minmax(360px, 1.6fr);
+  gap: clamp(32px, 5vw, 64px);
+  padding: clamp(36px, 5vw, 56px) clamp(24px, 4vw, 48px);
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.94)),
+    url('/images/generated/florabot-pattern.webp') center / 440px repeat;
+  border: 1px solid #eae5db;
+  border-radius: 20px;
+  box-shadow: 0 10px 32px -12px rgba(24, 62, 43, 0.06);
+  margin-block: 28px 36px;
 }
-.home-faq > div > p {
-  font-size: 0.85rem;
-  color: #495f4e;
-  max-width: 34ch;
+.home-faq > div:first-child {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.home-faq > div:first-child h2 {
+  font-family: 'Playfair Display', 'Palatino Linotype', Georgia, serif;
+  font-size: clamp(1.45rem, 2.3vw, 1.95rem);
+  font-weight: 700;
+  color: #183e2b;
+  line-height: 1.25;
+  margin: 0 0 14px;
+}
+.home-faq > div:first-child p {
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: #556758;
+  margin: 0 0 24px;
+  max-width: 36ch;
 }
 .home-faq .text-link {
-  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border-radius: 6px;
+  border: 1.5px solid #183e2b;
+  background: #ffffff;
+  color: #183e2b;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none !important;
+  box-shadow: 0 2px 6px rgba(24, 62, 43, 0.08);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.home-faq .text-link:hover {
+  background: #183e2b;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(24, 62, 43, 0.18);
 }
 .home-faq details {
-  border-bottom: 1px solid #dce4d6;
+  background: #ffffff;
+  border: 1.5px solid #eae5dc;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(24, 62, 43, 0.03);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+.home-faq details:hover {
+  border-color: #183e2b;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(24, 62, 43, 0.08);
+}
+.home-faq details[open] {
+  border-color: #183e2b;
+  background: #ffffff;
+  box-shadow: 0 8px 24px -6px rgba(24, 62, 43, 0.12);
 }
 .home-faq summary {
-  padding: 18px 0;
-  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  font-family: 'Playfair Display', 'Palatino Linotype', Georgia, serif;
+  font-size: 15.5px;
   font-weight: 600;
+  color: #183e2b;
   cursor: pointer;
+  list-style: none;
+  user-select: none;
+  transition: color 0.15s ease;
+}
+.home-faq summary::-webkit-details-marker {
+  display: none;
+}
+.home-faq summary::after {
+  content: '+';
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #eae7e0;
+  color: #183e2b;
+  font-family: system-ui, sans-serif;
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1;
+  transition:
+    transform 0.25s ease,
+    background 0.2s ease,
+    color 0.2s ease;
+  flex-shrink: 0;
+  margin-left: 16px;
+}
+.home-faq details[open] summary::after {
+  content: '−';
+  background: #183e2b;
+  color: #ffffff;
+  transform: rotate(180deg);
 }
 .home-faq details p {
-  margin: 0 0 20px;
-  font-size: 0.8rem;
-  color: #495f4e;
+  padding: 0 24px 22px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #4a5c4d;
+  border-top: 1px solid #f2eee8;
+  padding-top: 16px;
 }
+
+/* Section: Dành cho shop đối tác Partner */
 .home-partner {
-  border: 1px solid #dce4d6;
-  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #eae7e0;
+  border-radius: 20px;
   overflow: hidden;
+  box-shadow: 0 12px 36px -12px rgba(24, 62, 43, 0.09);
+  margin-block: 24px 64px;
 }
 .home-partner-intro {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  padding: 28px 32px;
-  background: #f1f4e9;
+  gap: 32px;
+  padding: clamp(36px, 4vw, 48px);
+  background: linear-gradient(135deg, #183e2b 0%, #0e271a 100%);
+  color: #ffffff;
 }
-.home-partner-intro h2 {
-  font-size: 1.3rem;
+.home-storefront .home-partner-intro h2 {
+  font-family:
+    'Be Vietnam Pro',
+    Georgia,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  font-size: clamp(1.4rem, 2.3vw, 1.9rem);
+  font-weight: 700;
+  color: #ffffff !important;
+  margin: 0 0 10px;
+  letter-spacing: 0.01em;
 }
 .home-partner-intro p {
-  font-size: 0.8rem;
-  color: #495f4e;
-  margin: 8px 0 0;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+  max-width: 48ch;
 }
 .home-partner-intro .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 11px 26px;
+  background: #ffffff;
+  color: #183e2b;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: 6px;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
   flex-shrink: 0;
 }
-.home-partner-details > summary {
-  padding: 16px 32px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
+.home-partner-intro .button:hover {
+  background: #f4f2ec;
+  color: #0b1f14;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 .home-storefront .home-partner .section {
-  padding: 28px 32px;
-  background: #fff;
+  padding: 36px clamp(24px, 4vw, 48px);
+  border-top: 1px solid #e4dfd5;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.93), rgba(255, 255, 255, 0.93)),
+    url('/images/generated/florabot-pattern.webp') center / 440px repeat;
 }
 .home-storefront .home-partner h2 {
-  font-size: 1.5rem;
+  font-family:
+    'Be Vietnam Pro',
+    Georgia,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  font-size: clamp(1.4rem, 2.2vw, 1.85rem);
+  color: #183e2b;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+.home-storefront .home-partner .section-intro p {
+  color: #597361;
+  font-size: 14.5px;
+  margin: 0 0 24px;
+}
+
+/* Graphic Divider - Dải hoa văn thực vật cổ điển phân tách section */
+.graphic-divider {
+  width: 100%;
+  height: 54px;
+  background: url('/images/generated/florabot-pattern.webp') center / 350px repeat;
+  border-top: 1px solid rgba(24, 62, 43, 0.2);
+  border-bottom: 1px solid rgba(24, 62, 43, 0.2);
+  box-shadow:
+    inset 0 2px 5px rgba(24, 62, 43, 0.06),
+    inset 0 -2px 5px rgba(24, 62, 43, 0.06);
+  margin: 0;
+}
+
+.home-content > .graphic-divider {
+  border-radius: 14px;
+  border: 1px solid rgba(24, 62, 43, 0.2);
+  margin-block: 20px 40px;
+}
+
+@media (max-width: 600px) {
+  .graphic-divider {
+    height: 44px;
+    background-size: 280px;
+  }
+}
+
+.landing-pricing-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.landing-pricing-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.pricing-card {
+  background: #faf8f5;
+  border: 1.5px solid #eae5dc;
+  border-radius: 16px;
+  padding: 32px 28px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 16px -4px rgba(24, 62, 43, 0.04);
+}
+
+.pricing-card:hover {
+  border-color: #183e2b;
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px -8px rgba(24, 62, 43, 0.12);
+}
+
+.pricing-card.featured {
+  background: #f7faf7;
+  border-color: #c7ded0;
+}
+
+.pricing-card.featured:hover {
+  border-color: #183e2b;
+}
+
+.pricing-card-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.pricing-card-type {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #183e2b;
+}
+
+.pricing-card-subtitle {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #5c7764;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.pricing-card-desc {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #4b6350;
+  margin: 0 0 20px;
+  min-height: 44px;
+}
+
+.pricing-card-rate {
+  display: flex;
+  align-items: baseline;
+  padding-block: 14px 18px;
+  border-top: 1px solid #ebe6dd;
+  border-bottom: 1px solid #ebe6dd;
+  margin-bottom: 20px;
+}
+
+.pricing-card.featured .pricing-card-rate {
+  border-color: #dce7e0;
+}
+
+.pricing-card-rate .pricing-amount {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 2.1rem;
+  font-weight: 800;
+  color: #183e2b;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.pricing-card-rate .pricing-unit {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #4b6350;
+  margin-left: 6px;
+}
+
+.pricing-card-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1 1 auto;
+}
+
+.pricing-card-features li {
+  position: relative;
+  padding-left: 22px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #3b5040;
+}
+
+.pricing-card-features li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #183e2b;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.pricing-cta-wrap {
+  grid-column: 1 / -1;
+  margin-top: 8px;
+}
+
+.pricing-cta-wrap .pricing-cta-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 52px;
+  background: #183e2b;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: 8px;
+  text-decoration: none !important;
+  box-shadow: 0 6px 20px rgba(24, 62, 43, 0.18);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pricing-cta-wrap .pricing-cta-btn:hover {
+  background: #0e271a;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(24, 62, 43, 0.28);
+}
+
+@media (max-width: 768px) {
+  .landing-pricing-cards {
+    grid-template-columns: 1fr;
+  }
 }
 .home-storefront .home-partner .registration-section {
   border-top: 1px solid #dce4d6;
@@ -287,30 +1020,59 @@ body:has(.home-storefront) {
     grid-template-columns: 1fr;
     gap: 16px;
   }
+  .home-hero-inner {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 24px 20px;
+    min-height: auto;
+  }
+  .home-hero-garden {
+    display: none;
+  }
+  .hero-cabinet {
+    max-width: 440px;
+  }
+  .home-hero-copy {
+    align-items: center;
+    text-align: center;
+    padding: 8px 0 0;
+  }
+  .home-hero-actions {
+    justify-content: center;
+  }
+  .home-hero-badges {
+    justify-content: center;
+  }
 }
 @media (max-width: 600px) {
   .home-storefront {
     padding-top: 0;
     padding-bottom: 32px;
   }
-  .home-hero-inner {
-    grid-template-columns: 1fr;
-    gap: 0;
-    min-height: 0;
+  .home-hero-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    margin-bottom: 10px;
   }
-  .home-hero-copy {
-    padding: 24px 0 16px;
+  .marketing-site .home-hero-copy .home-hero-title {
+    font-size: 1.55rem;
+    margin-bottom: 12px;
   }
-  .home-hero-copy p {
-    font-size: 0.85rem;
-    margin-bottom: 16px;
+  .home-hero-subtitle {
+    font-size: 13px;
+    margin-bottom: 18px;
   }
-  .home-hero-image {
-    min-height: 0;
-    height: 140px;
-    object-position: center 52%;
-    border-radius: 8px;
+  .home-hero-actions {
     margin-bottom: 20px;
+    gap: 12px;
+  }
+  .home-hero-badges {
+    font-size: 9.5px;
+    gap: 6px;
+    padding-top: 14px;
+  }
+  .brand-intro-text {
+    font-size: 13px;
   }
   .marketing-site .home-storefront .storefront-flowers {
     padding-block: 28px;

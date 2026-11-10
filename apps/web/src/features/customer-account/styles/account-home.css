@@ -26,18 +26,27 @@
 }
 .workspace-portal-root .account-home-status {
   display: grid;
-  grid-template-columns: 190px minmax(0, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 16px;
 }
 .workspace-portal-root .account-home-points,
 .workspace-portal-root .account-home-inbox {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 20px;
+  gap: 16px;
+  padding: 20px 24px;
   border: 1px solid #dfe9dc;
-  border-radius: 14px;
+  border-radius: 16px;
   background: white;
+  box-shadow: 0 2px 8px rgba(23, 62, 44, 0.04);
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+.workspace-portal-root .account-home-points:hover,
+.workspace-portal-root .account-home-inbox:hover {
+  border-color: #cbdcd5;
+  box-shadow: 0 4px 16px rgba(23, 62, 44, 0.08);
 }
 .workspace-portal-root .account-home-status svg {
   flex-shrink: 0;
@@ -53,11 +62,13 @@
   line-height: 1.5;
 }
 .workspace-portal-root .account-home-points strong {
-  font-size: 24px;
-  line-height: 1.2;
+  font-size: 20px;
+  line-height: 1.25;
+  color: #173e2c;
 }
 .workspace-portal-root .account-home-inbox strong {
-  font-size: 14px;
+  font-size: 15px;
+  color: #173e2c;
 }
 .workspace-portal-root .account-home-inbox a {
   margin-left: auto;
@@ -104,9 +115,14 @@
   text-align: center;
   padding: 32px 12px 24px;
 }
-.workspace-portal-root .account-home-empty > svg {
-  padding: 14px;
-  box-sizing: content-box;
+.workspace-portal-root .account-home-empty > svg,
+.workspace-portal-root .account-home-empty-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  box-sizing: border-box;
   border-radius: 50%;
   background: #eef5e9;
   color: #39704e;

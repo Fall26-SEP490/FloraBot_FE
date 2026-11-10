@@ -119,12 +119,21 @@ function SelectedFlowerRequestPanel({
         aria-describedby={confirmClose ? 'discard-request-description' : undefined}
       >
         <div className="flower-request-heading">
+          {selected.photo && (
+            <img
+              src={selected.photo}
+              alt=""
+              className="flower-request-header-thumb"
+              aria-hidden="true"
+            />
+          )}
           <div className="flower-request-header-content">
             <h2 id="selected-flower" className="flower-request-title">
               Yêu cầu báo giá
             </h2>
             <p className="flower-request-meta">
-              {selected.name} · {selected.shopName}
+              <span className="flower-request-header-name">{selected.name}</span> ·{' '}
+              {selected.shopName}
             </p>
           </div>
           <Button

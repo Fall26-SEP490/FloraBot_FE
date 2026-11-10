@@ -305,6 +305,9 @@ function OrderActions({
       );
     } finally {
       await queryClient.invalidateQueries({ queryKey: ['web-orders'] });
+      if (mode === 'seller' && kind === 'fulfill') {
+        await queryClient.invalidateQueries({ queryKey: ['products'] });
+      }
       sending.current = false;
       setBusy(false);
     }

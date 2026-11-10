@@ -147,29 +147,34 @@ select.catalog-sort-select {
   min-height: 44px !important;
   max-width: 100%;
   padding: 0.25rem 2rem 0.25rem 0.85rem !important;
-  border: 1px solid #c9dec6 !important;
-  border-radius: 8px !important;
+  border: 1px solid #d4e2d2 !important;
+  border-radius: 6px !important;
   background-color: #ffffff !important;
-  font-size: 0.78rem !important;
-  color: #143e27 !important;
+  font-family:
+    'Be Vietnam Pro',
+    -apple-system,
+    sans-serif !important;
+  font-size: 0.82rem !important;
+  color: #183e2b !important;
   font-weight: 600 !important;
   cursor: pointer !important;
   appearance: none !important;
   -webkit-appearance: none !important;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23235232' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23183e2b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
   background-repeat: no-repeat !important;
-  background-position: right 0.6rem center !important;
+  background-position: right 0.65rem center !important;
   transition:
     border-color 0.15s ease,
-    background-color 0.15s ease !important;
+    background-color 0.15s ease,
+    box-shadow 0.15s ease !important;
 }
 
 select.catalog-sort-select:hover {
-  border-color: #174b35 !important;
-  background-color: #f7faf5 !important;
+  border-color: #183e2b !important;
+  background-color: #f7faf6 !important;
 }
 
 select.catalog-sort-select:focus {
-  outline: 2px solid #174b35 !important;
+  outline: 2px solid #183e2b !important;
   outline-offset: 1px !important;
 }

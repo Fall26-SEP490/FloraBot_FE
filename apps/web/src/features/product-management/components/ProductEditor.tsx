@@ -72,6 +72,10 @@ export default function ProductEditor({
 
           <dl className="product-specs-list">
             <div>
+              <dt>Tồn bó tại shop</dt>
+              <dd>{product.quantity == null ? 'Chưa có dữ liệu' : `${product.quantity} bó`}</dd>
+            </div>
+            <div>
               <dt>Kích thước đóng gói</dt>
               <dd>
                 {product.lengthCm && product.widthCm && product.heightCm

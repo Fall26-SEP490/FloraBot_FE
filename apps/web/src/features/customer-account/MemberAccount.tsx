@@ -7,7 +7,7 @@ import './styles/account-home.css';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Button, Flower2, MessageSquare } from '@florabot/ui';
+import { ArrowRight, Button, Flower2, MessageSquare, Package, Store } from '@florabot/ui';
 import WebRequests from '../orders/WebRequests';
 import CustomerPendingOrders from './CustomerPendingOrders';
 import CustomerRentalApplication from './CustomerRentalApplication';
@@ -144,38 +144,48 @@ export default function MemberAccount() {
             <div className="account-home-points">
               <Flower2 size={20} aria-hidden="true" />
               <div>
-                <span>Điểm theo từng shop</span>
-                {loyalty.isPending ? (
+                <span>Điểm tích lũy</span>
+                {isCustomer && loyalty.isLoading ? (
                   <strong>Đang tải…</strong>
-                ) : loyalty.isError ? (
+                ) : isCustomer && loyalty.isError ? (
                   <strong>Chưa tải được</strong>
-                ) : loyalty.data?.items.length ? (
+                ) : isCustomer && loyalty.data?.items.length ? (
                   <div>
                     {loyalty.data.items.map((item) => (
                       <p key={item.sellerId}>
                         <strong>
-                          {item.shopName}: {Number(item.balance).toLocaleString('vi-VN')} điểm
+                          {item.shopName}:{' '}
+                          <span>{Number(item.balance).toLocaleString('vi-VN')}</span> điểm
                         </strong>
                       </p>
                     ))}
                   </div>
+                ) : profile.isLoading ? (
+                  <strong>Đang tải…</strong>
+                ) : profile.isSuccess && Number(profile.data.loyaltyPoints) > 0 ? (
+                  <strong>
+                    <span>{Number(profile.data.loyaltyPoints).toLocaleString('vi-VN')}</span> điểm
+                  </strong>
                 ) : (
                   <strong>Chưa có điểm</strong>
                 )}
-                {profile.isSuccess && Number(profile.data.loyaltyPoints) > 0 && (
+                {isCustomer &&
+                Boolean(loyalty.data?.items.length) &&
+                profile.isSuccess &&
+                Number(profile.data.loyaltyPoints) > 0 ? (
                   <small>
                     Điểm cũ toàn hệ thống:{' '}
-                    {Number(profile.data.loyaltyPoints).toLocaleString('vi-VN')}
+                    <span>{Number(profile.data.loyaltyPoints).toLocaleString('vi-VN')}</span>
                   </small>
-                )}
+                ) : null}
               </div>
-              {loyalty.isError && (
+              {isCustomer && loyalty.isError && (
                 <Button variant="outline" onClick={() => void loyalty.refetch()}>
                   Thử lại
                 </Button>
               )}
             </div>
-            {isCustomer && (
+            {isCustomer ? (
               <div className="account-home-inbox">
                 <MessageSquare size={20} aria-hidden="true" />
                 <div>
@@ -199,6 +209,28 @@ export default function MemberAccount() {
                     Mở hộp thư <ArrowRight size={16} aria-hidden="true" />
                   </a>
                 )}
+              </div>
+            ) : session.data?.role === 'SELLER' ? (
+              <div className="account-home-inbox account-home-seller-entry">
+                <Store size={20} aria-hidden="true" />
+                <div>
+                  <strong>Kênh quản lý người bán</strong>
+                  <span>Quản lý hoa, đơn đặt và gian hàng của shop.</span>
+                </div>
+                <Link href="/seller">
+                  Vào trang quản lý shop <ArrowRight size={16} aria-hidden="true" />
+                </Link>
+              </div>
+            ) : (
+              <div className="account-home-inbox">
+                <Package size={20} aria-hidden="true" />
+                <div>
+                  <strong>Khu vực làm việc</strong>
+                  <span>Truy cập các tính năng vận hành được cấp phép.</span>
+                </div>
+                <Link href="/workspace">
+                  Vào khu vực làm việc <ArrowRight size={16} aria-hidden="true" />
+                </Link>
               </div>
             )}
           </div>
@@ -254,7 +286,7 @@ export default function MemberAccount() {
         <section id="member-chats">
           <header className="account-section-heading">
             <h1>Tin nhắn</h1>
-            <p>Trao đổi với shop về đơn hoa của bạn.</p>
+            <p>Tin nhắn với các shop · Trao đổi về đơn hoa của bạn.</p>
           </header>
           <CustomerChatSection key={initialChatId ?? 'inbox'} initialChatId={initialChatId} />
         </section>

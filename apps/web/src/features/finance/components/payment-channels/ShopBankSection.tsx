@@ -23,8 +23,8 @@ export function ShopBankSection({
   onBankReadyChange,
 }: ShopBankSectionProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [bankName, setBankName] = useState('');
-  const [holder, setHolder] = useState('');
+  const [bankName, setBankName] = useState<string | null>(null);
+  const [holder, setHolder] = useState<string | null>(null);
   const [accountRaw, setAccountRaw] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [actionError, setActionError] = useState('');
@@ -64,10 +64,25 @@ export function ShopBankSection({
       setAccountRaw('');
       setFieldErrors({});
       setActionError('');
-      setActionSuccess('Đã lưu thông tin tài khoản ngân hàng của shop thành công.');
       setIsEditing(false);
-      await queryClient.invalidateQueries({ queryKey: ['seller-shop-bank', sellerId] });
-      void bankQuery.refetch();
+      setActionSuccess('');
+      try {
+        const saved = await request<SellerBankResponse>(`/sellers/${sellerId}/bank`);
+        queryClient.setQueryData(['seller-shop-bank', sellerId], saved);
+        setBankName(null);
+        setHolder(null);
+        if (saved.status === 'READY') {
+          setActionSuccess('Đã lưu thông tin tài khoản ngân hàng của shop thành công.');
+        } else {
+          setActionError(
+            'Đã gửi thông tin nhưng máy chủ chưa xác nhận tài khoản hợp lệ. Vui lòng kiểm tra lại hoặc liên hệ hỗ trợ.',
+          );
+        }
+      } catch {
+        setActionError(
+          'Đã gửi thông tin nhưng chưa tải lại được tài khoản đã lưu. Chọn “Tải lại thông tin ngân hàng” để kiểm tra trước khi gửi lại.',
+        );
+      }
     },
     onError: (err: unknown) => {
       setActionSuccess('');
@@ -107,8 +122,8 @@ export function ShopBankSection({
     setActionError('');
     setActionSuccess('');
 
-    const trimmedBank = bankName.trim();
-    const trimmedHolder = holder.trim().toUpperCase();
+    const trimmedBank = (bankName ?? bankQuery.data?.bankName ?? '').trim();
+    const trimmedHolder = (holder ?? bankQuery.data?.holder ?? '').trim().toUpperCase();
     const trimmedAccount = accountRaw.trim();
 
     const errors: Record<string, string> = {};
@@ -206,9 +221,12 @@ export function ShopBankSection({
       )}
 
       {actionError && (
-        <p role="alert" className="shop-bank-alert-box is-error">
-          {actionError}
-        </p>
+        <div role="alert" className="shop-bank-alert-box is-error">
+          <p>{actionError}</p>
+          <Button type="button" variant="outline" onClick={() => void bankQuery.refetch()}>
+            Tải lại thông tin ngân hàng
+          </Button>
+        </div>
       )}
 
       {bankQuery.data && !showForm && (
@@ -250,7 +268,9 @@ export function ShopBankSection({
             <div role="status" className="shop-bank-alert-box is-warning">
               <strong>Tài khoản ngân hàng của shop cần cập nhật lại thông tin.</strong>
               <p>
-                Vui lòng kiểm tra lại tên ngân hàng, chủ tài khoản và số tài khoản nhận hoàn phí.
+                Hệ thống đã có thông tin ngân hàng nhưng chưa xác nhận được tài khoản hợp lệ. Kiểm
+                tra tên ngân hàng, chủ tài khoản và nhập lại số tài khoản. Nếu vẫn gặp sau khi lưu,
+                vui lòng liên hệ hỗ trợ.
               </p>
             </div>
           )}
@@ -263,7 +283,7 @@ export function ShopBankSection({
                 type="text"
                 maxLength={120}
                 placeholder="Ví dụ: MB Bank, Vietcombank, Techcombank..."
-                value={bankName}
+                value={bankName ?? bankQuery.data?.bankName ?? ''}
                 disabled={saveBankMutation.isPending}
                 onChange={(e) => {
                   setBankName(e.target.value);
@@ -287,7 +307,7 @@ export function ShopBankSection({
                 type="text"
                 maxLength={120}
                 placeholder="Ví dụ: NGUYEN VAN A"
-                value={holder}
+                value={holder ?? bankQuery.data?.holder ?? ''}
                 disabled={saveBankMutation.isPending}
                 onChange={(e) => {
                   setHolder(e.target.value.toUpperCase());

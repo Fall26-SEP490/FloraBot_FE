@@ -74,6 +74,7 @@ export default function StaffStock({
       setNotice('Đã ghi nhận bó hoa vào ô tủ.');
       await queryClient.invalidateQueries({ queryKey: ['staff-stock', taskId] });
       await queryClient.invalidateQueries({ queryKey: ['staff-detail', taskId] });
+      await queryClient.invalidateQueries({ queryKey: ['products'], refetchType: 'none' });
     } catch (cause) {
       if (cause instanceof ApiError && [400, 403, 404, 409].includes(cause.status)) {
         sessionStorage.removeItem(key);

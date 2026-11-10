@@ -50,6 +50,7 @@ export function ProductCreateForm({
       widthCm: '' as unknown as number,
       heightCm: '' as unknown as number,
       tagsInput: '',
+      quantity: 0,
     },
   });
 
@@ -68,6 +69,7 @@ export function ProductCreateForm({
         lengthCm: values.lengthCm,
         widthCm: values.widthCm,
         heightCm: values.heightCm,
+        quantity: values.quantity,
       };
       const created = await postProduct(payload);
       await queryClient.invalidateQueries({ queryKey: ['products', sellerId] });
@@ -189,6 +191,30 @@ export function ProductCreateForm({
             </p>
           )}
         </div>
+      </div>
+
+      <div className="form-field">
+        <label htmlFor="create-product-quantity">Tồn bó tại shop</label>
+        <input
+          id="create-product-quantity"
+          type="number"
+          min="0"
+          max="2147483647"
+          step="1"
+          inputMode="numeric"
+          disabled={!canEdit || submitting}
+          {...form.register('quantity', { valueAsNumber: true })}
+          aria-invalid={!!form.formState.errors.quantity}
+          aria-describedby="create-product-quantity-help create-product-quantity-error"
+        />
+        <p className="quiet field-subhint" id="create-product-quantity-help">
+          Số bó thực tế còn tại shop. Mỗi bó nạp thành công vào kiosk sẽ trừ 1.
+        </p>
+        {form.formState.errors.quantity && (
+          <p className="error" id="create-product-quantity-error">
+            {form.formState.errors.quantity.message}
+          </p>
+        )}
       </div>
 
       <fieldset className="dimensions-fieldset">
@@ -338,8 +364,11 @@ export function ProductMetadataEditor({
       widthCm: (product.widthCm != null ? Number(product.widthCm) : '') as unknown as number,
       heightCm: (product.heightCm != null ? Number(product.heightCm) : '') as unknown as number,
       tagsInput: (product.tags || []).join(', '),
+      quantity: product.quantity == null ? undefined : Number(product.quantity),
     },
   });
+
+  const { dirtyFields } = form.formState;
 
   const onSubmit = async (values: ProductFormValues) => {
     if (submitting) return;
@@ -355,6 +384,9 @@ export function ProductMetadataEditor({
         lengthCm: values.lengthCm,
         widthCm: values.widthCm,
         heightCm: values.heightCm,
+        ...(dirtyFields.quantity && values.quantity !== undefined
+          ? { quantity: values.quantity }
+          : {}),
       };
       await putProduct(sellerId, product.id, payload);
       await queryClient.invalidateQueries({ queryKey: ['products', sellerId] });
@@ -421,6 +453,33 @@ export function ProductMetadataEditor({
             </p>
           )}
         </div>
+      </div>
+
+      <div className="form-field">
+        <label htmlFor={`${idPrefix}-quantity`}>Tồn bó tại shop</label>
+        <input
+          id={`${idPrefix}-quantity`}
+          type="number"
+          min="0"
+          max="2147483647"
+          step="1"
+          inputMode="numeric"
+          disabled={!canEdit || submitting}
+          {...form.register('quantity', {
+            setValueAs: (value: string) => (value === '' ? undefined : Number(value)),
+          })}
+          aria-invalid={!!form.formState.errors.quantity}
+          aria-describedby={`${idPrefix}-quantity-help ${idPrefix}-quantity-error`}
+        />
+        <p className="quiet field-subhint" id={`${idPrefix}-quantity-help`}>
+          Nhập tổng số bó thực tế còn tại shop. Khi thu hồi hoa từ kiosk, hãy kiểm tra và cập nhật
+          tồn tại đây.
+        </p>
+        {form.formState.errors.quantity && (
+          <p className="error" id={`${idPrefix}-quantity-error`}>
+            {form.formState.errors.quantity.message}
+          </p>
+        )}
       </div>
 
       <div className="form-field">

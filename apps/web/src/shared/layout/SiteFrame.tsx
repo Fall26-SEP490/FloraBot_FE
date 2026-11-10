@@ -28,8 +28,8 @@ const workspaceLabels: Record<string, string> = {
 export function SiteBrand({ className = 'site-brand', href = '/' }) {
   return (
     <Link className={className} href={href} aria-label="FloraBot — trang chủ">
-      <Flower2 size={27} aria-hidden="true" />
-      FloraBot<span aria-hidden="true">.</span>
+      <Flower2 size={22} aria-hidden="true" />
+      <span>FloraBot</span>
     </Link>
   );
 }
@@ -85,6 +85,18 @@ function SiteHeader() {
           : []),
       ]
     : [];
+
+  useEffect(() => {
+    if (!expanded && !accountMenuOpen) return;
+    const handleScroll = () => {
+      setOpenedPath(null);
+      setOpenedAccountPath(null);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [expanded, accountMenuOpen]);
 
   useEffect(() => {
     const element = header.current;
@@ -151,59 +163,83 @@ function SiteHeader() {
 
   return (
     <header ref={header} className="site-header florabot-header navigation-ready">
-      <SiteBrand />
-      <button
-        ref={toggle}
-        type="button"
-        className="site-menu"
-        aria-label="Menu"
-        aria-controls="main-navigation"
-        aria-expanded={expanded}
-        onClick={() => {
-          setOpenedAccountPath(null);
-          setOpenedPath(expanded ? null : pathname);
-        }}
-      >
-        {expanded ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}{' '}
-        <span className="site-menu-label">Menu</span>
-      </button>
+      {/* Tầng 1: Dải thông báo đen sang trọng phong cách Laflora */}
+      <div className="site-announcement-bar" role="region" aria-label="Thông báo đầu trang">
+        <span>FloraBot · Đặt hoa từ shop, nhận tại kiosk</span>
+      </div>
+
+      {/* Tầng 2: Main Bar với Logo bên trái, Menu ở giữa, Tài khoản bên phải (ngang hàng) */}
+      <div className="site-header-main">
+        <div className="site-header-left">
+          <SiteBrand />
+        </div>
+
+        {/* Menu danh mục ngang - nằm giữa trên Desktop */}
+        <nav
+          id="main-navigation"
+          aria-label="Điều hướng chính"
+          className={expanded ? 'is-open' : ''}
+        >
+          <div className="site-nav-inner">
+            {navigation.map(([href, label]) => (
+              <Link
+                key={href}
+                href={href}
+                prefetch={false}
+                aria-current={pathname === href ? 'page' : undefined}
+                onClick={() => setOpenedPath(null)}
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
+        </nav>
+
+        <div className="site-header-right">
+          {session.data ? (
+            <UserMenu
+              className="site-account"
+              menuId="site-user-menu"
+              name={session.data.name}
+              roleLabel={getRoleLabel(session.data.role)}
+              links={accountLinks}
+              busy={busy}
+              onLogout={() => void logout()}
+              open={accountMenuOpen}
+              onOpen={() => setOpenedPath(null)}
+              onOpenChange={(open) => setOpenedAccountPath(open ? pathname : null)}
+            />
+          ) : (
+            <div className="site-account">
+              <Link className="site-account-link" href="/dang-nhap" prefetch={false}>
+                <LogIn size={15} aria-hidden="true" />
+                <span>Đăng nhập</span>
+              </Link>
+            </div>
+          )}
+
+          <button
+            ref={toggle}
+            type="button"
+            className="site-menu"
+            aria-label="Menu"
+            aria-controls="main-navigation"
+            aria-expanded={expanded}
+            onClick={() => {
+              setOpenedAccountPath(null);
+              setOpenedPath(expanded ? null : pathname);
+            }}
+          >
+            {expanded ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}{' '}
+            <span className="site-menu-label">Menu</span>
+          </button>
+        </div>
+      </div>
+
       {expanded && (
         <div className="site-nav-backdrop" onClick={() => setOpenedPath(null)} aria-hidden="true" />
       )}
-      <nav id="main-navigation" aria-label="Điều hướng chính" className={expanded ? 'is-open' : ''}>
-        {navigation.map(([href, label]) => (
-          <Link
-            key={href}
-            href={href}
-            prefetch={false}
-            aria-current={pathname === href ? 'page' : undefined}
-            onClick={() => setOpenedPath(null)}
-          >
-            {label}
-          </Link>
-        ))}
-      </nav>
-      {session.data ? (
-        <UserMenu
-          className="site-account"
-          menuId="site-user-menu"
-          name={session.data.name}
-          roleLabel={getRoleLabel(session.data.role)}
-          links={accountLinks}
-          busy={busy}
-          onLogout={() => void logout()}
-          open={accountMenuOpen}
-          onOpen={() => setOpenedPath(null)}
-          onOpenChange={(open) => setOpenedAccountPath(open ? pathname : null)}
-        />
-      ) : (
-        <div className="site-account">
-          <Link className="site-account-link" href="/dang-nhap" prefetch={false}>
-            <LogIn size={16} aria-hidden="true" />
-            <span>Đăng nhập</span>
-          </Link>
-        </div>
-      )}
+
       {error && (
         <p role="alert" className="site-header-error">
           {error}

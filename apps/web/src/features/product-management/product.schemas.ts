@@ -1,5 +1,11 @@
 import { z } from 'zod';
 
+const quantitySchema = z
+  .number('Nhập tồn bó tại shop bằng số.')
+  .int('Tồn bó tại shop phải là số nguyên.')
+  .min(0, 'Tồn bó tại shop không được âm.')
+  .max(2147483647, 'Tồn bó tại shop tối đa 2.147.483.647.');
+
 export const priceSchema = z.object({
   price: z
     .number('Nhập giá bán bằng số.')
@@ -35,6 +41,7 @@ export const productMetadataSchema = z
     widthCm: dimensionSchema('Chiều rộng'),
     heightCm: dimensionSchema('Chiều cao'),
     tagsInput: z.string().max(1500, 'Danh sách từ khóa quá dài.'),
+    quantity: quantitySchema.optional(),
   })
   .superRefine((data, ctx) => {
     if (data.tagsInput) {
@@ -71,6 +78,7 @@ export const productMetadataSchema = z
 export const productCreateSchema = z.intersection(
   productMetadataSchema,
   z.object({
+    quantity: quantitySchema,
     kioskId: z
       .string()
       .regex(
