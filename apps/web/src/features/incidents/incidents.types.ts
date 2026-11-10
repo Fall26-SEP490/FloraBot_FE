@@ -22,6 +22,7 @@ export type StaffIncidentResolutionProps = {
   role?: ActiveTaskRole;
   version: number;
   active: boolean;
+  slotRepair?: boolean;
   apiBase?: string;
 };
 

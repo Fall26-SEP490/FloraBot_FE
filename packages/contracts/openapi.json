@@ -4903,6 +4903,8 @@
         "tags": [
           "FloraBot.Api"
         ],
+        "summary": "Danh sách mẫu hoa và tồn bó tại shop",
+        "description": "quantity là số bó còn tại shop; không bao gồm các bó đã nạp trong kiosk và không được tính từ số ô tủ.",
         "responses": {
           "200": {
             "description": "OK",
@@ -4923,6 +4925,8 @@
         "tags": [
           "Catalog"
         ],
+        "summary": "Tạo mẫu hoa và khai báo tồn bó tại shop",
+        "description": "quantity là số bó còn tại shop, số nguyên không âm; bỏ qua mặc định 0. Nạp thành công vào kiosk hoặc fulfill preorder trừ một bó. Thu hồi không tự cộng lại.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -8436,6 +8440,8 @@
         "tags": [
           "Catalog"
         ],
+        "summary": "Sửa mẫu hoa và tồn bó tại shop",
+        "description": "quantity là tồn thực tế tại shop, số nguyên không âm. Bỏ qua hoặc null giữ nguyên tồn hiện tại; gửi số mới là chốt lại tồn, không phải cộng thêm.",
         "parameters": [
           {
             "name": "sellerId",
@@ -9681,6 +9687,7 @@
         "tags": [
           "KioskOnboarding"
         ],
+        "description": "Kiosk được tạo OFFLINE. Khi bật tự cấp ESP32, yêu cầu cấp MQTT/HMAC được lưu cùng transaction; provisioning PENDING/PROVISIONING/READY/FAILED tách biệt trạng thái ONLINE. Không trả bí mật ESP32 trong response đăng ký.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -10462,6 +10469,602 @@
         }
       }
     },
+    "/api/operations/kiosks/{id}/esp32-config": {
+      "get": {
+        "tags": [
+          "Esp32Configuration"
+        ],
+        "summary": "Read ESP32 metadata for a currently assigned Operations Manager kiosk.",
+        "description": "Cache-Control: no-store. No MQTT password or HMAC is read or returned. canDownload describes role/scope and public deployment readiness, not secret-store completeness. Foreign/missing/ended installations return the same 404. Current role and assignment are rechecked on every request. Error responses have a stable code extension.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Esp32ConfigMetadata"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/kiosk-installations/{installationId}/esp32-config": {
+      "get": {
+        "tags": [
+          "Esp32Configuration"
+        ],
+        "summary": "Read ESP32 metadata for the assigned Technician's live installation (SCHEDULED, INSTALLING, AWAITING_HANDOVER).",
+        "description": "Cache-Control: no-store. No MQTT password or HMAC is read or returned. canDownload describes role/scope and public deployment readiness, not secret-store completeness. Foreign/missing/ended installations return the same 404. Current role and assignment are rechecked on every request. Error responses have a stable code extension.",
+        "parameters": [
+          {
+            "name": "installationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Esp32ConfigMetadata"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/kiosks/{id}/esp32-config": {
+      "get": {
+        "tags": [
+          "Esp32Configuration"
+        ],
+        "summary": "Admin oversight metadata only. Admin cannot download ESP32 secrets.",
+        "description": "Cache-Control: no-store. No MQTT password or HMAC is read or returned. canDownload describes role/scope and public deployment readiness, not secret-store completeness. Foreign/missing/ended installations return the same 404. Current role and assignment are rechecked on every request. Error responses have a stable code extension.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Esp32ConfigMetadata"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/operations/kiosks/{id}/esp32-config/download": {
+      "post": {
+        "tags": [
+          "Esp32Configuration"
+        ],
+        "summary": "Download the assigned kiosk's config.local.h after verifying the current Operations Manager password.",
+        "description": "JSON body {password}: current account password, verified for this download only. Returns attachment config.local.h, Cache-Control: no-store; Wi-Fi fields are blank. Admin/other roles: 403. Foreign/missing/ended installation: 404. Wrong/missing password: 401 ESP32_CONFIG_REAUTHENTICATION_FAILED. 409 codes: ESP32_CONFIG_DEPLOYMENT_NOT_CONFIGURED, ESP32_CONFIG_NOT_PROVISIONED, ESP32_CONFIG_HMAC_MISMATCH. No secret values are included in errors or audit payloads.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/Esp32ConfigDownloadRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Private config.local.h attachment; fill in local Wi-Fi before flashing.",
+            "headers": {
+              "Content-Disposition": {
+                "description": "attachment; filename=config.local.h",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "description": "no-store",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "text/x-c++hdr": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/kiosk-installations/{installationId}/esp32-config/download": {
+      "post": {
+        "tags": [
+          "Esp32Configuration"
+        ],
+        "summary": "Download config.local.h after verifying the assigned Technician's current password and live installation.",
+        "description": "JSON body {password}: current account password, verified for this download only. Returns attachment config.local.h, Cache-Control: no-store; Wi-Fi fields are blank. Admin/other roles: 403. Foreign/missing/ended installation: 404. Wrong/missing password: 401 ESP32_CONFIG_REAUTHENTICATION_FAILED. 409 codes: ESP32_CONFIG_DEPLOYMENT_NOT_CONFIGURED, ESP32_CONFIG_NOT_PROVISIONED, ESP32_CONFIG_HMAC_MISMATCH. No secret values are included in errors or audit payloads.",
+        "parameters": [
+          {
+            "name": "installationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/Esp32ConfigDownloadRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Private config.local.h attachment; fill in local Wi-Fi before flashing.",
+            "headers": {
+              "Content-Disposition": {
+                "description": "attachment; filename=config.local.h",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "description": "no-store",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "text/x-c++hdr": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/operations/kiosks/{id}/esp32-config/provision": {
+      "post": {
+        "tags": [
+          "Esp32Configuration"
+        ],
+        "summary": "Queue or retry ESP32 provisioning for the currently assigned kiosk/installation",
+        "description": "No request body or secrets. Current Manager/assigned live Technician only. New enrollment queues automatically when enabled. Retry keeps the original device credentials; READY/in-flight work is not reset. Poll the existing esp32-config GET. No heartbeat or ONLINE status is fabricated.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Esp32ProvisioningStatus"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/kiosk-installations/{installationId}/esp32-config/provision": {
+      "post": {
+        "tags": [
+          "Esp32Configuration"
+        ],
+        "summary": "Queue or retry ESP32 provisioning for the currently assigned kiosk/installation",
+        "description": "No request body or secrets. Current Manager/assigned live Technician only. New enrollment queues automatically when enabled. Retry keeps the original device credentials; READY/in-flight work is not reset. Poll the existing esp32-config GET. No heartbeat or ONLINE status is fabricated.",
+        "parameters": [
+          {
+            "name": "installationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Esp32ProvisioningStatus"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/me/kiosks/{kioskId}/layout-requests": {
       "post": {
         "tags": [
@@ -10721,8 +11324,6 @@
         "tags": [
           "KioskOps"
         ],
-        "summary": "Bắt đầu phiên bảo trì tự phục vụ cho ô tủ (Load, Remove, Replace)",
-        "description": "Khóa ô chuyển sang LOCKED, phát lệnh SELLER_ACCESS và thiết lập phiên bảo trì.",
         "parameters": [
           {
             "name": "kioskId",
@@ -10743,37 +11344,7 @@
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/StartSlotMaintenanceRequest"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SlotMaintenanceSessionResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
           "409": {
             "description": "Conflict",
             "content": {
@@ -10783,15 +11354,6 @@
                 }
               }
             }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
           }
         }
       }
@@ -10966,7 +11528,6 @@
         "tags": [
           "KioskOps"
         ],
-        "summary": "Mở cửa bước tiếp theo (nạp hoa mới) trong quy trình đổi hoa REPLACE",
         "parameters": [
           {
             "name": "kioskId",
@@ -10997,16 +11558,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SlotMaintenanceSessionResponse"
-                }
-              }
-            }
-          },
           "409": {
             "description": "Conflict",
             "content": {
@@ -11016,15 +11567,6 @@
                 }
               }
             }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
           }
         }
       }
@@ -11034,7 +11576,6 @@
         "tags": [
           "KioskOps"
         ],
-        "summary": "Mở cửa kiểm tra ô trong trạng thái NeedsInspection",
         "parameters": [
           {
             "name": "kioskId",
@@ -11064,37 +11605,7 @@
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OpenForCheckRequest"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SlotMaintenanceSessionResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
           "409": {
             "description": "Conflict",
             "content": {
@@ -11104,15 +11615,6 @@
                 }
               }
             }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
           }
         }
       }
@@ -11324,6 +11826,334 @@
         }
       }
     },
+    "/api/me/maintenance-access": {
+      "post": {
+        "tags": [
+          "KioskOps"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MaintenanceAccessRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaintenanceAccessIssued"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/kiosks/{kioskId}/maintenance-access/pending": {
+      "get": {
+        "tags": [
+          "KioskOps"
+        ],
+        "parameters": [
+          {
+            "name": "kioskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MaintenanceAccessPending"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/kiosks/{kioskId}/maintenance-access/{id}/confirm": {
+      "post": {
+        "tags": [
+          "KioskOps"
+        ],
+        "parameters": [
+          {
+            "name": "kioskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmMaintenanceAccessRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptedMaintenanceAccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me/inventory-tasks": {
+      "post": {
+        "tags": [
+          "KioskOps"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignInventoryTask"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffTaskResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/tasks/{taskId}/inventory-maintenance": {
+      "get": {
+        "tags": [
+          "KioskOps"
+        ],
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffInventoryScope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/tasks/{taskId}/inventory-maintenance/access": {
+      "post": {
+        "tags": [
+          "KioskOps"
+        ],
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StaffInventoryOperation"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaintenanceAccessIssued"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me/technical-repairs": {
+      "get": {
+        "tags": [
+          "KioskOps"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TechnicalRepairRow"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me/technical-repairs/{taskId}/approve": {
+      "post": {
+        "tags": [
+          "KioskOps"
+        ],
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TechnicalRepairApproval"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/tasks/{taskId}/repair-access": {
+      "post": {
+        "tags": [
+          "KioskOps"
+        ],
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaintenanceAccessIssued"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/kiosks/{kioskId}/slots/{slotId}/manual-unlock-retry": {
       "put": {
         "tags": [
@@ -11438,23 +12268,13 @@
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ManualUnlockRetryRequest"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
-          "200": {
-            "description": "OK",
+          "409": {
+            "description": "Conflict",
             "content": {
-              "application/json": {
+              "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ManualUnlockRetryResponse"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -14990,6 +15810,16 @@
   },
   "components": {
     "schemas": {
+      "AcceptedMaintenanceAccess": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "default": "ACCEPTED"
+          }
+        },
+        "additionalProperties": false
+      },
       "AccountDetailResponse": {
         "required": [
           "id",
@@ -16337,6 +17167,58 @@
         },
         "additionalProperties": false
       },
+      "AssignInventoryTask": {
+        "required": [
+          "id",
+          "assigneeId",
+          "kioskId",
+          "slotId",
+          "action",
+          "expectedBouquetId",
+          "productId",
+          "instructions"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assigneeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kioskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "action": {
+            "type": "string"
+          },
+          "expectedBouquetId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "productId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "instructions": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "AssignKioskManagerRequest": {
         "required": [
           "managerId"
@@ -16780,6 +17662,18 @@
         },
         "additionalProperties": false
       },
+      "ConfirmMaintenanceAccessRequest": {
+        "required": [
+          "code"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "ConfirmRefundRequest": {
         "required": [
           "p_refund",
@@ -17090,6 +17984,17 @@
               "string"
             ],
             "format": "double"
+          },
+          "quantity": {
+            "maximum": 2147483647,
+            "minimum": 0,
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 0
           }
         },
         "additionalProperties": false
@@ -17912,6 +18817,153 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "provisioning": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Esp32ProvisioningStatus"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "Esp32ConfigDownloadRequest": {
+        "required": [
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "Esp32ConfigMetadata": {
+        "required": [
+          "kioskId",
+          "kioskCode",
+          "status",
+          "hardwareId",
+          "mqttClientId",
+          "firmwareMqttClientId",
+          "mqttClientIdsMatch",
+          "mqttHost",
+          "mqttTlsPort",
+          "caCertificatePem",
+          "canDownload",
+          "requiresReauthentication",
+          "downloadUnavailableCode"
+        ],
+        "type": "object",
+        "properties": {
+          "kioskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kioskCode": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "hardwareId": {
+            "type": "string"
+          },
+          "mqttClientId": {
+            "type": "string"
+          },
+          "firmwareMqttClientId": {
+            "type": "string"
+          },
+          "mqttClientIdsMatch": {
+            "type": "boolean"
+          },
+          "mqttHost": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "mqttTlsPort": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "caCertificatePem": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "canDownload": {
+            "type": "boolean"
+          },
+          "requiresReauthentication": {
+            "type": "boolean"
+          },
+          "downloadUnavailableCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "provisioning": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Esp32ProvisioningStatus"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "Esp32ProvisioningStatus": {
+        "required": [
+          "state",
+          "errorCode",
+          "attempts",
+          "readyAt"
+        ],
+        "type": "object",
+        "properties": {
+          "state": {
+            "type": "string"
+          },
+          "errorCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "attempts": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "readyAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         },
         "additionalProperties": false
@@ -19576,6 +20628,118 @@
         },
         "additionalProperties": false
       },
+      "MaintenanceAccessIssued": {
+        "required": [
+          "id",
+          "code",
+          "expiresAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MaintenanceAccessPending": {
+        "required": [
+          "id",
+          "slotCode",
+          "operation",
+          "expiresAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slotCode": {
+            "type": "string"
+          },
+          "operation": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MaintenanceAccessRequest": {
+        "required": [
+          "kioskId",
+          "slotId",
+          "operation",
+          "sessionId",
+          "action",
+          "expectedBouquetId",
+          "productId",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "kioskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "operation": {
+            "type": "string"
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "action": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "expectedBouquetId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "productId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "requestId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
       "ManualUnlockRetryEnrollmentRequest": {
         "required": [
           "enabled",
@@ -19835,18 +20999,6 @@
             "type": "string"
           },
           "p_photo": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "OpenForCheckRequest": {
-        "required": [
-          "reason"
-        ],
-        "type": "object",
-        "properties": {
-          "reason": {
             "type": "string"
           }
         },
@@ -20714,6 +21866,15 @@
               "string"
             ],
             "format": "double"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 0
           }
         },
         "additionalProperties": false
@@ -24136,6 +25297,94 @@
         },
         "additionalProperties": false
       },
+      "StaffInventoryOperation": {
+        "required": [
+          "operation",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "StaffInventoryScope": {
+        "required": [
+          "kioskId",
+          "slotId",
+          "slotCode",
+          "sellerId",
+          "action",
+          "expectedBouquetId",
+          "productId",
+          "instructions",
+          "status",
+          "sessionStage",
+          "sessionSubstate"
+        ],
+        "type": "object",
+        "properties": {
+          "kioskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slotCode": {
+            "type": "string"
+          },
+          "sellerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "action": {
+            "type": "string"
+          },
+          "expectedBouquetId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "productId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "instructions": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "sessionStage": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sessionSubstate": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
       "StaffPreorderCandidate": {
         "required": [
           "requestId",
@@ -24676,43 +25925,6 @@
         },
         "additionalProperties": false
       },
-      "StartSlotMaintenanceRequest": {
-        "required": [
-          "id",
-          "action",
-          "expectedBouquetId",
-          "productId",
-          "reason"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "action": {
-            "type": "string"
-          },
-          "expectedBouquetId": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "uuid"
-          },
-          "productId": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "uuid"
-          },
-          "reason": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
       "StockBouquetRequest": {
         "required": [
           "productId",
@@ -24842,6 +26054,52 @@
               "string"
             ],
             "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "TechnicalRepairApproval": {
+        "required": [
+          "expiresAt"
+        ],
+        "type": "object",
+        "properties": {
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "TechnicalRepairRow": {
+        "required": [
+          "id",
+          "kioskName",
+          "slotCode",
+          "reason",
+          "expiresAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kioskName": {
+            "type": "string"
+          },
+          "slotCode": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         },
         "additionalProperties": false
@@ -25247,6 +26505,17 @@
               "string"
             ],
             "format": "double"
+          },
+          "quantity": {
+            "maximum": 2147483647,
+            "minimum": 0,
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -26240,6 +27509,9 @@
     },
     {
       "name": "KioskOnboarding"
+    },
+    {
+      "name": "Esp32Configuration"
     },
     {
       "name": "Payment"

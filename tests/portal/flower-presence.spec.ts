@@ -18,11 +18,26 @@ test('Admin can verify and enable sensors on a Walk-in slot', async ({ page }) =
       ],
     }),
   );
-  let settings: { enabled: boolean; doorVerified: boolean; presenceVerified: boolean } | null =
-    null;
+  let settings: {
+    enabled: boolean;
+    doorVerified: boolean;
+    presenceVerified: boolean;
+    supportsManualRetry?: boolean;
+  } | null = null;
   await page.route('**/api/admin/kiosks/ui-kiosk/slots/walk-in/sensor-capabilities', (route) => {
     if (route.request().method() === 'PUT') settings = route.request().postDataJSON();
     return settings ? route.fulfill({ json: settings }) : route.fulfill({ status: 204 });
+  });
+
+  await page.route('**/api/admin/kiosks/ui-kiosk/slots/walk-in/manual-unlock-retry', (route) => {
+    expect(route.request().method()).toBe('PUT');
+    const body = route.request().postDataJSON();
+    expect(body).toEqual({
+      enabled: !settings?.supportsManualRetry,
+      firmwareVerified: !settings?.supportsManualRetry,
+    });
+    settings = settings ? { ...settings, supportsManualRetry: body.enabled } : null;
+    return route.fulfill({ json: settings });
   });
 
   await page.goto('/admin/slots');
@@ -46,6 +61,13 @@ test('Admin can verify and enable sensors on a Walk-in slot', async ({ page }) =
   await page.getByRole('button', { name: 'Cấu hình cảm biến ô S01' }).click();
   await expect(enable).toBeChecked();
   await expect(dialog.getByRole('button', { name: 'Lưu cấu hình' })).toBeDisabled();
+  const enableRetry = dialog.getByRole('button', { name: 'Bật quyền thử mở lại' });
+  await expect(enableRetry).toBeDisabled();
+  await dialog.getByRole('checkbox', { name: /firmware hỗ trợ thử mở lại/ }).check();
+  await enableRetry.click();
+  await expect(dialog.getByRole('status')).toHaveText('Đã bật quyền thử mở lại.');
+  await dialog.getByRole('button', { name: 'Tắt quyền thử mở lại' }).click();
+  await expect(dialog.getByRole('status')).toHaveText('Đã tắt quyền thử mở lại.');
 });
 
 for (const width of [390, 1440]) {

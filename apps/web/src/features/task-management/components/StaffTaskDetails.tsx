@@ -8,6 +8,20 @@ import { formatTaskDate } from '../task-management.utils';
 
 export type { StaffTaskDetailsProps };
 
+export function staffTaskDetailsQuery(
+  taskId: string,
+  apiBase: string,
+  scopeKey: string,
+  actorId: string | undefined,
+  version: number,
+  page = 1,
+) {
+  return {
+    queryKey: ['staff-detail', taskId, actorId ?? 'none', scopeKey, version, page],
+    queryFn: () => request<TaskDetail>(`${apiBase}/${taskId}?page=${page}`),
+  };
+}
+
 export default function StaffTaskDetails({
   taskId,
   version,
@@ -22,8 +36,7 @@ export default function StaffTaskDetails({
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(1);
   const details = useQuery({
-    queryKey: ['staff-detail', taskId, actorId ?? 'none', scopeKey, version, page],
-    queryFn: () => request<TaskDetail>(`${apiBase}/${taskId}?page=${page}`),
+    ...staffTaskDetailsQuery(taskId, apiBase, scopeKey, actorId, version, page),
     enabled: open,
   });
   return (

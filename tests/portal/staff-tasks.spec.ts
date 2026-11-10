@@ -36,6 +36,11 @@ for (const width of [390, 1440]) {
         },
       }),
     );
+    await page.route('**/api/staff/tasks/task-1?*', (route) =>
+      route.fulfill({
+        json: { kioskStatus: 'ONLINE', incident: null, slotCode: null, history: [] },
+      }),
+    );
     await page.route('**/api/staff/tasks/task-1/transition', async (route) => {
       writes++;
       expect(route.request().postDataJSON().version).toBe(version);
@@ -153,6 +158,11 @@ test('Technician keeps an incident report draft when a Manager changes the instr
     }
     if (path === '/api/staff/tasks') {
       return route.fulfill({ json: { page: 1, hasMore: false, items: [task] } });
+    }
+    if (path === '/api/staff/tasks/task-1') {
+      return route.fulfill({
+        json: { kioskStatus: 'ONLINE', incident: null, slotCode: null, history: [] },
+      });
     }
     if (path === '/api/staff/tasks/task-1/transition') {
       const body = route.request().postDataJSON();
