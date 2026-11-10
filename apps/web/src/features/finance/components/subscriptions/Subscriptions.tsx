@@ -25,6 +25,15 @@ const kioskStatusLabel: Record<string, string> = {
   MAINTENANCE: 'Đang bảo trì',
 };
 
+const subscriptionStatusLabel: Record<string, string> = {
+  ACTIVE: 'Đang hiệu lực',
+  PENDING_PAYMENT: 'Chờ thanh toán',
+  EXPIRED: 'Hết hạn',
+  PAST_DUE: 'Quá hạn',
+  CANCELLED: 'Đã hủy',
+  TERMINATED: 'Đã chấm dứt',
+};
+
 function KioskRenewalCard({
   kiosk,
   sellerId,
@@ -357,13 +366,7 @@ export default function Subscriptions({ session }: { session: Session }) {
                       <td>{rentalMoney(sub.price)}</td>
                       <td>
                         <span className="subscription-status" data-status={sub.status}>
-                          {sub.status === 'ACTIVE'
-                            ? 'Đang hiệu lực'
-                            : sub.status === 'PENDING_PAYMENT'
-                              ? 'Chờ thanh toán'
-                              : sub.status === 'EXPIRED' || sub.status === 'PAST_DUE'
-                                ? 'Hết hạn'
-                                : sub.status}
+                          {subscriptionStatusLabel[sub.status] || sub.status}
                         </span>
                       </td>
                     </tr>
@@ -386,12 +389,22 @@ export default function Subscriptions({ session }: { session: Session }) {
 
       {application.data && (
         <div className="subscription-application-card">
-          <h3>Hồ sơ đăng ký thuê gần nhất</h3>
-          <ApplicationRentalSummary application={application.data} />
-          <div style={{ marginTop: '0.85rem' }}>
-            <Link href="/thue-kiosk" className="button button-outline">
+          <div className="subscription-application-head">
+            <div>
+              <h3>Hồ sơ đăng ký thuê gần nhất</h3>
+              <p className="subscription-application-desc">
+                Thông tin định mức ô và tổng phí đã phê duyệt cho hồ sơ thuê của shop.
+              </p>
+            </div>
+            <Link
+              href="/thue-kiosk"
+              className="button button-outline subscription-application-link"
+            >
               Xem hồ sơ hoặc thuê thêm kiosk
             </Link>
+          </div>
+          <div className="subscription-application-body">
+            <ApplicationRentalSummary application={application.data} />
           </div>
         </div>
       )}

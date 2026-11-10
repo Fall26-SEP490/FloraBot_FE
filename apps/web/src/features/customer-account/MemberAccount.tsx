@@ -317,7 +317,7 @@ export default function MemberAccount() {
                     <li key={order.id}>
                       <div className="account-history-row">
                         <h2>{order.shopName}</h2>
-                        <span className="account-history-status">
+                        <span className="account-history-status" data-status={order.status}>
                           {ORDER_STATUS_LABELS[order.status] || order.status}
                         </span>
                       </div>

@@ -218,7 +218,10 @@ function CustomerCloseAccountSection({ onClosed }: { onClosed: () => void }) {
   }
 
   return (
-    <details className="profile-security-disclosure" style={{ marginTop: '1.25rem' }}>
+    <details
+      className="profile-security-disclosure profile-danger-disclosure"
+      style={{ marginTop: '1.25rem' }}
+    >
       <summary>Đóng tài khoản vĩnh viễn</summary>
       <div className="profile-disclaimer-card" style={{ marginTop: '0.75rem' }}>
         Tài khoản chỉ có thể đóng khi không còn đơn hàng đang xử lý, yêu cầu hoàn tiền, khiếu nại mở

@@ -500,23 +500,42 @@
   scroll-margin-top: 88px;
 }
 .workspace-portal-root .profile-refined .profile-identity {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 1rem;
+  display: flex;
+  justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  background: linear-gradient(135deg, #f7faf5 0%, #edf5ea 100%);
+  border: 1px solid #d4e5d2;
+  border-radius: 14px;
+  padding: 1.1rem 1.4rem;
+  box-shadow: 0 2px 8px rgba(24, 62, 43, 0.03);
 }
 .workspace-portal-root .profile-refined .profile-identity .profile-section-heading {
   margin: 0;
 }
 .workspace-portal-root .profile-refined .profile-identity h2 {
-  font-size: 0.95rem;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #174b35;
 }
 .workspace-portal-root .profile-refined .profile-identity .profile-summary-grid {
-  display: block;
+  display: flex;
+  align-items: center;
   margin: 0;
   padding: 0;
   border: 0;
   background: none;
+}
+.workspace-portal-root .profile-refined .profile-identity .profile-summary-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.workspace-portal-root .profile-refined .profile-identity .profile-summary-item dd {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #183e2b;
 }
 .workspace-portal-root .profile-refined .profile-summary-grid {
   padding: 0.9rem 1rem;
@@ -718,4 +737,17 @@
 }
 .profile-security-disclosure[open] > summary {
   margin-bottom: 1rem;
+}
+
+.profile-danger-disclosure {
+  border: 1px solid #f8d7da;
+  border-radius: 12px;
+  padding: 0.25rem 0.85rem;
+  background: #fffafa;
+}
+.profile-danger-disclosure > summary {
+  color: #9e2a2b;
+}
+.profile-danger-disclosure > summary:hover {
+  color: #781d1e;
 }

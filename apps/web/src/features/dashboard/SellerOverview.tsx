@@ -329,13 +329,16 @@ export default function SellerOverview({ session }: { session: Session }) {
               )}
             </div>
             <ul className={styles.shortcuts}>
-              {shortcuts.map(({ href, title, icon: Icon }) => (
+              {shortcuts.map(({ href, title, detail, icon: Icon }) => (
                 <li key={href}>
                   <Link href={href}>
                     <span className={styles.shortcutIcon}>
                       <Icon size={18} aria-hidden="true" />
                     </span>
-                    <strong>{title}</strong>
+                    <span className={styles.shortcutContent}>
+                      <strong>{title}</strong>
+                      <span className={styles.shortcutDetail}>{detail}</span>
+                    </span>
                     <ArrowRight size={15} aria-hidden="true" />
                   </Link>
                 </li>
@@ -352,7 +355,7 @@ export default function SellerOverview({ session }: { session: Session }) {
         <aside className={styles.aside} aria-label="Hàng đợi và nguồn lực cửa hàng">
           <section className={styles.workbench} aria-labelledby="seller-workbench-title">
             <div className={styles.workbenchHeader}>
-              <h2 id="seller-workbench-title">Việc cần xử lý</h2>
+              <h2 id="seller-workbench-title">Việc cần làm</h2>
               <button
                 type="button"
                 className={styles.refreshIconBtn}
@@ -404,7 +407,7 @@ export default function SellerOverview({ session }: { session: Session }) {
                       ? 'Chưa tải được tin nhắn'
                       : inbox.isPending
                         ? 'Đang kiểm tra…'
-                        : `${inbox.data.hasMore ? 'Ít nhất ' : ''}${inbox.data.conversations} chưa đọc`}
+                        : `${inbox.data.hasMore ? 'Ít nhất ' : ''}${inbox.data.conversations} cuộc trò chuyện chưa đọc`}
                   </small>
                 </span>
                 <strong>

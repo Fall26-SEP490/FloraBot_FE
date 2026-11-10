@@ -51,34 +51,38 @@ export default function SellerSeasonal({ session }: { session: Session }) {
         <h2>Dữ liệu bán hoa thực tế</h2>
         <p>Số liệu theo đơn đã thanh toán của shop. Dữ liệu này tách riêng với dự báo.</p>
         <form
-          className="business-inline"
+          className="business-inline seasonal-filter-form"
           onSubmit={(event) => {
             event.preventDefault();
             setRange({ from, to });
             forecast.reset();
           }}
         >
-          <label>
-            Từ ngày{' '}
-            <input
-              type="date"
-              value={from}
-              max={to}
-              onChange={(event) => setFrom(event.target.value)}
-              required
-            />
-          </label>
-          <label>
-            Đến ngày{' '}
-            <input
-              type="date"
-              value={to}
-              min={from}
-              onChange={(event) => setTo(event.target.value)}
-              required
-            />
-          </label>
-          <Button type="submit">Xem số liệu</Button>
+          <div className="seasonal-filter-fields">
+            <label className="seasonal-date-label">
+              <span>Từ ngày</span>
+              <input
+                type="date"
+                value={from}
+                max={to}
+                onChange={(event) => setFrom(event.target.value)}
+                required
+              />
+            </label>
+            <label className="seasonal-date-label">
+              <span>Đến ngày</span>
+              <input
+                type="date"
+                value={to}
+                min={from}
+                onChange={(event) => setTo(event.target.value)}
+                required
+              />
+            </label>
+          </div>
+          <Button type="submit" className="seasonal-submit-btn">
+            Xem số liệu
+          </Button>
         </form>
         {sales.isPending ? (
           <p role="status">Đang tải số liệu…</p>
@@ -130,20 +134,22 @@ export default function SellerSeasonal({ session }: { session: Session }) {
             </>
           )
         )}
-        <a
-          className="button button-outline"
-          href={`/api/sellers/${sellerId}/ai/sales.csv?from=${range.from}&to=${range.to}`}
-          download
-        >
-          Tải dữ liệu CSV
-        </a>
+        <div className="seasonal-export-row">
+          <a
+            className="button button-outline seasonal-export-btn"
+            href={`/api/sellers/${sellerId}/ai/sales.csv?from=${range.from}&to=${range.to}`}
+            download
+          >
+            Tải dữ liệu CSV
+          </a>
+        </div>
       </section>
       <section className="business-panel">
         <h2>Ước tính nhu cầu mùa tới</h2>
         <p>Dự báo phụ thuộc dữ liệu lịch sử. Sản phẩm chưa đủ dữ liệu sẽ không có số ước tính.</p>
-        <div className="business-inline">
-          <label>
-            Tháng dự báo{' '}
+        <div className="business-inline seasonal-forecast-form">
+          <label className="seasonal-date-label">
+            <span>Tháng dự báo</span>
             <input
               type="month"
               value={target}
@@ -151,6 +157,7 @@ export default function SellerSeasonal({ session }: { session: Session }) {
             />
           </label>
           <Button
+            className="seasonal-submit-btn"
             disabled={forecast.isPending || sales.isPending}
             onClick={() => forecast.mutate()}
           >

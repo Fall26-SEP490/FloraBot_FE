@@ -19,7 +19,26 @@ type Detail = Omit<BaseDetail, 'submission'> & {
     | null;
 };
 type Bank = components['schemas']['RefundBankResponse'];
-const money = (value: number | string) => `${Number(value).toLocaleString('vi-VN')} đ`;
+const money = (value: number | string | null | undefined) =>
+  `${(Number(value) || 0).toLocaleString('vi-VN')} đ`;
+
+const refundStatusLabels: Record<string, string> = {
+  PENDING: 'Chờ xử lý',
+  APPROVED: 'Đã duyệt hoàn',
+  TRANSFERRED: 'Đã chuyển tiền',
+  COMPLETED: 'Hoàn tất',
+  REJECTED: 'Từ chối',
+  CANCELLED: 'Đã hủy',
+};
+
+const refundStatusStyles: Record<string, { bg: string; color: string; border: string }> = {
+  PENDING: { bg: '#fffbeb', color: '#92400e', border: '#fde68a' },
+  APPROVED: { bg: '#edf5ea', color: '#1b5e20', border: '#c8dec4' },
+  TRANSFERRED: { bg: '#eff6ff', color: '#1e40af', border: '#bfdbfe' },
+  COMPLETED: { bg: '#edf5ea', color: '#1b5e20', border: '#c8dec4' },
+  REJECTED: { bg: '#fef2f2', color: '#991b1b', border: '#fecaca' },
+  CANCELLED: { bg: '#f3f4f6', color: '#374151', border: '#d1d5db' },
+};
 
 function RefundCard({ id, sellerId }: { id: string; sellerId: string }) {
   const base = `/sellers/${sellerId}/refunds/${id}`;
@@ -87,10 +106,31 @@ function RefundCard({ id, sellerId }: { id: string; sellerId: string }) {
   return (
     <div className="business-refund-detail">
       <h3>
-        Đơn {item.orderCode} · {money(item.amount)}
+        Đơn {item.orderCode} · <span className="refund-amount">{money(item.amount)}</span>
       </h3>
       <p>
-        Trạng thái: <strong>{item.status}</strong>
+        Trạng thái:{' '}
+        <span
+          className="refund-status-pill"
+          data-status={item.status}
+          style={
+            refundStatusStyles[item.status]
+              ? {
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  padding: '2px 10px',
+                  borderRadius: '20px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  background: refundStatusStyles[item.status].bg,
+                  color: refundStatusStyles[item.status].color,
+                  border: `1px solid ${refundStatusStyles[item.status].border}`,
+                }
+              : undefined
+          }
+        >
+          {refundStatusLabels[item.status] || item.status}
+        </span>
         {item.isApproved ? ' · Đã được duyệt' : ' · Chờ duyệt'}
       </p>
       {item.status === 'PENDING' && (
@@ -238,8 +278,31 @@ export default function SellerRefunds({ session }: { session: Session }) {
         <div className="business-card-list">
           {refunds.data.items.map((item) => (
             <details className="business-card" key={item.id}>
-              <summary>
-                Đơn {item.orderCode} · {money(item.amount)} · {item.status}
+              <summary className="refund-summary-head">
+                <div className="refund-summary-main">
+                  <span className="refund-order-code">Đơn {item.orderCode}</span>
+                  <span className="refund-amount">{money(item.amount)}</span>
+                </div>
+                <div className="refund-summary-meta">
+                  <span
+                    className="refund-status-pill"
+                    data-status={item.status}
+                    style={
+                      refundStatusStyles[item.status]
+                        ? {
+                            background: refundStatusStyles[item.status].bg,
+                            color: refundStatusStyles[item.status].color,
+                            borderColor: refundStatusStyles[item.status].border,
+                          }
+                        : undefined
+                    }
+                  >
+                    {refundStatusLabels[item.status] || item.status}
+                  </span>
+                  <span className="refund-toggle-arrow" aria-hidden="true">
+                    ▾
+                  </span>
+                </div>
               </summary>
               <RefundCard id={item.id} sellerId={sellerId} />
             </details>

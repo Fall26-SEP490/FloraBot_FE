@@ -538,6 +538,69 @@
   padding: 0;
   margin-bottom: 1rem;
   border: 1px solid #dce7d8;
-  border-radius: 12px;
+  border-radius: 14px;
   background: #fff;
+  box-shadow: 0 2px 6px rgba(23, 62, 44, 0.03);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.member-orders.customer-order-list > li:hover {
+  border-color: #cbded5;
+  box-shadow: 0 4px 12px rgba(23, 62, 44, 0.06);
+}
+
+.member-orders.customer-order-list > li details[open] summary {
+  border-bottom: 1px solid #e7eee5;
+  border-radius: 14px 14px 0 0;
+}
+
+.customer-order-list .order-status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.3;
+  background: #f0f5ed;
+  color: #174b35;
+  border: 1px solid #c9d9c8;
+}
+
+.customer-order-list
+  .order-status-pill:is([data-status='READY'], [data-status='PAID'], [data-status='COMPLETED']) {
+  background: #edf7ec;
+  color: #1a5832;
+  border-color: #c4e3be;
+}
+
+.customer-order-list .order-status-pill:is([data-status='DISPENSING'], [data-status='ORDERED']) {
+  background: #eff6ff;
+  color: #1e40af;
+  border-color: #bfdbfe;
+}
+
+.customer-order-list
+  .order-status-pill:is(
+    [data-status='REQUESTED'],
+    [data-status='QUOTED'],
+    [data-status='AWAITING_PAYMENT']
+  ) {
+  background: #fffbeb;
+  color: #92400e;
+  border-color: #fde68a;
+}
+
+.customer-order-list
+  .order-status-pill:is(
+    [data-status='CANCELLED'],
+    [data-status='EXPIRED'],
+    [data-status='REJECTED'],
+    [data-status='DISPENSE_FAILED']
+  ) {
+  background: #fef2f2;
+  color: #b91c1c;
+  border-color: #fecaca;
 }

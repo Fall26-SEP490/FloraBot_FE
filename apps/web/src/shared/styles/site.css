@@ -592,8 +592,26 @@ html {
     gap: 4px;
   }
 
+  .site-header-main {
+    padding: 6px 6px;
+    gap: 6px;
+  }
+
+  .site-header-right {
+    gap: 6px;
+  }
+
+  .site-header .user-menu-identity {
+    display: none !important;
+  }
+
+  .site-header .user-menu-trigger {
+    padding: 4px 6px;
+    min-width: 0;
+  }
+
   .site-brand {
-    font-size: 18px;
+    font-size: 16px;
     gap: 4px;
   }
 

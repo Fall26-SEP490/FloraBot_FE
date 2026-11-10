@@ -14,7 +14,10 @@ type Payments = components['schemas']['SellerPaymentsListResponse'];
 type Report = components['schemas']['SellerSalesReportResponse'];
 type Loyalty = components['schemas']['SellerLoyaltySettingsResponse'];
 
-const currency = (value: number | string) => `${Number(value).toLocaleString('vi-VN')} đ`;
+const currency = (value: number | string | null | undefined) => {
+  const num = Number(value);
+  return `${(Number.isFinite(num) ? num : 0).toLocaleString('vi-VN')} đ`;
+};
 const dateTime = (value: string | null) => (value ? new Date(value).toLocaleString('vi-VN') : '—');
 const errorText = (error: unknown) =>
   error instanceof Error ? error.message : 'Chưa xử lý được yêu cầu.';
@@ -285,7 +288,22 @@ export default function SellerCommerce({ session }: { session: Session }) {
         ) : (
           loyalty.data && (
             <div className="business-inline">
-              <strong>{loyalty.data.enabled ? 'Đang bật' : 'Đang tắt'}</strong>
+              <span
+                className="status-pill"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  padding: '4px 12px',
+                  borderRadius: '20px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  background: loyalty.data.enabled ? '#edf5ea' : '#f3f4f6',
+                  color: loyalty.data.enabled ? '#1b5e20' : '#374151',
+                  border: `1px solid ${loyalty.data.enabled ? '#c8dec4' : '#d1d5db'}`,
+                }}
+              >
+                {loyalty.data.enabled ? 'Đang bật tích điểm' : 'Đang tắt tích điểm'}
+              </span>
               <Button
                 variant="outline"
                 disabled={updateLoyalty.isPending}

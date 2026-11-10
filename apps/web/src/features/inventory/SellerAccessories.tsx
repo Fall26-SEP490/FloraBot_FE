@@ -144,7 +144,7 @@ function Restock({
           </p>
         </div>
         <div className="accessory-meta-pills">
-          <span className="accessory-stock-pill">
+          <span className="accessory-stock-pill" data-empty={item.stockQuantity === 0}>
             Tồn hiện tại: <strong>{item.stockQuantity}</strong>
           </span>
           <span className="accessory-price-pill">
@@ -159,7 +159,6 @@ function Restock({
         <span className="accessory-pill" data-active={item.status === 'ACTIVE'}>
           {item.status === 'ACTIVE' ? 'Phụ kiện đang bật bán' : 'Phụ kiện đang tắt bán'}
         </span>
-        {' · '}
         <span className="kiosk-status-pill" data-status={item.kioskStatus}>
           {kioskStatuses[item.kioskStatus] || `Trạng thái tủ: ${item.kioskStatus}`}
         </span>
@@ -382,6 +381,7 @@ export default function SellerAccessories({ session }: { session: Session }) {
         </div>
         <Button
           variant="outline"
+          className="accessory-refresh-btn"
           disabled={inventory.isFetching}
           onClick={() => {
             if (loaded) void inventory.refetch();

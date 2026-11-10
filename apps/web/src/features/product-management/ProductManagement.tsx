@@ -332,7 +332,7 @@ export default function ProductManagement({ session }: { session: Session }) {
                   <div className="product-order-heading">
                     <strong>{product.name}</strong>
                     <span className="product-kind">
-                      {product.inventoryKind === 'LEGACY_FRESH' ? 'Dữ liệu cũ' : 'Hoa giả cao cấp'}
+                      {product.inventoryKind === 'LEGACY_FRESH' ? 'Hoa tươi' : 'Hoa giả cao cấp'}
                     </span>
                     <span className="product-status" data-status={product.status}>
                       {statusNames[product.status] || product.status}

@@ -138,9 +138,18 @@
   list-style: none;
 }
 .account-history-list li {
-  padding: 20px;
-  border: 1px solid #e0e9dc;
-  border-radius: 12px;
+  padding: 20px 24px;
+  border: 1px solid #dce7d8;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(23, 62, 44, 0.03);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.account-history-list li:hover {
+  border-color: #cbded5;
+  box-shadow: 0 4px 12px rgba(23, 62, 44, 0.06);
 }
 .account-history-row {
   display: flex;
@@ -164,18 +173,48 @@
   font-size: 16px;
 }
 .account-history-meta {
-  margin: 8px 0 20px;
+  margin: 6px 0 16px;
   color: #65786c;
-  font-size: 12px;
+  font-size: 12.5px;
   overflow-wrap: anywhere;
 }
 .account-history-status {
   flex-shrink: 0;
-  padding: 5px 9px;
-  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
   background: #eff5eb;
   color: #365c43;
-  font-size: 12px;
+  border: 1px solid #c9d9c8;
+}
+.account-history-status:is([data-status='COMPLETED'], [data-status='PAID']) {
+  background: #edf7ec;
+  color: #1a5832;
+  border-color: #c4e3be;
+}
+.account-history-status:is([data-status='DISPENSING'], [data-status='ORDERED']) {
+  background: #eff6ff;
+  color: #1e40af;
+  border-color: #bfdbfe;
+}
+.account-history-status:is([data-status='AWAITING_PAYMENT'], [data-status='EXPIRED']) {
+  background: #fffbeb;
+  color: #92400e;
+  border-color: #fde68a;
+}
+.account-history-status:is([data-status='CANCELLED'], [data-status='DISPENSE_FAILED']) {
+  background: #fef2f2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+.account-history-status:is([data-status='REFUNDED'], [data-status='DISPUTED']) {
+  background: #f5f3ff;
+  color: #6d28d9;
+  border-color: #ddd6fe;
 }
 @media (max-width: 760px) {
   .workspace-portal-root .customer-account-content .account-section-heading h1,
@@ -279,12 +318,22 @@
   flex: 0 0 auto;
 }
 .workspace-portal-root .profile-embedded .profile-identity {
-  padding: 12px 16px;
-  gap: 4px 16px;
+  padding: 14px 20px;
+  gap: 8px 16px;
+  background: linear-gradient(135deg, #f7faf5 0%, #edf5ea 100%);
+  border: 1px solid #d4e5d2;
+  border-radius: 14px;
 }
 .workspace-portal-root .profile-embedded .profile-identity h2 {
   margin: 0;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #174b35;
+}
+.workspace-portal-root .profile-embedded .profile-identity .profile-summary-item dd {
   font-size: 14px;
+  font-weight: 600;
+  color: #183e2b;
 }
 .workspace-portal-root .profile-embedded .profile-section-heading {
   margin-bottom: 12px;
@@ -297,8 +346,8 @@
   line-height: 1.45;
 }
 .workspace-portal-root .profile-embedded #profile-address {
-  height: 64px;
-  min-height: 64px;
+  height: 52px;
+  min-height: 52px;
   resize: vertical;
 }
 .workspace-portal-root .profile-embedded :is(.profile-section h2, .profile-section[id]) {
