@@ -1,0 +1,134 @@
+.admin-payment-channels {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.admin-channel-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  align-items: end;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--admin-line);
+  border-radius: 12px;
+  background: #f4f7f2;
+}
+
+.admin-channel-form label {
+  display: block;
+  margin: 0 0 8px;
+  font-size: 0.83rem;
+  font-weight: 600;
+}
+
+.admin-channel-form input {
+  min-width: 0;
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  background: var(--admin-surface);
+}
+
+.admin-channel-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-channel-list > li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) 8rem;
+  align-items: center;
+  gap: 12px 16px;
+  padding-block: 16px;
+  border-top: 1px solid var(--admin-line);
+}
+
+.admin-channel-list > li > .button {
+  justify-self: end;
+}
+
+.admin-channel-shop h3 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.admin-channel-shop small,
+.admin-channel-details dt,
+.admin-channel-empty {
+  color: var(--admin-muted);
+  overflow-wrap: anywhere;
+}
+
+.admin-channel-state {
+  justify-self: start;
+  padding: 4px 9px;
+  border-radius: 6px;
+  background: #edf2ed;
+  color: #3b5747;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.admin-channel-state[data-state='ACTIVE'] {
+  background: #e5f1e8;
+  color: #245b42;
+}
+
+.admin-channel-state[data-state='PENDING_VERIFICATION'] {
+  background: #f9efda;
+  color: #754816;
+}
+
+.admin-channel-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 0;
+}
+
+.admin-channel-details dt {
+  font-size: 0.75rem;
+}
+
+.admin-channel-details dd {
+  margin: 2px 0 0;
+  overflow-wrap: anywhere;
+  font-size: 0.85rem;
+}
+
+.admin-channel-feedback {
+  margin: 12px 0;
+  color: var(--admin-ink);
+}
+
+@media (max-width: 1150px) {
+  .admin-channel-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-channel-form > .button {
+    justify-self: start;
+  }
+
+  .admin-channel-list > li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .admin-channel-form,
+  .admin-channel-list > li {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-channel-form > .button {
+    justify-self: stretch;
+  }
+
+  .admin-channel-list > li > .button {
+    justify-self: start;
+  }
+}

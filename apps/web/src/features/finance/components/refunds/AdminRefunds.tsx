@@ -57,7 +57,16 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
     queryKey: ['admin-refund-seller-submission', id],
     queryFn: async () => {
       try {
-        return await request<SellerSubmission>(`/admin/refunds/${id}/seller-submission`);
+        const submission = await request<SellerSubmission>(
+          `/admin/refunds/${id}/seller-submission`,
+        );
+        if (
+          !submission?.id ||
+          !['PENDING_REVIEW', 'REJECTED', 'CONFIRMED'].includes(submission.status)
+        ) {
+          throw new Error('Không đọc được chứng từ shop gửi.');
+        }
+        return submission;
       } catch (cause) {
         if (cause instanceof ApiError && cause.status === 404) return null;
         throw cause;
@@ -144,7 +153,7 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
   }, [query.data?.canAccessBank]);
   if (bank && query.data && !query.data.canAccessBank) setBank(null);
   async function reveal() {
-    if (revealBusy.current || uncertain) return;
+    if (revealBusy.current || uncertain || query.data?.refund.payerRole !== 'ADMIN') return;
     revealBusy.current = true;
     setRevealing(true);
     setError('');
@@ -177,7 +186,10 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
     if (
       action === 'approve'
         ? !query.data.canApprove
-        : !query.data.canAccessBank || (!bank && !sellerSubmission.data)
+        : query.data.refund.payerRole === 'SELLER' || sellerSubmission.data
+          ? !(query.data.canReviewSellerTransfer || query.data.canAccessBank) ||
+            sellerSubmission.data?.status !== 'PENDING_REVIEW'
+          : query.data.refund.payerRole !== 'ADMIN' || !query.data.canAccessBank || !bank
     )
       return;
     sending.current = true;
@@ -195,7 +207,11 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
         } satisfies ConfirmRefundRequest);
       onNotice(
         action === 'approve'
-          ? 'Đã duyệt khoản hoàn. Bước chi hoặc xác nhận chuyển khoản cần một admin khác.'
+          ? query.data.refund.payerRole === 'SELLER'
+            ? 'Đã duyệt khoản hoàn. Shop chuyển khoản cho khách và gửi chứng từ; một admin khác sẽ đối chiếu.'
+            : query.data.refund.payerRole === 'ADMIN'
+              ? 'Đã duyệt khoản hoàn giao dịch cũ. Một admin khác thực hiện chi và ghi nhận chứng từ.'
+              : 'Đã duyệt khoản hoàn. Cần tải lại hồ sơ để xác định bên chuyển khoản và bước tiếp theo.'
           : sellerSubmission.data
             ? 'Đã xác nhận khoản hoàn do shop chuyển khoản.'
             : 'Đã ghi nhận chi hoàn và cập nhật sổ cái.',
@@ -233,6 +249,9 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
   };
   if (query.isPending) return <p role="status">Đang tải khoản hoàn…</p>;
   const data = query.data;
+  const sellerFunded = data?.refund.payerRole === 'SELLER' || Boolean(sellerSubmission.data);
+  const adminFunded = data?.refund.payerRole === 'ADMIN' && !sellerSubmission.data;
+  const canReviewSeller = data?.canReviewSellerTransfer || data?.canAccessBank;
   return (
     <div className="withdrawal-detail">
       {query.isError || !data ? (
@@ -280,22 +299,46 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
           )}
           {data.refund.status === 'PENDING' && (
             <>
-              {data.bankStatus === 'NEEDS_UPDATE' && (
+              {data.bankStatus === 'NEEDS_UPDATE' && !sellerSubmission.data && (
                 <p>
                   Chưa có tài khoản nhận hoàn hợp lệ. Khách cần bổ sung hoặc cập nhật trên biên
                   nhận.
                 </p>
               )}
-              {!data.canApprove && !data.canAccessBank && data.bankStatus === 'READY' && (
-                <p>
-                  Khoản hoàn đã được duyệt. Cần admin khác người duyệt thực hiện bước tiếp theo.
+              {sellerFunded && (
+                <div className="status-notice notice-info">
+                  <strong>Shop chuyển khoản hoàn tiền cho khách</strong>
+                  <p>
+                    {data.canApprove
+                      ? 'Admin duyệt yêu cầu, shop chuyển khoản và gửi chứng từ, sau đó một admin khác đối chiếu để hoàn tất.'
+                      : sellerSubmission.data?.status === 'PENDING_REVIEW'
+                        ? 'Shop đã gửi chứng từ. Admin khác người duyệt yêu cầu cần đối chiếu giao dịch để hoàn tất.'
+                        : sellerSubmission.data?.status === 'REJECTED'
+                          ? 'Chứng từ đã bị từ chối. Shop cần kiểm tra lý do và gửi bổ sung tại mục Hoàn tiền trực tiếp.'
+                          : 'Đã duyệt yêu cầu. Chờ shop mở Hoàn tiền trực tiếp, chuyển khoản cho khách và gửi chứng từ.'}
+                  </p>
+                </div>
+              )}
+              {!sellerFunded && !adminFunded && (
+                <p role="alert">
+                  Chưa xác định được bên chuyển khoản. Tải lại hồ sơ hoặc liên hệ quản trị hệ thống
+                  trước khi xử lý bước chi hoàn.
                 </p>
               )}
-              <p>
-                {sellerSubmission.data
-                  ? 'Đối chiếu chứng từ shop đã chuyển khoản trước khi xác nhận khoản hoàn.'
-                  : 'FloraBot chỉ ghi nhận kết quả chuyển khoản thủ công. Đối chiếu mã khoản hoàn với người phụ trách trước khi chi để tránh chuyển trùng.'}
-              </p>
+              {adminFunded &&
+                !data.canApprove &&
+                !data.canAccessBank &&
+                data.bankStatus === 'READY' && (
+                  <p>
+                    Khoản hoàn đã được duyệt. Cần admin khác người duyệt thực hiện bước tiếp theo.
+                  </p>
+                )}
+              {adminFunded && (
+                <p>
+                  Giao dịch cũ do nền tảng nhận tiền. Một admin khác người duyệt chuyển khoản và ghi
+                  nhận chứng từ.
+                </p>
+              )}
               {!uncertain && (
                 <>
                   {data.canApprove && !action && (
@@ -303,7 +346,7 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
                       Duyệt khoản hoàn
                     </Button>
                   )}
-                  {data.canAccessBank && !sellerSubmission.data && (
+                  {adminFunded && data.canAccessBank && sellerSubmission.isSuccess && (
                     <div>
                       {bank ? (
                         <>
@@ -355,7 +398,8 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
                       )}
                     </div>
                   )}
-                  {data.canAccessBank &&
+                  {sellerFunded &&
+                    canReviewSeller &&
                     sellerSubmission.data?.status === 'PENDING_REVIEW' &&
                     !action && (
                       <div className="stock-actions">
@@ -447,7 +491,11 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
                           </h4>
                           <p>
                             {action === 'approve'
-                              ? 'Một admin khác sẽ thực hiện bước chi; thao tác duyệt chưa chuyển tiền.'
+                              ? sellerFunded
+                                ? 'Sau khi duyệt, shop chuyển khoản cho khách và gửi chứng từ. Một admin khác đối chiếu để hoàn tất.'
+                                : adminFunded
+                                  ? 'Sau khi duyệt, một admin khác chuyển khoản và ghi nhận chứng từ cho giao dịch cũ.'
+                                  : 'Cần xác định bên chuyển khoản từ hồ sơ trước bước chi hoàn.'
                               : sellerSubmission.data
                                 ? 'Chỉ xác nhận sau khi đã đối chiếu giao dịch và chứng từ shop gửi. Thao tác này không chi tiền từ FloraBot.'
                                 : 'Chỉ xác nhận khi giao dịch ngân hàng đã hoàn tất. Thao tác này cập nhật sổ cái và trạng thái khoản hoàn.'}
@@ -527,8 +575,11 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
         onClick={async () => {
           epoch.current++;
           setBank(null);
-          const result = await query.refetch();
-          if (result.isSuccess) {
+          const [result, submission] = await Promise.all([
+            query.refetch(),
+            sellerSubmission.refetch(),
+          ]);
+          if (result.isSuccess && submission.isSuccess) {
             setUncertain(false);
             setError('');
             setAction(null);
@@ -563,7 +614,9 @@ function RefundItem({ item, onNotice }: { item: Item; onNotice: (message: string
           <span className="status-pill">
             {item.status === 'PENDING' && item.requiresApproval
               ? 'Cần Admin duyệt'
-              : REFUND_STATUS_NAMES[item.status] || item.status}
+              : item.status === 'PENDING' && item.payerRole === 'SELLER'
+                ? 'Đã duyệt · shop phụ trách hoàn'
+                : REFUND_STATUS_NAMES[item.status] || item.status}
           </span>
           <span className="refund-summary-toggle">
             {open ? 'Ẩn chi tiết' : 'Xem chi tiết'}
@@ -591,7 +644,10 @@ export default function AdminRefunds() {
   return (
     <section className="admin-refunds" aria-labelledby="refunds-title">
       <h2 id="refunds-title">Hoàn tiền cho khách</h2>
-      <p>Duyệt và chi bằng hai admin khác nhau. Khoản đang chờ được xếp cũ nhất trước.</p>
+      <p>
+        Admin duyệt yêu cầu và đối chiếu chứng từ. Shop chuyển khoản cho đơn nhận tiền trực tiếp qua
+        PayOS.
+      </p>
       <AdminFilterBar
         actions={
           <>

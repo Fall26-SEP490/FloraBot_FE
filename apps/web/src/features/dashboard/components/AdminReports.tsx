@@ -278,19 +278,19 @@ export default function AdminReports({ session }: { session: Session }) {
   const pageCount = Math.max(1, Math.ceil(rows.length / 20));
   return (
     <section className="api-reports" aria-labelledby="api-reports-title">
-      <div className="reports-heading">
-        <div>
-          <h2 id="api-reports-title">Báo cáo vận hành</h2>
-          <p>
-            Chọn báo cáo để tra cứu số liệu. Các báo cáo chỉ đọc, không tạo giao dịch hoặc điều
-            khiển tủ.
-          </p>
-        </div>
-        <Button variant="outline" disabled={query.isFetching} onClick={() => void query.refetch()}>
-          {query.isFetching ? 'Đang cập nhật…' : 'Cập nhật báo cáo'}
-        </Button>
-      </div>
-      <AdminFilterBar label="Loại báo cáo">
+      <h2 id="api-reports-title">Tra cứu số liệu</h2>
+      <AdminFilterBar
+        label="Loại báo cáo"
+        actions={
+          <Button
+            variant="outline"
+            disabled={query.isFetching}
+            onClick={() => void query.refetch()}
+          >
+            {query.isFetching ? 'Đang cập nhật…' : 'Cập nhật báo cáo'}
+          </Button>
+        }
+      >
         <div>
           <label htmlFor="operations-report">Chọn báo cáo</label>
           <select
@@ -311,8 +311,7 @@ export default function AdminReports({ session }: { session: Session }) {
       </AdminFilterBar>
       <p>{config.description}</p>
       <p className="quiet">
-        Hiển thị tối đa 100 dòng được hệ thống trả về, không phải tổng toàn hệ thống. Một số hàng
-        đợi có cả hồ sơ trước quy trình thuê kiosk hiện tại.
+        Hiển thị tối đa 100 dòng. Một số hàng đợi có cả hồ sơ từ quy trình thuê kiosk cũ.
       </p>
       {query.isPending ? (
         <p role="status">Đang tải báo cáo…</p>

@@ -1,10 +1,6 @@
 export const workspaceSections = {
   ADMIN: [
-    [
-      'approvals',
-      'Trung tâm duyệt',
-      'Kiểm tra phản ánh, hoàn tiền và yêu cầu rút tiền tồn đọng. Các hồ sơ vận hành được theo dõi riêng.',
-    ],
+    ['approvals', 'Trung tâm duyệt', 'Xem hồ sơ chờ xử lý và tiến độ vận hành.'],
     [
       'accounts',
       'Tài khoản hệ thống',
@@ -13,8 +9,8 @@ export const workspaceSections = {
     ['managers', 'Quản lý vận hành', 'Tạo tài khoản và quản lý trạng thái Quản lý vận hành.'],
     [
       'orders',
-      'Đơn đặt trước',
-      'Giám sát đơn đặt hoa và tiến độ chuẩn bị. Shop phụ trách báo giá và xử lý đơn.',
+      'Giám sát đơn đặt trước',
+      'Theo dõi tiến độ, phản ánh và hoàn tiền của các shop. Shop phụ trách báo giá và chuẩn bị hoa.',
     ],
     ['incidents', 'Sự cố tủ', 'Kiểm tra lỗi thiết bị, cửa tủ và tiền bị kẹt.'],
     [
@@ -22,21 +18,20 @@ export const workspaceSections = {
       'Giám sát công việc',
       'Theo dõi trạng thái sự cố và giao hoa trên toàn hệ thống ở chế độ chỉ đọc.',
     ],
-    [
-      'installations',
-      'Hồ sơ thuê kiosk',
-      'Theo dõi hồ sơ thuê và tiến độ lắp đặt. Quản lý vận hành xác nhận, phân công và bàn giao.',
-    ],
+    ['installations', 'Hồ sơ thuê kiosk', 'Tra cứu hồ sơ thuê theo từng giai đoạn lắp đặt.'],
     ['shops', 'Shop hoa', 'Tra cứu shop và duyệt gói cho hồ sơ shop có sẵn trong hệ thống.'],
-    ['slots', 'Phân bổ kiosk', 'Gán toàn bộ kiosk cho một shop và theo dõi trạng thái phân bổ.'],
+    [
+      'slots',
+      'Phân bổ kiosk',
+      'Theo dõi từng kiosk, gán shop và phân công người phụ trách vận hành.',
+    ],
     ['complaints', 'Phản ánh', 'Xem bằng chứng và xử lý phản ánh của khách.'],
-    ['refunds', 'Hoàn tiền', 'Kiểm tra khoản hoàn và xác nhận chi trả.'],
+    ['refunds', 'Hoàn tiền', 'Duyệt khoản hoàn và đối chiếu chứng từ chuyển khoản của shop.'],
     [
       'kiosk-refunds',
       'Hoàn tiền thuê kiosk',
       'Kiểm tra và xử lý hoàn tiền đơn đăng ký thuê kiosk hàng năm.',
     ],
-    ['withdrawals', 'Rút tiền tồn đọng', 'Xử lý yêu cầu rút tiền từ giao dịch cũ của shop.'],
     ['reconciliation', 'Đối soát', 'Kiểm tra giao dịch và kết quả đối soát.'],
     [
       'payment-channels',

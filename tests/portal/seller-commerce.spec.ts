@@ -145,3 +145,48 @@ test('Seller sees own active channel and shop receipts', async ({ page }) => {
   await expect(page.getByText('200.000 đ').first()).toBeVisible();
   await expect(page.getByRole('link', { name: 'Ví giao dịch cũ' })).toHaveCount(0);
 });
+
+for (const waitingForCustomer of [true, false]) {
+  test(`Seller refund explains the next action when waiting for customer=${waitingForCustomer}`, async ({
+    page,
+  }) => {
+    await page.route('**/hub/**', (route) => route.fulfill({ status: 503 }));
+    await page.route(`**/api/sellers/${sellerId}/refunds?*`, (route) =>
+      route.fulfill({
+        json: {
+          items: [{ id: 'refund-1', orderCode: 'FB-REFUND-1', amount: 100000, status: 'PENDING' }],
+          page: 1,
+          hasMore: false,
+        },
+      }),
+    );
+    await page.route(`**/api/sellers/${sellerId}/refunds/refund-1`, (route) =>
+      route.fulfill({
+        json: {
+          id: 'refund-1',
+          orderCode: 'FB-REFUND-1',
+          amount: 100000,
+          status: 'PENDING',
+          isApproved: true,
+          canAccessBank: false,
+          canSubmitTransfer: false,
+          submission: waitingForCustomer
+            ? null
+            : { providerReference: 'TRANSFER-1', status: 'PENDING_REVIEW' },
+        },
+      }),
+    );
+    await page.goto('/seller/refunds');
+    const refunds = page.locator('.business-panel');
+    await refunds.locator('.business-card summary').click();
+    await expect(
+      refunds.getByText(
+        waitingForCustomer
+          ? 'Khách cần bổ sung tài khoản nhận hoàn trên biên nhận. Sau đó tải lại hồ sơ để tiếp tục.'
+          : 'Đã gửi chứng từ. Chờ Admin đối chiếu để hoàn tất khoản hoàn.',
+        { exact: true },
+      ),
+    ).toBeVisible();
+    await expect(refunds.getByRole('button', { name: 'Gửi xác nhận chuyển khoản' })).toHaveCount(0);
+  });
+}

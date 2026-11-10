@@ -9,9 +9,8 @@ import { useQuery } from '@tanstack/react-query';
 import {
   Button,
   ClipboardList,
-  CircleAlert,
-  Package,
-  Boxes,
+  ChevronDown,
+  Search,
   RefreshCw,
   ArrowLeft,
   ArrowRight,
@@ -22,7 +21,6 @@ import type { components } from '../../../../../packages/contracts/src/generated
 import {
   canSendPreorderPickupOtp,
   matchesOrderFilter,
-  needsOrderAction,
   orderClosed,
   orderNextStep,
   orderStage,
@@ -37,6 +35,7 @@ import {
 import type { OrderFilter, Page, SendPreorderPickupOtpResponse, WebOrder } from './orders.types';
 import styles from './seller-orders.module.css';
 import customerStyles from './customer-orders.module.css';
+import './admin-preorders.css';
 import { CustomerQuoteDetails, CustomerPaymentReturn } from './CustomerQuoteDetails';
 import CustomerPickupGuide from './CustomerPickupGuide';
 import CustomerOrderChat from './CustomerOrderChat';
@@ -231,6 +230,7 @@ function OrderActions({
     ) ?? [];
   const fulfillSlots = emptyKioskSlots.filter((item) => item.zone === 'PREORDER');
   async function send(kind: string, body: unknown) {
+    if (mode === 'admin') return;
     if (sending.current || uncertain) return;
     if (
       mode === 'member' &&
@@ -312,9 +312,18 @@ function OrderActions({
       setBusy(false);
     }
   }
-  const canCancel = !row.orderStatus
-    ? ['REQUESTED', 'QUOTED'].includes(row.state)
-    : row.orderStatus === 'AWAITING_PAYMENT' || (mode !== 'member' && row.orderStatus === 'PAID');
+  const canCancel =
+    mode !== 'admin' &&
+    (!row.orderStatus
+      ? ['REQUESTED', 'QUOTED'].includes(row.state)
+      : row.orderStatus === 'AWAITING_PAYMENT' ||
+        (mode !== 'member' && row.orderStatus === 'PAID'));
+  function openCancellation() {
+    setAction('cancel');
+    setConfirm(false);
+    setNote('');
+  }
+
   const progress = (
     <ol className="order-progress" aria-label="Tiến độ đơn đặt hoa">
       {['Yêu cầu', 'Báo giá & thanh toán', 'Chuẩn bị', 'Sẵn sàng nhận', 'Hoàn tất'].map(
@@ -358,10 +367,12 @@ function OrderActions({
         className={mode === 'seller' && orderClosed(row) ? 'order-closed-note' : 'order-next-step'}
         role="note"
       >
-        {!(mode === 'seller' && orderClosed(row)) && <strong>Bước tiếp theo</strong>}
+        {!(mode === 'seller' && orderClosed(row)) && (
+          <strong>{mode === 'admin' ? 'Tình trạng xử lý' : 'Bước tiếp theo'}</strong>
+        )}
         <p>{mode === 'member' ? customerOrderHint(row) : orderNextStep(row, mode)}</p>
       </div>
-      {mode !== 'seller' &&
+      {mode === 'member' &&
         !(
           mode === 'member' &&
           ((!row.orderId && row.state === 'QUOTED') || row.orderStatus === 'AWAITING_PAYMENT')
@@ -414,13 +425,21 @@ function OrderActions({
         )}
       {mode === 'admin' && (
         <>
-          <p>
-            <strong>{row.productName}</strong> · {row.shopName}
-          </p>
-          <p>
-            Tủ nhận: {row.kioskName || row.kioskId} · {row.address}
-          </p>
-          <p>{row.instructions || 'Mua bó hoa có sẵn tại tủ.'}</p>
+          {row.address && (
+            <p>
+              <strong>Địa chỉ tủ:</strong> {row.address}
+            </p>
+          )}
+          {row.instructions && (
+            <p>
+              <strong>Yêu cầu của khách:</strong> {row.instructions}
+            </p>
+          )}
+          {row.quoteNote && (
+            <p>
+              <strong>Ghi chú:</strong> {row.quoteNote}
+            </p>
+          )}
           <dl className="bank-summary">
             <div>
               <dt>Nhận từ</dt>
@@ -465,7 +484,7 @@ function OrderActions({
       {mode === 'member' && role === 'CUSTOMER' && !action && !uncertain && (
         <CustomerOrderChat row={row} page={page} filter={filter} />
       )}
-      {!action && (
+      {!action && mode !== 'admin' && (
         <div className="stock-actions">
           {mode === 'member' && row.state === 'QUOTED' && !row.orderId && (
             <Button
@@ -535,15 +554,7 @@ function OrderActions({
             </Button>
           )}
           {canCancel && (
-            <Button
-              variant="outline"
-              disabled={busy || uncertain}
-              onClick={() => {
-                setAction('cancel');
-                setConfirm(false);
-                setNote('');
-              }}
-            >
+            <Button variant="outline" disabled={busy || uncertain} onClick={openCancellation}>
               Hủy yêu cầu
             </Button>
           )}
@@ -962,6 +973,13 @@ export default function WebRequests({
   const filtered = items.filter(
     (row) =>
       matchesOrderFilter(row, filter, mode) &&
+      (mode !== 'admin' ||
+        !search.trim() ||
+        searchable(
+          [row.orderCode, row.id, row.productName, row.shopName, row.kioskName, row.address]
+            .filter(Boolean)
+            .join(' '),
+        ).includes(searchable(search.trim()))) &&
       (mode !== 'seller' ||
         ((!search.trim() ||
           searchable(
@@ -986,11 +1004,15 @@ export default function WebRequests({
     mode === 'seller'
       ? filtered.slice((displayPage - 1) * SELLER_RESULT_SIZE, displayPage * SELLER_RESULT_SIZE)
       : filtered;
+  const interventionCount =
+    mode === 'admin'
+      ? items.filter((row) => matchesOrderFilter(row, 'attention', 'admin')).length
+      : 0;
   const filterName = sellerFilters.find((item) => item.value === filter)?.label ?? 'Tất cả';
   return (
     <Container
       id="web-orders"
-      className={`web-orders ${mode === 'seller' ? styles.sellerOrders : ''}`}
+      className={`web-orders ${mode === 'seller' ? styles.sellerOrders : mode === 'admin' ? 'admin-preorders' : ''}`}
       aria-labelledby="web-orders-title"
     >
       {mode === 'member' ? (
@@ -999,7 +1021,7 @@ export default function WebRequests({
         </h1>
       ) : (
         <h2 id="web-orders-title" className={mode === 'seller' ? 'sr-only' : undefined}>
-          Đơn đặt trước từ website
+          {mode === 'admin' ? 'Danh sách đơn từ website' : 'Đơn đặt trước từ website'}
         </h2>
       )}
       {mode === 'member' && params.get('paymentReturn') === '1' && (
@@ -1014,12 +1036,63 @@ export default function WebRequests({
           {readyNotice}
         </p>
       )}
-      {mode !== 'seller' && (
-        <p>
-          {mode === 'member'
-            ? 'Theo dõi yêu cầu, duyệt báo giá và xem lịch nhận hoa của bạn.'
-            : 'Đơn mẫu riêng cần báo giá, xác nhận thanh toán rồi nạp đúng bó hoa vào ô của shop.'}
-        </p>
+      {mode === 'member' && <p>Theo dõi yêu cầu, duyệt báo giá và xem lịch nhận hoa của bạn.</p>}
+      {mode === 'admin' && (
+        <>
+          <div className="admin-preorder-toolbar" role="group" aria-label="Bộ lọc đơn đặt trước">
+            <label className="admin-preorder-search">
+              <span>Tìm đơn trong trang</span>
+              <span className="admin-preorder-search-input">
+                <Search size={17} aria-hidden="true" />
+                <input
+                  type="search"
+                  placeholder="Mã đơn, tên shop hoặc tủ…"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                />
+              </span>
+            </label>
+            <label>
+              <span>Trạng thái</span>
+              <select
+                value={filter}
+                onChange={(event) => setFilter(event.target.value as OrderFilter)}
+              >
+                {sellerFilters.map(({ value, label }) => (
+                  <option key={value} value={value}>
+                    {value === 'attention' ? 'Cần theo dõi' : label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={query.isFetching}
+              onClick={() => void query.refetch()}
+            >
+              <RefreshCw size={16} aria-hidden="true" />
+              {query.isFetching ? 'Đang cập nhật…' : 'Làm mới'}
+            </Button>
+          </div>
+          {query.isSuccess && (
+            <div className="admin-preorder-results">
+              <p role="status">
+                Trang {page} · {filtered.length}/{items.length} yêu cầu
+              </p>
+              {interventionCount > 0 && (
+                <button
+                  type="button"
+                  className="admin-preorder-flag"
+                  aria-pressed={filter === 'attention'}
+                  onClick={() => setFilter(filter === 'attention' ? 'all' : 'attention')}
+                >
+                  Cần theo dõi <strong>{interventionCount}</strong>
+                </button>
+              )}
+            </div>
+          )}
+        </>
       )}
       {mode === 'seller' && (
         <>
@@ -1158,10 +1231,8 @@ export default function WebRequests({
           )}
         </>
       )}
-      {mode !== 'seller' &&
-        query.data &&
-        (mode !== 'member' || items.length > 0) &&
-        (mode === 'member' ? (
+      {mode === 'member' && query.data && items.length > 0 && (
+        <>
           <div
             className={customerStyles.filters}
             role="group"
@@ -1188,52 +1259,13 @@ export default function WebRequests({
               </button>
             ))}
           </div>
-        ) : (
-          <div
-            className="operations-metrics order-summary-strip"
-            aria-label="Tóm tắt trang đơn đang xem"
-          >
-            <div className="operations-metric">
-              <ClipboardList aria-hidden="true" />
-              <span>Yêu cầu trong trang</span>
-              <strong>{items.length}</strong>
-              <small>Toàn bộ đơn hiển thị</small>
-            </div>
-            <div className="operations-metric">
-              <CircleAlert aria-hidden="true" />
-              <span>Cần theo dõi</span>
-              <strong>{items.filter((row) => needsOrderAction(row, mode)).length}</strong>
-              <small>Chờ phản hồi / xử lý</small>
-            </div>
-            <div className="operations-metric">
-              <Package aria-hidden="true" />
-              <span>Đang chuẩn bị</span>
-              <strong>
-                {items.filter((row) => row.orderStatus === 'PAID' && !row.ready).length}
-              </strong>
-              <small>Đã thanh toán · cần nạp</small>
-            </div>
-            <div className="operations-metric">
-              <Boxes aria-hidden="true" />
-              <span>Sẵn sàng tại tủ</span>
-              <strong>
-                {items.filter((row) => row.ready && row.orderStatus === 'PAID').length}
-              </strong>
-              <small>Khách có thể nhận hoa</small>
-            </div>
-          </div>
-        ))}
-      {mode !== 'seller' && query.data && (mode !== 'member' || items.length > 0) && (
-        <p className="quiet order-page-note">
-          {mode === 'member'
-            ? `Thống kê và bộ lọc tính trên ${items.length} đơn ở trang ${page}.`
-            : `Thống kê và bộ lọc chỉ áp dụng cho ${items.length} đơn ở trang ${page}.`}
-        </p>
+          <p className="quiet order-page-note">
+            Thống kê và bộ lọc tính trên {items.length} đơn ở trang {page}.
+          </p>
+        </>
       )}
-      {mode !== 'seller' && (
-        <div
-          className={`queue-filter-bar order-filter-bar ${mode === 'member' ? customerStyles.toolbar : ''}`}
-        >
+      {mode === 'member' && (
+        <div className={`queue-filter-bar order-filter-bar ${customerStyles.toolbar}`}>
           <div className="filter-group">
             <label htmlFor={`order-filter-${mode}`} className="sr-only">
               Lọc yêu cầu trong trang
@@ -1245,13 +1277,9 @@ export default function WebRequests({
               onChange={(event) => setFilter(event.target.value as OrderFilter)}
             >
               <option value="all">Tất cả yêu cầu trong trang</option>
-              <option value="attention">
-                {mode === 'member' ? 'Cần bạn phản hồi' : 'Cần theo dõi'}
-              </option>
+              <option value="attention">Cần bạn phản hồi</option>
               <option value="requested">Chờ báo giá</option>
-              <option value="quoted">
-                {mode === 'member' ? 'Đã có báo giá' : 'Chờ khách xác nhận'}
-              </option>
+              <option value="quoted">Đã có báo giá</option>
               <option value="payment">Chờ thanh toán</option>
               <option value="preparing">Đang chuẩn bị</option>
               <option value="ready">Sẵn sàng tại tủ</option>
@@ -1264,7 +1292,7 @@ export default function WebRequests({
             onClick={() => void query.refetch()}
           >
             <RefreshCw size={16} aria-hidden="true" className={query.isFetching ? 'spin' : ''} />
-            {query.isFetching ? 'Đang cập nhật…' : mode === 'member' ? 'Làm mới' : 'Làm mới'}
+            {query.isFetching ? 'Đang cập nhật…' : 'Làm mới'}
           </Button>
         </div>
       )}
@@ -1286,7 +1314,9 @@ export default function WebRequests({
                 {items.length
                   ? mode === 'seller'
                     ? 'Thử đổi trạng thái, từ khóa hoặc ngày nhận để tìm đơn.'
-                    : 'Không có yêu cầu phù hợp bộ lọc trong trang này.'
+                    : mode === 'admin'
+                      ? 'Thử đổi trạng thái hoặc từ khóa. Bộ lọc áp dụng cho trang đang xem.'
+                      : 'Không có yêu cầu phù hợp bộ lọc trong trang này.'
                   : mode === 'member' && page === 1
                     ? 'Chọn một mẫu hoa bạn thích và gửi mong muốn cho shop. Đơn của bạn sẽ xuất hiện tại đây.'
                     : 'Chưa có yêu cầu ở trang này.'}
@@ -1298,11 +1328,21 @@ export default function WebRequests({
               )}
             </div>
           )}
+          {mode === 'admin' && displayItems.length > 0 && (
+            <div className="admin-preorder-columns" aria-hidden="true">
+              <span>Đơn / mẫu hoa</span>
+              <span>Shop / tủ nhận</span>
+              <span>Lịch nhận / giá</span>
+              <span>Trạng thái</span>
+            </div>
+          )}
           <ul
             className={
               mode === 'seller'
                 ? styles.orderList
-                : `member-orders ${mode === 'member' ? 'customer-order-list' : ''}`
+                : mode === 'member'
+                  ? 'member-orders customer-order-list'
+                  : 'admin-preorder-list'
             }
           >
             {displayItems.map((row) => (
@@ -1314,7 +1354,7 @@ export default function WebRequests({
                         ? styles.orderSummary
                         : mode === 'member'
                           ? customerStyles.summary
-                          : undefined
+                          : 'admin-preorder-row'
                     }
                   >
                     {mode === 'seller' ? (
@@ -1381,15 +1421,35 @@ export default function WebRequests({
                       </span>
                     ) : (
                       <>
-                        <strong>
-                          {row.orderCode || `Yêu cầu ${row.id.slice(0, 8)}`} ·{' '}
-                          {row.kind === 'CUSTOM' ? 'Hoa theo yêu cầu' : 'Hoa có sẵn'}
-                        </strong>
-                        <span
-                          className="order-status-pill"
-                          data-status={row.orderStatus || row.state}
-                        >
-                          {statusName(row)}
+                        <span className="admin-preorder-cell">
+                          <strong>{row.orderCode || `Yêu cầu ${row.id.slice(0, 8)}`}</strong>
+                          <small>
+                            {row.productName ||
+                              (row.kind === 'CUSTOM' ? 'Hoa theo yêu cầu' : 'Hoa có sẵn')}
+                          </small>
+                        </span>
+                        <span className="admin-preorder-cell">
+                          <strong>{row.shopName || 'Chưa rõ shop'}</strong>
+                          <small>{row.kioskName || 'Chưa rõ tủ nhận'}</small>
+                        </span>
+                        <span className="admin-preorder-cell admin-preorder-schedule">
+                          <span>{when(row.pickupAt)}</span>
+                          <small>
+                            {row.quotedPrice == null ? 'Chưa báo giá' : money(row.quotedPrice)}
+                          </small>
+                        </span>
+                        <span className="admin-preorder-state">
+                          <span
+                            className="order-status-pill"
+                            data-status={
+                              row.ready && row.orderStatus === 'PAID'
+                                ? 'READY'
+                                : row.orderStatus || row.state
+                            }
+                          >
+                            {statusName(row)}
+                          </span>
+                          <ChevronDown size={17} aria-hidden="true" />
                         </span>
                       </>
                     )}
@@ -1478,7 +1538,7 @@ export default function WebRequests({
                 }
               >
                 <ArrowLeft size={15} aria-hidden="true" />
-                <span>{mode === 'seller' ? 'Trang trước' : 'Yêu cầu trước'}</span>
+                <span>{mode === 'member' ? 'Yêu cầu trước' : 'Trang trước'}</span>
               </Button>
               <span className="order-page-indicator">
                 Trang {displayPage}
@@ -1494,7 +1554,7 @@ export default function WebRequests({
                   mode === 'seller' ? setResultPage(displayPage + 1) : setPage((value) => value + 1)
                 }
               >
-                <span>{mode === 'seller' ? 'Trang sau' : 'Yêu cầu sau'}</span>
+                <span>{mode === 'member' ? 'Yêu cầu sau' : 'Trang sau'}</span>
                 <ArrowRight size={15} aria-hidden="true" />
               </Button>
             </nav>

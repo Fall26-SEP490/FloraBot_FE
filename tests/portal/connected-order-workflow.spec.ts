@@ -1,6 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { mockPayos } from './payos.fixture';
 
 const sellerId = '20000000-0000-0000-0000-000000000001';
 const kioskId = '40000000-0000-0000-0000-000000000001';
@@ -161,6 +160,7 @@ test('Customer request → seller quote → customer acceptance/payment → sell
       if (path.endsWith('/payment-link'))
         return {
           checkoutUrl: 'https://pay.payos.vn/web/test-order',
+          qrCode: '000201010212TEST-BANK-QR',
           amount: row.quotedPrice,
           orderCode: 123456,
         };
@@ -225,12 +225,11 @@ test('Customer request → seller quote → customer acceptance/payment → sell
     .getByRole('checkbox', { name: 'Tôi đồng ý với giá, ghi chú và lịch nhận của shop.' })
     .check();
   await page.getByRole('button', { name: 'Đồng ý báo giá', exact: true }).click();
-  await mockPayos(page);
   await page.getByRole('button', { name: 'Thanh toán ngay', exact: true }).click();
   await expect(
     page
       .getByRole('dialog', { name: 'Thanh toán đơn hoa' })
-      .getByTitle('Thanh toán bảo mật qua PayOS'),
+      .getByRole('img', { name: 'Mã QR thanh toán PayOS' }),
   ).toBeVisible();
   await expect(page).toHaveURL(/tai-khoan/);
   expect(writes.filter((path) => path.endsWith('/payment-link'))).toHaveLength(1);
@@ -604,4 +603,72 @@ test('Seller pickup OTP button enforces eligibility, handles 409/429/503 without
   await expect(readyDetails.getByRole('button', { name: 'Gửi lại mã', exact: true })).toBeEnabled({
     timeout: 4000,
   });
+});
+
+test('Admin monitors preorder details without seller cancellation controls', async ({
+  page,
+}, info) => {
+  const paid = {
+    ...order(),
+    state: 'ORDERED',
+    orderStatus: 'PAID',
+    orderCode: 'FB-1001',
+    quotedPrice: 350000,
+    shopName: 'Tiệm Hoa Hồng',
+  };
+  const disputed = {
+    ...order(),
+    id: '70000000-0000-0000-0000-000000000002',
+    orderCode: 'FB-1002',
+    state: 'ORDERED',
+    orderStatus: 'DISPUTED',
+  };
+  const writes: string[] = [];
+  await common(
+    page,
+    () => 'ADMIN',
+    () => [paid, disputed],
+    async (path, body) => {
+      writes.push(path);
+      expect(path).toBe(`/admin/preorders/${paid.id}/cancel`);
+      expect(body).toEqual({ reason: 'Shop và khách đã xác nhận cần hủy đơn.' });
+      paid.state = 'CANCELLED';
+      paid.orderStatus = 'DISPENSE_FAILED';
+      return {};
+    },
+  );
+  await page.setViewportSize({ width: 1440, height: 950 });
+  await page.goto('/admin/orders');
+  const summary = page.locator('.admin-preorder-row').filter({ hasText: 'FB-1001' });
+  await expect(summary).toContainText('Tiệm Hoa Hồng');
+  await expect(summary).toContainText(flower.kioskName);
+  await expect(summary).toContainText('350.000 đ');
+  const attention = page.getByRole('button', { name: 'Cần theo dõi 1' });
+  await attention.click();
+  await expect(summary).toHaveCount(0);
+  await expect(page.locator('.admin-preorder-row')).toContainText('FB-1002');
+  await attention.click();
+  const search = page.getByRole('searchbox', { name: 'Tìm đơn trong trang' });
+  await search.fill('tiem hoa hong');
+  await expect(page.locator('.admin-preorder-row')).toHaveCount(1);
+  await search.clear();
+  expect(writes).toEqual([]);
+  await page.screenshot({ path: info.outputPath('admin-preorders-desktop.png') });
+  await page.setViewportSize({ width: 390, height: 950 });
+  await expect(summary).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(
+    (
+      await new AxeBuilder({ page })
+        .include('.admin-preorders')
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+        .analyze()
+    ).violations,
+  ).toEqual([]);
+  await page.screenshot({ path: info.outputPath('admin-preorders-mobile.png') });
+  await summary.press('Enter');
+  await expect(page.getByRole('button', { name: 'Báo giá hoặc từ chối' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Nạp hoa cho đơn này' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Hủy yêu cầu', exact: true })).toHaveCount(0);
+  expect(writes).toEqual([]);
 });

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, RefreshCw, Eye } from '@florabot/ui';
+import { Button, RefreshCw } from '@florabot/ui';
 import { useAdminQueues } from '../use-admin-queues';
 import AdminQueueItem from './AdminQueueItem';
 import '../styles/admin-approvals.css';
@@ -8,13 +8,17 @@ export default function AdminApprovalCenter({ actorId }: { actorId: string }) {
   const [onlyWithItems, setOnlyWithItems] = useState(false);
   const rows = useAdminQueues(actorId);
   const busy = rows.some(({ query }) => query.isFetching);
+  const hasMore = rows.some(({ query }) => query.data?.hasMore);
   const reviewRows = rows.filter(({ queue }) => queue.group === 'review');
   const visibleReviewRows = reviewRows.filter(
     ({ query }) => !onlyWithItems || !query.isSuccess || query.data.count > 0,
   );
   return (
     <section className="admin-approval-center" aria-label="Trung tâm yêu cầu">
-      <section className="admin-review-section" aria-labelledby="approval-center-title">
+      <section
+        className="admin-review-section admin-surface"
+        aria-labelledby="approval-center-title"
+      >
         <div className="admin-section-heading">
           <div>
             <h2 id="approval-center-title">Admin cần xử lý</h2>
@@ -47,9 +51,6 @@ export default function AdminApprovalCenter({ actorId }: { actorId: string }) {
               Có yêu cầu
             </button>
           </div>
-          <p className="admin-scope-note">
-            Số lượng theo lần tải hiện tại; dấu + nghĩa là còn trang tiếp theo.
-          </p>
         </div>
         <div className="admin-queue-list">
           {visibleReviewRows.map(({ queue, query }) => (
@@ -65,14 +66,14 @@ export default function AdminApprovalCenter({ actorId }: { actorId: string }) {
           )}
         </div>
       </section>
-      <section className="admin-monitor-section" aria-labelledby="admin-monitor-title">
+      <section
+        className="admin-monitor-section admin-surface"
+        aria-labelledby="admin-monitor-title"
+      >
         <div className="admin-section-heading">
           <div>
             <h2 id="admin-monitor-title">Theo dõi vận hành</h2>
-            <p>
-              <Eye size={16} aria-hidden="true" /> Kiểm tra sự cố và tiến độ thuê kiosk. Quản lý vận
-              hành phụ trách xếp lịch và bàn giao.
-            </p>
+            <p>Theo dõi sự cố và hồ sơ thuê. Quản lý vận hành phụ trách xếp lịch và bàn giao.</p>
           </div>
         </div>
         <div className="admin-queue-list">
@@ -83,6 +84,7 @@ export default function AdminApprovalCenter({ actorId }: { actorId: string }) {
             ))}
         </div>
       </section>
+      {hasMore && <p className="admin-scope-note">Dấu + cho biết còn hồ sơ ở trang tiếp theo.</p>}
     </section>
   );
 }

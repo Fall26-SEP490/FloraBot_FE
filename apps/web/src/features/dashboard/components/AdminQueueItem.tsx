@@ -42,7 +42,7 @@ export default function AdminQueueItem({
               Thử lại {queue.title.toLocaleLowerCase('vi')}
             </Button>
           </div>
-        ) : (
+        ) : compact ? (
           <p className="admin-queue-state">
             {query.data.count === 0
               ? 'Chưa có yêu cầu trong lần tải này.'
@@ -51,7 +51,7 @@ export default function AdminQueueItem({
                 : 'Yêu cầu đang chờ kiểm tra.'}
             {query.isFetching && <span role="status"> Đang cập nhật…</span>}
           </p>
-        )}
+        ) : null}
       </div>
       {query.isSuccess && (
         <div
@@ -59,7 +59,7 @@ export default function AdminQueueItem({
           aria-label={`${queueCountLabel(query.data)} yêu cầu đang hiển thị`}
         >
           <strong>{queueCountLabel(query.data)}</strong>
-          <span>đang hiển thị</span>
+          <span>{compact ? 'đang hiển thị' : 'hồ sơ'}</span>
         </div>
       )}
     </article>

@@ -100,7 +100,9 @@ for (const width of [390, 1440]) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
-    await section.screenshot({ path: `.impeccable/review/portal-kiosks-${width}.png` });
+    await section.screenshot({
+      path: `.impeccable/review/portal-kiosks-${width}.png`,
+    });
 
     await section.getByRole('button', { name: 'Gán kiosk cho shop' }).click();
     await page.getByRole('button', { name: 'Gán toàn bộ kiosk' }).click();
@@ -162,9 +164,11 @@ test('Admin explicitly assigns and removes a kiosk manager', async ({ page }) =>
   });
 
   await page.goto('/admin/slots');
-  await page.getByText('Phân công Quản lý vận hành phụ trách Kiosk', { exact: true }).click();
+  await page.getByRole('button', { name: 'Phân công quản lý', exact: true }).click();
   await expect(page.getByText('Chưa có quản lý phụ trách')).toBeVisible();
-  await page.getByLabel('Chọn kiosk', { exact: true }).selectOption(kiosk.id);
+  await page.getByRole('button', { name: 'Chọn quản lý cho K-DIAN' }).click();
+  await expect(page.getByLabel('Chọn kiosk', { exact: true })).toHaveValue(kiosk.id);
+  await expect(page.getByLabel('Quản lý vận hành phụ trách', { exact: true })).toBeFocused();
   const save = page.getByRole('button', { name: 'Lưu phân công vận hành' });
   const managerSelect = page.getByLabel('Quản lý vận hành phụ trách', { exact: true });
   await expect(save).toBeDisabled();

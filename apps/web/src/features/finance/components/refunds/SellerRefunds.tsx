@@ -93,6 +93,17 @@ function RefundCard({ id, sellerId }: { id: string; sellerId: string }) {
         Trạng thái: <strong>{item.status}</strong>
         {item.isApproved ? ' · Đã được duyệt' : ' · Chờ duyệt'}
       </p>
+      {item.status === 'PENDING' && (
+        <p className="business-note">
+          {!item.isApproved
+            ? 'Chờ Admin duyệt yêu cầu trước khi chuyển khoản cho khách.'
+            : item.submission?.status === 'PENDING_REVIEW'
+              ? 'Đã gửi chứng từ. Chờ Admin đối chiếu để hoàn tất khoản hoàn.'
+              : !item.canAccessBank
+                ? 'Khách cần bổ sung tài khoản nhận hoàn trên biên nhận. Sau đó tải lại hồ sơ để tiếp tục.'
+                : 'Mở tài khoản nhận hoàn, chuyển khoản cho khách rồi gửi mã giao dịch và ảnh chứng từ bên dưới.'}
+        </p>
+      )}
       {item.reason && <p>Lý do: {item.reason}</p>}
       {item.submission && (
         <div>

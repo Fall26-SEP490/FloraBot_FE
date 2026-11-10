@@ -9,12 +9,11 @@ const sections = [
   ['slots', 'Phân bổ kiosk'],
   ['installations', 'Hồ sơ thuê kiosk'],
   ['tasks', 'Giám sát công việc'],
-  ['orders', 'Đơn đặt trước'],
+  ['orders', 'Giám sát đơn đặt trước'],
   ['incidents', 'Sự cố tủ'],
   ['complaints', 'Phản ánh'],
   ['refunds', 'Hoàn tiền'],
   ['kiosk-refunds', 'Hoàn tiền thuê kiosk'],
-  ['withdrawals', 'Rút tiền'],
   ['reconciliation', 'Đối soát'],
   ['reports', 'Báo cáo vận hành'],
 ] as const;
@@ -42,7 +41,6 @@ for (const width of [390, 1440])
         complaints: '.admin-complaints',
         refunds: '.admin-refunds',
         'kiosk-refunds': '.admin-kiosk-refunds-view',
-        withdrawals: '.admin-withdrawals',
         reconciliation: '.admin-reconciliation',
         reports: '.api-reports',
       };
@@ -117,7 +115,6 @@ test('Admin shop and kiosk filters reset and disclosures work with keyboard', as
 for (const [path, label, loaded] of [
   ['/admin/accounts', 'Tài khoản hệ thống', '.management-table'],
   ['/admin/reports/v_admin_queue', 'Báo cáo vận hành', '.reports-table-wrap'],
-  ['/admin/withdrawals', 'Rút tiền', '.admin-shop-list'],
 ] as const)
   test(`Admin recovers ${label} from an API error without fake empty data`, async ({ page }) => {
     const model = await setupAdminSurfaces(page);

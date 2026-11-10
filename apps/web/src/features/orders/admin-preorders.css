@@ -1,0 +1,224 @@
+.admin-preorders {
+  --preorder-columns: minmax(0, 1.1fr) minmax(0, 1.05fr) minmax(0, 0.95fr) minmax(0, 1fr);
+}
+
+.admin-preorder-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 12px;
+  margin-block: 18px 12px;
+}
+
+.admin-preorder-toolbar label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  font-size: 0.8rem;
+}
+
+.admin-preorder-search-input {
+  position: relative;
+  display: block;
+}
+
+.admin-preorder-search-input svg {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  color: var(--admin-muted);
+  pointer-events: none;
+}
+
+.admin-content .admin-preorder-toolbar :is(input, select) {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  margin: 0;
+  background: white;
+}
+
+.admin-content .admin-preorder-toolbar input {
+  padding-inline-start: 37px;
+}
+
+.admin-preorder-results {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 44px;
+  margin-bottom: 10px;
+}
+
+.admin-preorder-results p {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--admin-muted);
+}
+
+.admin-preorder-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 6px 12px;
+  border: 1px solid #d6bf91;
+  border-radius: 8px;
+  background: #fff6e4;
+  color: #674819;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.admin-preorder-flag strong {
+  min-width: 1.25em;
+  text-align: center;
+}
+
+.admin-preorder-flag:is(:hover, [aria-pressed='true']) {
+  background: #f5e6c7;
+  border-color: #9c783b;
+}
+
+.admin-preorder-columns,
+.admin-preorder-row {
+  display: grid;
+  grid-template-columns: var(--preorder-columns);
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+}
+
+.admin-preorder-columns {
+  background: var(--admin-soft);
+  border-radius: 8px 8px 0 0;
+  color: var(--admin-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.admin-preorder-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-preorder-list > li {
+  border-bottom: 1px solid var(--admin-line);
+}
+
+.admin-preorder-row {
+  min-height: 72px;
+  border-radius: 6px;
+  cursor: pointer;
+  list-style: none;
+  overflow-wrap: anywhere;
+}
+
+.admin-preorder-row::-webkit-details-marker {
+  display: none;
+}
+
+.admin-preorder-row:hover,
+.admin-preorder-list details[open] > .admin-preorder-row {
+  background: #f5f8f3;
+}
+
+.admin-preorder-row:focus-visible,
+.admin-preorder-flag:focus-visible {
+  outline: 2px solid var(--admin-ink);
+  outline-offset: -2px;
+}
+
+.admin-preorder-cell {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.admin-preorder-cell small {
+  font-size: 0.76rem;
+  color: var(--admin-muted);
+}
+
+.admin-preorder-schedule {
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-preorder-state {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.admin-preorder-state svg {
+  flex: none;
+  color: var(--admin-muted);
+}
+
+.admin-preorder-list details[open] .admin-preorder-state svg {
+  transform: rotate(180deg);
+}
+
+.admin-preorder-list .order-status-pill {
+  padding: 4px 8px;
+  white-space: normal;
+  line-height: 1.45;
+}
+
+.admin-preorder-list
+  .order-status-pill:is([data-status='DISPUTED'], [data-status='DISPENSE_FAILED']) {
+  background: #fff0d8;
+  color: #694a18;
+}
+
+.admin-preorder-list .order-status-pill[data-status='READY'] {
+  background: #e8f3e7;
+  color: #25513a;
+}
+
+@media (max-width: 1080px) {
+  .admin-preorder-columns {
+    display: none;
+  }
+
+  .admin-preorder-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px 12px;
+  }
+
+  .admin-preorder-state {
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 540px) {
+  .admin-preorder-toolbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .admin-preorder-search {
+    grid-column: 1 / -1;
+  }
+
+  .admin-preorder-row {
+    padding-inline: 8px;
+  }
+
+  .admin-preorder-state .order-status-pill {
+    font-size: 0.7rem;
+  }
+
+  .admin-preorder-list .web-order-actions {
+    padding-inline: 12px;
+  }
+}
