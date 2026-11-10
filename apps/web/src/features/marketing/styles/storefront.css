@@ -153,6 +153,11 @@
 .storefront-flower-copy p {
   margin: 0;
 }
+.storefront-flower-availability {
+  color: var(--color-status-danger-ink, #842323);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
 .storefront-flower-price {
   font-weight: 700;
   font-size: 1.15rem;

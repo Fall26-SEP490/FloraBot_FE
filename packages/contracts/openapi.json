@@ -2737,6 +2737,7 @@
         "tags": [
           "FloraBot.Api"
         ],
+        "description": "Chỉ nhận preorder CUSTOM theo mẫu hoa đang ACTIVE và còn tồn tại shop. Nếu quantity = 0, trả 409 với detail PREORDER_PRODUCT_OUT_OF_STOCK. Số lượng không bị giữ chỗ khi tạo yêu cầu; được trừ khi Seller/nhân viên nạp hoa vào kiosk.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2754,6 +2755,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/FlowResult"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -4525,6 +4536,7 @@
         "tags": [
           "FloraBot.Api"
         ],
+        "description": "preorderAvailable cho biết mẫu còn tồn tại shop và có thể tạo preorder mới; số lượng cụ thể không được công khai trong catalog.",
         "parameters": [
           {
             "name": "page",
@@ -27008,7 +27020,8 @@
           "address",
           "zone",
           "photo",
-          "bouquets"
+          "bouquets",
+          "preorderAvailable"
         ],
         "type": "object",
         "properties": {
@@ -27068,6 +27081,9 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          "preorderAvailable": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false

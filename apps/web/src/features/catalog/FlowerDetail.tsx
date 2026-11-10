@@ -9,7 +9,14 @@ import { ArrowLeft, Button, MapPin, MessageSquare, Store } from '@florabot/ui';
 import { request, sessionQuery } from '@/shared/lib/api';
 import { MOCK_CATALOG_ITEMS } from './mocks/mockCatalog';
 import type { CatalogItem, CatalogResponse } from './catalog.types';
-import { canOrderOnWeb, formatPrice, isWalkIn, purchaseLabel } from './catalog.utils';
+import {
+  canOrderOnWeb,
+  formatPrice,
+  isPreorder,
+  isPreorderSoldOut,
+  isWalkIn,
+  purchaseLabel,
+} from './catalog.utils';
 import { FlowerRequestPanel } from './components/FlowerRequestPanel';
 import { ChatNoticeDialog } from './components/ChatNoticeDialog';
 import { useCustomerChat } from './hooks/useCustomerChat';
@@ -193,21 +200,24 @@ export default function FlowerDetail({
               <div className="flower-detail-pricing">
                 <span className="flower-detail-price">{formatPrice(item.price)} đ</span>
                 <span className="flower-detail-price-sub">
-                  {isWalkIn(item) ? 'Giá niêm yết tại tủ' : canOrderOnWeb(item) ? 'Giá mẫu' : ''}
+                  {isWalkIn(item) ? 'Giá niêm yết tại tủ' : isPreorder(item) ? 'Giá mẫu' : ''}
                 </span>
               </div>
 
-              {canOrderOnWeb(item) && (
+              {isPreorder(item) && (
                 <p className="flower-detail-note">
-                  Shop sẽ báo giá theo yêu cầu và xác nhận lịch nhận trước khi bạn thanh toán.
+                  {isPreorderSoldOut(item)
+                    ? 'Mẫu này tạm hết tại shop. Bạn có thể nhắn shop để hỏi khi nào có lại.'
+                    : 'Shop sẽ báo giá theo yêu cầu và xác nhận lịch nhận trước khi bạn thanh toán.'}
                 </p>
               )}
 
               {/* Hàng nút hành động cân đối, gọn gàng */}
               <div className="flower-detail-actions">
-                {canOrderOnWeb(item) ? (
+                {isPreorder(item) ? (
                   <Button
                     className="flower-detail-cta-btn button-primary"
+                    disabled={!canOrderOnWeb(item)}
                     onClick={() => selectItem(item)}
                   >
                     Yêu cầu báo giá
