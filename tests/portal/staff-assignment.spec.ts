@@ -183,9 +183,7 @@ test('Shop Owner assigns DELIVERY to own seller staff and recovers the same requ
   ).toBe(true);
 });
 
-test('Admin tasks oversight is read-only and does not advertise assigning legacy staff or review actions', async ({
-  page,
-}) => {
+test('Admin can oversee tasks without assigning staff or reviewing reports', async ({ page }) => {
   await page.route('**/api/**', async (route) => {
     const path = new URL(route.request().url()).pathname;
     if (path === '/api/auth/me')
@@ -205,7 +203,7 @@ test('Admin tasks oversight is read-only and does not advertise assigning legacy
   await expect(page.getByText('Duyệt báo cáo hoặc yêu cầu kiểm tra lại')).toHaveCount(0);
   await expect(
     page.getByText(
-      'Theo dõi trạng thái công việc toàn hệ thống ở chế độ chỉ đọc. Việc phân công và duyệt báo cáo do Quản lý vận hành và chủ shop thực hiện.',
+      'Theo dõi công việc toàn hệ thống và cập nhật hướng dẫn khi công việc đang mở. Quản lý vận hành và chủ shop phụ trách phân công và duyệt báo cáo.',
     ),
   ).toBeVisible();
 });

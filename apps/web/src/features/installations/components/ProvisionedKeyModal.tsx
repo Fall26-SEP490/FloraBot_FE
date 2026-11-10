@@ -50,8 +50,8 @@ export function ProvisionedKeyModal({ info, onClose }: ProvisionedKeyModalProps)
           <p>
             <strong>Lưu ý bảo mật quan trọng:</strong> Khóa API này chỉ hiển thị{' '}
             <strong>duy nhất một lần</strong>. Máy chủ chỉ lưu bản băm SHA-256 để xác thực. Hãy sao
-            chép và cấu hình vào firmware thiết bị ngay. Sau khi đóng bảng này, khóa sẽ không thể
-            xem lại.
+            chép để cấu hình màn hình kiosk. Sau khi đóng bảng này, khóa sẽ không thể xem lại. Bộ
+            cấu hình firmware được tải riêng trong mục Cấu hình ESP32.
           </p>
         </div>
       </div>

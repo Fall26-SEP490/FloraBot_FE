@@ -20,6 +20,9 @@ async function setup(page: Page) {
   await page.route('**/api/**', (route) =>
     route.fulfill({ status: 501, json: { detail: 'API not mocked in this test' } }),
   );
+  await page.route('**/api/admin/refunds/*/seller-submission', (route) =>
+    route.fulfill({ status: 404 }),
+  );
   await page.route('**/api/admin/evidence/*/*', (route) =>
     route.fulfill({
       json:
@@ -167,13 +170,15 @@ test('Automatic refund approval does not allow the approver to pay', async ({ pa
   expect(approved).toBe(false);
   await section.getByRole('button', { name: 'Xác nhận khoản hoàn' }).click();
   await expect(section.getByRole('status')).toHaveText(
-    'Đã duyệt khoản hoàn. Bước chi cần một admin khác.',
+    'Đã duyệt khoản hoàn. Bước chi hoặc xác nhận chuyển khoản cần một admin khác.',
   );
   await expect(
     section.getByRole('button', { name: 'Xem tài khoản nhận hoàn', exact: true }),
   ).toHaveCount(0);
   await expect(
-    section.getByText('Khoản hoàn đã được duyệt. Cần admin khác người duyệt thực hiện bước chi.'),
+    section.getByText(
+      'Khoản hoàn đã được duyệt. Cần admin khác người duyệt thực hiện bước tiếp theo.',
+    ),
   ).toBeVisible();
 });
 

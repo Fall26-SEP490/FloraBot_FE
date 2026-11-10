@@ -7,6 +7,7 @@ import { KIOSK_STATUS_LABELS, TECHNICIAN_PROGRESS_STEPS } from '../installations
 import type { StaffEvidenceItem, TechnicianInstallationDetail } from '../installations.types';
 import { formatDateVN, getTechnicianStepIndex, validateReportText } from '../installations.utils';
 import { useTechnicianActions } from '../hooks/useTechnicianActions';
+import { Esp32ConfigurationPanel } from '../../kiosk-management/Esp32ConfigurationPanel';
 import { TechnicianEvidenceGallery, TechnicianEvidenceSection } from './TechnicianEvidenceSection';
 
 interface TechnicianJobDetailCardProps {
@@ -196,6 +197,14 @@ export function TechnicianJobDetailCard({
       </div>
 
       {/* STEP 1: START VISIT */}
+      {['SCHEDULED', 'INSTALLING', 'AWAITING_HANDOVER'].includes(selectedJob.status) && (
+        <Esp32ConfigurationPanel
+          actorId={session.id}
+          scope="technician"
+          resourceId={selectedJob.id}
+        />
+      )}
+
       {selectedJob.status === 'SCHEDULED' && (
         <div className="tech-action-step">
           <h3>Bắt đầu lắp đặt</h3>

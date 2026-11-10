@@ -128,3 +128,60 @@ for (const width of [390, 1440]) {
     expect(writes).toBe(2);
   });
 }
+
+test('Technician keeps an incident report draft when a Manager changes the instructions', async ({
+  page,
+}) => {
+  const task = {
+    id: 'task-1',
+    kind: 'INCIDENT',
+    status: 'IN_PROGRESS',
+    version: 1,
+    kioskName: 'Tủ FPT',
+    address: 'Thủ Đức',
+    assigneeName: 'Kỹ thuật viên',
+    instructions: 'Kiểm tra chốt cửa trước.',
+    report: null,
+  };
+  const newInstructions = 'Kiểm tra cả cảm biến hành trình của cửa.';
+  const draft = 'Đã kiểm tra chốt, cửa đang đóng.';
+  const versions: number[] = [];
+  await page.route('**/api/**', (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (path === '/api/auth/me') {
+      return route.fulfill({ json: { id: 'tech-1', name: 'Kỹ thuật viên', role: 'TECHNICIAN' } });
+    }
+    if (path === '/api/staff/tasks') {
+      return route.fulfill({ json: { page: 1, hasMore: false, items: [task] } });
+    }
+    if (path === '/api/staff/tasks/task-1/transition') {
+      const body = route.request().postDataJSON();
+      versions.push(body.version);
+      expect(body.report).toBe(draft);
+      if (body.version === 1) {
+        task.version = 2;
+        task.instructions = newInstructions;
+        return route.fulfill({ status: 409, json: { detail: 'Công việc đã thay đổi.' } });
+      }
+      task.version = 3;
+      task.status = 'SUBMITTED';
+      return route.fulfill({ json: { id: task.id, version: task.version } });
+    }
+    return route.fulfill({ json: [] });
+  });
+
+  await page.goto('/technician');
+  await page.locator('.technician-task-body > summary').click();
+  const report = page.getByLabel('Nội dung cập nhật');
+  const submit = page.getByRole('button', { name: 'Gửi báo cáo' });
+  await report.fill(draft);
+  await submit.click();
+  await expect(submit).toBeDisabled();
+  await page.getByRole('button', { name: 'Tải hướng dẫn mới' }).click();
+  await expect(page.getByText(newInstructions)).toBeVisible();
+  await expect(report).toHaveValue(draft);
+  expect(versions).toEqual([1]);
+  await submit.click();
+  await expect(page.getByText('Chờ duyệt báo cáo', { exact: true }).last()).toBeVisible();
+  expect(versions).toEqual([1, 2]);
+});

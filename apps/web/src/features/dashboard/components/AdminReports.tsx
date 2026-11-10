@@ -1,5 +1,6 @@
 'use client';
 
+import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { AdminFilterBar } from '@/features/portal/components/AdminUi';
 import { useQuery } from '@tanstack/react-query';
@@ -82,11 +83,17 @@ interface AuditLogPage {
   hasMore: boolean;
 }
 
-function AdminAuditLogsSection() {
-  const [open, setOpen] = useState(false);
-  const [actionFilter, setActionFilter] = useState('');
-  const [entityTypeFilter, setEntityTypeFilter] = useState('');
-  const [entityIdFilter, setEntityIdFilter] = useState('');
+function AdminAuditLogsSection({
+  esp32Kiosk,
+  actorId,
+}: {
+  esp32Kiosk: string | null;
+  actorId: string;
+}) {
+  const [open, setOpen] = useState(Boolean(esp32Kiosk));
+  const [actionFilter, setActionFilter] = useState(esp32Kiosk ? 'ESP32_CONFIG_DOWNLOADED' : '');
+  const [entityTypeFilter, setEntityTypeFilter] = useState(esp32Kiosk ? 'kiosks' : '');
+  const [entityIdFilter, setEntityIdFilter] = useState(esp32Kiosk ?? '');
   const [actorIdFilter, setActorIdFilter] = useState('');
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -94,6 +101,7 @@ function AdminAuditLogsSection() {
   const logs = useQuery({
     queryKey: [
       'admin-audit-logs',
+      actorId,
       actionFilter.trim(),
       entityTypeFilter.trim(),
       entityIdFilter.trim(),
@@ -112,7 +120,7 @@ function AdminAuditLogsSection() {
   });
 
   const detail = useQuery({
-    queryKey: ['admin-audit-log-detail', selectedId],
+    queryKey: ['admin-audit-log-detail', actorId, selectedId],
     queryFn: () => request<AuditLogEntry>(`/admin/audit-logs/${selectedId}`),
     enabled: open && Boolean(selectedId),
   });
@@ -252,6 +260,7 @@ function AdminAuditLogsSection() {
 }
 
 export default function AdminReports({ session }: { session: Session }) {
+  const esp32Kiosk = useSearchParams().get('esp32Kiosk');
   const [report, setReport] = useState<ReportName>('v_admin_queue');
   const [page, setPage] = useState(1);
   const config = reports[report];
@@ -370,7 +379,11 @@ export default function AdminReports({ session }: { session: Session }) {
           </nav>
         </>
       )}
-      <AdminAuditLogsSection />
+      <AdminAuditLogsSection
+        key={esp32Kiosk ?? 'all'}
+        esp32Kiosk={esp32Kiosk}
+        actorId={session.id}
+      />
     </section>
   );
 }
