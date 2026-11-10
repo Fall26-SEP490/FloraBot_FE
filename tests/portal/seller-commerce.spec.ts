@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 const sellerId = '20000000-0000-0000-0000-000000000099';
+const unreadableBankMessage = 'Không đọc được số tài khoản đã lưu. Vui lòng nhập lại để cập nhật.';
 
 for (const readableAfterSave of [true, false]) {
   test(`Shop bank preserves saved names and checks read-back after save (${readableAfterSave})`, async ({
@@ -31,6 +32,7 @@ for (const readableAfterSave of [true, false]) {
     });
     await page.goto('/seller/commerce');
     const bank = page.locator('.shop-bank-section');
+    await expect(bank.getByRole('status')).toHaveText(unreadableBankMessage);
     await expect(bank.getByLabel('Tên ngân hàng nhận hoàn phí')).toHaveValue('MB Bank');
     await expect(bank.getByLabel('Tên chủ tài khoản')).toHaveValue('TEST HOLDER');
     await expect(bank.getByLabel('Số tài khoản ngân hàng')).toHaveValue('');
@@ -38,14 +40,21 @@ for (const readableAfterSave of [true, false]) {
     await expect(bank.getByLabel('Tên ngân hàng nhận hoàn phí')).toHaveValue('MB Bank');
     await expect(bank.getByLabel('Tên chủ tài khoản')).toHaveValue('TEST HOLDER');
     await bank.getByLabel('Số tài khoản ngân hàng').fill('0012345678');
-    await bank.getByRole('button', { name: 'Lưu tài khoản ngân hàng shop' }).click();
+    const saveButton = bank.getByRole('button', { name: 'Lưu tài khoản ngân hàng shop' });
+    const bankReadBack = page.waitForResponse(
+      (response) => saved && response.url().endsWith(`/sellers/${sellerId}/bank`),
+    );
+    await saveButton.click();
+    await bankReadBack;
     if (readableAfterSave) {
       await expect(bank).toContainText('Đã lưu thông tin tài khoản ngân hàng của shop thành công.');
       await page.reload();
       await expect(bank).toContainText('5678');
       await expect(bank.getByLabel('Số tài khoản ngân hàng')).toHaveCount(0);
     } else {
-      await expect(bank.getByRole('alert')).toContainText('máy chủ chưa xác nhận tài khoản hợp lệ');
+      await expect(saveButton).toBeEnabled();
+      await expect(bank.getByRole('status')).toHaveText(unreadableBankMessage);
+      await expect(bank.getByRole('alert')).toHaveCount(0);
       await expect(bank).not.toContainText(
         'Đã lưu thông tin tài khoản ngân hàng của shop thành công.',
       );

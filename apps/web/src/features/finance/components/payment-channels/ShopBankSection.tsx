@@ -73,9 +73,9 @@ export function ShopBankSection({
         setHolder(null);
         if (saved.status === 'READY') {
           setActionSuccess('Đã lưu thông tin tài khoản ngân hàng của shop thành công.');
-        } else {
+        } else if (saved.status !== 'NEEDS_UPDATE') {
           setActionError(
-            'Đã gửi thông tin nhưng máy chủ chưa xác nhận tài khoản hợp lệ. Vui lòng kiểm tra lại hoặc liên hệ hỗ trợ.',
+            'Đã gửi thông tin nhưng chưa thấy tài khoản vừa lưu. Vui lòng tải lại thông tin ngân hàng để kiểm tra.',
           );
         }
       } catch {
@@ -266,12 +266,7 @@ export function ShopBankSection({
 
           {bankQuery.data.status === 'NEEDS_UPDATE' && (
             <div role="status" className="shop-bank-alert-box is-warning">
-              <strong>Tài khoản ngân hàng của shop cần cập nhật lại thông tin.</strong>
-              <p>
-                Hệ thống đã có thông tin ngân hàng nhưng chưa xác nhận được tài khoản hợp lệ. Kiểm
-                tra tên ngân hàng, chủ tài khoản và nhập lại số tài khoản. Nếu vẫn gặp sau khi lưu,
-                vui lòng liên hệ hỗ trợ.
-              </p>
+              <p>Không đọc được số tài khoản đã lưu. Vui lòng nhập lại để cập nhật.</p>
             </div>
           )}
 
