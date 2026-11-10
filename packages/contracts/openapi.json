@@ -16629,10 +16629,6 @@
           },
           "canAccessBank": {
             "type": "boolean"
-          },
-          "canReviewSellerTransfer": {
-            "type": "boolean",
-            "default": false
           }
         },
         "additionalProperties": false
@@ -16768,10 +16764,6 @@
               "string"
             ],
             "format": "date-time"
-          },
-          "payerRole": {
-            "type": "string",
-            "default": "ADMIN"
           }
         },
         "additionalProperties": false

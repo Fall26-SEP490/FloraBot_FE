@@ -18,8 +18,11 @@ import type {
 import { formatFinanceDate, formatMoney } from '../../finance.utils';
 import FinancialProofs from '../FinancialProofs';
 
-type Item = AdminRefundResponse;
-type Detail = AdminRefundDetail;
+type Item = AdminRefundResponse & { payerRole?: string };
+type Detail = Omit<AdminRefundDetail, 'refund'> & {
+  refund: Item;
+  canReviewSellerTransfer?: boolean;
+};
 type Bank = RefundBankResponse;
 type Queue = AdminRefundPage;
 type SellerSubmission = {
@@ -211,7 +214,7 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
             ? 'Đã duyệt khoản hoàn. Shop chuyển khoản cho khách và gửi chứng từ; một admin khác sẽ đối chiếu.'
             : query.data.refund.payerRole === 'ADMIN'
               ? 'Đã duyệt khoản hoàn giao dịch cũ. Một admin khác thực hiện chi và ghi nhận chứng từ.'
-              : 'Đã duyệt khoản hoàn. Cần tải lại hồ sơ để xác định bên chuyển khoản và bước tiếp theo.'
+              : 'Đã duyệt khoản hoàn. Với đơn thanh toán trực tiếp cho shop, chờ shop chuyển khoản và gửi chứng từ để Admin khác đối chiếu.'
           : sellerSubmission.data
             ? 'Đã xác nhận khoản hoàn do shop chuyển khoản.'
             : 'Đã ghi nhận chi hoàn và cập nhật sổ cái.',
@@ -320,9 +323,9 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
                 </div>
               )}
               {!sellerFunded && !adminFunded && (
-                <p role="alert">
-                  Chưa xác định được bên chuyển khoản. Tải lại hồ sơ hoặc liên hệ quản trị hệ thống
-                  trước khi xử lý bước chi hoàn.
+                <p className="status-notice notice-info">
+                  Với đơn thanh toán trực tiếp cho shop, shop chuyển khoản cho khách tại mục Hoàn
+                  tiền trực tiếp và gửi chứng từ. Admin đối chiếu sau khi shop gửi chứng từ.
                 </p>
               )}
               {adminFunded &&
@@ -495,7 +498,7 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
                                 ? 'Sau khi duyệt, shop chuyển khoản cho khách và gửi chứng từ. Một admin khác đối chiếu để hoàn tất.'
                                 : adminFunded
                                   ? 'Sau khi duyệt, một admin khác chuyển khoản và ghi nhận chứng từ cho giao dịch cũ.'
-                                  : 'Cần xác định bên chuyển khoản từ hồ sơ trước bước chi hoàn.'
+                                  : 'Duyệt yêu cầu để shop tiếp tục hoàn tiền trực tiếp. Chứng từ shop gửi sẽ được Admin khác đối chiếu.'
                               : sellerSubmission.data
                                 ? 'Chỉ xác nhận sau khi đã đối chiếu giao dịch và chứng từ shop gửi. Thao tác này không chi tiền từ FloraBot.'
                                 : 'Chỉ xác nhận khi giao dịch ngân hàng đã hoàn tất. Thao tác này cập nhật sổ cái và trạng thái khoản hoàn.'}

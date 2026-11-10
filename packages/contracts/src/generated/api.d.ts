@@ -15337,8 +15337,6 @@ export interface components {
             bankStatus: string;
             canApprove: boolean;
             canAccessBank: boolean;
-            /** @default false */
-            canReviewSellerTransfer: boolean;
         };
         AdminRefundPage: {
             items: components["schemas"]["AdminRefundResponse"][];
@@ -15372,8 +15370,6 @@ export interface components {
             paidBy: null | string;
             /** Format: date-time */
             paidAt: null | string;
-            /** @default ADMIN */
-            payerRole: string;
         };
         AdminSellerResponse: {
             /** Format: uuid */

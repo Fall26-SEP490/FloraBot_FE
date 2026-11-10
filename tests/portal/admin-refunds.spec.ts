@@ -435,7 +435,7 @@ test('Admin reviews a Seller transfer without using the legacy bank payout', asy
   let submissionStatus = 'PENDING_REVIEW';
   let bankReads = 0;
   let confirmations = 0;
-  const directRow = { ...row, payerRole: 'SELLER' };
+  const directRow = { ...row, payerRole: undefined };
   await page.route('**/api/admin/refunds?*', (route) =>
     route.fulfill({ json: { items: [directRow], page: 1, hasMore: false } }),
   );
@@ -445,8 +445,7 @@ test('Admin reviews a Seller transfer without using the legacy bank payout', asy
         refund: directRow,
         bankStatus: 'READY',
         canApprove: false,
-        canAccessBank: false,
-        canReviewSellerTransfer: true,
+        canAccessBank: true,
       },
     }),
   );
@@ -528,7 +527,10 @@ test('An older API without refund payer metadata cannot expose an Admin payout',
   await page.goto('/admin/refunds');
   const section = page.locator('.admin-refunds');
   await section.locator('.admin-shop-list summary').click();
-  await expect(section.getByRole('alert')).toContainText('Chưa xác định được bên chuyển khoản');
+  await expect(section.getByRole('alert')).toHaveCount(0);
+  await expect(
+    section.getByText(/Với đơn thanh toán trực tiếp cho shop, shop chuyển khoản/),
+  ).toBeVisible();
   await expect(
     section.getByRole('button', { name: /Xem tài khoản nhận hoàn|Ghi nhận đã chi hoàn/ }),
   ).toHaveCount(0);
