@@ -3093,6 +3093,56 @@
         }
       }
     },
+    "/api/sellers/{sellerId}/preorders/{requestId}/assignment": {
+      "post": {
+        "tags": [
+          "Ordering"
+        ],
+        "summary": "Giao đơn đã thanh toán và ô PREORDER cụ thể cho nhân viên của shop",
+        "parameters": [
+          {
+            "name": "sellerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignStaffPreorderInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffTaskResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/staff/tasks/{taskId}/preorders": {
       "get": {
         "tags": [
@@ -4536,7 +4586,7 @@
         "tags": [
           "FloraBot.Api"
         ],
-        "description": "preorderAvailable cho biết mẫu còn tồn tại shop và có thể tạo preorder mới; số lượng cụ thể không được công khai trong catalog.",
+        "description": "preorderAvailable cho biết mẫu còn hàng tại shop. availablePreorderOnly lọc thêm theo sức chứa của kiosk.",
         "parameters": [
           {
             "name": "page",
@@ -4555,6 +4605,13 @@
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "availablePreorderOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
             }
           }
         ],
@@ -6566,6 +6623,25 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/StaffStockResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -9729,7 +9805,8 @@
         "tags": [
           "KioskOnboarding"
         ],
-        "summary": "Xóa kiosk chưa bàn giao và chưa phát sinh dữ liệu vận hành",
+        "summary": "Lưu trữ kiosk OFFLINE đã kết thúc thuê",
+        "description": "Lưu trữ mềm: chỉ Operations Manager được thao tác khi kiosk OFFLINE, không còn Seller/lease, tồn kho, đơn hàng hoặc công việc đang chờ. Kiosk được chuyển sang DISABLED; dữ liệu, đơn hàng, thanh toán và nhật ký lịch sử được giữ nguyên. Trả 409 nếu còn điều kiện chưa hoàn tất.",
         "parameters": [
           {
             "name": "id",
@@ -11978,6 +12055,95 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me/preorders/{requestId}/loading-access": {
+      "post": {
+        "tags": [
+          "Ordering"
+        ],
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreorderLoadingAccessInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreorderLoadingAccessSent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/tasks/{taskId}/preorders/{requestId}/loading-access": {
+      "post": {
+        "tags": [
+          "Ordering"
+        ],
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreorderLoadingAccessInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreorderLoadingAccessSent"
                 }
               }
             }
@@ -17265,6 +17431,33 @@
         },
         "additionalProperties": false
       },
+      "AssignStaffPreorderInput": {
+        "required": [
+          "id",
+          "assigneeId",
+          "slotId",
+          "instructions"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assigneeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "instructions": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "AssignStaffTask": {
         "required": [
           "id",
@@ -21477,6 +21670,50 @@
         },
         "additionalProperties": false
       },
+      "PreorderLoadingAccessInput": {
+        "required": [
+          "slotId"
+        ],
+        "type": "object",
+        "properties": {
+          "slotId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PreorderLoadingAccessSent": {
+        "required": [
+          "id",
+          "expiresAt",
+          "resendAfterSeconds"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "resendAfterSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "requiresCode": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "additionalProperties": false
+      },
       "PreorderPickupOtpOpened": {
         "required": [
           "attemptId",
@@ -25460,6 +25697,13 @@
           },
           "qrCode": {
             "type": "string"
+          },
+          "loadingAccessId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         },
         "additionalProperties": false
@@ -27129,6 +27373,13 @@
           },
           "qrCode": {
             "type": "string"
+          },
+          "loadingAccessId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         },
         "additionalProperties": false

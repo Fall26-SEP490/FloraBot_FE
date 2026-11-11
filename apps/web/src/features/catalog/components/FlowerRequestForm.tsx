@@ -18,6 +18,24 @@ import { ApiError, queryClient, request, sessionQuery } from '@/shared/lib/api';
 import type { CatalogItem, CatalogResponse } from '../catalog.types';
 import { formatPrice, isPreorder, isPreorderSoldOut, isWalkIn } from '../catalog.utils';
 import type { components } from '../../../../../../packages/contracts/src/generated/api';
+import { fetchPublicKiosks } from '../../kiosk-location/kiosk-location.api';
+
+type AvailabilityResponse = components['schemas']['KioskPreorderAvailabilityResponse'];
+
+function isValidPickupTime(pickup: Date) {
+  const delay = pickup.getTime() - Date.now();
+  return Number.isFinite(delay) && delay > 0 && delay <= 30 * 24 * 60 * 60 * 1000;
+}
+
+function distanceOrder(lat: number, lon: number, origin: GeolocationCoordinates) {
+  const rad = Math.PI / 180;
+  return (
+    Math.sin(((lat - origin.latitude) * rad) / 2) ** 2 +
+    Math.cos(lat * rad) *
+      Math.cos(origin.latitude * rad) *
+      Math.sin(((lon - origin.longitude) * rad) / 2) ** 2
+  );
+}
 
 interface FlowerRequestFormProps {
   item: CatalogItem;
@@ -41,6 +59,7 @@ export function FlowerRequestForm({
   const kiosks = useQuery({
     queryKey: ['catalog-pickup-kiosks', item.productId, item.sellerId],
     enabled: !item.isDemoSample && isPreorder(item),
+    refetchInterval: 60_000,
     queryFn: async () => {
       const matches = new Map<string, CatalogItem>();
       let page = 1;
@@ -65,8 +84,95 @@ export function FlowerRequestForm({
       return [...matches.values()];
     },
   });
-  const eligibleKiosks = kiosks.data ?? [item];
+
+  const candidateKiosks = (kiosks.data ?? []).filter((entry) => !isPreorderSoldOut(entry));
+  const kioskAvailability = useQuery({
+    queryKey: [
+      'catalog-kiosk-availability',
+      item.productId,
+      item.sellerId,
+      candidateKiosks.map((k) => k.kioskId).sort(),
+    ],
+    enabled: candidateKiosks.length > 0,
+    queryFn: async () => {
+      const checks = await Promise.allSettled(
+        candidateKiosks.map(async (entry) => {
+          const resp = await request<AvailabilityResponse>(
+            `/kiosks/${entry.kioskId}/preorder-availability`,
+          );
+          return { entry, resp };
+        }),
+      );
+      if (checks.length > 0 && checks.every((check) => check.status === 'rejected'))
+        throw new Error('Chưa kiểm tra được sức chứa tại các tủ nhận.');
+      const available: CatalogItem[] = [];
+      for (const result of checks) {
+        if (result.status === 'fulfilled' && result.value.resp?.available === true) {
+          available.push(result.value.entry);
+        }
+      }
+      return available;
+    },
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+  });
+
+  const [origin, setOrigin] = useState<GeolocationCoordinates | null>(null);
+  const [locationPending, setLocationPending] = useState(false);
+  const [locationError, setLocationError] = useState(false);
+  const directory = useQuery({
+    queryKey: ['public-kiosks'],
+    queryFn: fetchPublicKiosks,
+    enabled: origin !== null,
+    staleTime: 60_000,
+  });
+  const coordinates = new Map(directory.data?.map((kiosk) => [kiosk.id, kiosk]));
+  function distance(entry: CatalogItem) {
+    const point = coordinates.get(entry.kioskId);
+    return origin &&
+      point &&
+      typeof point.latitude === 'number' &&
+      typeof point.longitude === 'number'
+      ? distanceOrder(point.latitude, point.longitude, origin)
+      : Number.POSITIVE_INFINITY;
+  }
+  const eligibleKiosks = [...(kioskAvailability.data ?? [])].sort((a, b) => {
+    const first = distance(a);
+    const second = distance(b);
+    return first === second ? a.kioskName.localeCompare(b.kioskName, 'vi') : first - second;
+  });
+  const kioskListLoading =
+    kiosks.isPending || (candidateKiosks.length > 0 && kioskAvailability.isPending);
+  const kioskListError = kiosks.isError || kioskAvailability.isError;
+  const noKiosksAvailable = !kioskListLoading && !kioskListError && eligibleKiosks.length === 0;
+
+  const [confirmed, setConfirmed] = useState(false);
+
   const selectedKiosk = eligibleKiosks.find((entry) => entry.kioskId === kioskId);
+  function refreshKiosks() {
+    void kiosks.refetch().then(() => {
+      if (candidateKiosks.length > 0) void kioskAvailability.refetch();
+    });
+  }
+  function locate() {
+    setLocationError(false);
+    if (!navigator.geolocation) {
+      setLocationError(true);
+      return;
+    }
+    setLocationPending(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setOrigin(position.coords);
+        setLocationPending(false);
+      },
+      () => {
+        setLocationError(true);
+        setLocationPending(false);
+      },
+      { timeout: 10_000, maximumAge: 30_000 },
+    );
+  }
   const [pickup, setPickup] = useState('');
   const pickupDateForEstimate = pickup ? new Date(pickup) : null;
   const availability = useQuery({
@@ -75,13 +181,12 @@ export function FlowerRequestForm({
       kioskId && pickupDateForEstimate && Number.isFinite(pickupDateForEstimate.getTime()),
     ),
     queryFn: () =>
-      request<components['schemas']['KioskPreorderAvailabilityResponse']>(
+      request<AvailabilityResponse>(
         `/kiosks/${kioskId}/preorder-availability?pickupAt=${encodeURIComponent(new Date(pickup).toISOString())}`,
       ),
     staleTime: 15_000,
   });
   const [instructions, setInstructions] = useState('');
-  const [confirmed, setConfirmed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [uncertain, setUncertain] = useState(false);
   const [stockConflict, setStockConflict] = useState(false);
@@ -118,50 +223,43 @@ export function FlowerRequestForm({
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
-    if (sending.current || !confirmed || !isPreorder(item) || soldOut) return;
+    if (sending.current || !confirmed || !isPreorder(item) || item.isDemoSample || soldOut) return;
     setError('');
     setPickupError('');
     setBriefError('');
-    if (!selectedKiosk || kiosks.isPending || kiosks.isError) {
-      setError('Chưa xác minh được tủ nhận hoa. Hãy tải lại danh sách tủ.');
-      return;
-    }
-    const pickupDate = new Date(pickup);
-    const delay = pickupDate.getTime() - Date.now();
-    if (!Number.isFinite(delay) || delay <= 0 || delay > 30 * 24 * 60 * 60 * 1000) {
-      setPickupError('Chọn thời gian nhận trong tương lai, tối đa 30 ngày tới.');
-      pickupRef.current?.focus();
-      return;
-    }
-    if (availability.data && availability.data.available === false) {
-      setError(availability.data.message || 'Tủ nhận hiện không còn sức chứa đặt trước.');
-      return;
-    }
-    const brief = instructions.trim();
-    if (brief.length < 10 || brief.length > 2000) {
-      setBriefError('Nhập mong muốn từ 10 đến 2.000 ký tự để shop báo giá.');
-      briefRef.current?.focus();
-      return;
+    if (!pending.current) {
+      if (!selectedKiosk || kioskListLoading || kioskListError) {
+        setError('Chưa xác minh được tủ nhận hoa. Hãy tải lại danh sách tủ.');
+        return;
+      }
+      const pickupDate = new Date(pickup);
+      if (!isValidPickupTime(pickupDate)) {
+        setPickupError('Chọn thời gian nhận trong tương lai, tối đa 30 ngày tới.');
+        pickupRef.current?.focus();
+        return;
+      }
+      if (availability.data && availability.data.available === false) {
+        setError(availability.data.message || 'Tủ nhận hiện không còn sức chứa đặt trước.');
+        return;
+      }
+      const brief = instructions.trim();
+      if (brief.length < 10 || brief.length > 2000) {
+        setBriefError('Nhập mong muốn từ 10 đến 2.000 ký tự để shop báo giá.');
+        briefRef.current?.focus();
+        return;
+      }
+
+      pending.current = {
+        id: crypto.randomUUID(),
+        kind: 'CUSTOM',
+        productId: item.productId,
+        kioskId: selectedKiosk.kioskId,
+        pickupAt: pickupDate.toISOString(),
+        instructions: brief,
+      };
     }
     sending.current = true;
     setBusy(true);
-
-    if (item.isDemoSample) {
-      setError('Mẫu minh họa chỉ dùng để xem giao diện và không thể tạo đơn thật.');
-      sending.current = false;
-      setBusy(false);
-      setUncertain(false);
-      return;
-    }
-
-    pending.current ??= {
-      id: crypto.randomUUID(),
-      kind: 'CUSTOM',
-      productId: item.productId,
-      kioskId: selectedKiosk.kioskId,
-      pickupAt: pickupDate.toISOString(),
-      instructions: brief,
-    };
 
     try {
       await request('/member/preorders', pending.current);
@@ -181,6 +279,9 @@ export function FlowerRequestForm({
           queryClient.invalidateQueries({ queryKey: ['landing-catalog-preview'] }),
           queryClient.invalidateQueries({
             queryKey: ['catalog-pickup-kiosks', item.productId, item.sellerId],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ['catalog-kiosk-availability', item.productId, item.sellerId],
           }),
         ]);
       } else {
@@ -319,28 +420,49 @@ export function FlowerRequestForm({
             <label htmlFor={`kiosk-${item.productId}`}>Tủ nhận hoa</label>
             <select
               id={`kiosk-${item.productId}`}
-              value={kioskId}
-              disabled={kiosks.isPending || kiosks.isError}
+              value={selectedKiosk?.kioskId ?? ''}
+              disabled={kioskListLoading || kioskListError || noKiosksAvailable}
               onChange={(event) => {
                 setKioskId(event.target.value);
                 setConfirmed(false);
               }}
               required
             >
+              <option value="" disabled>
+                {noKiosksAvailable ? 'Không có tủ nhận khả dụng' : 'Chọn tủ nhận hoa'}
+              </option>
               {eligibleKiosks.map((entry) => (
                 <option key={entry.kioskId} value={entry.kioskId}>
                   {entry.kioskName}
                 </option>
               ))}
             </select>
-            {kiosks.isPending && <p role="status">Đang tải tủ nhận phù hợp…</p>}
-            {kiosks.isError && (
+            {kioskListLoading && <p role="status">Đang kiểm tra tủ nhận khả dụng…</p>}
+            {kioskListError && (
               <p role="alert">Chưa tải được danh sách tủ nhận. Vui lòng thử lại.</p>
             )}
-            {kiosks.isError && (
-              <Button type="button" variant="outline" onClick={() => void kiosks.refetch()}>
+            {noKiosksAvailable && (
+              <p role="alert">Tất cả tủ nhận hiện không khả dụng. Thử tải lại sau.</p>
+            )}
+            {(kioskListError || noKiosksAvailable) && (
+              <Button type="button" variant="outline" onClick={refreshKiosks}>
                 Tải lại tủ nhận
               </Button>
+            )}
+            {!kioskListLoading && !kioskListError && !noKiosksAvailable && (
+              <Button type="button" variant="outline" onClick={refreshKiosks}>
+                Cập nhật tủ nhận
+              </Button>
+            )}
+            {eligibleKiosks.length > 1 && (
+              <Button type="button" variant="outline" onClick={locate} disabled={locationPending}>
+                {locationPending ? 'Đang lấy vị trí…' : 'Xếp tủ gần tôi'}
+              </Button>
+            )}
+            {(locationError || directory.isError) && (
+              <p role="status">
+                Chưa lấy được vị trí hoặc tọa độ tủ. Bạn vẫn có thể chọn theo tên.
+              </p>
             )}
             <div className="flower-request-kiosk-box">
               <MapPin size={16} className="flower-request-kiosk-icon" aria-hidden="true" />
@@ -491,7 +613,12 @@ export function FlowerRequestForm({
         )}
         <Button
           type="submit"
-          disabled={busy || soldOut || !confirmed || kiosks.isPending || kiosks.isError}
+          disabled={
+            busy ||
+            soldOut ||
+            !confirmed ||
+            (!uncertain && (!selectedKiosk || kioskListLoading || kioskListError))
+          }
           className="flower-request-submit-btn"
         >
           {busy ? 'Đang gửi…' : uncertain ? 'Gửi lại cùng yêu cầu' : 'Gửi yêu cầu để shop báo giá'}

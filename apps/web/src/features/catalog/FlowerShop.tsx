@@ -36,10 +36,13 @@ export default function FlowerShop() {
   const { handleOpenChat, openingChatId, chatNotice, setChatNotice } = useCustomerChat(setSelected);
 
   const catalog = useQuery({
-    queryKey: ['web-catalog', 'complete'],
+    queryKey: ['web-catalog', 'available-preorders'],
     enabled: !demoEnabled,
+    refetchInterval: 60_000,
     queryFn: () =>
-      loadCatalog((page) => request<CatalogResponse>(`/shop/catalog?page=${page}&search=`)),
+      loadCatalog((page) =>
+        request<CatalogResponse>(`/shop/catalog?page=${page}&search=&availablePreorderOnly=true`),
+      ),
   });
 
   // Prefer backend data. Demo data is opt-in via ?demo=1 and never creates real writes.

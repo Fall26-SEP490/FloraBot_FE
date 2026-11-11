@@ -51,8 +51,18 @@ test('Seller staff fulfills only paid preorder into a PREORDER slot', async ({ p
   );
   await page.route('**/api/staff/tasks/task-1/preorders/order-1/fulfill', (route) => {
     writes++;
-    expect(route.request().postDataJSON()).toEqual({ slotId: 'slot-p', qrCode: 'BOUQUET-001' });
+    expect(route.request().postDataJSON()).toEqual({
+      slotId: 'slot-p',
+      qrCode: 'BOUQUET-001',
+      loadingAccessId: 'access-1',
+    });
     return route.fulfill({ json: { requestId: 'order-1', bouquetId: 'bouquet-1' } });
+  });
+  await page.route('**/api/staff/tasks/task-1/preorders/order-1/loading-access', (route) => {
+    expect(route.request().postDataJSON()).toEqual({ slotId: 'slot-p' });
+    return route.fulfill({
+      json: { id: 'access-1', resendAfterSeconds: 30, requiresCode: true },
+    });
   });
   await page.goto('/staff');
   await page.getByText('Nạp đơn đặt trước đã thanh toán', { exact: true }).click();
@@ -66,6 +76,9 @@ test('Seller staff fulfills only paid preorder into a PREORDER slot', async ({ p
   await page.getByLabel('Đơn đặt trước').selectOption('order-1');
   await page.getByLabel('Ô PREORDER trống').selectOption('slot-p');
   await page.getByLabel('Mã QR bó hoa').fill('BOUQUET-001');
+  await expect(page.getByRole('button', { name: 'Xác nhận đã nạp vào ô' })).toBeDisabled();
+  await page.getByRole('button', { name: 'Yêu cầu mở ô', exact: true }).click();
+  await expect(page.getByText(/Mã đã gửi qua email/)).toBeVisible();
   await page.getByRole('button', { name: 'Xác nhận đã nạp vào ô' }).click();
   await expect(page.getByText('Đã ghi nhận hoa của đơn vào ô PREORDER.')).toBeVisible();
   expect(writes).toBe(1);

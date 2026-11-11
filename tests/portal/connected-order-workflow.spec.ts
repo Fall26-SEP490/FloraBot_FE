@@ -121,6 +121,87 @@ async function common(
   });
 }
 
+test('Preorder picker hides full kiosks and sorts available ones by customer location', async ({
+  page,
+}) => {
+  await common(
+    page,
+    () => 'CUSTOMER',
+    () => [],
+  );
+  await page.context().grantPermissions(['geolocation']);
+  await page.context().setGeolocation({ latitude: 10.77, longitude: 106.68 });
+  const near = '40000000-0000-0000-0000-000000000002';
+  const full = '40000000-0000-0000-0000-000000000003';
+  const choices = [
+    { ...flower, kioskName: 'A - tủ xa' },
+    { ...flower, kioskId: near, kioskName: 'Z - tủ gần' },
+    { ...flower, kioskId: full, kioskName: 'Tủ đã đầy' },
+  ];
+  await page.route('**/api/shop/catalog?*', (route) =>
+    route.fulfill({ json: { items: choices, page: 1, hasMore: false } }),
+  );
+  await page.route('**/api/kiosks', (route) =>
+    route.fulfill({
+      json: [
+        { id: kioskId, latitude: 10.9, longitude: 106.78 },
+        { id: near, latitude: 10.771, longitude: 106.681 },
+        { id: full, latitude: 10.77, longitude: 106.68 },
+      ],
+    }),
+  );
+  await page.route(`**/api/kiosks/${full}/preorder-availability*`, (route) =>
+    route.fulfill({ json: { available: false, status: 'CAPACITY_EXHAUSTED' } }),
+  );
+  await page.goto('/dat-hoa');
+  await page
+    .getByRole('button', { name: /báo giá/i })
+    .first()
+    .click();
+  const picker = page.getByLabel('Tủ nhận hoa', { exact: true });
+  await expect(picker.locator('option:not([disabled])')).toHaveText(['A - tủ xa', 'Z - tủ gần']);
+  await page.getByRole('button', { name: 'Xếp tủ gần tôi' }).click();
+  await expect(picker.locator('option:not([disabled])')).toHaveText(['Z - tủ gần', 'A - tủ xa']);
+});
+
+test('Seller assigns a paid preorder and exact slot to shop staff before the bouquet QR is available', async ({
+  page,
+}) => {
+  const row = order();
+  row.state = 'ORDERED';
+  row.orderStatus = 'PAID';
+  row.orderCode = 'TEST-ASSIGN-01';
+  row.quotedPrice = 350000;
+  let assigned = false;
+  await common(
+    page,
+    () => 'SELLER',
+    () => [row],
+    async (path, body) => {
+      if (path.endsWith('/assignment')) {
+        expect(body.assigneeId).toBe('staff-1');
+        expect(body.slotId).toBe(slotId);
+        expect(body.id).toMatch(/^[0-9a-f-]{36}$/);
+        assigned = true;
+        return { id: body.id };
+      }
+      return undefined;
+    },
+  );
+  await page.route(`**/api/sellers/${sellerId}/staff`, (route) =>
+    route.fulfill({ json: [{ id: 'staff-1', name: 'Nhân viên được giao' }] }),
+  );
+  await page.goto('/seller/orders');
+  await page.locator('details[id^="preorder-"] > summary').click();
+  await page.getByRole('button', { name: 'Nạp hoa cho đơn này' }).click();
+  await page.getByLabel('Ô trống tại tủ nhận').selectOption(slotId);
+  await page.getByText('Giao nhân viên nạp vào ô này', { exact: true }).click();
+  await page.getByLabel('Nhân viên của shop').selectOption('staff-1');
+  await page.getByRole('button', { name: 'Xác nhận giao nhân viên', exact: true }).click();
+  await expect(page.getByText('Đã giao nhân viên nạp đúng đơn và ô đã chọn.')).toBeVisible();
+  expect(assigned).toBe(true);
+});
+
 test('Customer request → seller quote → customer acceptance/payment → seller stock → admin reports', async ({
   page,
 }) => {
@@ -164,9 +245,14 @@ test('Customer request → seller quote → customer acceptance/payment → sell
           amount: row.quotedPrice,
           orderCode: 123456,
         };
+      if (path.endsWith('/loading-access')) {
+        expect(body.slotId).toBe(slotId);
+        return { id: 'loading-access-1', resendAfterSeconds: 30, requiresCode: true };
+      }
       if (path.endsWith('/fulfill')) {
         expect(body.slotId).toBe(slotId);
         expect(body.qrCode).toBe('TEST-BOUQUET-01');
+        expect(body.loadingAccessId).toBe('loading-access-1');
         row.ready = true;
         return { result: row.id };
       }
@@ -253,6 +339,9 @@ test('Customer request → seller quote → customer acceptance/payment → sell
   await page.getByRole('button', { name: 'Quay lại', exact: true }).click();
   await expect(page.getByLabel('Mã QR của bó hoa')).toHaveValue('TEST-BOUQUET-01');
   await page.getByRole('button', { name: 'Tiếp tục kiểm tra' }).click();
+  await expect(page.getByRole('button', { name: 'Xác nhận nạp hoa', exact: true })).toBeDisabled();
+  await page.getByRole('button', { name: 'Yêu cầu mở ô', exact: true }).click();
+  await expect(page.getByText(/Mã đã gửi qua email/)).toBeVisible();
   await page
     .getByRole('checkbox', { name: 'Tôi đã đối chiếu và xác nhận thông tin trên.' })
     .check();

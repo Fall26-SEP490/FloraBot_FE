@@ -39,6 +39,8 @@ import './admin-preorders.css';
 import { CustomerQuoteDetails, CustomerPaymentReturn } from './CustomerQuoteDetails';
 import CustomerPickupGuide from './CustomerPickupGuide';
 import CustomerOrderChat from './CustomerOrderChat';
+import PreorderLoadingButton from './PreorderLoadingButton';
+import AssignPreorderStock from './AssignPreorderStock';
 import { readSellerQueue, sellerQueueKey, SELLER_RESULT_SIZE } from './seller-queue';
 import { rememberPreorderPayment } from './payment-return';
 import ProductThumbnail from '../product-management/components/ProductThumbnail';
@@ -119,6 +121,7 @@ function OrderActions({
   });
   const [slot, setSlot] = useState('');
   const [qr, setQr] = useState('');
+  const [loadingAccessId, setLoadingAccessId] = useState('');
   const [fulfillStep, setFulfillStep] = useState<1 | 2>(1);
   const [confirm, setConfirm] = useState(false);
   const [reviewedQuote, setReviewedQuote] = useState<{
@@ -533,6 +536,7 @@ function OrderActions({
                   setAction('fulfill');
                   setConfirm(false);
                   setFulfillStep(1);
+                  setLoadingAccessId('');
                   setError('');
                 }}
               >
@@ -591,7 +595,13 @@ function OrderActions({
                 note,
                 reject,
               });
-            if (action === 'fulfill') void send('fulfill', { slotId: slot, qrCode: qr });
+            if (action === 'fulfill') {
+              if (!loadingAccessId) {
+                setError('Yêu cầu mã mở ô trước khi xác nhận nạp.');
+                return;
+              }
+              void send('fulfill', { slotId: slot, qrCode: qr, loadingAccessId });
+            }
             if (action === 'cancel') void send('cancel', { reason: note });
           }}
         >
@@ -703,7 +713,10 @@ function OrderActions({
                   id={`order-slot-${row.id}`}
                   required
                   value={slot}
-                  onChange={(event) => setSlot(event.target.value)}
+                  onChange={(event) => {
+                    setSlot(event.target.value);
+                    setLoadingAccessId('');
+                  }}
                 >
                   <option value="">Chọn ô Pre-order trống</option>
                   {fulfillSlots.map((item) => (
@@ -712,6 +725,20 @@ function OrderActions({
                     </option>
                   ))}
                 </select>
+                {fulfillSlots.some((item) => item.id === slot) &&
+                  row.sellerId &&
+                  !loadingAccessId && (
+                    <AssignPreorderStock
+                      key={`assignment:${slot}`}
+                      sellerId={row.sellerId}
+                      orderId={row.id}
+                      slotId={slot}
+                      onAssigned={() => {
+                        setAction(null);
+                        setNotice('Đã giao nhân viên nạp đúng đơn và ô đã chọn.');
+                      }}
+                    />
+                  )}
                 {slots.isError && <p role="alert">Chưa tải được ô. Đóng biểu mẫu rồi mở lại.</p>}
                 {!slots.isPending && !slots.isError && fulfillSlots.length === 0 && (
                   <p className="quiet">Chưa có ô Pre-order trống phù hợp tại tủ nhận.</p>
@@ -760,6 +787,12 @@ function OrderActions({
                     <dd>{qr}</dd>
                   </div>
                 </dl>
+                <PreorderLoadingButton
+                  key={slot}
+                  path={`/me/preorders/${row.id}/loading-access`}
+                  slotId={slot}
+                  onAccess={setLoadingAccessId}
+                />
               </div>
             )}
             {action === 'cancel' && row.orderStatus === 'PAID' && (
@@ -803,6 +836,7 @@ function OrderActions({
                   type="submit"
                   disabled={
                     busy ||
+                    (action === 'fulfill' && !loadingAccessId) ||
                     (mode === 'member' &&
                       action === 'accept' &&
                       (!confirm || quoteExpired || !hasQuotedPrice || reviewedQuoteChanged))

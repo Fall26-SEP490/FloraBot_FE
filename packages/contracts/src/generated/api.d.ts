@@ -3177,6 +3177,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sellers/{sellerId}/preorders/{requestId}/assignment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Giao đơn đã thanh toán và ô PREORDER cụ thể cho nhân viên của shop */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sellerId: string;
+                    requestId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AssignStaffPreorderInput"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StaffTaskResult"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/staff/tasks/{taskId}/preorders": {
         parameters: {
             query?: never;
@@ -4585,12 +4628,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description preorderAvailable cho biết mẫu còn tồn tại shop và có thể tạo preorder mới; số lượng cụ thể không được công khai trong catalog. */
+        /** @description preorderAvailable cho biết mẫu còn hàng tại shop. availablePreorderOnly lọc thêm theo sức chứa của kiosk. */
         get: {
             parameters: {
                 query?: {
                     page?: number | string;
                     search?: string;
+                    availablePreorderOnly?: boolean;
                 };
                 header?: never;
                 path?: never;
@@ -6762,6 +6806,36 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["StaffStockResult"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
                     };
                 };
             };
@@ -9872,7 +9946,10 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Xóa kiosk chưa bàn giao và chưa phát sinh dữ liệu vận hành */
+        /**
+         * Lưu trữ kiosk OFFLINE đã kết thúc thuê
+         * @description Lưu trữ mềm: chỉ Operations Manager được thao tác khi kiosk OFFLINE, không còn Seller/lease, tồn kho, đơn hàng hoặc công việc đang chờ. Kiosk được chuyển sang DISABLED; dữ liệu, đơn hàng, thanh toán và nhật ký lịch sử được giữ nguyên. Trả 409 nếu còn điều kiện chưa hoàn tất.
+         */
         delete: {
             parameters: {
                 query?: never;
@@ -12174,6 +12251,89 @@ export interface paths {
                     };
                     content: {
                         "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/preorders/{requestId}/loading-access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    requestId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PreorderLoadingAccessInput"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PreorderLoadingAccessSent"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/tasks/{taskId}/preorders/{requestId}/loading-access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    taskId: string;
+                    requestId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PreorderLoadingAccessInput"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PreorderLoadingAccessSent"];
                     };
                 };
             };
@@ -15505,6 +15665,15 @@ export interface components {
             /** Format: uuid */
             p_seller: string;
         };
+        AssignStaffPreorderInput: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            assigneeId: string;
+            /** Format: uuid */
+            slotId: string;
+            instructions: string;
+        };
         AssignStaffTask: {
             /** Format: uuid */
             id: string;
@@ -16557,6 +16726,20 @@ export interface components {
         PlatformFailureRequest: {
             reason: string;
         };
+        PreorderLoadingAccessInput: {
+            /** Format: uuid */
+            slotId: string;
+        };
+        PreorderLoadingAccessSent: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            expiresAt: string;
+            /** Format: int32 */
+            resendAfterSeconds: number | string;
+            /** @default true */
+            requiresCode: boolean;
+        };
         PreorderPickupOtpOpened: {
             /** Format: uuid */
             attemptId: string;
@@ -17579,6 +17762,8 @@ export interface components {
             /** Format: uuid */
             slotId: string;
             qrCode: string;
+            /** Format: uuid */
+            loadingAccessId?: null | string;
         };
         StaffPreorderFulfillResult: {
             /** Format: uuid */
@@ -17972,6 +18157,8 @@ export interface components {
             /** Format: uuid */
             slotId: string;
             qrCode: string;
+            /** Format: uuid */
+            loadingAccessId?: null | string;
         };
         WebQuoteInput: {
             /** Format: int64 */
