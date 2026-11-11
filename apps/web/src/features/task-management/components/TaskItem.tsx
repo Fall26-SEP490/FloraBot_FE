@@ -5,6 +5,9 @@ import { Button, MapPin, Store } from '@florabot/ui';
 import { ApiError, queryClient, request } from '@/shared/lib/api';
 import StaffIncidentResolution from '../../incidents/StaffIncidentResolution';
 import StaffStock from '../../inventory/StaffStock';
+import StaffInventoryMaintenance, {
+  useStaffInventoryMaintenance,
+} from '../../inventory/StaffInventoryMaintenance';
 import { TASK_STATUS_LABELS } from '../task-management.constants';
 import type { ActiveTaskRole, Task } from '../task-management.types';
 import StaffEvidence from './StaffEvidence';
@@ -46,6 +49,9 @@ export function TaskItem({
           : 'Xem chi tiết';
   const isManager = mode === 'manager';
   const [taskOpen, setTaskOpen] = useState(false);
+  const staffDelivery =
+    isWorker && role === 'SELLER_STAFF' && !!actorId && task.kind === 'DELIVERY';
+  const inventory = useStaffInventoryMaintenance(task.id, actorId, staffDelivery);
   const needsRepairContext =
     isTechnician && task.kind === 'INCIDENT' && task.status === 'IN_PROGRESS';
   const repairDetails = useQuery({
@@ -77,6 +83,12 @@ export function TaskItem({
   const [notice, setNotice] = useState('');
   const [instructionsDraft, setInstructionsDraft] = useState(task.instructions);
   const [editingInstructions, setEditingInstructions] = useState(false);
+  const waitingForInventory =
+    staffDelivery &&
+    task.status === 'IN_PROGRESS' &&
+    (inventory.isPending ||
+      inventory.isError ||
+      (!!inventory.data && inventory.data.sessionStage !== 'Completed'));
   const canEditInstructions =
     !isWorker &&
     ['ASSIGNED', 'IN_PROGRESS'].includes(task.status) &&
@@ -124,7 +136,7 @@ export function TaskItem({
       : isWorker
         ? task.status === 'ASSIGNED'
           ? ['IN_PROGRESS']
-          : task.status === 'IN_PROGRESS'
+          : task.status === 'IN_PROGRESS' && !waitingForInventory
             ? ['SUBMITTED']
             : []
         : [];
@@ -134,6 +146,7 @@ export function TaskItem({
     try {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['staff-tasks'] }, { throwOnError: true }),
+        queryClient.invalidateQueries({ queryKey: ['staff-inventory-maintenance', task.id] }),
         queryClient.invalidateQueries(
           { queryKey: ['staff-detail', task.id] },
           { throwOnError: true },
@@ -156,7 +169,10 @@ export function TaskItem({
       await request(`${apiBase}/${task.id}/transition`, { ...values, version: task.version });
       form.reset();
       setNotice('Đã cập nhật công việc.');
-      await queryClient.invalidateQueries({ queryKey: ['staff-tasks'] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['staff-tasks'] }),
+        queryClient.invalidateQueries({ queryKey: ['staff-inventory-maintenance', task.id] }),
+      ]);
     } catch (cause) {
       if (isTechnician && cause instanceof ApiError && cause.status === 409) {
         setConflictVersion(task.version);
@@ -194,25 +210,38 @@ export function TaskItem({
 
   const taskContent = (
     <>
-      {isWorker && role === 'SELLER_STAFF' && actorId && task.kind === 'DELIVERY' && (
+      {staffDelivery && actorId && (
         <div className="staff-stocking-section">
           <div className="staff-stocking-header">
             <h4>Thao tác nạp hoa tại tủ</h4>
             <p>
               {task.status === 'IN_PROGRESS'
-                ? 'Tủ đã sẵn sàng. Mở mục nạp hoa Walk-in hoặc Đơn đặt trước bên dưới.'
+                ? 'Chọn thao tác phù hợp với công việc được giao.'
                 : 'Chuyển công việc sang “Đang thực hiện” ở form bên dưới để mở khóa thao tác nạp.'}
             </p>
           </div>
-          <StaffStock
-            taskId={task.id}
-            actorId={actorId}
-            sellerId={sellerId}
-            role={role}
-            active={task.status === 'IN_PROGRESS'}
-            apiBase={apiBase}
-          />
-          <StaffPreorderFulfillment taskId={task.id} active={task.status === 'IN_PROGRESS'} />
+          {inventory.data && <StaffInventoryMaintenance taskId={task.id} scope={inventory.data} />}
+          {inventory.isError && (
+            <p role="alert">
+              Chưa tải được thao tác được giao.{' '}
+              <Button type="button" variant="outline" onClick={() => void inventory.refetch()}>
+                Tải lại
+              </Button>
+            </p>
+          )}
+          {inventory.data === null && (
+            <StaffStock
+              taskId={task.id}
+              actorId={actorId}
+              sellerId={sellerId}
+              role={role}
+              active={task.status === 'IN_PROGRESS'}
+              apiBase={apiBase}
+            />
+          )}
+          {inventory.data === null && (
+            <StaffPreorderFulfillment taskId={task.id} active={task.status === 'IN_PROGRESS'} />
+          )}
         </div>
       )}
       {choices.length > 0 && (!needsRepairContext || (repairDetails.isSuccess && !slotRepair)) && (

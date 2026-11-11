@@ -1,4 +1,89 @@
 import { expect, test } from '@playwright/test';
+
+test('Seller can assign a monitored Walk-in slot and approve a separate repair', async ({
+  page,
+}) => {
+  const sellerId = 'shop-1';
+  const kioskId = 'kiosk-1';
+  const slotId = 'slot-1';
+  const repair = {
+    id: 'repair-1',
+    kioskName: 'Tủ FPT',
+    slotCode: 'A02',
+    reason: 'Kiểm tra cửa kẹt',
+    expiresAt: null as string | null,
+  };
+  await page.route('**/api/**', (route) => {
+    switch (new URL(route.request().url()).pathname) {
+      case '/api/auth/me':
+        return route.fulfill({
+          json: { id: 'seller', name: 'Shop', role: 'SELLER', sellerId, sellerStatus: 'ACTIVE' },
+        });
+      case `/api/sellers/${sellerId}/kiosks`:
+        return route.fulfill({ json: [{ id: kioskId, code: 'K01', name: 'Tủ FPT' }] });
+      case `/api/me/kiosks/${kioskId}/slots`:
+        return route.fulfill({
+          json: [
+            {
+              id: slotId,
+              kioskId,
+              slotCode: 'A01',
+              status: 'RENTED_EMPTY',
+              zone: 'WALK_IN',
+              bouquetId: null,
+              sensorEnabled: true,
+              sensorReady: true,
+            },
+          ],
+        });
+      case `/api/me/kiosks/${kioskId}/slots/${slotId}/maintenance-sessions/active`:
+        return route.fulfill({ status: 204 });
+      case '/api/me/products':
+        return route.fulfill({
+          json: [
+            { id: 'product-1', name: 'Hoa hồng', status: 'ACTIVE', price: 350000, quantity: 5 },
+          ],
+        });
+      case `/api/sellers/${sellerId}/staff`:
+        return route.fulfill({ json: [{ id: 'staff-1', name: 'Nhân viên A' }] });
+      case '/api/me/inventory-tasks': {
+        const { id, ...payload } = route.request().postDataJSON();
+        expect(id).toBeTruthy();
+        expect(payload).toEqual({
+          assigneeId: 'staff-1',
+          kioskId,
+          slotId,
+          action: 'LOAD',
+          expectedBouquetId: null,
+          productId: 'product-1',
+          instructions: 'Nạp hoa đúng ô A01.',
+        });
+        return route.fulfill({ json: { id } });
+      }
+      case '/api/me/technical-repairs':
+        return route.fulfill({ json: [repair] });
+      case '/api/me/technical-repairs/repair-1/approve':
+        expect(route.request().method()).toBe('POST');
+        repair.expiresAt = new Date(Date.now() + 600_000).toISOString();
+        return route.fulfill({ json: { expiresAt: repair.expiresAt } });
+      default:
+        return route.fulfill({ json: { items: [] } });
+    }
+  });
+  await page.goto('/seller/stock');
+  await page.getByText('Duyệt quyền mở ô để sửa tủ', { exact: true }).click();
+  await expect(page.getByText('Kiểm tra cửa kẹt')).toBeVisible();
+  await page.getByRole('button', { name: 'Duyệt quyền mở ô', exact: true }).click();
+  await expect(page.getByText(/Đã duyệt đến/)).toBeVisible();
+  await page.getByRole('button', { name: 'Xem chi tiết ô A01' }).click();
+  const modal = page.getByRole('dialog', { name: 'Chi tiết ô A01' });
+  await modal.getByText('Giao nhân viên thao tác ô A01').click();
+  await modal.getByLabel('Nhân viên', { exact: true }).selectOption('staff-1');
+  await modal.getByLabel('Mẫu hoa', { exact: true }).selectOption('product-1');
+  await modal.getByLabel(/Hướng dẫn/).fill('Nạp hoa đúng ô A01.');
+  await modal.getByRole('button', { name: 'Xác nhận giao nhân viên' }).click();
+  await expect(modal.getByText('Đã giao công việc cho nhân viên.')).toBeVisible();
+});
 import AxeBuilder from '@axe-core/playwright';
 
 test.beforeEach(async ({ page }) => {
@@ -434,9 +519,9 @@ test('Monitored Walk-in slot uses a physical maintenance session before stocking
     sensorReady: true,
     manualRetryEnabled: false,
   };
-  const sessionId = '60000000-0000-0000-0000-000000000099';
+  let confirmed = false;
   const progress = {
-    id: sessionId,
+    id: '',
     kioskId,
     slotId,
     action: 'LOAD',
@@ -468,23 +553,29 @@ test('Monitored Walk-in slot uses a physical maintenance session before stocking
       return route.fulfill({ status: 500, json: {} });
     }
     if (path === `/api/me/kiosks/${kioskId}/slots/${slotId}/maintenance-sessions/active`)
-      return maintenanceCalls
+      return confirmed
         ? route.fulfill({ json: progress })
         : route.fulfill({ status: 204, body: '' });
-    if (
-      path === `/api/me/kiosks/${kioskId}/slots/${slotId}/maintenance-sessions` &&
-      route.request().method() === 'POST'
-    ) {
+    if (path === '/api/me/maintenance-access' && route.request().method() === 'POST') {
       const body = route.request().postDataJSON();
+      expect(body.operation).toBe('START');
+      expect(body.kioskId).toBe(kioskId);
+      expect(body.slotId).toBe(slotId);
       expect(body.action).toBe('LOAD');
       expect(body.productId).toBe(productId);
       expect(body.expectedBouquetId).toBeNull();
       maintenanceCalls++;
-      slot.status = 'LOCKED';
-      return route.fulfill({ json: progress });
+      progress.id = body.sessionId;
+      return route.fulfill({
+        json: {
+          id: 'challenge',
+          code: '123456',
+          expiresAt: new Date(Date.now() + 120_000).toISOString(),
+        },
+      });
     }
     if (
-      path === `/api/me/kiosks/${kioskId}/slots/${slotId}/maintenance-sessions/${sessionId}/check`
+      path === `/api/me/kiosks/${kioskId}/slots/${slotId}/maintenance-sessions/${progress.id}/check`
     ) {
       progress.stage = 'Completed';
       slot.status = 'STOCKED';
@@ -492,7 +583,7 @@ test('Monitored Walk-in slot uses a physical maintenance session before stocking
       slot.productId = productId;
       return route.fulfill({ json: progress });
     }
-    if (path === `/api/me/kiosks/${kioskId}/slots/${slotId}/maintenance-sessions/${sessionId}`)
+    if (path === `/api/me/kiosks/${kioskId}/slots/${slotId}/maintenance-sessions/${progress.id}`)
       return route.fulfill({ json: progress });
     return route.fulfill({ json: { items: [] } });
   });
@@ -500,9 +591,14 @@ test('Monitored Walk-in slot uses a physical maintenance session before stocking
   await page.goto('/seller/stock');
   await page.getByLabel(/Chọn ô Walk-in trống/).selectOption(slotId);
   await page.getByLabel('2. Chọn mẫu hoa').selectOption(productId);
-  await page.getByRole('button', { name: 'Mở ô để nạp hoa' }).click();
+  await page.getByRole('button', { name: 'Lấy mã mở ô để nạp hoa' }).click();
   const modal = page.getByRole('dialog', { name: 'Chi tiết ô A01' });
+  await expect(modal).toContainText('123456');
+  await expect(modal).not.toContainText('Đang chờ nạp hoa');
+  confirmed = true;
+  slot.status = 'LOCKED';
   await expect(modal).toContainText('Đang chờ nạp hoa');
+  await expect(modal).not.toContainText('123456');
   expect(maintenanceCalls).toBe(1);
   expect(oldFlowCalls).toBe(0);
   await page.evaluate(() => localStorage.clear());

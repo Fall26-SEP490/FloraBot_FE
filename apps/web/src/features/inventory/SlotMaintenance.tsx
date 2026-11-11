@@ -3,6 +3,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import { queryClient, request } from '@/shared/lib/api';
 import type { SellerSlot } from './slot-state';
+import { MaintenanceCode, useMaintenanceCode, type MaintenanceAccess } from './MaintenanceCode';
 
 export type MaintenanceAction = 'LOAD' | 'REMOVE' | 'REPLACE';
 
@@ -26,21 +27,6 @@ export const maintenancePath = (kioskId: string, slotId: string, sessionId?: str
 export const maintenanceKey = (sellerId: string, kioskId: string, slotId: string) =>
   `florabot:slot-maintenance:${sellerId}:${kioskId}:${slotId}`;
 
-export function rememberMaintenance(sellerId: string, session: MaintenanceSession) {
-  try {
-    window.localStorage.setItem(
-      maintenanceKey(sellerId, session.kioskId, session.slotId),
-      session.id,
-    );
-  } catch {
-    // The active-session API can recover this session when browser storage is unavailable.
-  }
-  queryClient.setQueryData(
-    ['slot-maintenance', session.kioskId, session.slotId, session.id],
-    session,
-  );
-}
-
 export async function startMaintenance(input: {
   kioskId: string;
   slot: SellerSlot;
@@ -48,10 +34,13 @@ export async function startMaintenance(input: {
   productId?: string | null;
   reason: string;
 }) {
-  return request<MaintenanceSession>(
-    maintenancePath(input.kioskId, input.slot.id),
+  return request<MaintenanceAccess>(
+    '/me/maintenance-access',
     {
-      id: crypto.randomUUID(),
+      kioskId: input.kioskId,
+      slotId: input.slot.id,
+      operation: 'START',
+      sessionId: crypto.randomUUID(),
       action: input.action,
       expectedBouquetId: input.slot.bouquetId,
       productId: input.productId ?? null,
@@ -81,12 +70,16 @@ export default function SlotMaintenance({
   slot,
   products,
   canStock,
+  loadAccess,
+  onLoadFinished,
 }: {
   sellerId: string;
   kioskId: string;
   slot: SellerSlot;
   products: { id: string; name: string }[];
   canStock: boolean;
+  loadAccess?: MaintenanceAccess;
+  onLoadFinished: () => void;
 }) {
   const [savedSessionId, setSavedSessionId] = useState<string | null>(() => {
     try {
@@ -101,7 +94,11 @@ export default function SlotMaintenance({
   const [productId, setProductId] = useState('');
   const [reason, setReason] = useState('');
   const [issueReason, setIssueReason] = useState('');
-  const [retryMessage, setRetryMessage] = useState('');
+  const [issued, setIssued] = useState<{
+    access: MaintenanceAccess;
+    sessionSnapshot: string | null;
+  }>();
+  const access = useMaintenanceCode(issued?.access ?? loadAccess);
 
   const activeQueryKey = ['slot-maintenance-active', kioskId, slot.id];
   const activeSession = useQuery({
@@ -113,7 +110,7 @@ export default function SlotMaintenance({
     enabled: !!slot.sensorEnabled && !savedSessionId,
     staleTime: Infinity,
     refetchInterval: (query) =>
-      query.state.data?.id ? false : slot.status === 'LOCKED' ? 4_000 : false,
+      query.state.data?.id ? false : access || slot.status === 'LOCKED' ? 4_000 : false,
   });
   const sessionId = savedSessionId || activeSession.data?.id || null;
   const session = useQuery({
@@ -122,6 +119,23 @@ export default function SlotMaintenance({
     enabled: !!sessionId,
     refetchInterval: (query) => (query.state.data?.stage === 'Completed' ? false : 4_000),
   });
+  const current = session.data;
+  const sessionSnapshot = current
+    ? [current.id, current.stage, current.substate, current.currentCmdId].join(':')
+    : null;
+  const matchesOperation = issued?.sessionSnapshot
+    ? sessionSnapshot === issued.sessionSnapshot
+    : !sessionId;
+  const visibleCode = matchesOperation ? access : undefined;
+
+  useEffect(() => {
+    if (!current || current.stage === 'Completed') return;
+    try {
+      window.localStorage.setItem(maintenanceKey(sellerId, kioskId, slot.id), current.id);
+    } catch {
+      // The active-session API can recover the session without browser storage.
+    }
+  }, [current, sellerId, kioskId, slot.id]);
 
   useEffect(() => {
     if (session.data?.stage !== 'Completed') return;
@@ -137,10 +151,8 @@ export default function SlotMaintenance({
   const start = useMutation({
     mutationFn: () => startMaintenance({ kioskId, slot, action, productId, reason }),
     onSuccess: (result) => {
-      rememberMaintenance(sellerId, result);
-      setSavedSessionId(result.id);
-      setReason('');
-      void queryClient.invalidateQueries({ queryKey: ['seller-kiosk-slots', sellerId, kioskId] });
+      setIssued({ access: result, sessionSnapshot: null });
+      void activeSession.refetch();
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['products', sellerId] }),
   });
@@ -161,20 +173,26 @@ export default function SlotMaintenance({
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['products', sellerId] }),
   });
-  const retry = useMutation({
-    mutationFn: () =>
-      request<{ status: string }>(
-        `${maintenancePath(kioskId, slot.id, sessionId!)}/retry-unlock`,
-        { requestId: crypto.randomUUID() },
+  const open = useMutation({
+    mutationFn: (operation: 'OPEN_NEXT' | 'OPEN_FOR_CHECK' | 'RETRY') =>
+      request<MaintenanceAccess>(
+        '/me/maintenance-access',
+        {
+          kioskId,
+          slotId: slot.id,
+          sessionId,
+          operation,
+          ...(operation === 'OPEN_FOR_CHECK' ? { reason: issueReason.trim() } : {}),
+          ...(operation === 'RETRY' ? { requestId: crypto.randomUUID() } : {}),
+        },
         true,
         'POST',
       ),
-    onSuccess: () => setRetryMessage('Đã gửi yêu cầu thử lại. Chờ tủ xác nhận cửa đã mở.'),
+    onSuccess: (result) => setIssued({ access: result, sessionSnapshot }),
   });
 
   if (!slot.sensorEnabled) return null;
 
-  const current = session.data;
   const hasStoredSession = !!sessionId;
   const active = current && current.stage !== 'Completed';
   const eligibleBouquet = !!slot.bouquetId && ['STOCKED', 'PENDING_REMOVAL'].includes(slot.status);
@@ -185,7 +203,7 @@ export default function SlotMaintenance({
     !hasStoredSession &&
     !activeSession.isPending &&
     !activeSession.isError;
-  const busy = start.isPending || advance.isPending || retry.isPending;
+  const busy = start.isPending || advance.isPending || open.isPending;
 
   return (
     <section className="stock-maintenance" aria-label={`Bảo trì ô ${slot.slotCode}`}>
@@ -193,6 +211,7 @@ export default function SlotMaintenance({
         <h4>Bảo trì ô {slot.slotCode}</h4>
         <span className="stock-maintenance-chip">Có giám sát cảm biến</span>
       </div>
+      {visibleCode && <MaintenanceCode access={visibleCode} />}
       {!slot.sensorReady && (
         <p role="note">
           Ô chưa được xác minh đủ cảm biến cửa và hoa. Liên hệ admin để kiểm tra trước khi thao tác.
@@ -258,8 +277,8 @@ export default function SlotMaintenance({
           {current.availableActions.includes('open-next') && (
             <Button
               type="button"
-              disabled={busy}
-              onClick={() => advance.mutate({ step: 'open-next' })}
+              disabled={busy || !!visibleCode}
+              onClick={() => open.mutate('OPEN_NEXT')}
             >
               Mở cửa nạp hoa mới
             </Button>
@@ -268,20 +287,24 @@ export default function SlotMaintenance({
             <Button
               type="button"
               variant="outline"
-              disabled={busy || issueReason.trim().length < 5}
-              onClick={() =>
-                advance.mutate({ step: 'open-for-check', body: { reason: issueReason.trim() } })
-              }
+              disabled={busy || !!visibleCode || issueReason.trim().length < 5}
+              onClick={() => open.mutate('OPEN_FOR_CHECK')}
             >
               Mở cửa kiểm tra
             </Button>
           )}
           {slot.manualRetryEnabled && current.currentCmdId && (
-            <Button type="button" variant="outline" disabled={busy} onClick={() => retry.mutate()}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={busy || !!visibleCode || (current.retryAfterSeconds ?? 0) > 0}
+              onClick={() => open.mutate('RETRY')}
+            >
               Thử lại lệnh mở cửa
             </Button>
           )}
-          {current.availableActions.includes('report-issue') && (
+          {(current.availableActions.includes('report-issue') ||
+            current.availableActions.includes('open-for-check')) && (
             <div className="stock-maintenance-issue">
               <label htmlFor={`maintenance-issue-${slot.id}`}>Mô tả sự cố</label>
               <textarea
@@ -291,16 +314,18 @@ export default function SlotMaintenance({
                 onChange={(event) => setIssueReason(event.target.value)}
                 placeholder="Mô tả tình trạng cửa hoặc cảm biến"
               />
-              <Button
-                type="button"
-                variant="outline"
-                disabled={busy || issueReason.trim().length < 5}
-                onClick={() =>
-                  advance.mutate({ step: 'report-issue', body: { reason: issueReason.trim() } })
-                }
-              >
-                Báo sự cố
-              </Button>
+              {current.availableActions.includes('report-issue') && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={busy || issueReason.trim().length < 5}
+                  onClick={() =>
+                    advance.mutate({ step: 'report-issue', body: { reason: issueReason.trim() } })
+                  }
+                >
+                  Báo sự cố
+                </Button>
+              )}
             </div>
           )}
         </div>
@@ -311,7 +336,8 @@ export default function SlotMaintenance({
           variant="outline"
           onClick={() => {
             setSavedSessionId(null);
-            setRetryMessage('');
+            setIssued(undefined);
+            onLoadFinished();
             queryClient.setQueryData(['slot-maintenance-active', kioskId, slot.id], null);
           }}
         >
@@ -356,11 +382,16 @@ export default function SlotMaintenance({
           />
           <Button
             type="button"
-            disabled={busy || reason.trim().length < 5 || (action === 'REPLACE' && !productId)}
+            disabled={
+              busy ||
+              !!visibleCode ||
+              reason.trim().length < 5 ||
+              (action === 'REPLACE' && !productId)
+            }
             onClick={() => start.mutate()}
           >
             {start.isPending
-              ? 'Đang mở phiên…'
+              ? 'Đang lấy mã…'
               : action === 'REPLACE'
                 ? 'Bắt đầu thay hoa'
                 : 'Bắt đầu thu hồi hoa'}
@@ -372,12 +403,11 @@ export default function SlotMaintenance({
           Nếu phiên không còn trên máy chủ, liên hệ hỗ trợ trước khi mở một phiên mới.
         </p>
       )}
-      {(start.error || advance.error || retry.error) && (
+      {(start.error || advance.error || open.error) && (
         <p role="alert" className="error">
-          {start.error?.message || advance.error?.message || retry.error?.message}
+          {start.error?.message || advance.error?.message || open.error?.message}
         </p>
       )}
-      {retryMessage && <p role="status">{retryMessage}</p>}
     </section>
   );
 }

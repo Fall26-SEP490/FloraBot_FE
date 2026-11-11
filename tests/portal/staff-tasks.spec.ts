@@ -108,6 +108,9 @@ for (const width of [390, 1440]) {
         },
       }),
     );
+    await page.route('**/api/staff/tasks/task-delivery-1/inventory-maintenance', (route) =>
+      route.fulfill({ status: 404, body: '' }),
+    );
     await page.route('**/api/staff/tasks/task-delivery-1/transition', async (route) => {
       writes++;
       expect(route.request().postDataJSON().version).toBe(version);

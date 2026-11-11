@@ -10,7 +10,10 @@ import { queryClient, request, type Session } from '@/shared/lib/api';
 import ReportFault from '../incidents/ReportFault';
 import ReturnFlowers from '../orders/ReturnFlowers';
 import RemoveSlotBouquet from './RemoveSlotBouquet';
-import SlotMaintenance, { rememberMaintenance, startMaintenance } from './SlotMaintenance';
+import SlotMaintenance, { startMaintenance } from './SlotMaintenance';
+import type { MaintenanceAccess } from './MaintenanceCode';
+import AssignInventoryTask from './AssignInventoryTask';
+import SellerRepairApprovals from './SellerRepairApprovals';
 import { Modal } from '@/shared/components/Modal';
 import './styles/seller-stock.css';
 import { slotNeedsAttention, slotSaleState, slotWarning, type SellerSlot } from './slot-state';
@@ -383,6 +386,11 @@ export default function SellerStock({ session }: { session: Session }) {
   const [message, setMessage] = useState('');
   const [stockReason, setStockReason] = useState('Nạp hoa bán trực tiếp');
   const [detailSlotId, setDetailSlotId] = useState<string | null>(null);
+  const [loadAccess, setLoadAccess] = useState<{
+    kioskId: string;
+    slotId: string;
+    access: MaintenanceAccess;
+  }>();
   const closeSlotDetails = useCallback(() => setDetailSlotId(null), []);
   const notice = useRef<HTMLParagraphElement>(null);
   useEffect(() => {
@@ -424,15 +432,14 @@ export default function SellerStock({ session }: { session: Session }) {
       if (slot.sensorEnabled) {
         if (!slot.sensorReady)
           throw new Error('Ô chưa được admin xác minh đủ cảm biến cửa và hoa.');
-        const session = await startMaintenance({
+        const access = await startMaintenance({
           kioskId: selectedKioskId,
           slot,
           action: 'LOAD',
           productId: values.productId,
           reason: stockReason,
         });
-        rememberMaintenance(sellerId!, session);
-        return { kind: 'maintenance' as const, session };
+        return { kind: 'maintenance' as const, access };
       }
       await request('/me/flows/stock_bouquet', {
         productId: values.productId,
@@ -444,8 +451,9 @@ export default function SellerStock({ session }: { session: Session }) {
       const slot = slots.data?.find((item) => item.id === values.slotId);
       const product = products.data?.find((item) => item.id === values.productId);
       if (result.kind === 'maintenance') {
+        setLoadAccess({ kioskId: selectedKioskId, slotId: values.slotId, access: result.access });
         setMessage(
-          `Đã bắt đầu phiên nạp hoa vào ô ${slot?.slotCode || ''}. Theo dõi cửa và cảm biến trong chi tiết ô.`,
+          `Đã cấp mã nạp hoa cho ô ${slot?.slotCode || ''}. Xem mã và tiến độ trong chi tiết ô.`,
         );
         setDetailSlotId(values.slotId);
       } else {
@@ -526,6 +534,7 @@ export default function SellerStock({ session }: { session: Session }) {
         </p>
       )}
 
+      <SellerRepairApprovals key={sellerId} sellerId={sellerId} />
       <div className="stock-toolbar-card">
         <div className="stock-toolbar-top">
           <div className="stock-toolbar-title">
@@ -806,7 +815,7 @@ export default function SellerStock({ session }: { session: Session }) {
                     {stock.isPending
                       ? 'Đang xử lý…'
                       : selectedSlot?.sensorEnabled
-                        ? 'Mở ô để nạp hoa'
+                        ? 'Lấy mã mở ô để nạp hoa'
                         : 'Nạp hoa vào ô'}
                   </Button>
                 </div>
@@ -1005,11 +1014,19 @@ export default function SellerStock({ session }: { session: Session }) {
 
                   {detailSlot.sensorEnabled ? (
                     <SlotMaintenance
+                      key={`${selectedKioskId}:${detailSlot.id}`}
                       sellerId={sellerId}
                       kioskId={selectedKioskId}
                       slot={detailSlot}
                       products={available}
                       canStock={canStock}
+                      loadAccess={
+                        loadAccess?.kioskId === selectedKioskId &&
+                        loadAccess.slotId === detailSlot.id
+                          ? loadAccess.access
+                          : undefined
+                      }
+                      onLoadFinished={() => setLoadAccess(undefined)}
                     />
                   ) : (
                     <>
@@ -1017,6 +1034,20 @@ export default function SellerStock({ session }: { session: Session }) {
                       <ReturnFlowers slot={detailSlot} sellerId={sellerId} />
                     </>
                   )}
+                  {canStock &&
+                    detailSlot.sensorReady &&
+                    slotZone(detailSlot) === 'WALK_IN' &&
+                    ((!detailSlot.bouquetId && detailSlot.status === 'RENTED_EMPTY') ||
+                      (detailSlot.bouquetId &&
+                        ['STOCKED', 'PENDING_REMOVAL'].includes(detailSlot.status))) && (
+                      <AssignInventoryTask
+                        key={`${selectedKioskId}:${detailSlot.id}:${detailSlot.bouquetId}`}
+                        sellerId={sellerId}
+                        kioskId={selectedKioskId}
+                        slot={detailSlot}
+                        products={available.filter((product) => Number(product.quantity) !== 0)}
+                      />
+                    )}
                   <ReportFault slot={detailSlot} sellerId={sellerId} />
                 </div>
               )}

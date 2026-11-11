@@ -136,8 +136,88 @@
   margin-left: auto;
 }
 
+/* Locate Button */
+.catalog-locate-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  height: 44px;
+  min-height: 44px;
+  padding: 0 0.95rem;
+  border-radius: 6px;
+  border: 1px solid #d4e2d2;
+  background-color: #ffffff;
+  color: #183e2b;
+  font-family:
+    'Be Vietnam Pro',
+    -apple-system,
+    sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.catalog-locate-btn:hover:not(:disabled) {
+  border-color: #173e33;
+  background-color: #f7faf6;
+  color: #173e33;
+}
+
+.catalog-locate-btn:focus-visible {
+  outline: 2px solid #173e33;
+  outline-offset: 1px;
+}
+
+.catalog-locate-btn.is-active {
+  background-color: #edf4ec;
+  border-color: #173e33;
+  color: #173e33;
+  font-weight: 700;
+}
+
+.catalog-locate-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  border-color: #e5ece3;
+}
+
 .catalog-sort-wrapper {
   position: relative;
+}
+
+/* Location Status Banner */
+.catalog-location-status {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.65rem 0.95rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  margin-bottom: 0.85rem;
+}
+
+.catalog-location-status svg {
+  flex-shrink: 0;
+}
+
+.catalog-location-status.is-info {
+  background-color: #edf4ec;
+  border: 1px solid #c8dec6;
+  color: #173e33;
+}
+
+.catalog-location-status.is-error {
+  background-color: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #9a3412;
 }
 
 /* Explicit override for select */

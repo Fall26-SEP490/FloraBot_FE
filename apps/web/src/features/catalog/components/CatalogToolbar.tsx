@@ -1,5 +1,5 @@
 import type { RefObject } from 'react';
-import { SlidersHorizontal } from '@florabot/ui';
+import { MapPin, SlidersHorizontal } from '@florabot/ui';
 import type { SortOption } from '../catalog.types';
 
 interface CatalogToolbarProps {
@@ -11,6 +11,8 @@ interface CatalogToolbarProps {
   searchQuery: string;
   sortBy: SortOption;
   onSortChange: (sort: SortOption) => void;
+  locating?: boolean;
+  onLocate?: () => void;
 }
 
 export function CatalogToolbar({
@@ -22,6 +24,8 @@ export function CatalogToolbar({
   searchQuery,
   sortBy,
   onSortChange,
+  locating,
+  onLocate,
 }: CatalogToolbarProps) {
   return (
     <div className="catalog-content-toolbar">
@@ -49,6 +53,20 @@ export function CatalogToolbar({
       </div>
 
       <div className="catalog-toolbar-right">
+        {onLocate && (
+          <button
+            type="button"
+            className={`catalog-locate-btn ${sortBy === 'nearest' ? 'is-active' : ''}`}
+            disabled={locating}
+            onClick={onLocate}
+            title="Sắp xếp mẫu hoa theo khoảng cách từ kiosk gần bạn nhất"
+            aria-pressed={sortBy === 'nearest'}
+          >
+            <MapPin size={15} aria-hidden="true" />
+            <span>{locating ? 'Đang lấy vị trí…' : 'Xếp hoa gần tôi'}</span>
+          </button>
+        )}
+
         <div className="catalog-sort-wrapper">
           <select
             className="catalog-sort-select"

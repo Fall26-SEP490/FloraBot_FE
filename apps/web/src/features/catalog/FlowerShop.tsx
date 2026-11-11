@@ -7,7 +7,7 @@ import { request, sessionQuery } from '@/shared/lib/api';
 import { MOCK_CATALOG_ITEMS } from '@/features/catalog/mocks/mockCatalog';
 import type { CatalogItem, CatalogResponse } from './catalog.types';
 import { canOrderOnWeb } from './catalog.utils';
-import { Button } from '@florabot/ui';
+import { MapPin } from '@florabot/ui';
 import { fetchPublicKiosks } from '../kiosk-location/kiosk-location.api';
 import { isValidLatitude, isValidLongitude } from '../kiosk-location/kiosk-location.utils';
 import { CatalogEmptyState } from './components/CatalogEmptyState';
@@ -91,6 +91,33 @@ export default function FlowerShop() {
   const page = Math.min(filters.page, Math.max(1, Math.ceil(filters.displayedItems.length / 12)));
   const catalogHref = catalogReturnPath('/dat-hoa?' + searchParams.toString());
   const pageItems = filters.displayedItems.slice((page - 1) * 12, page * 12);
+
+  const locationStatusMessage = useMemo(() => {
+    if (locating) return 'Đang xác định vị trí của bạn…';
+    if (origin && directory.isPending) return 'Đang tìm khoảng cách tới các kiosk…';
+    if (locationError || directory.isError) {
+      return 'Chưa lấy được vị trí hoặc tọa độ kiosk. Bạn vẫn có thể chọn hoa và sắp xếp theo giá, tên.';
+    }
+    if (!origin && filters.sortBy === 'nearest' && !locating && !locationError) {
+      return 'Bấm “Xếp hoa gần tôi” và cho phép vị trí để sắp xếp theo khoảng cách.';
+    }
+    if (origin && directory.isSuccess && filters.sortBy === 'nearest' && distances.size > 0) {
+      return 'Ưu tiên hoa tại các kiosk gần bạn còn chỗ PREORDER.';
+    }
+    if (origin && directory.isSuccess && distances.size === 0) {
+      return 'Chưa có tọa độ kiosk để tính khoảng cách. Bạn vẫn có thể chọn hoa.';
+    }
+    return null;
+  }, [
+    locating,
+    origin,
+    directory.isPending,
+    directory.isError,
+    directory.isSuccess,
+    locationError,
+    filters.sortBy,
+    distances.size,
+  ]);
 
   function locate() {
     setLocationError(false);
@@ -180,28 +207,6 @@ export default function FlowerShop() {
           onClear={handleSearchClear}
         />
       </header>
-      <div className="stock-actions">
-        <Button type="button" variant="outline" disabled={locating} onClick={locate}>
-          {locating ? 'Đang lấy vị trí…' : 'Xếp hoa gần tôi'}
-        </Button>
-        {locating && <p role="status">Đang xác định vị trí của bạn…</p>}
-        {origin && directory.isPending && <p role="status">Đang tìm khoảng cách tới các kiosk…</p>}
-        {(locationError || directory.isError) && (
-          <p role="status">
-            Chưa lấy được vị trí hoặc tọa độ kiosk. Bạn vẫn có thể chọn hoa và sắp xếp theo giá,
-            tên.
-          </p>
-        )}
-        {!origin && filters.sortBy === 'nearest' && !locating && !locationError && (
-          <p role="status">Bấm “Xếp hoa gần tôi” và cho phép vị trí để sắp xếp theo khoảng cách.</p>
-        )}
-        {origin && directory.isSuccess && filters.sortBy === 'nearest' && distances.size > 0 && (
-          <p role="status">Ưu tiên hoa tại các kiosk gần bạn còn chỗ PREORDER.</p>
-        )}
-        {origin && directory.isSuccess && distances.size === 0 && (
-          <p role="status">Chưa có tọa độ kiosk để tính khoảng cách. Bạn vẫn có thể chọn hoa.</p>
-        )}
-      </div>
 
       <ChatNoticeDialog
         notice={chatNotice}
@@ -251,7 +256,19 @@ export default function FlowerShop() {
                 if (value === 'nearest' && !origin) locate();
                 else filters.setSortBy(value);
               }}
+              locating={locating}
+              onLocate={locate}
             />
+          )}
+
+          {locationStatusMessage && (
+            <div
+              className={`catalog-location-status ${locationError || directory.isError ? 'is-error' : 'is-info'}`}
+              role="status"
+            >
+              <MapPin size={15} aria-hidden="true" />
+              <span>{locationStatusMessage}</span>
+            </div>
           )}
 
           <CatalogEmptyState

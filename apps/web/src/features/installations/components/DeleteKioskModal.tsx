@@ -23,7 +23,7 @@ export function DeleteKioskModal({
   const deletion = useMutation({
     mutationFn: async () => {
       if (session.role !== 'OPERATIONS_MANAGER')
-        throw new ApiError(403, 'Chỉ Quản lý vận hành được xóa kiosk.');
+        throw new ApiError(403, 'Chỉ Quản lý vận hành được lưu trữ kiosk.');
       await request<void>(
         `/operations/kiosks/${encodeURIComponent(kiosk.id)}`,
         undefined,
@@ -43,19 +43,19 @@ export function DeleteKioskModal({
   const errorMessage =
     deletion.error instanceof ApiError
       ? deletion.error.status === 403
-        ? 'Bạn không có quyền xóa kiosk. Thao tác này chỉ dành cho Quản lý vận hành.'
+        ? 'Bạn không có quyền lưu trữ kiosk. Thao tác này chỉ dành cho Quản lý vận hành.'
         : deletion.error.status === 401
-          ? 'Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại trước khi xóa kiosk.'
+          ? 'Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại trước khi lưu trữ kiosk.'
           : missing
             ? 'Tủ không còn tồn tại. Danh sách kho đã được cập nhật; hãy quay lại kiểm tra.'
             : deletion.error.message
-      : 'Chưa xác nhận được kết quả xóa. Hãy kiểm tra lại kho tủ trước khi thử lại.';
+      : 'Chưa xác nhận được kết quả lưu trữ. Hãy kiểm tra lại kho tủ trước khi thử lại.';
 
   if (session.role !== 'OPERATIONS_MANAGER') return null;
   return (
     <Modal
       open
-      title="Xóa tủ khỏi kho?"
+      title="Lưu trữ tủ khỏi kho?"
       onClose={close}
       closeDisabled={deletion.isPending}
       className="installation-modal installation-delete-modal"
@@ -63,9 +63,7 @@ export function DeleteKioskModal({
     >
       <div className="inventory-delete-warning">
         <CircleAlert size={23} aria-hidden="true" />
-        <p>
-          Tủ sẽ bị xóa khỏi hệ thống. <strong>Thao tác này không thể hoàn tác.</strong>
-        </p>
+        <p>Tủ sẽ rời kho khả dụng. Lịch sử đơn hàng, thanh toán và vận hành được giữ lại.</p>
       </div>
       <dl className="inventory-delete-summary">
         <div>
@@ -82,8 +80,8 @@ export function DeleteKioskModal({
         </div>
       </dl>
       <p className="inventory-delete-policy">
-        Chỉ xóa tủ OFFLINE chưa từng kết nối, chưa được gán và chưa có dữ liệu sử dụng. Tủ có lịch
-        sử sẽ được giữ lại.
+        Tủ phải ở trạng thái OFFLINE, đã kết thúc thuê và không còn hàng, đơn hoặc công việc đang xử
+        lý.
       </p>
       {deletion.isError && (
         <p role="alert" className="inventory-delete-error">
@@ -101,7 +99,7 @@ export function DeleteKioskModal({
           }}
           disabled={deletion.isPending || missing}
         >
-          {deletion.isPending ? 'Đang xóa...' : 'Xác nhận xóa tủ'}
+          {deletion.isPending ? 'Đang lưu trữ…' : 'Xác nhận lưu trữ tủ'}
         </Button>
       </div>
     </Modal>

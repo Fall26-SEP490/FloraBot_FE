@@ -113,8 +113,8 @@ async function openInventory(page: Page) {
   return page.getByRole('dialog', { name: 'Kho thiết bị Kiosk khả dụng' });
 }
 async function confirmDialog(page: Page) {
-  await page.getByRole('button', { name: `Xóa tủ ${targetCode}`, exact: true }).click();
-  const dialog = page.getByRole('dialog', { name: 'Xóa tủ khỏi kho?' });
+  await page.getByRole('button', { name: `Lưu trữ tủ ${targetCode}`, exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Lưu trữ tủ khỏi kho?' });
   await expect(dialog).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(1);
   return dialog;
@@ -129,7 +129,7 @@ for (const width of [390, 1440]) {
     await page.goto('/operations/installations');
     const inventory = await openInventory(page);
     await expect(
-      inventory.getByRole('button', { name: 'Xóa tủ K-ONLINE-TEST', exact: true }),
+      inventory.getByRole('button', { name: 'Lưu trữ tủ K-ONLINE-TEST', exact: true }),
     ).toBeDisabled();
     await page.screenshot({
       path: `artifacts/kiosk-delete-inventory-${width}.png`,
@@ -138,10 +138,10 @@ for (const width of [390, 1440]) {
     let dialog = await confirmDialog(page);
     await expect(dialog.getByRole('button', { name: 'Hủy', exact: true })).toBeFocused();
     await expect(dialog).toContainText(targetCode);
-    await expect(dialog).toContainText('Thao tác này không thể hoàn tác.');
+    await expect(dialog).toContainText('Lịch sử đơn hàng, thanh toán và vận hành được giữ lại.');
     await page.keyboard.press('Escape');
     await expect(
-      inventory.getByRole('button', { name: `Xóa tủ ${targetCode}`, exact: true }),
+      inventory.getByRole('button', { name: `Lưu trữ tủ ${targetCode}`, exact: true }),
     ).toBeFocused();
     expect(model.deleteCalls).toEqual([]);
     dialog = await confirmDialog(page);
@@ -154,8 +154,8 @@ for (const width of [390, 1440]) {
       fullPage: true,
     });
     model.hold = true;
-    await dialog.getByRole('button', { name: 'Xác nhận xóa tủ', exact: true }).click();
-    await expect(dialog.getByRole('button', { name: 'Đang xóa...', exact: true })).toBeDisabled();
+    await dialog.getByRole('button', { name: 'Xác nhận lưu trữ tủ', exact: true }).click();
+    await expect(dialog.getByRole('button', { name: 'Đang lưu trữ…', exact: true })).toBeDisabled();
     await expect(dialog.getByRole('button', { name: 'Hủy', exact: true })).toBeDisabled();
     await page.keyboard.press('Escape');
     await expect(dialog).toBeVisible();
@@ -163,11 +163,11 @@ for (const width of [390, 1440]) {
     model.release();
     await expect(inventory).toBeVisible();
     await expect(
-      inventory.getByRole('status').filter({ hasText: `Đã xóa tủ ${targetCode}` }),
+      inventory.getByRole('status').filter({ hasText: `Đã lưu trữ tủ ${targetCode}` }),
     ).toBeVisible();
     await expect(inventory.getByText('1 tủ khả dụng', { exact: true })).toBeVisible();
     await expect(
-      inventory.getByRole('button', { name: `Xóa tủ ${targetCode}`, exact: true }),
+      inventory.getByRole('button', { name: `Lưu trữ tủ ${targetCode}`, exact: true }),
     ).toHaveCount(0);
     await expect.poll(() => model.eligibleReads).toBeGreaterThan(1);
     expect(model.deleteCalls).toHaveLength(1);
@@ -183,24 +183,24 @@ for (const status of [401, 403, 409, 500, 0]) {
     await page.goto('/operations/installations');
     const inventory = await openInventory(page);
     const dialog = await confirmDialog(page);
-    await dialog.getByRole('button', { name: 'Xác nhận xóa tủ', exact: true }).click();
+    await dialog.getByRole('button', { name: 'Xác nhận lưu trữ tủ', exact: true }).click();
     const message =
       status === 401
         ? 'Phiên đăng nhập đã hết hạn.'
         : status === 403
-          ? 'Bạn không có quyền xóa kiosk.'
+          ? 'Bạn không có quyền lưu trữ kiosk.'
           : status === 409
             ? 'Kiosk đã có hồ sơ hoặc dữ liệu liên quan'
             : status === 0
-              ? 'Chưa xác nhận được kết quả xóa.'
+              ? 'Chưa xác nhận được kết quả lưu trữ.'
               : 'Yêu cầu kiểm thử bị từ chối.';
     await expect(dialog.getByRole('alert')).toContainText(message);
     await expect(
-      dialog.getByRole('button', { name: 'Xác nhận xóa tủ', exact: true }),
+      dialog.getByRole('button', { name: 'Xác nhận lưu trữ tủ', exact: true }),
     ).toBeEnabled();
     await dialog.getByRole('button', { name: 'Hủy', exact: true }).click();
     await expect(inventory.getByText(targetCode, { exact: true })).toBeVisible();
-    await expect(inventory.getByRole('status').filter({ hasText: 'Đã xóa tủ' })).toHaveCount(0);
+    await expect(inventory.getByRole('status').filter({ hasText: 'Đã lưu trữ tủ' })).toHaveCount(0);
     expect(model.deleteCalls).toHaveLength(1);
   });
 }
@@ -211,12 +211,14 @@ test('404 removes an obsolete kiosk without claiming a successful deletion', asy
   await page.goto('/operations/installations');
   const inventory = await openInventory(page);
   const dialog = await confirmDialog(page);
-  await dialog.getByRole('button', { name: 'Xác nhận xóa tủ', exact: true }).click();
+  await dialog.getByRole('button', { name: 'Xác nhận lưu trữ tủ', exact: true }).click();
   await expect(dialog.getByRole('alert')).toContainText('Tủ không còn tồn tại.');
-  await expect(dialog.getByRole('button', { name: 'Xác nhận xóa tủ', exact: true })).toBeDisabled();
+  await expect(
+    dialog.getByRole('button', { name: 'Xác nhận lưu trữ tủ', exact: true }),
+  ).toBeDisabled();
   await dialog.getByRole('button', { name: 'Quay lại kho', exact: true }).click();
   await expect(inventory.getByText(targetCode, { exact: true })).toHaveCount(0);
-  await expect(inventory.getByRole('status').filter({ hasText: 'Đã xóa tủ' })).toHaveCount(0);
+  await expect(inventory.getByRole('status').filter({ hasText: 'Đã lưu trữ tủ' })).toHaveCount(0);
 });
 
 test('Deleting a selected kiosk also clears its schedule option and prevents stale scheduling', async ({
@@ -229,7 +231,7 @@ test('Deleting a selected kiosk also clears its schedule option and prevents sta
   await expect(select).toHaveValue(targetId);
   const inventory = await openInventory(page);
   const dialog = await confirmDialog(page);
-  await dialog.getByRole('button', { name: 'Xác nhận xóa tủ', exact: true }).click();
+  await dialog.getByRole('button', { name: 'Xác nhận lưu trữ tủ', exact: true }).click();
   await expect(inventory).toBeVisible();
   await inventory.getByRole('button', { name: 'Đóng', exact: true }).click();
   await expect(select).toHaveValue('');
@@ -248,7 +250,7 @@ test('Admin cannot access kiosk inventory or delete controls', async ({ page }) 
   await page.goto('/admin/installations');
   await expect(page.getByText('Chế độ giám sát (Admin)', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Kho tủ khả dụng' })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: /Xóa tủ/ })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /Lưu trữ tủ/ })).toHaveCount(0);
   expect(model.eligibleReads).toBe(0);
   expect(model.deleteCalls).toEqual([]);
 });

@@ -30,6 +30,9 @@ test('Seller staff fulfills only paid preorder into a PREORDER slot', async ({ p
       },
     }),
   );
+  await page.route('**/api/staff/tasks/task-1/inventory-maintenance', (route) =>
+    route.fulfill({ status: 404, body: '' }),
+  );
   await page.route('**/api/staff/tasks/task-1/preorders', (route) =>
     route.fulfill({
       json: {

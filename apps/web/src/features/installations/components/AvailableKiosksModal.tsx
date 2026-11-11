@@ -34,7 +34,7 @@ export function AvailableKiosksModal({ open, onClose, session }: AvailableKiosks
   };
   const handleDeleted = async (kiosk: EligibleKioskResponse) => {
     await removeFromInventory(kiosk.id);
-    setDeleteSuccess(`Đã xóa tủ ${kiosk.code} khỏi kho.`);
+    setDeleteSuccess(`Đã lưu trữ tủ ${kiosk.code}.`);
     setDeleteTarget(null);
   };
   const [slotFilter, setSlotFilter] = useState('ALL');
@@ -213,14 +213,12 @@ export function AvailableKiosksModal({ open, onClose, session }: AvailableKiosks
                         <Button
                           variant="outline"
                           className="inventory-delete-button"
-                          aria-label={`Xóa tủ ${kiosk.code}`}
+                          aria-label={`Lưu trữ tủ ${kiosk.code}`}
                           aria-describedby="inventory-delete-policy"
                           data-autofocus={lastDeleteId === kiosk.id || undefined}
                           disabled={kiosk.status !== 'OFFLINE'}
                           title={
-                            kiosk.status !== 'OFFLINE'
-                              ? 'Chỉ xóa được tủ OFFLINE chưa từng kết nối.'
-                              : undefined
+                            kiosk.status !== 'OFFLINE' ? 'Chỉ lưu trữ được tủ OFFLINE.' : undefined
                           }
                           onClick={() => {
                             setLastDeleteId(kiosk.id);
@@ -240,7 +238,8 @@ export function AvailableKiosksModal({ open, onClose, session }: AvailableKiosks
         )}
         <div className="installation-modal-footer">
           <p id="inventory-delete-policy">
-            Chọn tủ khi xếp lịch. Chỉ xóa tủ OFFLINE chưa từng kết nối và chưa có lịch sử sử dụng.
+            Chọn tủ khi xếp lịch. Có thể lưu trữ tủ OFFLINE đã kết thúc thuê và không còn việc đang
+            xử lý.
           </p>
           <Button variant="outline" onClick={onClose}>
             Đóng
