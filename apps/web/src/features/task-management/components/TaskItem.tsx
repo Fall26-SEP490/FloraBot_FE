@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
-import { Button } from '@florabot/ui';
+import { Button, MapPin, Store } from '@florabot/ui';
 import { ApiError, queryClient, request } from '@/shared/lib/api';
 import StaffIncidentResolution from '../../incidents/StaffIncidentResolution';
 import StaffStock from '../../inventory/StaffStock';
@@ -185,82 +185,25 @@ export function TaskItem({
       setBusy(false);
     }
   }
+  const quickTemplates =
+    task.status === 'ASSIGNED'
+      ? ['Bắt đầu giao hoa đến tủ', 'Đã có mặt tại kiosk']
+      : task.status === 'IN_PROGRESS'
+        ? ['Đã nạp hoa và kiểm tra đầy đủ', 'Đã nạp hoa xong, các ô hoạt động tốt']
+        : [];
+
   const taskContent = (
     <>
-      <StaffTaskDetails
-        taskId={task.id}
-        version={task.version}
-        apiBase={apiBase}
-        admin={!isWorker}
-        readOnly={readOnly}
-        actorId={actorId}
-        sellerId={sellerId}
-        role={role}
-      />
-      <StaffEvidence
-        key={`${task.id}:${task.version}:${actorId}`}
-        taskId={task.id}
-        version={task.version}
-        apiBase={apiBase}
-        actorId={actorId}
-        sellerId={sellerId}
-        role={role}
-        mode={mode}
-        admin={!isWorker}
-        active={isWorker && task.status === 'IN_PROGRESS'}
-      />
-      {canReassign && ['ASSIGNED', 'IN_PROGRESS'].includes(task.status) && (
-        <StaffReassignment
-          taskId={task.id}
-          version={task.version}
-          assigneeId={task.assigneeId}
-          assigneeName={task.assigneeName}
-          apiBase={apiBase}
-          directoryEndpoint={directoryEndpoint}
-          actorId={actorId}
-          sellerId={sellerId}
-          role={role}
-        />
-      )}
-      {canEditInstructions && (
-        <details
-          open={editingInstructions}
-          onToggle={(e) => setEditingInstructions(e.currentTarget.open)}
-        >
-          <summary>Sửa hướng dẫn công việc</summary>
-          {editingInstructions && (
-            <form onSubmit={(e) => void saveInstructions(e)} noValidate>
-              <label htmlFor={`edit-instructions-${task.id}`}>
-                Hướng dẫn công việc (10–2.000 ký tự)
-              </label>
-              <textarea
-                id={`edit-instructions-${task.id}`}
-                rows={3}
-                minLength={10}
-                maxLength={2000}
-                disabled={busy}
-                value={instructionsDraft}
-                onChange={(e) => setInstructionsDraft(e.target.value)}
-              />
-              <Button
-                type="submit"
-                variant="outline"
-                disabled={busy || instructionsDraft.trim().length < 10}
-              >
-                {busy ? 'Đang lưu…' : 'Lưu hướng dẫn'}
-              </Button>
-            </form>
-          )}
-        </details>
-      )}
-      {task.report && (
-        <p>
-          <strong>Báo cáo gần nhất:</strong> {task.report}
-        </p>
-      )}
       {isWorker && role === 'SELLER_STAFF' && actorId && task.kind === 'DELIVERY' && (
-        <>
-          <StaffPreorderFulfillment taskId={task.id} active={task.status === 'IN_PROGRESS'} />
+        <div className="staff-stocking-section">
+          <div className="staff-stocking-header">
+            <h4>Thao tác nạp hoa tại tủ</h4>
+            <p>
+              {task.status === 'IN_PROGRESS'
+                ? 'Tủ đã sẵn sàng. Mở mục nạp hoa Walk-in hoặc Đơn đặt trước bên dưới.'
+                : 'Chuyển công việc sang “Đang thực hiện” ở form bên dưới để mở khóa thao tác nạp.'}
+            </p>
+          </div>
           <StaffStock
             taskId={task.id}
             actorId={actorId}
@@ -269,8 +212,154 @@ export function TaskItem({
             active={task.status === 'IN_PROGRESS'}
             apiBase={apiBase}
           />
-        </>
+          <StaffPreorderFulfillment taskId={task.id} active={task.status === 'IN_PROGRESS'} />
+        </div>
       )}
+      {choices.length > 0 && (!needsRepairContext || (repairDetails.isSuccess && !slotRepair)) && (
+        <form noValidate onSubmit={form.handleSubmit(submit)} className="staff-transition-form">
+          <div className="staff-transition-header">
+            <h4>Cập nhật tiến độ &amp; Báo cáo</h4>
+            <p>Chọn bước tiếp theo và nhập nội dung để gửi thông báo cho shop.</p>
+          </div>
+          <div className="staff-form-group">
+            <label htmlFor={`action-${task.id}`}>Bước tiếp theo</label>
+            <select
+              id={`action-${task.id}`}
+              {...form.register('status', { required: true })}
+              disabled={busy || uncertain}
+            >
+              {choices.map((choice) => (
+                <option key={choice} value={choice}>
+                  {choice === 'IN_PROGRESS' && isManager
+                    ? 'Yêu cầu kiểm tra lại'
+                    : TASK_STATUS_LABELS[choice]}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="staff-form-group">
+            <label htmlFor={`report-${task.id}`}>Nội dung cập nhật</label>
+            {quickTemplates.length > 0 && (
+              <div className="staff-quick-templates" aria-label="Gợi ý nội dung">
+                <span className="staff-quick-label">Gợi ý nhanh:</span>
+                <div className="staff-quick-chips">
+                  {quickTemplates.map((template) => (
+                    <button
+                      key={template}
+                      type="button"
+                      className="staff-chip-btn"
+                      onClick={() => form.setValue('report', template, { shouldValidate: true })}
+                    >
+                      {template}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <textarea
+              id={`report-${task.id}`}
+              maxLength={2000}
+              rows={3}
+              placeholder="Nhập mô tả kết quả công việc hoặc chọn gợi ý bên trên (tối thiểu 10 ký tự)…"
+              {...form.register('report', {
+                validate: (value) => value.trim().length >= 10 || 'Mô tả ít nhất 10 ký tự.',
+              })}
+              aria-invalid={!!form.formState.errors.report}
+              aria-describedby={`report-error-${task.id}`}
+              disabled={busy}
+            />
+            <p id={`report-error-${task.id}`} className="error">
+              {form.formState.errors.report?.message}
+            </p>
+          </div>
+          <Button
+            type="submit"
+            disabled={busy || uncertain || needsLatestVersion}
+            className="staff-submit-btn"
+          >
+            {busy
+              ? 'Đang cập nhật…'
+              : isTechnician
+                ? task.status === 'ASSIGNED'
+                  ? 'Bắt đầu xử lý'
+                  : 'Gửi báo cáo'
+                : 'Xác nhận cập nhật'}
+          </Button>
+        </form>
+      )}
+      {task.report && (
+        <div className="staff-latest-report">
+          <strong>Báo cáo gần nhất:</strong> <p>{task.report}</p>
+        </div>
+      )}
+      <div className="staff-secondary-details">
+        <StaffEvidence
+          key={`${task.id}:${task.version}:${actorId}`}
+          taskId={task.id}
+          version={task.version}
+          apiBase={apiBase}
+          actorId={actorId}
+          sellerId={sellerId}
+          role={role}
+          mode={mode}
+          admin={!isWorker}
+          active={isWorker && task.status === 'IN_PROGRESS'}
+        />
+        <StaffTaskDetails
+          taskId={task.id}
+          version={task.version}
+          apiBase={apiBase}
+          admin={!isWorker}
+          readOnly={readOnly}
+          actorId={actorId}
+          sellerId={sellerId}
+          role={role}
+        />
+        {canReassign && ['ASSIGNED', 'IN_PROGRESS'].includes(task.status) && (
+          <StaffReassignment
+            taskId={task.id}
+            version={task.version}
+            assigneeId={task.assigneeId}
+            assigneeName={task.assigneeName}
+            apiBase={apiBase}
+            directoryEndpoint={directoryEndpoint}
+            actorId={actorId}
+            sellerId={sellerId}
+            role={role}
+          />
+        )}
+        {canEditInstructions && (
+          <details
+            open={editingInstructions}
+            onToggle={(e) => setEditingInstructions(e.currentTarget.open)}
+          >
+            <summary>Sửa hướng dẫn công việc</summary>
+            {editingInstructions && (
+              <form onSubmit={(e) => void saveInstructions(e)} noValidate>
+                <label htmlFor={`edit-instructions-${task.id}`}>
+                  Hướng dẫn công việc (10–2.000 ký tự)
+                </label>
+                <textarea
+                  id={`edit-instructions-${task.id}`}
+                  rows={3}
+                  minLength={10}
+                  maxLength={2000}
+                  disabled={busy}
+                  value={instructionsDraft}
+                  onChange={(e) => setInstructionsDraft(e.target.value)}
+                />
+                <Button
+                  type="submit"
+                  variant="outline"
+                  disabled={busy || instructionsDraft.trim().length < 10}
+                >
+                  {busy ? 'Đang lưu…' : 'Lưu hướng dẫn'}
+                </Button>
+              </form>
+            )}
+          </details>
+        )}
+      </div>
       {needsRepairContext && taskOpen && repairDetails.isPending && (
         <p role="status">Đang kiểm tra ô tủ của công việc…</p>
       )}
@@ -322,64 +411,41 @@ export function TaskItem({
           thống sẽ kiểm tra lại tín hiệu cửa và cảm biến trước khi đóng sự cố.
         </p>
       )}
-      {choices.length > 0 && (!needsRepairContext || (repairDetails.isSuccess && !slotRepair)) && (
-        <form noValidate onSubmit={form.handleSubmit(submit)}>
-          <label htmlFor={`action-${task.id}`}>Bước tiếp theo</label>
-          <select
-            id={`action-${task.id}`}
-            {...form.register('status', { required: true })}
-            disabled={busy || uncertain}
-          >
-            {choices.map((choice) => (
-              <option key={choice} value={choice}>
-                {choice === 'IN_PROGRESS' && isManager
-                  ? 'Yêu cầu kiểm tra lại'
-                  : TASK_STATUS_LABELS[choice]}
-              </option>
-            ))}
-          </select>
-          <label htmlFor={`report-${task.id}`}>Nội dung cập nhật</label>
-          <textarea
-            id={`report-${task.id}`}
-            maxLength={2000}
-            rows={3}
-            {...form.register('report', {
-              validate: (value) => value.trim().length >= 10 || 'Mô tả ít nhất 10 ký tự.',
-            })}
-            aria-invalid={!!form.formState.errors.report}
-            aria-describedby={`report-error-${task.id}`}
-            disabled={busy}
-          />
-          <p id={`report-error-${task.id}`} className="error">
-            {form.formState.errors.report?.message}
-          </p>
-          <Button type="submit" disabled={busy || uncertain || needsLatestVersion}>
-            {busy
-              ? 'Đang cập nhật…'
-              : isTechnician
-                ? task.status === 'ASSIGNED'
-                  ? 'Bắt đầu xử lý'
-                  : 'Gửi báo cáo'
-                : 'Xác nhận cập nhật'}
-          </Button>
-        </form>
-      )}
     </>
   );
   return (
-    <article className="member-empty" aria-labelledby={`task-${task.id}`}>
+    <article className="staff-task-card member-empty" aria-labelledby={`task-${task.id}`}>
       <div className="staff-task-heading">
-        <h3 id={`task-${task.id}`}>
-          {task.kind === 'INCIDENT' ? 'Kiểm tra sự cố' : 'Giao hoa'} · {task.kioskName}
-        </h3>
-        <span className="staff-task-label">{TASK_STATUS_LABELS[task.status] || task.status}</span>
+        <div>
+          <h3 id={`task-${task.id}`}>
+            {task.kind === 'INCIDENT' ? 'Kiểm tra sự cố' : 'Giao hoa'} · {task.kioskName}
+          </h3>
+          {!isTechnician && (
+            <p className="staff-assignee-text">Người thực hiện: {task.assigneeName}</p>
+          )}
+        </div>
+        <span className="staff-task-label" data-status={task.status}>
+          {TASK_STATUS_LABELS[task.status] || task.status}
+        </span>
       </div>
-      {!isTechnician && <p>Người thực hiện: {task.assigneeName}</p>}
-      <p>
-        {task.address}
-        {task.shopName ? ` · ${task.shopName}` : ''}
-      </p>
-      <p>{task.instructions}</p>
+      <div className="staff-task-destination-card">
+        <p className="staff-destination-address">
+          <MapPin size={15} aria-hidden="true" />
+          <span>
+            {task.address}
+            {task.shopName ? ` · ${task.shopName}` : ''}
+          </span>
+        </p>
+        {task.instructions && (
+          <div className="staff-instructions-callout">
+            <div className="staff-instructions-head">
+              <Store size={14} aria-hidden="true" />
+              <strong>Ghi chú từ shop:</strong>
+            </div>
+            <p>{task.instructions}</p>
+          </div>
+        )}
+      </div>
       {isTechnician ? (
         <details
           className="technician-task-body"
@@ -392,7 +458,7 @@ export function TaskItem({
           {taskContent}
         </details>
       ) : (
-        taskContent
+        <div className="staff-task-body">{taskContent}</div>
       )}
       {error && <p role="alert">{error}</p>}
       {notice && <p role="status">{notice}</p>}

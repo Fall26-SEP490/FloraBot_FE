@@ -265,6 +265,13 @@
   border-radius: 10px;
   background: #edf5ea;
   color: #27593b;
+  overflow: hidden;
+}
+.flowerIcon img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .address {
   color: var(--order-muted);

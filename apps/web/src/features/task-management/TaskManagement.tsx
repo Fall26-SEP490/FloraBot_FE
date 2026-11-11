@@ -106,11 +106,17 @@ export function TaskManagement(props: StaffTasksProps) {
     >
       <h2
         id="staff-tasks-title"
-        className={role === 'OPERATIONS_MANAGER' || role === 'TECHNICIAN' ? 'sr-only' : undefined}
+        className={
+          role === 'OPERATIONS_MANAGER' || role === 'TECHNICIAN' || role === 'SELLER_STAFF'
+            ? 'sr-only'
+            : undefined
+        }
       >
         {sectionTitle}
       </h2>
-      {role !== 'OPERATIONS_MANAGER' && role !== 'TECHNICIAN' && <p>{sectionDescription}</p>}
+      {role !== 'OPERATIONS_MANAGER' && role !== 'TECHNICIAN' && role !== 'SELLER_STAFF' && (
+        <p>{sectionDescription}</p>
+      )}
       {tasks.data &&
         role !== 'SELLER' &&
         role !== 'OPERATIONS_MANAGER' &&

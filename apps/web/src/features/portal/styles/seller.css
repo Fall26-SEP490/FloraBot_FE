@@ -1225,10 +1225,6 @@
   box-shadow: none;
 }
 
-.seller-workspace .kiosk-map-inactive {
-  min-height: 220px;
-}
-
 /* Slot status pills in SellerStock */
 .seller-workspace .slot-status-pill {
   display: inline-flex;

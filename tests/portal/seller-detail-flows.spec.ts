@@ -191,6 +191,18 @@ for (const width of [390, 1440]) {
     const card = page.locator('.kiosk-card');
     await expect(card).toContainText('Địa chỉ kiểm thử');
     await expect(card.locator('.kiosk-form')).toHaveCount(0);
+    await expect(
+      card.getByRole('region', { name: 'Bản đồ vị trí của Tủ kiểm thử Seller' }),
+    ).toBeVisible();
+    const info = await card.locator('.kiosk-card-information').boundingBox();
+    const map = await card.locator('.kiosk-map-column').boundingBox();
+    expect(info).not.toBeNull();
+    expect(map).not.toBeNull();
+    if (width < 1050) {
+      expect(map!.y).toBeGreaterThanOrEqual(info!.y + info!.height);
+    } else {
+      expect(map!.x).toBeGreaterThanOrEqual(info!.x + info!.width);
+    }
     await card.getByText('Chỉnh địa chỉ và ghim bản đồ', { exact: true }).click();
     await card.getByLabel('Tìm địa chỉ kiosk', { exact: false }).fill('Địa chỉ mới kiểm thử');
     await card.getByText('Chỉnh địa chỉ và ghim bản đồ', { exact: true }).click();

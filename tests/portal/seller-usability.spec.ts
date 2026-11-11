@@ -1,6 +1,40 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { setupSellerUsability, sampleRequest, kioskId, shopId } from '../fixtures/seller-usability';
+
+test('Seller preorder displays the uploaded product photo and falls back if it cannot load', async ({
+  page,
+}) => {
+  await setupSellerUsability(page);
+  const photoUrl = 'https://media.example.test/flower.webp';
+  let photoAvailable = true;
+  await page.route(photoUrl, (route) =>
+    photoAvailable
+      ? route.fulfill({ path: 'apps/web/public/images/occasions/pastelBouquet-480.webp' })
+      : route.fulfill({ status: 404 }),
+  );
+  await page.route(`**/api/me/products/${sampleRequest.productId}/photos?page=1`, (route) =>
+    route.fulfill({ json: { items: [{ url: photoUrl }], hasMore: false } }),
+  );
+
+  await page.goto('/seller/orders');
+  const order = page.locator(`#preorder-${sampleRequest.id}`);
+  const photo = order.getByRole('img', { name: `Ảnh ${sampleRequest.productName}` });
+  await expect(photo).toBeVisible();
+  await expect
+    .poll(() => photo.evaluate((image: HTMLImageElement) => image.naturalWidth))
+    .toBeGreaterThan(0);
+
+  photoAvailable = false;
+  const response = page.waitForResponse(
+    (result) => result.url() === photoUrl && result.status() === 404,
+  );
+  await page.reload();
+  await response;
+  await expect(photo).toHaveCount(0);
+  await expect(order.getByText(sampleRequest.productName, { exact: true }).first()).toBeVisible();
+});
+
 const sections = [
   ['overview', 'Tổng quan cửa hàng', '[aria-labelledby="seller-orders-title"]'],
   ['orders', 'Đơn đặt trước', '#web-orders'],

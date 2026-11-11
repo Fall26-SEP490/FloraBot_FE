@@ -17,55 +17,14 @@ import { queryClient, type Session } from '@/shared/lib/api';
 import { TablePagination } from '../../shared/components/DataTable';
 import { Modal } from '../../shared/components/Modal';
 import { clampPage, paginate } from '../../shared/pagination';
-import { fetchProductPhotos, fetchProducts, fetchSellerKiosks } from './product.api';
-import type { PhotoPage, Product, SellerKiosk } from './product.types';
+import { fetchProducts, fetchSellerKiosks } from './product.api';
+import type { Product, SellerKiosk } from './product.types';
 import { PAGE_SIZE, statusNames } from './product.types';
-import { errorText, safeImage } from './product.utils';
+import { errorText } from './product.utils';
 import ProductEditor from './components/ProductEditor';
+import ProductThumbnail from './components/ProductThumbnail';
 import { ProductCreateForm } from './components/ProductCatalogForm';
 import './styles/products.css';
-
-function ProductThumbnail({
-  sellerId,
-  productId,
-  productName,
-}: {
-  sellerId: string;
-  productId: string;
-  productName: string;
-}) {
-  const [failedUrl, setFailedUrl] = useState<string | null>(null);
-  const photos = useQuery<PhotoPage>({
-    queryKey: ['product-photos', sellerId, productId, 1],
-    queryFn: () => fetchProductPhotos(productId, 1),
-    staleTime: 60_000,
-  });
-
-  const firstUrl = photos.data?.items?.[0]?.url;
-  const showImage = Boolean(firstUrl && safeImage(firstUrl) && failedUrl !== firstUrl);
-
-  return (
-    <span
-      className={`product-flower-icon ${showImage ? 'has-thumb' : ''}`}
-      aria-hidden={showImage ? undefined : 'true'}
-    >
-      {showImage && firstUrl ? (
-        <img
-          src={firstUrl}
-          alt={`Ảnh ${productName}`}
-          className="product-flower-thumb"
-          width="48"
-          height="52"
-          loading="lazy"
-          referrerPolicy="no-referrer"
-          onError={() => setFailedUrl(firstUrl)}
-        />
-      ) : (
-        <Flower2 size={22} aria-hidden="true" />
-      )}
-    </span>
-  );
-}
 
 export default function ProductManagement({ session }: { session: Session }) {
   const [search, setSearch] = useState('');

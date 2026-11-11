@@ -17,6 +17,7 @@ interface KioskPickerMapProps {
   interactive?: boolean;
   ariaLabel?: string;
   zoom?: number;
+  scrollZoom?: boolean;
 }
 
 export default function KioskPickerMap({
@@ -28,6 +29,7 @@ export default function KioskPickerMap({
   interactive = true,
   ariaLabel = 'Bản đồ định vị kiosk',
   zoom,
+  scrollZoom = true,
 }: KioskPickerMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
@@ -76,6 +78,7 @@ export default function KioskPickerMap({
             center: [lon, lat],
             zoom: initialZoomRef.current ?? (hasCoords ? 15 : 12),
             attributionControl: false,
+            scrollZoom,
           });
           goongMapRef.current = map;
           map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
@@ -195,7 +198,7 @@ export default function KioskPickerMap({
         markerRef.current = null;
       }
     };
-  }, [tileConfig.isGoong, tileConfig.styleUrl]);
+  }, [tileConfig.isGoong, tileConfig.styleUrl, scrollZoom]);
 
   // Sync coords from props to map/marker
   useEffect(() => {

@@ -41,6 +41,7 @@ import CustomerPickupGuide from './CustomerPickupGuide';
 import CustomerOrderChat from './CustomerOrderChat';
 import { readSellerQueue, sellerQueueKey, SELLER_RESULT_SIZE } from './seller-queue';
 import { rememberPreorderPayment } from './payment-return';
+import ProductThumbnail from '../product-management/components/ProductThumbnail';
 
 const sellerFilters: { value: OrderFilter; label: string }[] = [
   { value: 'all', label: 'Tất cả' },
@@ -1457,9 +1458,12 @@ export default function WebRequests({
                       <>
                         <span className={styles.orderBody}>
                           <span className={styles.product}>
-                            <span className={styles.flowerIcon}>
-                              <Flower2 size={24} aria-hidden="true" />
-                            </span>
+                            <ProductThumbnail
+                              sellerId={sellerId ?? row.sellerId}
+                              productId={row.productId}
+                              productName={row.productName || 'mẫu hoa'}
+                              className={styles.flowerIcon}
+                            />
                             <span>
                               <small>Mẫu hoa</small>
                               <strong>{row.productName || 'Hoa theo yêu cầu'}</strong>

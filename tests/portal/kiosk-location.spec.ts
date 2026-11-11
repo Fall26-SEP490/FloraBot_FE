@@ -163,15 +163,16 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
     const maintenanceCard = page.locator('.kiosk-card').filter({ hasText: 'Kiosk Shared Central' });
     await expect(maintenanceCard.locator('.kiosk-status-badge')).toHaveText('Bảo trì');
 
-    // Shared / uneditable kiosk has notice and disabled address search
+    // All kiosks have a map even when the location editor is closed.
+    await expect(page.locator('.kiosk-card .kiosk-picker-map')).toHaveCount(3);
     await expect(maintenanceCard.locator('.kiosk-permission-notice')).toContainText(
       'Tủ kiosk này dùng chung hoặc chưa được gán toàn quyền cho shop',
     );
-    await maintenanceCard.getByText('Xem ghim và thông tin vị trí', { exact: true }).click();
-    await expect(maintenanceCard.locator('input[name="address"]')).toBeDisabled();
     await expect(
-      maintenanceCard.locator('input[name="latitude"], input[name="longitude"]'),
-    ).toHaveCount(0);
+      maintenanceCard.getByRole('region', { name: 'Bản đồ vị trí của Kiosk Shared Central' }),
+    ).toBeVisible();
+    await expect(maintenanceCard.locator('input[name="address"]')).toHaveCount(0);
+    await expect(page.locator('.kiosks-list')).not.toContainText(/Vĩ độ|Kinh độ/i);
   });
 
   test('SELLER_STAFF is restricted from writing/updating kiosk locations', async ({ page }) => {
@@ -405,27 +406,22 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
     );
 
     await page.goto('/seller/kiosks');
-    await page
-      .locator('.kiosk-card')
-      .filter({ hasText: 'Kiosk Landmark 81' })
-      .getByText('Chỉnh địa chỉ và ghim bản đồ', { exact: true })
-      .click();
+    const card = page.locator('.kiosk-card').filter({ hasText: 'Kiosk Landmark 81' });
+    await card.getByText('Chỉnh địa chỉ và ghim bản đồ', { exact: true }).click();
 
-    await page
+    await card
       .locator('.kiosk-picker-map.maplibregl-map, .kiosk-picker-map.leaflet-container')
-      .first()
       .waitFor();
-    const goongMap = page.locator('.kiosk-picker-map.maplibregl-map');
+    const goongMap = card.locator('.kiosk-picker-map.maplibregl-map');
     if (await goongMap.count()) {
-      await expect(page.locator('.kiosk-map-attribution')).toContainText('Goong Maps');
+      await expect(card.locator('.kiosk-map-attribution')).toContainText('Goong Maps');
       await expect(goongMap.locator('canvas.maplibregl-canvas')).toBeVisible();
     } else {
-      const tile = page.locator('.kiosk-picker-map img.leaflet-tile').first();
+      const tile = card.locator('.kiosk-picker-map img.leaflet-tile').first();
       await expect(tile).toBeVisible();
       await expect(tile).toHaveAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
     }
 
-    const card = page.locator('.kiosk-card').filter({ hasText: 'Kiosk Landmark 81' });
     const originalHref = await card.locator('.kiosk-external-link').getAttribute('href');
     await card.locator('.kiosk-picker-map').click({ position: { x: 35, y: 35 } });
     await expect(card.locator('.kiosk-location-selection')).toContainText('Đã chọn vị trí ghim');

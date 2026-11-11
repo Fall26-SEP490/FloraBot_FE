@@ -126,29 +126,6 @@
   color: var(--color-workspace-ink, #183e2b);
 }
 
-.seller-kiosks-page .kiosk-map-inactive {
-  display: grid;
-  place-items: center;
-  min-height: 350px;
-  background: #f4f8f2;
-  border: 2px dashed #cfe0ca;
-  border-radius: var(--radius-workspace-control, 8px);
-  padding: 24px;
-  text-align: center;
-}
-
-.seller-kiosks-page .kiosk-map-inactive-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  color: var(--color-workspace-muted, #476451);
-}
-
-.seller-kiosks-page .kiosk-btn-open-map {
-  font-weight: 600;
-}
-
 .seller-kiosks-page .kiosk-role-warning {
   display: flex;
   align-items: center;
@@ -360,17 +337,43 @@
   margin-bottom: 1rem;
 }
 
-/* Form Layout */
-.seller-kiosks-page .kiosk-form-grid {
+.seller-kiosks-page .kiosk-card-location {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-  gap: 1.5rem;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 1.25rem 1.5rem;
   align-items: start;
+  margin-bottom: 1rem;
 }
 
-@media (max-width: 900px) {
-  .seller-kiosks-page .kiosk-form-grid {
-    grid-template-columns: 1fr;
+.seller-kiosks-page .kiosk-card-information .kiosk-card-header {
+  margin-bottom: 1rem;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.seller-kiosks-page .kiosk-map-column {
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px solid var(--color-workspace-divider, #dce6d7);
+  border-radius: var(--radius-workspace-panel, 12px);
+  background: #f7faf6;
+}
+
+.seller-kiosks-page .kiosk-map-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem 0.75rem;
+  min-height: 44px;
+  margin-bottom: 0.25rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+@media (max-width: 1050px) {
+  .seller-kiosks-page .kiosk-card-location {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -499,10 +502,6 @@
   margin: 0;
 }
 
-.seller-kiosks-page .kiosk-preview-link-wrap {
-  margin-top: 0.25rem;
-}
-
 .seller-kiosks-page .kiosk-external-link {
   display: inline-flex;
   align-items: center;
@@ -532,7 +531,7 @@
 
 .seller-kiosks-page .kiosk-picker-map {
   width: 100%;
-  height: 350px;
+  height: clamp(220px, 24vw, 320px);
   border-radius: var(--radius-workspace-control, 8px);
   border: 1px solid var(--color-workspace-line, #c9d9c8);
   background: #eaf0e8;
@@ -623,39 +622,6 @@
   font-size: 0.8rem;
   font-weight: 500;
   color: var(--color-workspace-ink, #183e2b);
-}
-
-/* Coordinates Summary Box */
-.seller-kiosks-page .kiosk-coords-summary {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  background: #f7faf6;
-  border: 1px solid #d8e5d5;
-  border-radius: var(--radius-workspace-control, 8px);
-}
-
-.seller-kiosks-page .kiosk-coord-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.84rem;
-}
-
-.seller-kiosks-page .kiosk-coord-label {
-  color: var(--color-workspace-muted, #476451);
-  font-weight: 500;
-}
-
-.seller-kiosks-page .kiosk-coord-val {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-weight: 600;
-  color: var(--color-workspace-ink, #183e2b);
-  background: #eaf2e8;
-  padding: 0.1rem 0.4rem;
-  border-radius: 4px;
 }
 
 /* Enhanced Disclaimer Note */
