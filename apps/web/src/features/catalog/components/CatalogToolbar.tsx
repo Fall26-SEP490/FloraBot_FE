@@ -57,6 +57,7 @@ export function CatalogToolbar({
             onChange={(e) => onSortChange(e.target.value as SortOption)}
           >
             <option value="default">Sắp xếp: Mặc định</option>
+            <option value="nearest">Khoảng cách: Gần nhất</option>
             <option value="price-asc">Giá: Thấp đến cao</option>
             <option value="price-desc">Giá: Cao đến thấp</option>
             <option value="name-asc">Tên: A – Z</option>

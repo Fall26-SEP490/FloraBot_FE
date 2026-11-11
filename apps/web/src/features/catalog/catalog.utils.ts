@@ -91,8 +91,26 @@ export function filterCatalogItems(items: CatalogItem[], criteria: FilterCriteri
   });
 }
 
-export function sortCatalogItems(items: CatalogItem[], sortBy: SortOption): CatalogItem[] {
+export function sortCatalogItems(
+  items: CatalogItem[],
+  sortBy: SortOption,
+  distances?: ReadonlyMap<string, number>,
+): CatalogItem[] {
   return [...items].sort((a, b) => {
+    if (sortBy === 'nearest') {
+      const first = distances?.get(a.kioskId);
+      const second = distances?.get(b.kioskId);
+      const firstDistance =
+        first !== undefined && Number.isFinite(first) && first >= 0
+          ? first
+          : Number.POSITIVE_INFINITY;
+      const secondDistance =
+        second !== undefined && Number.isFinite(second) && second >= 0
+          ? second
+          : Number.POSITIVE_INFINITY;
+      if (firstDistance !== secondDistance) return firstDistance - secondDistance;
+      return a.kioskId.localeCompare(b.kioskId) || a.productId.localeCompare(b.productId);
+    }
     if (sortBy === 'price-asc') return a.price - b.price;
     if (sortBy === 'price-desc') return b.price - a.price;
     if (sortBy === 'name-asc') return a.name.localeCompare(b.name, 'vi');

@@ -11,7 +11,10 @@ import type {
 } from '../catalog.types';
 import { computeFilterCounts, filterCatalogItems, sortCatalogItems } from '../catalog.utils';
 
-export function useCatalogFilters(rawItems: CatalogItem[]) {
+export function useCatalogFilters(
+  rawItems: CatalogItem[],
+  distances?: ReadonlyMap<string, number>,
+) {
   const searchParams = useSearchParams();
   const state = readCatalogQuery(new URLSearchParams(searchParams.toString()));
   const {
@@ -57,8 +60,8 @@ export function useCatalogFilters(rawItems: CatalogItem[]) {
   );
 
   const displayedItems = useMemo(
-    () => sortCatalogItems(filteredItems, sortBy),
-    [filteredItems, sortBy],
+    () => sortCatalogItems(filteredItems, sortBy, distances),
+    [filteredItems, sortBy, distances],
   );
 
   const counts = useMemo(() => computeFilterCounts(rawItems), [rawItems]);

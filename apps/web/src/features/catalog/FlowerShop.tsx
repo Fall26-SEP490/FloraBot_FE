@@ -7,6 +7,9 @@ import { request, sessionQuery } from '@/shared/lib/api';
 import { MOCK_CATALOG_ITEMS } from '@/features/catalog/mocks/mockCatalog';
 import type { CatalogItem, CatalogResponse } from './catalog.types';
 import { canOrderOnWeb } from './catalog.utils';
+import { Button } from '@florabot/ui';
+import { fetchPublicKiosks } from '../kiosk-location/kiosk-location.api';
+import { isValidLatitude, isValidLongitude } from '../kiosk-location/kiosk-location.utils';
 import { CatalogEmptyState } from './components/CatalogEmptyState';
 import { CatalogGrid } from './components/CatalogGrid';
 import { CatalogSearchBar } from './components/CatalogSearchBar';
@@ -54,12 +57,61 @@ export default function FlowerShop() {
     return catalog.data ?? [];
   }, [catalog.data, demoEnabled]);
 
-  // Hook owns filters state and derived items
-  const filters = useCatalogFilters(rawItems);
+  const [origin, setOrigin] = useState<GeolocationCoordinates | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState(false);
+  const directory = useQuery({
+    queryKey: ['public-kiosks'],
+    queryFn: fetchPublicKiosks,
+    enabled: origin !== null,
+    staleTime: 60_000,
+  });
+  const distances = useMemo(() => {
+    const result = new Map<string, number>();
+    if (!origin) return result;
+    const radians = Math.PI / 180;
+    for (const kiosk of directory.data ?? []) {
+      if (!isValidLatitude(kiosk.latitude) || !isValidLongitude(kiosk.longitude)) continue;
+      const latitudeDelta = (kiosk.latitude - origin.latitude) * radians;
+      const longitudeDelta = (kiosk.longitude - origin.longitude) * radians;
+      // Haversine's central-angle score preserves distance order without rounding.
+      result.set(
+        kiosk.id,
+        Math.sin(latitudeDelta / 2) ** 2 +
+          Math.cos(kiosk.latitude * radians) *
+            Math.cos(origin.latitude * radians) *
+            Math.sin(longitudeDelta / 2) ** 2,
+      );
+    }
+    return result;
+  }, [directory.data, origin]);
+
+  const filters = useCatalogFilters(rawItems, distances);
   const { search, setSearch, draft, setDraft } = filters;
   const page = Math.min(filters.page, Math.max(1, Math.ceil(filters.displayedItems.length / 12)));
   const catalogHref = catalogReturnPath('/dat-hoa?' + searchParams.toString());
   const pageItems = filters.displayedItems.slice((page - 1) * 12, page * 12);
+
+  function locate() {
+    setLocationError(false);
+    if (!navigator.geolocation) {
+      setLocationError(true);
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setOrigin(coords);
+        setLocating(false);
+        filters.setSortBy('nearest');
+      },
+      () => {
+        setLocating(false);
+        setLocationError(true);
+      },
+      { timeout: 10_000, maximumAge: 60_000 },
+    );
+  }
 
   // Resume "Nhắn tin với shop" after returning from login
   useEffect(() => {
@@ -128,6 +180,28 @@ export default function FlowerShop() {
           onClear={handleSearchClear}
         />
       </header>
+      <div className="stock-actions">
+        <Button type="button" variant="outline" disabled={locating} onClick={locate}>
+          {locating ? 'Đang lấy vị trí…' : 'Xếp hoa gần tôi'}
+        </Button>
+        {locating && <p role="status">Đang xác định vị trí của bạn…</p>}
+        {origin && directory.isPending && <p role="status">Đang tìm khoảng cách tới các kiosk…</p>}
+        {(locationError || directory.isError) && (
+          <p role="status">
+            Chưa lấy được vị trí hoặc tọa độ kiosk. Bạn vẫn có thể chọn hoa và sắp xếp theo giá,
+            tên.
+          </p>
+        )}
+        {!origin && filters.sortBy === 'nearest' && !locating && !locationError && (
+          <p role="status">Bấm “Xếp hoa gần tôi” và cho phép vị trí để sắp xếp theo khoảng cách.</p>
+        )}
+        {origin && directory.isSuccess && filters.sortBy === 'nearest' && distances.size > 0 && (
+          <p role="status">Ưu tiên hoa tại các kiosk gần bạn còn chỗ PREORDER.</p>
+        )}
+        {origin && directory.isSuccess && distances.size === 0 && (
+          <p role="status">Chưa có tọa độ kiosk để tính khoảng cách. Bạn vẫn có thể chọn hoa.</p>
+        )}
+      </div>
 
       <ChatNoticeDialog
         notice={chatNotice}
@@ -173,7 +247,10 @@ export default function FlowerShop() {
               displayedCount={filters.displayedItems.length}
               searchQuery={search}
               sortBy={filters.sortBy}
-              onSortChange={filters.setSortBy}
+              onSortChange={(value) => {
+                if (value === 'nearest' && !origin) locate();
+                else filters.setSortBy(value);
+              }}
             />
           )}
 

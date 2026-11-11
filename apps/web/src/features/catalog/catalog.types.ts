@@ -26,7 +26,7 @@ export type CatalogResponse = {
 
 export type PriceFilter = 'all' | 'under300' | '300to600' | '600to1000' | 'over1000';
 export type AvailabilityFilter = 'all' | 'stock' | 'custom';
-export type SortOption = 'default' | 'price-asc' | 'price-desc' | 'name-asc';
+export type SortOption = 'default' | 'price-asc' | 'price-desc' | 'name-asc' | 'nearest';
 
 export interface CatalogFilterState {
   search: string;

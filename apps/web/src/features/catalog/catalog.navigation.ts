@@ -31,7 +31,11 @@ export function readCatalogQuery(params: URLSearchParams) {
       'all',
     ),
     availabilityFilter: pick<AvailabilityFilter>('mode', ['all', 'stock', 'custom'], 'all'),
-    sortBy: pick<SortOption>('sort', ['default', 'price-asc', 'price-desc', 'name-asc'], 'default'),
+    sortBy: pick<SortOption>(
+      'sort',
+      ['default', 'price-asc', 'price-desc', 'name-asc', 'nearest'],
+      'default',
+    ),
     occasionFilter: text('occasion') || 'all',
     shopFilter: text('shop') || 'all',
     kioskFilter: text('kiosk') || 'all',
