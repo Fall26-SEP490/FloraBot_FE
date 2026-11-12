@@ -2,6 +2,9 @@ import { expect, test } from '@playwright/test';
 
 test('Seller staff fulfills only paid preorder into a PREORDER slot', async ({ page }) => {
   let writes = 0;
+  let issued = 0;
+  const clockStart = new Date();
+  await page.clock.install({ time: clockStart });
   await page.route('**/api/auth/me', (route) =>
     route.fulfill({
       json: { id: 'staff-1', name: 'Nhân viên Hoa', role: 'SELLER_STAFF', sellerId: 'shop-1' },
@@ -57,14 +60,20 @@ test('Seller staff fulfills only paid preorder into a PREORDER slot', async ({ p
     expect(route.request().postDataJSON()).toEqual({
       slotId: 'slot-p',
       qrCode: 'BOUQUET-001',
-      loadingAccessId: 'access-1',
+      loadingAccessId: 'access-2',
     });
     return route.fulfill({ json: { requestId: 'order-1', bouquetId: 'bouquet-1' } });
   });
   await page.route('**/api/staff/tasks/task-1/preorders/order-1/loading-access', (route) => {
     expect(route.request().postDataJSON()).toEqual({ slotId: 'slot-p' });
+    issued++;
     return route.fulfill({
-      json: { id: 'access-1', resendAfterSeconds: 30, requiresCode: true },
+      json: {
+        id: `access-${issued}`,
+        expiresAt: new Date(clockStart.getTime() + (issued === 1 ? 30_000 : 300_000)).toISOString(),
+        resendAfterSeconds: 0,
+        requiresCode: issued === 1,
+      },
     });
   });
   await page.goto('/staff');
@@ -82,6 +91,13 @@ test('Seller staff fulfills only paid preorder into a PREORDER slot', async ({ p
   await expect(page.getByRole('button', { name: 'Xác nhận đã nạp vào ô' })).toBeDisabled();
   await page.getByRole('button', { name: 'Yêu cầu mở ô', exact: true }).click();
   await expect(page.getByText(/Mã đã gửi qua email/)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Xác nhận đã nạp vào ô' })).toBeEnabled();
+  await page.clock.fastForward(31_000);
+  await expect(page.getByText(/Đã hết thời hạn xác nhận/)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Xác nhận đã nạp vào ô' })).toBeDisabled();
+  expect(writes).toBe(0);
+  await page.getByRole('button', { name: 'Yêu cầu mở ô lại', exact: true }).click();
+  await expect(page.getByText(/Đang có lượt nạp tại ô này/)).toBeVisible();
   await page.getByRole('button', { name: 'Xác nhận đã nạp vào ô' }).click();
   await expect(page.getByText('Đã ghi nhận hoa của đơn vào ô PREORDER.')).toBeVisible();
   expect(writes).toBe(1);

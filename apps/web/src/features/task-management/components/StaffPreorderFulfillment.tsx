@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import { ApiError, queryClient, request } from '@/shared/lib/api';
 import PreorderLoadingButton from '@/features/orders/PreorderLoadingButton';
+import { usePreorderLoadingAccess } from '@/features/orders/usePreorderLoadingAccess';
 
 type Preorder = {
   requestId: string;
@@ -24,7 +25,12 @@ export default function StaffPreorderFulfillment({
   const [requestId, setRequestId] = useState('');
   const [slotId, setSlotId] = useState('');
   const [qrCode, setQrCode] = useState('');
-  const [loadingAccessId, setLoadingAccessId] = useState('');
+  const {
+    setAccess: setLoadingAccess,
+    expired: loadingAccessExpired,
+    loadingAccessId,
+    getCurrentAccessId,
+  } = usePreorderLoadingAccess();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -39,14 +45,18 @@ export default function StaffPreorderFulfillment({
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy || uncertain || !active) return;
+    const loadingAccessId = getCurrentAccessId();
     if (
       !options.data?.preorders.some((order) => order.requestId === requestId) ||
       !validSlots.some((slot) => slot.id === slotId) ||
-      !loadingAccessId ||
       !qrCode.trim() ||
       qrCode.trim().length > 120
     ) {
       setError('Chọn đơn đã thanh toán, ô PREORDER trống và nhập mã QR hợp lệ.');
+      return;
+    }
+    if (!loadingAccessId) {
+      setError('Yêu cầu mã mở ô còn hiệu lực trước khi xác nhận nạp hoa.');
       return;
     }
     setBusy(true);
@@ -61,7 +71,7 @@ export default function StaffPreorderFulfillment({
       setRequestId('');
       setSlotId('');
       setQrCode('');
-      setLoadingAccessId('');
+      setLoadingAccess(null);
       setNotice('Đã ghi nhận hoa của đơn vào ô PREORDER.');
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['staff-preorders', taskId] }),
@@ -108,7 +118,7 @@ export default function StaffPreorderFulfillment({
             value={requestId}
             onChange={(event) => {
               setRequestId(event.target.value);
-              setLoadingAccessId('');
+              setLoadingAccess(null);
             }}
             required
             disabled={busy || uncertain}
@@ -127,7 +137,7 @@ export default function StaffPreorderFulfillment({
             value={slotId}
             onChange={(event) => {
               setSlotId(event.target.value);
-              setLoadingAccessId('');
+              setLoadingAccess(null);
             }}
             required
             disabled={busy || uncertain}
@@ -157,7 +167,9 @@ export default function StaffPreorderFulfillment({
               key={`${requestId}:${slotId}`}
               path={`/staff/tasks/${taskId}/preorders/${requestId}/loading-access`}
               slotId={slotId}
-              onAccess={setLoadingAccessId}
+              onAccess={setLoadingAccess}
+              expired={loadingAccessExpired}
+              disabled={busy || uncertain || !validSlots.some((slot) => slot.id === slotId)}
             />
           )}
           <Button

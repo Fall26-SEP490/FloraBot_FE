@@ -99,7 +99,9 @@ export async function request<T>(
         ? 'Shop chưa cấu hình kênh nhận tiền PayOS. Bạn chưa bị tính tiền; vui lòng liên hệ shop.'
         : problem.detail === 'channel_not_active' || problem.detail === 'seller_channel_unavailable'
           ? 'Kênh nhận tiền của shop chưa sẵn sàng. Bạn chưa bị tính tiền; hãy thử lại sau.'
-          : problem.detail === 'legacy_checkout' || problem.detail === 'checkout_not_payable'
+          : problem.detail === 'legacy_checkout' ||
+              problem.detail === 'checkout_not_payable' ||
+              problem.detail === 'receiver_account_mismatch'
             ? problem.title
             : problem.detail) ||
         problem.error ||

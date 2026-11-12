@@ -40,6 +40,7 @@ import { CustomerQuoteDetails, CustomerPaymentReturn } from './CustomerQuoteDeta
 import CustomerPickupGuide from './CustomerPickupGuide';
 import CustomerOrderChat from './CustomerOrderChat';
 import PreorderLoadingButton from './PreorderLoadingButton';
+import { usePreorderLoadingAccess } from './usePreorderLoadingAccess';
 import AssignPreorderStock from './AssignPreorderStock';
 import { readSellerQueue, sellerQueueKey, SELLER_RESULT_SIZE } from './seller-queue';
 import { rememberPreorderPayment } from './payment-return';
@@ -121,7 +122,12 @@ function OrderActions({
   });
   const [slot, setSlot] = useState('');
   const [qr, setQr] = useState('');
-  const [loadingAccessId, setLoadingAccessId] = useState('');
+  const {
+    setAccess: setLoadingAccess,
+    expired: loadingAccessExpired,
+    loadingAccessId,
+    getCurrentAccessId,
+  } = usePreorderLoadingAccess();
   const [fulfillStep, setFulfillStep] = useState<1 | 2>(1);
   const [confirm, setConfirm] = useState(false);
   const [reviewedQuote, setReviewedQuote] = useState<{
@@ -232,7 +238,9 @@ function OrderActions({
     slots.data?.filter(
       (item) => item.kioskId === row.kioskId && item.status === 'RENTED_EMPTY' && !item.bouquetId,
     ) ?? [];
-  const fulfillSlots = emptyKioskSlots.filter((item) => item.zone === 'PREORDER');
+  const fulfillSlots = emptyKioskSlots.filter(
+    (item) => item.zone === 'PREORDER' && item.sensorReady,
+  );
   async function send(kind: string, body: unknown) {
     if (mode === 'admin') return;
     if (sending.current || uncertain) return;
@@ -536,7 +544,7 @@ function OrderActions({
                   setAction('fulfill');
                   setConfirm(false);
                   setFulfillStep(1);
-                  setLoadingAccessId('');
+                  setLoadingAccess(null);
                   setError('');
                 }}
               >
@@ -596,8 +604,9 @@ function OrderActions({
                 reject,
               });
             if (action === 'fulfill') {
+              const loadingAccessId = getCurrentAccessId();
               if (!loadingAccessId) {
-                setError('Yêu cầu mã mở ô trước khi xác nhận nạp.');
+                setError('Yêu cầu mã mở ô còn hiệu lực trước khi xác nhận nạp hoa.');
                 return;
               }
               void send('fulfill', { slotId: slot, qrCode: qr, loadingAccessId });
@@ -715,7 +724,7 @@ function OrderActions({
                   value={slot}
                   onChange={(event) => {
                     setSlot(event.target.value);
-                    setLoadingAccessId('');
+                    setLoadingAccess(null);
                   }}
                 >
                   <option value="">Chọn ô Pre-order trống</option>
@@ -741,7 +750,9 @@ function OrderActions({
                   )}
                 {slots.isError && <p role="alert">Chưa tải được ô. Đóng biểu mẫu rồi mở lại.</p>}
                 {!slots.isPending && !slots.isError && fulfillSlots.length === 0 && (
-                  <p className="quiet">Chưa có ô Pre-order trống phù hợp tại tủ nhận.</p>
+                  <p className="quiet">
+                    Chưa có ô Pre-order trống với cảm biến sẵn sàng tại tủ nhận.
+                  </p>
                 )}
                 <label htmlFor={`order-qr-${row.id}`}>Mã QR của bó hoa</label>
                 <div className="field-action">
@@ -791,7 +802,9 @@ function OrderActions({
                   key={slot}
                   path={`/me/preorders/${row.id}/loading-access`}
                   slotId={slot}
-                  onAccess={setLoadingAccessId}
+                  onAccess={setLoadingAccess}
+                  expired={loadingAccessExpired}
+                  disabled={!fulfillSlots.some((item) => item.id === slot)}
                 />
               </div>
             )}
@@ -836,7 +849,8 @@ function OrderActions({
                   type="submit"
                   disabled={
                     busy ||
-                    (action === 'fulfill' && !loadingAccessId) ||
+                    (action === 'fulfill' &&
+                      (!loadingAccessId || !fulfillSlots.some((item) => item.id === slot))) ||
                     (mode === 'member' &&
                       action === 'accept' &&
                       (!confirm || quoteExpired || !hasQuotedPrice || reviewedQuoteChanged))

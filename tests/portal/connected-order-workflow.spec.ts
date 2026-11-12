@@ -108,6 +108,16 @@ async function common(
                       zone: 'PREORDER',
                       status: 'RENTED_EMPTY',
                       bouquetId: null,
+                      sensorReady: true,
+                    },
+                    {
+                      id: 'slot-sensor-not-ready',
+                      kioskId,
+                      slotCode: 'P02',
+                      zone: 'PREORDER',
+                      status: 'RENTED_EMPTY',
+                      bouquetId: null,
+                      sensorReady: false,
                     },
                   ]
                 : path === '/member/history'
@@ -247,7 +257,12 @@ test('Customer request → seller quote → customer acceptance/payment → sell
         };
       if (path.endsWith('/loading-access')) {
         expect(body.slotId).toBe(slotId);
-        return { id: 'loading-access-1', resendAfterSeconds: 30, requiresCode: true };
+        return {
+          id: 'loading-access-1',
+          expiresAt: new Date(Date.now() + 300_000).toISOString(),
+          resendAfterSeconds: 30,
+          requiresCode: true,
+        };
       }
       if (path.endsWith('/fulfill')) {
         expect(body.slotId).toBe(slotId);
@@ -331,6 +346,9 @@ test('Customer request → seller quote → customer acceptance/payment → sell
   await page.locator('details[id^="preorder-"] > summary').click();
   await page.getByRole('button', { name: 'Nạp hoa cho đơn này' }).click();
   await expect(page.getByRole('button', { name: 'Tiếp tục kiểm tra' })).toBeDisabled();
+  await expect(
+    page.getByLabel('Ô trống tại tủ nhận').locator('option[value="slot-sensor-not-ready"]'),
+  ).toHaveCount(0);
   await page.getByLabel('Ô trống tại tủ nhận').selectOption(slotId);
   await page.getByLabel('Mã QR của bó hoa').fill('TEST-BOUQUET-01');
   await page.getByRole('button', { name: 'Tiếp tục kiểm tra' }).click();
