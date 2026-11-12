@@ -6,7 +6,7 @@ export const KIOSK_STATUS_LABELS: Record<string, string> = {
   SCHEDULED: 'Đã xếp lịch lắp đặt',
   INSTALLING: 'Đang lắp đặt tại điểm',
   AWAITING_HANDOVER: 'Chờ nghiệm thu bàn giao',
-  ACTIVE: 'Đang hoạt động (Chủ shop)',
+  ACTIVE: 'Đã bàn giao',
   CANCELLED: 'Đã hủy',
   REJECTED: 'Đã từ chối',
   REFUND_PENDING: 'Đang xử lý hoàn tiền',

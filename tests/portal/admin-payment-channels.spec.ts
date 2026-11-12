@@ -72,3 +72,45 @@ for (const width of [390, 1440]) {
     await expect(verify).toBeHidden();
   });
 }
+
+test('Admin sees the backend channel rebind reason and can retry verification', async ({
+  page,
+}) => {
+  await page.route('**/api/auth/me', (route) =>
+    route.fulfill({ json: { id: 'admin-user', name: 'Admin', role: 'ADMIN' } }),
+  );
+  await page.route('**/api/admin/payment-channels', (route) =>
+    route.fulfill({
+      json: [
+        {
+          sellerId,
+          shopName: 'Shop thử nghiệm',
+          currentVersion: 2,
+          state: 'PENDING_VERIFICATION',
+          expectedBankBin: '9704',
+          expectedBankAccountMasked: '***1234',
+          expectedBankName: 'Ngân hàng thử nghiệm',
+          verifiedAt: null,
+          updatedAt: '2026-11-12T00:00:00Z',
+        },
+      ],
+    }),
+  );
+  let attempts = 0;
+  await page.route(`**/api/sellers/${sellerId}/payment-channel/verify`, (route) => {
+    attempts++;
+    return route.fulfill({
+      status: 503,
+      json: { title: 'Cấu hình kênh đã thay đổi. Cần gắn lại phiên bản mới.' },
+    });
+  });
+  await page.goto('/admin/payment-channels');
+  const verify = page.getByRole('button', { name: 'Xác thực kênh của Shop thử nghiệm' });
+  await verify.click();
+  await expect(page.getByRole('main').getByRole('alert')).toContainText(
+    'Cấu hình kênh đã thay đổi. Cần gắn lại phiên bản mới.',
+  );
+  await expect(page.getByText('Đã kích hoạt', { exact: true })).toHaveCount(0);
+  await expect(verify).toBeEnabled();
+  expect(attempts).toBe(1);
+});

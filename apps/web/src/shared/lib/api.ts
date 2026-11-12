@@ -105,6 +105,7 @@ export async function request<T>(
         problem.error ||
         firstValidationError ||
         problem.message ||
+        problem.title ||
         (response.status === 401
           ? default401
           : response.status === 403

@@ -130,7 +130,7 @@ describe('Annual Kiosk Onboarding Unit Tests', () => {
       expect(KIOSK_STATUS_LABELS.SCHEDULED).toBe('Đã xếp lịch lắp đặt');
       expect(KIOSK_STATUS_LABELS.INSTALLING).toBe('Đang lắp đặt tại điểm');
       expect(KIOSK_STATUS_LABELS.AWAITING_HANDOVER).toBe('Chờ nghiệm thu bàn giao');
-      expect(KIOSK_STATUS_LABELS.ACTIVE).toBe('Đang hoạt động (Chủ shop)');
+      expect(KIOSK_STATUS_LABELS.ACTIVE).toBe('Đã bàn giao');
       expect(KIOSK_STATUS_LABELS.REFUND_PENDING).toBe('Đang xử lý hoàn tiền');
       expect(KIOSK_STATUS_LABELS.REFUNDED).toBe('Đã hoàn tiền');
     });
