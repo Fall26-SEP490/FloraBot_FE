@@ -90,6 +90,7 @@ export function TaskItem({
       inventory.isError ||
       (!!inventory.data && inventory.data.sessionStage !== 'Completed'));
   const canEditInstructions =
+    !readOnly &&
     !isWorker &&
     ['ASSIGNED', 'IN_PROGRESS'].includes(task.status) &&
     (role === 'ADMIN' ||
@@ -98,7 +99,7 @@ export function TaskItem({
 
   async function saveInstructions(event: React.FormEvent) {
     event.preventDefault();
-    if (busy || uncertain) return;
+    if (!canEditInstructions || busy || uncertain || needsLatestVersion) return;
     const trimmed = instructionsDraft.trim();
     if (trimmed.length < 10 || trimmed.length > 2000) {
       setError('Hướng dẫn công việc cần từ 10 đến 2.000 ký tự.');
@@ -118,6 +119,10 @@ export function TaskItem({
       setEditingInstructions(false);
       await queryClient.invalidateQueries({ queryKey: ['staff-tasks'] });
     } catch (cause) {
+      if (cause instanceof ApiError && cause.status === 409) {
+        setConflictVersion(task.version);
+        return;
+      }
       setError(
         cause instanceof ApiError ? cause.message : 'Chưa cập nhật được hướng dẫn công việc.',
       );
@@ -380,7 +385,9 @@ export function TaskItem({
                 <Button
                   type="submit"
                   variant="outline"
-                  disabled={busy || instructionsDraft.trim().length < 10}
+                  disabled={
+                    busy || uncertain || needsLatestVersion || instructionsDraft.trim().length < 10
+                  }
                 >
                   {busy ? 'Đang lưu…' : 'Lưu hướng dẫn'}
                 </Button>

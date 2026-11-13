@@ -91,7 +91,7 @@ export function TaskManagement(props: StaffTasksProps) {
       : role === 'SELLER'
         ? 'Phân công giao hoa cho nhân viên shop và theo dõi tiến độ nạp hoa tại tủ.'
         : role === 'ADMIN'
-          ? 'Theo dõi công việc toàn hệ thống và cập nhật hướng dẫn khi công việc đang mở. Quản lý vận hành và chủ shop phụ trách phân công và duyệt báo cáo.'
+          ? 'Theo dõi công việc toàn hệ thống ở chế độ chỉ đọc. Quản lý vận hành và chủ shop phụ trách cập nhật hướng dẫn, phân công và duyệt báo cáo.'
           : role === 'TECHNICIAN'
             ? 'Bắt đầu công việc, ghi nhận kết quả và gửi báo cáo để Quản lý vận hành duyệt.'
             : 'Bắt đầu công việc, nạp hoa vào ô tủ và gửi báo cáo để chủ shop theo dõi.';
