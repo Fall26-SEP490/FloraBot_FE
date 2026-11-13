@@ -11,7 +11,6 @@ import ReportFault from '../incidents/ReportFault';
 import ReturnFlowers from '../orders/ReturnFlowers';
 import RemoveSlotBouquet from './RemoveSlotBouquet';
 import SlotMaintenance, { startMaintenance } from './SlotMaintenance';
-import type { MaintenanceAccess } from './MaintenanceCode';
 import AssignInventoryTask from './AssignInventoryTask';
 import SellerRepairApprovals from './SellerRepairApprovals';
 import { Modal } from '@/shared/components/Modal';
@@ -386,10 +385,10 @@ export default function SellerStock({ session }: { session: Session }) {
   const [message, setMessage] = useState('');
   const [stockReason, setStockReason] = useState('Nạp hoa bán trực tiếp');
   const [detailSlotId, setDetailSlotId] = useState<string | null>(null);
-  const [loadAccess, setLoadAccess] = useState<{
+  const [loadSession, setLoadSession] = useState<{
     kioskId: string;
     slotId: string;
-    access: MaintenanceAccess;
+    sessionId: string;
   }>();
   const closeSlotDetails = useCallback(() => setDetailSlotId(null), []);
   const notice = useRef<HTMLParagraphElement>(null);
@@ -432,14 +431,14 @@ export default function SellerStock({ session }: { session: Session }) {
       if (slot.sensorEnabled) {
         if (!slot.sensorReady)
           throw new Error('Ô chưa được admin xác minh đủ cảm biến cửa và hoa.');
-        const access = await startMaintenance({
+        const maintenance = await startMaintenance({
           kioskId: selectedKioskId,
           slot,
           action: 'LOAD',
           productId: values.productId,
           reason: stockReason,
         });
-        return { kind: 'maintenance' as const, access };
+        return { kind: 'maintenance' as const, sessionId: maintenance.id };
       }
       await request('/me/flows/stock_bouquet', {
         productId: values.productId,
@@ -451,10 +450,12 @@ export default function SellerStock({ session }: { session: Session }) {
       const slot = slots.data?.find((item) => item.id === values.slotId);
       const product = products.data?.find((item) => item.id === values.productId);
       if (result.kind === 'maintenance') {
-        setLoadAccess({ kioskId: selectedKioskId, slotId: values.slotId, access: result.access });
-        setMessage(
-          `Đã cấp mã nạp hoa cho ô ${slot?.slotCode || ''}. Xem mã và tiến độ trong chi tiết ô.`,
-        );
+        setLoadSession({
+          kioskId: selectedKioskId,
+          slotId: values.slotId,
+          sessionId: result.sessionId,
+        });
+        setMessage(`Đã gửi yêu cầu mở ô ${slot?.slotCode || ''}. Xem tiến độ trong chi tiết ô.`);
         setDetailSlotId(values.slotId);
       } else {
         setMessage(
@@ -676,8 +677,8 @@ export default function SellerStock({ session }: { session: Session }) {
               <div>
                 <h3>Nạp hoa vào tủ</h3>
                 <p>
-                  Chọn ô Walk-in trống và mẫu hoa. Ô có cảm biến sẽ mở cửa và xác nhận sau khi đặt
-                  hoa thật.
+                  Chọn ô Walk-in trống và mẫu hoa. Với ô có cảm biến, chỉ gửi yêu cầu mở khi bạn
+                  đang ở tủ.
                 </p>
               </div>
               <span className="stock-form-badge">Walk-in</span>
@@ -815,7 +816,7 @@ export default function SellerStock({ session }: { session: Session }) {
                     {stock.isPending
                       ? 'Đang xử lý…'
                       : selectedSlot?.sensorEnabled
-                        ? 'Lấy mã mở ô để nạp hoa'
+                        ? 'Mở ô để nạp hoa'
                         : 'Nạp hoa vào ô'}
                   </Button>
                 </div>
@@ -1020,13 +1021,13 @@ export default function SellerStock({ session }: { session: Session }) {
                       slot={detailSlot}
                       products={available}
                       canStock={canStock}
-                      loadAccess={
-                        loadAccess?.kioskId === selectedKioskId &&
-                        loadAccess.slotId === detailSlot.id
-                          ? loadAccess.access
+                      loadSessionId={
+                        loadSession?.kioskId === selectedKioskId &&
+                        loadSession.slotId === detailSlot.id
+                          ? loadSession.sessionId
                           : undefined
                       }
-                      onLoadFinished={() => setLoadAccess(undefined)}
+                      onLoadFinished={() => setLoadSession(undefined)}
                     />
                   ) : (
                     <>

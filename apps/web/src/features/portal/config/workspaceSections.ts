@@ -89,6 +89,11 @@ export const workspaceSections = {
     ],
     ['tasks', 'Công việc kỹ thuật', 'Phân công sự cố và kiểm tra báo cáo của kỹ thuật viên.'],
     [
+      'maintenance-recovery',
+      'Phiên bảo trì hết hạn',
+      'Khôi phục các ô đang khóa sau khi kiểm tra tại tủ.',
+    ],
+    [
       'installations',
       'Hồ sơ thuê & Lắp đặt',
       'Tiếp nhận hồ sơ thuê kiosk, xác nhận liên hệ, phân công kỹ thuật và nghiệm thu bàn giao.',

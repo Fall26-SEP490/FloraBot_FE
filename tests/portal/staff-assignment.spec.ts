@@ -134,6 +134,24 @@ test('Shop Owner assigns DELIVERY to own seller staff and recovers the same requ
       expect(route.request().headers()['idempotency-key']).toMatch(/^[a-f0-9-]{36}$/);
       return route.fulfill({ json: { id: 'task-1' } });
     }
+    if (path === '/api/sellers/shop-lan/staff-tasks' && writes === 2)
+      return route.fulfill({
+        json: {
+          items: [
+            {
+              id: 'task-1',
+              version: 1,
+              kind: 'DELIVERY',
+              status: 'ASSIGNED',
+              kioskName: 'Tủ Landmark',
+              assigneeName: 'Nhân viên Lan Anh',
+              instructions: 'Giao 5 bó hồng pastel vào ô tủ Landmark',
+            },
+          ],
+          page: 1,
+          hasMore: false,
+        },
+      });
     if (/staff-tasks|preorders|products|accessories|wallet|subscriptions/.test(path))
       return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
     return route.fulfill({ json: [] });
@@ -174,6 +192,12 @@ test('Shop Owner assigns DELIVERY to own seller staff and recovers the same requ
     page.getByText('Đã phân công. Nhân viên sẽ thấy công việc trong tài khoản.'),
   ).toBeVisible();
   expect(writes).toBe(2);
+  const task = page.getByRole('article', { name: 'Giao hoa · Tủ Landmark' });
+  await expect(task.getByText('Chờ bắt đầu', { exact: true })).toBeVisible();
+  await expect(task.getByLabel('Bước tiếp theo')).toHaveCount(0);
+  await task.getByRole('button', { name: 'Hủy công việc', exact: true }).click();
+  await expect(task.getByLabel('Lý do hủy')).toBeVisible();
+  await expect(task.getByText('Chờ bắt đầu', { exact: true })).toBeVisible();
 
   // Reads are seller-scoped; task creation uses the token-scoped endpoint.
   expect(

@@ -7,6 +7,7 @@ const groups = [
     items: [
       { key: 'installations', title: 'Hồ sơ thuê & Lắp đặt', icon: Boxes },
       { key: 'tasks', title: 'Công việc kỹ thuật', icon: ClipboardList },
+      { key: 'maintenance-recovery', title: 'Phiên bảo trì hết hạn', icon: Boxes },
       { key: 'terminations', title: 'Chấm dứt thuê kiosk', icon: Boxes },
     ],
   },

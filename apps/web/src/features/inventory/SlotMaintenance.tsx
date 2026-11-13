@@ -3,7 +3,6 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import { queryClient, request } from '@/shared/lib/api';
 import type { SellerSlot } from './slot-state';
-import { MaintenanceCode, useMaintenanceCode, type MaintenanceAccess } from './MaintenanceCode';
 
 export type MaintenanceAction = 'LOAD' | 'REMOVE' | 'REPLACE';
 
@@ -34,8 +33,8 @@ export async function startMaintenance(input: {
   productId?: string | null;
   reason: string;
 }) {
-  return request<MaintenanceAccess>(
-    '/me/maintenance-access',
+  return request<MaintenanceSession>(
+    '/me/maintenance-open',
     {
       kioskId: input.kioskId,
       slotId: input.slot.id,
@@ -62,6 +61,7 @@ const stageLabels: Record<string, string> = {
   AwaitLoading: 'Đang chờ nạp hoa',
   NeedsInspection: 'Cần kiểm tra ô',
   Completed: 'Đã hoàn tất',
+  Recovered: 'Đã kết thúc sau kiểm tra',
 };
 
 export default function SlotMaintenance({
@@ -70,7 +70,7 @@ export default function SlotMaintenance({
   slot,
   products,
   canStock,
-  loadAccess,
+  loadSessionId,
   onLoadFinished,
 }: {
   sellerId: string;
@@ -78,10 +78,11 @@ export default function SlotMaintenance({
   slot: SellerSlot;
   products: { id: string; name: string }[];
   canStock: boolean;
-  loadAccess?: MaintenanceAccess;
+  loadSessionId?: string;
   onLoadFinished: () => void;
 }) {
   const [savedSessionId, setSavedSessionId] = useState<string | null>(() => {
+    if (loadSessionId) return loadSessionId;
     try {
       return typeof window === 'undefined'
         ? null
@@ -94,12 +95,6 @@ export default function SlotMaintenance({
   const [productId, setProductId] = useState('');
   const [reason, setReason] = useState('');
   const [issueReason, setIssueReason] = useState('');
-  const [issued, setIssued] = useState<{
-    access: MaintenanceAccess;
-    sessionSnapshot: string | null;
-  }>();
-  const access = useMaintenanceCode(issued?.access ?? loadAccess);
-
   const activeQueryKey = ['slot-maintenance-active', kioskId, slot.id];
   const activeSession = useQuery({
     queryKey: activeQueryKey,
@@ -110,49 +105,50 @@ export default function SlotMaintenance({
     enabled: !!slot.sensorEnabled && !savedSessionId,
     staleTime: Infinity,
     refetchInterval: (query) =>
-      query.state.data?.id ? false : access || slot.status === 'LOCKED' ? 4_000 : false,
+      query.state.data?.id ? false : slot.status === 'LOCKED' ? 4_000 : false,
   });
   const sessionId = savedSessionId || activeSession.data?.id || null;
   const session = useQuery({
     queryKey: ['slot-maintenance', kioskId, slot.id, sessionId],
     queryFn: () => request<MaintenanceSession>(maintenancePath(kioskId, slot.id, sessionId!)),
     enabled: !!sessionId,
-    refetchInterval: (query) => (query.state.data?.stage === 'Completed' ? false : 4_000),
+    refetchInterval: (query) =>
+      ['Completed', 'Recovered'].includes(query.state.data?.stage ?? '') ? false : 4_000,
   });
   const current = session.data;
-  const sessionSnapshot = current
-    ? [current.id, current.stage, current.substate, current.currentCmdId].join(':')
-    : null;
-  const matchesOperation = issued?.sessionSnapshot
-    ? sessionSnapshot === issued.sessionSnapshot
-    : !sessionId;
-  const visibleCode = matchesOperation ? access : undefined;
-
+  const sessionClosed = current?.stage === 'Completed' || current?.stage === 'Recovered';
+  const sessionExpired =
+    current?.stage === 'NeedsInspection' && current.inspectionReason === 'SessionExpired';
+  const waitingForDoor =
+    current?.substate === 'Initial' &&
+    !!current.currentCmdId &&
+    (current.stage === 'AwaitRemoval' || current.stage === 'AwaitLoading');
   useEffect(() => {
-    if (!current || current.stage === 'Completed') return;
+    if (!current || sessionClosed) return;
     try {
       window.localStorage.setItem(maintenanceKey(sellerId, kioskId, slot.id), current.id);
     } catch {
       // The active-session API can recover the session without browser storage.
     }
-  }, [current, sellerId, kioskId, slot.id]);
+  }, [current, sessionClosed, sellerId, kioskId, slot.id]);
 
   useEffect(() => {
-    if (session.data?.stage !== 'Completed') return;
+    if (!sessionClosed) return;
     try {
       window.localStorage.removeItem(maintenanceKey(sellerId, kioskId, slot.id));
     } catch {
-      // The completed session is still visible in query state.
+      // The closed session is still visible in query state.
     }
     void queryClient.invalidateQueries({ queryKey: ['seller-kiosk-slots', sellerId, kioskId] });
     void queryClient.invalidateQueries({ queryKey: ['products', sellerId] });
-  }, [session.data?.stage, sellerId, kioskId, slot.id]);
+  }, [sessionClosed, sellerId, kioskId, slot.id]);
 
   const start = useMutation({
     mutationFn: () => startMaintenance({ kioskId, slot, action, productId, reason }),
     onSuccess: (result) => {
-      setIssued({ access: result, sessionSnapshot: null });
-      void activeSession.refetch();
+      queryClient.setQueryData(['slot-maintenance', kioskId, slot.id, result.id], result);
+      setSavedSessionId(result.id);
+      void queryClient.invalidateQueries({ queryKey: ['seller-kiosk-slots', sellerId, kioskId] });
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['products', sellerId] }),
   });
@@ -166,7 +162,7 @@ export default function SlotMaintenance({
       ),
     onSuccess: (result) => {
       queryClient.setQueryData(['slot-maintenance', kioskId, slot.id, sessionId], result);
-      if (result.stage === 'Completed') {
+      if (result.stage === 'Completed' || result.stage === 'Recovered') {
         void queryClient.invalidateQueries({ queryKey: ['seller-kiosk-slots', sellerId, kioskId] });
       }
       setIssueReason('');
@@ -175,8 +171,8 @@ export default function SlotMaintenance({
   });
   const open = useMutation({
     mutationFn: (operation: 'OPEN_NEXT' | 'OPEN_FOR_CHECK' | 'RETRY') =>
-      request<MaintenanceAccess>(
-        '/me/maintenance-access',
+      request(
+        '/me/maintenance-open',
         {
           kioskId,
           slotId: slot.id,
@@ -188,13 +184,15 @@ export default function SlotMaintenance({
         true,
         'POST',
       ),
-    onSuccess: (result) => setIssued({ access: result, sessionSnapshot }),
+    onSuccess: async () => {
+      await session.refetch();
+    },
   });
 
   if (!slot.sensorEnabled) return null;
 
   const hasStoredSession = !!sessionId;
-  const active = current && current.stage !== 'Completed';
+  const active = current && !sessionClosed;
   const eligibleBouquet = !!slot.bouquetId && ['STOCKED', 'PENDING_REMOVAL'].includes(slot.status);
   const canStart =
     slot.zone === 'WALK_IN' &&
@@ -211,7 +209,9 @@ export default function SlotMaintenance({
         <h4>Bảo trì ô {slot.slotCode}</h4>
         <span className="stock-maintenance-chip">Có giám sát cảm biến</span>
       </div>
-      {visibleCode && <MaintenanceCode access={visibleCode} />}
+      {open.isSuccess && open.variables === 'RETRY' && (
+        <p role="status">Đã gửi yêu cầu thử lại. Chờ tủ phản hồi.</p>
+      )}
       {!slot.sensorReady && (
         <p role="note">
           Ô chưa được xác minh đủ cảm biến cửa và hoa. Liên hệ admin để kiểm tra trước khi thao tác.
@@ -246,16 +246,28 @@ export default function SlotMaintenance({
       {current && (
         <div className="stock-maintenance-progress" role="status">
           <strong>
-            {actionLabels[current.action]} · {stageLabels[current.stage] || current.stage}
+            {actionLabels[current.action]} ·{' '}
+            {sessionExpired
+              ? 'Phiên đã hết hạn'
+              : waitingForDoor
+                ? 'Đang chờ tủ xác nhận mở cửa'
+                : stageLabels[current.stage] || current.stage}
           </strong>
           <p>
-            {current.stage === 'Completed'
-              ? 'BE đã xác nhận cửa và cảm biến; thông tin ô đã được cập nhật.'
-              : current.stage === 'NeedsInspection'
-                ? `Chưa thể xác nhận kết quả. ${current.inspectionReason || 'Hãy kiểm tra ô và tín hiệu cảm biến.'}`
-                : current.action === 'REPLACE' && current.substate === 'RemovalClosedEmptyConfirmed'
-                  ? 'Hoa cũ đã được lấy ra. Mở cửa lần nữa để đặt hoa mới vào.'
-                  : 'Thao tác với hoa thật, đóng cửa ô, rồi chờ tín hiệu cảm biến. Trạng thái sẽ tự cập nhật.'}
+            {current.stage === 'Recovered'
+              ? 'Đội vận hành đã đối soát và cập nhật lại trạng thái ô.'
+              : sessionExpired
+                ? 'Ô vẫn khóa trong hệ thống vì phiên đã hết hạn mà chưa xác nhận được kết quả. Liên hệ đội vận hành để kiểm tra cửa và tình trạng hoa trong ô.'
+                : current.stage === 'Completed'
+                  ? 'Hệ thống đã xác nhận tín hiệu cửa và cảm biến, đồng thời cập nhật thông tin ô.'
+                  : current.stage === 'NeedsInspection'
+                    ? `Chưa thể xác nhận kết quả. ${current.inspectionReason || 'Hãy kiểm tra ô và tín hiệu cảm biến.'}`
+                    : current.action === 'REPLACE' &&
+                        current.substate === 'RemovalClosedEmptyConfirmed'
+                      ? 'Hoa cũ đã được lấy ra. Mở cửa lần nữa để đặt hoa mới vào.'
+                      : waitingForDoor
+                        ? 'Hệ thống đã tiếp nhận yêu cầu mở ô. Chờ cửa mở thực tế. Nếu cửa vẫn đóng, chọn “Kiểm tra tiến độ”.'
+                        : 'Thao tác với hoa thật, đóng cửa ô, rồi chờ tín hiệu cảm biến. Trạng thái sẽ tự cập nhật.'}
           </p>
           {active && (
             <p className="quiet">
@@ -275,11 +287,7 @@ export default function SlotMaintenance({
             Kiểm tra tiến độ
           </Button>
           {current.availableActions.includes('open-next') && (
-            <Button
-              type="button"
-              disabled={busy || !!visibleCode}
-              onClick={() => open.mutate('OPEN_NEXT')}
-            >
+            <Button type="button" disabled={busy} onClick={() => open.mutate('OPEN_NEXT')}>
               Mở cửa nạp hoa mới
             </Button>
           )}
@@ -287,22 +295,24 @@ export default function SlotMaintenance({
             <Button
               type="button"
               variant="outline"
-              disabled={busy || !!visibleCode || issueReason.trim().length < 5}
+              disabled={busy || issueReason.trim().length < 5}
               onClick={() => open.mutate('OPEN_FOR_CHECK')}
             >
               Mở cửa kiểm tra
             </Button>
           )}
-          {slot.manualRetryEnabled && current.currentCmdId && (
-            <Button
-              type="button"
-              variant="outline"
-              disabled={busy || !!visibleCode || (current.retryAfterSeconds ?? 0) > 0}
-              onClick={() => open.mutate('RETRY')}
-            >
-              Thử lại lệnh mở cửa
-            </Button>
-          )}
+          {slot.manualRetryEnabled &&
+            current.currentCmdId &&
+            (current.stage === 'AwaitRemoval' || current.stage === 'AwaitLoading') && (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={busy || (current.retryAfterSeconds ?? 0) > 0}
+                onClick={() => open.mutate('RETRY')}
+              >
+                Thử lại lệnh mở cửa
+              </Button>
+            )}
           {(current.availableActions.includes('report-issue') ||
             current.availableActions.includes('open-for-check')) && (
             <div className="stock-maintenance-issue">
@@ -330,13 +340,13 @@ export default function SlotMaintenance({
           )}
         </div>
       )}
-      {current?.stage === 'Completed' && (
+      {sessionClosed && (
         <Button
           type="button"
           variant="outline"
           onClick={() => {
             setSavedSessionId(null);
-            setIssued(undefined);
+            open.reset();
             onLoadFinished();
             queryClient.setQueryData(['slot-maintenance-active', kioskId, slot.id], null);
           }}
@@ -346,6 +356,7 @@ export default function SlotMaintenance({
       )}
       {!hasStoredSession && canStart && (
         <div className="stock-maintenance-start">
+          <p>Chỉ gửi yêu cầu mở ô khi bạn đang ở tủ.</p>
           <label htmlFor={`maintenance-action-${slot.id}`}>Thao tác</label>
           <select
             id={`maintenance-action-${slot.id}`}
@@ -382,16 +393,11 @@ export default function SlotMaintenance({
           />
           <Button
             type="button"
-            disabled={
-              busy ||
-              !!visibleCode ||
-              reason.trim().length < 5 ||
-              (action === 'REPLACE' && !productId)
-            }
+            disabled={busy || reason.trim().length < 5 || (action === 'REPLACE' && !productId)}
             onClick={() => start.mutate()}
           >
             {start.isPending
-              ? 'Đang lấy mã…'
+              ? 'Đang gửi yêu cầu mở ô…'
               : action === 'REPLACE'
                 ? 'Bắt đầu thay hoa'
                 : 'Bắt đầu thu hồi hoa'}

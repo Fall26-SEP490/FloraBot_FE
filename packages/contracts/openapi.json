@@ -10,6 +10,276 @@
     }
   ],
   "paths": {
+    "/api/me/maintenance-open": {
+      "post": {
+        "tags": [
+          "KioskOps"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MaintenanceAccessRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualUnlockRetryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/tasks/{taskId}/inventory-maintenance/open": {
+      "post": {
+        "tags": [
+          "KioskOps"
+        ],
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StaffInventoryOperation"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlotMaintenanceSessionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/operations/maintenance-recoveries": {
+      "get": {
+        "tags": [
+          "KioskOps"
+        ],
+        "summary": "Danh sách phiên bảo trì hết hạn thuộc phạm vi quản lý",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaintenanceRecoveryPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/api/operations/kiosks/{kioskId}/slots/{slotId}/maintenance-recovery": {
+      "get": {
+        "tags": [
+          "KioskOps"
+        ],
+        "summary": "Xem phiên bảo trì hết hạn của ô thuộc phạm vi quản lý",
+        "parameters": [
+          {
+            "name": "kioskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "slotId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaintenanceRecoveryCandidate"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/operations/kiosks/{kioskId}/slots/{slotId}/maintenance-recovery/{sessionId}": {
+      "post": {
+        "tags": [
+          "KioskOps"
+        ],
+        "summary": "Kết thúc phiên bảo trì hết hạn sau khi kiểm tra ô tại tủ",
+        "parameters": [
+          {
+            "name": "kioskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "slotId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecoverMaintenanceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaintenanceRecoveryResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -12370,6 +12640,16 @@
           "required": true
         },
         "responses": {
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "200": {
             "description": "OK",
             "content": {
@@ -15988,6 +16268,174 @@
   },
   "components": {
     "schemas": {
+      "MaintenanceRecoveryPage": {
+        "required": [
+          "items",
+          "hasMore"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MaintenanceRecoveryRow"
+            }
+          },
+          "hasMore": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MaintenanceRecoveryRow": {
+        "required": [
+          "kioskId",
+          "kioskCode",
+          "kioskName",
+          "slotId",
+          "slotCode",
+          "sessionId",
+          "action",
+          "bouquetId",
+          "expiresAt"
+        ],
+        "type": "object",
+        "properties": {
+          "kioskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kioskCode": {
+            "type": "string"
+          },
+          "kioskName": {
+            "type": "string"
+          },
+          "slotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slotCode": {
+            "type": "string"
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "action": {
+            "type": "string"
+          },
+          "bouquetId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MaintenanceRecoveryCandidate": {
+        "required": [
+          "sessionId",
+          "action",
+          "stage",
+          "bouquetId",
+          "expiresAt",
+          "commandId"
+        ],
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "action": {
+            "type": "string"
+          },
+          "stage": {
+            "type": "string"
+          },
+          "bouquetId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "commandId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RecoverMaintenanceRequest": {
+        "required": [
+          "confirmedDoorClosed",
+          "observedContents",
+          "expectedBouquetId",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "confirmedDoorClosed": {
+            "type": "boolean"
+          },
+          "observedContents": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "expectedBouquetId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "MaintenanceRecoveryResult": {
+        "required": [
+          "sessionId",
+          "stage",
+          "slotStatus"
+        ],
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "stage": {
+            "type": "string"
+          },
+          "slotStatus": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "AcceptedMaintenanceAccess": {
         "type": "object",
         "properties": {

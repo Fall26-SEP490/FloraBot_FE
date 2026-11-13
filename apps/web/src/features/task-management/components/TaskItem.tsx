@@ -49,9 +49,11 @@ export function TaskItem({
           : 'Xem chi tiết';
   const isManager = mode === 'manager';
   const [taskOpen, setTaskOpen] = useState(false);
+  const [showCancellation, setShowCancellation] = useState(false);
   const staffDelivery =
     isWorker && role === 'SELLER_STAFF' && !!actorId && task.kind === 'DELIVERY';
-  const inventory = useStaffInventoryMaintenance(task.id, actorId, staffDelivery);
+  const canWorkOnInventory = staffDelivery && task.status === 'IN_PROGRESS';
+  const inventory = useStaffInventoryMaintenance(task.id, actorId, canWorkOnInventory);
   const needsRepairContext =
     isTechnician && task.kind === 'INCIDENT' && task.status === 'IN_PROGRESS';
   const repairDetails = useQuery({
@@ -84,8 +86,7 @@ export function TaskItem({
   const [instructionsDraft, setInstructionsDraft] = useState(task.instructions);
   const [editingInstructions, setEditingInstructions] = useState(false);
   const waitingForInventory =
-    staffDelivery &&
-    task.status === 'IN_PROGRESS' &&
+    canWorkOnInventory &&
     (inventory.isPending ||
       inventory.isError ||
       (!!inventory.data && inventory.data.sessionStage !== 'Completed'));
@@ -130,21 +131,27 @@ export function TaskItem({
       setBusy(false);
     }
   }
-  const choices = readOnly
-    ? []
-    : isManager
-      ? task.status === 'SUBMITTED'
-        ? ['COMPLETED', 'IN_PROGRESS', 'CANCELLED']
-        : ['ASSIGNED', 'IN_PROGRESS'].includes(task.status)
-          ? ['CANCELLED']
-          : []
-      : isWorker
-        ? task.status === 'ASSIGNED'
-          ? ['IN_PROGRESS']
-          : task.status === 'IN_PROGRESS' && !waitingForInventory
-            ? ['SUBMITTED']
+  const sellerCanCancel =
+    !readOnly &&
+    isManager &&
+    role === 'SELLER' &&
+    ['ASSIGNED', 'IN_PROGRESS'].includes(task.status);
+  const choices =
+    readOnly || (sellerCanCancel && !showCancellation)
+      ? []
+      : isManager
+        ? task.status === 'SUBMITTED'
+          ? ['COMPLETED', 'IN_PROGRESS', 'CANCELLED']
+          : ['ASSIGNED', 'IN_PROGRESS'].includes(task.status)
+            ? ['CANCELLED']
             : []
-        : [];
+        : isWorker
+          ? task.status === 'ASSIGNED'
+            ? ['IN_PROGRESS']
+            : task.status === 'IN_PROGRESS' && !waitingForInventory
+              ? ['SUBMITTED']
+              : []
+          : [];
   async function refreshTask() {
     setBusy(true);
     setError('');
@@ -165,7 +172,7 @@ export function TaskItem({
   }
 
   async function submit(values: { report: string; status: string }) {
-    if (busy || uncertain || needsLatestVersion) return;
+    if (busy || uncertain || needsLatestVersion || !choices.includes(values.status)) return;
     setBusy(true);
     setError('');
     setNotice('');
@@ -206,8 +213,9 @@ export function TaskItem({
       setBusy(false);
     }
   }
-  const quickTemplates =
-    task.status === 'ASSIGNED'
+  const quickTemplates = !staffDelivery
+    ? []
+    : task.status === 'ASSIGNED'
       ? ['Bắt đầu giao hoa đến tủ', 'Đã có mặt tại kiosk']
       : task.status === 'IN_PROGRESS'
         ? ['Đã nạp hoa và kiểm tra đầy đủ', 'Đã nạp hoa xong, các ô hoạt động tốt']
@@ -215,20 +223,17 @@ export function TaskItem({
 
   const taskContent = (
     <>
-      {staffDelivery && actorId && (
+      {canWorkOnInventory && actorId && (
         <div className="staff-stocking-section">
           <div className="staff-stocking-header">
-            <h4>Thao tác nạp hoa tại tủ</h4>
-            <p>
-              {task.status === 'IN_PROGRESS'
-                ? 'Chọn thao tác phù hợp với công việc được giao.'
-                : 'Chuyển công việc sang “Đang thực hiện” ở form bên dưới để mở khóa thao tác nạp.'}
-            </p>
+            <h4>Thao tác tại tủ</h4>
           </div>
+          {inventory.isPending && <p role="status">Đang tải thao tác được giao…</p>}
           {inventory.data && <StaffInventoryMaintenance taskId={task.id} scope={inventory.data} />}
           {inventory.isError && (
             <p role="alert">
-              Chưa tải được thao tác được giao.{' '}
+              Chưa tải được thao tác được giao
+              {inventory.error instanceof ApiError ? ` (HTTP ${inventory.error.status})` : ''}.{' '}
               <Button type="button" variant="outline" onClick={() => void inventory.refetch()}>
                 Tải lại
               </Button>
@@ -249,11 +254,36 @@ export function TaskItem({
           )}
         </div>
       )}
+      {sellerCanCancel && (
+        <div>
+          <p>
+            {task.status === 'ASSIGNED'
+              ? 'Đang chờ nhân viên bắt đầu công việc.'
+              : 'Nhân viên đang thực hiện. Bạn có thể duyệt khi nhận được báo cáo.'}
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            aria-expanded={showCancellation}
+            disabled={busy || uncertain || needsLatestVersion}
+            onClick={() => {
+              setShowCancellation(!showCancellation);
+              form.reset();
+            }}
+          >
+            {showCancellation ? 'Đóng form hủy' : 'Hủy công việc'}
+          </Button>
+        </div>
+      )}
       {choices.length > 0 && (!needsRepairContext || (repairDetails.isSuccess && !slotRepair)) && (
         <form noValidate onSubmit={form.handleSubmit(submit)} className="staff-transition-form">
           <div className="staff-transition-header">
-            <h4>Cập nhật tiến độ &amp; Báo cáo</h4>
-            <p>Chọn bước tiếp theo và nhập nội dung để gửi thông báo cho shop.</p>
+            <h4>{sellerCanCancel ? 'Hủy công việc' : 'Cập nhật tiến độ & Báo cáo'}</h4>
+            <p>
+              {sellerCanCancel
+                ? 'Nhập lý do hủy để nhân viên biết.'
+                : 'Chọn bước tiếp theo và nhập nội dung cập nhật.'}
+            </p>
           </div>
           <div className="staff-form-group">
             <label htmlFor={`action-${task.id}`}>Bước tiếp theo</label>
@@ -266,13 +296,17 @@ export function TaskItem({
                 <option key={choice} value={choice}>
                   {choice === 'IN_PROGRESS' && isManager
                     ? 'Yêu cầu kiểm tra lại'
-                    : TASK_STATUS_LABELS[choice]}
+                    : choice === 'CANCELLED'
+                      ? 'Hủy công việc'
+                      : TASK_STATUS_LABELS[choice]}
                 </option>
               ))}
             </select>
           </div>
           <div className="staff-form-group">
-            <label htmlFor={`report-${task.id}`}>Nội dung cập nhật</label>
+            <label htmlFor={`report-${task.id}`}>
+              {sellerCanCancel ? 'Lý do hủy' : 'Nội dung cập nhật'}
+            </label>
             {quickTemplates.length > 0 && (
               <div className="staff-quick-templates" aria-label="Gợi ý nội dung">
                 <span className="staff-quick-label">Gợi ý nhanh:</span>
@@ -294,7 +328,11 @@ export function TaskItem({
               id={`report-${task.id}`}
               maxLength={2000}
               rows={3}
-              placeholder="Nhập mô tả kết quả công việc hoặc chọn gợi ý bên trên (tối thiểu 10 ký tự)…"
+              placeholder={
+                sellerCanCancel
+                  ? 'Nhập lý do hủy (ít nhất 10 ký tự)…'
+                  : 'Nhập nội dung (ít nhất 10 ký tự)…'
+              }
               {...form.register('report', {
                 validate: (value) => value.trim().length >= 10 || 'Mô tả ít nhất 10 ký tự.',
               })}
@@ -313,11 +351,13 @@ export function TaskItem({
           >
             {busy
               ? 'Đang cập nhật…'
-              : isTechnician
-                ? task.status === 'ASSIGNED'
-                  ? 'Bắt đầu xử lý'
-                  : 'Gửi báo cáo'
-                : 'Xác nhận cập nhật'}
+              : sellerCanCancel
+                ? 'Xác nhận hủy'
+                : isTechnician
+                  ? task.status === 'ASSIGNED'
+                    ? 'Bắt đầu xử lý'
+                    : 'Gửi báo cáo'
+                  : 'Xác nhận cập nhật'}
           </Button>
         </form>
       )}

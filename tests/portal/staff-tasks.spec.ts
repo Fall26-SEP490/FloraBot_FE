@@ -86,6 +86,7 @@ for (const width of [390, 1440]) {
     let version = 1;
     let status = 'ASSIGNED';
     let writes = 0;
+    let inventoryReadsBeforeStart = 0;
     await page.route('**/api/staff/tasks?*', (route) =>
       route.fulfill({
         json: {
@@ -108,12 +109,16 @@ for (const width of [390, 1440]) {
         },
       }),
     );
-    await page.route('**/api/staff/tasks/task-delivery-1/inventory-maintenance', (route) =>
-      route.fulfill({ status: 404, body: '' }),
-    );
+    await page.route('**/api/staff/tasks/task-delivery-1/inventory-maintenance', (route) => {
+      if (status === 'ASSIGNED') inventoryReadsBeforeStart++;
+      return route.fulfill({ status: status === 'ASSIGNED' ? 500 : 404, body: '' });
+    });
     await page.route('**/api/staff/tasks/task-delivery-1/transition', async (route) => {
       writes++;
       expect(route.request().postDataJSON().version).toBe(version);
+      expect(route.request().postDataJSON().status).toBe(
+        writes === 1 ? 'IN_PROGRESS' : 'SUBMITTED',
+      );
       version++;
       status = writes === 1 ? 'IN_PROGRESS' : 'SUBMITTED';
       if (writes === 1) return route.abort();
@@ -134,6 +139,7 @@ for (const width of [390, 1440]) {
     await page.getByRole('button', { name: 'Xác nhận cập nhật' }).click();
     await expect(page.getByRole('button', { name: 'Xác nhận cập nhật' })).toHaveCount(0);
     expect(writes).toBe(2);
+    expect(inventoryReadsBeforeStart).toBe(0);
   });
 }
 

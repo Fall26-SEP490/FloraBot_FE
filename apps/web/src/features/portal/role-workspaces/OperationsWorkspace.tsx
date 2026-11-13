@@ -51,6 +51,10 @@ const StaffTasks = dynamic(() => import('../../task-management/TaskManagement'),
 const OperationsTerminations = dynamic(() =>
   import('../../kiosk-management/KioskTerminations').then((mod) => mod.OperationsTerminations),
 );
+const OperationsMaintenanceRecovery = dynamic(
+  () => import('../../kiosk-management/OperationsMaintenanceRecovery'),
+  { loading: () => <p role="status">Đang tải phiên bảo trì…</p> },
+);
 
 export default function OperationsWorkspace({ section = 'overview' }: { section?: string }) {
   const params = useSearchParams();
@@ -123,7 +127,9 @@ export default function OperationsWorkspace({ section = 'overview' }: { section?
                           ? 'Điều phối công việc kỹ thuật'
                           : section === 'terminations'
                             ? 'Chấm dứt thuê kiosk'
-                            : 'Tổng quan vận hành'}
+                            : section === 'maintenance-recovery'
+                              ? 'Phiên bảo trì hết hạn'
+                              : 'Tổng quan vận hành'}
               </h1>
               {section !== 'overview' && (
                 <p>
@@ -139,7 +145,9 @@ export default function OperationsWorkspace({ section = 'overview' }: { section?
                             ? 'Phân công sự cố, điều chỉnh người phụ trách và duyệt báo cáo khắc phục.'
                             : section === 'terminations'
                               ? 'Xem xét yêu cầu và ghi nhận bàn giao kiosk.'
-                              : `Chào ${session.data.name}, xem các việc cần xử lý tại đây.`}
+                              : section === 'maintenance-recovery'
+                                ? 'Kiểm tra cửa và hoa tại tủ trước khi khôi phục ô đang khóa.'
+                                : `Chào ${session.data.name}, xem các việc cần xử lý tại đây.`}
                 </p>
               )}
             </div>
@@ -171,6 +179,8 @@ export default function OperationsWorkspace({ section = 'overview' }: { section?
             />
           ) : section === 'terminations' ? (
             <OperationsTerminations />
+          ) : section === 'maintenance-recovery' ? (
+            <OperationsMaintenanceRecovery key={session.data.id} managerId={session.data.id} />
           ) : section === 'overview' ? (
             <OperationsOverview session={session.data} />
           ) : (

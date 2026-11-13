@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-test('Staff requests the assigned Walk-in code and waits for the sensor before reporting', async ({
+test('Staff opens the assigned Walk-in slot on the web and waits for the sensor before reporting', async ({
   page,
 }) => {
   const taskId = 'inventory-task';
@@ -42,25 +42,20 @@ test('Staff requests the assigned Walk-in code and waits for the sensor before r
       },
     }),
   );
-  await page.route(`${path}/access`, (route) => {
+  await page.route(`${path}/open`, (route) => {
     expect(route.request().postDataJSON()).toEqual({ operation: 'START', reason: null });
-    return route.fulfill({
-      json: {
-        id: 'challenge',
-        code: '456789',
-        expiresAt: new Date(Date.now() + 120_000).toISOString(),
-      },
-    });
+    stage = 'AwaitLoading';
+    return route.fulfill({ json: { id: taskId, stage } });
   });
   await page.goto('/staff');
   await expect(page.getByRole('heading', { name: 'Nạp hoa · Ô A01' })).toBeVisible();
   await expect(page.getByLabel('Nội dung cập nhật')).toHaveCount(0);
   await expect(page.getByText('Nạp hoa và xem kết quả')).toHaveCount(0);
-  await page.getByRole('button', { name: 'Lấy mã mở ô', exact: true }).click();
-  await expect(page.getByText('456789', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Mở ô', exact: true }).click();
+  await expect(page.getByText('Đã gửi yêu cầu mở ô. Chờ tủ phản hồi.')).toBeVisible();
   stage = 'Completed';
   await expect(page.getByText(/Tủ đã xác nhận thao tác hoàn tất/)).toBeVisible();
-  await expect(page.getByText('456789', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('Đã gửi yêu cầu mở ô. Chờ tủ phản hồi.')).toHaveCount(0);
   await expect(page.getByLabel('Nội dung cập nhật')).toBeVisible();
 });
 

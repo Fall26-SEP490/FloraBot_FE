@@ -63,6 +63,13 @@ export function TaskManagement(props: StaffTasksProps) {
     queryKey: ['staff-tasks', role ?? 'none', actorId ?? 'none', scopeKey, page, status],
     queryFn: () => request<TaskPage>(`${apiBase}?page=${page}${status ? `&status=${status}` : ''}`),
     enabled: isValidRole,
+    refetchInterval: (query) =>
+      role === 'SELLER' &&
+      query.state.data?.items.some(
+        (task) => task.status === 'ASSIGNED' || task.status === 'IN_PROGRESS',
+      )
+        ? 10_000
+        : false,
   });
 
   if (!isValidRole || !role) {
