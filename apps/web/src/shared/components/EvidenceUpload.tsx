@@ -24,21 +24,25 @@ export default function EvidenceUpload({
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState('');
+  const [uploadError, setUploadError] = useState('');
+  const errorMessage = uploadError || error;
   const controller = useRef<AbortController | null>(null);
   useEffect(() => () => controller.current?.abort(), []);
   async function upload() {
     if (!file || busy) return;
+    setStatus('');
     if (
       !['image/png', 'image/jpeg', 'image/webp'].includes(file.type) ||
       file.size === 0 ||
       file.size > 5 * 1024 * 1024
     ) {
-      setStatus('Chọn ảnh PNG, JPEG hoặc WebP, tối đa 5 MB.');
+      setUploadError('Chọn ảnh PNG, JPEG hoặc WebP, tối đa 5 MB.');
       return;
     }
     const active = new AbortController();
     controller.current = active;
     setBusy(true);
+    setUploadError('');
     setStatus('Đang lưu ảnh riêng tư…');
     onReference('');
     try {
@@ -69,12 +73,14 @@ export default function EvidenceUpload({
         setStatus(`Đã lưu ảnh ${file.name}. Hãy gửi hồ sơ trong 30 phút.`);
       }
     } catch (failure) {
-      if (!active.signal.aborted)
-        setStatus(
+      if (!active.signal.aborted) {
+        setStatus('');
+        setUploadError(
           failure instanceof Error && failure.name === 'Error'
             ? failure.message
             : 'Chưa xác nhận được ảnh đã lưu. Bạn có thể tải lại; hồ sơ chưa được gửi.',
         );
+      }
     } finally {
       if (!active.signal.aborted) setBusy(false);
     }
@@ -88,11 +94,12 @@ export default function EvidenceUpload({
         type="file"
         accept="image/png,image/jpeg,image/webp"
         disabled={disabled || busy}
-        aria-invalid={!!error}
-        aria-describedby={`${id}-help ${id}-error ${id}-status`}
+        aria-invalid={Boolean(errorMessage)}
+        aria-describedby={`${id}-help${errorMessage ? ` ${id}-error` : ''}`}
         onChange={(event) => {
           setFile(event.target.files?.[0] ?? null);
           setStatus('');
+          setUploadError('');
           onReference('');
         }}
       />
@@ -108,12 +115,12 @@ export default function EvidenceUpload({
       >
         {busy ? 'Đang tải ảnh…' : 'Tải ảnh minh chứng'}
       </Button>
-      <p id={`${id}-status`} role="status">
-        {status}
-      </p>
-      <p id={`${id}-error`} className="error">
-        {error}
-      </p>
+      {status && <p role="status">{status}</p>}
+      {errorMessage && (
+        <p id={`${id}-error`} className="error" role={uploadError ? 'alert' : undefined}>
+          {errorMessage}
+        </p>
+      )}
     </div>
   );
 }

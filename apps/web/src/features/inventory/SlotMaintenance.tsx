@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
-import { queryClient, request } from '@/shared/lib/api';
+import { ApiError, queryClient, request } from '@/shared/lib/api';
 import type { SellerSlot } from './slot-state';
 
 export type MaintenanceAction = 'LOAD' | 'REMOVE' | 'REPLACE';
@@ -205,6 +205,7 @@ export default function SlotMaintenance({
     !activeSession.isPending &&
     !activeSession.isError;
   const busy = start.isPending || advance.isPending || open.isPending;
+  const maintenanceError = start.error || advance.error || open.error;
 
   return (
     <section className="stock-maintenance" aria-label={`Bảo trì ô ${slot.slotCode}`}>
@@ -412,9 +413,10 @@ export default function SlotMaintenance({
           Nếu phiên không còn trên máy chủ, liên hệ hỗ trợ trước khi mở một phiên mới.
         </p>
       )}
-      {(start.error || advance.error || open.error) && (
+      {maintenanceError && (
         <p role="alert" className="error">
-          {start.error?.message || advance.error?.message || open.error?.message}
+          {maintenanceError.message}
+          {maintenanceError instanceof ApiError && ` (HTTP ${maintenanceError.status})`}
         </p>
       )}
     </section>

@@ -47,6 +47,11 @@ async function setup(page: Page) {
           : [
               {
                 ...flower,
+                kioskId: '40000000-0000-0000-0000-000000000003',
+                kioskName: 'Tủ Pre-order thứ hai',
+              },
+              {
+                ...flower,
                 zone: 'WALK_IN',
                 price: 250000,
               },
@@ -89,12 +94,16 @@ for (const width of [390, 1440]) {
     const previewPosition = await preview.boundingBox();
     const partnerPosition = await page.locator('#danh-cho-shop').boundingBox();
     expect(previewPosition!.y).toBeLessThan(partnerPosition!.y);
-    await expect(
-      preview.getByRole('link', {
-        name: `${flower.name} · Đặt trước · ${flower.kioskName}`,
-        exact: true,
-      }),
-    ).toHaveAttribute('href', `/dat-hoa/${flower.productId}/${flower.kioskId}?zone=PREORDER`);
+    const preorderCard = preview.getByRole('link', {
+      name: `${flower.name} · Đặt trước`,
+      exact: true,
+    });
+    await expect(preorderCard).toHaveAttribute(
+      'href',
+      `/dat-hoa/${flower.productId}/${flower.kioskId}?zone=PREORDER`,
+    );
+    await expect(preorderCard).not.toContainText(flower.kioskName);
+    await expect(preview).not.toContainText('Tủ Pre-order thứ hai');
     const walkInCard = preview.getByRole('link', {
       name: `${flower.name} · Chỉ mua tại kiosk · ${flower.kioskName}`,
       exact: true,
@@ -122,7 +131,11 @@ for (const width of [390, 1440]) {
     await preview.getByRole('link', { name: 'Xem tất cả mẫu', exact: true }).click();
     await expect(page).toHaveURL(/\/dat-hoa$/);
     await expect(page.locator('.flower-card')).toHaveCount(3);
-    await expect(page.locator('.flower-card').first()).toContainText(flower.kioskName);
+    await expect(page.locator('.flower-card').first()).not.toContainText(flower.kioskName);
+    await expect(page.locator('.flower-card').filter({ hasText: flower.kioskName })).toHaveCount(1);
+    await expect(
+      page.locator('.flower-card').filter({ hasText: 'Tủ Pre-order thứ hai' }),
+    ).toHaveCount(0);
     expect(state.pages).toContain(2);
     await expect(page.getByRole('heading', { name: flower.name, exact: true })).toHaveCount(2);
     await expect(page.locator('.flower-card-desc')).toHaveCount(0);
@@ -131,12 +144,6 @@ for (const width of [390, 1440]) {
     const contentBox = await card.locator('.flower-card-body').boundingBox();
     expect(contentBox!.y).toBeGreaterThanOrEqual(imageBox!.y + imageBox!.height - 1);
     if (width === 390) {
-      const cards = await page.locator('.flower-card').evaluateAll((elements) =>
-        elements.slice(0, 2).map((element) => ({
-          x: element.getBoundingClientRect().x,
-          y: element.getBoundingClientRect().y,
-        })),
-      );
       await page.mouse.move(0, 0);
       await expect
         .poll(async () =>
@@ -144,12 +151,13 @@ for (const width of [390, 1440]) {
             .locator('.flower-card')
             .evaluateAll((elements) =>
               Math.abs(
-                elements[0].getBoundingClientRect().y - elements[1].getBoundingClientRect().y,
+                elements[0].getBoundingClientRect().x - elements[1].getBoundingClientRect().x,
               ),
             ),
         )
         .toBeLessThan(1);
-      expect(cards[1].x).toBeGreaterThan(cards[0].x);
+      const nextCardBox = await page.locator('.flower-card').nth(1).boundingBox();
+      expect(nextCardBox!.y).toBeGreaterThan(contentBox!.y);
     }
     expect(
       (

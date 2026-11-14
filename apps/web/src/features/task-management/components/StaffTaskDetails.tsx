@@ -124,21 +124,25 @@ export default function StaffTaskDetails({
             </ol>
           )}
           <div className="staff-history-pagination" aria-label="Phân trang lịch sử công việc">
-            <Button
-              variant="outline"
-              disabled={page === 1 || details.isFetching}
-              onClick={() => setPage(page - 1)}
-            >
-              Lịch sử trước
-            </Button>
-            <span>Trang {page}</span>
-            <Button
-              variant="outline"
-              disabled={!details.data.hasMore || details.isFetching}
-              onClick={() => setPage(page + 1)}
-            >
-              Lịch sử tiếp
-            </Button>
+            {(page > 1 || details.data.hasMore) && (
+              <>
+                <Button
+                  variant="outline"
+                  disabled={page === 1 || details.isFetching}
+                  onClick={() => setPage(page - 1)}
+                >
+                  Lịch sử trước
+                </Button>
+                <span>Trang {page}</span>
+                <Button
+                  variant="outline"
+                  disabled={!details.data.hasMore || details.isFetching}
+                  onClick={() => setPage(page + 1)}
+                >
+                  Lịch sử tiếp
+                </Button>
+              </>
+            )}
             <Button
               variant="outline"
               disabled={details.isFetching}

@@ -9,7 +9,12 @@ import type {
   PriceFilter,
   SortOption,
 } from '../catalog.types';
-import { computeFilterCounts, filterCatalogItems, sortCatalogItems } from '../catalog.utils';
+import {
+  computeFilterCounts,
+  filterCatalogItems,
+  sortCatalogItems,
+  uniqueCatalogCards,
+} from '../catalog.utils';
 
 export function useCatalogFilters(
   rawItems: CatalogItem[],
@@ -60,11 +65,12 @@ export function useCatalogFilters(
   );
 
   const displayedItems = useMemo(
-    () => sortCatalogItems(filteredItems, sortBy, distances),
+    () => uniqueCatalogCards(sortCatalogItems(filteredItems, sortBy, distances)),
     [filteredItems, sortBy, distances],
   );
 
   const counts = useMemo(() => computeFilterCounts(rawItems), [rawItems]);
+  const totalCards = useMemo(() => uniqueCatalogCards(rawItems).length, [rawItems]);
 
   const hasActiveFilters = Boolean(
     search.trim() ||
@@ -155,6 +161,7 @@ export function useCatalogFilters(
     filteredItems,
     displayedItems,
     counts,
+    totalCards,
     hasActiveFilters,
     activeFilters,
     resetFilters,

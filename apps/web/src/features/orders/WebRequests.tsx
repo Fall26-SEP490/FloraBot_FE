@@ -234,13 +234,15 @@ function OrderActions({
       ),
     enabled: action === 'fulfill' && Boolean(row.kioskId),
   });
-  const emptyKioskSlots =
+  const emptyPreorderSlots =
     slots.data?.filter(
-      (item) => item.kioskId === row.kioskId && item.status === 'RENTED_EMPTY' && !item.bouquetId,
+      (item) =>
+        item.kioskId === row.kioskId &&
+        item.zone === 'PREORDER' &&
+        item.status === 'RENTED_EMPTY' &&
+        !item.bouquetId,
     ) ?? [];
-  const fulfillSlots = emptyKioskSlots.filter(
-    (item) => item.zone === 'PREORDER' && item.sensorReady,
-  );
+  const fulfillSlots = emptyPreorderSlots.filter((item) => item.sensorReady);
   async function send(kind: string, body: unknown) {
     if (mode === 'admin') return;
     if (sending.current || uncertain) return;
@@ -587,7 +589,9 @@ function OrderActions({
               action === 'fulfill' &&
               (fulfillStep !== 2 || !fulfillSlots.some((item) => item.id === slot) || !qr.trim())
             ) {
-              setError('Chọn ô Pre-order trống và nhập mã QR trước khi xác nhận.');
+              setError(
+                'Chọn ô Pre-order có cảm biến sẵn sàng và nhập mã bó hoa trước khi xác nhận.',
+              );
               setFulfillStep(1);
               return;
             }
@@ -623,7 +627,7 @@ function OrderActions({
                 >
                   <span>1</span>
                   <div>
-                    <strong>Chọn ô và mã hoa</strong>
+                    <strong>Chọn ô và mã bó hoa</strong>
                     <small>Thông tin bó hoa</small>
                   </div>
                 </li>
@@ -714,23 +718,26 @@ function OrderActions({
             {action === 'fulfill' && fulfillStep === 1 && (
               <>
                 <p>
-                  Chỉ xác nhận sau khi đã nạp bó hoa theo yêu cầu. Thao tác này giữ ô riêng cho
-                  khách, chưa mở cửa nhận hoa.
+                  Chọn ô tại kiosk của đơn để mở cửa và đặt hoa vào. Sau khi xác nhận nạp thành
+                  công, chọn “Gửi mã nhận hoa” để gửi OTP 8 số tới email của khách.
                 </p>
                 <label htmlFor={`order-slot-${row.id}`}>Ô trống tại tủ nhận</label>
                 <select
                   id={`order-slot-${row.id}`}
                   required
                   value={slot}
+                  disabled={slots.isPending || slots.isError}
+                  aria-describedby={`order-slot-help-${row.id}`}
                   onChange={(event) => {
                     setSlot(event.target.value);
                     setLoadingAccess(null);
                   }}
                 >
                   <option value="">Chọn ô Pre-order trống</option>
-                  {fulfillSlots.map((item) => (
-                    <option key={item.id} value={item.id}>
+                  {emptyPreorderSlots.map((item) => (
+                    <option key={item.id} value={item.id} disabled={!item.sensorReady}>
                       {item.slotCode}
+                      {!item.sensorReady && ' · Cảm biến chưa sẵn sàng'}
                     </option>
                   ))}
                 </select>
@@ -748,19 +755,38 @@ function OrderActions({
                       }}
                     />
                   )}
-                {slots.isError && <p role="alert">Chưa tải được ô. Đóng biểu mẫu rồi mở lại.</p>}
-                {!slots.isPending && !slots.isError && fulfillSlots.length === 0 && (
-                  <p className="quiet">
-                    Chưa có ô Pre-order trống với cảm biến sẵn sàng tại tủ nhận.
-                  </p>
-                )}
-                <label htmlFor={`order-qr-${row.id}`}>Mã QR của bó hoa</label>
+                <div id={`order-slot-help-${row.id}`}>
+                  {slots.isPending ? (
+                    <p role="status">Đang tải các ô tại tủ nhận…</p>
+                  ) : slots.isError ? (
+                    <p role="alert">Chưa tải được các ô tại tủ nhận.</p>
+                  ) : emptyPreorderSlots.length === 0 ? (
+                    <p className="quiet">Tủ nhận của đơn hiện chưa có ô Pre-order trống.</p>
+                  ) : fulfillSlots.length < emptyPreorderSlots.length ? (
+                    <p className="quiet">
+                      Ô có cảm biến chưa sẵn sàng cần Admin xác minh cảm biến cửa, cảm biến hoa và
+                      bật giám sát trong mục Phân bổ kiosk.
+                    </p>
+                  ) : null}
+                  {(slots.isError || (!slots.isPending && fulfillSlots.length === 0)) && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={slots.isFetching}
+                      onClick={() => void slots.refetch()}
+                    >
+                      Tải lại danh sách ô
+                    </Button>
+                  )}
+                </div>
+                <label htmlFor={`order-qr-${row.id}`}>Mã định danh bó hoa</label>
                 <div className="field-action">
                   <input
                     id={`order-qr-${row.id}`}
                     required
                     maxLength={120}
                     value={qr}
+                    aria-describedby={`order-qr-help-${row.id}`}
                     onChange={(event) => setQr(event.target.value)}
                   />
                   <Button
@@ -770,9 +796,13 @@ function OrderActions({
                       setQr(`BOUQUET-${(row.orderCode || row.id.slice(0, 8)).toUpperCase()}`)
                     }
                   >
-                    Tạo mã tự động
+                    Tạo mã bó tự động
                   </Button>
                 </div>
+                <p id={`order-qr-help-${row.id}`} className="quiet">
+                  Dùng để theo dõi bó hoa trong kho. Có thể nhập mã trên tem QR hoặc tạo mã bó tự
+                  động.
+                </p>
               </>
             )}
             {action === 'fulfill' && fulfillStep === 2 && (
@@ -794,7 +824,7 @@ function OrderActions({
                     </dd>
                   </div>
                   <div>
-                    <dt>Mã QR bó hoa</dt>
+                    <dt>Mã định danh bó hoa</dt>
                     <dd>{qr}</dd>
                   </div>
                 </dl>

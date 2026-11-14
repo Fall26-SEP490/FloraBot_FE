@@ -1,5 +1,6 @@
 import { Button } from '@florabot/ui';
 import type { CatalogItem } from '../catalog.types';
+import { catalogCardKey } from '../catalog.utils';
 import { FlowerCard } from './FlowerCard';
 
 interface CatalogGridProps {
@@ -34,7 +35,7 @@ export function CatalogGrid({
       <ul className="flower-catalog-grid flower-catalog">
         {items.map((item) => (
           <FlowerCard
-            key={`${item.productId}-${item.kioskId}-${item.zone ?? 'template'}`}
+            key={catalogCardKey(item)}
             item={item}
             catalogHref={catalogHref}
             openingChatId={openingChatId}

@@ -149,15 +149,20 @@ export default function StaffPreorderFulfillment({
               </option>
             ))}
           </select>
-          <label htmlFor={`preorder-qr-${taskId}`}>Mã QR bó hoa</label>
+          <label htmlFor={`preorder-qr-${taskId}`}>Mã định danh bó hoa</label>
           <input
             id={`preorder-qr-${taskId}`}
             value={qrCode}
             onChange={(event) => setQrCode(event.target.value)}
             maxLength={120}
+            aria-describedby={`preorder-qr-help-${taskId}`}
             required
             disabled={busy || uncertain}
           />
+          <p id={`preorder-qr-help-${taskId}`} className="quiet">
+            Nhập mã trên tem QR để theo dõi bó hoa trong kho. Shop gửi OTP 8 số tới email của khách
+            sau khi hoa sẵn sàng.
+          </p>
           {options.data.preorders.length === 0 && (
             <p>Chưa có đơn đã thanh toán trong thời gian giao.</p>
           )}

@@ -18,6 +18,22 @@ export function isPreorder(item: Pick<CatalogItem, 'zone'>): boolean {
   return item.zone == null || item.zone === 'PREORDER';
 }
 
+type CatalogCardItem = Pick<CatalogItem, 'sellerId' | 'productId' | 'kioskId' | 'zone'>;
+
+export function catalogCardKey(item: CatalogCardItem): string {
+  const product = `${item.sellerId}:${item.productId}`;
+  return isPreorder(item) ? `${product}:PREORDER` : `${product}:${item.kioskId}:${item.zone}`;
+}
+
+export function uniqueCatalogCards<T extends CatalogCardItem>(items: readonly T[]): T[] {
+  const cards = new Map<string, T>();
+  for (const item of items) {
+    const key = catalogCardKey(item);
+    if (!cards.has(key)) cards.set(key, item);
+  }
+  return [...cards.values()];
+}
+
 type PreorderStatus = Pick<CatalogItem, 'zone' | 'preorderAvailable'>;
 
 export function isPreorderSoldOut(item: PreorderStatus): boolean {
@@ -124,16 +140,17 @@ export function getOccasionBadgeClass(occasion?: string): string {
 }
 
 export function computeFilterCounts(items: CatalogItem[]) {
+  const cards = uniqueCatalogCards(items);
   const occasionCounts: Record<string, number> = {};
   OCCASIONS.forEach((occ) => {
-    occasionCounts[occ] = items.filter((item) => matchesOccasion(item, occ)).length;
+    occasionCounts[occ] = cards.filter((item) => matchesOccasion(item, occ)).length;
   });
 
   let under300 = 0;
   let range300to600 = 0;
   let range600to1000 = 0;
   let over1000 = 0;
-  items.forEach((item) => {
+  cards.forEach((item) => {
     if (item.price < 300000) under300++;
     else if (item.price <= 600000) range300to600++;
     else if (item.price <= 1000000) range600to1000++;
@@ -143,14 +160,14 @@ export function computeFilterCounts(items: CatalogItem[]) {
 
   let stock = 0;
   let custom = 0;
-  items.forEach((item) => {
+  cards.forEach((item) => {
     if (matchesAvailability(item, 'stock')) stock++;
     else if (isPreorder(item)) custom++;
   });
   const availabilityCounts: AvailabilityCounts = { stock, custom };
 
   const shopCounts: Record<string, number> = {};
-  items.forEach((item) => {
+  cards.forEach((item) => {
     if (item.shopName) shopCounts[item.shopName] = (shopCounts[item.shopName] || 0) + 1;
   });
 

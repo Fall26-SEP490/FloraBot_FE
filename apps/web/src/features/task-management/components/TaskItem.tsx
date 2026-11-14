@@ -52,6 +52,7 @@ export function TaskItem({
   const [showCancellation, setShowCancellation] = useState(false);
   const staffDelivery =
     isWorker && role === 'SELLER_STAFF' && !!actorId && task.kind === 'DELIVERY';
+  const startingDelivery = staffDelivery && task.status === 'ASSIGNED';
   const canWorkOnInventory = staffDelivery && task.status === 'IN_PROGRESS';
   const inventory = useStaffInventoryMaintenance(task.id, actorId, canWorkOnInventory);
   const needsRepairContext =
@@ -77,6 +78,7 @@ export function TaskItem({
     task.status === 'SUBMITTED';
 
   const form = useForm<{ report: string; status: string }>();
+  const reportError = form.formState.errors.report?.message;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [uncertain, setUncertain] = useState(false);
@@ -131,13 +133,13 @@ export function TaskItem({
       setBusy(false);
     }
   }
-  const sellerCanCancel =
+  const canCancelOpenTask =
     !readOnly &&
     isManager &&
-    role === 'SELLER' &&
+    (role === 'SELLER' || role === 'OPERATIONS_MANAGER') &&
     ['ASSIGNED', 'IN_PROGRESS'].includes(task.status);
   const choices =
-    readOnly || (sellerCanCancel && !showCancellation)
+    readOnly || (canCancelOpenTask && !showCancellation)
       ? []
       : isManager
         ? task.status === 'SUBMITTED'
@@ -164,6 +166,9 @@ export function TaskItem({
           { throwOnError: true },
         ),
       ]);
+      setUncertain(false);
+      setConflictVersion(null);
+      setNotice('Đã tải lại công việc. Kiểm tra trạng thái và hướng dẫn trước khi tiếp tục.');
     } catch {
       setError('Chưa tải được công việc. Kiểm tra kết nối rồi thử lại.');
     } finally {
@@ -206,20 +211,26 @@ export function TaskItem({
       setUncertain(ambiguous);
       setError(
         ambiguous
-          ? 'Chưa xác nhận được trạng thái mới. Tải lại danh sách để kiểm tra trước khi thao tác tiếp.'
+          ? cause instanceof ApiError && cause.status >= 500
+            ? `Máy chủ trả lỗi HTTP ${cause.status}. Chưa xác nhận được trạng thái mới; tải lại công việc trước khi thao tác tiếp.`
+            : 'Chưa xác nhận được trạng thái mới. Tải lại danh sách để kiểm tra trước khi thao tác tiếp.'
           : cause.message,
       );
     } finally {
       setBusy(false);
     }
   }
-  const quickTemplates = !staffDelivery
-    ? []
-    : task.status === 'ASSIGNED'
-      ? ['Bắt đầu giao hoa đến tủ', 'Đã có mặt tại kiosk']
-      : task.status === 'IN_PROGRESS'
-        ? ['Đã nạp hoa và kiểm tra đầy đủ', 'Đã nạp hoa xong, các ô hoạt động tốt']
-        : [];
+  const quickTemplates = isTechnician
+    ? task.status === 'ASSIGNED'
+      ? ['Đã nhận việc kiểm tra sự cố tại tủ', 'Đã có mặt tại kiosk để kiểm tra sự cố']
+      : []
+    : !staffDelivery
+      ? []
+      : task.status === 'ASSIGNED'
+        ? ['Bắt đầu giao hoa đến tủ', 'Đã có mặt tại kiosk']
+        : task.status === 'IN_PROGRESS'
+          ? ['Đã nạp hoa và kiểm tra đầy đủ', 'Đã nạp hoa xong, các ô hoạt động tốt']
+          : [];
 
   const taskContent = (
     <>
@@ -254,11 +265,13 @@ export function TaskItem({
           )}
         </div>
       )}
-      {sellerCanCancel && (
+      {canCancelOpenTask && (
         <div>
           <p>
             {task.status === 'ASSIGNED'
-              ? 'Đang chờ nhân viên bắt đầu công việc.'
+              ? role === 'OPERATIONS_MANAGER'
+                ? 'Đang chờ kỹ thuật viên bắt đầu công việc.'
+                : 'Đang chờ nhân viên bắt đầu công việc.'
               : 'Nhân viên đang thực hiện. Bạn có thể duyệt khi nhận được báo cáo.'}
           </p>
           <Button
@@ -278,11 +291,23 @@ export function TaskItem({
       {choices.length > 0 && (!needsRepairContext || (repairDetails.isSuccess && !slotRepair)) && (
         <form noValidate onSubmit={form.handleSubmit(submit)} className="staff-transition-form">
           <div className="staff-transition-header">
-            <h4>{sellerCanCancel ? 'Hủy công việc' : 'Cập nhật tiến độ & Báo cáo'}</h4>
+            <h4>
+              {canCancelOpenTask
+                ? 'Hủy công việc'
+                : startingDelivery
+                  ? 'Bắt đầu công việc'
+                  : 'Cập nhật tiến độ & Báo cáo'}
+            </h4>
             <p>
-              {sellerCanCancel
+              {canCancelOpenTask
                 ? 'Nhập lý do hủy để nhân viên biết.'
-                : 'Chọn bước tiếp theo và nhập nội dung cập nhật.'}
+                : isTechnician
+                  ? 'Chọn bước tiếp theo và nhập nội dung để quản lý theo dõi xử lý sự cố.'
+                  : startingDelivery
+                    ? 'Nhập ghi chú hoặc chọn gợi ý, rồi bấm Bắt đầu. Thao tác tại tủ sẽ hiện khi công việc chuyển sang Đang thực hiện.'
+                    : canWorkOnInventory
+                      ? 'Sau khi thực hiện và ghi nhận thao tác tại tủ, gửi kết quả để chủ shop duyệt.'
+                      : 'Chọn bước tiếp theo và nhập nội dung cập nhật.'}
             </p>
           </div>
           <div className="staff-form-group">
@@ -305,7 +330,7 @@ export function TaskItem({
           </div>
           <div className="staff-form-group">
             <label htmlFor={`report-${task.id}`}>
-              {sellerCanCancel ? 'Lý do hủy' : 'Nội dung cập nhật'}
+              {canCancelOpenTask ? 'Lý do hủy' : 'Nội dung cập nhật'}
             </label>
             {quickTemplates.length > 0 && (
               <div className="staff-quick-templates" aria-label="Gợi ý nội dung">
@@ -329,20 +354,22 @@ export function TaskItem({
               maxLength={2000}
               rows={3}
               placeholder={
-                sellerCanCancel
+                canCancelOpenTask
                   ? 'Nhập lý do hủy (ít nhất 10 ký tự)…'
                   : 'Nhập nội dung (ít nhất 10 ký tự)…'
               }
               {...form.register('report', {
-                validate: (value) => value.trim().length >= 10 || 'Mô tả ít nhất 10 ký tự.',
+                validate: (value) => (value?.trim().length ?? 0) >= 10 || 'Mô tả ít nhất 10 ký tự.',
               })}
-              aria-invalid={!!form.formState.errors.report}
-              aria-describedby={`report-error-${task.id}`}
+              aria-invalid={Boolean(reportError)}
+              aria-describedby={reportError ? `report-error-${task.id}` : undefined}
               disabled={busy}
             />
-            <p id={`report-error-${task.id}`} className="error">
-              {form.formState.errors.report?.message}
-            </p>
+            {reportError && (
+              <p id={`report-error-${task.id}`} className="error" role="alert">
+                {reportError}
+              </p>
+            )}
           </div>
           <Button
             type="submit"
@@ -351,19 +378,26 @@ export function TaskItem({
           >
             {busy
               ? 'Đang cập nhật…'
-              : sellerCanCancel
+              : canCancelOpenTask
                 ? 'Xác nhận hủy'
                 : isTechnician
                   ? task.status === 'ASSIGNED'
                     ? 'Bắt đầu xử lý'
                     : 'Gửi báo cáo'
-                  : 'Xác nhận cập nhật'}
+                  : startingDelivery
+                    ? 'Bắt đầu'
+                    : canWorkOnInventory
+                      ? 'Gửi báo cáo'
+                      : 'Xác nhận cập nhật'}
           </Button>
         </form>
       )}
       {task.report && (
         <div className="staff-latest-report">
-          <strong>Báo cáo gần nhất:</strong> <p>{task.report}</p>
+          <strong>
+            {task.status === 'IN_PROGRESS' ? 'Cập nhật gần nhất:' : 'Báo cáo gần nhất:'}
+          </strong>{' '}
+          <p>{task.report}</p>
         </div>
       )}
       <div className="staff-secondary-details">
@@ -516,7 +550,9 @@ export function TaskItem({
           <div className="staff-instructions-callout">
             <div className="staff-instructions-head">
               <Store size={14} aria-hidden="true" />
-              <strong>Ghi chú từ shop:</strong>
+              <strong>
+                {task.kind === 'INCIDENT' ? 'Hướng dẫn từ quản lý:' : 'Ghi chú từ shop:'}
+              </strong>
             </div>
             <p>{task.instructions}</p>
           </div>
@@ -537,6 +573,11 @@ export function TaskItem({
         <div className="staff-task-body">{taskContent}</div>
       )}
       {error && <p role="alert">{error}</p>}
+      {uncertain && (
+        <Button type="button" variant="outline" disabled={busy} onClick={() => void refreshTask()}>
+          {busy ? 'Đang kiểm tra trạng thái…' : 'Kiểm tra lại trạng thái công việc'}
+        </Button>
+      )}
       {notice && <p role="status">{notice}</p>}
     </article>
   );

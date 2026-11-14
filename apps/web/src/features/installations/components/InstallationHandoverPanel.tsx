@@ -69,7 +69,7 @@ export function InstallationHandoverPanel({
       </div>
 
       <div className="evidence-review-section">
-        <h4>Ảnh minh chứng hiện trường thực tế:</h4>
+        <h4>Ảnh minh chứng được đính kèm:</h4>
         {evidencePhotos.length > 0 ? (
           <div className="evidence-thumbnails-grid">
             {evidencePhotos.map((ev, idx) => (
@@ -83,7 +83,7 @@ export function InstallationHandoverPanel({
           </div>
         ) : (
           <p className="kiosk-help-text">
-            Đang lấy ảnh minh chứng từ phiếu lắp đặt. Cần có ít nhất 1 ảnh để tiến hành bàn giao.
+            Chưa có ảnh minh chứng trong hồ sơ. Cần có ít nhất 1 ảnh để tiến hành bàn giao.
           </p>
         )}
       </div>

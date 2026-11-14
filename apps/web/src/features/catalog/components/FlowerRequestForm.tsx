@@ -55,7 +55,7 @@ export function FlowerRequestForm({
   onUncertainChange,
 }: FlowerRequestFormProps) {
   const session = useQuery(sessionQuery);
-  const [kioskId, setKioskId] = useState(item.kioskId);
+  const [chosenKioskId, setChosenKioskId] = useState('');
   const kiosks = useQuery({
     queryKey: ['catalog-pickup-kiosks', item.productId, item.sellerId],
     enabled: !item.isDemoSample && isPreorder(item),
@@ -146,9 +146,14 @@ export function FlowerRequestForm({
   const kioskListError = kiosks.isError || kioskAvailability.isError;
   const noKiosksAvailable = !kioskListLoading && !kioskListError && eligibleKiosks.length === 0;
 
-  const [confirmed, setConfirmed] = useState(false);
+  const [confirmedKioskId, setConfirmedKioskId] = useState('');
 
-  const selectedKiosk = eligibleKiosks.find((entry) => entry.kioskId === kioskId);
+  const selectedKiosk = chosenKioskId
+    ? eligibleKiosks.find((entry) => entry.kioskId === chosenKioskId)
+    : eligibleKiosks.length === 1
+      ? eligibleKiosks[0]
+      : undefined;
+  const kioskId = selectedKiosk?.kioskId ?? '';
   function refreshKiosks() {
     void kiosks.refetch().then(() => {
       if (candidateKiosks.length > 0) void kioskAvailability.refetch();
@@ -189,6 +194,7 @@ export function FlowerRequestForm({
   const [instructions, setInstructions] = useState('');
   const [busy, setBusy] = useState(false);
   const [uncertain, setUncertain] = useState(false);
+  const confirmed = Boolean(confirmedKioskId && (uncertain || confirmedKioskId === kioskId));
   const [stockConflict, setStockConflict] = useState(false);
   // A retry of an unconfirmed request can still succeed with its existing request ID.
   const soldOut = !uncertain && (stockConflict || isPreorderSoldOut(selectedKiosk ?? item));
@@ -199,7 +205,7 @@ export function FlowerRequestForm({
   const briefRef = useRef<HTMLTextAreaElement>(null);
   const [done, setDone] = useState(false);
   const [submittedId, setSubmittedId] = useState<string | null>(null);
-  const dirty = !done && Boolean(pickup || instructions || confirmed || kioskId !== item.kioskId);
+  const dirty = !done && Boolean(pickup || instructions || confirmed || chosenKioskId);
   useEffect(() => {
     onDirtyChange?.(dirty);
   }, [dirty, onDirtyChange]);
@@ -423,8 +429,8 @@ export function FlowerRequestForm({
               value={selectedKiosk?.kioskId ?? ''}
               disabled={kioskListLoading || kioskListError || noKiosksAvailable}
               onChange={(event) => {
-                setKioskId(event.target.value);
-                setConfirmed(false);
+                setChosenKioskId(event.target.value);
+                setConfirmedKioskId('');
               }}
               required
             >
@@ -578,7 +584,8 @@ export function FlowerRequestForm({
               type="checkbox"
               required
               checked={confirmed}
-              onChange={(event) => setConfirmed(event.target.checked)}
+              disabled={!selectedKiosk}
+              onChange={(event) => setConfirmedKioskId(event.target.checked ? kioskId : '')}
             />
             <span>Tôi đã kiểm tra tủ nhận và thông tin yêu cầu.</span>
           </label>

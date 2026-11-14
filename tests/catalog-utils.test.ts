@@ -12,6 +12,7 @@ import {
   matchesPrice,
   matchesSearch,
   sortCatalogItems,
+  uniqueCatalogCards,
 } from '../apps/web/src/features/catalog/catalog.utils';
 import type { CatalogItem } from '../apps/web/src/features/catalog/catalog.types';
 
@@ -30,6 +31,23 @@ const sampleItem = (overrides?: Partial<CatalogItem>): CatalogItem => ({
   occasion: 'Sinh nhật',
   tags: ['Sinh nhật', 'Hồng'],
   ...overrides,
+});
+
+it('shows one preorder card per shop product and keeps walk-in cards by kiosk', () => {
+  const preorder = sampleItem({ zone: 'PREORDER' });
+  const walkIn = sampleItem({ zone: 'WALK_IN' });
+  const secondKiosk = { kioskId: 'kiosk-2', kioskName: 'Kiosk 2' };
+  const anotherShop = sampleItem({ sellerId: 'seller-2' });
+  const items = [
+    preorder,
+    { ...preorder, ...secondKiosk },
+    walkIn,
+    { ...walkIn, ...secondKiosk },
+    anotherShop,
+  ];
+
+  expect(uniqueCatalogCards(items)).toEqual([preorder, walkIn, items[3], anotherShop]);
+  expect(computeFilterCounts(items).availabilityCounts).toEqual({ custom: 2, stock: 2 });
 });
 
 describe('Catalog Utilities - Price boundaries', () => {

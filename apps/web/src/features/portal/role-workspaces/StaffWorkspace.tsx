@@ -105,7 +105,10 @@ export default function StaffWorkspace({ section = 'tasks' }: { section?: string
                   </li>
                   <li>
                     <strong>Nạp hoa vào ô</strong>
-                    <p>Bắt đầu công việc, chọn ô trống, quét mã QR và xác nhận.</p>
+                    <p>
+                      Bắt đầu công việc, mở mục Thao tác tại tủ và làm theo hướng dẫn của việc được
+                      giao.
+                    </p>
                   </li>
                   <li>
                     <strong>Gửi báo cáo</strong>

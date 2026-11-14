@@ -92,7 +92,10 @@ export default function StaffReassignment({
       <summary>Đổi người phụ trách</summary>
       <p>
         Hiện phụ trách: {assigneeName}. Sau bàn giao, người cũ mất quyền thao tác và người mới cần
-        bắt đầu công việc. Các lần nạp hoa trước đó vẫn được giữ.
+        bắt đầu công việc.{' '}
+        {role === 'OPERATIONS_MANAGER'
+          ? 'Báo cáo và ảnh minh chứng trước đó vẫn được giữ.'
+          : 'Các lần nạp hoa trước đó vẫn được giữ.'}
       </p>
       {staff.isPending ? (
         <p role="status">Đang tải nhân viên…</p>
@@ -111,7 +114,9 @@ export default function StaffReassignment({
             disabled={busy || uncertain}
             {...form.register('assigneeId', { required: 'Chọn người nhận bàn giao.' })}
             aria-invalid={!!form.formState.errors.assigneeId}
-            aria-describedby={`reassign-staff-error-${taskId}`}
+            aria-describedby={
+              form.formState.errors.assigneeId ? `reassign-staff-error-${taskId}` : undefined
+            }
           >
             <option value="">Chọn nhân viên</option>
             {available.map((person) => (
@@ -120,9 +125,11 @@ export default function StaffReassignment({
               </option>
             ))}
           </select>
-          <p className="error" id={`reassign-staff-error-${taskId}`}>
-            {form.formState.errors.assigneeId?.message}
-          </p>
+          {form.formState.errors.assigneeId?.message && (
+            <p className="error" id={`reassign-staff-error-${taskId}`}>
+              {form.formState.errors.assigneeId.message}
+            </p>
+          )}
           <label htmlFor={`reassign-reason-${taskId}`}>Lý do và thông tin bàn giao</label>
           <textarea
             id={`reassign-reason-${taskId}`}
@@ -132,23 +139,31 @@ export default function StaffReassignment({
               validate: (value) => value.trim().length >= 10 || 'Mô tả ít nhất 10 ký tự.',
             })}
             aria-invalid={!!form.formState.errors.reason}
-            aria-describedby={`reassign-reason-error-${taskId}`}
+            aria-describedby={
+              form.formState.errors.reason ? `reassign-reason-error-${taskId}` : undefined
+            }
           />
-          <p className="error" id={`reassign-reason-error-${taskId}`}>
-            {form.formState.errors.reason?.message}
-          </p>
+          {form.formState.errors.reason?.message && (
+            <p className="error" id={`reassign-reason-error-${taskId}`}>
+              {form.formState.errors.reason.message}
+            </p>
+          )}
           <label className="payout-checkbox">
             <input
               type="checkbox"
               disabled={busy || uncertain}
               {...form.register('confirm', { required: 'Xác nhận thay đổi người phụ trách.' })}
-              aria-describedby={`reassign-confirm-error-${taskId}`}
+              aria-describedby={
+                form.formState.errors.confirm ? `reassign-confirm-error-${taskId}` : undefined
+              }
             />{' '}
             Tôi xác nhận thay đổi người phụ trách công việc này.
           </label>
-          <p className="error" id={`reassign-confirm-error-${taskId}`}>
-            {form.formState.errors.confirm?.message}
-          </p>
+          {form.formState.errors.confirm?.message && (
+            <p className="error" id={`reassign-confirm-error-${taskId}`}>
+              {form.formState.errors.confirm.message}
+            </p>
+          )}
           <Button type="submit" disabled={busy || uncertain}>
             {busy ? 'Đang bàn giao…' : 'Xác nhận bàn giao'}
           </Button>

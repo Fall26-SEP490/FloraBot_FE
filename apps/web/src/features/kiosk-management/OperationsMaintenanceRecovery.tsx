@@ -7,6 +7,8 @@ import { ApiError, queryClient, request } from '@/shared/lib/api';
 import '../finance/styles/commerce-subscriptions.css';
 import './styles/maintenance-recovery.css';
 
+type RecoveryCandidate = components['schemas']['MaintenanceRecoveryCandidate'];
+
 type RecoveryPage = components['schemas']['MaintenanceRecoveryPage'];
 type RecoveryRow = components['schemas']['MaintenanceRecoveryRow'];
 type RecoveryRequest = components['schemas']['RecoverMaintenanceRequest'];
@@ -30,16 +32,38 @@ const dateFormat = new Intl.DateTimeFormat('vi-VN', {
 
 function RecoveryForm({
   row,
+  managerId,
   onClose,
   onRecovered,
 }: {
   row: RecoveryRow;
+  managerId: string;
   onClose: () => void;
   onRecovered: (result: RecoveryResult) => void;
 }) {
   const [contents, setContents] = useState('');
   const [doorClosed, setDoorClosed] = useState(false);
   const [reason, setReason] = useState('');
+  const candidate = useQuery({
+    queryKey: [
+      'operations-maintenance-recovery-detail',
+      managerId,
+      row.kioskId,
+      row.slotId,
+      row.sessionId,
+    ],
+    queryFn: () =>
+      request<RecoveryCandidate>(
+        `/operations/kiosks/${row.kioskId}/slots/${row.slotId}/maintenance-recovery`,
+      ),
+    staleTime: 0,
+    refetchOnMount: 'always',
+  });
+  const matchesSession =
+    candidate.isSuccess &&
+    candidate.data.sessionId === row.sessionId &&
+    candidate.data.bouquetId === row.bouquetId;
+
   const recovery = useMutation({
     mutationFn: (input: RecoveryRequest) =>
       request<RecoveryResult>(
@@ -52,9 +76,16 @@ function RecoveryForm({
     recovery.isError &&
     (!(recovery.error instanceof ApiError) ||
       recovery.error.status >= 500 ||
-      recovery.error.status === 404);
+      recovery.error.status === 404 ||
+      recovery.error.status === 409);
   const ready =
-    doorClosed && !!contents && reason.trim().length >= 5 && !recovery.isPending && !uncertain;
+    matchesSession &&
+    !candidate.isFetching &&
+    doorClosed &&
+    !!contents &&
+    reason.trim().length >= 5 &&
+    !recovery.isPending &&
+    !uncertain;
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -76,47 +107,100 @@ function RecoveryForm({
       closeDisabled={recovery.isPending}
     >
       <form className="maintenance-recovery-form" onSubmit={submit}>
-        <label className="maintenance-recovery-confirm">
-          <input
-            type="checkbox"
-            checked={doorClosed}
-            disabled={recovery.isPending}
-            onChange={(event) => setDoorClosed(event.target.checked)}
-            required
-          />
-          Tôi đã kiểm tra tại tủ và xác nhận cửa ô đang đóng.
-        </label>
-        <label>
-          Tình trạng thực tế trong ô
-          <select
-            value={contents}
-            onChange={(event) => setContents(event.target.value)}
-            required
-            disabled={recovery.isPending}
-          >
-            <option value="">Chọn tình trạng hoa</option>
-            {row.bouquetId && <option value="ORIGINAL_BOUQUET">Bó hoa cũ vẫn còn trong ô</option>}
-            <option value="EMPTY">Ô đã trống</option>
-          </select>
-        </label>
-        <label>
-          Ghi chú kiểm tra
-          <textarea
-            value={reason}
-            onChange={(event) => setReason(event.target.value)}
-            rows={3}
-            required
-            minLength={5}
-            maxLength={500}
-            disabled={recovery.isPending}
-          />
-        </label>
-        {recovery.isError && (
-          <p role="alert" className="error">
-            {uncertain
-              ? 'Chưa xác nhận được kết quả. Đóng cửa sổ và làm mới danh sách để kiểm tra phiên.'
-              : recovery.error.message}
+        {candidate.isPending ? (
+          <p role="status">Đang kiểm tra phiên bảo trì hiện tại…</p>
+        ) : candidate.isError ? (
+          <div role="alert">
+            <p>Chưa xác minh được phiên bảo trì: {candidate.error.message}</p>
+            <Button type="button" variant="outline" onClick={() => void candidate.refetch()}>
+              Tải lại thông tin phiên
+            </Button>
+          </div>
+        ) : !matchesSession ? (
+          <p role="alert">
+            Phiên hoặc bó hoa đã thay đổi. Quay lại và làm mới danh sách trước khi tiếp tục.
           </p>
+        ) : (
+          <>
+            <dl className="account-details">
+              <div>
+                <dt>Thao tác</dt>
+                <dd>{actions[candidate.data.action] ?? candidate.data.action}</dd>
+              </div>
+              <div>
+                <dt>Tình trạng phiên</dt>
+                <dd>
+                  {candidate.data.stage === 'NeedsInspection'
+                    ? 'Cần kiểm tra tại tủ'
+                    : candidate.data.stage}
+                </dd>
+              </div>
+              <div>
+                <dt>Mã phiên</dt>
+                <dd>{candidate.data.sessionId}</dd>
+              </div>
+              <div>
+                <dt>Mã lệnh mở cửa</dt>
+                <dd>{candidate.data.commandId ?? 'Chưa có mã lệnh được ghi nhận'}</dd>
+              </div>
+            </dl>
+            <p>
+              Mã lệnh không chứng minh cửa đã mở. Chỉ xác nhận sau khi kiểm tra cửa và hoa thực tế
+              tại tủ.
+            </p>
+          </>
+        )}
+        <fieldset
+          disabled={!matchesSession || candidate.isFetching || recovery.isPending || uncertain}
+        >
+          <legend>Kết quả kiểm tra tại tủ</legend>
+          <label className="maintenance-recovery-confirm">
+            <input
+              type="checkbox"
+              checked={doorClosed}
+              disabled={recovery.isPending}
+              onChange={(event) => setDoorClosed(event.target.checked)}
+              required
+            />
+            Tôi đã kiểm tra tại tủ và xác nhận cửa ô đang đóng.
+          </label>
+          <label>
+            Tình trạng thực tế trong ô
+            <select
+              value={contents}
+              onChange={(event) => setContents(event.target.value)}
+              required
+              disabled={recovery.isPending}
+            >
+              <option value="">Chọn tình trạng hoa</option>
+              {row.bouquetId && <option value="ORIGINAL_BOUQUET">Bó hoa cũ vẫn còn trong ô</option>}
+              <option value="EMPTY">Ô đã trống</option>
+            </select>
+          </label>
+          <label>
+            Ghi chú kiểm tra
+            <textarea
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              rows={3}
+              required
+              minLength={5}
+              maxLength={500}
+              disabled={recovery.isPending}
+            />
+          </label>
+        </fieldset>
+        {recovery.isError && (
+          <div role="alert">
+            <p className="error">
+              {recovery.error instanceof ApiError
+                ? `HTTP ${recovery.error.status}: ${recovery.error.message}`
+                : 'Không nhận được phản hồi xác nhận từ máy chủ. Kiểm tra kết nối.'}
+            </p>
+            {uncertain && (
+              <p>Đóng cửa sổ và làm mới danh sách để kiểm tra phiên trước khi thao tác tiếp.</p>
+            )}
+          </div>
         )}
         <div className="maintenance-recovery-actions">
           <Button type="button" variant="outline" onClick={onClose} disabled={recovery.isPending}>
@@ -212,6 +296,7 @@ export default function OperationsMaintenanceRecovery({ managerId }: { managerId
         <RecoveryForm
           key={selected.sessionId}
           row={selected}
+          managerId={managerId}
           onClose={close}
           onRecovered={(result) => {
             setNotice(
@@ -219,6 +304,9 @@ export default function OperationsMaintenanceRecovery({ managerId }: { managerId
             );
             close();
             void queryClient.invalidateQueries({ queryKey });
+            void queryClient.invalidateQueries({
+              queryKey: ['operations-maintenance-recovery-detail', managerId],
+            });
           }}
         />
       )}

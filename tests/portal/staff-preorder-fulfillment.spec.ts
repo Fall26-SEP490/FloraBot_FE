@@ -87,7 +87,7 @@ test('Seller staff fulfills only paid preorder into a PREORDER slot', async ({ p
   );
   await page.getByLabel('Đơn đặt trước').selectOption('order-1');
   await page.getByLabel('Ô PREORDER trống').selectOption('slot-p');
-  await page.getByLabel('Mã QR bó hoa').fill('BOUQUET-001');
+  await page.getByLabel('Mã định danh bó hoa').fill('BOUQUET-001');
   await expect(page.getByRole('button', { name: 'Xác nhận đã nạp vào ô' })).toBeDisabled();
   await page.getByRole('button', { name: 'Yêu cầu mở ô', exact: true }).click();
   await expect(page.getByText(/Mã đã gửi qua email/)).toBeVisible();
