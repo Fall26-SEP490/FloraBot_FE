@@ -88,21 +88,36 @@ export default function EvidenceUpload({
   return (
     <div className="evidence-upload">
       <label htmlFor={id}>Ảnh minh chứng</label>
-      <input
-        ref={inputRef}
-        id={id}
-        type="file"
-        accept="image/png,image/jpeg,image/webp"
-        disabled={disabled || busy}
-        aria-invalid={Boolean(errorMessage)}
-        aria-describedby={`${id}-help${errorMessage ? ` ${id}-error` : ''}`}
-        onChange={(event) => {
-          setFile(event.target.files?.[0] ?? null);
-          setStatus('');
-          setUploadError('');
-          onReference('');
-        }}
-      />
+      <div className="evidence-file-control">
+        <input
+          ref={inputRef}
+          id={id}
+          type="file"
+          className="product-photo-file-input"
+          tabIndex={-1}
+          accept="image/png,image/jpeg,image/webp"
+          disabled={disabled || busy}
+          aria-invalid={Boolean(errorMessage)}
+          aria-describedby={`${id}-help${errorMessage ? ` ${id}-error` : ''}`}
+          onChange={(event) => {
+            setFile(event.target.files?.[0] ?? null);
+            setStatus('');
+            setUploadError('');
+            onReference('');
+          }}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          disabled={disabled || busy}
+          onClick={() => document.getElementById(id)?.click()}
+        >
+          Chọn ảnh
+        </Button>
+        <span className="evidence-file-name" aria-live="polite">
+          {file ? file.name : 'Chưa chọn tệp nào'}
+        </span>
+      </div>
       <p id={`${id}-help`} className="quiet">
         Ảnh lưu riêng tư để đội ngũ xử lý hồ sơ. Chọn PNG, JPEG hoặc WebP tối đa 5 MB; tránh chụp
         thông tin cá nhân không cần thiết.

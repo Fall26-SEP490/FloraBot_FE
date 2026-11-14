@@ -80,7 +80,7 @@
 .workspace-portal-root.platform-workspace .platform-nav-heading small {
   display: block;
   color: #b8cdc2;
-  font-size: 0.55rem;
+  font-size: 0.67rem;
   letter-spacing: 0.1em;
   margin-bottom: 5px;
 }
@@ -565,7 +565,11 @@
     flex-wrap: wrap;
   }
   .workspace-portal-root.platform-workspace .dashboard-brand {
+    display: inline-flex;
+    align-items: center;
     min-width: 0;
+    min-height: 44px;
+    padding-block: 6px;
     font-size: 1.4rem;
     order: 0;
   }

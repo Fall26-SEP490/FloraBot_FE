@@ -2,7 +2,7 @@
 
 import './styles/profile.css';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -40,7 +40,7 @@ import type {
 import { phonePattern, emailPattern, asciiAlphanumeric, hasControlChars } from './profile.schemas';
 import { basicPayload, basicValues, validBirthDate, vietnamToday } from './profile.utils';
 import ShopBankSection from '../finance/components/payment-channels/ShopBankSection';
-import { profileSections, useProfileNavigation } from './useProfileNavigation';
+import { getProfileSections, useProfileNavigation } from './useProfileNavigation';
 import { useProfileDraftGuard } from './useProfileDraftGuard';
 
 interface SellerShopProfileData {
@@ -117,7 +117,7 @@ function SellerShopProfileSection() {
       >
         <summary>Xem và cập nhật thông tin cửa hàng</summary>
         {open && (
-          <div style={{ marginTop: '0.75rem' }}>
+          <div className="profile-disclosure-body">
             {shopQuery.isPending && <p role="status">Đang tải thông tin cửa hàng…</p>}
             {shopQuery.isError && (
               <p role="alert" className="profile-status-message profile-status-error">
@@ -218,12 +218,9 @@ function CustomerCloseAccountSection({ onClosed }: { onClosed: () => void }) {
   }
 
   return (
-    <details
-      className="profile-security-disclosure profile-danger-disclosure"
-      style={{ marginTop: '1.25rem' }}
-    >
+    <details className="profile-security-disclosure profile-danger-disclosure profile-disclosure-spacing">
       <summary>Đóng tài khoản vĩnh viễn</summary>
-      <div className="profile-disclaimer-card" style={{ marginTop: '0.75rem' }}>
+      <div className="profile-disclaimer-card profile-disclosure-note">
         Tài khoản chỉ có thể đóng khi không còn đơn hàng đang xử lý, yêu cầu hoàn tiền, khiếu nại mở
         hoặc hồ sơ thuê kiosk đang chờ. Sau khi đóng, toàn bộ phiên đăng nhập sẽ kết thúc.
       </div>
@@ -366,7 +363,11 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
       targetContactEmail.trim() !== '' ||
       contactMode === 'otp',
   );
-  const { activeSection, setActiveSection } = useProfileNavigation(profile.isSuccess);
+  const sections = useMemo(
+    () => getProfileSections(session.data?.role, Boolean(session.data?.sellerId)),
+    [session.data?.role, session.data?.sellerId],
+  );
+  const { activeSection, setActiveSection } = useProfileNavigation(profile.isSuccess, sections);
 
   const handleChangePassword = async (values: {
     currentPassword: string;
@@ -498,7 +499,7 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
                 : 'Không tải được phiên làm việc do máy chủ đang bận hoặc gián đoạn kết nối. Vui lòng thử lại.'}
             </p>
           </div>
-          <div className="profile-actions" style={{ marginTop: '1.5rem' }}>
+          <div className="profile-actions profile-actions-spaced">
             <Button onClick={() => void session.refetch()}>Thử lại</Button>
           </div>
         </div>
@@ -515,7 +516,7 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
             <h1>Hồ sơ cá nhân</h1>
             <p>Vui lòng đăng nhập để truy cập và quản lý hồ sơ của bạn.</p>
           </div>
-          <div className="profile-actions" style={{ marginTop: '2rem' }}>
+          <div className="profile-actions profile-actions-wide-gap">
             <Link href="/dang-nhap?returnUrl=/ho-so" className="button button-primary">
               Đăng nhập tài khoản
             </Link>
@@ -536,7 +537,7 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
           <div className="profile-header-titles">
             <h1>Tài khoản nhân viên cũ đã ngừng hoạt động</h1>
           </div>
-          <div className="workspace-denied-notice" role="alert" style={{ marginTop: '1.5rem' }}>
+          <div className="workspace-denied-notice profile-notice-spaced" role="alert">
             <CircleAlert size={20} aria-hidden="true" />
             <p>
               Tài khoản nhân viên FloraBot trước đây đã ngừng hoạt động. Hệ thống hiện phân chia
@@ -545,11 +546,11 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
             </p>
           </div>
           {logoutError && (
-            <p role="alert" className="error" style={{ marginTop: '1rem' }}>
+            <p role="alert" className="error profile-error-spaced">
               {logoutError}
             </p>
           )}
-          <div className="profile-actions" style={{ marginTop: '1.5rem' }}>
+          <div className="profile-actions profile-actions-spaced">
             <Button variant="outline" disabled={loggingOut} onClick={() => void handleLogout()}>
               {loggingOut ? 'Đang đăng xuất…' : 'Đăng xuất'}
             </Button>
@@ -944,7 +945,7 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
         {/* Navigation Breadcrumb */}
         <nav aria-label="Đường dẫn điều hướng" className="profile-breadcrumb">
           <Link href={homeUrl}>
-            <ArrowRight size={14} style={{ transform: 'rotate(180deg)' }} aria-hidden="true" />
+            <ArrowRight size={14} className="profile-back-icon" aria-hidden="true" />
             {role === 'CUSTOMER' ? 'Khu vực cá nhân' : 'Bảng điều khiển quản lý'}
           </Link>
           <span aria-hidden="true">/</span>
@@ -976,7 +977,7 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
         {/* Quick navigation anchor chips */}
         <div className="profile-layout">
           <nav aria-label="Mục hồ sơ" className="profile-quick-nav">
-            {profileSections.map(([id, label]) => (
+            {sections.map(([id, label]) => (
               <a
                 key={id}
                 href={`#${id}`}
@@ -1555,7 +1556,7 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
                     <strong>Số tài khoản:</strong> Đã che, kết thúc bằng{' '}
                     {bankValues.accountNumber.slice(bankValues.accountNumber.length > 4 ? -4 : -2)}
                   </p>
-                  <p className="profile-form-hint" style={{ marginTop: '0.75rem' }}>
+                  <p className="profile-form-hint profile-review-hint">
                     FloraBot chưa xác minh thông tin này với ngân hàng. Bạn cần kiểm tra chính xác
                     trước khi lưu.
                   </p>
@@ -1603,7 +1604,11 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
               <>
                 <SellerShopProfileSection />
                 {session.data?.sellerId && (
-                  <ShopBankSection sellerId={session.data.sellerId} variant="embedded" />
+                  <ShopBankSection
+                    sellerId={session.data.sellerId}
+                    variant="embedded"
+                    sectionId="shop-bank-heading"
+                  />
                 )}
               </>
             )}
@@ -1703,13 +1708,7 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
                   </form>
                 </details>
 
-                <div
-                  style={{
-                    marginTop: '2rem',
-                    paddingTop: '1.5rem',
-                    borderTop: '1px solid #e1ebe0',
-                  }}
-                >
+                <div className="profile-google-link-wrap">
                   <GoogleAccountLink email={currentProfile.loginEmail || ''} />
                 </div>
 

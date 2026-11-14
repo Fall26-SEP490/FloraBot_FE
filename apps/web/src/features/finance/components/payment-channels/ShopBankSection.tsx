@@ -5,6 +5,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import { ApiError, queryClient, request } from '@/shared/lib/api';
 import type { components } from '../../../../../../../packages/contracts/src/generated/api';
+import '../../styles/shop-bank-section.css';
 
 export type SellerBankResponse = components['schemas']['SellerBankResponse'];
 export type SetSellerBankRequest = components['schemas']['SetSellerBankRequest'];
@@ -13,6 +14,7 @@ export interface ShopBankSectionProps {
   sellerId: string;
   variant?: 'panel' | 'embedded';
   title?: string;
+  sectionId?: string;
   onBankReadyChange?: (isReady: boolean) => void;
 }
 
@@ -20,6 +22,7 @@ export function ShopBankSection({
   sellerId,
   variant = 'panel',
   title = 'Tài khoản ngân hàng của shop (Nhận hoàn phí thuê kiosk)',
+  sectionId,
   onBankReadyChange,
 }: ShopBankSectionProps) {
   const [isEditing, setIsEditing] = useState(false);
@@ -371,6 +374,7 @@ export function ShopBankSection({
   if (variant === 'embedded') {
     return (
       <section
+        id={sectionId}
         className="shop-bank-section embedded"
         aria-labelledby={`shop-bank-title-${sellerId}`}
       >
@@ -381,6 +385,7 @@ export function ShopBankSection({
 
   return (
     <section
+      id={sectionId}
       className="business-panel shop-bank-section"
       aria-labelledby={`shop-bank-title-${sellerId}`}
     >

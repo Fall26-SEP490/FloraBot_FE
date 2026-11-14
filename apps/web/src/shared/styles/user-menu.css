@@ -27,9 +27,8 @@
 
 .user-menu-trigger:hover,
 .user-menu-trigger[aria-expanded='true'] {
-  border-color: #174b35;
+  border-color: var(--color-workspace-accent);
   box-shadow: 0 4px 14px rgba(23, 75, 53, 0.2);
-  transform: translateY(-1px);
 }
 
 .user-menu-trigger:focus-visible {
@@ -53,7 +52,7 @@
   height: 38px;
   place-items: center;
   border-radius: 50%;
-  background: linear-gradient(135deg, #174b35 0%, #2b6b4a 100%);
+  background-color: var(--color-workspace-accent, #174b35);
   color: #ffffff;
   font-size: 15px;
   font-weight: 800;
@@ -70,10 +69,14 @@
   max-width: min(160px, 25vw);
   overflow: hidden;
   color: #587264;
-  font-size: 11px;
-  line-height: 1.2;
+  font-size: 12px;
+  line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.dashboard-header .user-menu-caption {
+  display: none;
 }
 
 .user-menu-name {
@@ -93,10 +96,10 @@
   z-index: 1120;
   width: min(280px, calc(100vw - 28px));
   padding: 8px;
-  border: 1px solid #d6e3d4;
-  border-radius: 16px;
-  background: #ffffff;
-  color: #173824;
+  border: 1px solid var(--color-workspace-divider, #d6e3d4);
+  border-radius: var(--radius-workspace-panel, 12px);
+  background: var(--color-workspace-surface, #ffffff);
+  color: var(--color-workspace-ink, #173824);
   box-shadow:
     0 4px 16px rgba(17, 52, 33, 0.08),
     0 16px 36px rgba(17, 52, 33, 0.14);
@@ -122,7 +125,7 @@
 .user-menu-logout {
   display: flex;
   width: 100%;
-  min-height: 42px;
+  min-height: 44px;
   box-sizing: border-box;
   align-items: center;
   gap: 10px;

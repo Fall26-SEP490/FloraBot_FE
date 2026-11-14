@@ -222,14 +222,32 @@ export function TaskItem({
   }
   const quickTemplates = isTechnician
     ? task.status === 'ASSIGNED'
-      ? ['Đã nhận việc kiểm tra sự cố tại tủ', 'Đã có mặt tại kiosk để kiểm tra sự cố']
+      ? [
+          {
+            label: 'Đã nhận việc kiểm tra sự cố tại tủ',
+            value: 'Đã nhận việc kiểm tra sự cố tại tủ',
+          },
+          {
+            label: 'Đã có mặt tại kiosk để kiểm tra sự cố',
+            value: 'Đã có mặt tại kiosk để kiểm tra sự cố',
+          },
+        ]
       : []
     : !staffDelivery
       ? []
       : task.status === 'ASSIGNED'
-        ? ['Bắt đầu giao hoa đến tủ', 'Đã có mặt tại kiosk']
+        ? [
+            { label: 'Bắt đầu giao hoa đến tủ', value: 'Bắt đầu giao hoa đến tủ' },
+            { label: 'Đã có mặt tại kiosk', value: 'Đã có mặt tại kiosk' },
+          ]
         : task.status === 'IN_PROGRESS'
-          ? ['Đã nạp hoa và kiểm tra đầy đủ', 'Đã nạp hoa xong, các ô hoạt động tốt']
+          ? [
+              { label: 'Đã nạp hoa đủ', value: 'Đã nạp hoa và kiểm tra đầy đủ' },
+              {
+                label: 'Các ô hoạt động tốt',
+                value: 'Đã nạp hoa xong, các ô hoạt động tốt',
+              },
+            ]
           : [];
 
   const taskContent = (
@@ -338,12 +356,14 @@ export function TaskItem({
                 <div className="staff-quick-chips">
                   {quickTemplates.map((template) => (
                     <button
-                      key={template}
+                      key={template.value}
                       type="button"
                       className="staff-chip-btn"
-                      onClick={() => form.setValue('report', template, { shouldValidate: true })}
+                      onClick={() =>
+                        form.setValue('report', template.value, { shouldValidate: true })
+                      }
                     >
-                      {template}
+                      {template.label}
                     </button>
                   ))}
                 </div>
@@ -524,7 +544,10 @@ export function TaskItem({
     </>
   );
   return (
-    <article className="staff-task-card member-empty" aria-labelledby={`task-${task.id}`}>
+    <article
+      className={role === 'SELLER_STAFF' ? 'staff-task-card' : 'staff-task-card member-empty'}
+      aria-labelledby={`task-${task.id}`}
+    >
       <div className="staff-task-heading">
         <div>
           <h3 id={`task-${task.id}`}>
@@ -541,9 +564,9 @@ export function TaskItem({
       <div className="staff-task-destination-card">
         <p className="staff-destination-address">
           <MapPin size={15} aria-hidden="true" />
-          <span>
-            {task.address}
-            {task.shopName ? ` · ${task.shopName}` : ''}
+          <span className="staff-destination-text">
+            <span>{task.address}</span>
+            {task.shopName ? <span className="staff-destination-shop">{task.shopName}</span> : null}
           </span>
         </p>
         {task.instructions && (

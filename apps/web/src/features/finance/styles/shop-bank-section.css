@@ -1,0 +1,262 @@
+/* Dedicated styles for ShopBankSection across seller and profile surfaces */
+
+.shop-bank-section.embedded {
+  display: grid;
+  gap: 1rem;
+  margin-top: 0;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--color-workspace-divider, #dce6d7);
+  border-radius: var(--radius-workspace-panel, 12px);
+  background: var(--color-workspace-surface, #ffffff);
+  color: var(--color-workspace-ink, #183e2b);
+  box-shadow: var(--shadow-workspace-panel, 0 1px 3px rgb(24 62 43 / 4%));
+}
+
+.shop-bank-section .business-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0;
+}
+
+.shop-bank-section .business-heading h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--color-workspace-ink, #183e2b);
+}
+
+.shop-bank-section .business-heading p {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: var(--color-workspace-muted, #476451);
+}
+
+.shop-bank-distinction-card {
+  margin: 0.15rem 0;
+  padding: 0.85rem 1rem;
+  background: var(--color-workspace-surface-muted, #fafcfa);
+  border: 0;
+  border-left: 3px solid var(--color-workspace-accent, #174b35);
+  border-radius: 0 var(--radius-workspace-control, 8px) var(--radius-workspace-control, 8px) 0;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: var(--color-workspace-muted, #476451);
+}
+
+.shop-bank-distinction-badge {
+  display: inline-block;
+  margin-bottom: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--color-workspace-ink, #183e2b);
+}
+
+.shop-bank-distinction-card p {
+  margin: 0.25rem 0;
+}
+
+.shop-bank-loading {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-workspace-muted, #476451);
+}
+
+.shop-bank-alert-box {
+  display: grid;
+  gap: 0.65rem;
+  justify-items: start;
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-workspace-control, 8px);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.shop-bank-alert-box p {
+  margin: 0;
+}
+
+.shop-bank-alert-box.is-warning {
+  background: var(--color-status-warning-surface, #fff8e6);
+  border: 1px solid var(--color-status-warning-line, #ffd666);
+  color: var(--color-status-warning-ink, #7a5400);
+}
+
+.shop-bank-alert-box.is-error {
+  background: var(--color-status-danger-surface, #fff0ee);
+  border: 1px solid var(--color-status-danger-line, #e5aaaa);
+  color: var(--color-status-danger-ink, #842323);
+}
+
+.shop-bank-alert-box.is-success {
+  background: var(--color-status-success-surface, #e8f5e9);
+  border: 1px solid var(--color-status-success-line, #a5d6a7);
+  color: var(--color-status-success-ink, #1b5e20);
+}
+
+.shop-bank-ready-card {
+  display: grid;
+  gap: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--color-workspace-divider, #dce6d7);
+}
+
+.shop-bank-status-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.shop-bank-section .status-pill.status-ACTIVE {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.3;
+  background: var(--color-status-success-surface, #e8f5e9);
+  color: var(--color-status-success-ink, #1b5e20);
+  border: 1px solid var(--color-status-success-line, #a5d6a7);
+}
+
+.shop-bank-status-desc {
+  font-size: 0.84rem;
+  color: var(--color-workspace-muted, #476451);
+}
+
+.shop-bank-section .business-facts.shop-bank-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin: 0;
+  padding: 0.85rem 0.5rem;
+  border: 0;
+  border-top: 1px solid var(--color-workspace-divider, #dce6d7);
+  border-bottom: 1px solid var(--color-workspace-divider, #dce6d7);
+  border-radius: 0;
+  background: var(--color-workspace-surface-muted, #fafcfa);
+}
+
+.shop-bank-section .business-facts.shop-bank-facts > div {
+  min-width: 0;
+  padding: 0 0.5rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.shop-bank-section .business-facts.shop-bank-facts span {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-workspace-muted, #476451);
+}
+
+.shop-bank-section .business-facts.shop-bank-facts strong {
+  font-size: 0.92rem;
+  color: var(--color-workspace-ink, #183e2b);
+  overflow-wrap: anywhere;
+}
+
+.shop-bank-form-wrapper {
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--color-workspace-divider, #dce6d7);
+}
+
+.shop-bank-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  max-width: 640px;
+  margin-top: 0.75rem;
+}
+
+.shop-bank-form .profile-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0;
+}
+
+.shop-bank-form label {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--color-workspace-ink, #183e2b);
+}
+
+.shop-bank-form input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--color-workspace-line, #c9d9c8);
+  border-radius: var(--radius-workspace-control, 8px);
+  font-size: 0.92rem;
+  color: var(--color-workspace-ink, #183e2b);
+  background: var(--color-workspace-surface, #ffffff);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.shop-bank-form input:focus {
+  outline: none;
+  border-color: var(--interaction-border-focus, #174b35);
+  box-shadow: 0 0 0 3px var(--interaction-focus-ring, rgb(23 75 53 / 16%));
+}
+
+.shop-bank-form input[aria-invalid='true'] {
+  border-color: var(--interaction-error-border, #a9342f);
+}
+
+.shop-bank-form .profile-field-error {
+  margin: 0;
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: var(--color-status-danger-ink, #842323);
+}
+
+.shop-bank-field-hint {
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--color-workspace-muted, #476451);
+}
+
+.shop-bank-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.35rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .shop-bank-section.embedded {
+    padding: 1.1rem;
+  }
+
+  .shop-bank-section .business-facts.shop-bank-facts {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.75rem;
+  }
+
+  .shop-bank-form-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .shop-bank-form-actions .button {
+    width: 100%;
+    min-height: 44px;
+  }
+}

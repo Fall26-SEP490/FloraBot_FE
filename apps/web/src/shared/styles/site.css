@@ -114,9 +114,9 @@ html {
   background: #183e2b;
   color: #ffffff;
   text-align: center;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 6px 16px;
   width: 100%;
@@ -371,15 +371,13 @@ html {
   font-size: 13.5px;
   color: #4a5c4d;
   text-decoration: none;
-  transition:
-    color 0.15s ease,
-    transform 0.15s ease;
+  transition: color 0.15s ease;
 }
 
 .footer-col nav a:hover {
   color: #183e2b;
-  text-decoration: none !important;
-  transform: translateX(2px);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .footer-bottom {
@@ -519,17 +517,43 @@ html {
 
 @media (max-width: 600px) {
   .site-announcement-bar {
-    font-size: 10px;
+    font-size: 12px;
     padding: 5px 10px;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.04em;
   }
 
   .site-header-main {
-    padding: 6px 12px;
+    padding: 6px 10px;
+    gap: 8px;
+    max-width: 100%;
+  }
+
+  .site-header-left {
+    min-width: 0;
   }
 
   .site-brand {
-    font-size: 18px;
+    font-size: 15px;
+    letter-spacing: 0.1em;
+    gap: 5px;
+    white-space: nowrap;
+  }
+
+  .site-brand svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  .site-header-right {
+    flex: 0 1 auto;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .site-header .user-menu-account {
+    flex-shrink: 1;
+    min-width: 0;
   }
 
   .site-menu-label {
@@ -540,13 +564,19 @@ html {
     flex-shrink: 0;
     justify-content: center;
   }
+  .site-header .user-menu-caption {
+    display: none;
+  }
   .site-header .user-menu-trigger {
     gap: 5px;
-    padding-right: 7px;
+    min-width: 44px;
+    min-height: 44px;
+    max-width: 100%;
+    padding: 3px 8px 3px 4px;
   }
-  .site-header .user-menu-name,
-  .site-header .user-menu-caption {
-    max-width: 68px;
+  .site-header .user-menu-name {
+    max-width: clamp(88px, 30vw, 150px);
+    font-size: 13px;
   }
   .site-header .user-menu-avatar {
     width: 30px;

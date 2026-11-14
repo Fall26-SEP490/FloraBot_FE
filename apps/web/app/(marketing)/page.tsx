@@ -19,7 +19,7 @@ export default function Page() {
               <h1 id="hero-title" className="home-hero-title">
                 Một bó hoa,
                 <br />
-                thật nhiều thương.
+                nhiều yêu thương.
               </h1>
               <p className="home-hero-subtitle">
                 Chọn mẫu hoa từ các shop, nhận báo giá và hẹn lấy hoa tại kiosk FloraBot.

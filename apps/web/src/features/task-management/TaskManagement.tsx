@@ -135,10 +135,10 @@ export function TaskManagement(props: StaffTasksProps) {
               <strong>{tasks.data.items.length}</strong>
               <small>Trong trang đang xem</small>
             </div>
-            <div className="operations-metric">
-              <RefreshCw aria-hidden="true" style={{ color: '#0369a1' }} />
+            <div className="operations-metric operations-metric--info">
+              <RefreshCw aria-hidden="true" />
               <span>Chờ bắt đầu hoặc đang thực hiện</span>
-              <strong style={{ color: '#0369a1' }}>
+              <strong>
                 {
                   tasks.data.items.filter(
                     (t) => t.status === 'IN_PROGRESS' || t.status === 'ASSIGNED',
@@ -146,10 +146,10 @@ export function TaskManagement(props: StaffTasksProps) {
                 }
               </strong>
             </div>
-            <div className="operations-metric">
-              <CheckCircle2 aria-hidden="true" style={{ color: '#16a34a' }} />
+            <div className="operations-metric operations-metric--success">
+              <CheckCircle2 aria-hidden="true" />
               <span>Chờ duyệt hoặc đã duyệt</span>
-              <strong style={{ color: 'var(--color-status-success-ink)' }}>
+              <strong>
                 {
                   tasks.data.items.filter(
                     (t) => t.status === 'SUBMITTED' || t.status === 'COMPLETED',

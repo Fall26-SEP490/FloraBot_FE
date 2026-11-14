@@ -62,7 +62,7 @@
   font-weight: 550;
   padding: 11px 12px;
   border-radius: 9px;
-  margin-block: 3px;
+  margin-block: 4px;
 }
 .workspace-portal-root.platform-workspace .workspace-sidebar a:hover {
   background: #f0f5ef;
