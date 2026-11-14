@@ -54,7 +54,10 @@ export function AdminKioskSlotDetails({
           <section aria-label={`Các ô của kiosk ${kioskCode}`}>
             <h4>Các ô của kiosk {kioskCode}</h4>
             <FlowerPresencePanel kioskId={kioskId} />
-            <p className="quiet">Cấu hình giám sát cảm biến áp dụng cho ô mua tại tủ.</p>
+            <p className="quiet">
+              Xác minh cảm biến cửa và cảm biến hoa tại ô trước khi bật giám sát. Ô Pre-order cần
+              bật giám sát để shop nạp hoa.
+            </p>
             {slots.isPending && <p role="status">Đang tải các ô tủ…</p>}
             {slots.isError ? (
               <div role="alert">
@@ -80,7 +83,7 @@ export function AdminKioskSlotDetails({
                     </span>
                     <div className="admin-kiosk-slot-actions">
                       <span>{slot.bouquetId ? 'Đã gán bó hoa' : 'Chưa gán bó hoa'}</span>
-                      {slot.zone === 'WALK_IN' && (
+                      {(slot.zone === 'WALK_IN' || slot.zone === 'PREORDER') && (
                         <Button
                           type="button"
                           variant="outline"

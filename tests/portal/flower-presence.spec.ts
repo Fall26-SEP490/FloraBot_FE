@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { setupAdminSurfaces } from '../fixtures/admin-surfaces';
 
-test('Admin can verify and enable sensors on a Walk-in slot', async ({ page }) => {
+test('Admin can verify and enable sensors on Walk-in and Pre-order slots', async ({ page }) => {
   await setupAdminSurfaces(page);
   await page.route('**/api/admin/slots', (route) =>
     route.fulfill({
@@ -24,6 +24,13 @@ test('Admin can verify and enable sensors on a Walk-in slot', async ({ page }) =
     presenceVerified: boolean;
     supportsManualRetry?: boolean;
   } | null = null;
+  let preorderSettings: typeof settings;
+  await page.route('**/api/admin/kiosks/ui-kiosk/slots/preorder/sensor-capabilities', (route) => {
+    if (route.request().method() === 'PUT') preorderSettings = route.request().postDataJSON();
+    return preorderSettings
+      ? route.fulfill({ json: preorderSettings })
+      : route.fulfill({ status: 204 });
+  });
   await page.route('**/api/admin/kiosks/ui-kiosk/slots/walk-in/sensor-capabilities', (route) => {
     if (route.request().method() === 'PUT') settings = route.request().postDataJSON();
     return settings ? route.fulfill({ json: settings }) : route.fulfill({ status: 204 });
@@ -44,7 +51,18 @@ test('Admin can verify and enable sensors on a Walk-in slot', async ({ page }) =
   await page.getByLabel('Lọc phân bổ', { exact: true }).selectOption('ALL');
   await page.locator('.admin-shop-list > li > details > summary').first().click();
   await page.getByRole('button', { name: 'Xem các ô tủ', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Cấu hình cảm biến ô S03' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Cấu hình cảm biến ô S03' }).click();
+  const preorderDialog = page.getByRole('dialog', { name: 'Cấu hình cảm biến ô S03' });
+  const enablePreorder = preorderDialog.getByRole('checkbox', { name: 'Bật giám sát cho ô' });
+  await expect(enablePreorder).toBeDisabled();
+  await preorderDialog.getByRole('checkbox', { name: 'Đã kiểm tra cảm biến cửa' }).check();
+  await expect(enablePreorder).toBeDisabled();
+  await preorderDialog.getByRole('checkbox', { name: 'Đã kiểm tra cảm biến hoa' }).check();
+  await enablePreorder.check();
+  await preorderDialog.getByRole('button', { name: 'Lưu cấu hình' }).click();
+  await expect(preorderDialog.getByRole('status')).toHaveText('Đã lưu cấu hình cảm biến.');
+  expect(preorderSettings).toEqual({ enabled: true, doorVerified: true, presenceVerified: true });
+  await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Cấu hình cảm biến ô S01' }).click();
   const dialog = page.getByRole('dialog', { name: 'Cấu hình cảm biến ô S01' });
   const enable = dialog.getByRole('checkbox', { name: 'Bật giám sát cho ô' });

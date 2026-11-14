@@ -349,14 +349,15 @@ test('Customer request → seller quote → customer acceptance/payment → sell
   await expect(page.getByRole('button', { name: 'Tiếp tục kiểm tra' })).toBeDisabled();
   await expect(
     page.getByLabel('Ô trống tại tủ nhận').locator('option[value="slot-sensor-not-ready"]'),
-  ).toHaveCount(0);
+  ).toBeDisabled();
+  await expect(page.getByText(/Ô có cảm biến chưa sẵn sàng cần Admin/)).toBeVisible();
   await page.getByLabel('Ô trống tại tủ nhận').selectOption(slotId);
-  await page.getByLabel('Mã QR của bó hoa').fill('TEST-BOUQUET-01');
+  await page.getByLabel('Mã định danh bó hoa').fill('TEST-BOUQUET-01');
   await page.getByRole('button', { name: 'Tiếp tục kiểm tra' }).click();
   await expect(page.locator('.fulfill-review')).toContainText('P01');
   await expect(page.locator('.fulfill-review')).toContainText('TEST-BOUQUET-01');
   await page.getByRole('button', { name: 'Quay lại', exact: true }).click();
-  await expect(page.getByLabel('Mã QR của bó hoa')).toHaveValue('TEST-BOUQUET-01');
+  await expect(page.getByLabel('Mã định danh bó hoa')).toHaveValue('TEST-BOUQUET-01');
   await page.getByRole('button', { name: 'Tiếp tục kiểm tra' }).click();
   await expect(page.getByRole('button', { name: 'Xác nhận nạp hoa', exact: true })).toBeDisabled();
   await page.getByRole('button', { name: 'Yêu cầu mở ô', exact: true }).click();
