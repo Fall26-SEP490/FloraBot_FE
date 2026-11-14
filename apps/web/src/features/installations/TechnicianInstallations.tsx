@@ -41,17 +41,24 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
       .replace(/[\u0300-\u036f]/g, '')
       .toLowerCase()
       .replace(/đ/g, 'd');
-  const matchingJobs = jobs.filter(
-    (job) =>
-      (!status || job.status === status) &&
-      normalize(`${job.shopName} ${job.kioskCode} ${job.installationAddress}`).includes(
-        normalize(search.trim()),
-      ),
-  );
-  const initialJobId = jobs.length > 0 ? jobs[0].id : null;
-  const effectiveJobId = jobs.some((job) => job.id === selectedJobId)
+  const jobPriority: Record<string, number> = {
+    INSTALLING: 0,
+    SCHEDULED: 1,
+    AWAITING_HANDOVER: 2,
+    ACTIVE: 3,
+  };
+  const matchingJobs = jobs
+    .filter(
+      (job) =>
+        (!status || job.status === status) &&
+        normalize(`${job.shopName} ${job.kioskCode} ${job.installationAddress}`).includes(
+          normalize(search.trim()),
+        ),
+    )
+    .sort((a, b) => (jobPriority[a.status] ?? 4) - (jobPriority[b.status] ?? 4));
+  const effectiveJobId = matchingJobs.some((job) => job.id === selectedJobId)
     ? selectedJobId
-    : initialJobId;
+    : (matchingJobs[0]?.id ?? null);
 
   // Query: Specific Job Detail (fetch actual detail)
   const jobDetailQuery = useQuery({

@@ -594,3 +594,30 @@
   font-size: 12.5px;
   margin: 8px 0;
 }
+
+/* Keep technician progress suggestions readable outside the seller workspace. */
+#staff-tasks .staff-quick-templates {
+  margin: 8px 0 12px;
+}
+#staff-tasks .staff-quick-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+#staff-tasks .staff-chip-btn {
+  border: 1px solid #c8dec6;
+  border-radius: 20px;
+  padding: 8px 12px;
+  background: #f4f8f2;
+  color: #173e33;
+  text-align: left;
+  cursor: pointer;
+}
+#staff-tasks .staff-chip-btn:focus-visible {
+  outline: 2px solid #173e33;
+  outline-offset: 2px;
+}
+#staff-tasks .staff-submit-btn {
+  margin-top: 12px;
+}

@@ -133,13 +133,6 @@ export function InstallationActionCards({
           <div className="kiosk-form-field">
             <div className="field-label-with-action">
               <label htmlFor={confirmNoteId}>Ghi chú xác nhận liên hệ (bắt buộc):</label>
-              <button
-                type="button"
-                className="link-inline-btn"
-                onClick={() => setConfirmNote('Đã gọi điện xác nhận vị trí mặt bằng và nguồn điện')}
-              >
-                + Điền mẫu nhanh
-              </button>
             </div>
             <textarea
               id={confirmNoteId}
@@ -151,13 +144,8 @@ export function InstallationActionCards({
           </div>
           <div className="action-buttons-row">
             <Button
-              onClick={() =>
-                onSubmitConfirm(
-                  confirmNote.trim() || 'Đã gọi điện xác nhận vị trí mặt bằng và nguồn điện',
-                  () => setConfirmNote(''),
-                )
-              }
-              disabled={confirmPending}
+              onClick={() => onSubmitConfirm(confirmNote.trim(), () => setConfirmNote(''))}
+              disabled={confirmPending || confirmNote.trim().length < 5}
             >
               <Check size={18} aria-hidden="true" />
               {confirmPending ? 'Đang xác nhận...' : 'Xác nhận liên hệ'}
