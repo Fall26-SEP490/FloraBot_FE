@@ -239,7 +239,7 @@ export default function FlowerShop() {
           filters={filters}
           mobileFiltersOpen={dialog.mobileFiltersOpen}
           onClose={dialog.closeMobileFilters}
-          totalRawItems={rawItems.length}
+          totalRawItems={filters.totalCards}
         />
 
         <section className="catalog-main-content" aria-label="Danh sách sản phẩm">

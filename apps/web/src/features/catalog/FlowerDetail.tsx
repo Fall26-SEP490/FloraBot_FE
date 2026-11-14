@@ -242,23 +242,22 @@ export default function FlowerDetail({
                 </Button>
               </div>
 
-              {/* Thông tin nơi nhận hoa / nơi mua hoa */}
-              <section className="flower-detail-location" aria-labelledby="flower-location-title">
-                <h2 id="flower-location-title">
-                  {isWalkIn(item) ? 'Nơi mua hoa' : 'Nơi nhận hoa'}
-                </h2>
-                <div className="flower-detail-location-body">
-                  <div className="flower-detail-info-row">
-                    <div className="flower-detail-info-icon" aria-hidden="true">
-                      <MapPin size={16} />
-                    </div>
-                    <div className="flower-detail-info-content">
-                      <strong>{item.kioskName || 'Chưa có thông tin'}</strong>
-                      <p>{item.address || 'Chưa có địa chỉ'}</p>
+              {isWalkIn(item) && (
+                <section className="flower-detail-location" aria-labelledby="flower-location-title">
+                  <h2 id="flower-location-title">Nơi mua hoa</h2>
+                  <div className="flower-detail-location-body">
+                    <div className="flower-detail-info-row">
+                      <div className="flower-detail-info-icon" aria-hidden="true">
+                        <MapPin size={16} />
+                      </div>
+                      <div className="flower-detail-info-content">
+                        <strong>{item.kioskName || 'Chưa có thông tin'}</strong>
+                        <p>{item.address || 'Chưa có địa chỉ'}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </section>
+                </section>
+              )}
 
               {/* Mô tả sản phẩm thực tế */}
               {item.description?.trim() ? (

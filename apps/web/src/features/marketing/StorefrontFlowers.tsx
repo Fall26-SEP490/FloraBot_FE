@@ -6,10 +6,12 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import { loadCatalog } from '@/features/catalog/catalog.data';
 import {
+  catalogCardKey,
   isPreorder,
   isPreorderSoldOut,
   isWalkIn,
   purchaseLabel,
+  uniqueCatalogCards,
 } from '@/features/catalog/catalog.utils';
 import { fetchLandingCatalog } from './landing-api';
 import { priceVnd, safePublicUrl } from './landing-data';
@@ -18,7 +20,7 @@ export default function StorefrontFlowers() {
   const [failedPhotos, setFailedPhotos] = useState<Set<string>>(() => new Set());
   const catalog = useQuery({
     queryKey: ['landing-catalog-preview'],
-    queryFn: () => loadCatalog(fetchLandingCatalog),
+    queryFn: async () => uniqueCatalogCards(await loadCatalog(fetchLandingCatalog)),
   });
   const items = catalog.data ?? [];
   const groups = [
@@ -79,15 +81,17 @@ export default function StorefrontFlowers() {
               </div>
               <ul className="storefront-flower-grid">
                 {group.flowers.slice(0, 10).map((item) => {
-                  const key = `${item.productId}:${item.kioskId}:${item.zone ?? 'template'}`;
+                  const kioskName = isPreorder(item) ? '' : item.kioskName;
                   const photo = safePublicUrl(item.photo);
                   const illustrative = !photo || failedPhotos.has(photo);
                   return (
-                    <li key={key}>
+                    <li key={catalogCardKey(item)}>
                       <Link
                         className="storefront-flower"
                         href={`/dat-hoa/${encodeURIComponent(item.productId)}/${encodeURIComponent(item.kioskId)}${item.zone ? `?zone=${encodeURIComponent(item.zone)}` : ''}`}
-                        aria-label={`${item.name} · ${purchaseLabel(item)} · ${item.kioskName}`}
+                        aria-label={[item.name, purchaseLabel(item), kioskName]
+                          .filter(Boolean)
+                          .join(' · ')}
                       >
                         <div className="storefront-flower-photo">
                           <img
@@ -122,7 +126,7 @@ export default function StorefrontFlowers() {
                             <p className="storefront-flower-availability">Hết hàng</p>
                           )}
                           <p className="storefront-flower-shop" title={item.shopName}>
-                            {[item.shopName, item.kioskName].filter(Boolean).join(' · ')}
+                            {[item.shopName, kioskName].filter(Boolean).join(' · ')}
                           </p>
                         </div>
                       </Link>

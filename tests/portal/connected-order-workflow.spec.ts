@@ -170,6 +170,7 @@ test('Preorder picker hides full kiosks and sorts available ones by customer loc
     .click();
   const picker = page.getByLabel('Tủ nhận hoa', { exact: true });
   await expect(picker.locator('option:not([disabled])')).toHaveText(['A - tủ xa', 'Z - tủ gần']);
+  await expect(picker).toHaveValue('');
   await page.getByRole('button', { name: 'Xếp tủ gần tôi' }).click();
   await expect(picker.locator('option:not([disabled])')).toHaveText(['Z - tủ gần', 'A - tủ xa']);
 });

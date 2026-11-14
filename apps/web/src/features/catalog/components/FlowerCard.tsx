@@ -6,6 +6,7 @@ import {
   canOrderOnWeb,
   formatPrice,
   getOccasionBadgeClass,
+  isPreorder,
   isWalkIn,
   purchaseLabel,
 } from '../catalog.utils';
@@ -121,10 +122,12 @@ export function FlowerCard({
             <Store size={14} aria-hidden="true" />
             <span>{item.shopName}</span>
           </span>
-          <span className="flower-meta-item" title={item.kioskName}>
-            <MapPin size={14} aria-hidden="true" />
-            <span>{item.kioskName}</span>
-          </span>
+          {!isPreorder(item) && item.kioskName && (
+            <span className="flower-meta-item" title={item.kioskName}>
+              <MapPin size={14} aria-hidden="true" />
+              <span>{item.kioskName}</span>
+            </span>
+          )}
           {walkIn && item.address && <span className="flower-meta-item">{item.address}</span>}
         </div>
       </div>
