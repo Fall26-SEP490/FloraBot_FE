@@ -131,21 +131,25 @@ export default function StaffEvidence({
             </ol>
           )}
           <div className="staff-history-pagination" aria-label="Phân trang ảnh minh chứng">
-            <Button
-              variant="outline"
-              disabled={page === 1 || evidence.isFetching}
-              onClick={() => setPage(page - 1)}
-            >
-              Ảnh trang trước
-            </Button>
-            <span>Trang {page}</span>
-            <Button
-              variant="outline"
-              disabled={!evidence.data.hasMore || evidence.isFetching}
-              onClick={() => setPage(page + 1)}
-            >
-              Ảnh trang tiếp
-            </Button>
+            {(page > 1 || evidence.data.hasMore) && (
+              <>
+                <Button
+                  variant="outline"
+                  disabled={page === 1 || evidence.isFetching}
+                  onClick={() => setPage(page - 1)}
+                >
+                  Ảnh trang trước
+                </Button>
+                <span>Trang {page}</span>
+                <Button
+                  variant="outline"
+                  disabled={!evidence.data.hasMore || evidence.isFetching}
+                  onClick={() => setPage(page + 1)}
+                >
+                  Ảnh trang tiếp
+                </Button>
+              </>
+            )}
             <Button
               variant="outline"
               disabled={evidence.isFetching}

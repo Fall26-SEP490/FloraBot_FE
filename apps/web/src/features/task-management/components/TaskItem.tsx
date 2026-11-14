@@ -52,6 +52,7 @@ export function TaskItem({
   const [showCancellation, setShowCancellation] = useState(false);
   const staffDelivery =
     isWorker && role === 'SELLER_STAFF' && !!actorId && task.kind === 'DELIVERY';
+  const startingDelivery = staffDelivery && task.status === 'ASSIGNED';
   const canWorkOnInventory = staffDelivery && task.status === 'IN_PROGRESS';
   const inventory = useStaffInventoryMaintenance(task.id, actorId, canWorkOnInventory);
   const needsRepairContext =
@@ -77,6 +78,7 @@ export function TaskItem({
     task.status === 'SUBMITTED';
 
   const form = useForm<{ report: string; status: string }>();
+  const reportError = form.formState.errors.report?.message;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [uncertain, setUncertain] = useState(false);
@@ -289,13 +291,23 @@ export function TaskItem({
       {choices.length > 0 && (!needsRepairContext || (repairDetails.isSuccess && !slotRepair)) && (
         <form noValidate onSubmit={form.handleSubmit(submit)} className="staff-transition-form">
           <div className="staff-transition-header">
-            <h4>{canCancelOpenTask ? 'Hủy công việc' : 'Cập nhật tiến độ & Báo cáo'}</h4>
+            <h4>
+              {canCancelOpenTask
+                ? 'Hủy công việc'
+                : startingDelivery
+                  ? 'Bắt đầu công việc'
+                  : 'Cập nhật tiến độ & Báo cáo'}
+            </h4>
             <p>
               {canCancelOpenTask
                 ? 'Nhập lý do hủy để nhân viên biết.'
                 : isTechnician
                   ? 'Chọn bước tiếp theo và nhập nội dung để quản lý theo dõi xử lý sự cố.'
-                  : 'Chọn bước tiếp theo và nhập nội dung cập nhật.'}
+                  : startingDelivery
+                    ? 'Nhập ghi chú hoặc chọn gợi ý, rồi bấm Bắt đầu. Thao tác tại tủ sẽ hiện khi công việc chuyển sang Đang thực hiện.'
+                    : canWorkOnInventory
+                      ? 'Sau khi thực hiện và ghi nhận thao tác tại tủ, gửi kết quả để chủ shop duyệt.'
+                      : 'Chọn bước tiếp theo và nhập nội dung cập nhật.'}
             </p>
           </div>
           <div className="staff-form-group">
@@ -347,17 +359,15 @@ export function TaskItem({
                   : 'Nhập nội dung (ít nhất 10 ký tự)…'
               }
               {...form.register('report', {
-                validate: (value) => value.trim().length >= 10 || 'Mô tả ít nhất 10 ký tự.',
+                validate: (value) => (value?.trim().length ?? 0) >= 10 || 'Mô tả ít nhất 10 ký tự.',
               })}
-              aria-invalid={!!form.formState.errors.report}
-              aria-describedby={
-                form.formState.errors.report ? `report-error-${task.id}` : undefined
-              }
+              aria-invalid={Boolean(reportError)}
+              aria-describedby={reportError ? `report-error-${task.id}` : undefined}
               disabled={busy}
             />
-            {form.formState.errors.report?.message && (
-              <p id={`report-error-${task.id}`} className="error">
-                {form.formState.errors.report.message}
+            {reportError && (
+              <p id={`report-error-${task.id}`} className="error" role="alert">
+                {reportError}
               </p>
             )}
           </div>
@@ -374,13 +384,20 @@ export function TaskItem({
                   ? task.status === 'ASSIGNED'
                     ? 'Bắt đầu xử lý'
                     : 'Gửi báo cáo'
-                  : 'Xác nhận cập nhật'}
+                  : startingDelivery
+                    ? 'Bắt đầu'
+                    : canWorkOnInventory
+                      ? 'Gửi báo cáo'
+                      : 'Xác nhận cập nhật'}
           </Button>
         </form>
       )}
       {task.report && (
         <div className="staff-latest-report">
-          <strong>Báo cáo gần nhất:</strong> <p>{task.report}</p>
+          <strong>
+            {task.status === 'IN_PROGRESS' ? 'Cập nhật gần nhất:' : 'Báo cáo gần nhất:'}
+          </strong>{' '}
+          <p>{task.report}</p>
         </div>
       )}
       <div className="staff-secondary-details">

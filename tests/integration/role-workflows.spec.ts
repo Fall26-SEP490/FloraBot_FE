@@ -517,7 +517,7 @@ test.describe('FloraBot Role Workflows Integration', () => {
         response.url().endsWith(`/api/staff/tasks/${deliveryTask.id}/transition`) &&
         response.request().method() === 'POST',
     );
-    await staffDeliveryCard.getByRole('button', { name: 'Xác nhận cập nhật' }).click();
+    await staffDeliveryCard.getByRole('button', { name: 'Bắt đầu', exact: true }).click();
     expect((await startDeliveryReq).status()).toBe(200);
     await expect(staffDeliveryCard.locator('.staff-task-label')).toHaveText('Đang thực hiện');
 
@@ -532,7 +532,7 @@ test.describe('FloraBot Role Workflows Integration', () => {
         response.url().endsWith(`/api/staff/tasks/${deliveryTask.id}/transition`) &&
         response.request().method() === 'POST',
     );
-    await staffDeliveryCard.getByRole('button', { name: 'Xác nhận cập nhật' }).click();
+    await staffDeliveryCard.getByRole('button', { name: 'Gửi báo cáo', exact: true }).click();
     expect((await submitDeliveryReq).status()).toBe(200);
     await expect(staffDeliveryCard.locator('.staff-task-label')).toHaveText('Chờ duyệt báo cáo');
 

@@ -39,6 +39,7 @@ for (const admin of [false, true])
     let posts = 0;
     let reads = 0;
     let fail = true;
+    let showMultiplePages = false;
     await page.route(`**${prefix}/task/evidence?*`, (route) => {
       reads++;
       if (fail) {
@@ -53,7 +54,7 @@ for (const admin of [false, true])
               ? []
               : [{ id: savedId || 'old-photo', createdAt: '2026-10-09T08:00:00Z' }],
           page: Number(params.get('page') || 1),
-          hasMore: params.get('page') === '1',
+          hasMore: showMultiplePages && params.get('page') === '1',
         },
       });
     });
@@ -78,12 +79,18 @@ for (const admin of [false, true])
       'href',
       `${prefix}/task/evidence/old-photo`,
     );
+    await expect(panel.getByRole('button', { name: 'Ảnh trang trước' })).toHaveCount(0);
+    await expect(panel.getByRole('button', { name: 'Ảnh trang tiếp' })).toHaveCount(0);
+    showMultiplePages = true;
+    await panel.getByRole('button', { name: 'Cập nhật ảnh' }).click();
     await panel.getByRole('button', { name: 'Ảnh trang tiếp' }).click();
     await expect(panel.getByText('Chưa có ảnh minh chứng ở trang này.')).toBeVisible();
     await panel.getByRole('button', { name: 'Ảnh trang trước' }).click();
     if (admin) {
       await expect(panel.locator('input[type=file]')).toHaveCount(0);
     } else {
+      await expect(panel.locator('.evidence-upload [role="status"]')).toHaveCount(0);
+      await expect(panel.locator('.evidence-upload .error')).toHaveCount(0);
       await expect(panel.getByRole('button', { name: 'Gắn ảnh vào công việc' })).toBeDisabled();
       await panel
         .getByLabel('Ảnh minh chứng', { exact: true })
