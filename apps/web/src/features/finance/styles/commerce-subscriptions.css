@@ -138,6 +138,166 @@
   padding-top: 1rem;
 }
 
+.termination-card {
+  display: grid;
+  gap: 0.9rem;
+  background: #ffffff;
+  border: 1px solid #d7e3d8;
+  border-radius: 14px;
+  padding: 1.15rem 1.25rem;
+}
+.termination-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.termination-card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.termination-card-title h3 {
+  margin: 0;
+  font-size: 1.08rem;
+  color: #163022;
+}
+.termination-code-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: #eaf3ec;
+  color: #1d4e34;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.termination-status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: #edf2ee;
+  color: #2f4b3c;
+}
+.termination-status-pill[data-status='REQUESTED'] {
+  background: #fef3c7;
+  color: #7c4a03;
+}
+.termination-status-pill[data-status='ACCEPTED'] {
+  background: #e0f2fe;
+  color: #0c4a6e;
+}
+.termination-status-pill[data-status='COMPLETED'] {
+  background: #dcfce7;
+  color: #14532d;
+}
+.termination-status-pill[data-status='REJECTED'],
+.termination-status-pill[data-status='CANCELLED'] {
+  background: #fee2e2;
+  color: #7f1d1d;
+}
+.termination-meta-time {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
+  color: #52685d;
+}
+.termination-stepper {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.termination-step {
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid #e2eae3;
+  background: #f8faf8;
+  font-size: 0.85rem;
+  color: #52685d;
+}
+.termination-step strong {
+  display: block;
+  font-size: 0.8rem;
+  margin-bottom: 0.1rem;
+}
+.termination-step[data-state='done'] {
+  border-color: #b7dfc4;
+  background: #f0faf3;
+  color: #1a5436;
+}
+.termination-step[data-state='active'] {
+  border-color: #2c6e49;
+  background: #eef7f1;
+  color: #143d28;
+  font-weight: 600;
+}
+.termination-info-box {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 10px;
+  background: #f7faf7;
+  border: 1px solid #e3ece4;
+  font-size: 0.92rem;
+}
+.termination-info-box p {
+  margin: 0;
+}
+.termination-action-panel {
+  max-width: none;
+  padding: 0.95rem 1rem;
+  border-radius: 12px;
+  border: 1px solid #cfe0d2;
+  background: #fbfdfb;
+}
+.termination-optional-evidence {
+  margin-top: 0.25rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  border: 1px dashed #cddacd;
+  background: #f6faf6;
+}
+.termination-optional-evidence summary {
+  font-size: 0.9rem;
+}
+.termination-action-panel h4 {
+  margin: 0 0 0.35rem;
+  font-size: 0.98rem;
+  color: #163022;
+}
+.termination-waiting-box {
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  border: 1px dashed #9fc3aa;
+  background: #f4faf5;
+  color: #1e4b33;
+  font-size: 0.92rem;
+}
+.termination-waiting-box p {
+  margin: 0.25rem 0 0;
+}
+.termination-task-box {
+  padding: 0.75rem 0.95rem;
+  border-radius: 10px;
+  border: 1px solid #e1e9e2;
+  background: #fafcfa;
+}
+.termination-task-box details {
+  margin-top: 0;
+}
+.termination-task-box details + details {
+  margin-top: 0.65rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid #e5ede6;
+}
+
 .subscription-hero {
   display: flex;
   align-items: flex-start;

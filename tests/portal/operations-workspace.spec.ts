@@ -386,3 +386,114 @@ test('Manager reviews location and slot layout using their distinct backend cont
   await approveLayout.click();
   await expect(page.getByText('Không có yêu cầu đổi cơ cấu ô đang chờ duyệt.')).toBeVisible();
 });
+
+test('Manager assigns dismantling technician, confirms handover without mandatory manager photo, and archives kiosk', async ({
+  page,
+}) => {
+  await setup(page);
+  const terminationId = '01a1d855-fe9d-7221-86bf-f75603597d4c';
+  const kioskId = '01a1c35c-3858-724e-8627-016e26b7e6c6';
+  let record = {
+    id: terminationId,
+    kioskId,
+    kioskCode: 'K-HCM-06',
+    kioskName: 'Kiosk Nguyễn Thị Minh Khai',
+    sellerId: '20000000-0000-0000-0000-000000000001',
+    shopName: 'Dalat Hasfarm',
+    status: 'ACCEPTED',
+    reason: 'Shop dừng kinh doanh tại điểm đặt này.',
+    requestedAt: '2026-11-14T02:00:00Z',
+    requestedBy: '20000000-0000-0000-0000-000000000001',
+    reviewAction: 'ACCEPT',
+    reviewReason: 'Chấp thuận chấm dứt thuê theo yêu cầu của shop.',
+    reviewedAt: '2026-11-14T03:00:00Z',
+    reviewedBy: '10000000-0000-0000-0000-000000000099',
+    correlatedTaskId: null as string | null,
+    removalTaskStatus: null as string | null,
+    lifecycleStatus: 'DISMANTLING_PENDING_ASSIGNMENT',
+    completedAt: null as string | null,
+    completedBy: null as string | null,
+    completionNotes: null as string | null,
+    version: 2,
+    createdAt: '2026-11-14T02:00:00Z',
+    updatedAt: '2026-11-14T03:00:00Z',
+  };
+  let archived = false;
+
+  await page.route('**/api/operations/kiosk-termination-requests?*', (route) =>
+    route.fulfill({ json: { items: [record], page: 1, limit: 20, hasMore: false } }),
+  );
+  await page.route('**/api/operations/staff', (route) =>
+    route.fulfill({
+      json: [{ id: '01a1b43b-3170-7bd5-b10f-e8fb79680984', name: 'Trần Kỹ Thuật' }],
+    }),
+  );
+  await page.route(
+    `**/api/operations/kiosk-termination-requests/${terminationId}/assign`,
+    (route) => {
+      expect(route.request().postDataJSON()).toEqual({
+        assigneeId: '01a1b43b-3170-7bd5-b10f-e8fb79680984',
+        instructions: 'Kiểm tra hiện trường, tháo dỡ và thu hồi K-HCM-06.',
+      });
+      record = {
+        ...record,
+        correlatedTaskId: '01a1d899-0000-7000-8000-000000000001',
+        removalTaskStatus: 'SUBMITTED',
+        lifecycleStatus: 'AWAITING_MANAGER_CONFIRMATION',
+        version: 3,
+      };
+      return route.fulfill({ json: { id: record.correlatedTaskId } });
+    },
+  );
+  await page.route(
+    `**/api/operations/kiosk-termination-requests/${terminationId}/complete`,
+    (route) => {
+      expect(route.request().postDataJSON()).toEqual({
+        notes: 'Đã kiểm tra báo cáo tháo dỡ của kỹ thuật viên.',
+        evidenceReference: null,
+      });
+      record = {
+        ...record,
+        status: 'COMPLETED',
+        removalTaskStatus: 'COMPLETED',
+        lifecycleStatus: 'TERMINATION_COMPLETED',
+        completionNotes: 'Đã kiểm tra báo cáo tháo dỡ của kỹ thuật viên.',
+        version: 4,
+      };
+      return route.fulfill({ json: record });
+    },
+  );
+  await page.route(`**/api/operations/kiosks/${kioskId}`, (route) => {
+    expect(route.request().method()).toBe('DELETE');
+    archived = true;
+    return route.fulfill({ status: 204 });
+  });
+
+  await page.goto('/operations/terminations');
+  await expect(page.getByText('Chờ phân công kỹ thuật viên tháo dỡ').first()).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Xác nhận đã bàn giao' })).toHaveCount(0);
+
+  await page
+    .getByLabel('Kỹ thuật viên phụ trách')
+    .selectOption('01a1b43b-3170-7bd5-b10f-e8fb79680984');
+  await page
+    .getByLabel('Hướng dẫn tháo dỡ (10–2.000 ký tự)')
+    .fill('Kiểm tra hiện trường, tháo dỡ và thu hồi K-HCM-06.');
+  await page.getByRole('button', { name: 'Phân công tháo dỡ' }).click();
+
+  await expect(
+    page.getByText('Kỹ thuật viên đã báo cáo, chờ quản lý xác nhận bàn giao'),
+  ).toBeVisible();
+  const completeButton = page.getByRole('button', { name: 'Xác nhận đã bàn giao' });
+  await expect(completeButton).toBeEnabled();
+  await page
+    .getByLabel('Ghi chú bàn giao (tùy chọn)')
+    .fill('Đã kiểm tra báo cáo tháo dỡ của kỹ thuật viên.');
+  await completeButton.click();
+
+  await expect(page.getByText('Đã hoàn tất tháo dỡ và bàn giao')).toBeVisible();
+  await page.getByRole('button', { name: 'Lưu trữ tủ K-HCM-06' }).click();
+  await page.getByRole('button', { name: 'Xác nhận lưu trữ tủ' }).click();
+  await expect(page.getByText(/Đã lưu trữ tủ K-HCM-06/)).toBeVisible();
+  expect(archived).toBe(true);
+});

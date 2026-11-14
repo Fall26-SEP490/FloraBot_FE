@@ -12,7 +12,11 @@ export function formatIncidentLabel(
 
 export function safeUrl(value: string): string | null {
   try {
-    if (/^\/api\/admin\/evidence\/[0-9a-f-]{36}$/.test(value)) return value;
+    if (
+      /^\/api\/admin\/evidence\/[0-9a-f-]{36}$/i.test(value) ||
+      /^\/api\/admin\/incidents\/[0-9a-f-]{36}\/evidence\/[0-9a-f-]{36}$/i.test(value)
+    )
+      return value;
     const url = new URL(value);
     return url.protocol === 'https:' && !url.username && !url.password ? url.href : null;
   } catch {

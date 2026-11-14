@@ -208,3 +208,52 @@ test('Technician keeps an incident report draft when a Manager changes the instr
   await expect(page.getByText('Chờ duyệt báo cáo', { exact: true }).last()).toBeVisible();
   expect(versions).toEqual([1, 2]);
 });
+
+test('KIOSK_REMOVAL task shows dismantling label and Manager completion guidance', async ({
+  page,
+}) => {
+  await page.route('**/api/**', (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (path === '/api/auth/me')
+      return route.fulfill({
+        json: { id: 'mgr-1', name: 'Quản lý', role: 'OPERATIONS_MANAGER', sellerId: null },
+      });
+    if (path === '/api/operations/staff-tasks')
+      return route.fulfill({
+        json: {
+          page: 1,
+          hasMore: false,
+          items: [
+            {
+              id: 'task-removal-1',
+              kind: 'KIOSK_REMOVAL',
+              status: 'SUBMITTED',
+              version: 2,
+              assigneeId: 'tech-1',
+              assigneeName: 'Kỹ thuật viên Hoa',
+              kioskId: 'kiosk-1',
+              kioskName: 'Kiosk Quận 3',
+              address: '123 Võ Văn Tần',
+              sellerId: null,
+              shopName: null,
+              incidentId: null,
+              instructions: 'Ngắt nguồn, tháo dỡ và thu hồi kiosk về kho.',
+              report: 'Đã tháo dỡ và thu hồi kiosk đầy đủ.',
+            },
+          ],
+        },
+      });
+    return route.fulfill({ json: [] });
+  });
+
+  await page.goto('/operations/tasks');
+  const card = page.getByRole('article', { name: 'Tháo dỡ kiosk · Kiosk Quận 3' });
+  await expect(card).toBeVisible();
+  await expect(card.getByText('Hướng dẫn từ quản lý:', { exact: true })).toBeVisible();
+  await expect(card.locator('select option[value="COMPLETED"]')).toHaveCount(0);
+  await expect(card.locator('select option[value="IN_PROGRESS"]')).toHaveCount(1);
+  await expect(card.getByRole('link', { name: 'Hồ sơ chấm dứt thuê kiosk' })).toHaveAttribute(
+    'href',
+    '/operations/terminations',
+  );
+});

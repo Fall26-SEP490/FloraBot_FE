@@ -43,43 +43,31 @@ async function setup(page: Page) {
   await page.route('**/api/packages', (route) => route.fulfill({ json: [] }));
 }
 for (const width of [390, 1440]) {
-  test(`Admin reviews evidence, handles refund guard and resolves incident ${width}`, async ({
-    page,
-  }) => {
+  test(`Admin monitors incident evidence without operational writes ${width}`, async ({ page }) => {
     await page.setViewportSize({ width, height: 1000 });
     await setup(page);
-    let resolved = false;
-    let attempts = 0;
+    let writes = 0;
     await page.route('**/api/admin/incidents?*', (route) =>
-      route.fulfill({ json: { items: resolved ? [] : [row], page: 1, hasMore: false } }),
+      route.fulfill({ json: { items: [row], page: 1, hasMore: false } }),
     );
     await page.route('**/api/admin/incidents/incident-1', (route) =>
       route.fulfill({
         json: {
-          incident: { ...row, status: resolved ? 'RESOLVED_FIXED' : 'OPEN' },
+          incident: row,
           evidence: {
             items: [
               { id: 'good', url: 'https://example.invalid/evidence.jpg', createdAt: row.createdAt },
               { id: 'bad', url: 'javascript:alert(1)', createdAt: row.createdAt },
             ],
+            page: 1,
             hasMore: false,
           },
         },
       }),
     );
     await page.route('**/flows/resolve_device_fault', (route) => {
-      expect(route.request().postDataJSON()).toEqual({
-        p_dispute: row.id,
-        p_note: 'Đã kiểm tra khóa và cảm biến tại ô A01.',
-      });
-      attempts++;
-      if (attempts === 1)
-        return route.fulfill({
-          status: 409,
-          json: { detail: 'Phải chi hoàn cho khách trước khi đóng sự cố.' },
-        });
-      resolved = true;
-      return route.fulfill({ json: { result: null } });
+      writes++;
+      return route.fulfill({ status: 500 });
     });
     await page.goto('/admin/incidents');
     const section = page.locator('.admin-incidents');
@@ -89,14 +77,10 @@ for (const width of [390, 1440]) {
       'noopener noreferrer',
     );
     await expect(section.locator('a[href^="javascript:"]')).toHaveCount(0);
-    await section.getByRole('button', { name: 'Kiểm tra kết quả xử lý' }).click();
-    await expect(section.getByLabel('Kết quả kiểm tra và xử lý')).toBeFocused();
-    expect(attempts).toBe(0);
-    await section
-      .getByLabel('Kết quả kiểm tra và xử lý')
-      .fill('Đã kiểm tra khóa và cảm biến tại ô A01.');
-    await section.getByRole('button', { name: 'Kiểm tra kết quả xử lý' }).click();
-    await expect(section.getByRole('button', { name: 'Xác nhận đóng sự cố' })).toBeFocused();
+    await expect(section.getByText('Chế độ giám sát.', { exact: false })).toBeVisible();
+    await expect(section.getByLabel('Kết quả kiểm tra và xử lý')).toHaveCount(0);
+    await expect(section.getByRole('button', { name: 'Xác nhận đóng sự cố' })).toHaveCount(0);
+    await expect(section.locator('form')).toHaveCount(0);
     expect(
       (
         await new AxeBuilder({ page })
@@ -107,51 +91,23 @@ for (const width of [390, 1440]) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
-    await section.screenshot({ path: `.impeccable/review/portal-incidents-${width}.png` });
-    await section.getByRole('button', { name: 'Xác nhận đóng sự cố' }).click();
-    await expect(section.getByRole('alert')).toContainText('Phải chi hoàn');
-    await expect(section.getByLabel('Kết quả kiểm tra và xử lý')).toHaveValue(
-      'Đã kiểm tra khóa và cảm biến tại ô A01.',
-    );
-    await section.getByRole('button', { name: 'Kiểm tra kết quả xử lý' }).click();
-    await section.getByRole('button', { name: 'Xác nhận đóng sự cố' }).click();
-    await expect(section.getByRole('status')).toContainText('Đã ghi nhận xử lý');
-    await expect(section.getByRole('status')).toBeFocused();
-    await expect(section.getByText('Chưa có sự cố trong nhóm này.')).toBeVisible();
-    expect(attempts).toBe(2);
+    expect(writes).toBe(0);
   });
 }
 
-test('Queue pagination, read failure and lost resolution response', async ({ page }) => {
+test('Admin recovers read errors and paginates without closing incidents', async ({ page }) => {
   await setup(page);
   let fail = true;
-  let resolved = false;
-  let attempts = 0;
   await page.route('**/api/admin/incidents?*', (route) => {
     if (fail) return route.fulfill({ status: 503 });
-    const url = new URL(route.request().url());
-    const pageNumber = Number(url.searchParams.get('page'));
+    const pageNumber = Number(new URL(route.request().url()).searchParams.get('page'));
     return route.fulfill({
       json: { items: pageNumber === 2 ? [] : [row], page: pageNumber, hasMore: pageNumber === 1 },
     });
   });
   await page.route('**/api/admin/incidents/incident-1', (route) =>
-    route.fulfill({
-      json: {
-        incident: {
-          ...row,
-          status: resolved ? 'RESOLVED_FIXED' : 'OPEN',
-          decision: resolved ? 'Đã xử lý' : null,
-        },
-        evidence: { items: [], hasMore: false },
-      },
-    }),
+    route.fulfill({ json: { incident: row, evidence: { items: [], page: 1, hasMore: false } } }),
   );
-  await page.route('**/flows/resolve_device_fault', (route) => {
-    attempts++;
-    resolved = true;
-    return route.abort();
-  });
   await page.goto('/admin/incidents');
   const section = page.locator('.admin-incidents');
   await expect(section.getByRole('alert')).toContainText('Chưa tải được sự cố');
@@ -161,53 +117,94 @@ test('Queue pagination, read failure and lost resolution response', async ({ pag
   await expect(section.getByText('Trang 2', { exact: true })).toBeVisible();
   await section.getByRole('button', { name: 'Trang sự cố trước' }).click();
   await section.locator('summary').click();
-  await section.getByLabel('Kết quả kiểm tra và xử lý').fill('Đã kiểm tra thực tế.');
-  await section.getByRole('button', { name: 'Kiểm tra kết quả xử lý' }).click();
-  await section.getByRole('button', { name: 'Xác nhận đóng sự cố' }).click();
-  await expect(section.getByRole('status')).toContainText('Chưa xác nhận được kết quả');
-  await expect(section.getByRole('heading', { name: 'Đã xử lý', exact: true })).toBeVisible();
-  await expect(section.getByRole('button', { name: 'Kiểm tra kết quả xử lý' })).toHaveCount(0);
-  expect(attempts).toBe(1);
+  await expect(section.getByText('Chưa có ảnh đính kèm.')).toBeVisible();
+  await expect(section.locator('form')).toHaveCount(0);
 });
 
-test('Background refresh during pointer activation does not discard an incident confirmation', async ({
-  page,
-}) => {
+test('Admin can read the resolved incident decision and time', async ({ page }) => {
   await setup(page);
-  let reads = 0;
-  let writes = 0;
-  let release = () => {};
-  const gate = new Promise<void>((resolve) => {
-    release = resolve;
-  });
+  const closed = {
+    ...row,
+    status: 'RESOLVED_FIXED',
+    decision: 'Đã kiểm tra và khắc phục khóa.',
+    resolvedAt: '2026-11-14T08:00:00Z',
+  };
   await page.route('**/api/admin/incidents?*', (route) =>
-    route.fulfill({ json: { items: [row], page: 1, hasMore: false } }),
+    route.fulfill({ json: { items: [closed], page: 1, hasMore: false } }),
   );
-  await page.route('**/api/admin/incidents/incident-1', async (route) => {
-    reads++;
-    if (reads > 1) await gate;
-    await route.fulfill({ json: { incident: row, evidence: { items: [], hasMore: false } } });
-  });
-  await page.route('**/flows/resolve_device_fault', (route) => {
-    writes++;
+  await page.route('**/api/admin/incidents/incident-1', (route) =>
+    route.fulfill({ json: { incident: closed, evidence: { items: [], page: 1, hasMore: false } } }),
+  );
+  await page.goto('/admin/incidents');
+  const section = page.locator('.admin-incidents');
+  await section.getByLabel('Trạng thái sự cố').selectOption('RESOLVED_FIXED');
+  await section.locator('summary').click();
+  await expect(section.getByRole('heading', { name: 'Đã xử lý', exact: true })).toBeVisible();
+  await expect(section.getByText(closed.decision)).toBeVisible();
+  await expect(section.locator('form')).toHaveCount(0);
+});
+
+test('Admin opens staff task evidence URL and paginates incident evidence', async ({ page }) => {
+  await setup(page);
+  const incidentId = '01a1cc2a-bf1d-7b9b-8339-997499973215';
+  const taskAttachmentId = '01a1cc2b-0000-7000-8000-000000000001';
+  const disputeAttachmentId = '01a1cc2b-0000-7000-8000-000000000002';
+  const requestedPages: string[] = [];
+  await page.route('**/api/admin/incidents?*', (route) =>
+    route.fulfill({ json: { items: [{ ...row, id: incidentId }], page: 1, hasMore: false } }),
+  );
+  await page.route(`**/api/admin/incidents/${incidentId}*`, (route) => {
+    const url = new URL(route.request().url());
+    const evPage = url.searchParams.get('evidencePage') || '1';
+    requestedPages.push(evPage);
     return route.fulfill({
-      status: 409,
-      json: { detail: 'Đã có thay đổi trên máy chủ. Cập nhật hồ sơ.' },
+      json: {
+        incident: { ...row, id: incidentId },
+        evidence:
+          evPage === '2'
+            ? {
+                page: 2,
+                hasMore: false,
+                items: [
+                  {
+                    id: disputeAttachmentId,
+                    url: `/api/admin/evidence/${disputeAttachmentId}`,
+                    createdAt: row.createdAt,
+                    source: 'INCIDENT',
+                    taskId: null,
+                  },
+                ],
+              }
+            : {
+                page: 1,
+                hasMore: true,
+                items: [
+                  {
+                    id: taskAttachmentId,
+                    url: `/api/admin/incidents/${incidentId}/evidence/${taskAttachmentId}`,
+                    createdAt: row.createdAt,
+                    source: 'STAFF_TASK',
+                    taskId: '01a1cc2b-1111-7000-8000-000000000009',
+                  },
+                ],
+              },
+      },
     });
   });
+
   await page.goto('/admin/incidents');
   const section = page.locator('.admin-incidents');
   await section.locator('summary').click();
-  await section.getByLabel('Kết quả kiểm tra và xử lý').fill('Đã kiểm tra thực tế.');
-  await section.getByRole('button', { name: 'Kiểm tra kết quả xử lý' }).click();
-  const confirm = section.getByRole('button', { name: 'Xác nhận đóng sự cố' });
-  await expect(confirm).toBeFocused();
-  await confirm.hover();
-  await page.mouse.down();
-  await page.evaluate(() => window.dispatchEvent(new Event('online')));
-  await expect.poll(() => reads).toBeGreaterThan(1);
-  await page.mouse.up();
-  release();
-  await expect.poll(() => writes).toBe(1);
-  await expect(section.getByRole('alert')).toContainText('Đã có thay đổi trên máy chủ');
+  const link1 = section.getByRole('link', { name: 'Mở ảnh minh chứng 1' });
+  await expect(link1).toHaveAttribute(
+    'href',
+    `/api/admin/incidents/${incidentId}/evidence/${taskAttachmentId}`,
+  );
+  await expect(section.getByText('· Ảnh kiểm tra kỹ thuật')).toBeVisible();
+  await section.getByRole('button', { name: 'Ảnh trang sau' }).click();
+  await expect(section.getByText('Trang ảnh 2', { exact: true })).toBeVisible();
+  const link21 = section.getByRole('link', { name: 'Mở ảnh minh chứng 21' });
+  await expect(link21).toHaveAttribute('href', `/api/admin/evidence/${disputeAttachmentId}`);
+  await expect(section.getByText('· Ảnh báo sự cố')).toBeVisible();
+  expect(requestedPages).toEqual(['1', '2']);
 });

@@ -64,12 +64,14 @@ export function TaskManagement(props: StaffTasksProps) {
     queryFn: () => request<TaskPage>(`${apiBase}?page=${page}${status ? `&status=${status}` : ''}`),
     enabled: isValidRole,
     refetchInterval: (query) =>
-      role === 'SELLER' &&
-      query.state.data?.items.some(
-        (task) => task.status === 'ASSIGNED' || task.status === 'IN_PROGRESS',
-      )
-        ? 10_000
-        : false,
+      role === 'OPERATIONS_MANAGER'
+        ? 30_000
+        : role === 'SELLER' &&
+            query.state.data?.items.some(
+              (task) => task.status === 'ASSIGNED' || task.status === 'IN_PROGRESS',
+            )
+          ? 10_000
+          : false,
   });
 
   if (!isValidRole || !role) {

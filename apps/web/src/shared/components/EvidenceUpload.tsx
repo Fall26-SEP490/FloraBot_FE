@@ -98,7 +98,7 @@ export default function EvidenceUpload({
           accept="image/png,image/jpeg,image/webp"
           disabled={disabled || busy}
           aria-invalid={Boolean(errorMessage)}
-          aria-describedby={`${id}-help${errorMessage ? ` ${id}-error` : ''}`}
+          aria-describedby={`${id}-help${status ? ` ${id}-status` : ''}${errorMessage ? ` ${id}-error` : ''}`}
           onChange={(event) => {
             setFile(event.target.files?.[0] ?? null);
             setStatus('');
@@ -130,7 +130,11 @@ export default function EvidenceUpload({
       >
         {busy ? 'Đang tải ảnh…' : 'Tải ảnh minh chứng'}
       </Button>
-      {status && <p role="status">{status}</p>}
+      {status && (
+        <p id={`${id}-status`} role="status">
+          {status}
+        </p>
+      )}
       {errorMessage && (
         <p id={`${id}-error`} className="error" role={uploadError ? 'alert' : undefined}>
           {errorMessage}

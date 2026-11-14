@@ -199,7 +199,7 @@ export default function AdminOverview({ session }: { session: Session }) {
     queryFn: () =>
       readFeed<Task>('/admin/staff-tasks?page=1&status=SUBMITTED', (row) => ({
         id: row.id,
-        title: `${row.kind === 'INCIDENT' ? 'Kiểm tra sự cố' : 'Giao hoa'} · ${row.kioskName}`,
+        title: `${row.kind === 'INCIDENT' ? 'Kiểm tra sự cố' : row.kind === 'KIOSK_REMOVAL' ? 'Tháo dỡ kiosk' : 'Giao hoa'} · ${row.kioskName}`,
         detail: row.assigneeName,
         state: 'Đã gửi báo cáo',
       })),
@@ -236,11 +236,12 @@ export default function AdminOverview({ session }: { session: Session }) {
           </p>
         </section>
         <FeedPanel
-          title="Sự cố cần xử lý"
+          title="Giám sát sự cố vận hành"
           query={incidents}
           href="/admin/incidents"
-          action="Xem sự cố"
+          action="Giám sát sự cố"
           empty="Chưa có sự cố đang mở trong danh sách vừa tải."
+          monitor
         />
       </div>
       <div className="admin-overview-secondary">

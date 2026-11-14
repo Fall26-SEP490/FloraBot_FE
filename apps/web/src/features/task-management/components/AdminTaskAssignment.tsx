@@ -58,6 +58,7 @@ export default function AdminTaskAssignment({
         `${incidentsEndpoint}?status=OPEN&page=${page}`,
       ),
     enabled: kind === 'INCIDENT' && !attempt,
+    refetchInterval: effectiveRole === 'OPERATIONS_MANAGER' ? 30_000 : false,
   });
   const targetQuery = kind === 'INCIDENT' ? incidents : scopes;
   async function send(payload: TaskAssignmentPayload) {

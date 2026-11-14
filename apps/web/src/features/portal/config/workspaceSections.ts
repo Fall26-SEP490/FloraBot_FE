@@ -12,7 +12,11 @@ export const workspaceSections = {
       'Giám sát đơn đặt trước',
       'Theo dõi tiến độ, phản ánh và hoàn tiền của các shop. Shop phụ trách báo giá và chuẩn bị hoa.',
     ],
-    ['incidents', 'Sự cố tủ', 'Kiểm tra lỗi thiết bị, cửa tủ và tiền bị kẹt.'],
+    [
+      'incidents',
+      'Giám sát sự cố tủ',
+      'Xem tiến độ, báo cáo và ảnh minh chứng. Quản lý vận hành phụ trách xử lý.',
+    ],
     [
       'tasks',
       'Giám sát công việc',
