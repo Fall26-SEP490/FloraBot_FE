@@ -67,8 +67,8 @@ export default function StaffIncidentResolution({
           : 'Chỉ xác nhận sau khi kiểm tra tại tủ. Thao tác ghi nhận kết quả xử lý và gửi báo cáo cho Quản lý vận hành.'}
       </p>
       <p>
-        Khoản hoàn tiền đang chờ do quản trị viên xử lý riêng. Thao tác này không mở cửa tủ hay chi
-        tiền.
+        Nếu có khoản hoàn tiền, shop thực hiện và quản trị viên đối chiếu theo luồng hoàn tiền
+        riêng. Thao tác này không mở cửa tủ hay chi tiền.
       </p>
       {attempt ? (
         <>
@@ -95,24 +95,32 @@ export default function StaffIncidentResolution({
               validate: (value) => value.trim().length >= 10 || 'Mô tả ít nhất 10 ký tự.',
             })}
             aria-invalid={!!form.formState.errors.report}
-            aria-describedby={`resolution-report-error-${taskId}`}
+            aria-describedby={
+              form.formState.errors.report ? `resolution-report-error-${taskId}` : undefined
+            }
           />
-          <p id={`resolution-report-error-${taskId}`} className="error">
-            {form.formState.errors.report?.message}
-          </p>
+          {form.formState.errors.report?.message && (
+            <p id={`resolution-report-error-${taskId}`} className="error">
+              {form.formState.errors.report.message}
+            </p>
+          )}
           <label>
             <input
               type="checkbox"
               disabled={busy}
               {...form.register('confirm', { required: 'Xác nhận đã kiểm tra thực tế tại tủ.' })}
               aria-invalid={!!form.formState.errors.confirm}
-              aria-describedby={`resolution-confirm-error-${taskId}`}
+              aria-describedby={
+                form.formState.errors.confirm ? `resolution-confirm-error-${taskId}` : undefined
+              }
             />{' '}
             Tôi đã kiểm tra thực tế và xác nhận sự cố đã được sửa.
           </label>
-          <p id={`resolution-confirm-error-${taskId}`} className="error">
-            {form.formState.errors.confirm?.message}
-          </p>
+          {form.formState.errors.confirm?.message && (
+            <p id={`resolution-confirm-error-${taskId}`} className="error">
+              {form.formState.errors.confirm.message}
+            </p>
+          )}
           <Button disabled={busy} type="submit">
             {slotRepair ? 'Gửi báo cáo sửa ô tủ' : 'Ghi nhận và gửi báo cáo'}
           </Button>

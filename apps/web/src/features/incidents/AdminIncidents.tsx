@@ -159,11 +159,15 @@ function IncidentItem({ row, onNotice }: { row: Incident; onNotice: (message: st
                         {...form.register('note')}
                         disabled={resolve.isPending}
                         aria-invalid={!!form.formState.errors.note}
-                        aria-describedby={`incident-error-${row.id}`}
+                        aria-describedby={
+                          form.formState.errors.note ? `incident-error-${row.id}` : undefined
+                        }
                       />
-                      <p id={`incident-error-${row.id}`} className="error">
-                        {form.formState.errors.note?.message}
-                      </p>
+                      {form.formState.errors.note?.message && (
+                        <p id={`incident-error-${row.id}`} className="error">
+                          {form.formState.errors.note.message}
+                        </p>
+                      )}
                     </div>
                     {review !== null && (
                       <>

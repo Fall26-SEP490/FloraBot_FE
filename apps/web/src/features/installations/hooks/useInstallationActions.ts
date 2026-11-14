@@ -157,7 +157,7 @@ export function useInstallationActions({
   ].some((mutation) => mutation.isPending);
 
   const submitConfirm = (id: string, note: string, onDone?: () => void) => {
-    const finalNote = note.trim() || 'Đã gọi điện xác nhận vị trí mặt bằng và nguồn điện';
+    const finalNote = note.trim();
     const validation = validateConfirmNote(finalNote);
     if (!validation.valid) {
       setActionError(validation.error || 'Ghi chú không hợp lệ.');

@@ -57,6 +57,15 @@ test('Operations Manager assigns INCIDENT and recovers the same request after re
   await expect(page.locator('#assignment-kind option[value="DELIVERY"]')).toHaveCount(0);
   await expect(page.getByLabel('Loại công việc')).toHaveValue('INCIDENT');
 
+  // Required-field errors must not draw empty red boxes before validation.
+  await expect(
+    page.locator(
+      '#assignment-staff-error, #assignment-target-error, #assignment-instructions-error',
+    ),
+  ).toHaveCount(0);
+  await expect(page.getByLabel('Sự cố cần kiểm tra')).toContainText('Chọn sự cố cần kiểm tra');
+  await expect(page.getByRole('button', { name: 'Sự cố trang trước' })).toHaveCount(0);
+
   await page.getByRole('button', { name: 'Giao công việc', exact: true }).click();
   await expect(page.getByText('Chọn nhân viên phụ trách.', { exact: true })).toBeVisible();
   expect(writes).toBe(0);
@@ -227,7 +236,7 @@ test('Admin can oversee tasks without assigning staff or reviewing reports', asy
   await expect(page.getByText('Duyệt báo cáo hoặc yêu cầu kiểm tra lại')).toHaveCount(0);
   await expect(
     page.getByText(
-      'Theo dõi công việc toàn hệ thống và cập nhật hướng dẫn khi công việc đang mở. Quản lý vận hành và chủ shop phụ trách phân công và duyệt báo cáo.',
+      'Theo dõi công việc toàn hệ thống ở chế độ chỉ đọc. Quản lý vận hành và chủ shop phụ trách cập nhật hướng dẫn, phân công và duyệt báo cáo.',
     ),
   ).toBeVisible();
 });
