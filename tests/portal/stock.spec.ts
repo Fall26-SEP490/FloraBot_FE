@@ -151,10 +151,27 @@ for (const width of [390, 1440]) {
       { ...base, status: 'STOCKED', orderStatus: 'DISPENSE_FAILED' },
       { ...base, status: 'FAULT' },
       { ...base, status: 'LOCKED' },
-      { ...base, status: 'PENDING_REMOVAL' },
+      {
+        ...base,
+        status: 'PENDING_REMOVAL',
+        orderStatus: 'DISPENSE_FAILED',
+        sensorEnabled: true,
+        sensorReady: true,
+      },
     ].map((slot, index) => ({ ...slot, id: `slot-${index}`, slotCode: `A0${index + 1}` }));
     await page.route('**/api/**', (route) => {
       const path = new URL(route.request().url()).pathname;
+      if (path === `/api/me/kiosks/${kioskId}/slots/slot-8/maintenance-sessions/active`)
+        return route.fulfill({ status: 204 });
+      if (path === '/api/me/maintenance-open') {
+        expect(route.request().postDataJSON()).toMatchObject({
+          kioskId,
+          slotId: 'slot-8',
+          action: 'REMOVE',
+          expectedBouquetId: base.bouquetId,
+        });
+        return route.fulfill({ status: 404 });
+      }
       const data =
         path === '/api/auth/me'
           ? {
@@ -183,12 +200,12 @@ for (const width of [390, 1440]) {
       ['A04', 'Đã bán — đang xử lý nhận hoa'],
       ['A05', 'Ô trống'],
       ['A06', 'Nhận hoa thất bại — cần xử lý'],
+      ['A09', 'Nhận hoa thất bại — cần xử lý'],
     ])
       await expect(card(code)).toContainText(label);
     for (const [code, warning] of [
       ['A07', 'Có sự cố'],
       ['A08', 'Đang khóa'],
-      ['A09', 'Chờ lấy hoa hết hạn'],
     ]) {
       await expect(card(code)).toContainText('Đã bán — chờ khách nhận');
       await expect(card(code)).toContainText(warning);
@@ -198,6 +215,13 @@ for (const width of [390, 1440]) {
     await expect(modal).toContainText('Đã bán — chờ khách nhận');
     await expect(modal).toContainText('Có sự cố');
     await expect(modal).toContainText('FB-PAID');
+    await page.keyboard.press('Escape');
+    await card('A09').click();
+    const removal = page.getByRole('dialog', { name: 'Chi tiết ô A09' });
+    await expect(removal).toContainText('Chờ thu hồi hoa');
+    await removal.getByLabel('Lý do thao tác').fill('Thu hồi hoa sau khi khách nhận thất bại');
+    await removal.getByRole('button', { name: 'Bắt đầu thu hồi hoa' }).click();
+    await expect(removal.getByRole('alert')).toContainText('HTTP 404');
     await page.keyboard.press('Escape');
     await page.getByRole('button', { name: /^Đang có hoa/ }).click();
     await expect(page.locator('.stock-slot-card')).toHaveCount(8);

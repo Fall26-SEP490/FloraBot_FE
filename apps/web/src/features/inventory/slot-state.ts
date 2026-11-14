@@ -29,7 +29,7 @@ const slotLabels: Record<string, string> = {
   RENTED_EMPTY: 'Ô trống',
   STOCKED: 'Đã nạp hoa',
   HELD: 'Ô đang được giữ',
-  PENDING_REMOVAL: 'Chờ lấy hoa hết hạn',
+  PENDING_REMOVAL: 'Chờ thu hồi hoa',
   PENDING_RELEASE: 'Chờ lấy hoa về để trả ô',
   FAULT: 'Có sự cố',
   LOCKED: 'Đang khóa',
