@@ -38,7 +38,7 @@ export const adminQueues = [
     title: 'Sự cố kiosk đang mở',
     endpoint: '/admin/incidents?status=OPEN&page=1',
     description:
-      'Kiểm tra bằng chứng và ghi nhận kết quả xử lý sự cố. Quản lý vận hành phân công kỹ thuật viên.',
+      'Giám sát bằng chứng và tiến độ. Quản lý vận hành phân công kỹ thuật viên và duyệt báo cáo.',
     action: 'Xem sự cố kiosk',
     group: 'monitor',
   },

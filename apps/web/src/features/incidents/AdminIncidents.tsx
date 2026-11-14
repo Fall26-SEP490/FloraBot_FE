@@ -1,16 +1,12 @@
 import { AdminFilterBar, AdminDisclosureSummary } from '@/features/portal/components/AdminUi';
-import { useEffect, useRef, useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
-import { ApiError, queryClient, request } from '@/shared/lib/api';
+import { queryClient, request } from '@/shared/lib/api';
 import type {
   AdminIncidentDetail,
   AdminIncidentPage,
   AdminIncidentResponse,
-  ResolveDeviceFaultRequest,
 } from './incidents.types';
 import { formatIncidentDate, formatIncidentLabel, safeUrl } from './incidents.utils';
 
@@ -18,69 +14,17 @@ type Incident = AdminIncidentResponse;
 type Detail = AdminIncidentDetail;
 type Page = AdminIncidentPage;
 
-const schema = z.object({
-  note: z
-    .string()
-    .trim()
-    .min(5, 'Ghi kết quả kiểm tra ít nhất 5 ký tự.')
-    .max(2000, 'Ghi chú tối đa 2.000 ký tự.'),
-});
-
-function IncidentItem({ row, onNotice }: { row: Incident; onNotice: (message: string) => void }) {
+function IncidentItem({ row }: { row: Incident }) {
   const [open, setOpen] = useState(false);
-  const [review, setReview] = useState<string | null>(null);
-  const confirmRef = useRef<HTMLButtonElement>(null);
-  const sending = useRef(false);
+  const [evidencePage, setEvidencePage] = useState(1);
   const detail = useQuery({
-    queryKey: ['admin-incident', row.id],
-    queryFn: () => request<Detail>(`/admin/incidents/${row.id}`),
+    queryKey: ['admin-incident', row.id, evidencePage],
+    queryFn: () =>
+      request<Detail>(
+        `/admin/incidents/${row.id}${evidencePage > 1 ? `?evidencePage=${evidencePage}` : ''}`,
+      ),
     enabled: open,
   });
-  const form = useForm<z.infer<typeof schema>>({
-    resolver: zodResolver(schema),
-    defaultValues: { note: '' },
-  });
-  useEffect(() => {
-    if (review !== null) confirmRef.current?.focus();
-  }, [review]);
-  const resolve = useMutation({
-    mutationFn: (note: string) =>
-      request('/admin/flows/resolve_device_fault', {
-        p_dispute: row.id,
-        p_note: note,
-      } satisfies ResolveDeviceFaultRequest),
-    onSuccess: () => {
-      form.reset();
-      setReview(null);
-      onNotice(`Đã ghi nhận xử lý sự cố tại ${formatIncidentLabel(row)}.`);
-    },
-    onError: (error) => {
-      setReview(null);
-      if (!(error instanceof ApiError) || error.status >= 500)
-        onNotice(
-          'Chưa xác nhận được kết quả xử lý. Danh sách đang được cập nhật; hãy kiểm tra mục đã xử lý trước khi gửi lại.',
-        );
-    },
-    onSettled: async () => {
-      sending.current = false;
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['admin-incidents'] }),
-        queryClient.invalidateQueries({ queryKey: ['admin-incident', row.id] }),
-        queryClient.invalidateQueries({ queryKey: ['admin-slots'] }),
-      ]);
-    },
-  });
-  const confirm = () => {
-    if (
-      sending.current ||
-      review === null ||
-      detail.isError ||
-      detail.data?.incident.status !== 'OPEN'
-    )
-      return;
-    sending.current = true;
-    resolve.mutate(review);
-  };
   return (
     <li>
       <details onToggle={(event) => setOpen(event.currentTarget.open)}>
@@ -118,14 +62,24 @@ function IncidentItem({ row, onNotice }: { row: Incident; onNotice: (message: st
                   <ul className="incident-evidence">
                     {detail.data.evidence.items.map((photo, index) => {
                       const url = safeUrl(photo.url);
+                      const photoIndex = (evidencePage - 1) * 20 + index + 1;
+                      const sourceLabel =
+                        photo.source === 'STAFF_TASK'
+                          ? ' · Ảnh kiểm tra kỹ thuật'
+                          : photo.source === 'INCIDENT'
+                            ? ' · Ảnh báo sự cố'
+                            : '';
                       return (
                         <li key={photo.id}>
                           {url ? (
-                            <a href={url} target="_blank" rel="noopener noreferrer">
-                              Mở ảnh minh chứng {index + 1}
-                            </a>
+                            <>
+                              <a href={url} target="_blank" rel="noopener noreferrer">
+                                Mở ảnh minh chứng {photoIndex}
+                              </a>
+                              {sourceLabel && <span className="quiet">{sourceLabel}</span>}
+                            </>
                           ) : (
-                            <span>Ảnh {index + 1}: đường dẫn không hợp lệ để mở an toàn.</span>
+                            <span>Ảnh {photoIndex}: đường dẫn không hợp lệ để mở an toàn.</span>
                           )}
                         </li>
                       );
@@ -134,80 +88,36 @@ function IncidentItem({ row, onNotice }: { row: Incident; onNotice: (message: st
                 )}
                 {detail.data.evidence.hasMore && (
                   <p>
-                    Đang hiển thị 20 ảnh đầu tiên. Còn ảnh khác trong hồ sơ, cần đối chiếu đầy đủ
-                    trước khi kết luận.
+                    Đang hiển thị 20 ảnh ở trang {evidencePage}. Còn ảnh khác trong hồ sơ, cần đối
+                    chiếu đầy đủ trước khi kết luận.
                   </p>
                 )}
+                {(evidencePage > 1 || detail.data.evidence.hasMore) && (
+                  <nav className="stock-actions" aria-label="Phân trang ảnh sự cố">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={evidencePage === 1 || detail.isFetching}
+                      onClick={() => setEvidencePage((value) => Math.max(1, value - 1))}
+                    >
+                      Ảnh trang trước
+                    </Button>
+                    <span>Trang ảnh {evidencePage}</span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={!detail.data.evidence.hasMore || detail.isFetching}
+                      onClick={() => setEvidencePage((value) => value + 1)}
+                    >
+                      Ảnh trang sau
+                    </Button>
+                  </nav>
+                )}
                 {detail.data.incident.status === 'OPEN' ? (
-                  <form noValidate onSubmit={form.handleSubmit((values) => setReview(values.note))}>
-                    <h3>Ghi nhận kết quả xử lý</h3>
-                    <p>
-                      Chỉ đóng sự cố sau khi kiểm tra thực tế. Hệ thống tự xác định trạng thái ô phù
-                      hợp; thao tác này không mở cửa và không chuyển tiền.
-                    </p>
-                    {row.kind === 'DISPENSE_FAILED' && (
-                      <p className="quiet">
-                        Sự cố giao hoa có khoản hoàn chờ chi phải được hoàn tiền trước khi đóng.
-                      </p>
-                    )}
-                    <div hidden={review !== null}>
-                      <label htmlFor={`incident-note-${row.id}`}>Kết quả kiểm tra và xử lý</label>
-                      <textarea
-                        id={`incident-note-${row.id}`}
-                        rows={3}
-                        maxLength={2000}
-                        {...form.register('note')}
-                        disabled={resolve.isPending}
-                        aria-invalid={!!form.formState.errors.note}
-                        aria-describedby={
-                          form.formState.errors.note ? `incident-error-${row.id}` : undefined
-                        }
-                      />
-                      {form.formState.errors.note?.message && (
-                        <p id={`incident-error-${row.id}`} className="error">
-                          {form.formState.errors.note.message}
-                        </p>
-                      )}
-                    </div>
-                    {review !== null && (
-                      <>
-                        <p>
-                          <strong>
-                            Xác nhận đã kiểm tra và xử lý tại {formatIncidentLabel(row)}?
-                          </strong>
-                        </p>
-                        <p className="incident-text">{review}</p>
-                      </>
-                    )}
-                    <div className="stock-actions">
-                      {review === null ? (
-                        <Button type="submit" disabled={resolve.isPending}>
-                          Kiểm tra kết quả xử lý
-                        </Button>
-                      ) : (
-                        <>
-                          <Button
-                            ref={confirmRef}
-                            type="button"
-                            onClick={confirm}
-                            disabled={resolve.isPending}
-                          >
-                            {resolve.isPending ? 'Đang ghi nhận…' : 'Xác nhận đóng sự cố'}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            disabled={resolve.isPending}
-                            onClick={() => {
-                              setReview(null);
-                              requestAnimationFrame(() => form.setFocus('note'));
-                            }}
-                          >
-                            Sửa ghi chú
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </form>
+                  <p className="quiet">
+                    Đang được theo dõi trong luồng vận hành. Quản lý vận hành tiếp nhận, phân công
+                    kỹ thuật viên và kiểm tra báo cáo. Admin xem tiến độ và ảnh minh chứng tại đây.
+                  </p>
                 ) : (
                   <>
                     <h3>Đã xử lý</h3>
@@ -218,13 +128,6 @@ function IncidentItem({ row, onNotice }: { row: Incident; onNotice: (message: st
                       <p>{formatIncidentDate(detail.data.incident.resolvedAt)}</p>
                     )}
                   </>
-                )}
-                {resolve.isError && (
-                  <p role="alert" className="error">
-                    {resolve.error instanceof ApiError
-                      ? resolve.error.message
-                      : 'Kết nối bị gián đoạn. Kiểm tra trạng thái cập nhật trước khi thử lại.'}
-                  </p>
                 )}
               </>
             )}
@@ -238,8 +141,6 @@ function IncidentItem({ row, onNotice }: { row: Incident; onNotice: (message: st
 export default function AdminIncidents() {
   const [status, setStatus] = useState('OPEN');
   const [page, setPage] = useState(1);
-  const [notice, setNotice] = useState('');
-  const noticeRef = useRef<HTMLParagraphElement>(null);
   const queue = useQuery({
     queryKey: ['admin-incidents', status, page],
     queryFn: () => request<Page>(`/admin/incidents?status=${status}&page=${page}`),
@@ -247,7 +148,10 @@ export default function AdminIncidents() {
   return (
     <section className="admin-incidents" aria-labelledby="incidents-title">
       <h2 id="incidents-title">Theo dõi sự cố tủ hoa</h2>
-      <p>Ưu tiên các báo cáo đang mở để hoa sớm được bán trở lại. Mỗi trang có tối đa 25 sự cố.</p>
+      <p>
+        Chế độ giám sát. Quản lý vận hành phụ trách tiếp nhận, phân công và duyệt kết quả xử lý sự
+        cố. Mỗi trang có tối đa 25 sự cố.
+      </p>
       <AdminFilterBar
         actions={
           <>
@@ -280,9 +184,6 @@ export default function AdminIncidents() {
           </select>
         </div>
       </AdminFilterBar>
-      <p role="status" tabIndex={-1} ref={noticeRef}>
-        {notice}
-      </p>
       {queue.isPending ? (
         <p role="status">Đang tải danh sách sự cố…</p>
       ) : queue.isError ? (
@@ -300,14 +201,7 @@ export default function AdminIncidents() {
           )}
           <ul className="admin-shop-list">
             {queue.data.items.map((row) => (
-              <IncidentItem
-                key={row.id}
-                row={row}
-                onNotice={(message) => {
-                  setNotice(message);
-                  requestAnimationFrame(() => noticeRef.current?.focus());
-                }}
-              />
+              <IncidentItem key={row.id} row={row} />
             ))}
           </ul>
           <nav className="stock-actions" aria-label="Phân trang sự cố">

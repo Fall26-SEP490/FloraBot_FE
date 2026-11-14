@@ -148,7 +148,7 @@ export default function StaffTaskDetails({
               disabled={details.isFetching}
               onClick={() => void details.refetch()}
             >
-              Cập nhật chi tiết
+              Tải lại chi tiết
             </Button>
           </div>
         </>

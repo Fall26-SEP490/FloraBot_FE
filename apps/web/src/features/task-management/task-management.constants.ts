@@ -29,7 +29,9 @@ export const TASK_DETAIL_STATES: Record<string, string> = {
 
 export const TASK_DETAIL_ACTIONS: Record<string, string> = {
   STAFF_TASK_ASSIGNED: 'Phân công công việc',
+  KIOSK_REMOVAL_TASK_ASSIGNED: 'Phân công tháo dỡ kiosk',
   STAFF_TASK_UPDATED: 'Cập nhật công việc',
+  STAFF_TASK_INSTRUCTIONS_EDITED: 'Cập nhật hướng dẫn công việc',
   STAFF_TASK_STOCKED: 'Ghi nhận nạp hoa',
   STAFF_TASK_REASSIGNED: 'Bàn giao người phụ trách',
   STAFF_TASK_EVIDENCE_ADDED: 'Thêm ảnh minh chứng',

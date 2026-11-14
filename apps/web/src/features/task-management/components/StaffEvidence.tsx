@@ -23,9 +23,10 @@ export default function StaffEvidence({
   actorId,
   sellerId,
   active,
+  taskStatus,
   apiBase: explicitApiBase,
   mode,
-}: StaffEvidenceProps) {
+}: StaffEvidenceProps & { taskStatus?: string }) {
   const isWorker = mode !== undefined ? mode === 'worker' : !admin;
   const path = explicitApiBase
     ? `${explicitApiBase}/${taskId}/evidence`
@@ -155,7 +156,7 @@ export default function StaffEvidence({
               disabled={evidence.isFetching}
               onClick={() => void evidence.refetch()}
             >
-              Cập nhật ảnh
+              Tải lại ảnh
             </Button>
           </div>
         </>
@@ -186,7 +187,11 @@ export default function StaffEvidence({
             </Button>
           </>
         ) : (
-          <p>Bắt đầu công việc để gửi ảnh. Ảnh đã lưu vẫn xem được sau khi gửi báo cáo.</p>
+          <p>
+            {taskStatus === 'SUBMITTED' || taskStatus === 'COMPLETED' || taskStatus === 'CANCELLED'
+              ? 'Công việc đã kết thúc bước thực hiện. Các ảnh đã gắn vẫn xem được ở danh sách trên.'
+              : 'Bắt đầu công việc để gửi ảnh. Ảnh đã lưu vẫn xem được sau khi gửi báo cáo.'}
+          </p>
         ))}
       {notice && <p role="status">{notice}</p>}
       {error && <p role="alert">{error}</p>}

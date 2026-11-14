@@ -6,6 +6,9 @@ import { Button, MapPin } from '@florabot/ui';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
 import EvidenceUpload from '@/shared/components/EvidenceUpload';
 import { ApiError, queryClient, request, type Session } from '@/shared/lib/api';
+import StaffEvidence from '../task-management/components/StaffEvidence';
+import StaffTaskDetails from '../task-management/components/StaffTaskDetails';
+import type { StaffDirectoryMember } from '../task-management/task-management.types';
 import type { KioskLocationChangeResponse, SellerKioskItem } from './kiosk-management.types';
 import '../finance/styles/commerce-subscriptions.css';
 
@@ -22,14 +25,34 @@ interface SlotLayoutRequestView {
   reviewNote: string | null;
 }
 
-type Termination = components['schemas']['KioskTerminationResponse'];
-type Page = components['schemas']['KioskTerminationPage'];
+type Termination = components['schemas']['KioskTerminationResponse'] & {
+  removalTaskStatus?: string | null;
+  lifecycleStatus?: string;
+};
+type Page = Omit<components['schemas']['KioskTerminationPage'], 'items'> & {
+  items: Termination[];
+};
 const statusLabel: Record<string, string> = {
   REQUESTED: 'Chờ xem xét',
   ACCEPTED: 'Đã chấp thuận, chờ bàn giao',
   REJECTED: 'Đã từ chối',
   CANCELLED: 'Đã rút yêu cầu',
   COMPLETED: 'Đã bàn giao',
+};
+const lifecycleLabel: Record<string, string> = {
+  TERMINATION_REQUESTED: 'Chờ quản lý xem xét',
+  DISMANTLING_PENDING_ASSIGNMENT: 'Chờ phân công kỹ thuật viên tháo dỡ',
+  DISMANTLING: 'Đang thực hiện tháo dỡ',
+  AWAITING_MANAGER_CONFIRMATION: 'Kỹ thuật viên đã báo cáo, chờ quản lý xác nhận bàn giao',
+  TERMINATION_COMPLETED: 'Đã hoàn tất tháo dỡ và bàn giao',
+  NORMAL: 'Đang vận hành bình thường',
+};
+const removalTaskLabel: Record<string, string> = {
+  ASSIGNED: 'Chờ kỹ thuật viên bắt đầu',
+  IN_PROGRESS: 'Đang tháo dỡ tại điểm đặt',
+  SUBMITTED: 'Kỹ thuật viên đã gửi báo cáo tháo dỡ',
+  COMPLETED: 'Đã xác nhận tháo dỡ',
+  CANCELLED: 'Công việc tháo dỡ đã hủy',
 };
 const textError = (error: unknown) =>
   error instanceof Error ? error.message : 'Không xử lý được yêu cầu.';
@@ -152,6 +175,22 @@ function SellerTerminationCard({ kiosk, sellerId }: { kiosk: SellerKioskItem; se
               <div className="seller-termination-info-row">
                 <span className="seller-termination-info-label">Phản hồi từ ban quản lý:</span>
                 <span className="seller-termination-info-val">{current.data.reviewReason}</span>
+              </div>
+            )}
+            {(current.data.lifecycleStatus || current.data.removalTaskStatus) && (
+              <div className="seller-termination-info-row">
+                <span className="seller-termination-info-label">Tiến độ tháo dỡ:</span>
+                <span className="seller-termination-info-val">
+                  {lifecycleLabel[current.data.lifecycleStatus || ''] ||
+                    removalTaskLabel[current.data.removalTaskStatus || ''] ||
+                    statusLabel[current.data.status] ||
+                    current.data.status}
+                  {current.data.removalTaskStatus &&
+                  removalTaskLabel[current.data.removalTaskStatus] &&
+                  current.data.lifecycleStatus
+                    ? ` (${removalTaskLabel[current.data.removalTaskStatus]})`
+                    : ''}
+                </span>
               </div>
             )}
           </div>
@@ -297,11 +336,25 @@ export function SellerTerminations({ session }: { session: Session }) {
   );
 }
 
-function ManagerTerminationCard({ item }: { item: Termination }) {
+function ManagerTerminationCard({
+  item,
+  technicians,
+}: {
+  item: Termination;
+  technicians: StaffDirectoryMember[];
+}) {
   const [reason, setReason] = useState('');
+  const [assigneeId, setAssigneeId] = useState('');
+  const [instructions, setInstructions] = useState('');
   const [notes, setNotes] = useState('');
   const [evidenceReference, setEvidenceReference] = useState('');
+  const [confirmArchive, setConfirmArchive] = useState(false);
   const [notice, setNotice] = useState('');
+  const managerRole = 'OPERATIONS_MANAGER' as const;
+  const needsAssignment =
+    item.status === 'ACCEPTED' &&
+    (!item.correlatedTaskId || !item.removalTaskStatus || item.removalTaskStatus === 'CANCELLED');
+  const canComplete = item.status === 'ACCEPTED' && item.removalTaskStatus === 'SUBMITTED';
   const review = useMutation({
     mutationFn: (action: 'ACCEPT' | 'REJECT') =>
       request<Termination>(
@@ -315,6 +368,23 @@ function ManagerTerminationCard({ item }: { item: Termination }) {
       await queryClient.invalidateQueries({ queryKey: ['operations-terminations'] });
     },
   });
+  const assign = useMutation({
+    mutationFn: () =>
+      request<{ id: string }>(
+        `/operations/kiosk-termination-requests/${item.id}/assign`,
+        { assigneeId, instructions: instructions.trim() },
+        true,
+        'POST',
+      ),
+    onSuccess: async () => {
+      setInstructions('');
+      setNotice('Đã phân công kỹ thuật viên tháo dỡ kiosk.');
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['operations-terminations'] }),
+        queryClient.invalidateQueries({ queryKey: ['staff-tasks'] }),
+      ]);
+    },
+  });
   const complete = useMutation({
     mutationFn: () =>
       request<Termination>(
@@ -325,21 +395,119 @@ function ManagerTerminationCard({ item }: { item: Termination }) {
       ),
     onSuccess: async () => {
       setNotice('Đã ghi nhận bàn giao kiosk.');
-      await queryClient.invalidateQueries({ queryKey: ['operations-terminations'] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['operations-terminations'] }),
+        queryClient.invalidateQueries({ queryKey: ['staff-tasks'] }),
+      ]);
     },
   });
+  const archive = useMutation({
+    mutationFn: () =>
+      request<void>(
+        `/operations/kiosks/${encodeURIComponent(item.kioskId)}`,
+        undefined,
+        true,
+        'DELETE',
+      ),
+    onSuccess: async () => {
+      setConfirmArchive(false);
+      setNotice(
+        `Đã lưu trữ tủ ${item.kioskCode || item.kioskName || item.kioskId}. Lịch sử đơn hàng, thanh toán và vận hành được giữ lại.`,
+      );
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['operations-terminations'] }),
+        queryClient.invalidateQueries({ queryKey: ['available-kiosks-inventory'] }),
+        queryClient.invalidateQueries({ queryKey: ['eligible-kiosks'] }),
+      ]);
+    },
+  });
+  const step1State =
+    item.status === 'REQUESTED'
+      ? 'active'
+      : item.status === 'ACCEPTED' || item.status === 'COMPLETED'
+        ? 'done'
+        : 'idle';
+  const step2State =
+    item.status === 'COMPLETED' || item.removalTaskStatus === 'SUBMITTED'
+      ? 'done'
+      : item.status === 'ACCEPTED'
+        ? 'active'
+        : 'idle';
+  const step3State = item.status === 'COMPLETED' ? 'done' : canComplete ? 'active' : 'idle';
+
   return (
-    <article className="business-card">
-      <h3>
-        {item.kioskName || item.kioskCode} · {item.shopName}
-      </h3>
-      <p>
-        <strong>{statusLabel[item.status] || item.status}</strong> · Yêu cầu lúc{' '}
-        {new Date(item.requestedAt).toLocaleString('vi-VN')}
-      </p>
-      <p>Lý do của shop: {item.reason}</p>
+    <article className="business-card termination-card">
+      <div className="termination-card-head">
+        <div>
+          <div className="termination-card-title">
+            {item.kioskCode && <span className="termination-code-pill">{item.kioskCode}</span>}
+            <h3>
+              {item.kioskName || item.kioskCode} · {item.shopName}
+            </h3>
+          </div>
+          <p className="termination-meta-time">
+            Yêu cầu lúc {new Date(item.requestedAt).toLocaleString('vi-VN')}
+          </p>
+        </div>
+        <span className="termination-status-pill" data-status={item.status}>
+          {statusLabel[item.status] || item.status}
+        </span>
+      </div>
+
+      {item.status !== 'REJECTED' && item.status !== 'CANCELLED' && (
+        <ol className="termination-stepper" aria-label="Tiến trình chấm dứt thuê">
+          <li className="termination-step" data-state={step1State}>
+            <strong>Bước 1 · Duyệt yêu cầu</strong>
+            <span>{item.status === 'REQUESTED' ? 'Chờ xem xét' : 'Đã chấp thuận'}</span>
+          </li>
+          <li className="termination-step" data-state={step2State}>
+            <strong>Bước 2 · Tháo dỡ kiosk</strong>
+            <span>
+              {item.status === 'COMPLETED'
+                ? 'Đã hoàn tất'
+                : needsAssignment
+                  ? 'Chờ phân công kỹ thuật viên'
+                  : item.removalTaskStatus
+                    ? removalTaskLabel[item.removalTaskStatus] || item.removalTaskStatus
+                    : 'Chờ thực hiện'}
+            </span>
+          </li>
+          <li className="termination-step" data-state={step3State}>
+            <strong>Bước 3 · Xác nhận bàn giao</strong>
+            <span>
+              {item.status === 'COMPLETED'
+                ? 'Đã bàn giao'
+                : canComplete
+                  ? 'Sẵn sàng xác nhận'
+                  : 'Chờ báo cáo tháo dỡ'}
+            </span>
+          </li>
+        </ol>
+      )}
+
+      <div className="termination-info-box">
+        <p>
+          <strong>Lý do của shop:</strong> {item.reason}
+        </p>
+        {item.reviewReason && (
+          <p>
+            <strong>Kết quả xem xét:</strong> {item.reviewReason}
+          </p>
+        )}
+        {(item.lifecycleStatus || item.removalTaskStatus) && (
+          <p>
+            <strong>Trạng thái chi tiết:</strong>{' '}
+            {lifecycleLabel[item.lifecycleStatus || ''] || statusLabel[item.status] || item.status}
+          </p>
+        )}
+      </div>
+
       {item.status === 'REQUESTED' && (
-        <form className="business-form" onSubmit={(event) => event.preventDefault()}>
+        <form
+          className="business-form termination-action-panel"
+          onSubmit={(event) => event.preventDefault()}
+        >
+          <h4>Xem xét yêu cầu chấm dứt</h4>
           <label htmlFor={`term-review-${item.id}`}>Lý do xem xét (10–2.000 ký tự)</label>
           <textarea
             id={`term-review-${item.id}`}
@@ -366,35 +534,165 @@ function ManagerTerminationCard({ item }: { item: Termination }) {
           </div>
         </form>
       )}
-      {item.status === 'ACCEPTED' && (
-        <div className="business-form">
+      {needsAssignment && (
+        <form
+          className="business-form termination-action-panel"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (assigneeId && instructions.trim().length >= 10) {
+              assign.mutate();
+            }
+          }}
+        >
+          <h4>Phân công kỹ thuật viên tháo dỡ</h4>
           <p>
-            Chỉ hoàn tất sau khi đã kiểm tra và bàn giao tủ. BE sẽ kiểm tra điều kiện còn lại trước
-            khi chấm dứt.
+            Giao công việc tháo dỡ để kỹ thuật viên kiểm tra hiện trường, thu hồi thiết bị và gửi
+            báo cáo/ảnh minh chứng trước khi hoàn tất bàn giao.
           </p>
-          <EvidenceUpload
-            id={`term-evidence-${item.id}`}
-            endpoint={`/api/operations/kiosk-termination-requests/${item.id}/evidence/upload`}
-            onReference={setEvidenceReference}
+          <label htmlFor={`term-assignee-${item.id}`}>Kỹ thuật viên phụ trách</label>
+          <select
+            id={`term-assignee-${item.id}`}
+            required
+            value={assigneeId}
+            onChange={(event) => setAssigneeId(event.target.value)}
+            disabled={assign.isPending}
+          >
+            <option value="">Chọn kỹ thuật viên</option>
+            {technicians.map((tech) => (
+              <option key={tech.id} value={tech.id}>
+                {tech.name}
+              </option>
+            ))}
+          </select>
+          <label htmlFor={`term-instructions-${item.id}`}>Hướng dẫn tháo dỡ (10–2.000 ký tự)</label>
+          <textarea
+            id={`term-instructions-${item.id}`}
+            minLength={10}
+            maxLength={2000}
+            required
+            rows={3}
+            placeholder="Nhập hướng dẫn kiểm tra, tháo dỡ và thu hồi kiosk tại điểm đặt…"
+            value={instructions}
+            onChange={(event) => setInstructions(event.target.value)}
+            disabled={assign.isPending}
           />
-          <label htmlFor={`term-notes-${item.id}`}>Ghi chú bàn giao</label>
+          <div>
+            <Button
+              type="submit"
+              disabled={assign.isPending || !assigneeId || instructions.trim().length < 10}
+            >
+              {assign.isPending ? 'Đang phân công…' : 'Phân công tháo dỡ'}
+            </Button>
+          </div>
+        </form>
+      )}
+      {item.status === 'ACCEPTED' && !needsAssignment && !canComplete && (
+        <div className="termination-waiting-box" role="status">
+          <strong>Đang chờ kỹ thuật viên tháo dỡ & gửi báo cáo</strong>
+          <p>
+            Sau khi kỹ thuật viên hoàn thành tháo dỡ và gửi báo cáo bên ứng dụng Kỹ thuật viên, mục
+            xác nhận bàn giao sẽ tự động mở tại đây.
+          </p>
+        </div>
+      )}
+      {item.correlatedTaskId && (
+        <div className="termination-task-box">
+          <StaffEvidence
+            key={`${item.correlatedTaskId}:${item.version}`}
+            taskId={item.correlatedTaskId}
+            version={Number(item.version) || 1}
+            apiBase="/operations/staff-tasks"
+            role={managerRole}
+            mode="manager"
+            admin
+            active={false}
+          />
+          <StaffTaskDetails
+            taskId={item.correlatedTaskId}
+            version={Number(item.version) || 1}
+            apiBase="/operations/staff-tasks"
+            role={managerRole}
+            admin
+          />
+        </div>
+      )}
+      {canComplete && (
+        <div className="business-form termination-action-panel">
+          <h4>Xác nhận hoàn tất bàn giao</h4>
+          <p>
+            Kỹ thuật viên đã gửi báo cáo tháo dỡ. Hãy kiểm tra ảnh/báo cáo của kỹ thuật viên ở mục
+            trên rồi bấm xác nhận hoàn tất bàn giao.
+          </p>
+          <label htmlFor={`term-notes-${item.id}`}>Ghi chú bàn giao (tùy chọn)</label>
           <textarea
             id={`term-notes-${item.id}`}
             value={notes}
+            disabled={complete.isPending}
             onChange={(event) => setNotes(event.target.value)}
           />
-          <Button
-            disabled={complete.isPending || !evidenceReference}
-            onClick={() => complete.mutate()}
-          >
-            Xác nhận đã bàn giao
-          </Button>
+          <details className="termination-optional-evidence">
+            <summary>Đính kèm thêm ảnh biên bản từ quản lý (không bắt buộc)</summary>
+            <div style={{ marginTop: '0.6rem' }}>
+              <EvidenceUpload
+                id={`term-evidence-${item.id}`}
+                endpoint={`/api/operations/kiosk-termination-requests/${item.id}/evidence/upload`}
+                disabled={complete.isPending}
+                onReference={setEvidenceReference}
+              />
+            </div>
+          </details>
+          <div>
+            <Button disabled={complete.isPending} onClick={() => complete.mutate()}>
+              {complete.isPending ? 'Đang xác nhận…' : 'Xác nhận đã bàn giao'}
+            </Button>
+          </div>
         </div>
       )}
-      {item.reviewReason && <p>Kết quả xem xét: {item.reviewReason}</p>}
+      {item.status === 'COMPLETED' && (
+        <div className="business-form termination-action-panel">
+          {item.completionNotes && <p>Ghi chú bàn giao: {item.completionNotes}</p>}
+          {!confirmArchive ? (
+            <div>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={archive.isPending}
+                onClick={() => setConfirmArchive(true)}
+              >
+                Lưu trữ tủ {item.kioskCode || item.kioskName || ''}
+              </Button>
+            </div>
+          ) : (
+            <div>
+              <p>
+                <strong>
+                  Xác nhận lưu trữ mềm tủ {item.kioskCode || item.kioskName || item.kioskId}?
+                </strong>{' '}
+                Tủ phải ở trạng thái OFFLINE và không còn hàng, đơn hoặc công việc đang chờ. Lịch sử
+                đơn hàng, thanh toán và vận hành được giữ lại.
+              </p>
+              <div className="business-inline">
+                <Button type="button" disabled={archive.isPending} onClick={() => archive.mutate()}>
+                  {archive.isPending ? 'Đang lưu trữ…' : 'Xác nhận lưu trữ tủ'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={archive.isPending}
+                  onClick={() => setConfirmArchive(false)}
+                >
+                  Hủy
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
       {notice && <p role="status">{notice}</p>}
-      {(review.isError || complete.isError) && (
-        <p role="alert">{textError(review.error || complete.error)}</p>
+      {(review.isError || assign.isError || complete.isError || archive.isError) && (
+        <p role="alert">
+          {textError(review.error || assign.error || complete.error || archive.error)}
+        </p>
       )}
     </article>
   );
@@ -594,6 +892,20 @@ export function OperationsTerminations() {
         `/operations/kiosk-termination-requests?page=${page}&limit=20${status ? `&status=${status}` : ''}`,
       ),
   });
+  const hasAssignableTermination = Boolean(
+    records.data?.items.some(
+      (item) =>
+        item.status === 'ACCEPTED' &&
+        (!item.correlatedTaskId ||
+          !item.removalTaskStatus ||
+          item.removalTaskStatus === 'CANCELLED'),
+    ),
+  );
+  const technicians = useQuery({
+    queryKey: ['operations-termination-technicians'],
+    queryFn: () => request<StaffDirectoryMember[]>('/operations/staff'),
+    enabled: hasAssignableTermination,
+  });
   const locationRequests = useQuery({
     queryKey: ['operations-location-requests'],
     queryFn: () =>
@@ -642,7 +954,11 @@ export function OperationsTerminations() {
       ) : records.data?.items.length ? (
         <div className="business-card-list">
           {records.data.items.map((item) => (
-            <ManagerTerminationCard key={item.id} item={item} />
+            <ManagerTerminationCard
+              key={item.id}
+              item={item}
+              technicians={technicians.data ?? []}
+            />
           ))}
         </div>
       ) : (

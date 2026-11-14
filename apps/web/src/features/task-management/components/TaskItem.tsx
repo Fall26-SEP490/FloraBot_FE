@@ -138,12 +138,19 @@ export function TaskItem({
     isManager &&
     (role === 'SELLER' || role === 'OPERATIONS_MANAGER') &&
     ['ASSIGNED', 'IN_PROGRESS'].includes(task.status);
+  const reviewingRemoval =
+    isManager &&
+    role === 'OPERATIONS_MANAGER' &&
+    task.kind === 'KIOSK_REMOVAL' &&
+    task.status === 'SUBMITTED';
   const choices =
     readOnly || (canCancelOpenTask && !showCancellation)
       ? []
       : isManager
         ? task.status === 'SUBMITTED'
-          ? ['COMPLETED', 'IN_PROGRESS', 'CANCELLED']
+          ? task.kind === 'KIOSK_REMOVAL'
+            ? ['IN_PROGRESS', 'CANCELLED']
+            : ['COMPLETED', 'IN_PROGRESS', 'CANCELLED']
           : ['ASSIGNED', 'IN_PROGRESS'].includes(task.status)
             ? ['CANCELLED']
             : []
@@ -221,18 +228,22 @@ export function TaskItem({
     }
   }
   const quickTemplates = isTechnician
-    ? task.status === 'ASSIGNED'
-      ? [
-          {
-            label: 'Đã nhận việc kiểm tra sự cố tại tủ',
-            value: 'Đã nhận việc kiểm tra sự cố tại tủ',
-          },
-          {
-            label: 'Đã có mặt tại kiosk để kiểm tra sự cố',
-            value: 'Đã có mặt tại kiosk để kiểm tra sự cố',
-          },
-        ]
-      : []
+    ? task.kind === 'KIOSK_REMOVAL'
+      ? task.status === 'ASSIGNED'
+        ? ['Đã nhận việc tháo dỡ kiosk', 'Đã có mặt tại điểm đặt để tháo dỡ kiosk'].map(
+            (value) => ({ label: value, value }),
+          )
+        : task.status === 'IN_PROGRESS'
+          ? [
+              'Đã tháo dỡ, kiểm kê thiết bị và thu hồi kiosk đầy đủ',
+              'Đã ngắt nguồn, tháo dỡ và bàn giao mặt bằng',
+            ].map((value) => ({ label: value, value }))
+          : []
+      : task.status === 'ASSIGNED'
+        ? ['Đã nhận việc kiểm tra sự cố tại tủ', 'Đã có mặt tại kiosk để kiểm tra sự cố'].map(
+            (value) => ({ label: value, value }),
+          )
+        : []
     : !staffDelivery
       ? []
       : task.status === 'ASSIGNED'
@@ -320,7 +331,9 @@ export function TaskItem({
               {canCancelOpenTask
                 ? 'Nhập lý do hủy để nhân viên biết.'
                 : isTechnician
-                  ? 'Chọn bước tiếp theo và nhập nội dung để quản lý theo dõi xử lý sự cố.'
+                  ? task.kind === 'KIOSK_REMOVAL'
+                    ? 'Chọn bước tiếp theo và nhập báo cáo tháo dỡ (hoặc đính kèm ảnh minh chứng) để quản lý xác nhận bàn giao.'
+                    : 'Chọn bước tiếp theo và nhập nội dung để quản lý theo dõi xử lý sự cố.'
                   : startingDelivery
                     ? 'Nhập ghi chú hoặc chọn gợi ý, rồi bấm Bắt đầu. Thao tác tại tủ sẽ hiện khi công việc chuyển sang Đang thực hiện.'
                     : canWorkOnInventory
@@ -431,6 +444,7 @@ export function TaskItem({
           role={role}
           mode={mode}
           admin={!isWorker}
+          taskStatus={task.status}
           active={isWorker && task.status === 'IN_PROGRESS'}
         />
         <StaffTaskDetails
@@ -443,19 +457,21 @@ export function TaskItem({
           sellerId={sellerId}
           role={role}
         />
-        {canReassign && ['ASSIGNED', 'IN_PROGRESS'].includes(task.status) && (
-          <StaffReassignment
-            taskId={task.id}
-            version={task.version}
-            assigneeId={task.assigneeId}
-            assigneeName={task.assigneeName}
-            apiBase={apiBase}
-            directoryEndpoint={directoryEndpoint}
-            actorId={actorId}
-            sellerId={sellerId}
-            role={role}
-          />
-        )}
+        {canReassign &&
+          task.kind !== 'KIOSK_REMOVAL' &&
+          ['ASSIGNED', 'IN_PROGRESS'].includes(task.status) && (
+            <StaffReassignment
+              taskId={task.id}
+              version={task.version}
+              assigneeId={task.assigneeId}
+              assigneeName={task.assigneeName}
+              apiBase={apiBase}
+              directoryEndpoint={directoryEndpoint}
+              actorId={actorId}
+              sellerId={sellerId}
+              role={role}
+            />
+          )}
         {canEditInstructions && (
           <details
             open={editingInstructions}
@@ -541,6 +557,13 @@ export function TaskItem({
           thống sẽ kiểm tra lại tín hiệu cửa và cảm biến trước khi đóng sự cố.
         </p>
       )}
+      {reviewingRemoval && (
+        <p>
+          Kỹ thuật viên đã gửi báo cáo tháo dỡ. Để xác nhận hoàn tất bàn giao và giải phóng hợp đồng
+          thuê, hãy thực hiện tại <a href="/operations/terminations">Hồ sơ chấm dứt thuê kiosk</a>{' '}
+          (hoặc chọn Yêu cầu kiểm tra lại ở trên nếu cần làm lại).
+        </p>
+      )}
     </>
   );
   return (
@@ -551,7 +574,12 @@ export function TaskItem({
       <div className="staff-task-heading">
         <div>
           <h3 id={`task-${task.id}`}>
-            {task.kind === 'INCIDENT' ? 'Kiểm tra sự cố' : 'Giao hoa'} · {task.kioskName}
+            {task.kind === 'INCIDENT'
+              ? 'Kiểm tra sự cố'
+              : task.kind === 'KIOSK_REMOVAL'
+                ? 'Tháo dỡ kiosk'
+                : 'Giao hoa'}{' '}
+            · {task.kioskName}
           </h3>
           {!isTechnician && (
             <p className="staff-assignee-text">Người thực hiện: {task.assigneeName}</p>
@@ -574,7 +602,9 @@ export function TaskItem({
             <div className="staff-instructions-head">
               <Store size={14} aria-hidden="true" />
               <strong>
-                {task.kind === 'INCIDENT' ? 'Hướng dẫn từ quản lý:' : 'Ghi chú từ shop:'}
+                {task.kind === 'INCIDENT' || task.kind === 'KIOSK_REMOVAL'
+                  ? 'Hướng dẫn từ quản lý:'
+                  : 'Ghi chú từ shop:'}
               </strong>
             </div>
             <p>{task.instructions}</p>
