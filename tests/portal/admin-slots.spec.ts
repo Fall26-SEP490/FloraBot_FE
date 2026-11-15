@@ -76,9 +76,13 @@ for (const width of [390, 1440]) {
     await expect(section.getByRole('alert')).toContainText('Chưa tải được kiosk');
     ready = true;
     await section.getByRole('button', { name: 'Làm mới danh sách kiosk' }).click();
+    await expect(section.getByLabel('Lọc phân bổ')).toHaveCount(0);
+    await section.getByRole('button', { name: 'Bộ lọc', exact: true }).click();
+    await expect(section.getByLabel('Lọc phân bổ')).toHaveValue('ALL');
     await section.getByLabel('Tìm mã kiosk, tên kiosk hoặc shop').fill('không tìm thấy');
     await expect(section.getByText('Không có kiosk phù hợp với bộ lọc hiện tại.')).toBeVisible();
     await section.getByLabel('Tìm mã kiosk, tên kiosk hoặc shop').fill('FPT-01');
+    await section.getByLabel('Lọc phân bổ').selectOption('UNASSIGNED');
     await section.locator('summary.admin-disclosure-summary').click();
 
     await section.getByRole('button', { name: 'Gán kiosk cho shop' }).click();

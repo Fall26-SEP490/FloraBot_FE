@@ -106,9 +106,12 @@ test('Admin shop and kiosk filters reset and disclosures work with keyboard', as
   await expect(summary.locator('.when-closed')).toBeHidden();
   await expect(page.getByText('Địa chỉ / khu vực', { exact: true })).toBeVisible();
   await page.goto('/admin/slots');
-  await page.getByLabel('Lọc phân bổ', { exact: true }).selectOption('ALL');
+  await expect(page.getByLabel('Lọc phân bổ', { exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Bộ lọc', exact: true }).click();
+  await expect(page.getByLabel('Lọc phân bổ', { exact: true })).toHaveValue('ALL');
+  await page.getByLabel('Lọc phân bổ', { exact: true }).selectOption('UNASSIGNED');
   await page.getByRole('button', { name: 'Đặt lại bộ lọc', exact: true }).click();
-  await expect(page.getByLabel('Lọc phân bổ', { exact: true })).toHaveValue('UNASSIGNED');
+  await expect(page.getByLabel('Lọc phân bổ', { exact: true })).toHaveValue('ALL');
   expect(model.writes).toEqual([]);
 });
 

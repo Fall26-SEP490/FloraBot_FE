@@ -4,7 +4,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button, RefreshCw, Search, Store, Users } from '@florabot/ui';
+import { Button, RefreshCw, Search, SlidersHorizontal, Store, Users } from '@florabot/ui';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
 import { queryClient, request } from '@/shared/lib/api';
 import { ConfirmDialog } from '../../shared/components/Modal';
@@ -358,7 +358,8 @@ export default function AdminSlots({ actorId }: { actorId: string }) {
   const [view, setView] = useState<'shop' | 'manager'>('shop');
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
-  const [ownership, setOwnership] = useState('UNASSIGNED');
+  const [ownership, setOwnership] = useState('ALL');
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [confirmation, setConfirmation] = useState('');
   const notice = useRef<HTMLParagraphElement>(null);
   const kiosks = useQuery({
@@ -379,7 +380,7 @@ export default function AdminSlots({ actorId }: { actorId: string }) {
         .toLocaleLowerCase('vi')
         .includes(normalizedSearch),
   );
-  const hasFilters = !!search || !!status || ownership !== 'UNASSIGNED';
+  const hasFilters = !!search || !!status || ownership !== 'ALL';
   const refresh = () => {
     void kiosks.refetch();
     if (view === 'shop') void sellers.refetch();
@@ -425,52 +426,73 @@ export default function AdminSlots({ actorId }: { actorId: string }) {
           className="allocation-view"
           aria-labelledby="admin-slots-title"
         >
-          <div className="allocation-section-heading">
-            <h2 id="admin-slots-title">Danh sách kiosk</h2>
-            <p>Chọn một kiosk để xem các ô hoặc gán toàn bộ tủ cho một shop.</p>
+          <div className="allocation-heading-row">
+            <div className="allocation-section-heading">
+              <h2 id="admin-slots-title">Danh sách kiosk</h2>
+              <p>Chọn một kiosk để xem các ô hoặc gán toàn bộ tủ cho một shop.</p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              aria-label="Bộ lọc"
+              aria-expanded={filtersOpen}
+              aria-controls="allocation-filter-fields"
+              onClick={() => setFiltersOpen((open) => !open)}
+            >
+              <SlidersHorizontal size={16} aria-hidden="true" />
+              Bộ lọc
+              {hasFilters && <span aria-hidden="true">· Đang lọc</span>}
+            </Button>
           </div>
-          <div className="allocation-filters" role="group" aria-label="Bộ lọc kiosk">
-            <div className="allocation-search">
-              <label htmlFor="kiosk-search">Tìm mã kiosk, tên kiosk hoặc shop</label>
+          {filtersOpen && (
+            <div
+              id="allocation-filter-fields"
+              className="allocation-filters"
+              role="group"
+              aria-label="Bộ lọc kiosk"
+            >
+              <div className="allocation-search">
+                <label htmlFor="kiosk-search">Tìm mã kiosk, tên kiosk hoặc shop</label>
+                <div>
+                  <Search size={17} aria-hidden="true" />
+                  <input
+                    id="kiosk-search"
+                    type="search"
+                    placeholder="Nhập mã, tên kiosk hoặc shop"
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                  />
+                </div>
+              </div>
               <div>
-                <Search size={17} aria-hidden="true" />
-                <input
-                  id="kiosk-search"
-                  type="search"
-                  placeholder="Nhập mã, tên kiosk hoặc shop"
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                />
+                <label htmlFor="kiosk-ownership">Lọc phân bổ</label>
+                <select
+                  id="kiosk-ownership"
+                  value={ownership}
+                  onChange={(event) => setOwnership(event.target.value)}
+                >
+                  <option value="UNASSIGNED">Chưa gán shop</option>
+                  <option value="ASSIGNED">Đã gán shop</option>
+                  <option value="ALL">Tất cả kiosk</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="kiosk-status">Lọc trạng thái kiosk</label>
+                <select
+                  id="kiosk-status"
+                  value={status}
+                  onChange={(event) => setStatus(event.target.value)}
+                >
+                  <option value="">Tất cả trạng thái</option>
+                  {Object.entries(kioskStatuses).map(([value, name]) => (
+                    <option key={value} value={value}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
-            <div>
-              <label htmlFor="kiosk-ownership">Lọc phân bổ</label>
-              <select
-                id="kiosk-ownership"
-                value={ownership}
-                onChange={(event) => setOwnership(event.target.value)}
-              >
-                <option value="UNASSIGNED">Chưa gán shop</option>
-                <option value="ASSIGNED">Đã gán shop</option>
-                <option value="ALL">Tất cả kiosk</option>
-              </select>
-            </div>
-            <div>
-              <label htmlFor="kiosk-status">Lọc trạng thái kiosk</label>
-              <select
-                id="kiosk-status"
-                value={status}
-                onChange={(event) => setStatus(event.target.value)}
-              >
-                <option value="">Tất cả trạng thái</option>
-                {Object.entries(kioskStatuses).map(([value, name]) => (
-                  <option key={value} value={value}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+          )}
 
           <div className="allocation-results">
             <p role="status">
@@ -485,7 +507,7 @@ export default function AdminSlots({ actorId }: { actorId: string }) {
                 onClick={() => {
                   setSearch('');
                   setStatus('');
-                  setOwnership('UNASSIGNED');
+                  setOwnership('ALL');
                 }}
               >
                 Đặt lại bộ lọc
