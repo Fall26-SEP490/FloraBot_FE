@@ -339,9 +339,11 @@ export function SellerTerminations({ session }: { session: Session }) {
 function ManagerTerminationCard({
   item,
   technicians,
+  onReviewed,
 }: {
   item: Termination;
   technicians: StaffDirectoryMember[];
+  onReviewed: () => void;
 }) {
   const [reason, setReason] = useState('');
   const [assigneeId, setAssigneeId] = useState('');
@@ -365,6 +367,7 @@ function ManagerTerminationCard({
       ),
     onSuccess: async () => {
       setNotice('Đã cập nhật kết quả xem xét.');
+      onReviewed();
       await queryClient.invalidateQueries({ queryKey: ['operations-terminations'] });
     },
   });
@@ -478,7 +481,7 @@ function ManagerTerminationCard({
               {item.status === 'COMPLETED'
                 ? 'Đã bàn giao'
                 : canComplete
-                  ? 'Sẵn sàng xác nhận'
+                  ? 'Chờ quản lý kiểm tra'
                   : 'Chờ báo cáo tháo dỡ'}
             </span>
           </li>
@@ -598,7 +601,7 @@ function ManagerTerminationCard({
       {item.correlatedTaskId && (
         <div className="termination-task-box">
           <StaffEvidence
-            key={`${item.correlatedTaskId}:${item.version}`}
+            key={`${item.correlatedTaskId}:${item.version}:${item.removalTaskStatus}`}
             taskId={item.correlatedTaskId}
             version={Number(item.version) || 1}
             apiBase="/operations/staff-tasks"
@@ -608,6 +611,7 @@ function ManagerTerminationCard({
             active={false}
           />
           <StaffTaskDetails
+            key={`${item.correlatedTaskId}:${item.removalTaskStatus}`}
             taskId={item.correlatedTaskId}
             version={Number(item.version) || 1}
             apiBase="/operations/staff-tasks"
@@ -620,8 +624,9 @@ function ManagerTerminationCard({
         <div className="business-form termination-action-panel">
           <h4>Xác nhận hoàn tất bàn giao</h4>
           <p>
-            Kỹ thuật viên đã gửi báo cáo tháo dỡ. Hãy kiểm tra ảnh/báo cáo của kỹ thuật viên ở mục
-            trên rồi bấm xác nhận hoàn tất bàn giao.
+            Kỹ thuật viên đã gửi báo cáo tháo dỡ. Kiểm tra ảnh/báo cáo và tình trạng thực tế trước
+            khi xác nhận. Hệ thống vẫn kiểm tra hoa, ô khóa, đơn hàng và các công việc chưa kết
+            thúc.
           </p>
           <label htmlFor={`term-notes-${item.id}`}>Ghi chú bàn giao (tùy chọn)</label>
           <textarea
@@ -887,6 +892,7 @@ export function OperationsTerminations() {
   const [layoutOpen, setLayoutOpen] = useState(false);
   const records = useQuery({
     queryKey: ['operations-terminations', status, page],
+    refetchInterval: 30_000,
     queryFn: () =>
       request<Page>(
         `/operations/kiosk-termination-requests?page=${page}&limit=20${status ? `&status=${status}` : ''}`,
@@ -958,6 +964,10 @@ export function OperationsTerminations() {
               key={item.id}
               item={item}
               technicians={technicians.data ?? []}
+              onReviewed={() => {
+                setStatus('');
+                setPage(1);
+              }}
             />
           ))}
         </div>
