@@ -70,6 +70,20 @@
   padding-top: 18px;
 }
 
+.allocation-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.allocation-heading-row > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .allocation-section-heading h2,
 .allocation-section-heading p,
 .allocation-subheading,

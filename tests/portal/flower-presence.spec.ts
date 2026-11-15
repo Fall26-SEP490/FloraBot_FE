@@ -48,7 +48,6 @@ test('Admin can verify and enable sensors on Walk-in and Pre-order slots', async
   });
 
   await page.goto('/admin/slots');
-  await page.getByLabel('Lọc phân bổ', { exact: true }).selectOption('ALL');
   await page.locator('.admin-shop-list > li > details > summary').first().click();
   await page.getByRole('button', { name: 'Xem các ô tủ', exact: true }).click();
   await page.getByRole('button', { name: 'Cấu hình cảm biến ô S03' }).click();
@@ -143,7 +142,6 @@ for (const width of [390, 1440]) {
     });
     await page.setViewportSize({ width, height: 960 });
     await page.goto('/admin/slots');
-    await page.getByLabel('Lọc phân bổ', { exact: true }).selectOption('ALL');
     await page.locator('.admin-shop-list > li > details > summary').first().click();
     await page.getByRole('button', { name: 'Xem các ô tủ', exact: true }).first().click();
     const panel = page.locator('.flower-presence').first();
