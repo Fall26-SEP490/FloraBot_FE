@@ -114,7 +114,7 @@ async function openInventory(page: Page) {
 }
 async function confirmDialog(page: Page) {
   await page.getByRole('button', { name: `Lưu trữ tủ ${targetCode}`, exact: true }).click();
-  const dialog = page.getByRole('dialog', { name: 'Lưu trữ tủ khỏi kho?' });
+  const dialog = page.getByRole('dialog', { name: 'Ngừng sử dụng và lưu trữ tủ?' });
   await expect(dialog).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(1);
   return dialog;
@@ -163,7 +163,9 @@ for (const width of [390, 1440]) {
     model.release();
     await expect(inventory).toBeVisible();
     await expect(
-      inventory.getByRole('status').filter({ hasText: `Đã lưu trữ tủ ${targetCode}` }),
+      inventory
+        .getByRole('status')
+        .filter({ hasText: `Đã ngừng sử dụng và lưu trữ tủ ${targetCode}` }),
     ).toBeVisible();
     await expect(inventory.getByText('1 tủ khả dụng', { exact: true })).toBeVisible();
     await expect(
@@ -200,7 +202,9 @@ for (const status of [401, 403, 409, 500, 0]) {
     ).toBeEnabled();
     await dialog.getByRole('button', { name: 'Hủy', exact: true }).click();
     await expect(inventory.getByText(targetCode, { exact: true })).toBeVisible();
-    await expect(inventory.getByRole('status').filter({ hasText: 'Đã lưu trữ tủ' })).toHaveCount(0);
+    await expect(
+      inventory.getByRole('status').filter({ hasText: 'Đã ngừng sử dụng và lưu trữ tủ' }),
+    ).toHaveCount(0);
     expect(model.deleteCalls).toHaveLength(1);
   });
 }
@@ -218,7 +222,9 @@ test('404 removes an obsolete kiosk without claiming a successful deletion', asy
   ).toBeDisabled();
   await dialog.getByRole('button', { name: 'Quay lại kho', exact: true }).click();
   await expect(inventory.getByText(targetCode, { exact: true })).toHaveCount(0);
-  await expect(inventory.getByRole('status').filter({ hasText: 'Đã lưu trữ tủ' })).toHaveCount(0);
+  await expect(
+    inventory.getByRole('status').filter({ hasText: 'Đã ngừng sử dụng và lưu trữ tủ' }),
+  ).toHaveCount(0);
 });
 
 test('Deleting a selected kiosk also clears its schedule option and prevents stale scheduling', async ({

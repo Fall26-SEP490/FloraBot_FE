@@ -9,7 +9,7 @@ const lanes = [
   { status: 'IN_PROGRESS', title: 'Đang thực hiện' },
   { status: 'ASSIGNED', title: 'Chờ bắt đầu' },
   { status: 'SUBMITTED', title: 'Chờ chủ shop duyệt' },
-  { status: 'COMPLETED', title: 'Đã duyệt' },
+  { status: 'COMPLETED', title: 'Đã hoàn thành' },
   { status: 'CANCELLED', title: 'Đã hủy' },
 ] as const;
 

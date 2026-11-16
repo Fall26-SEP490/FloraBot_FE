@@ -75,7 +75,10 @@ export default function TechnicianWorkspace({ section = 'tasks' }: { section?: s
               <div className="dashboard-page-heading">
                 <div>
                   <h1>Công việc kỹ thuật</h1>
-                  <p>Xem sự cố được giao và cập nhật kết quả xử lý.</p>
+                  <p>
+                    Nhận việc sửa sự cố hoặc tháo dỡ đã được Manager giao. Việc lắp đặt nằm ở mục
+                    Lắp đặt Kiosk.
+                  </p>
                 </div>
               </div>
               <StaffTasks
@@ -89,8 +92,14 @@ export default function TechnicianWorkspace({ section = 'tasks' }: { section?: s
                 <summary>Cách xử lý một sự cố</summary>
                 <ol>
                   <li>Xem địa chỉ, hướng dẫn và thông tin sự cố.</li>
-                  <li>Bắt đầu công việc khi đến tủ, kiểm tra và tải ảnh minh chứng.</li>
-                  <li>Ghi nhận kết quả xử lý và gửi báo cáo cho Quản lý vận hành.</li>
+                  <li>
+                    Bắt đầu công việc khi đến tủ. Với sửa ô, cần chủ shop duyệt quyền và OTP sửa mới
+                    để mở đúng ô.
+                  </li>
+                  <li>
+                    Sau khi kiểm tra thực tế và có bằng chứng cửa/cảm biến, gửi báo cáo; Manager
+                    nghiệm thu hoặc yêu cầu làm lại.
+                  </li>
                 </ol>
                 <p>
                   Việc lắp đặt kiosk nằm trong mục Lắp đặt Kiosk. Nạp hoa do nhân viên shop phụ

@@ -51,7 +51,7 @@ test('Operations Manager assigns INCIDENT and recovers the same request after re
   });
 
   await page.goto('/operations/tasks');
-  await page.getByText('Phân công công việc mới', { exact: true }).click();
+  await page.getByRole('button', { name: 'Phân công mới', exact: true }).click();
 
   // Verify wrong-kind action absent: DELIVERY is not allowed for Operations Manager
   await expect(page.locator('#assignment-kind option[value="DELIVERY"]')).toHaveCount(0);
@@ -88,7 +88,6 @@ test('Operations Manager assigns INCIDENT and recovers the same request after re
   expect(writes).toBe(1);
 
   await page.reload();
-  await page.getByText('Phân công công việc mới', { exact: true }).click();
   await page.getByRole('button', { name: 'Kiểm tra lại yêu cầu' }).click();
   await expect(
     page.getByText('Đã phân công. Nhân viên sẽ thấy công việc trong tài khoản.'),
@@ -279,10 +278,12 @@ test('Manager sees a repair verification conflict and can retry after reloading'
   });
 
   await page.goto('/operations/tasks');
+  await page.getByRole('button', { name: /Chờ duyệt báo cáo/ }).click();
   const card = page.locator('article').filter({ hasText: 'Đã kiểm tra cửa và cảm biến.' });
+  await card.locator('.manager-task-details > summary').click();
   await expect(card.getByText(/hệ thống sẽ kiểm tra lại tín hiệu cửa/)).toBeVisible();
   await card.getByLabel('Nội dung cập nhật').fill('Đã đối chiếu báo cáo sửa và tín hiệu tại tủ.');
-  const confirm = card.getByRole('button', { name: 'Xác nhận cập nhật' });
+  const confirm = card.getByRole('button', { name: 'Xác nhận hoàn thành' });
   await confirm.click();
   await expect(card.getByRole('alert')).toContainText('Chưa duyệt được báo cáo');
   await expect(confirm).toBeDisabled();
@@ -290,5 +291,76 @@ test('Manager sees a repair verification conflict and can retry after reloading'
   await card.getByLabel('Nội dung cập nhật').fill('Đã đối chiếu báo cáo sửa và tín hiệu tại tủ.');
   await confirm.click();
   await expect(confirm).toHaveCount(0);
+  await expect(page.getByText('Đã xác nhận hoàn thành', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Xem công việc hoàn thành', exact: true }).click();
+  await expect(page.getByLabel('Lọc trạng thái', { exact: true })).toHaveValue('COMPLETED');
   expect(writes).toBe(2);
+});
+
+test('Technician sees the LOCKED repair blocker without submitting a completion report', async ({
+  page,
+}) => {
+  let writes = 0;
+  const task = {
+    id: 'locked-repair-task',
+    kind: 'INCIDENT',
+    status: 'IN_PROGRESS',
+    version: 3,
+    assigneeId: 'tech-1',
+    assigneeName: 'Kỹ thuật viên',
+    kioskId: 'kiosk-12',
+    kioskName: 'Kiosk HCM 12',
+    address: 'Hà Nội',
+    incidentId: 'incident-s01',
+    instructions: 'Kiểm tra ô S01 bị khóa',
+    report: 'Đã có mặt tại kiosk để kiểm tra',
+  };
+  await page.route('**/api/**', (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (route.request().method() !== 'GET') {
+      writes++;
+      return route.fulfill({ status: 409 });
+    }
+    if (path === '/api/auth/me')
+      return route.fulfill({ json: { id: 'tech-1', name: 'Kỹ thuật viên', role: 'TECHNICIAN' } });
+    if (path === '/api/staff/tasks')
+      return route.fulfill({ json: { items: [task], page: 1, hasMore: false } });
+    if (path === '/api/staff/tasks/locked-repair-task')
+      return route.fulfill({
+        json: {
+          kioskStatus: 'ONLINE',
+          incident: {
+            slotId: 'slot-s01',
+            kind: 'DEVICE_FAULT',
+            status: 'OPEN',
+            reason: 'Cửa không mở',
+          },
+          slotCode: 'S01',
+          slotStatus: 'LOCKED',
+          history: [],
+          page: 1,
+          hasMore: false,
+          version: 3,
+          status: 'IN_PROGRESS',
+        },
+      });
+    return route.fulfill({ json: [] });
+  });
+  await page.goto('/technician');
+  await page
+    .locator('article')
+    .filter({ has: page.locator('#task-locked-repair-task') })
+    .locator('summary')
+    .first()
+    .click();
+  await expect(
+    page.getByRole('heading', { name: 'Cần kiểm tra trạng thái ô trước khi hoàn tất' }),
+  ).toBeVisible();
+  await expect(page.getByText(/chưa đủ điều kiện cấp quyền mở sửa/)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Gửi báo cáo sửa ô tủ', exact: true })).toHaveCount(
+    0,
+  );
+  await page.getByRole('button', { name: 'Cập nhật trạng thái công việc', exact: true }).click();
+  await expect(page.getByText(/Đã tải lại công việc/)).toBeVisible();
+  expect(writes).toBe(0);
 });

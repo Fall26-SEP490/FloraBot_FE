@@ -33,6 +33,8 @@ export type StaffIncidentResolutionProps = {
   version: number;
   active: boolean;
   slotRepair?: boolean;
+  blockedReason?: string;
+  onRefresh?: () => void | Promise<void>;
   apiBase?: string;
 };
 

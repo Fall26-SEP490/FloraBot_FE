@@ -1,5 +1,14 @@
 import { expect, test, type Page } from '@playwright/test';
 
+async function openManagerTaskAdjustments(page: Page) {
+  const detail = page.locator('.manager-task-details').first();
+  if ((await detail.getAttribute('open')) === null)
+    await detail.locator(':scope > summary').click();
+  const adjustments = page.locator('.manager-task-adjustments').first();
+  if ((await adjustments.getAttribute('open')) === null)
+    await adjustments.locator(':scope > summary').click();
+}
+
 async function setup(page: Page, role: 'ADMIN' | 'OPERATIONS_MANAGER', conflict = false) {
   const model = {
     version: 1,
@@ -92,11 +101,14 @@ for (const width of [390, 1440])
       if (req.isNavigationRequest()) documents++;
     });
     await page.goto('/operations/tasks');
+    await page.getByRole('button', { name: /Công việc đã giao/ }).click();
+    await openManagerTaskAdjustments(page);
     await page.getByText('Sửa hướng dẫn công việc', { exact: true }).click();
     await page
       .getByLabel('Hướng dẫn công việc (10–2.000 ký tự)')
       .fill('  Kiểm tra chốt cửa và ghi lại kết quả  ');
     await page.getByRole('button', { name: 'Lưu hướng dẫn' }).click();
+    await openManagerTaskAdjustments(page);
     await expect(
       page.getByText('Kiểm tra chốt cửa và ghi lại kết quả', { exact: true }),
     ).toBeVisible();
@@ -112,6 +124,8 @@ test('Manager must reload a stale task before retrying a 409 instruction update'
 }) => {
   const model = await setup(page, 'OPERATIONS_MANAGER', true);
   await page.goto('/operations/tasks');
+  await page.getByRole('button', { name: /Công việc đã giao/ }).click();
+  await openManagerTaskAdjustments(page);
   await page.getByText('Sửa hướng dẫn công việc', { exact: true }).click();
   const editor = page.getByLabel('Hướng dẫn công việc (10–2.000 ký tự)');
   const draft = 'Kiểm tra cửa và cảm biến theo yêu cầu mới';
@@ -126,12 +140,14 @@ test('Manager must reload a stale task before retrying a 409 instruction update'
   await expect(page.getByRole('button', { name: 'Lưu hướng dẫn' })).toBeDisabled();
   expect(model.patches).toHaveLength(1);
   await page.getByRole('button', { name: 'Tải hướng dẫn mới' }).click();
+  await openManagerTaskAdjustments(page);
   await expect(
     page.getByText('Hướng dẫn mới do người phụ trách khác cập nhật', { exact: true }),
   ).toBeVisible();
   await page.getByText('Sửa hướng dẫn công việc', { exact: true }).click();
   await editor.fill(draft);
   await page.getByRole('button', { name: 'Lưu hướng dẫn' }).click();
+  await openManagerTaskAdjustments(page);
   await expect(page.getByText(draft, { exact: true })).toBeVisible();
   expect(model.patches.map((patch) => patch.version)).toEqual([1, 2]);
   expect(model.writes).toEqual([]);

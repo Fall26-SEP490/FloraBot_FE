@@ -62,3 +62,19 @@
 .maintenance-recovery-form .account-details dd {
   overflow-wrap: anywhere;
 }
+
+.maintenance-recovery-panel > .operations-flow-help {
+  padding: 14px 18px;
+  margin: 16px 0;
+  border: 1px solid #dce5df;
+  border-radius: 10px;
+  background: #f8faf8;
+  font-size: 14px;
+}
+.maintenance-recovery-panel > .operations-flow-help summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.maintenance-recovery-panel > .operations-flow-help p {
+  line-height: 1.7;
+}

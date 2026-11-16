@@ -450,8 +450,8 @@ test.describe('FloraBot Identity Foundation - Workspace and Roles', () => {
     });
 
     await page.goto('/operations/tasks');
-    await expect(page.getByRole('heading', { name: 'Điều phối công việc kỹ thuật' })).toBeVisible();
-    await page.getByText('Phân công công việc mới', { exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Sự cố & công việc' })).toBeVisible();
+    await page.getByRole('button', { name: 'Phân công mới', exact: true }).click();
     // Verify old un-scoped retry attempt was NOT restored:
     await expect(page.getByText('Chỉ thị cũ từ phiên trước')).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Kiểm tra lại yêu cầu' })).toHaveCount(0);

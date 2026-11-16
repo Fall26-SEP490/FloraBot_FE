@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { useCallback, useState, type FormEvent } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
@@ -232,7 +233,7 @@ export default function OperationsMaintenanceRecovery({ managerId }: { managerId
       aria-labelledby="maintenance-recovery-title"
     >
       <div className="business-heading">
-        <h2 id="maintenance-recovery-title">Các ô cần kiểm tra</h2>
+        <h2 id="maintenance-recovery-title">Phiên cần xác minh</h2>
         <Button
           variant="outline"
           disabled={recoveries.isFetching}
@@ -241,6 +242,22 @@ export default function OperationsMaintenanceRecovery({ managerId }: { managerId
           Làm mới
         </Button>
       </div>
+      <details className="operations-flow-help">
+        <summary>Khi nào cần khôi phục phiên?</summary>
+        <p>
+          Mục này chỉ hiện phiên nạp, thu hồi hoặc thay hoa đã hết hạn và cần xác minh. Phiên đang
+          hoạt động chưa xuất hiện ở đây là bình thường.
+        </p>
+        <p>
+          Khi thiết bị gặp lỗi, theo dõi phiếu và giao kỹ thuật viên ở{' '}
+          <Link href="/operations/tasks">Sự cố &amp; công việc</Link>. Không cần chờ phiên hết hạn
+          để xử lý phiếu sự cố đã được tạo.
+        </p>
+        <p>
+          Kết thúc phiên là đối chiếu cửa và hoa thực tế để khôi phục dữ liệu. Thao tác này không
+          gửi lệnh mở khóa, không tự đóng sự cố và không lưu trữ tủ.
+        </p>
+      </details>
       {notice && <p role="status">{notice}</p>}
       {recoveries.isPending ? (
         <p role="status">Đang tải phiên bảo trì hết hạn…</p>
@@ -249,7 +266,10 @@ export default function OperationsMaintenanceRecovery({ managerId }: { managerId
           {recoveries.error.message}
         </p>
       ) : recoveries.data.items.length === 0 ? (
-        <p>Không có phiên bảo trì hết hạn trên trang này.</p>
+        <p>
+          Không có phiên hết hạn cần khôi phục ở trang này. Phiếu sự cố được theo dõi riêng tại Sự
+          cố & công việc.
+        </p>
       ) : (
         <ul className="maintenance-recovery-list">
           {recoveries.data.items.map((row) => (
@@ -304,6 +324,10 @@ export default function OperationsMaintenanceRecovery({ managerId }: { managerId
             );
             close();
             void queryClient.invalidateQueries({ queryKey });
+            void queryClient.invalidateQueries({ queryKey: ['staff-tasks'] });
+            void queryClient.invalidateQueries({ queryKey: ['staff-detail'] });
+            void queryClient.invalidateQueries({ queryKey: ['assignment-incidents'] });
+            void queryClient.invalidateQueries({ queryKey: ['flower-presence', selected.kioskId] });
             void queryClient.invalidateQueries({
               queryKey: ['operations-maintenance-recovery-detail', managerId],
             });

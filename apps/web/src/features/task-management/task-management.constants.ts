@@ -2,7 +2,7 @@ export const TASK_STATUS_LABELS: Record<string, string> = {
   ASSIGNED: 'Chờ bắt đầu',
   IN_PROGRESS: 'Đang thực hiện',
   SUBMITTED: 'Chờ duyệt báo cáo',
-  COMPLETED: 'Đã duyệt',
+  COMPLETED: 'Đã hoàn thành',
   CANCELLED: 'Đã hủy',
 };
 
@@ -12,11 +12,11 @@ export const TASK_DETAIL_STATES: Record<string, string> = {
   MAINTENANCE: 'Đang bảo trì',
   DISABLED: 'Ngừng hoạt động',
   OPEN: 'Chưa giải quyết',
-  RESOLVED_FIXED: 'Đã xử lý',
+  RESOLVED_FIXED: 'Đã giải quyết',
   ASSIGNED: 'Chờ bắt đầu',
   IN_PROGRESS: 'Đang thực hiện',
   SUBMITTED: 'Chờ duyệt báo cáo',
-  COMPLETED: 'Đã duyệt',
+  COMPLETED: 'Đã hoàn thành',
   CANCELLED: 'Đã hủy',
   FREE: 'Chưa phân bổ',
   RENTED_EMPTY: 'Đang trống',

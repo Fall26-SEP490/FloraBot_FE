@@ -57,6 +57,9 @@ for (const width of [390, 1440])
       return route.abort();
     });
     await page.goto('/operations/tasks');
+    await page.getByRole('button', { name: /Công việc đã giao/ }).click();
+    await page.locator('.manager-task-details > summary').click();
+    await page.locator('.manager-task-adjustments > summary').click();
     let panel = page.locator('.staff-reassignment');
     await panel.locator('summary').click();
     await panel.getByRole('button', { name: 'Xác nhận bàn giao' }).click();
@@ -86,6 +89,8 @@ for (const width of [390, 1440])
     await expect(panel.getByRole('button', { name: 'Xác nhận bàn giao' })).toBeDisabled();
     expect(writes).toBe(1);
     await page.getByRole('button', { name: 'Tải lại công việc', exact: true }).click();
+    await page.locator('.manager-task-details > summary').click();
+    await page.locator('.manager-task-adjustments > summary').click();
     panel = page.locator('.staff-reassignment');
     await panel.locator('summary').click();
     await expect(panel.getByText(/Hiện phụ trách: Linh/)).toBeVisible();

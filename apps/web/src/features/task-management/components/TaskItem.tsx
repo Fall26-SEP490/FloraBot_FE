@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
 import { Button, ChevronDown, MapPin, Store } from '@florabot/ui';
 import { ApiError, queryClient, request } from '@/shared/lib/api';
@@ -8,7 +8,7 @@ import StaffStock, { staffStockQuery, walkInBlocker } from '../../inventory/Staf
 import StaffInventoryMaintenance, {
   useStaffInventoryMaintenance,
 } from '../../inventory/StaffInventoryMaintenance';
-import { TASK_STATUS_LABELS } from '../task-management.constants';
+import { TASK_DETAIL_STATES, TASK_STATUS_LABELS } from '../task-management.constants';
 import type { ActiveTaskRole, Task } from '../task-management.types';
 import StaffEvidence from './StaffEvidence';
 import StaffReassignment from './StaffReassignment';
@@ -31,6 +31,7 @@ export function TaskItem({
   readOnly,
   staffOpen = false,
   onToggleStaff,
+  onTransition,
 }: {
   task: Task;
   mode: 'worker' | 'manager' | 'oversight';
@@ -43,6 +44,7 @@ export function TaskItem({
   readOnly: boolean;
   staffOpen?: boolean;
   onToggleStaff?: () => void;
+  onTransition?: (result: { id: string; kioskName: string; status: string }) => void;
 }) {
   const isWorker = mode === 'worker';
   const isTechnician = isWorker && role === 'TECHNICIAN';
@@ -101,6 +103,10 @@ export function TaskItem({
             : null;
   const needsRepairContext =
     isTechnician && task.kind === 'INCIDENT' && task.status === 'IN_PROGRESS';
+  const showIncidentOutcome =
+    task.kind === 'INCIDENT' &&
+    task.status === 'COMPLETED' &&
+    (role === 'OPERATIONS_MANAGER' || role === 'TECHNICIAN');
   const repairDetails = useQuery({
     ...staffTaskDetailsQuery(
       task.id,
@@ -109,7 +115,7 @@ export function TaskItem({
       actorId,
       task.version,
     ),
-    enabled: needsRepairContext && taskOpen,
+    enabled: (needsRepairContext && taskOpen) || showIncidentOutcome,
   });
   const slotRepair =
     needsRepairContext &&
@@ -205,6 +211,11 @@ export function TaskItem({
               ? ['SUBMITTED']
               : []
           : [];
+  const selectedTransition = useWatch({
+    control: form.control,
+    name: 'status',
+    defaultValue: choices[0] ?? '',
+  });
   async function refreshTask() {
     setBusy(true);
     setError('');
@@ -236,10 +247,17 @@ export function TaskItem({
     try {
       await request(`${apiBase}/${task.id}/transition`, { ...values, version: task.version });
       form.reset();
-      setNotice('Đã cập nhật công việc.');
+      setNotice(
+        values.status === 'COMPLETED'
+          ? 'Đã xác nhận hoàn thành công việc.'
+          : 'Đã cập nhật công việc.',
+      );
+      onTransition?.({ id: task.id, kioskName: task.kioskName, status: values.status });
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['staff-tasks'] }),
         queryClient.invalidateQueries({ queryKey: ['staff-inventory-maintenance', task.id] }),
+        queryClient.invalidateQueries({ queryKey: ['assignment-incidents'] }),
+        queryClient.invalidateQueries({ queryKey: ['staff-detail', task.id] }),
       ]);
     } catch (cause) {
       if (isTechnician && cause instanceof ApiError && cause.status === 409) {
@@ -321,7 +339,9 @@ export function TaskItem({
                 ? 'Hủy công việc'
                 : startingDelivery
                   ? 'Bắt đầu công việc'
-                  : 'Cập nhật tiến độ & Báo cáo'}
+                  : reviewingIncident
+                    ? 'Duyệt báo cáo sự cố'
+                    : 'Cập nhật tiến độ & Báo cáo'}
             </h4>
             <p>
               {canCancelOpenTask
@@ -334,7 +354,9 @@ export function TaskItem({
             </p>
           </div>
           <div className="staff-form-group">
-            <label htmlFor={`action-${task.id}`}>Bước tiếp theo</label>
+            <label htmlFor={`action-${task.id}`}>
+              {reviewingIncident ? 'Kết quả xét duyệt' : 'Bước tiếp theo'}
+            </label>
             <select
               id={`action-${task.id}`}
               {...form.register('status', { required: true })}
@@ -419,11 +441,74 @@ export function TaskItem({
                 ? 'Bắt đầu'
                 : canWorkOnInventory
                   ? 'Gửi báo cáo'
-                  : 'Xác nhận cập nhật'}
+                  : reviewingIncident
+                    ? selectedTransition === 'COMPLETED'
+                      ? 'Xác nhận hoàn thành'
+                      : selectedTransition === 'IN_PROGRESS'
+                        ? 'Yêu cầu kiểm tra lại'
+                        : 'Xác nhận hủy'
+                    : 'Xác nhận cập nhật'}
       </Button>
     </form>
   );
 
+  const assignmentAdjustments = (
+    <>
+      {canReassign &&
+        task.kind !== 'KIOSK_REMOVAL' &&
+        ['ASSIGNED', 'IN_PROGRESS'].includes(task.status) && (
+          <StaffReassignment
+            taskId={task.id}
+            version={task.version}
+            assigneeId={task.assigneeId}
+            assigneeName={task.assigneeName}
+            apiBase={apiBase}
+            directoryEndpoint={directoryEndpoint}
+            actorId={actorId}
+            sellerId={sellerId}
+            role={role}
+          />
+        )}
+      {canEditInstructions && (
+        <details
+          open={editingInstructions}
+          onToggle={(e) => setEditingInstructions(e.currentTarget.open)}
+        >
+          <summary>Sửa hướng dẫn công việc</summary>
+          {isManager && role === 'OPERATIONS_MANAGER' && (
+            <p>
+              Bổ sung yêu cầu kiểm tra cho kỹ thuật viên đang phụ trách; không tạo công việc mới.
+            </p>
+          )}
+          {editingInstructions && (
+            <form onSubmit={(e) => void saveInstructions(e)} noValidate>
+              <label htmlFor={`edit-instructions-${task.id}`}>
+                Hướng dẫn công việc (10–2.000 ký tự)
+              </label>
+              <textarea
+                id={`edit-instructions-${task.id}`}
+                rows={3}
+                minLength={10}
+                maxLength={2000}
+                disabled={busy}
+                value={instructionsDraft}
+                onChange={(e) => setInstructionsDraft(e.target.value)}
+              />
+              <Button
+                type="submit"
+                variant="outline"
+                disabled={
+                  busy || uncertain || needsLatestVersion || instructionsDraft.trim().length < 10
+                }
+              >
+                {busy ? 'Đang lưu…' : 'Lưu hướng dẫn'}
+              </Button>
+            </form>
+          )}
+        </details>
+      )}
+    </>
+  );
   const taskContent = (
     <>
       {canWorkOnInventory && actorId && (
@@ -524,54 +609,20 @@ export function TaskItem({
           sellerId={sellerId}
           role={role}
         />
-        {canReassign &&
-          task.kind !== 'KIOSK_REMOVAL' &&
-          ['ASSIGNED', 'IN_PROGRESS'].includes(task.status) && (
-            <StaffReassignment
-              taskId={task.id}
-              version={task.version}
-              assigneeId={task.assigneeId}
-              assigneeName={task.assigneeName}
-              apiBase={apiBase}
-              directoryEndpoint={directoryEndpoint}
-              actorId={actorId}
-              sellerId={sellerId}
-              role={role}
-            />
-          )}
-        {canEditInstructions && (
-          <details
-            open={editingInstructions}
-            onToggle={(e) => setEditingInstructions(e.currentTarget.open)}
-          >
-            <summary>Sửa hướng dẫn công việc</summary>
-            {editingInstructions && (
-              <form onSubmit={(e) => void saveInstructions(e)} noValidate>
-                <label htmlFor={`edit-instructions-${task.id}`}>
-                  Hướng dẫn công việc (10–2.000 ký tự)
-                </label>
-                <textarea
-                  id={`edit-instructions-${task.id}`}
-                  rows={3}
-                  minLength={10}
-                  maxLength={2000}
-                  disabled={busy}
-                  value={instructionsDraft}
-                  onChange={(e) => setInstructionsDraft(e.target.value)}
-                />
-                <Button
-                  type="submit"
-                  variant="outline"
-                  disabled={
-                    busy || uncertain || needsLatestVersion || instructionsDraft.trim().length < 10
-                  }
-                >
-                  {busy ? 'Đang lưu…' : 'Lưu hướng dẫn'}
-                </Button>
-              </form>
-            )}
-          </details>
-        )}
+        {isManager && role === 'OPERATIONS_MANAGER'
+          ? (canEditInstructions ||
+              (canReassign &&
+                task.kind !== 'KIOSK_REMOVAL' &&
+                ['ASSIGNED', 'IN_PROGRESS'].includes(task.status))) && (
+              <details className="manager-task-adjustments">
+                <summary>Điều chỉnh phân công</summary>
+                <p className="manager-adjustments-hint">
+                  Chỉ dùng khi cần đổi kỹ thuật viên hoặc bổ sung hướng dẫn cho công việc này.
+                </p>
+                {assignmentAdjustments}
+              </details>
+            )
+          : assignmentAdjustments}
       </div>
       {needsRepairContext && taskOpen && repairDetails.isPending && (
         <p role="status">Đang kiểm tra ô tủ của công việc…</p>
@@ -599,6 +650,16 @@ export function TaskItem({
             version={task.version}
             active={task.status === 'IN_PROGRESS'}
             slotRepair={slotRepair}
+            blockedReason={
+              slotRepair &&
+              repairDetails.data?.slotStatus &&
+              repairDetails.data.slotStatus !== 'FAULT'
+                ? repairDetails.data.slotStatus === 'LOCKED'
+                  ? `Ô ${repairDetails.data.slotCode || ''} đang khóa và chưa đủ điều kiện cấp quyền mở sửa. Nhờ Quản lý vận hành kiểm tra phiên thao tác và lệnh mở trước khi tiếp tục. Bạn có thể bổ sung ảnh hiện trường; không cần tạo phiếu trùng hoặc chờ thêm chỉ để gửi báo cáo.`
+                  : `Ô ${repairDetails.data.slotCode || ''} hiện ở trạng thái ${repairDetails.data.slotStatus === 'RENTED_EMPTY' ? 'ô trống' : repairDetails.data.slotStatus}. Phiếu sự cố vẫn đang xử lý nên công việc chưa đủ điều kiện nộp báo cáo hoàn tất theo luồng sửa ô. Nhờ Quản lý vận hành xác minh kết quả khôi phục và phối hợp bộ phận hỗ trợ để khép phiếu phù hợp. Trạng thái ô không tự chứng minh sự cố đã được sửa.`
+                : undefined
+            }
+            onRefresh={refreshTask}
             apiBase={apiBase}
           />
         )}
@@ -633,32 +694,8 @@ export function TaskItem({
       )}
     </>
   );
-  return (
-    <article
-      ref={cardRef}
-      className={
-        compactStaff ? 'staff-task-card staff-task-compact' : 'staff-task-card member-empty'
-      }
-      aria-labelledby={`task-${task.id}`}
-    >
-      <div className="staff-task-heading">
-        <div>
-          <CardTitle id={`task-${task.id}`}>
-            {task.kind === 'INCIDENT'
-              ? 'Kiểm tra sự cố'
-              : task.kind === 'KIOSK_REMOVAL'
-                ? 'Tháo dỡ kiosk'
-                : 'Giao hoa'}{' '}
-            · {task.kioskName}
-          </CardTitle>
-          {!isTechnician && !compactStaff && (
-            <p className="staff-assignee-text">Người thực hiện: {task.assigneeName}</p>
-          )}
-        </div>
-        <span className="staff-task-label" data-status={task.status}>
-          {TASK_STATUS_LABELS[task.status] || task.status}
-        </span>
-      </div>
+  const taskDetails = (
+    <>
       <div className="staff-task-destination-card">
         <p className="staff-destination-address">
           <MapPin size={15} aria-hidden="true" />
@@ -734,6 +771,56 @@ export function TaskItem({
         </details>
       ) : (
         <div className="staff-task-body">{taskContent}</div>
+      )}
+    </>
+  );
+  return (
+    <article
+      ref={cardRef}
+      className={
+        compactStaff ? 'staff-task-card staff-task-compact' : 'staff-task-card member-empty'
+      }
+      aria-labelledby={`task-${task.id}`}
+    >
+      <div className="staff-task-heading">
+        <div>
+          <CardTitle id={`task-${task.id}`}>
+            {task.kind === 'INCIDENT'
+              ? 'Kiểm tra sự cố'
+              : task.kind === 'KIOSK_REMOVAL'
+                ? 'Tháo dỡ kiosk'
+                : 'Giao hoa'}{' '}
+            · {task.kioskName}
+          </CardTitle>
+          {!isTechnician && !compactStaff && (
+            <p className="staff-assignee-text">Người thực hiện: {task.assigneeName}</p>
+          )}
+        </div>
+        <span className="staff-task-label" data-status={task.status}>
+          {TASK_STATUS_LABELS[task.status] || task.status}
+        </span>
+      </div>
+      {showIncidentOutcome && (
+        <p className="manager-incident-outcome" role="status">
+          {repairDetails.data?.incident
+            ? `Sự cố: ${TASK_DETAIL_STATES[repairDetails.data.incident.status] || repairDetails.data.incident.status}`
+            : repairDetails.isError
+              ? 'Chưa tải được trạng thái sự cố.'
+              : repairDetails.isPending
+                ? 'Đang kiểm tra trạng thái sự cố…'
+                : 'Chưa có thông tin trạng thái sự cố.'}
+        </p>
+      )}
+      {isManager && role === 'OPERATIONS_MANAGER' ? (
+        <details className="manager-task-details">
+          <summary>
+            {task.status === 'SUBMITTED' ? 'Kiểm tra báo cáo' : 'Xem chi tiết công việc'}
+            <ChevronDown size={16} aria-hidden="true" />
+          </summary>
+          {taskDetails}
+        </details>
+      ) : (
+        taskDetails
       )}
       {error && <p role="alert">{error}</p>}
       {uncertain && (

@@ -17,6 +17,8 @@ export default function StaffIncidentResolution({
   version,
   active,
   slotRepair = false,
+  blockedReason,
+  onRefresh,
   apiBase = '/staff/tasks',
 }: StaffIncidentResolutionProps) {
   const scopeKey = sellerId ? `seller:${sellerId}` : apiBase;
@@ -46,7 +48,11 @@ export default function StaffIncidentResolution({
       if (cause instanceof ApiError && [400, 403, 404, 409].includes(cause.status)) {
         sessionStorage.removeItem(key);
         setAttempt(null);
-        setError(cause.message);
+        setError(
+          cause.status === 409 && slotRepair
+            ? 'Hệ thống chưa chấp nhận báo cáo sửa ô. Cần kiểm tra trạng thái công việc, quyền sửa, chu kỳ cửa và cảm biến trước khi gửi lại.'
+            : cause.message,
+        );
       } else
         setError(
           !saved
@@ -58,6 +64,22 @@ export default function StaffIncidentResolution({
     }
   }
   if (!active && !attempt) return null;
+  if (blockedReason && !attempt)
+    return (
+      <section className="staff-resolution" aria-label="Điều kiện gửi báo cáo sửa ô">
+        <h4>Cần kiểm tra trạng thái ô trước khi hoàn tất</h4>
+        <p role="status">{blockedReason}</p>
+        <p>
+          Bạn vẫn có thể bổ sung ảnh minh chứng cho công việc. Ghi nhận đã đến tủ hoặc tải ảnh chưa
+          xác nhận ô đã được sửa.
+        </p>
+        {onRefresh && (
+          <Button type="button" variant="outline" onClick={() => void onRefresh()}>
+            Cập nhật trạng thái công việc
+          </Button>
+        )}
+      </section>
+    );
   return (
     <details className="staff-resolution">
       <summary>{slotRepair ? 'Báo cáo kết quả sửa ô tủ' : 'Ghi nhận đã sửa sự cố'}</summary>
@@ -126,7 +148,21 @@ export default function StaffIncidentResolution({
           </Button>
         </form>
       )}
-      {error && <p role="alert">{error}</p>}
+      {error && (
+        <div>
+          <p role="alert">{error}</p>
+          {onRefresh && (
+            <Button
+              type="button"
+              variant="outline"
+              disabled={busy}
+              onClick={() => void onRefresh()}
+            >
+              Tải lại trạng thái trước khi gửi lại
+            </Button>
+          )}
+        </div>
+      )}
     </details>
   );
 }

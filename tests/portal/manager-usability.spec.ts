@@ -5,7 +5,7 @@ for (const width of [390, 1440]) {
   for (const [path, title] of [
     ['', 'Tổng quan vận hành'],
     ['installations', 'Hồ sơ thuê & lắp đặt'],
-    ['tasks', 'Điều phối công việc kỹ thuật'],
+    ['tasks', 'Sự cố & công việc'],
     ['technicians', 'Quản lý kỹ thuật viên'],
     ['sellers', 'Quản lý shop hoa'],
     ['customers', 'Quản lý khách hàng'],
@@ -23,7 +23,9 @@ for (const width of [390, 1440]) {
       if (path === 'installations')
         await expect(page.getByRole('table', { name: 'Danh sách hồ sơ thuê kiosk' })).toBeVisible();
       if (path === 'tasks')
-        await expect(page.getByText('0 công việc trong trang 1', { exact: false })).toBeVisible();
+        await expect(
+          page.getByRole('heading', { name: 'Phiếu sự cố đang mở', exact: true }),
+        ).toBeVisible();
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
         true,
       );

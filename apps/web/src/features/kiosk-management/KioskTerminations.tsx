@@ -8,7 +8,7 @@ import EvidenceUpload from '@/shared/components/EvidenceUpload';
 import { ApiError, queryClient, request, type Session } from '@/shared/lib/api';
 import StaffEvidence from '../task-management/components/StaffEvidence';
 import StaffTaskDetails from '../task-management/components/StaffTaskDetails';
-import type { StaffDirectoryMember } from '../task-management/task-management.types';
+import type { StaffDirectoryMember, TaskDetail } from '../task-management/task-management.types';
 import type { KioskLocationChangeResponse, SellerKioskItem } from './kiosk-management.types';
 import '../finance/styles/commerce-subscriptions.css';
 
@@ -353,6 +353,13 @@ function ManagerTerminationCard({
   const [confirmArchive, setConfirmArchive] = useState(false);
   const [notice, setNotice] = useState('');
   const managerRole = 'OPERATIONS_MANAGER' as const;
+  const kioskState = useQuery({
+    queryKey: ['termination-kiosk-state', item.kioskId, item.correlatedTaskId],
+    queryFn: () => request<TaskDetail>(`/operations/staff-tasks/${item.correlatedTaskId}`),
+    enabled: item.status === 'COMPLETED' && Boolean(item.correlatedTaskId),
+    refetchInterval: 30_000,
+  });
+
   const needsAssignment =
     item.status === 'ACCEPTED' &&
     (!item.correlatedTaskId || !item.removalTaskStatus || item.removalTaskStatus === 'CANCELLED');
@@ -397,7 +404,9 @@ function ManagerTerminationCard({
         'POST',
       ),
     onSuccess: async () => {
-      setNotice('Đã ghi nhận bàn giao kiosk.');
+      setNotice(
+        'Đã xác nhận bàn giao. Tiếp tục bước 4 để ngừng sử dụng và lưu trữ tủ khi đủ điều kiện.',
+      );
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['operations-terminations'] }),
         queryClient.invalidateQueries({ queryKey: ['staff-tasks'] }),
@@ -415,15 +424,22 @@ function ManagerTerminationCard({
     onSuccess: async () => {
       setConfirmArchive(false);
       setNotice(
-        `Đã lưu trữ tủ ${item.kioskCode || item.kioskName || item.kioskId}. Lịch sử đơn hàng, thanh toán và vận hành được giữ lại.`,
+        `Đã ngừng sử dụng và lưu trữ tủ ${item.kioskCode || item.kioskName || item.kioskId}. Tủ không còn trong kho khả dụng; lịch sử được giữ lại.`,
       );
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['operations-terminations'] }),
+        queryClient.invalidateQueries({ queryKey: ['termination-kiosk-state', item.kioskId] }),
         queryClient.invalidateQueries({ queryKey: ['available-kiosks-inventory'] }),
         queryClient.invalidateQueries({ queryKey: ['eligible-kiosks'] }),
       ]);
     },
   });
+  const archived = archive.isSuccess || kioskState.data?.kioskStatus === 'DISABLED';
+  const awaitingKioskState =
+    item.status === 'COMPLETED' && Boolean(item.correlatedTaskId) && kioskState.isPending;
+  const mustGoOffline = Boolean(
+    kioskState.data && !['OFFLINE', 'DISABLED'].includes(kioskState.data.kioskStatus),
+  );
   const step1State =
     item.status === 'REQUESTED'
       ? 'active'
@@ -453,7 +469,7 @@ function ManagerTerminationCard({
           </p>
         </div>
         <span className="termination-status-pill" data-status={item.status}>
-          {statusLabel[item.status] || item.status}
+          {archived ? 'Đã lưu trữ tủ' : statusLabel[item.status] || item.status}
         </span>
       </div>
 
@@ -485,6 +501,19 @@ function ManagerTerminationCard({
                   : 'Chờ báo cáo tháo dỡ'}
             </span>
           </li>
+          <li
+            className="termination-step"
+            data-state={archived ? 'done' : item.status === 'COMPLETED' ? 'active' : 'idle'}
+          >
+            <strong>Bước 4 · Ngừng sử dụng &amp; lưu trữ</strong>
+            <span>
+              {archived
+                ? 'Đã lưu trữ, kết thúc luồng'
+                : item.status === 'COMPLETED'
+                  ? 'Kiểm tra điều kiện lưu trữ'
+                  : 'Chờ hoàn tất bàn giao'}
+            </span>
+          </li>
         </ol>
       )}
 
@@ -500,7 +529,11 @@ function ManagerTerminationCard({
         {(item.lifecycleStatus || item.removalTaskStatus) && (
           <p>
             <strong>Trạng thái chi tiết:</strong>{' '}
-            {lifecycleLabel[item.lifecycleStatus || ''] || statusLabel[item.status] || item.status}
+            {archived
+              ? 'Tủ đã ngừng sử dụng, không còn trong kho khả dụng'
+              : lifecycleLabel[item.lifecycleStatus || ''] ||
+                statusLabel[item.status] ||
+                item.status}
           </p>
         )}
       </div>
@@ -656,40 +689,95 @@ function ManagerTerminationCard({
       {item.status === 'COMPLETED' && (
         <div className="business-form termination-action-panel">
           {item.completionNotes && <p>Ghi chú bàn giao: {item.completionNotes}</p>}
-          {!confirmArchive ? (
-            <div>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={archive.isPending}
-                onClick={() => setConfirmArchive(true)}
-              >
-                Lưu trữ tủ {item.kioskCode || item.kioskName || ''}
-              </Button>
+          {archived ? (
+            <div role="status">
+              <h4>Đã ngừng sử dụng và lưu trữ tủ</h4>
+              <p>
+                Luồng chấm dứt và lưu trữ đã hoàn tất. Tủ không còn trong kho khả dụng hoặc danh
+                sách cấp phát. Lịch sử đơn hàng, thanh toán và vận hành được giữ lại.
+              </p>
             </div>
           ) : (
-            <div>
+            <>
+              <h4>Bước 4 · Ngừng sử dụng và lưu trữ tủ</h4>
               <p>
-                <strong>
-                  Xác nhận lưu trữ mềm tủ {item.kioskCode || item.kioskName || item.kioskId}?
-                </strong>{' '}
-                Tủ phải ở trạng thái OFFLINE và không còn hàng, đơn hoặc công việc đang chờ. Lịch sử
-                đơn hàng, thanh toán và vận hành được giữ lại.
+                Bàn giao đã hoàn tất. Lưu trữ là bước cuối để ngừng sử dụng tủ; sau khi thành công,
+                tủ không còn trong kho khả dụng hoặc danh sách cấp phát.
               </p>
-              <div className="business-inline">
-                <Button type="button" disabled={archive.isPending} onClick={() => archive.mutate()}>
-                  {archive.isPending ? 'Đang lưu trữ…' : 'Xác nhận lưu trữ tủ'}
-                </Button>
+              {awaitingKioskState && <p role="status">Đang kiểm tra trạng thái tủ…</p>}
+              {kioskState.data && (
+                <p>
+                  Trạng thái kết nối: <strong>{kioskState.data.kioskStatus}</strong>.
+                </p>
+              )}
+              {mustGoOffline && (
+                <p>
+                  Tủ phải chuyển về OFFLINE trước khi lưu trữ. Sau khi ngắt kết nối thiết bị, cập
+                  nhật lại trạng thái.
+                </p>
+              )}
+              {kioskState.isError && (
+                <p role="alert">
+                  Chưa đọc được trạng thái tủ. Tải lại trạng thái để kiểm tra trước khi lưu trữ.
+                </p>
+              )}
+              {item.correlatedTaskId && (
                 <Button
                   type="button"
                   variant="outline"
-                  disabled={archive.isPending}
-                  onClick={() => setConfirmArchive(false)}
+                  disabled={kioskState.isFetching || archive.isPending}
+                  onClick={() => void kioskState.refetch()}
                 >
-                  Hủy
+                  Cập nhật trạng thái tủ
                 </Button>
-              </div>
-            </div>
+              )}
+              {!confirmArchive ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={
+                    archive.isPending || awaitingKioskState || mustGoOffline || kioskState.isError
+                  }
+                  onClick={() => setConfirmArchive(true)}
+                >
+                  Lưu trữ tủ {item.kioskCode || item.kioskName || ''}
+                </Button>
+              ) : (
+                <div>
+                  <p>
+                    <strong>
+                      Xác nhận ngừng sử dụng và lưu trữ tủ{' '}
+                      {item.kioskCode || item.kioskName || item.kioskId}?
+                    </strong>{' '}
+                    Tủ phải OFFLINE, không còn gán shop/hợp đồng đang hiệu lực, hoa, ô khóa, đơn
+                    hàng, thanh toán, sự cố hoặc công việc chưa kết thúc. Lịch sử được giữ lại. Tủ
+                    đã lưu trữ sẽ không xuất hiện trong kho khả dụng.
+                  </p>
+                  <div className="business-inline">
+                    <Button
+                      type="button"
+                      disabled={
+                        archive.isPending ||
+                        awaitingKioskState ||
+                        mustGoOffline ||
+                        kioskState.isError
+                      }
+                      onClick={() => archive.mutate()}
+                    >
+                      {archive.isPending ? 'Đang lưu trữ…' : 'Xác nhận lưu trữ tủ'}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={archive.isPending}
+                      onClick={() => setConfirmArchive(false)}
+                    >
+                      Quay lại
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
@@ -931,7 +1019,7 @@ export function OperationsTerminations() {
       <div className="business-heading">
         <div>
           <h2>Hồ sơ chấm dứt thuê kiosk</h2>
-          <p>Xem xét yêu cầu, kiểm tra bàn giao rồi xác nhận hoàn tất.</p>
+          <p>Quản lý yêu cầu chấm dứt thuê, bàn giao và lưu trữ kiosk.</p>
         </div>
         <Button variant="outline" onClick={() => void records.refetch()}>
           Làm mới

@@ -83,7 +83,9 @@ for (const admin of [false, true])
     await expect(panel.getByRole('button', { name: 'Ảnh trang trước' })).toHaveCount(0);
     await expect(panel.getByRole('button', { name: 'Ảnh trang tiếp' })).toHaveCount(0);
     showMultiplePages = true;
-    await panel.getByRole('button', { name: 'Tải lại ảnh', exact: true }).click();
+    await expect(panel.getByRole('button', { name: 'Tải lại ảnh', exact: true })).toHaveCount(0);
+    await panel.locator('summary').click();
+    await panel.locator('summary').click();
     await panel.getByRole('button', { name: 'Ảnh trang tiếp' }).click();
     await expect(panel.getByText('Chưa có ảnh minh chứng ở trang này.')).toBeVisible();
     await panel.getByRole('button', { name: 'Ảnh trang trước' }).click();
