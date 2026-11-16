@@ -20,6 +20,9 @@ type Suggestion = {
   productReviews?: number;
   shopRating?: number | null;
   shopReviews?: number;
+  shopName?: string | null;
+  kioskName?: string | null;
+  distanceKm?: number | null;
 };
 type Answer = { message: string; suggestions: Suggestion[] };
 type Exchange = { question: string; answer?: Answer; error?: boolean };
@@ -42,6 +45,7 @@ const prompts = {
 } satisfies Record<string, { question: string; mode?: Mode; budget?: number }[]>;
 
 const currency = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
+const distance = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 1 });
 
 export function FlowerAdvisor({ audience = 'customer' }: { audience?: 'customer' | 'seller' }) {
   const panel = useRef<HTMLDialogElement>(null);
@@ -51,6 +55,9 @@ export function FlowerAdvisor({ audience = 'customer' }: { audience?: 'customer'
   const [busy, setBusy] = useState(false);
   const [opened, setOpened] = useState(false);
   const [kioskId, setKioskId] = useState('');
+  const [location, setLocation] = useState<{ latitude: number; longitude: number }>();
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState(false);
   const kiosks = useQuery({
     queryKey: ['public-kiosks'],
     queryFn: fetchPublicKiosks,
@@ -72,7 +79,12 @@ export function FlowerAdvisor({ audience = 'customer' }: { audience?: 'customer'
     try {
       const answer = await request<Answer>(
         '/shop/flower-chat',
-        { ...input, question: text, kioskId: kioskId || undefined },
+        {
+          ...input,
+          question: text,
+          kioskId: kioskId || undefined,
+          ...(audience === 'customer' && input.mode !== 'WALK_IN' ? location : undefined),
+        },
         false,
       );
       setExchanges((previous) => [...previous.slice(0, -1), { question: text, answer }]);
@@ -88,6 +100,26 @@ export function FlowerAdvisor({ audience = 'customer' }: { audience?: 'customer'
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     void send({ question });
+  }
+
+  function locate() {
+    setLocationError(false);
+    if (!navigator.geolocation) {
+      setLocationError(true);
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setLocation({ latitude: coords.latitude, longitude: coords.longitude });
+        setLocating(false);
+      },
+      () => {
+        setLocationError(true);
+        setLocating(false);
+      },
+      { timeout: 10000, maximumAge: 60000 },
+    );
   }
 
   return (
@@ -109,6 +141,22 @@ export function FlowerAdvisor({ audience = 'customer' }: { audience?: 'customer'
             ×
           </button>
         </header>
+        {audience === 'customer' && (
+          <div aria-label="Vị trí nhận hoa đặt trước">
+            {location ? (
+              <button type="button" onClick={() => setLocation(undefined)}>
+                Bỏ vị trí của tôi
+              </button>
+            ) : (
+              <button type="button" disabled={locating} onClick={locate}>
+                {locating ? 'Đang lấy vị trí…' : 'Dùng vị trí của tôi'}
+              </button>
+            )}
+            {locationError && (
+              <p role="status">Chưa lấy được vị trí. Bạn vẫn có thể hỏi FloraBot.</p>
+            )}
+          </div>
+        )}
         {audience === 'customer' && (
           <label>
             Kiosk mua tại tủ
@@ -175,6 +223,19 @@ export function FlowerAdvisor({ audience = 'customer' }: { audience?: 'customer'
                         {currency.format(item.price)} ·{' '}
                         {item.mode === 'WALK_IN' ? 'Lấy tại tủ' : 'Đặt trước'}
                       </span>
+                      {item.mode === 'PREORDER' && item.kioskName && (
+                        <span>
+                          {[
+                            item.shopName,
+                            item.kioskName,
+                            item.distanceKm != null
+                              ? `Cách khoảng ${distance.format(item.distanceKm)} km`
+                              : null,
+                          ]
+                            .filter(Boolean)
+                            .join(' · ')}
+                        </span>
+                      )}
                       {item.productRating != null && (
                         <span>
                           Mẫu hoa {item.productRating}/5 ({item.productReviews} lượt)

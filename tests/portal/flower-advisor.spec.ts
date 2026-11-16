@@ -3,12 +3,15 @@ import { expect, test } from '@playwright/test';
 test('FloraBot offers quick prompts and redirects an unrelated typed question', async ({
   page,
 }) => {
+  await page.context().grantPermissions(['geolocation']);
+  await page.context().setGeolocation({ latitude: 10.9, longitude: 106.6 });
   await page.route('**/api/kiosks', (route) =>
     route.fulfill({ json: [{ id: 'kiosk', name: 'Kiosk mẫu' }] }),
   );
   await page.route('**/api/shop/flower-chat', (route) => {
     const input = route.request().postDataJSON();
     if (input.mode === 'WALK_IN') {
+      expect(input.latitude).toBeUndefined();
       expect(input.budget).toBe(400000);
       expect(input.kioskId).toBe('kiosk');
       return route.fulfill({
@@ -29,6 +32,8 @@ test('FloraBot offers quick prompts and redirects an unrelated typed question', 
       });
     }
     if (input.mode === 'PREORDER') {
+      expect(input.latitude).toBe(10.9);
+      expect(input.longitude).toBe(106.6);
       return route.fulfill({
         json: {
           message: 'Có mẫu nhận đặt trước.',
@@ -40,6 +45,9 @@ test('FloraBot offers quick prompts and redirects an unrelated typed question', 
               name: 'Tulip len',
               price: 350000,
               mode: 'PREORDER',
+              shopName: 'Shop mẫu',
+              kioskName: 'Kiosk mẫu',
+              distanceKm: 1.5,
               photo: '/favicon.ico',
               productRating: 4.5,
               productReviews: 2,
@@ -63,6 +71,8 @@ test('FloraBot offers quick prompts and redirects an unrelated typed question', 
     dialog.getByText('FloraBot xin chào, chúng tôi có thể giúp gì cho bạn ạ?'),
   ).toBeVisible();
   await dialog.getByLabel('Kiosk mua tại tủ').selectOption('kiosk');
+  await dialog.getByRole('button', { name: 'Dùng vị trí của tôi' }).click();
+  await expect(dialog.getByRole('button', { name: 'Bỏ vị trí của tôi' })).toBeVisible();
   await dialog.getByRole('button', { name: /sinh nhật dưới/ }).click();
   await expect(dialog.getByRole('link', { name: 'Hồng lụa' })).toHaveAttribute(
     'href',
@@ -75,6 +85,7 @@ test('FloraBot offers quick prompts and redirects an unrelated typed question', 
   );
   await expect(dialog.locator('img.flower-advisor-photo')).toHaveAttribute('src', '/favicon.ico');
   await expect(dialog.getByText('Shop 4/5 (8 lượt)')).toBeVisible();
+  await expect(dialog.getByText('Shop mẫu · Kiosk mẫu · Cách khoảng 1,5 km')).toBeVisible();
   await dialog.getByRole('textbox', { name: 'Câu hỏi cho FloraBot' }).fill('Ai vô địch bóng đá?');
   await dialog.getByRole('button', { name: 'Gửi', exact: true }).click();
   await expect(dialog.getByText('Bạn muốn FloraBot gợi ý hoa cho dịp nào ạ?')).toBeVisible();
