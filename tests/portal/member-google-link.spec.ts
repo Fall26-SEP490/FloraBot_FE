@@ -71,7 +71,10 @@ test.describe('Member Google Account Linking', () => {
       if (url.pathname === '/api/account/profile')
         return route.fulfill({ json: customerAccountProfile });
       if (url.pathname === '/api/member/profile') return route.fulfill({ json: customerProfile });
-      if (url.pathname === '/api/member/history' || url.pathname.endsWith('/preorders')) {
+      if (
+        ['/api/member/history', '/api/member/loyalty'].includes(url.pathname) ||
+        url.pathname.endsWith('/preorders')
+      ) {
         return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
       }
       if (url.pathname === '/api/auth/config') {
@@ -129,7 +132,10 @@ test.describe('Member Google Account Linking', () => {
       if (url.pathname === '/api/account/profile')
         return route.fulfill({ json: customerAccountProfile });
       if (url.pathname === '/api/member/profile') return route.fulfill({ json: customerProfile });
-      if (url.pathname === '/api/member/history' || url.pathname.endsWith('/preorders')) {
+      if (
+        ['/api/member/history', '/api/member/loyalty'].includes(url.pathname) ||
+        url.pathname.endsWith('/preorders')
+      ) {
         return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
       }
       if (url.pathname === '/api/auth/config') {
@@ -196,7 +202,10 @@ test.describe('Member Google Account Linking', () => {
       if (url.pathname === '/api/account/profile')
         return route.fulfill({ json: customerAccountProfile });
       if (url.pathname === '/api/member/profile') return route.fulfill({ json: customerProfile });
-      if (url.pathname === '/api/member/history' || url.pathname.endsWith('/preorders')) {
+      if (
+        ['/api/member/history', '/api/member/loyalty'].includes(url.pathname) ||
+        url.pathname.endsWith('/preorders')
+      ) {
         return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
       }
       if (url.pathname === '/api/auth/config') {
@@ -225,8 +234,8 @@ test.describe('Member Google Account Linking', () => {
 
     // Verify friendly instruction shows profile email and benefits
     await expect(linkSection).toContainText('lan@example.com');
-    await expect(linkSection).toContainText('chọn tài khoản Google sử dụng cùng email');
-    await expect(linkSection).toContainText('đăng nhập bằng mật khẩu hiện tại hoặc bằng Google');
+    await expect(linkSection).toContainText('hãy chọn tài khoản có cùng email');
+    await expect(linkSection).toContainText('Bạn vẫn có thể dùng mật khẩu hiện tại.');
 
     // Verify NO mock fallback inputs (no email input, no manual token input)
     await expect(linkSection.locator('input')).toHaveCount(0);
@@ -288,7 +297,10 @@ test.describe('Member Google Account Linking', () => {
       if (url.pathname === '/api/account/profile')
         return route.fulfill({ json: customerAccountProfile });
       if (url.pathname === '/api/member/profile') return route.fulfill({ json: customerProfile });
-      if (url.pathname === '/api/member/history' || url.pathname.endsWith('/preorders')) {
+      if (
+        ['/api/member/history', '/api/member/loyalty'].includes(url.pathname) ||
+        url.pathname.endsWith('/preorders')
+      ) {
         return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
       }
       if (url.pathname === '/api/auth/config') {
@@ -372,7 +384,10 @@ test.describe('Member Google Account Linking', () => {
       if (url.pathname === '/api/account/profile')
         return route.fulfill({ json: customerAccountProfile });
       if (url.pathname === '/api/member/profile') return route.fulfill({ json: customerProfile });
-      if (url.pathname === '/api/member/history' || url.pathname.endsWith('/preorders')) {
+      if (
+        ['/api/member/history', '/api/member/loyalty'].includes(url.pathname) ||
+        url.pathname.endsWith('/preorders')
+      ) {
         return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
       }
       if (url.pathname === '/api/auth/config') {
@@ -439,7 +454,10 @@ test.describe('Member Google Account Linking', () => {
       if (url.pathname === '/api/account/profile')
         return route.fulfill({ json: customerAccountProfile });
       if (url.pathname === '/api/member/profile') return route.fulfill({ json: customerProfile });
-      if (url.pathname === '/api/member/history' || url.pathname.endsWith('/preorders')) {
+      if (
+        ['/api/member/history', '/api/member/loyalty'].includes(url.pathname) ||
+        url.pathname.endsWith('/preorders')
+      ) {
         return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
       }
       if (url.pathname === '/api/auth/config') {
@@ -491,7 +509,10 @@ test.describe('Member Google Account Linking', () => {
       if (url.pathname === '/api/account/profile')
         return route.fulfill({ json: sellerAccountProfile });
       if (url.pathname === '/api/member/profile') return route.fulfill({ json: sellerProfile });
-      if (url.pathname === '/api/member/history' || url.pathname.endsWith('/preorders')) {
+      if (
+        ['/api/member/history', '/api/member/loyalty'].includes(url.pathname) ||
+        url.pathname.endsWith('/preorders')
+      ) {
         return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
       }
       if (url.pathname === '/api/auth/config') {
@@ -522,7 +543,10 @@ test.describe('Member Google Account Linking', () => {
       if (url.pathname === '/api/account/profile')
         return route.fulfill({ json: customerAccountProfile });
       if (url.pathname === '/api/member/profile') return route.fulfill({ json: customerProfile });
-      if (url.pathname === '/api/member/history' || url.pathname.endsWith('/preorders')) {
+      if (
+        ['/api/member/history', '/api/member/loyalty'].includes(url.pathname) ||
+        url.pathname.endsWith('/preorders')
+      ) {
         return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
       }
       if (url.pathname === '/api/auth/config') {
@@ -539,7 +563,10 @@ test.describe('Member Google Account Linking', () => {
 
     await page.goto('/tai-khoan#member-profile');
     await expect(page).toHaveURL(/\/ho-so$/);
-    await expect(page.getByRole('heading', { level: 1, name: 'Lan Nguyễn' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Hồ sơ', exact: true })).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Thông tin cá nhân' })).toContainText(
+      'Lan Nguyễn',
+    );
 
     await page.goto('/tai-khoan#member-security');
     await expect(page).toHaveURL(/\/ho-so#security$/);
@@ -583,7 +610,7 @@ test.describe('Member Google Account Linking', () => {
     });
 
     await page.goto('/ho-so');
-    await expect(page.getByRole('heading', { level: 1, name: 'Quản Trị Viên' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Hồ sơ cá nhân' })).toBeVisible();
 
     // Explain the supported route instead of offering a forbidden member action.
     await expect(page.locator('#security')).toContainText(
@@ -596,7 +623,7 @@ test.describe('Member Google Account Linking', () => {
 
     await expect(
       page.locator('.profile-quick-nav').getByRole('link', { name: 'Bảo mật' }),
-    ).toHaveCount(1);
+    ).toHaveCount(0);
 
     expect(memberEndpointCalled).toBe(false);
   });

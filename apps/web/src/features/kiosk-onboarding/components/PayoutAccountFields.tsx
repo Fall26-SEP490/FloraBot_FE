@@ -1,3 +1,5 @@
+import { VietnamBankSelect } from '@/shared/components/VietnamBankSelect';
+
 interface PayoutAccountFieldsProps {
   bankName: string;
   onBankNameChange: (val: string) => void;
@@ -23,10 +25,9 @@ export function PayoutAccountFields({
 }: PayoutAccountFieldsProps) {
   return (
     <fieldset className="kiosk-form-group">
-      <legend>Tài khoản nhận hoàn phí thuê kiosk</legend>
+      <legend>Tài khoản nhận hoàn phí</legend>
       <p className="kiosk-group-note">
-        Dùng khi hồ sơ cần hoàn phí thuê bằng chuyển khoản. Phí thuê được thanh toán cho FloraBot;
-        kênh PayOS nhận tiền bán hoa của shop được cấu hình riêng.
+        FloraBot dùng tài khoản này để chuyển khoản nếu hồ sơ được hoàn phí thuê.
       </p>
 
       <div className="form-fields-grid-2">
@@ -34,17 +35,19 @@ export function PayoutAccountFields({
           <label htmlFor="bank-name-input">
             Tên ngân hàng <span className="required-star">*</span>
           </label>
-          <input
+          <VietnamBankSelect
             id="bank-name-input"
-            type="text"
-            maxLength={120}
             value={bankName}
-            onChange={(e) => onBankNameChange(e.target.value)}
-            placeholder="Ví dụ: Vietcombank, MB Bank, v.v."
+            onValueChange={onBankNameChange}
             required
-            aria-invalid={!!bankNameError}
+            invalid={!!bankNameError}
+            describedBy={bankNameError ? 'lease-bank-name-error' : undefined}
           />
-          {bankNameError && <p className="kiosk-field-error">{bankNameError}</p>}
+          {bankNameError && (
+            <p id="lease-bank-name-error" className="kiosk-field-error">
+              {bankNameError}
+            </p>
+          )}
         </div>
 
         <div className="kiosk-form-field">

@@ -1,8 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useController, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@florabot/ui';
+import { VietnamBankSelect } from '@/shared/components/VietnamBankSelect';
 import type { SubmitRefundInfoRequest } from '../../finance.types';
 
 const plainText = z
@@ -48,6 +49,7 @@ export default function RefundAccount({
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const form = useForm<Fields>({ resolver: zodResolver(schema), defaultValues: empty });
+  const { field: bankField } = useController({ name: 'bank', control: form.control });
   const controller = useRef<AbortController | null>(null);
   const sending = useRef(false);
   const reviewHeading = useRef<HTMLHeadingElement>(null);
@@ -165,14 +167,16 @@ export default function RefundAccount({
         >
           <div hidden={review}>
             <label htmlFor="refund-bank">Tên ngân hàng</label>
-            <input
+            <VietnamBankSelect
               id="refund-bank"
-              autoComplete="off"
-              maxLength={120}
-              {...form.register('bank')}
-              aria-invalid={!!form.formState.errors.bank}
-              aria-describedby="refund-bank-error"
-              readOnly={saving}
+              inputRef={bankField.ref}
+              value={bankField.value}
+              onValueChange={bankField.onChange}
+              onBlur={bankField.onBlur}
+              invalid={!!form.formState.errors.bank}
+              describedBy="refund-bank-error"
+              disabled={saving}
+              required
             />
             <p id="refund-bank-error" className="error">
               {form.formState.errors.bank?.message}

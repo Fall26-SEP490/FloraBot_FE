@@ -166,16 +166,7 @@ describe('validateKioskApplicationDraft Unit Tests', () => {
       ).toBe('Địa chỉ lắp đặt quá ngắn, vui lòng ghi rõ số nhà, đường, phường/xã.');
     });
 
-    it('accepts addresses with 5 or more characters and rejects unselected Goong address', () => {
-      expect(
-        validateKioskApplicationDraft({
-          ...validDraft,
-          addressSelected: false,
-        }).errors.installationAddress,
-      ).toBe('Vui lòng chọn một địa chỉ từ danh sách gợi ý của Goong.');
-      expect(
-        validateKioskApplicationDraft({ ...validDraft, installationAddress: '12345' }).isValid,
-      ).toBe(true);
+    it('accepts a manually entered address with a valid map pin', () => {
       expect(
         validateKioskApplicationDraft({ ...validDraft, installationAddress: '12345' }).isValid,
       ).toBe(true);
@@ -201,7 +192,7 @@ describe('validateKioskApplicationDraft Unit Tests', () => {
         lonInput: '106.7',
       });
       expect(result.isValid).toBe(false);
-      expect(result.errors.coordinates).toContain('ô trống không đồng nghĩa với 0');
+      expect(result.errors.coordinates).toContain('Chưa ghim vị trí lắp đặt');
     });
 
     it('accepts boundary coordinates 90/-90 and 180/-180', () => {

@@ -169,6 +169,201 @@
   border-color: var(--interaction-border-hover);
 }
 
+#staff-tasks .staff-task-compact {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 20px;
+  margin-bottom: 12px;
+  box-shadow: none;
+}
+
+.staff-workspace #staff-tasks .staff-task-toolbar {
+  padding: 0 0 12px;
+  margin-bottom: 12px;
+  border: 0;
+  border-bottom: 1px solid var(--color-workspace-divider);
+  border-radius: 0;
+  background: transparent;
+}
+
+.staff-workspace #staff-tasks.staff-task-board .staff-task-toolbar {
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.staff-task-group + .staff-task-group,
+.staff-task-group + .staff-board-history {
+  margin-top: 24px;
+}
+
+.staff-task-group > h3 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.staff-task-board .staff-task-label {
+  display: none;
+}
+
+.staff-board-history {
+  border-top: 1px solid var(--color-workspace-divider);
+  padding-top: 4px;
+}
+
+.staff-board-history > summary {
+  min-height: 44px;
+  padding-block: 12px;
+  cursor: pointer;
+  font-weight: 650;
+}
+
+.staff-board-history[open] > summary {
+  margin-bottom: 12px;
+}
+
+.staff-board-empty {
+  color: var(--color-workspace-muted);
+}
+
+.staff-task-compact .staff-task-blocker {
+  max-width: 65ch;
+  margin: 4px 0 0;
+  color: var(--color-status-warning-ink);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.staff-task-compact .staff-task-heading,
+.staff-task-compact .staff-task-body,
+.staff-task-compact > [role='alert'],
+.staff-task-compact > [role='status'] {
+  grid-column: 1 / -1;
+}
+
+.staff-task-compact .staff-task-destination-card {
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  overflow-wrap: anywhere;
+}
+
+.staff-task-compact .staff-destination-address {
+  color: var(--color-workspace-muted);
+  font-weight: 500;
+}
+
+.staff-task-compact .staff-instructions-callout {
+  margin-top: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.staff-task-compact .staff-instructions-head {
+  display: inline;
+}
+
+.staff-task-compact .staff-instructions-head svg {
+  display: none;
+}
+
+.staff-task-compact .staff-instructions-callout p {
+  margin: 2px 0 0;
+  white-space: pre-wrap;
+}
+
+.staff-task-compact .staff-instructions-callout[data-preview='true'] p {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.staff-task-compact .staff-task-open {
+  min-height: 44px;
+  align-self: end;
+  gap: 8px;
+}
+
+.staff-task-open[aria-expanded='true'] svg,
+.staff-report-disclosure[open] > summary svg {
+  transform: rotate(180deg);
+}
+
+.staff-task-compact .staff-task-body:not([hidden]) {
+  display: grid;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+#staff-tasks .staff-task-compact .staff-secondary-details details {
+  margin-block: 0;
+}
+
+.staff-task-compact .staff-latest-report {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  overflow-wrap: anywhere;
+}
+
+.staff-task-compact .staff-stocking-section details > summary,
+#staff-tasks .staff-task-compact .staff-secondary-details summary,
+.staff-report-disclosure > summary {
+  display: list-item;
+}
+
+#staff-tasks .staff-task-compact .staff-stocking-section details > summary {
+  background: transparent;
+}
+
+.staff-task-compact .staff-stocking-section details > p,
+.staff-task-compact .staff-stock-result {
+  margin: 0;
+  padding: 10px 14px;
+}
+
+.staff-task-compact .staff-report-disclosure > summary,
+.dashboard-staff-guide > summary {
+  min-height: 44px;
+  padding-block: 10px;
+  color: var(--color-workspace-ink);
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.staff-workspace #staff-guide {
+  margin-top: 12px;
+  padding-block: 8px;
+}
+
+.staff-task-compact .staff-report-disclosure > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--color-workspace-divider);
+}
+
+.staff-task-compact .staff-transition-form {
+  max-width: 42rem;
+}
+
+.staff-task-compact .staff-report-disclosure .staff-transition-form {
+  padding-top: 4px;
+  border: 0;
+}
+
+@media (max-width: 640px) {
+  #staff-tasks .staff-task-compact {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .staff-task-compact .staff-task-open {
+    justify-self: start;
+    margin-top: 4px;
+  }
+}
+
 /* Card Heading */
 .staff-task-heading {
   display: flex;
@@ -178,7 +373,7 @@
   flex-wrap: wrap;
 }
 
-.staff-task-heading h3 {
+.staff-task-heading :is(h3, h4) {
   margin: 0;
   font-size: 17px;
   font-weight: 700;

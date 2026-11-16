@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { chooseVietnamBank } from '../fixtures/vietnam-bank';
 
 for (const succeeds of [true, false]) {
   test(`Saving shop bank is separate from rental submission (${succeeds ? 'success' : 'failure'})`, async ({
@@ -53,14 +54,14 @@ for (const succeeds of [true, false]) {
     });
     await page.goto('/thue-kiosk');
     await expect(page.locator('form form')).toHaveCount(0);
-    await page.getByLabel('Tên ngân hàng nhận hoàn phí').fill('MB Bank');
+    await chooseVietnamBank(page, 'Tên ngân hàng nhận hoàn phí', 'MBB', 'Quân đội');
     await page.getByLabel('Tên chủ tài khoản (Viết hoa').fill('TEST HOLDER');
     await page.getByLabel('Số tài khoản ngân hàng').fill('0012345678');
     await page.getByRole('checkbox', { name: /Tôi đã kiểm tra/ }).check();
     await page.getByRole('button', { name: 'Lưu tài khoản ngân hàng shop' }).click();
     await expect.poll(() => saves.length).toBe(1);
     expect(saves[0]).toEqual({
-      p_bank: 'MB Bank',
+      p_bank: 'Quân đội',
       p_holder: 'TEST HOLDER',
       p_account_enc: '0012345678',
     });

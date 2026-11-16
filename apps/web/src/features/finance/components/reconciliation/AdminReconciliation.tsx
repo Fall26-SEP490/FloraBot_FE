@@ -92,14 +92,12 @@ export default function AdminReconciliation() {
       if (!document.hidden) return;
       epoch.current++;
       sending.current = false;
-      setRaw('');
-      setEntries([{ key: 0, txn: '', amount: '' }]);
       setReview(null);
       setDaily(null);
       setGateway(null);
       setBusy(false);
       setError('');
-      setNotice('Đã xóa dữ liệu đối soát khỏi màn hình khi bạn rời tab.');
+      setNotice('Đã ẩn kết quả đối soát khi bạn rời tab. Nội dung vừa nhập vẫn được giữ.');
     }
     document.addEventListener('visibilitychange', clearWhenHidden);
     return () => {

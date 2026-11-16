@@ -241,14 +241,10 @@ export default function GoogleAccountLink({ email }: GoogleAccountLinkProps) {
       <h3 className={styles.title}>Liên kết tài khoản Google</h3>
       <div className={styles.instruction}>
         <p>
-          Liên kết tài khoản Google giúp bạn đăng nhập nhanh chóng chỉ với một chạm. Vui lòng chọn
-          tài khoản Google sử dụng cùng email:{' '}
+          Để đăng nhập bằng Google, hãy chọn tài khoản có cùng email:{' '}
           <strong className={styles.emailHighlight}>{email || 'tài khoản của bạn'}</strong>.
         </p>
-        <p className={styles.benefitNote}>
-          Sau khi liên kết, bạn có thể đăng nhập bằng mật khẩu hiện tại hoặc bằng Google bất cứ lúc
-          nào.
-        </p>
+        <p className={styles.benefitNote}>Bạn vẫn có thể dùng mật khẩu hiện tại.</p>
       </div>
 
       {configQuery.isPending ? (

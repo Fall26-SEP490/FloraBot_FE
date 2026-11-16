@@ -195,7 +195,7 @@ test('Create artificial flower for an owned kiosk: validation, conflict handling
 
   // Open create form
   await page.getByRole('button', { name: 'Thêm bó hoa giả mới' }).click();
-  const createForm = page.getByRole('form', { name: 'Thêm mẫu hoa giả mới' });
+  const createForm = page.getByRole('form', { name: 'Thêm mẫu hoa mới' });
   await expect(createForm).toBeVisible();
 
   // Test client-side validations

@@ -29,6 +29,7 @@ export default function Receipt() {
   const [orderId, setOrderId] = useState(initial.get('order') || '');
   const [token, setToken] = useState(initial.get('token') || '');
   const [receipt, setReceipt] = useState<ReceiptData | null>(null);
+  const [receiptRevision, setReceiptRevision] = useState(0);
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
   const [personalDevice, setPersonalDevice] = useState(false);
@@ -47,15 +48,18 @@ export default function Receipt() {
       controller.current?.abort();
     };
   }, [initial]);
+  const displayedReceiptId = receipt?.orderId;
   useEffect(() => {
-    if (receipt) heading.current?.focus();
-  }, [receipt]);
+    if (displayedReceiptId) heading.current?.focus();
+  }, [displayedReceiptId]);
 
-  async function lookup() {
-    setSaveNotice('');
-    setPersonalDevice(false);
+  async function lookup(preserveReceipt = false): Promise<ReceiptData | null> {
+    if (!preserveReceipt) {
+      setSaveNotice('');
+      setPersonalDevice(false);
+      setReceipt(null);
+    }
     setError('');
-    setReceipt(null);
     if (
       !/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(orderId.trim()) ||
       !/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/.test(token.trim().toUpperCase())
@@ -63,7 +67,7 @@ export default function Receipt() {
       setError(
         'Kiểm tra ID biên nhận và mã tra cứu 8 ký tự trên màn hình kiosk. Bạn cũng có thể quét lại mã QR.',
       );
-      return;
+      return null;
     }
     controller.current?.abort();
     const active = new AbortController();
@@ -91,7 +95,11 @@ export default function Receipt() {
               : 'Chưa tải được biên nhận. Bạn thử lại nhé.',
         );
       const result = (await response.json()) as ReceiptData;
-      if (!active.signal.aborted) setReceipt(result);
+      if (!active.signal.aborted) {
+        setReceipt(result);
+        setReceiptRevision((value) => value + 1);
+        return result;
+      }
     } catch (cause) {
       if (!active.signal.aborted)
         setError(
@@ -102,6 +110,7 @@ export default function Receipt() {
     } finally {
       if (!active.signal.aborted) setPending(false);
     }
+    return null;
   }
 
   return (
@@ -159,7 +168,7 @@ export default function Receipt() {
             aria-describedby="receipt-error"
           />
           <p id="receipt-error" role="alert" className="error">
-            {error}
+            {!receipt && error}
           </p>
           <div className="receipt-actions">
             <Button type="submit" disabled={pending}>
@@ -196,11 +205,16 @@ export default function Receipt() {
               type="button"
               variant="outline"
               disabled={pending}
-              onClick={() => void lookup()}
+              onClick={() => void lookup(true)}
             >
               Cập nhật trạng thái
             </Button>
           </div>
+          {error && (
+            <p role="alert" className="error">
+              {error}
+            </p>
+          )}
           <p className="receipt-status" data-status={receipt.status}>
             {statuses[receipt.status] || 'Đang cập nhật trạng thái'}
           </p>
@@ -332,10 +346,17 @@ export default function Receipt() {
           ) : (
             receipt.disputeDeadline && <p>Đã hết thời hạn gửi phản ánh cho đơn này.</p>
           )}
-          {receipt.canComplain && (
+          {
             <ReceiptComplaint
+              key={receipt.orderId}
               orderId={receipt.orderId}
+              canComplain={receipt.canComplain && !receipt.hasComplaint}
+              receiptRevision={receiptRevision}
               trackingToken={token.trim().toUpperCase()}
+              onCheckReceipt={async () => {
+                const fresh = await lookup(true);
+                return !!fresh && fresh.canComplain && !fresh.hasComplaint;
+              }}
               onSaved={() =>
                 setReceipt((current) =>
                   current
@@ -344,7 +365,7 @@ export default function Receipt() {
                 )
               }
             />
-          )}
+          }
           <p className="quiet">
             Mở “Tra cứu lại hoặc cập nhật biên nhận”, rồi chọn “Xem biên nhận” để tải trạng thái mới
             nhất.

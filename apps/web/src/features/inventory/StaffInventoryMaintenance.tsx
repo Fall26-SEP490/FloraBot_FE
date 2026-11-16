@@ -21,6 +21,7 @@ export function useStaffInventoryMaintenance(
   taskId: string,
   actorId: string | undefined,
   enabled: boolean,
+  watch = enabled,
 ) {
   return useQuery({
     queryKey: ['staff-inventory-maintenance', taskId, actorId],
@@ -34,6 +35,7 @@ export function useStaffInventoryMaintenance(
       }
     },
     refetchInterval: (query) =>
+      watch &&
       query.state.data?.status === 'IN_PROGRESS' &&
       !['Completed', 'Recovered'].includes(query.state.data.sessionStage ?? '')
         ? 4_000

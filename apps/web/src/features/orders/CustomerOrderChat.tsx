@@ -14,10 +14,12 @@ export default function CustomerOrderChat({
   row,
   page,
   filter,
+  className,
 }: {
   row: WebOrder;
   page: number;
   filter: OrderFilter;
+  className?: string;
 }) {
   const router = useRouter();
   const opening = useRef(false);
@@ -44,7 +46,7 @@ export default function CustomerOrderChat({
     }
   }
   return (
-    <div className={styles.orderChat}>
+    <div className={className ? `${styles.orderChat} ${className}` : styles.orderChat}>
       <Button
         type="button"
         variant="outline"

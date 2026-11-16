@@ -100,6 +100,44 @@ async function fixture(page: Page, initialPending = true) {
   return state;
 }
 
+test('Payment callback opens the exact kiosk renewal from shared browser storage', async ({
+  page,
+}) => {
+  await fixture(page);
+  const kioskId = '40000000-0000-4000-8000-000000000020';
+  const renewalId = '50000000-0000-4000-8000-000000000020';
+  await page.addInitScript(
+    ({ kioskId, renewalId }) => {
+      localStorage.setItem(
+        'florabot-payment-return:renewal-user',
+        JSON.stringify([
+          {
+            code: '123',
+            target: { kind: 'renewal', resourceId: renewalId, kioskId },
+            savedAt: Date.now(),
+          },
+        ]),
+      );
+    },
+    { kioskId, renewalId },
+  );
+  await page.route('**/api/me/kiosks', (r) =>
+    r.fulfill({
+      json: [{ id: kioskId, code: 'K-02', name: 'Kiosk cần gia hạn', status: 'OFFLINE' }],
+    }),
+  );
+  await page.route('**/api/sellers/shop/subscriptions', (r) =>
+    r.fulfill({
+      json: { subscriptions: [{ ...pending, id: renewalId, kioskId, status: 'ACTIVE' }] },
+    }),
+  );
+  await page.goto('/tai-khoan?orderCode=123');
+  await expect(page).toHaveURL(new RegExp(`renewalId=${renewalId}#renewal-${kioskId}$`));
+  await expect(page.locator(`#renewal-${kioskId}`).getByRole('status')).toContainText(
+    'Đã thanh toán',
+  );
+});
+
 test('Reload restores the pending kiosk renewal and pays its existing subscription', async ({
   page,
 }) => {
@@ -117,7 +155,9 @@ test('Reload restores the pending kiosk renewal and pays its existing subscripti
   await card.getByRole('button', { name: 'Tiếp tục thanh toán' }).click();
   const dialog = page.getByRole('dialog', { name: 'Thanh toán gia hạn kiosk' });
   await expect(dialog.getByRole('img', { name: 'Mã QR thanh toán PayOS' })).toBeVisible();
-  await expect(dialog.getByRole('link')).toHaveCount(0);
+  await expect(
+    dialog.getByRole('link', { name: 'Thanh toán trên thiết bị này qua PayOS' }),
+  ).toBeVisible();
   expect(state.creates).toBe(0);
   expect(state.links).toEqual(['/api/sellers/shop/subscriptions/pending-hcm/payment-link']);
   await dialog.getByRole('button', { name: 'Đóng', exact: true }).click();
@@ -157,8 +197,9 @@ test('Unreadable subscriptions block duplicate creation and unsafe payment links
   await page.getByRole('button', { name: 'Tải lại kỳ thuê' }).click();
   state.unsafeLink = true;
   await card.getByRole('button', { name: 'Tiếp tục thanh toán' }).click();
-  await expect(card.getByRole('alert')).toContainText('không thuộc cổng thanh toán');
-  await expect(page.getByRole('dialog')).toHaveCount(0);
+  const dialog = page.getByRole('dialog');
+  await expect(dialog.getByRole('alert')).toContainText('không thuộc cổng thanh toán');
+  await expect(dialog.getByRole('link')).toHaveCount(0);
   expect(state.creates).toBe(0);
 });
 

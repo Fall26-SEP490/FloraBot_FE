@@ -1,14 +1,15 @@
 'use client';
 
 import { createPortal } from 'react-dom';
+import { useRef, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Button } from '@florabot/ui';
+import { Button, RefreshCw } from '@florabot/ui';
 import { Modal } from './Modal';
 import { validatePayosCheckoutUrl } from '@/shared/lib/payos-checkout';
 import './payos-checkout.css';
 
 export interface PayosCheckoutProps {
-  checkoutUrl: string;
+  checkoutUrl?: string | null;
   qrCode?: string | null;
   amount?: number | string | null;
   orderCode?: number | string | null;
@@ -16,11 +17,14 @@ export interface PayosCheckoutProps {
   recipientAccountMasked?: string | null;
   title: string;
   description: string;
-  onClose: (result: 'success' | 'cancel' | 'close') => void;
-  onRefresh: () => void;
+  onClose: () => void;
+  onRefresh: () => Promise<boolean>;
   onRetryQr: () => void;
   isLoadingQr?: boolean;
   qrError?: string;
+  expired?: boolean;
+  retryDisabled?: boolean;
+  allowStatusCheck?: boolean;
 }
 
 export default function PayosCheckout({
@@ -37,92 +41,176 @@ export default function PayosCheckout({
   onRetryQr,
   isLoadingQr = false,
   qrError,
+  expired = false,
+  retryDisabled = false,
+  allowStatusCheck = false,
 }: PayosCheckoutProps) {
-  const validation = validatePayosCheckoutUrl(checkoutUrl);
+  const validation = validatePayosCheckoutUrl(qrError ? '' : (checkoutUrl ?? ''));
   const qrValue = qrCode?.trim();
-  const hasBankQr = Boolean(qrCode?.trim()?.startsWith('000201'));
+  const hasBankQr = Boolean(validation.valid && qrValue?.startsWith('000201'));
+  const canCheckStatus = validation.valid || allowStatusCheck || expired;
+  const [verification, setVerification] = useState<'idle' | 'checking' | 'waiting' | 'error'>(
+    'idle',
+  );
+  const checking = useRef(false);
+  const [checkedAt, setCheckedAt] = useState('');
+  async function verify() {
+    if (checking.current || isLoadingQr || !canCheckStatus) return;
+    checking.current = true;
+    setVerification('checking');
+    try {
+      const resolved = await onRefresh();
+      setCheckedAt(new Date().toLocaleTimeString('vi-VN', { hour12: false }));
+      setVerification(resolved ? 'idle' : 'waiting');
+    } catch {
+      setVerification('error');
+    } finally {
+      checking.current = false;
+    }
+  }
+
+  const waitingMessage = expired
+    ? verification === 'waiting'
+      ? `Đã kiểm tra lúc ${checkedAt}. Hệ thống chưa ghi nhận thanh toán cho đơn hết hạn này. Nếu đã chuyển khoản, đừng thanh toán lại.`
+      : 'Mã QR đã hết hạn. Nếu bạn đã chuyển khoản, hãy kiểm tra giao dịch trước khi thực hiện thao tác khác.'
+    : 'Hệ thống chưa xác nhận thanh toán. Nếu bạn đã chuyển khoản, đừng thanh toán lại.';
+  const step =
+    expired || verification !== 'idle'
+      ? 2
+      : !isLoadingQr && (hasBankQr || validation.valid)
+        ? 1
+        : 0;
 
   return createPortal(
     <Modal
       open
       title={title}
       description={description}
-      onClose={() => onClose('close')}
+      onClose={onClose}
       size="md"
       className="payos-checkout-modal"
     >
       <div className="payos-native-checkout">
-        <div className="payos-qr-section">
-          <div className="payos-qr-box">
-            {validation.valid && hasBankQr && qrValue ? (
-              <QRCodeSVG
-                value={qrValue}
-                size={230}
-                marginSize={3}
-                title="Mã QR thanh toán PayOS"
-                role="img"
-                aria-label="Mã QR thanh toán PayOS"
-                className="payos-qr-svg"
-              />
-            ) : (
-              <p className="payos-qr-error" role="alert">
-                {!validation.valid
-                  ? validation.error
-                  : 'Chưa có mã VietQR ngân hàng hợp lệ. Vui lòng tải lại mã để thanh toán.'}
-              </p>
-            )}
-          </div>
-          {hasBankQr && validation.valid && (
-            <p className="payos-qr-instruction">
-              Mở ứng dụng ngân hàng quét mã VietQR để thanh toán
-            </p>
-          )}
-          {validation.valid && !hasBankQr && (
-            <>
-              {qrError && (
+        <div className="payos-checkout-content">
+          <ol className="payos-steps" aria-label="Tiến độ thanh toán">
+            {['Mã QR', 'Chuyển khoản', 'Xác nhận'].map((label, index) => (
+              <li key={label} aria-current={index === step ? 'step' : undefined}>
+                {label}
+              </li>
+            ))}
+          </ol>
+          <div className="payos-qr-section" aria-busy={isLoadingQr}>
+            <div className="payos-qr-box">
+              {expired ? (
+                <p className="payos-qr-error" role="status">
+                  Mã QR đã hết hạn
+                </p>
+              ) : isLoadingQr ? (
+                <p className="payos-qr-loading" role="status">
+                  <RefreshCw size={18} className="payos-loading-icon" aria-hidden="true" />
+                  Đang tạo mã QR…
+                </p>
+              ) : hasBankQr && qrValue ? (
+                <QRCodeSVG
+                  value={qrValue}
+                  size={230}
+                  marginSize={3}
+                  title="Mã QR thanh toán PayOS"
+                  role="img"
+                  aria-label="Mã QR thanh toán PayOS"
+                  className="payos-qr-svg"
+                />
+              ) : (
                 <p className="payos-qr-error" role="alert">
-                  {qrError}
+                  {qrError ||
+                    'Chưa có mã VietQR ngân hàng hợp lệ. Vui lòng tải lại mã để thanh toán.'}
                 </p>
               )}
-              <Button variant="outline" onClick={onRetryQr} disabled={isLoadingQr}>
-                {isLoadingQr ? 'Đang tải mã QR…' : 'Tải lại mã QR'}
+            </div>
+            {hasBankQr && !expired && !isLoadingQr && (
+              <p className="payos-qr-instruction">
+                Mở ứng dụng ngân hàng quét mã VietQR để thanh toán
+              </p>
+            )}
+            {!expired && !isLoadingQr && !hasBankQr && (
+              <Button
+                variant="outline"
+                onClick={onRetryQr}
+                disabled={retryDisabled || verification === 'checking'}
+              >
+                Tải lại mã QR
               </Button>
-            </>
-          )}
-        </div>
+            )}
+            {!expired && !isLoadingQr && validation.valid && validation.url && (
+              <a className="payos-mobile-link" href={validation.url} rel="noreferrer">
+                Thanh toán trên thiết bị này qua PayOS
+              </a>
+            )}
+          </div>
 
-        <div className="payos-payment-details">
-          {amount != null && (
-            <div className="payos-detail-row">
-              <span className="payos-detail-label">Số tiền cần thanh toán</span>
-              <span className="payos-detail-value payos-amount">
-                {Number(amount).toLocaleString('vi-VN')} đ
-              </span>
-            </div>
-          )}
-          {orderCode != null && (
-            <div className="payos-detail-row">
-              <span className="payos-detail-label">Mã giao dịch</span>
-              <span className="payos-detail-value payos-code">{orderCode}</span>
-            </div>
-          )}
-          {(recipientName || recipientAccountMasked) && (
-            <div className="payos-detail-row">
-              <span className="payos-detail-label">Tài khoản nhận</span>
-              <span className="payos-detail-value">
-                {[recipientName, recipientAccountMasked].filter(Boolean).join(' · ')}
-              </span>
-            </div>
-          )}
+          <div className="payos-payment-details">
+            {amount != null && (
+              <div className="payos-detail-row">
+                <span className="payos-detail-label">Số tiền cần thanh toán</span>
+                <span className="payos-detail-value payos-amount">
+                  {Number(amount).toLocaleString('vi-VN')} đ
+                </span>
+              </div>
+            )}
+            {orderCode != null && (
+              <div className="payos-detail-row">
+                <span className="payos-detail-label">Mã giao dịch</span>
+                <span className="payos-detail-value payos-code">{orderCode}</span>
+              </div>
+            )}
+            {(recipientName || recipientAccountMasked) && (
+              <div className="payos-detail-row">
+                <span className="payos-detail-label">Tài khoản nhận</span>
+                <span className="payos-detail-value">
+                  {[recipientName, recipientAccountMasked].filter(Boolean).join(' · ')}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
-
         <div className="payos-checkout-footer">
-          <p>Sau khi hoàn tất chuyển khoản, bấm Kiểm tra thanh toán để xác nhận.</p>
+          {verification === 'error' ? (
+            <p className="payos-feedback" role="alert">
+              Chưa kiểm tra được giao dịch. Hãy thử kiểm tra lại. Nếu đã chuyển khoản, đừng thanh
+              toán lại.
+            </p>
+          ) : (
+            <p className="payos-feedback" role="status">
+              {verification === 'checking' ? (
+                <span className="payos-verifying">
+                  <RefreshCw size={16} className="payos-loading-icon" aria-hidden="true" />
+                  Đang kiểm tra giao dịch…
+                </span>
+              ) : expired || verification === 'waiting' ? (
+                waitingMessage
+              ) : isLoadingQr || !canCheckStatus ? (
+                ''
+              ) : (
+                'Nếu đã chuyển khoản, hãy kiểm tra để xem giao dịch đã được xác nhận chưa.'
+              )}
+            </p>
+          )}
           <div className="payos-checkout-footer-buttons">
-            <Button variant="default" onClick={onRefresh}>
-              Kiểm tra thanh toán
-            </Button>
-            <Button variant="outline" onClick={() => onClose('close')}>
+            {canCheckStatus && (
+              <Button
+                variant="default"
+                onClick={() => void verify()}
+                disabled={isLoadingQr || verification === 'checking'}
+                aria-busy={verification === 'checking'}
+              >
+                {verification === 'checking'
+                  ? 'Đang kiểm tra…'
+                  : verification === 'error'
+                    ? 'Kiểm tra lại'
+                    : 'Kiểm tra thanh toán'}
+              </Button>
+            )}
+            <Button variant="outline" onClick={onClose}>
               Đóng
             </Button>
           </div>

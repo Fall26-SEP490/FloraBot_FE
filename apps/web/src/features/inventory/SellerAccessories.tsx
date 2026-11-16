@@ -294,7 +294,6 @@ function Restock({
 }
 
 export default function SellerAccessories({ session }: { session: Session }) {
-  const [loaded, setLoaded] = useState(false);
   const [search, setSearch] = useState('');
   const [kiosk, setKiosk] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
@@ -308,7 +307,8 @@ export default function SellerAccessories({ session }: { session: Session }) {
   const inventory = useQuery({
     queryKey: ['seller-accessories', session.sellerId],
     queryFn: () => request<Accessory[]>(`/sellers/${session.sellerId}/accessories`),
-    enabled: loaded && !!session.sellerId,
+    enabled: !!session.sellerId,
+    refetchOnMount: 'always',
   });
   const sellerKiosks = useQuery({
     queryKey: ['seller-kiosks', session.sellerId],
@@ -346,8 +346,9 @@ export default function SellerAccessories({ session }: { session: Session }) {
       );
       setNewName('');
       setNewPrice('');
+      setSearch('');
+      setKiosk('');
       setCreateNotice(`Đã thêm phụ kiện ${trimmedName}.`);
-      setLoaded(true);
       await inventory.refetch();
     } catch (cause) {
       setCreateError(cause instanceof ApiError ? cause.message : 'Chưa tạo được phụ kiện mới.');
@@ -383,13 +384,10 @@ export default function SellerAccessories({ session }: { session: Session }) {
           variant="outline"
           className="accessory-refresh-btn"
           disabled={inventory.isFetching}
-          onClick={() => {
-            if (loaded) void inventory.refetch();
-            else setLoaded(true);
-          }}
+          onClick={() => void inventory.refetch()}
         >
           <RefreshCw size={15} aria-hidden="true" className={inventory.isFetching ? 'spin' : ''} />
-          {loaded ? 'Làm mới tồn phụ kiện' : 'Xem tồn phụ kiện'}
+          Làm mới tồn phụ kiện
         </Button>
       </div>
 
@@ -460,13 +458,7 @@ export default function SellerAccessories({ session }: { session: Session }) {
         )}
       </details>
 
-      {!loaded && (
-        <p className="seller-flow-notice" role="status">
-          Chọn “Xem tồn phụ kiện” để tải số lượng theo từng tủ. Chỉ ghi nhận bổ sung sau khi đã đặt
-          phụ kiện vào đúng tủ.
-        </p>
-      )}
-      {loaded && items.length > 0 && (
+      {items.length > 0 && (
         <div className="accessory-filters">
           <div>
             <label htmlFor="accessory-search">Tìm phụ kiện</label>
@@ -516,10 +508,10 @@ export default function SellerAccessories({ session }: { session: Session }) {
           Chưa tải được tồn mới nhất. Chọn “Làm mới tồn phụ kiện” để thử lại.
         </p>
       )}
-      {loaded && !inventory.isError && inventory.data?.length === 0 && (
+      {inventory.isSuccess && inventory.data.length === 0 && (
         <p className="seller-empty-state">Shop chưa có phụ kiện được thiết lập tại tủ.</p>
       )}
-      {loaded && items.length > 0 && visible.length === 0 && (
+      {items.length > 0 && visible.length === 0 && (
         <p role="status" className="seller-empty-state">
           Không có phụ kiện khớp bộ lọc. Thử đổi tủ hoặc xóa tìm kiếm.
         </p>

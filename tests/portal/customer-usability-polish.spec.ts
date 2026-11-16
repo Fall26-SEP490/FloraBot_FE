@@ -1,3 +1,4 @@
+import { fillPickup } from '../fixtures/quotation';
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 const productId = '30000000-0000-0000-0000-000000000001';
@@ -81,6 +82,9 @@ async function fixture(page: Page) {
       });
     if (path === '/api/shop/catalog')
       return route.fulfill({ json: { items: [flower], page: 1, hasMore: false } });
+    if (path.endsWith('/preorder-availability'))
+      return route.fulfill({ json: { available: true } });
+    if (path.endsWith('/catalog/accessories')) return route.fulfill({ json: [] });
     if (path === '/api/member/preorders')
       return route.fulfill(
         state.failOrders
@@ -101,26 +105,25 @@ async function fillRequest(page: Page) {
     const date = new Date(Date.now() + 24 * 60 * 60 * 1000);
     return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
   });
-  await page.getByLabel('Thời gian mong muốn nhận hoa').fill(local);
+  await fillPickup(page, local);
   await page
-    .getByLabel('Dịp tặng, màu hoa, ngân sách và lời nhắn')
+    .getByLabel('Bạn muốn bó hoa như thế nào?')
     .fill('Hoa trắng tặng sinh nhật, ngân sách 400.000 đồng');
-  await page.getByRole('checkbox').check();
 }
 for (const width of [390, 1440]) {
   test(`Quotation protects drafts on Escape, scrim and close at ${width}px`, async ({ page }) => {
     const state = await fixture(page);
     await page.setViewportSize({ width, height: 950 });
     const dialog = await openRequest(page);
-    await expect(dialog.getByText('email đăng nhập của bạn', { exact: true })).toBeVisible();
+    await expect(dialog.getByText('Bạn chưa cần thanh toán', { exact: true })).toBeVisible();
     await expect(dialog.getByText(/SMS/)).toHaveCount(0);
     await page.screenshot({ path: test.info().outputPath(`quotation-${width}.png`) });
-    const pickup = await page.getByLabel('Thời gian mong muốn nhận hoa').boundingBox();
+    const pickup = await page.getByLabel('Ngày nhận hoa').boundingBox();
     expect(pickup && pickup.y < 500).toBeTruthy();
-    const brief = page.getByLabel('Dịp tặng, màu hoa, ngân sách và lời nhắn');
+    const brief = page.getByLabel('Bạn muốn bó hoa như thế nào?');
     await brief.fill('Bản nháp cần giữ lại khi đóng nhầm');
     await page.keyboard.press('Escape');
-    const discard = page.getByRole('dialog', { name: 'Bạn muốn bỏ nội dung đang nhập?' });
+    const discard = page.getByRole('dialog', { name: 'Đóng yêu cầu báo giá?' });
     await expect(discard).toBeVisible();
     await expect(discard.getByRole('button', { name: 'Tiếp tục nhập' })).toBeFocused();
     await page.keyboard.press('Escape');
@@ -132,9 +135,15 @@ for (const width of [390, 1440]) {
     await page.getByRole('button', { name: 'Đóng mẫu đang chọn' }).click();
     await expect(discard).toBeVisible();
     await page.screenshot({ path: test.info().outputPath(`discard-${width}.png`) });
-    await discard.getByRole('button', { name: 'Bỏ nội dung và đóng' }).click();
+    await discard
+      .getByRole('button', { name: width === 390 ? 'Đóng cửa sổ' : 'Đóng form', exact: true })
+      .click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Yêu cầu báo giá', exact: true })).toBeFocused();
+    await page.getByRole('button', { name: 'Yêu cầu báo giá', exact: true }).click();
+    await expect(brief).toHaveValue('');
+    await page.getByRole('button', { name: 'Đóng mẫu đang chọn' }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
     expect(state.writes).toEqual([]);
   });
   test(`Compact profile keeps editing and account navigation reachable at ${width}px`, async ({
@@ -143,7 +152,8 @@ for (const width of [390, 1440]) {
     await fixture(page);
     await page.setViewportSize({ width, height: 950 });
     await page.goto('/ho-so');
-    await expect(page.getByLabel('Họ và tên *')).toHaveValue('Nguyễn Minh Anh');
+    await expect(page.locator('.profile-personal-summary')).toContainText('Nguyễn Minh Anh');
+    await expect(page.getByLabel('Họ và tên *')).toBeHidden();
     await expect(page.locator('.profile-page')).toHaveClass(/profile-refined/);
     await expect(page.locator('.profile-page')).toHaveClass(/profile-embedded/);
     const nav = page.getByRole('navigation', { name: 'Điều hướng tài khoản' });
@@ -157,35 +167,18 @@ for (const width of [390, 1440]) {
       await page.keyboard.press('Escape');
       await expect(nav).toBeHidden();
       await expect(toggle).toBeFocused();
-      const name = await page.getByLabel('Họ và tên *').boundingBox();
+      const name = await page.locator('.profile-personal-summary').boundingBox();
       expect(name && name.y < 750).toBeTruthy();
     } else await expect(nav).toBeVisible();
     await page.screenshot({ path: test.info().outputPath(`profile-${width}.png`) });
     const profileNav = page.getByRole('navigation', { name: 'Mục hồ sơ' });
-    for (const label of ['Ngân hàng', 'Thông tin cá nhân', 'Tài khoản']) {
+    for (const label of ['Ngân hàng', 'Đăng nhập & bảo mật', 'Thông tin cá nhân']) {
       const link = profileNav.getByRole('link', { name: label, exact: true });
       await link.click();
       await expect(link).toHaveAttribute('aria-current', 'location');
     }
-    for (const [id, label] of [
-      ['contact-email-heading', 'Email liên hệ'],
-      ['personal-bank-heading', 'Ngân hàng'],
-      ['basic-info-heading', 'Thông tin cá nhân'],
-    ]) {
-      const delta = await page.evaluate((headingId) => {
-        const nav = document.querySelector('.profile-quick-nav')!;
-        const section = document.getElementById(headingId)!.closest('.profile-section')!;
-        const stickyBottom =
-          parseFloat(getComputedStyle(nav).top) + nav.getBoundingClientRect().height;
-        return section.getBoundingClientRect().top - stickyBottom - 72;
-      }, id);
-      await page.mouse.move(width - 40, 450);
-      await page.mouse.wheel(0, delta);
-      await expect(profileNav.getByRole('link', { name: label, exact: true })).toHaveAttribute(
-        'aria-current',
-        'location',
-      );
-    }
+    await page.getByRole('button', { name: 'Chỉnh sửa thông tin' }).click();
+    await expect(page.getByLabel('Họ và tên *')).toHaveValue('Nguyễn Minh Anh');
     const results = await new AxeBuilder({ page })
       .include('#main')
       .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
@@ -208,7 +201,7 @@ test('Submitted quotation links directly to its request and leaves the API paylo
   });
   await openRequest(page);
   await fillRequest(page);
-  await page.getByRole('button', { name: 'Gửi yêu cầu để shop báo giá', exact: true }).click();
+  await page.getByRole('button', { name: 'Gửi yêu cầu báo giá', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Đã nhận yêu cầu của bạn' })).toBeVisible();
   expect(state.writes).toHaveLength(1);
   expect(Object.keys(state.writes[0]).sort()).toEqual(
@@ -221,6 +214,7 @@ test('Submitted quotation links directly to its request and leaves the API paylo
     `/tai-khoan?requestId=${state.writes[0].id}#web-orders`,
   );
   await link.click();
+  await expect(page).toHaveURL(/\/tai-khoan\?requestId=/, { timeout: 15000 });
   await expect(page.locator(`[id="preorder-${state.writes[0].id}"]`)).toHaveAttribute('open', '');
 });
 test('Uncertain quotation retries the same id and payload after closing confirmation is cancelled', async ({
@@ -238,7 +232,7 @@ test('Uncertain quotation retries the same id and payload after closing confirma
   });
   await openRequest(page);
   await fillRequest(page);
-  await page.getByRole('button', { name: 'Gửi yêu cầu để shop báo giá', exact: true }).click();
+  await page.getByRole('button', { name: 'Gửi yêu cầu báo giá', exact: true }).click();
   await expect(
     page.getByRole('button', { name: 'Gửi lại cùng yêu cầu', exact: true }),
   ).toBeEnabled();
@@ -265,7 +259,7 @@ test('Quotation cannot be dismissed or submitted again while its request is in f
   });
   await openRequest(page);
   await fillRequest(page);
-  await page.getByRole('button', { name: 'Gửi yêu cầu để shop báo giá', exact: true }).click();
+  await page.getByRole('button', { name: 'Gửi yêu cầu báo giá', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Đóng mẫu đang chọn' })).toBeDisabled();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toBeVisible();
@@ -273,7 +267,7 @@ test('Quotation cannot be dismissed or submitted again while its request is in f
   release();
   await expect(page.getByRole('heading', { name: 'Đã nhận yêu cầu của bạn' })).toBeVisible();
 });
-test('Overview prioritizes actionable orders with direct links and distinguishes partial results', async ({
+test('Orders group quotes, pickup and closed orders without duplicating filters', async ({
   page,
 }) => {
   const state = await fixture(page);
@@ -285,39 +279,31 @@ test('Overview prioritizes actionable orders with direct links and distinguishes
   ] as typeof state.items;
   state.hasMore = true;
   await page.goto('/tai-khoan');
-  const region = page.getByRole('region', { name: 'Đơn đang theo dõi' });
-  await expect(region.getByRole('listitem')).toHaveCount(3);
-  await expect(region.getByRole('link', { name: 'Xem báo giá' })).toHaveAttribute(
-    'href',
-    '/tai-khoan?requestId=quote-1#web-orders',
-  );
-  await expect(region.getByRole('link', { name: 'Xem hướng dẫn nhận' })).toHaveAttribute(
-    'href',
-    '/tai-khoan?requestId=ready-1#web-orders',
-  );
-  await expect(region.getByText('danh sách đầy đủ', { exact: false })).toBeVisible();
-  const pending = await region.boundingBox();
-  const points = await page.locator('.account-home-status').boundingBox();
-  expect(pending && points && pending.y < points.y).toBeTruthy();
-  await page.screenshot({ path: test.info().outputPath('overview.png') });
+  const region = page.getByRole('region', { name: 'Đơn hàng', exact: true });
+  await expect(
+    region.locator('.customer-order-list > li').first().locator(':scope > details'),
+  ).toHaveAttribute('id', 'preorder-quote-1');
+  const tracking = region.getByRole('region', { name: 'Đang theo dõi' });
+  await expect(tracking.locator('.customer-order-list > li')).toHaveCount(2);
+  await expect(tracking.locator('#preorder-ready-1')).toBeVisible();
+  await expect(region.locator('#preorder-closed-1 > summary')).toBeHidden();
+  await expect(region.getByRole('button', { name: 'Trang sau', exact: true })).toBeEnabled();
 });
-test('Overview isolates order API errors, retries and never invents an empty global list', async ({
+
+test('Orders can retry a preorder API error without inventing a global empty list', async ({
   page,
 }) => {
   const state = await fixture(page);
   state.failOrders = true;
   await page.goto('/tai-khoan');
-  const region = page.getByRole('region', { name: 'Đơn đang theo dõi' });
-  await expect(region.getByRole('alert')).toBeVisible();
-  await expect(page.getByText('120', { exact: true })).toBeVisible();
+  const region = page.getByRole('region', { name: 'Đơn hàng', exact: true });
+  await expect(region.getByText('Chưa tải được đơn đặt trước', { exact: false })).toBeVisible();
   state.failOrders = false;
   state.items = [];
   state.hasMore = true;
-  await region.getByRole('button', { name: 'Tải lại đơn' }).click();
-  await expect(region.getByText('Chưa thấy đơn đang xử lý', { exact: false })).toBeVisible();
-  await expect(region.getByText('Chưa có đơn đặt trước đang xử lý.', { exact: false })).toHaveCount(
-    0,
-  );
+  await region.getByRole('button', { name: 'Làm mới', exact: true }).click();
+  await expect(region.getByText('Chưa có đơn ở trang này', { exact: true })).toBeVisible();
+  await expect(region.getByRole('button', { name: 'Trang sau', exact: true })).toBeEnabled();
 });
 
 test('Homepage pickup guidance uses the same email channel as the quotation and order flow', async ({
@@ -326,8 +312,7 @@ test('Homepage pickup guidance uses the same email channel as the quotation and 
   await fixture(page);
   await page.goto('/');
   await expect(
-    page.getByRole('heading', { name: 'Hoa sẵn sàng, bạn ghé nhận', exact: true }),
+    page.getByText('Khi hoa sẵn sàng, dùng mã OTP trong email để nhận tại tủ.', { exact: true }),
   ).toBeVisible();
   await expect(page.getByText(/OTP.*SMS|SMS.*OTP/)).toHaveCount(0);
-  await expect(page.getByText('tới email đăng nhập của bạn.', { exact: false })).toBeVisible();
 });

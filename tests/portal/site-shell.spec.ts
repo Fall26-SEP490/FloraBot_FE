@@ -48,7 +48,7 @@ test('Avatar menu preserves workspace, purchase, and profile destinations for ev
     ['TECHNICIAN', 'Công việc kỹ thuật', '/technician'],
     ['SELLER_STAFF', 'Công việc tại shop', '/staff'],
     ['STAFF', 'Khu vực làm việc', '/workspace'],
-    ['CUSTOMER', 'Tài khoản và hồ sơ', '/tai-khoan'],
+    ['CUSTOMER', 'Đơn hàng', '/tai-khoan#web-orders'],
     ['SELLER', 'Quản lý shop', '/seller'],
   ]) {
     await page.route('**/api/auth/me', (route) =>
@@ -61,13 +61,14 @@ test('Avatar menu preserves workspace, purchase, and profile destinations for ev
       'href',
       destination,
     );
-    const customerAccount = role === 'SELLER' || role === 'CUSTOMER';
     await expect(
       header.getByRole('link', {
-        name: customerAccount ? 'Tài khoản và hồ sơ' : 'Hồ sơ cá nhân',
+        name: role === 'CUSTOMER' ? 'Hồ sơ' : 'Hồ sơ cá nhân',
         exact: true,
       }),
-    ).toHaveAttribute('href', customerAccount ? '/tai-khoan' : '/ho-so');
+    ).toHaveAttribute('href', '/ho-so');
+    if (role === 'SELLER')
+      await expect(header.locator('#site-user-menu a[href^="/tai-khoan"]')).toHaveCount(0);
     await page.unroute('**/api/auth/me');
   }
 });

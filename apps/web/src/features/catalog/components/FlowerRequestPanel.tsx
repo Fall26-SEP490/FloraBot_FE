@@ -37,6 +37,7 @@ function SelectedFlowerRequestPanel({
   const [busy, setBusy] = useState(false);
   const [uncertain, setUncertain] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
+  const [leaveForChat, setLeaveForChat] = useState(false);
   const keepEditingRef = useRef<HTMLButtonElement>(null);
   const previousDraftFocus = useRef<HTMLElement | null>(null);
   const requestClose = useCallback(() => {
@@ -44,6 +45,7 @@ function SelectedFlowerRequestPanel({
     if (dirty || uncertain) {
       previousDraftFocus.current =
         document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      setLeaveForChat(false);
       setConfirmClose(true);
     } else onClose();
   }, [busy, dirty, uncertain, onClose]);
@@ -54,6 +56,11 @@ function SelectedFlowerRequestPanel({
       if (target?.isConnected) target.focus({ preventScroll: true });
     });
   }, []);
+  const confirmLeave = () => {
+    setConfirmClose(false);
+    if (leaveForChat) onOpenChat(selected);
+    else onClose();
+  };
   const escapeHandler = useRef(requestClose);
   useEffect(() => {
     escapeHandler.current = confirmClose ? cancelClose : requestClose;
@@ -115,11 +122,11 @@ function SelectedFlowerRequestPanel({
         className="flower-request"
         role="dialog"
         aria-modal="true"
-        aria-labelledby={confirmClose ? 'discard-request-title' : 'selected-flower'}
+        aria-labelledby="selected-flower"
         aria-describedby={confirmClose ? 'discard-request-description' : undefined}
       >
         <div className="flower-request-heading">
-          {selected.photo && (
+          {!confirmClose && selected.photo && (
             <img
               src={selected.photo}
               alt=""
@@ -129,47 +136,52 @@ function SelectedFlowerRequestPanel({
           )}
           <div className="flower-request-header-content">
             <h2 id="selected-flower" className="flower-request-title">
-              Yêu cầu báo giá
+              {confirmClose
+                ? leaveForChat
+                  ? 'Chuyển sang tin nhắn?'
+                  : 'Đóng yêu cầu báo giá?'
+                : 'Yêu cầu báo giá'}
             </h2>
-            <p className="flower-request-meta">
-              <span className="flower-request-header-name">{selected.name}</span> ·{' '}
-              {selected.shopName}
-            </p>
+            {!confirmClose && (
+              <p className="flower-request-meta">
+                <span className="flower-request-header-name">{selected.name}</span> ·{' '}
+                {selected.shopName}
+              </p>
+            )}
           </div>
           <Button
             ref={closeRef}
             variant="outline"
             className="flower-request-close-btn"
-            onClick={requestClose}
+            onClick={confirmClose ? (leaveForChat ? cancelClose : confirmLeave) : requestClose}
             disabled={busy}
-            aria-label="Đóng mẫu đang chọn"
+            aria-label={
+              confirmClose
+                ? leaveForChat
+                  ? 'Quay lại biểu mẫu'
+                  : 'Đóng cửa sổ'
+                : 'Đóng mẫu đang chọn'
+            }
           >
             <X size={18} aria-hidden="true" />
-            <span className="sr-only">Đóng mẫu đang chọn</span>
           </Button>
         </div>
         <div className="flower-request-body">
           {confirmClose && (
-            <div className="flower-request-discard" aria-labelledby="discard-request-title">
-              <h3 id="discard-request-title">Bạn muốn bỏ nội dung đang nhập?</h3>
+            <div className="flower-request-discard">
               <p id="discard-request-description">
                 {uncertain
                   ? 'Kết quả gửi chưa được xác nhận. Hãy kiểm tra đơn đặt trước trước khi tạo yêu cầu mới.'
-                  : 'Ngày nhận và lời nhắn chưa gửi sẽ mất khi đóng cửa sổ.'}
+                  : leaveForChat
+                    ? 'Thông tin đang nhập sẽ không được lưu khi mở tin nhắn.'
+                    : 'Thông tin chưa gửi sẽ không được lưu.'}
               </p>
               <div className="flower-request-discard-actions">
                 <Button ref={keepEditingRef} onClick={cancelClose}>
                   Tiếp tục nhập
                 </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setConfirmClose(false);
-                    setDirty(false);
-                    onClose();
-                  }}
-                >
-                  Bỏ nội dung và đóng
+                <Button variant="outline" onClick={confirmLeave}>
+                  {leaveForChat ? 'Mở tin nhắn' : 'Đóng form'}
                 </Button>
               </div>
             </div>
@@ -182,7 +194,13 @@ function SelectedFlowerRequestPanel({
             <FlowerRequestForm
               key={`${selected.productId}-${selected.kioskId}-${selected.zone ?? 'template'}`}
               item={selected}
-              onOpenChat={() => onOpenChat(selected)}
+              onOpenChat={() => {
+                if (!dirty && !uncertain) return onOpenChat(selected);
+                previousDraftFocus.current =
+                  document.activeElement instanceof HTMLElement ? document.activeElement : null;
+                setLeaveForChat(true);
+                setConfirmClose(true);
+              }}
               openingChat={openingChatId === selected.productId}
               onDirtyChange={setDirty}
               onBusyChange={setBusy}

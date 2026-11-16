@@ -126,7 +126,9 @@ for (const width of [390, 1440]) {
     });
     await page.goto('/staff');
     await expect(page.getByRole('heading', { name: 'Giao hoa · Tủ FPT' })).toBeVisible();
-    await expect(page.getByText('Chờ bắt đầu hoặc đang thực hiện', { exact: true })).toBeVisible();
+    await expect(page.locator('.staff-task-label')).toHaveText('Chờ bắt đầu');
+    await expect(page.getByLabel('Ghi chú khi bắt đầu')).toBeHidden();
+    await page.getByRole('button', { name: 'Mở công việc' }).click();
     await expect(page.locator('#report-error-task-delivery-1')).toHaveCount(0);
     const start = page.getByRole('button', { name: 'Bắt đầu', exact: true });
     await start.click();
@@ -138,8 +140,9 @@ for (const width of [390, 1440]) {
     await expect(page.getByText(/Chưa xác nhận được trạng thái mới/)).toBeVisible();
     expect(writes).toBe(1);
     await page.getByRole('button', { name: 'Tải lại công việc' }).click();
-    await expect(page.getByLabel('Bước tiếp theo')).toHaveValue('SUBMITTED');
-    await page.getByLabel('Nội dung cập nhật').fill('Đã nạp hoa và kiểm tra đầy đủ');
+    await expect(page.getByLabel('Kết quả công việc')).toBeHidden();
+    await page.getByText('Viết báo cáo', { exact: true }).click();
+    await page.getByLabel('Kết quả công việc').fill('Đã nạp hoa và kiểm tra đầy đủ');
     await page.getByRole('button', { name: 'Gửi báo cáo', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Gửi báo cáo', exact: true })).toHaveCount(0);
     expect(writes).toBe(2);

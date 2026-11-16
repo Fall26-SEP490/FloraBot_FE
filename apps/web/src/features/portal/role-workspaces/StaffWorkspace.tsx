@@ -72,7 +72,7 @@ export default function StaffWorkspace({ section = 'tasks' }: { section?: string
               <p>
                 {section === 'chats'
                   ? 'Trao đổi yêu cầu công việc và chia sẻ ảnh trực tiếp với shop của bạn.'
-                  : `Chào ${session.data.name}, theo dõi việc được giao, nạp hoa và gửi báo cáo cho shop.`}
+                  : 'Chọn công việc để xem nơi giao và thao tác tiếp theo.'}
               </p>
             </div>
           </div>
@@ -91,24 +91,16 @@ export default function StaffWorkspace({ section = 'tasks' }: { section?: string
                 apiBase="/staff/tasks"
                 allowedKinds={['DELIVERY']}
               />
-              <section
-                id="staff-guide"
-                className="dashboard-staff-guide"
-                tabIndex={-1}
-                aria-labelledby="staff-guide-title"
-              >
-                <h2 id="staff-guide-title">Từ nhận việc đến hoàn thành</h2>
+              <details id="staff-guide" className="dashboard-staff-guide" tabIndex={-1}>
+                <summary>Cách làm công việc giao hoa</summary>
                 <ol>
                   <li>
                     <strong>Kiểm tra yêu cầu</strong>
                     <p>Xem đúng tủ, địa chỉ và nội dung được phân công.</p>
                   </li>
                   <li>
-                    <strong>Nạp hoa vào ô</strong>
-                    <p>
-                      Bắt đầu công việc, mở mục Thao tác tại tủ và làm theo hướng dẫn của việc được
-                      giao.
-                    </p>
+                    <strong>Thao tác tại tủ</strong>
+                    <p>Làm theo yêu cầu trong công việc đã mở.</p>
                   </li>
                   <li>
                     <strong>Gửi báo cáo</strong>
@@ -118,7 +110,7 @@ export default function StaffWorkspace({ section = 'tasks' }: { section?: string
                 <p className="dashboard-data-note">
                   Bạn chỉ thao tác trong phạm vi công việc được giao của shop phụ trách.
                 </p>
-              </section>
+              </details>
             </>
           )}
           {logout.isError && <p role="alert">Chưa đăng xuất được. Bạn thử lại nhé.</p>}

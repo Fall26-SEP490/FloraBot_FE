@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { chooseVietnamBank } from '../fixtures/vietnam-bank';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { uploadEvidence, evidencePng } from './evidence';
@@ -53,7 +54,7 @@ test('Public receipt stores a refund account through gateway/API without exposin
   await page.goto(`/receipt#order=${order}&token=${token}`);
   await page.getByRole('button', { name: 'Xem biên nhận', exact: true }).click();
   await expect(page.getByText('Khoản hoàn đang chờ thông tin tài khoản nhận tiền.')).toBeVisible();
-  await page.getByLabel('Tên ngân hàng', { exact: true }).fill('ACB');
+  await chooseVietnamBank(page, 'Tên ngân hàng', 'ACB', 'Ngân hàng Á Châu');
   await page.getByLabel('Tên chủ tài khoản', { exact: true }).fill('Nguyen Van A');
   await page.getByLabel('Số tài khoản ngân hàng', { exact: true }).fill('001234567890');
   await page.getByRole('button', { name: 'Kiểm tra tài khoản', exact: true }).click();
@@ -72,7 +73,7 @@ test('Public receipt stores a refund account through gateway/API without exposin
   const audit = sql(
     `SELECT payload::text FROM notify.audit_logs WHERE entity_id='${order}' AND action='REFUND_INFO_SUBMITTED';`,
   );
-  expect(JSON.parse(audit)).toEqual({ bank: 'ACB' });
+  expect(JSON.parse(audit)).toEqual({ bank: 'Ngân hàng Á Châu' });
   const lookup = await page.request.post('/api/receipts/lookup', {
     data: { orderId: order, trackingToken: token },
   });

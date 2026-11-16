@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { chooseVietnamBank } from '../fixtures/vietnam-bank';
 import AxeBuilder from '@axe-core/playwright';
 import type { components } from '../../packages/contracts/src/generated/api';
 
@@ -51,7 +52,7 @@ for (const width of [390, 1440])
       expect(route.request().postDataJSON()).toEqual({
         p_order: id,
         p_tracking: token,
-        p_bank: 'ACB',
+        p_bank: 'Ngân hàng Á Châu',
         p_account_enc: account,
         p_holder: 'Nguyen Van A',
       });
@@ -60,7 +61,12 @@ for (const width of [390, 1440])
     await page.getByRole('button', { name: 'Kiểm tra tài khoản', exact: true }).click();
     await expect(page.getByLabel('Tên ngân hàng', { exact: true })).toBeFocused();
     await expect(page.locator('#refund-bank-error')).toContainText('Nhập tên ngân hàng');
-    await page.getByLabel('Tên ngân hàng', { exact: true }).fill('ACB');
+    const bank = page.getByRole('combobox', { name: 'Tên ngân hàng', exact: true });
+    await bank.fill('ngan hang a chau');
+    await expect(page.getByRole('option', { name: /Ngân hàng Á Châu/ })).toBeVisible();
+    await bank.press('ArrowDown');
+    await bank.press('Enter');
+    await expect(bank).toHaveValue('Ngân hàng Á Châu');
     await page.getByLabel('Tên chủ tài khoản', { exact: true }).fill('Nguyen Van A');
     await page.getByLabel('Số tài khoản ngân hàng', { exact: true }).fill(account);
     expect(
@@ -112,7 +118,7 @@ test('Lost refund-account response clears inputs and never retries automatically
     writes++;
     return route.abort();
   });
-  await page.getByLabel('Tên ngân hàng', { exact: true }).fill('ACB');
+  await chooseVietnamBank(page, 'Tên ngân hàng', 'ACB', 'Ngân hàng Á Châu');
   await page.getByLabel('Tên chủ tài khoản', { exact: true }).fill('Nguyen Van A');
   await page.getByLabel('Số tài khoản ngân hàng', { exact: true }).fill(account);
   await page.getByRole('button', { name: 'Kiểm tra tài khoản', exact: true }).click();

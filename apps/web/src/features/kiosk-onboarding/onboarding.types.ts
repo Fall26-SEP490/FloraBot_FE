@@ -11,7 +11,6 @@ export interface KioskApplicationFormDraft {
   phone: string;
   contactEmail: string;
   installationAddress: string;
-  addressSelected?: boolean;
   latInput: string;
   lonInput: string;
   bankName: string;

@@ -11,6 +11,7 @@ import {
 } from '@florabot/ui';
 import { request } from '@/shared/lib/api';
 import AdminTaskAssignment from './components/AdminTaskAssignment';
+import StaffTaskBoard from './components/StaffTaskBoard';
 import { TaskItem } from './components/TaskItem';
 import { TASK_STATUS_LABELS } from './task-management.constants';
 import type { ActiveTaskRole, StaffTasksProps, TaskPage } from './task-management.types';
@@ -19,6 +20,24 @@ import './styles/task-management.css';
 export type { ActiveTaskRole, StaffTasksProps };
 
 export function TaskManagement(props: StaffTasksProps) {
+  const role = props.actorRole ?? props.role;
+  const mode = props.mode ?? (props.admin ? 'oversight' : 'worker');
+  if (role === 'SELLER_STAFF' && mode === 'worker') {
+    const actorId = props.actorId ?? props.staffId;
+    return (
+      <StaffTaskBoard
+        key={`${actorId}:${props.sellerId}:${props.apiBase}`}
+        actorId={actorId}
+        sellerId={props.sellerId}
+        apiBase={props.apiBase ?? '/staff/tasks'}
+        readOnly={props.readOnly ?? false}
+      />
+    );
+  }
+  return <FilteredTaskList {...props} />;
+}
+
+function FilteredTaskList(props: StaffTasksProps) {
   const role = props.actorRole ?? props.role ?? (props.admin ? 'ADMIN' : undefined);
   const isValidRole = Boolean(
     role && ['ADMIN', 'OPERATIONS_MANAGER', 'TECHNICIAN', 'SELLER', 'SELLER_STAFF'].includes(role),
@@ -129,7 +148,8 @@ export function TaskManagement(props: StaffTasksProps) {
       {tasks.data &&
         role !== 'SELLER' &&
         role !== 'OPERATIONS_MANAGER' &&
-        role !== 'TECHNICIAN' && (
+        role !== 'TECHNICIAN' &&
+        role !== 'SELLER_STAFF' && (
           <div className="operations-metrics order-summary-strip" aria-label="Thống kê công việc">
             <div className="operations-metric">
               <ClipboardList aria-hidden="true" />
@@ -161,17 +181,13 @@ export function TaskManagement(props: StaffTasksProps) {
             </div>
           </div>
         )}
-      {(role === 'SELLER' || role === 'OPERATIONS_MANAGER' || role === 'TECHNICIAN') &&
-        tasks.isSuccess && (
-          <p
-            className={role === 'SELLER' ? 'seller-task-count' : 'manager-task-count'}
-            role="status"
-          >
-            {tasks.data.items.length} công việc trong trang {page}
-            {status ? ` · ${TASK_STATUS_LABELS[status] || status}` : ''}.
-            {tasks.data.hasMore ? ' Còn công việc ở trang sau.' : ''}
-          </p>
-        )}
+      {(role === 'SELLER' || role === 'OPERATIONS_MANAGER') && tasks.isSuccess && (
+        <p className={role === 'SELLER' ? 'seller-task-count' : 'manager-task-count'} role="status">
+          {tasks.data.items.length} công việc trong trang {page}
+          {status ? ` · ${TASK_STATUS_LABELS[status] || status}` : ''}.
+          {tasks.data.hasMore ? ' Còn công việc ở trang sau.' : ''}
+        </p>
+      )}
       {canAssign && actorId && (
         <AdminTaskAssignment
           actorId={actorId}
@@ -214,6 +230,7 @@ export function TaskManagement(props: StaffTasksProps) {
         </div>
         <Button
           variant="outline"
+          aria-label="Tải lại công việc"
           disabled={tasks.isFetching}
           onClick={async () => {
             const result = await tasks.refetch();
@@ -221,7 +238,7 @@ export function TaskManagement(props: StaffTasksProps) {
           }}
         >
           <RefreshCw size={15} aria-hidden="true" className={tasks.isFetching ? 'spin' : ''} />
-          Tải lại công việc
+          {role === 'TECHNICIAN' ? 'Làm mới' : 'Tải lại công việc'}
         </Button>
       </div>
       {tasks.isPending ? (
@@ -263,12 +280,19 @@ export function TaskManagement(props: StaffTasksProps) {
               )}
             </div>
           ) : (
-            tasks.data.items.map((task) => (
+            (mode === 'worker'
+              ? [...tasks.data.items].sort((a, b) => {
+                  const rank = (state: string) =>
+                    state === 'IN_PROGRESS' ? 0 : state === 'ASSIGNED' ? 1 : 2;
+                  return rank(a.status) - rank(b.status);
+                })
+              : tasks.data.items
+            ).map((task) => (
               <TaskItem
                 key={`${task.id}-${role === 'TECHNICIAN' ? task.status : task.version}-${reload}`}
                 task={task}
                 mode={mode}
-                role={role}
+                actorRole={role}
                 actorId={actorId}
                 sellerId={sellerId}
                 apiBase={apiBase}
@@ -278,7 +302,8 @@ export function TaskManagement(props: StaffTasksProps) {
               />
             ))
           )}
-          {(tasks.data.items.length > 0 || page > 1) && (
+          {(page > 1 ||
+            (role === 'SELLER_STAFF' ? tasks.data.hasMore : tasks.data.items.length > 0)) && (
             <nav aria-label="Phân trang công việc" className="order-pagination">
               <Button
                 variant="outline"

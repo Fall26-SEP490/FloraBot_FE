@@ -9,6 +9,7 @@ import type {
 } from '../../installations/installations.types';
 import { KIOSK_STATUS_LABELS } from '../../installations/installations.constants';
 import { validatePayosCheckoutUrl } from '../../installations/installations.utils';
+import { rememberPaymentReturn } from '../../orders/payment-return';
 
 export function useKioskApplicationActions(sessionData: Session | undefined) {
   const router = useRouter();
@@ -21,6 +22,7 @@ export function useKioskApplicationActions(sessionData: Session | undefined) {
   // Validated checkout opens the embedded payment dialog.
   const [validatedCheckoutUrl, setValidatedCheckoutUrl] = useState<string | null>(null);
   const [latestPaymentData, setLatestPaymentData] = useState<PaymentLinkResponse | null>(null);
+  const [issuedApplicationIds, setIssuedApplicationIds] = useState<string[]>([]);
   const [checkoutApplicationId, setCheckoutApplicationId] = useState<string | null>(null);
   const [paymentLinkError, setPaymentLinkError] = useState('');
   const [reconcileNotice, setReconcileNotice] = useState('');
@@ -28,6 +30,7 @@ export function useKioskApplicationActions(sessionData: Session | undefined) {
   const [refreshingSession, setRefreshingSession] = useState(false);
 
   const errorBannerRef = useRef<HTMLDivElement>(null);
+  const applicationKey = ['current-kiosk-application', sessionData?.id];
 
   // Submit application mutation
   const applyMutation = useMutation({
@@ -92,11 +95,17 @@ export function useKioskApplicationActions(sessionData: Session | undefined) {
         'POST',
       ),
     onSuccess: (data, applicationId) => {
-      setCheckoutApplicationId(applicationId);
       setPaymentLinkError('');
       setLatestPaymentData(data);
       const validation = validatePayosCheckoutUrl(data.checkoutUrl);
       if (validation.valid && validation.url) {
+        setIssuedApplicationIds((current) =>
+          current.includes(applicationId) ? current : [...current, applicationId],
+        );
+        rememberPaymentReturn(sessionData?.id, data.orderCode, {
+          kind: 'rental',
+          resourceId: applicationId,
+        });
         setValidatedCheckoutUrl(validation.url);
       } else {
         setValidatedCheckoutUrl(null);
@@ -125,6 +134,14 @@ export function useKioskApplicationActions(sessionData: Session | undefined) {
       }
     },
   });
+  function openCheckout(applicationId: string) {
+    if (paymentLinkMutation.isPending) return;
+    setCheckoutApplicationId(applicationId);
+    setValidatedCheckoutUrl(null);
+    setLatestPaymentData(null);
+    setPaymentLinkError('');
+    paymentLinkMutation.mutate(applicationId);
+  }
 
   // Reconcile payment mutation (dynamic status message)
   const reconcileMutation = useMutation({
@@ -150,7 +167,7 @@ export function useKioskApplicationActions(sessionData: Session | undefined) {
           `Trạng thái hồ sơ sau đối soát: ${KIOSK_STATUS_LABELS[status] || status}.`,
         );
       }
-      queryClient.setQueryData(['current-kiosk-application', sessionData?.id], updated);
+      queryClient.setQueryData(applicationKey, updated);
       void queryClient.invalidateQueries({
         queryKey: ['current-kiosk-application', sessionData?.id],
       });
@@ -178,7 +195,7 @@ export function useKioskApplicationActions(sessionData: Session | undefined) {
       setCancelDialogOpen(false);
       setCancelReason('');
       setCancelError('');
-      queryClient.setQueryData(['current-kiosk-application', sessionData?.id], updated);
+      queryClient.setQueryData(applicationKey, updated);
       void queryClient.invalidateQueries({
         queryKey: ['current-kiosk-application', sessionData?.id],
       });
@@ -236,8 +253,10 @@ export function useKioskApplicationActions(sessionData: Session | undefined) {
     setCancelError,
     validatedCheckoutUrl,
     latestPaymentData,
+    issuedApplicationIds,
     checkoutApplicationId,
-    setValidatedCheckoutUrl,
+    openCheckout,
+    closeCheckout: () => setCheckoutApplicationId(null),
     paymentLinkError,
     reconcileNotice,
     refreshError,

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { isValidLatitude, isValidLongitude } from '../../kiosk-location/kiosk-location.utils';
 
 export function useKioskGeolocation(
@@ -8,8 +8,16 @@ export function useKioskGeolocation(
   const [gpsLoading, setGpsLoading] = useState(false);
   const [gpsMessage, setGpsMessage] = useState('');
   const [gpsError, setGpsError] = useState(false);
+  const requestId = useRef(0);
 
+  const resetGps = () => {
+    requestId.current += 1;
+    setGpsLoading(false);
+    setGpsMessage('');
+    setGpsError(false);
+  };
   const requestGps = () => {
+    const id = ++requestId.current;
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
       setGpsError(true);
       setGpsMessage('Thiết bị hoặc trình duyệt của bạn không hỗ trợ định vị GPS.');
@@ -21,6 +29,7 @@ export function useKioskGeolocation(
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        if (id !== requestId.current) return;
         setGpsLoading(false);
         const lat = pos.coords.latitude;
         const lon = pos.coords.longitude;
@@ -31,7 +40,7 @@ export function useKioskGeolocation(
           setGpsMessage(
             hasAddress
               ? 'Đã cập nhật ghim bản đồ theo vị trí hiện tại. Địa chỉ đang chọn được giữ nguyên.'
-              : 'Đã cập nhật ghim bản đồ theo vị trí hiện tại. Vui lòng tìm và chọn địa chỉ lắp đặt tương ứng ở ô phía trên.',
+              : 'Đã ghim vị trí hiện tại. Hãy nhập địa chỉ lắp đặt rồi kiểm tra lại ghim.',
           );
         } else {
           setGpsError(true);
@@ -39,6 +48,7 @@ export function useKioskGeolocation(
         }
       },
       (err) => {
+        if (id !== requestId.current) return;
         setGpsLoading(false);
         setGpsError(true);
         if (err.code === 1) {
@@ -64,5 +74,6 @@ export function useKioskGeolocation(
     gpsMessage,
     gpsError,
     requestGps,
+    resetGps,
   };
 }

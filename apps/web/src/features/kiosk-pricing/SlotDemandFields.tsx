@@ -27,7 +27,7 @@ export function SlotDemandFields({
       <div className="slot-demand-inputs">
         <div>
           <label htmlFor={`${id}-walk`}>Ô bán sẵn (Walk-in)</label>
-          <p id={`${id}-walk-hint`}>Nạp hoa để khách mua ngay tại tủ.</p>
+          <p id={`${id}-walk-hint`}>Khách đến tủ, chọn và mua hoa có sẵn.</p>
           <strong>{rentalMoney(pricing.walkInAnnualPrice!)} / ô / năm</strong>
           <div className={showSteppers ? 'slot-quantity-control' : undefined}>
             {showSteppers && (
@@ -68,7 +68,7 @@ export function SlotDemandFields({
         </div>
         <div>
           <label htmlFor={`${id}-preorder`}>Ô đặt trước (Pre-order)</label>
-          <p id={`${id}-preorder-hint`}>Chuẩn bị hoa cho khách nhận theo lịch hẹn.</p>
+          <p id={`${id}-preorder-hint`}>Khách đến tủ lấy hoa đã đặt trước.</p>
           <strong>{rentalMoney(pricing.preorderAnnualPrice!)} / ô / năm</strong>
           <div className={showSteppers ? 'slot-quantity-control' : undefined}>
             {showSteppers && (
@@ -119,8 +119,7 @@ export function SlotDemandFields({
         )}
       </div>
       <p className="slot-demand-note">
-        Sau khi kiosk hoạt động, bạn có thể gửi yêu cầu đổi số ô Walk-in / Pre-order (tổng số ô giữ
-        nguyên).
+        Khi kiosk hoạt động, bạn có thể yêu cầu đổi loại ô. Tổng số ô giữ nguyên.
       </p>
     </fieldset>
   );

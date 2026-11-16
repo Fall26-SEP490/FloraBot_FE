@@ -175,7 +175,9 @@ test('Cleared or hidden reports cannot reappear from a late response', async ({ 
   await (await response).finished();
   await page.evaluate(() => new Promise(requestAnimationFrame));
   await expect(section.getByRole('status')).toContainText('rời tab');
-  await expect(section.getByLabel('Nội dung sao kê JSON')).toHaveValue('');
+  await expect(section.getByLabel('Nội dung sao kê JSON')).toHaveValue(
+    '[{"txn":"private","amount":100}]',
+  );
   await page.evaluate(() => {
     Object.defineProperty(document, 'hidden', { configurable: true, value: false });
     document.dispatchEvent(new Event('visibilitychange'));

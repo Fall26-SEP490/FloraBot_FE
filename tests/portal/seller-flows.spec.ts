@@ -106,8 +106,6 @@ for (const width of [390, 1440]) {
       return route.fulfill({ json: { result: 'ok' } });
     });
     await page.goto('/seller/accessories');
-    await expect(page.getByText(/Chọn “Xem tồn phụ kiện”/)).toBeVisible();
-    await page.getByRole('button', { name: 'Xem tồn phụ kiện', exact: true }).click();
     await expect(page.locator('.accessory-card')).toHaveCount(2);
     await page.getByLabel('Tìm phụ kiện', { exact: true }).fill('DEN');
     await expect(page.locator('.accessory-card')).toHaveCount(1);

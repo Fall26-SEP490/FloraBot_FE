@@ -1,6 +1,8 @@
+import { CheckCircle2, Clock } from '@florabot/ui';
 import type { WebOrder } from './orders.types';
-import { money, statusName, when } from './orders.utils';
+import { customerOrderHint, money, statusName, when } from './orders.utils';
 import styles from './customer-orders.module.css';
+import { PreorderAccessories } from './PreorderAccessories';
 
 export function CustomerQuoteDetails({ row, now }: { row: WebOrder; now: number }) {
   const quoting = row.state === 'QUOTED' && !row.orderId;
@@ -10,6 +12,16 @@ export function CustomerQuoteDetails({ row, now }: { row: WebOrder; now: number 
   const time = (value: string | null | undefined) =>
     value && Number.isFinite(new Date(value).getTime()) ? when(value) : 'Chưa có thông tin';
   const hasPrice = row.quotedPrice != null && Number.isFinite(row.quotedPrice);
+  const shortClock = (value: string) =>
+    new Date(value).toLocaleTimeString('vi-VN', {
+      timeZone: 'Asia/Ho_Chi_Minh',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  const sameDay =
+    row.pickupBefore &&
+    new Date(row.pickupAt).toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) ===
+      new Date(row.pickupBefore).toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
   return (
     <div
       role="region"
@@ -18,47 +30,60 @@ export function CustomerQuoteDetails({ row, now }: { row: WebOrder; now: number 
         quoting ? 'Báo giá của shop' : paying ? 'Thông tin thanh toán' : 'Thông tin đơn hoa'
       }
     >
-      <div className={styles.quotePrice}>
-        <span>{paying ? 'Số tiền cần thanh toán' : quoting ? 'Giá shop báo' : 'Giá đã chốt'}</span>
-        <strong>{hasPrice ? money(row.quotedPrice!) : 'Chưa có báo giá'}</strong>
-        {quoting && <p>Đồng ý báo giá trước, thanh toán sau.</p>}
-        {paying && <p>Chọn “Thanh toán ngay” để thanh toán qua PayOS ngay tại đây.</p>}
+      <div className={styles.quoteAmountBlock}>
+        <div className={styles.quotePrice}>
+          {row.orderStatus === 'PAID' && (
+            <p role="status">
+              <CheckCircle2 className="payos-confirmed-icon" size={16} aria-hidden="true" />
+              <b>Đã thanh toán.</b>{' '}
+              {row.ready ? 'Hoa đã sẵn sàng tại tủ.' : 'Shop đang chuẩn bị hoa.'}
+            </p>
+          )}
+          <span>
+            {paying ? 'Số tiền cần thanh toán' : quoting ? 'Tổng báo giá' : 'Giá đã chốt'}
+          </span>
+          <strong>{hasPrice ? money(row.quotedPrice!) : 'Chưa có báo giá'}</strong>
+          {quoting && <p>Đồng ý báo giá trước, thanh toán sau.</p>}
+          {paying && <p>Chọn “Thanh toán ngay” để thanh toán qua PayOS ngay tại đây.</p>}
+          {!quoting && !paying && row.orderStatus !== 'PAID' && <p>{customerOrderHint(row)}</p>}
+        </div>
+        <PreorderAccessories row={row} compact />
       </div>
-      <dl className={styles.quoteFacts}>
-        <div>
-          <dt>Cửa hàng</dt>
-          <dd>{row.shopName || 'Shop chưa cập nhật tên'}</dd>
-        </div>
-        <div>
-          <dt>Tủ nhận hoa</dt>
-          <dd>
-            {row.kioskName || 'Chưa có thông tin tủ'}
-            {row.address && <span>{row.address}</span>}
-          </dd>
-        </div>
-        <div>
-          <dt>{row.state === 'REQUESTED' ? 'Giờ nhận mong muốn' : 'Nhận từ'}</dt>
-          <dd>{time(row.pickupAt)}</dd>
-        </div>
-        {row.pickupBefore && (
+      <div className={styles.quotePickupBlock}>
+        <dl className={styles.quoteFacts}>
           <div>
-            <dt>Nhận trước</dt>
-            <dd>{time(row.pickupBefore)}</dd>
+            <dt>Tủ nhận hoa</dt>
+            <dd>
+              {row.kioskName || 'Chưa có thông tin tủ'}
+              {row.address && <span>{row.address}</span>}
+            </dd>
+          </div>
+          <div>
+            <dt>{row.state === 'REQUESTED' ? 'Giờ nhận mong muốn' : 'Thời gian nhận hoa'}</dt>
+            <dd>
+              {time(row.pickupAt)}
+              {row.pickupBefore && (
+                <> – {sameDay ? shortClock(row.pickupBefore) : time(row.pickupBefore)}</>
+              )}
+            </dd>
+          </div>
+          {(quoting || paying) && (
+            <div className={styles.quoteDeadline}>
+              <dt>
+                <Clock size={14} aria-hidden="true" />
+                {quoting ? 'Phản hồi báo giá trước' : 'Thanh toán trước'}
+              </dt>
+              <dd>{time(deadline)}</dd>
+            </div>
+          )}
+        </dl>
+        {row.quoteNote && (
+          <div className={styles.quoteNote}>
+            <strong>Ghi chú của shop</strong>
+            <p>{row.quoteNote}</p>
           </div>
         )}
-        {(quoting || paying) && (
-          <div className={styles.quoteDeadline}>
-            <dt>{quoting ? 'Phản hồi báo giá trước' : 'Thanh toán trước'}</dt>
-            <dd>{time(deadline)}</dd>
-          </div>
-        )}
-      </dl>
-      {row.quoteNote && (
-        <div className={styles.quoteNote}>
-          <strong>Ghi chú của shop</strong>
-          <p>{row.quoteNote}</p>
-        </div>
-      )}
+      </div>
       {quoting && !hasPrice && (
         <p role="alert" className={styles.expiry}>
           Báo giá chưa có số tiền hợp lệ. Hãy liên hệ shop để kiểm tra trước khi xác nhận.

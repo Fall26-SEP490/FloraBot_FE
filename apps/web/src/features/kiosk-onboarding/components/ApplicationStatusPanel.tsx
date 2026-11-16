@@ -1,7 +1,4 @@
-import {
-  ApplicationRentalSummary,
-  rentalAllocation,
-} from '../../kiosk-pricing/ApplicationRentalSummary';
+import { ApplicationRentalSummary } from '../../kiosk-pricing/ApplicationRentalSummary';
 import { Button, CircleAlert } from '@florabot/ui';
 import type { KioskApplicationResponse } from '../../installations/installations.types';
 import { KIOSK_STATUS_LABELS } from '../../installations/installations.constants';
@@ -61,6 +58,17 @@ export function ApplicationStatusPanel({
       </div>
 
       <ApplicationRentalSummary application={appData} />
+
+      {appData.status === 'AWAITING_PAYMENT' && (
+        <PaymentActions
+          annualFee={appData.annualFee}
+          paymentLinkError={paymentLinkError}
+          isGeneratingLink={isGeneratingLink}
+          isReconciling={isReconciling}
+          onGenerateLink={onGenerateLink}
+          onReconcile={onReconcile}
+        />
+      )}
       {/* Progress Timeline */}
       <ApplicationTimeline status={appData.status} scheduledDate={appData.scheduledDate} />
 
@@ -86,18 +94,6 @@ export function ApplicationStatusPanel({
       )}
 
       {/* State Specific Callouts */}
-      {appData.status === 'AWAITING_PAYMENT' && (
-        <PaymentActions
-          packageName={rentalAllocation(appData)}
-          annualFee={appData.annualFee}
-          paymentLinkError={paymentLinkError}
-          isGeneratingLink={isGeneratingLink}
-          isReconciling={isReconciling}
-          onGenerateLink={onGenerateLink}
-          onReconcile={onReconcile}
-        />
-      )}
-
       {appData.status === 'ACTIVE' && (
         <ActiveSellerPanel
           refreshingSession={refreshingSession}
@@ -128,11 +124,11 @@ export function ApplicationStatusPanel({
             </p>
           </div>
           <div>
-            <strong>Tài khoản nhận doanh thu shop:</strong>
+            <strong>Tài khoản nhận hoàn phí:</strong>
             <p>
               {appData.bankName} - ****{appData.bankAccountSuffix} ({appData.bankHolder})
             </p>
-            <small>Chỉ dùng để nhận tiền bán hoa, không ủy quyền trích nợ.</small>
+            <small>Dùng khi hồ sơ được hoàn phí thuê qua chuyển khoản.</small>
           </div>
           <div>
             <strong>Sức chứa kiosk:</strong>

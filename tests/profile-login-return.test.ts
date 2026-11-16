@@ -1,6 +1,13 @@
 import { expect, it } from 'vitest';
 import { postLoginPath } from '../apps/web/src/features/auth/auth.utils';
 
+it('returns customers and sellers to the rental page after sign-in', () => {
+  const query = '?returnUrl=%2Fthue-kiosk';
+  expect(postLoginPath('CUSTOMER', query)).toBe('/thue-kiosk');
+  expect(postLoginPath('SELLER', query)).toBe('/thue-kiosk');
+  expect(postLoginPath('ADMIN', query)).toBe('/admin');
+});
+
 it('preserves the product chat context without accepting extra destinations', () => {
   const target =
     '/dat-hoa?action=chat&sellerId=20000000-0000-0000-0000-000000000001&productId=30000000-0000-0000-0000-000000000001&shopName=Shop&name=Hoa';

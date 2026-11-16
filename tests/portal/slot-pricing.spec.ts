@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { chooseVietnamBank } from '../fixtures/vietnam-bank';
 import AxeBuilder from '@axe-core/playwright';
 
 const pricing = {
@@ -162,11 +163,11 @@ for (const width of [390, 1440]) {
     await page.getByLabel('Tên shop hoa').fill('Shop kiểm thử');
     await page.getByLabel('Số điện thoại kinh doanh').fill('0901234567');
     await page.getByLabel('Email liên hệ công việc').fill('shop@example.com');
-    await page.getByLabel('Tên ngân hàng').fill('MB Bank');
+    await chooseVietnamBank(page, 'Tên ngân hàng', 'MB Bank', 'Quân đội');
     await page.getByLabel('Tên chủ tài khoản').fill('NGUYEN VAN A');
     await page.getByLabel('Số tài khoản ngân hàng').fill('00123');
     await address(page);
-    await page.getByRole('checkbox', { name: /Tôi xác nhận số ô/ }).check();
+    await page.getByRole('checkbox', { name: /Tôi đã kiểm tra số ô/ }).check();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
@@ -199,13 +200,13 @@ test('Seller additional rental sends only location and demand, requires review a
   await page.goto('/thue-kiosk');
   await expect(page.getByLabel('Tên shop hoa')).toHaveCount(0);
   await address(page);
-  await page.getByRole('checkbox', { name: /Tôi xác nhận số ô/ }).check();
+  await page.getByRole('checkbox', { name: /Tôi đã kiểm tra số ô/ }).check();
   await page.getByRole('button', { name: 'Nộp hồ sơ thuê kiosk' }).click();
-  await expect(page.getByRole('checkbox', { name: /Tôi xác nhận số ô/ })).not.toBeChecked();
+  await expect(page.getByRole('checkbox', { name: /Tôi đã kiểm tra số ô/ })).not.toBeChecked();
   await expect(page.getByRole('button', { name: 'Nộp hồ sơ thuê kiosk' })).toBeDisabled();
   expect(state.writes).toHaveLength(1);
   await expect(page.locator('.slot-demand-total').first()).toContainText('200.000');
-  await page.getByRole('checkbox', { name: /Tôi xác nhận số ô/ }).check();
+  await page.getByRole('checkbox', { name: /Tôi đã kiểm tra số ô/ }).check();
   await page.getByRole('button', { name: 'Nộp hồ sơ thuê kiosk' }).click();
   await expect(page.getByRole('heading', { name: 'Hồ sơ thuê: Shop kiểm thử' })).toBeVisible();
   expect(state.writes[1]).toEqual({

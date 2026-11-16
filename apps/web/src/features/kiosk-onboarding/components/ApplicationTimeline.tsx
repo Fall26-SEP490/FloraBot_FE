@@ -82,7 +82,11 @@ export function ApplicationTimeline({ status, scheduledDate }: ApplicationTimeli
           <div className="step-content">
             <span className="step-title">Lắp đặt tại tủ</span>
             <span className="step-sub">
-              {status === 'INSTALLING' ? 'KTV đang thi công' : 'Đã chụp minh chứng'}
+              {status === 'INSTALLING'
+                ? 'KTV đang thi công'
+                : ['AWAITING_HANDOVER', 'ACTIVE'].includes(status)
+                  ? 'Đã lắp đặt'
+                  : 'Chờ lắp đặt'}
             </span>
           </div>
         </li>
@@ -97,7 +101,11 @@ export function ApplicationTimeline({ status, scheduledDate }: ApplicationTimeli
           <div className="step-content">
             <span className="step-title">Nghiệm thu bàn giao</span>
             <span className="step-sub">
-              {status === 'ACTIVE' ? 'Đã kích hoạt shop' : 'Quản lý duyệt ảnh'}
+              {status === 'ACTIVE'
+                ? 'Đã bàn giao'
+                : status === 'AWAITING_HANDOVER'
+                  ? 'Quản lý đang kiểm tra'
+                  : 'Chờ nghiệm thu'}
             </span>
           </div>
         </li>

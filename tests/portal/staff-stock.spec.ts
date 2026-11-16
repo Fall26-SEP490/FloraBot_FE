@@ -48,15 +48,16 @@ test('Staff opens the assigned Walk-in slot on the web and waits for the sensor 
     return route.fulfill({ json: { id: taskId, stage } });
   });
   await page.goto('/staff');
+  await page.getByRole('button', { name: 'Tiếp tục xử lý' }).click();
   await expect(page.getByRole('heading', { name: 'Nạp hoa · Ô A01' })).toBeVisible();
-  await expect(page.getByLabel('Nội dung cập nhật')).toHaveCount(0);
-  await expect(page.getByText('Nạp hoa và xem kết quả')).toHaveCount(0);
+  await expect(page.getByText('Viết báo cáo', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('Nạp hoa bán tại tủ')).toHaveCount(0);
   await page.getByRole('button', { name: 'Mở ô', exact: true }).click();
   await expect(page.getByText('Đã gửi yêu cầu mở ô. Chờ tủ phản hồi.')).toBeVisible();
   stage = 'Completed';
   await expect(page.getByText(/Tủ đã xác nhận thao tác hoàn tất/)).toBeVisible();
   await expect(page.getByText('Đã gửi yêu cầu mở ô. Chờ tủ phản hồi.')).toHaveCount(0);
-  await expect(page.getByLabel('Nội dung cập nhật')).toBeVisible();
+  await expect(page.getByText('Viết báo cáo', { exact: true })).toBeVisible();
 });
 
 for (const width of [390, 1440])
@@ -120,7 +121,8 @@ for (const width of [390, 1440])
       return route.fulfill({ json: { id: body.id, bouquetId: 'bouquet-1' } });
     });
     await page.goto('/staff');
-    await page.getByText('Nạp hoa và xem kết quả', { exact: true }).click();
+    await page.getByRole('button', { name: 'Tiếp tục xử lý' }).click();
+    await page.getByText('Nạp hoa bán tại tủ', { exact: true }).click();
     await page.getByRole('button', { name: 'Ghi nhận đã nạp hoa' }).click();
     await expect(page.getByText('Chọn mẫu hoa.', { exact: true })).toBeVisible();
     expect(writes).toBe(0);
@@ -142,7 +144,8 @@ for (const width of [390, 1440])
     await page.getByRole('button', { name: 'Ghi nhận đã nạp hoa' }).click();
     await expect(page.getByRole('button', { name: 'Kiểm tra kết quả nạp' })).toBeVisible();
     await page.reload();
-    await page.getByText('Nạp hoa và xem kết quả', { exact: true }).click();
+    await page.getByRole('button', { name: 'Tiếp tục xử lý' }).click();
+    await page.getByText('Nạp hoa bán tại tủ', { exact: true }).click();
     await page.getByRole('button', { name: 'Kiểm tra kết quả nạp' }).click();
     await expect(page.getByText('Đã ghi nhận bó hoa vào ô tủ.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Ghi nhận đã nạp hoa' })).toHaveCount(0);
@@ -155,5 +158,5 @@ for (const width of [390, 1440])
       }),
     );
     await page.goto('/technician');
-    await expect(page.getByText('Nạp hoa và xem kết quả')).toHaveCount(0);
+    await expect(page.getByText('Nạp hoa bán tại tủ')).toHaveCount(0);
   });

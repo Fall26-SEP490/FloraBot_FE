@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
+import { VietnamBankSelect } from '@/shared/components/VietnamBankSelect';
 import { ApiError, queryClient, request } from '@/shared/lib/api';
 import type { components } from '../../../../../../../packages/contracts/src/generated/api';
 import '../../styles/shop-bank-section.css';
@@ -276,23 +277,24 @@ export function ShopBankSection({
           <form onSubmit={handleSubmit} className="shop-bank-form" noValidate>
             <div className="profile-form-group">
               <label htmlFor={`shop-bank-name-${sellerId}`}>Tên ngân hàng nhận hoàn phí *</label>
-              <input
+              <VietnamBankSelect
                 id={`shop-bank-name-${sellerId}`}
-                type="text"
-                maxLength={120}
-                placeholder="Ví dụ: MB Bank, Vietcombank, Techcombank..."
                 value={bankName ?? bankQuery.data?.bankName ?? ''}
                 disabled={saveBankMutation.isPending}
-                onChange={(e) => {
-                  setBankName(e.target.value);
+                onValueChange={(name) => {
+                  setBankName(name);
                   if (fieldErrors.bankName) {
                     setFieldErrors((prev) => ({ ...prev, bankName: '' }));
                   }
                 }}
-                aria-invalid={Boolean(fieldErrors.bankName)}
+                invalid={Boolean(fieldErrors.bankName)}
+                describedBy={fieldErrors.bankName ? `shop-bank-error-${sellerId}` : undefined}
+                required
               />
               {fieldErrors.bankName && (
-                <p className="profile-field-error">{fieldErrors.bankName}</p>
+                <p className="profile-field-error" id={`shop-bank-error-${sellerId}`}>
+                  {fieldErrors.bankName}
+                </p>
               )}
             </div>
 

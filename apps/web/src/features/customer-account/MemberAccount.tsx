@@ -7,23 +7,13 @@ import './styles/account-home.css';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Button, Flower2, MessageSquare, Package, Store } from '@florabot/ui';
+import { Button } from '@florabot/ui';
 import WebRequests from '../orders/WebRequests';
-import CustomerPendingOrders from './CustomerPendingOrders';
 import CustomerRentalApplication from './CustomerRentalApplication';
-import { preorderPaymentReturn } from '../orders/payment-return';
+import { findPaymentReturn, validPaymentCode } from '../orders/payment-return';
 import { CustomerChatSection } from '@/features/chat/CustomerChatSection';
-import { getCustomerUnreadCount } from '@/features/chat/api';
 import { sessionQuery } from '@/shared/lib/api';
-import { request } from '@/shared/lib/api';
-import type { components } from '../../../../../packages/contracts/src/generated/api';
-import { fetchMemberProfile, fetchMemberHistory } from './customer-account.api';
-import {
-  type TabKey,
-  type CustomerHistoryItem,
-  TAB_HASH_MAP,
-  ORDER_STATUS_LABELS,
-} from './customer-account.types';
+import { type TabKey, TAB_HASH_MAP } from './customer-account.types';
 
 export default function MemberAccount() {
   const router = useRouter();
@@ -31,23 +21,27 @@ export default function MemberAccount() {
   const initialChatId = searchParams.get('chat') || null;
   const session = useQuery(sessionQuery);
   const isCustomer = session.data?.role === 'CUSTOMER';
+  const returningCode = validPaymentCode(searchParams.get('orderCode'));
+  const checkoutReturn = useQuery({
+    queryKey: ['payment-return-target', session.data?.id, session.data?.role, returningCode],
+    enabled: Boolean(session.data && returningCode),
+    queryFn: () => findPaymentReturn(returningCode!, session.data!.id, session.data!.role),
+    staleTime: 0,
+  });
+  useEffect(() => {
+    if (returningCode && checkoutReturn.data) router.replace(checkoutReturn.data);
+  }, [returningCode, checkoutReturn.data, router]);
   const [activeTab, setActiveTab] = useState<TabKey>(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace(/^#/, '');
       if (hash && TAB_HASH_MAP[hash]) return TAB_HASH_MAP[hash];
       if (window.location.search.includes('chat=')) return 'chats';
     }
-    return 'overview';
+    return 'orders';
   });
 
   useEffect(() => {
     const syncFromUrl = () => {
-      const paymentReturn = preorderPaymentReturn(window.location.search);
-      if (paymentReturn) {
-        setActiveTab('orders');
-        router.replace(paymentReturn);
-        return;
-      }
       const hash = window.location.hash.replace(/^#/, '');
       if (hash === 'member-profile' || hash === 'profile') {
         router.replace('/ho-so');
@@ -65,6 +59,10 @@ export default function MemberAccount() {
         router.replace(session.data.role === 'SELLER' ? '/seller' : '/thue-kiosk');
         return;
       }
+      if (session.data?.role === 'SELLER' && !returningCode) {
+        router.replace('/ho-so');
+        return;
+      }
       if (new URLSearchParams(window.location.search).get('chat')) {
         setActiveTab('chats');
         if (window.location.hash !== '#member-chats') {
@@ -75,7 +73,7 @@ export default function MemberAccount() {
       } else if (hash && TAB_HASH_MAP[hash]) {
         setActiveTab(TAB_HASH_MAP[hash]);
       } else {
-        setActiveTab('overview');
+        setActiveTab('orders');
       }
     };
     syncFromUrl();
@@ -85,312 +83,59 @@ export default function MemberAccount() {
       window.removeEventListener('hashchange', syncFromUrl);
       window.removeEventListener('popstate', syncFromUrl);
     };
-  }, [router, session.data, initialChatId, searchParams]);
+  }, [router, session.data, initialChatId, searchParams, returningCode]);
 
-  const profile = useQuery({
-    queryKey: ['member-profile', session.data?.id],
-    queryFn: fetchMemberProfile,
-  });
-  const loyalty = useQuery({
-    queryKey: ['member-shop-loyalty', session.data?.id],
-    enabled: isCustomer,
-    queryFn: () =>
-      request<components['schemas']['MemberLoyaltyPageResponse']>(
-        '/member/loyalty?page=1&pageSize=20',
-      ),
-  });
-
-  const [page, setPage] = useState(1);
-  const history = useQuery({
-    queryKey: ['member-history', session.data?.id, page],
-    queryFn: () => fetchMemberHistory(page),
-    enabled: activeTab === 'history',
-  });
-
-  const recentHistory = useQuery({
-    queryKey: ['member-history', session.data?.id, 1],
-    queryFn: () => fetchMemberHistory(1),
-    enabled: activeTab === 'overview',
-  });
-
-  const chatsQuery = useQuery({
-    queryKey: ['member-chats-unread-count', session.data?.id],
-    queryFn: ({ signal }) => getCustomerUnreadCount(signal),
-    enabled: isCustomer,
-    refetchInterval: 15000,
-  });
-
-  const unreadChatsCount = chatsQuery.isSuccess ? chatsQuery.data : undefined;
-  // A conversation link takes precedence immediately, including same-route navigation.
   const requestedTab = initialChatId ? 'chats' : activeTab;
-  const visibleTab = requestedTab === 'chats' && !isCustomer ? 'overview' : requestedTab;
+  const visibleTab = requestedTab === 'chats' && isCustomer ? 'chats' : 'orders';
+
+  if (returningCode) {
+    return (
+      <main id="main" className="member-page">
+        <div className="account-home">
+          <h1>Kết quả thanh toán</h1>
+          {checkoutReturn.isSuccess && !checkoutReturn.data && !checkoutReturn.isFetching ? (
+            <>
+              <p role="alert">
+                Trình duyệt này chưa lưu giao dịch. Hãy mở mục theo dõi bên dưới để kiểm tra. Nếu đã
+                chuyển khoản, đừng thanh toán lại.
+              </p>
+              <div className="stock-actions">
+                <Button onClick={() => void checkoutReturn.refetch()}>Kiểm tra lại</Button>
+                <Link href={isCustomer ? '/tai-khoan#web-orders' : '/seller/subscriptions'}>
+                  {isCustomer ? 'Xem đơn đặt trước' : 'Xem kỳ thuê kiosk'}
+                </Link>
+                <Link href="/thue-kiosk">Xem hồ sơ thuê kiosk</Link>
+              </div>
+            </>
+          ) : (
+            <p role="status">Đang tìm giao dịch để mở trang theo dõi…</p>
+          )}
+        </div>
+      </main>
+    );
+  }
+
+  if (!isCustomer)
+    return (
+      <main id="main" className="member-page">
+        <p role="status">Đang mở hồ sơ cá nhân…</p>
+      </main>
+    );
 
   return (
     <main id="main" className="member-page">
-      {visibleTab === 'overview' && (
-        <div className="account-home">
-          <header className="account-home-heading">
-            <div>
-              <h1>Tổng quan</h1>
-              <p>Xin chào, {session.data?.name || 'bạn'}. Cùng xem hoạt động gần đây của bạn.</p>
-            </div>
-            <Link href="/dat-hoa" className="button button-primary">
-              Khám phá hoa <ArrowRight size={16} aria-hidden="true" />
-            </Link>
-          </header>
-          {isCustomer && <CustomerRentalApplication />}
-          {isCustomer && <CustomerPendingOrders />}
-          <div className="account-home-status">
-            <div className="account-home-points">
-              <Flower2 size={20} aria-hidden="true" />
-              <div>
-                <span>Điểm tích lũy</span>
-                {isCustomer && loyalty.isLoading ? (
-                  <strong>Đang tải…</strong>
-                ) : isCustomer && loyalty.isError ? (
-                  <strong>Chưa tải được</strong>
-                ) : isCustomer && loyalty.data?.items.length ? (
-                  <div>
-                    {loyalty.data.items.map((item) => (
-                      <p key={item.sellerId}>
-                        <strong>
-                          {item.shopName}:{' '}
-                          <span>{Number(item.balance).toLocaleString('vi-VN')}</span> điểm
-                        </strong>
-                      </p>
-                    ))}
-                  </div>
-                ) : profile.isLoading ? (
-                  <strong>Đang tải…</strong>
-                ) : profile.isSuccess && Number(profile.data.loyaltyPoints) > 0 ? (
-                  <strong>
-                    <span>{Number(profile.data.loyaltyPoints).toLocaleString('vi-VN')}</span> điểm
-                  </strong>
-                ) : (
-                  <strong>Chưa có điểm</strong>
-                )}
-                {isCustomer &&
-                Boolean(loyalty.data?.items.length) &&
-                profile.isSuccess &&
-                Number(profile.data.loyaltyPoints) > 0 ? (
-                  <small>
-                    Điểm cũ toàn hệ thống:{' '}
-                    <span>{Number(profile.data.loyaltyPoints).toLocaleString('vi-VN')}</span>
-                  </small>
-                ) : null}
-              </div>
-              {isCustomer && loyalty.isError && (
-                <Button variant="outline" onClick={() => void loyalty.refetch()}>
-                  Thử lại
-                </Button>
-              )}
-            </div>
-            {isCustomer ? (
-              <div className="account-home-inbox">
-                <MessageSquare size={20} aria-hidden="true" />
-                <div>
-                  <strong>
-                    {chatsQuery.isPending
-                      ? 'Đang tải tin nhắn…'
-                      : chatsQuery.isError
-                        ? 'Chưa tải được tin nhắn'
-                        : unreadChatsCount
-                          ? unreadChatsCount + ' tin nhắn chưa đọc'
-                          : 'Không có tin nhắn chưa đọc'}
-                  </strong>
-                  <span>Trao đổi và nhận cập nhật từ shop.</span>
-                </div>
-                {chatsQuery.isError ? (
-                  <Button variant="outline" onClick={() => void chatsQuery.refetch()}>
-                    Thử lại
-                  </Button>
-                ) : (
-                  <a href="/tai-khoan#member-chats">
-                    Mở hộp thư <ArrowRight size={16} aria-hidden="true" />
-                  </a>
-                )}
-              </div>
-            ) : session.data?.role === 'SELLER' ? (
-              <div className="account-home-inbox account-home-seller-entry">
-                <Store size={20} aria-hidden="true" />
-                <div>
-                  <strong>Kênh quản lý người bán</strong>
-                  <span>Quản lý hoa, đơn đặt và gian hàng của shop.</span>
-                </div>
-                <Link href="/seller">
-                  Vào trang quản lý shop <ArrowRight size={16} aria-hidden="true" />
-                </Link>
-              </div>
-            ) : (
-              <div className="account-home-inbox">
-                <Package size={20} aria-hidden="true" />
-                <div>
-                  <strong>Khu vực làm việc</strong>
-                  <span>Truy cập các tính năng vận hành được cấp phép.</span>
-                </div>
-                <Link href="/workspace">
-                  Vào khu vực làm việc <ArrowRight size={16} aria-hidden="true" />
-                </Link>
-              </div>
-            )}
-          </div>
-          <section className="account-home-recent" aria-labelledby="recent-purchases-title">
-            <div className="account-home-section-heading">
-              <h2 id="recent-purchases-title">Lần mua gần đây</h2>
-              <a href="/tai-khoan#member-orders">
-                Xem tất cả <ArrowRight size={16} aria-hidden="true" />
-              </a>
-            </div>
-            {recentHistory.isPending ? (
-              <p role="status">Đang tải các lần mua gần đây…</p>
-            ) : recentHistory.isError ? (
-              <div role="alert">
-                <p>Chưa tải được lịch sử mua.</p>
-                <Button variant="outline" onClick={() => void recentHistory.refetch()}>
-                  Thử lại
-                </Button>
-              </div>
-            ) : recentHistory.data.items.length ? (
-              <ul className="account-home-purchases">
-                {recentHistory.data.items.slice(0, 3).map((order) => (
-                  <li key={order.id}>
-                    <div>
-                      <strong>{order.shopName}</strong>
-                      <span>
-                        {order.orderCode} · {new Date(order.createdAt).toLocaleDateString('vi-VN')}
-                      </span>
-                    </div>
-                    <span className="account-home-order-status">
-                      {ORDER_STATUS_LABELS[order.status] || order.status}
-                    </span>
-                    <strong>{Number(order.totalAmount).toLocaleString('vi-VN')} đ</strong>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="account-home-empty">
-                <Flower2 size={30} aria-hidden="true" />
-                <h3>Chưa có lần mua nào</h3>
-                <p>Khi bạn mua hoa, thông tin đơn sẽ xuất hiện ở đây.</p>
-                <a href="/tai-khoan#web-orders">
-                  Đang chờ nhận hoa? Xem đơn đặt trước <ArrowRight size={16} aria-hidden="true" />
-                </a>
-              </div>
-            )}
-          </section>
-        </div>
-      )}
-
-      {/* Tab 2: Chats */}
-      {visibleTab === 'chats' && (
+      {visibleTab === 'chats' ? (
         <section id="member-chats">
           <header className="account-section-heading">
             <h1>Tin nhắn</h1>
-            <p>Tin nhắn với các shop · Trao đổi về đơn hoa của bạn.</p>
           </header>
           <CustomerChatSection key={initialChatId ?? 'inbox'} initialChatId={initialChatId} />
         </section>
-      )}
-
-      {/* Tab 3: Preorders */}
-      {visibleTab === 'orders' && <WebRequests mode="member" />}
-
-      {/* Tab 4: History */}
-      {visibleTab === 'history' && (
-        <section id="member-orders" className="account-section-card">
-          <header className="account-section-heading">
-            <h1>Lịch sử mua</h1>
-            <p>Xem lại những lần mua hoa và trạng thái xử lý.</p>
-          </header>
-          {history.isPending ? (
-            <p role="status">Đang tải đơn hàng…</p>
-          ) : history.isError ? (
-            <>
-              <p role="alert">Chưa tải được lịch sử.</p>
-              <Button onClick={() => void history.refetch()}>Tải lại lịch sử</Button>
-            </>
-          ) : (
-            <>
-              {history.data.items.length ? (
-                <ul className="account-history-list">
-                  {history.data.items.map((order: CustomerHistoryItem) => (
-                    <li key={order.id}>
-                      <div className="account-history-row">
-                        <h2>{order.shopName}</h2>
-                        <span className="account-history-status" data-status={order.status}>
-                          {ORDER_STATUS_LABELS[order.status] || order.status}
-                        </span>
-                      </div>
-                      <p className="account-history-meta">
-                        {order.orderCode} ·{' '}
-                        <time dateTime={order.createdAt}>
-                          {new Date(order.createdAt).toLocaleString('vi-VN')}
-                        </time>
-                      </p>
-                      <div className="account-history-row">
-                        <p>{order.items.join(', ') || 'Hoa đặt theo yêu cầu'}</p>
-                        <strong>{Number(order.totalAmount).toLocaleString('vi-VN')} đ</strong>
-                      </div>
-                      <details className="account-history-details">
-                        <summary>Xem thông tin giao dịch</summary>
-                        <dl>
-                          <div>
-                            <dt>Mã đơn</dt>
-                            <dd>{order.orderCode}</dd>
-                          </div>
-                          <div>
-                            <dt>Điểm được cộng</dt>
-                            <dd>{Number(order.pointsEarned).toLocaleString('vi-VN')}</dd>
-                          </div>
-                          <div>
-                            <dt>Điểm đã dùng</dt>
-                            <dd>{Number(order.pointsRedeemed).toLocaleString('vi-VN')}</dd>
-                          </div>
-                        </dl>
-                        <p>Cần hỗ trợ? Liên hệ FloraBot và cung cấp mã đơn này.</p>
-                        <Link href="/lien-he">
-                          Liên hệ hỗ trợ <ArrowRight size={16} aria-hidden="true" />
-                        </Link>
-                      </details>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div className="member-empty">
-                  <span className="member-empty-icon">
-                    <Flower2 size={24} aria-hidden="true" />
-                  </span>
-                  <h3>{page > 1 ? 'Chưa có đơn ở trang này' : 'Chưa có lịch sử mua hoa'}</h3>
-                  <p>Các đơn mua bằng tài khoản này sẽ được lưu ở đây.</p>
-                  {page === 1 && (
-                    <Link className="button button-outline" href="/dat-hoa">
-                      Khám phá hoa <ArrowRight size={16} aria-hidden="true" />
-                    </Link>
-                  )}
-                </div>
-              )}
-              {(page > 1 || history.data.hasMore) && (
-                <nav className="stock-actions" aria-label="Phân trang lịch sử">
-                  <Button
-                    variant="outline"
-                    disabled={page === 1 || history.isFetching}
-                    onClick={() => setPage((value) => value - 1)}
-                  >
-                    Trang trước
-                  </Button>
-                  <span>Trang {page}</span>
-                  <Button
-                    variant="outline"
-                    disabled={!history.data.hasMore || history.isFetching}
-                    onClick={() => setPage((value) => value + 1)}
-                  >
-                    Trang sau
-                  </Button>
-                </nav>
-              )}
-            </>
-          )}
-        </section>
+      ) : (
+        <>
+          <CustomerRentalApplication />
+          <WebRequests mode="member" />
+        </>
       )}
     </main>
   );

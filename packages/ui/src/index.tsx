@@ -81,6 +81,7 @@ export {
   KeyRound,
   Sparkles,
   Clock,
+  CalendarDays,
   CheckCircle2,
   Crosshair,
 } from 'lucide-react';

@@ -536,7 +536,7 @@
 
 .member-orders.customer-order-list > li {
   padding: 0;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   border: 1px solid #dce7d8;
   border-radius: 14px;
   background: #fff;

@@ -1,7 +1,6 @@
 import { Banknote, Button, CircleAlert, RefreshCw } from '@florabot/ui';
 
 interface PaymentActionsProps {
-  packageName: string;
   annualFee: number | string;
   paymentLinkError: string;
   isGeneratingLink: boolean;
@@ -11,7 +10,6 @@ interface PaymentActionsProps {
 }
 
 export function PaymentActions({
-  packageName,
   annualFee,
   paymentLinkError,
   isGeneratingLink,
@@ -22,10 +20,9 @@ export function PaymentActions({
   return (
     <div className="status-action-box" data-action="payment">
       <h3>Thanh toán phí thuê kiosk</h3>
-      <p>{packageName}</p>
+      <p>Hồ sơ đã gửi. Thanh toán để FloraBot tiếp tục xử lý.</p>
       <p>
-        Số tiền: <strong>{Number(annualFee).toLocaleString('vi-VN')} đ</strong> (cho thời hạn 1 năm,
-        tính từ khi bàn giao).
+        Số tiền: <strong>{Number(annualFee).toLocaleString('vi-VN')} đ</strong>
       </p>
 
       {paymentLinkError && (

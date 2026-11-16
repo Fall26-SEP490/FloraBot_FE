@@ -1,8 +1,9 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Button, MapPin } from '@florabot/ui';
+import { Button, CheckCircle2, MapPin } from '@florabot/ui';
 import { ApiError, request, type Session } from '@/shared/lib/api';
 import PayosCheckout from '@/shared/components/PayosCheckout';
 import { validatePayosCheckoutUrl } from '@/shared/lib/payos-checkout';
@@ -11,6 +12,7 @@ import type { KioskApplicationResponse } from '../../../installations/installati
 import type { SellerKioskItem } from '../../../kiosk-management/kiosk-management.types';
 import { ApplicationRentalSummary } from '../../../kiosk-pricing/ApplicationRentalSummary';
 import { rentalMoney } from '../../../kiosk-pricing/kiosk-pricing';
+import { rememberPaymentReturn } from '../../../orders/payment-return';
 import '../../styles/commerce-subscriptions.css';
 
 type SubscriptionOverviewResponse = components['schemas']['SubscriptionOverviewResponse'];
@@ -37,21 +39,27 @@ const subscriptionStatusLabel: Record<string, string> = {
 function KioskRenewalCard({
   kiosk,
   sellerId,
+  userId,
   subscriptions = [],
   subscriptionsReady,
+  returnedRenewalId,
   onRefresh,
 }: {
   kiosk: SellerKioskItem;
   sellerId: string;
+  userId: string;
   subscriptions?: SubscriptionResponse[];
   subscriptionsReady: boolean;
-  onRefresh: () => Promise<unknown>;
+  returnedRenewalId: string | null;
+  onRefresh: () => Promise<SubscriptionResponse[]>;
 }) {
   const [payment, setPayment] = useState<{
     subscriptionId: string;
     data: RenewalPaymentLinkResponse;
   } | null>(null);
-  const [notice, setNotice] = useState('');
+  const [paymentOutcome, setPaymentOutcome] = useState<'confirmed' | 'cancelled' | null>(null);
+  const [openPaymentId, setOpenPaymentId] = useState<string | null>(null);
+  const [issuedRenewalIds, setIssuedRenewalIds] = useState<string[]>([]);
   const renewal = subscriptions.find(
     (s) => s.kioskId === kiosk.id && s.status === 'PENDING_PAYMENT',
   );
@@ -60,6 +68,20 @@ function KioskRenewalCard({
   const currentSub = subscriptions.find(
     (s) => s.kioskId === kiosk.id && (s.status === 'ACTIVE' || s.status === 'PAST_DUE'),
   );
+  const activeReturn = subscriptions.find(
+    (s) => s.kioskId === kiosk.id && s.id === returnedRenewalId,
+  );
+  const card = useRef<HTMLElement>(null);
+  const showingPayment = Boolean(renewal && openPaymentId === renewal.id);
+  const paymentWasOpen = useRef(false);
+  const returned = Boolean(activeReturn);
+  useEffect(() => {
+    if (returned) card.current?.focus();
+  }, [returned]);
+  useEffect(() => {
+    if (paymentWasOpen.current && !showingPayment) card.current?.focus({ preventScroll: true });
+    paymentWasOpen.current = showingPayment;
+  }, [showingPayment]);
 
   const createRenewal = useMutation({
     mutationFn: () =>
@@ -93,7 +115,15 @@ function KioskRenewalCard({
         return;
       }
       setError('');
-      setNotice('');
+      setPaymentOutcome(null);
+      setIssuedRenewalIds((current) =>
+        current.includes(subscriptionId) ? current : [...current, subscriptionId],
+      );
+      rememberPaymentReturn(userId, data.orderCode, {
+        kind: 'renewal',
+        resourceId: subscriptionId,
+        kioskId: kiosk.id,
+      });
       setPayment({ subscriptionId, data: { ...data, checkoutUrl: validation.url } });
     },
     onError: (err: unknown) => {
@@ -104,7 +134,13 @@ function KioskRenewalCard({
   });
 
   return (
-    <article className="subscription-kiosk-card" aria-label={kiosk.name || kiosk.code}>
+    <article
+      id={`renewal-${kiosk.id}`}
+      ref={card}
+      tabIndex={-1}
+      className="subscription-kiosk-card"
+      aria-label={kiosk.name || kiosk.code}
+    >
       <div className="subscription-kiosk-main">
         <div className="subscription-kiosk-badges">
           <span className="subscription-kiosk-code">{kiosk.code}</span>
@@ -116,6 +152,18 @@ function KioskRenewalCard({
           )}
         </div>
         <h3>{kiosk.name}</h3>
+        {activeReturn && (
+          <p role="status">
+            {activeReturn.status === 'ACTIVE' && (
+              <CheckCircle2 className="payos-confirmed-icon" size={16} aria-hidden="true" />
+            )}
+            {activeReturn.status === 'ACTIVE'
+              ? 'Đã thanh toán. Kỳ gia hạn của kiosk đã được cập nhật.'
+              : activeReturn.status === 'PENDING_PAYMENT'
+                ? 'Đang chờ xác nhận thanh toán gia hạn. Nếu đã chuyển khoản, đừng thanh toán lại.'
+                : 'Kỳ thuê này đã kết thúc hoặc không còn chờ thanh toán.'}
+          </p>
+        )}
         {kiosk.address && (
           <p className="subscription-kiosk-address">
             <MapPin size={14} aria-hidden="true" />
@@ -168,7 +216,12 @@ function KioskRenewalCard({
               <Button
                 type="button"
                 disabled={createPaymentLink.isPending}
-                onClick={() => createPaymentLink.mutate(renewal.id)}
+                onClick={() => {
+                  setOpenPaymentId(renewal.id);
+                  setPayment(null);
+                  setError('');
+                  createPaymentLink.mutate(renewal.id);
+                }}
               >
                 {createPaymentLink.isPending ? 'Đang tải mã QR…' : 'Tiếp tục thanh toán'}
               </Button>
@@ -177,33 +230,44 @@ function KioskRenewalCard({
         )}
       </div>
 
-      {renewal && payment?.subscriptionId === renewal.id && (
+      {renewal && showingPayment && (
         <PayosCheckout
-          checkoutUrl={payment.data.checkoutUrl}
-          qrCode={payment.data.qrCode}
-          amount={payment.data.amount}
-          orderCode={payment.data.orderCode}
+          checkoutUrl={payment?.data.checkoutUrl}
+          qrCode={payment?.data.qrCode}
+          amount={payment?.data.amount ?? renewal.price}
+          orderCode={payment?.data.orderCode}
           title="Thanh toán gia hạn kiosk"
           description={kiosk.name || kiosk.code}
-          recipientName={payment.data.recipientName}
-          recipientAccountMasked={payment.data.recipientAccountMasked}
+          recipientName={payment?.data.recipientName}
+          recipientAccountMasked={payment?.data.recipientAccountMasked}
           onRetryQr={() => createPaymentLink.mutate(renewal.id)}
           isLoadingQr={createPaymentLink.isPending}
           qrError={error}
-          onClose={() => {
-            setPayment(null);
-            void onRefresh();
-          }}
-          onRefresh={() => {
-            setNotice(
-              'Đang cập nhật trạng thái từ hệ thống. Thanh toán được xác nhận bởi máy chủ.',
-            );
-            void onRefresh();
+          allowStatusCheck={issuedRenewalIds.includes(renewal.id)}
+          onClose={() => setOpenPaymentId(null)}
+          onRefresh={async () => {
+            const rows = await onRefresh();
+            const updated = rows.find((s) => s.id === renewal.id);
+            if (!updated) throw new Error('Renewal not found');
+            if (updated.status === 'ACTIVE') setPaymentOutcome('confirmed');
+            if (updated.status === 'CANCELLED') setPaymentOutcome('cancelled');
+            return updated.status !== 'PENDING_PAYMENT';
           }}
         />
       )}
-      {notice && <p role="status">{notice}</p>}
-      {error && (
+      {paymentOutcome && (paymentOutcome === 'cancelled' || activeReturn?.id !== openPaymentId) && (
+        <p role="status">
+          {paymentOutcome === 'confirmed' ? (
+            <>
+              <CheckCircle2 className="payos-confirmed-icon" size={16} aria-hidden="true" />
+              Đã thanh toán. Kỳ gia hạn của kiosk đã được cập nhật.
+            </>
+          ) : (
+            'Kỳ gia hạn đã bị hủy. Kiểm tra lịch sử nếu bạn đã chuyển khoản.'
+          )}
+        </p>
+      )}
+      {error && !showingPayment && (
         <p role="alert" className="error subscription-kiosk-error">
           {error}
         </p>
@@ -213,6 +277,7 @@ function KioskRenewalCard({
 }
 
 export default function Subscriptions({ session }: { session: Session }) {
+  const returnedRenewalId = useSearchParams().get('renewalId');
   const application = useQuery({
     queryKey: ['current-kiosk-application', session.id],
     queryFn: async () => {
@@ -242,6 +307,12 @@ export default function Subscriptions({ session }: { session: Session }) {
     queryFn: () =>
       request<SubscriptionOverviewResponse>(`/sellers/${session.sellerId}/subscriptions`),
     enabled: Boolean(session.sellerId),
+    refetchInterval: (q) =>
+      q.state.data?.subscriptions.some(
+        (s) => s.id === returnedRenewalId && s.status === 'PENDING_PAYMENT',
+      )
+        ? 5_000
+        : false,
   });
 
   const subList = subscriptionsQuery.data?.subscriptions ?? [];
@@ -323,9 +394,14 @@ export default function Subscriptions({ session }: { session: Session }) {
                   key={kiosk.id}
                   kiosk={kiosk}
                   sellerId={session.sellerId!}
+                  userId={session.id}
                   subscriptions={subList}
                   subscriptionsReady={subscriptionsQuery.isSuccess}
-                  onRefresh={() => subscriptionsQuery.refetch()}
+                  returnedRenewalId={returnedRenewalId}
+                  onRefresh={async () =>
+                    (await subscriptionsQuery.refetch({ throwOnError: true })).data
+                      ?.subscriptions ?? []
+                  }
                 />
               ))}
             </div>

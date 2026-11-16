@@ -7,6 +7,10 @@ import { QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { Flower2, LogIn, Menu, Phone, X } from '@florabot/ui';
 import { workspaceBase } from '@/features/portal/config/workspaceSections';
 import { getRoleLabel } from '@/features/portal/config/roleRoutes';
+import {
+  sellerShopProfileQuery,
+  shopAccountName,
+} from '@/features/profile/seller-shop-profile.api';
 import { UserMenu, type UserMenuLink } from '@/shared/components/UserMenu';
 import { logoutSession, queryClient, sessionQuery } from '@/shared/lib/api';
 
@@ -58,11 +62,14 @@ function SiteHeader() {
     retryOnMount: false,
     refetchOnWindowFocus: false,
   });
+  const shop = useQuery(sellerShopProfileQuery(session.data));
   const accountLinks: UserMenuLink[] = session.data
     ? [
-        ...(['CUSTOMER', 'SELLER'].includes(session.data.role)
-          ? [{ href: '/tai-khoan', label: 'Tài khoản và hồ sơ', icon: 'profile' as const }]
-          : [{ href: '/ho-so', label: 'Hồ sơ cá nhân', icon: 'profile' as const }]),
+        {
+          href: '/ho-so',
+          label: session.data.role === 'CUSTOMER' ? 'Hồ sơ' : 'Hồ sơ cá nhân',
+          icon: 'profile',
+        },
         ...(session.data.role === 'SELLER'
           ? [{ href: '/seller', label: 'Quản lý shop', icon: 'shop' as const }]
           : session.data.role === 'CUSTOMER'
@@ -74,13 +81,10 @@ function SiteHeader() {
                   icon: 'workspace' as const,
                 },
               ]),
-        ...(['CUSTOMER', 'SELLER'].includes(session.data.role)
+        ...(session.data.role === 'CUSTOMER'
           ? [
-              { href: '/tai-khoan#web-orders', label: 'Đơn đặt trước', icon: 'orders' as const },
-              ...(session.data.role === 'CUSTOMER'
-                ? [{ href: '/tai-khoan#member-chats', label: 'Tin nhắn', icon: 'chats' as const }]
-                : []),
-              { href: '/tai-khoan#member-orders', label: 'Lịch sử mua', icon: 'history' as const },
+              { href: '/tai-khoan#web-orders', label: 'Đơn hàng', icon: 'orders' as const },
+              { href: '/tai-khoan#member-chats', label: 'Tin nhắn', icon: 'chats' as const },
             ]
           : []),
       ]
@@ -200,7 +204,7 @@ function SiteHeader() {
             <UserMenu
               className="site-account"
               menuId="site-user-menu"
-              name={session.data.name}
+              name={shopAccountName(session.data, shop.data)}
               roleLabel={getRoleLabel(session.data.role)}
               links={accountLinks}
               busy={busy}
@@ -257,7 +261,7 @@ const SiteFooter = memo(function SiteFooter() {
           <SiteBrand />
           <p className="footer-brand-desc">
             Nền tảng kết nối shop hoa địa phương và hệ thống tủ kiosk thông minh tự phục vụ. Nhận
-            hoa giả theo lịch hẹn, theo dõi đơn và trao đổi trực tiếp với shop.
+            hoa theo lịch hẹn, theo dõi đơn và trao đổi trực tiếp với shop.
           </p>
         </div>
         <div className="footer-col">

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { chooseVietnamBank } from '../fixtures/vietnam-bank';
 
 const customer = {
   id: 'e0100000-0000-0000-0000-000000000001',
@@ -18,6 +19,16 @@ const trial = {
   termMonths: 12,
   status: 'ACTIVE',
   description: 'Gói một năm từ khi bàn giao.',
+};
+const pricing = {
+  configured: true,
+  version: 1,
+  walkInAnnualPrice: 5000,
+  preorderAnnualPrice: 5000,
+  updatedAt: null,
+  termMonths: 12,
+  minSlots: 1,
+  maxSlots: 50,
 };
 const application = {
   id: 'e0200000-0000-0000-0000-000000000001',
@@ -101,7 +112,7 @@ async function mockCustomer(
     const request = route.request();
     const path = new URL(request.url()).pathname;
     if (path === '/api/auth/me') return route.fulfill({ json: customer });
-    if (path === '/api/kiosk-packages') return route.fulfill({ json: [trial] });
+    if (path === '/api/kiosk-packages') return route.fulfill({ json: pricing });
     if (path === '/api/member/kiosk-applications/current') {
       return options.hasApplication === false && calls.create === 0
         ? route.fulfill({ status: 404, json: {} })
@@ -129,35 +140,10 @@ test.describe('Coordinator onboarding acceptance boundaries', () => {
   for (const width of [390, 1024]) {
     test(`annual package layout is usable at ${width}px`, async ({ page }, testInfo) => {
       await mockCustomer(page, { hasApplication: false });
-      await page.route('**/api/kiosk-packages', (route) =>
-        route.fulfill({
-          json: [
-            trial,
-            {
-              ...trial,
-              id: '20000000-0000-0000-0000-00000000000d',
-              name: 'Pro',
-              annualFee: 15000,
-              walkInSlots: 4,
-              preorderSlots: 4,
-              totalSlots: 8,
-            },
-            {
-              ...trial,
-              id: '20000000-0000-0000-0000-00000000000e',
-              name: 'Max',
-              annualFee: 20000,
-              walkInSlots: 6,
-              preorderSlots: 6,
-              totalSlots: 12,
-            },
-          ],
-        }),
-      );
       await page.setViewportSize({ width, height: 900 });
       await page.goto('/thue-kiosk');
-      await expect(page.getByRole('radio')).toHaveCount(3);
-      await expect(page.getByText('Max', { exact: true })).toBeVisible();
+      await expect(page.getByRole('spinbutton')).toHaveCount(2);
+      await page.getByRole('button', { name: 'Chọn trên bản đồ', exact: true }).click();
       const map = page.getByRole('region', {
         name: 'Bản đồ chọn tọa độ lắp đặt kiosk',
         exact: true,
@@ -198,8 +184,9 @@ test.describe('Coordinator onboarding acceptance boundaries', () => {
       const popups: Page[] = [];
       page.on('popup', (popup) => popups.push(popup));
       await page.getByRole('button', { name: 'Thanh toán phí thuê', exact: true }).click();
-      await expect(page.locator('.kiosk-onboarding-container').getByRole('alert')).toBeVisible();
-      await expect(page.getByRole('link', { name: /Mở trang thanh toán/ })).toHaveCount(0);
+      const dialog = page.getByRole('dialog', { name: 'Thanh toán phí thuê kiosk' });
+      await expect(dialog.getByRole('alert')).toBeVisible();
+      await expect(dialog.getByRole('link')).toHaveCount(0);
       expect(page.url()).toBe(currentUrl);
       expect(popups).toHaveLength(0);
     });
@@ -251,12 +238,12 @@ test.describe('Coordinator onboarding acceptance boundaries', () => {
     await mockGoongPlaces(page, 0, 0);
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/thue-kiosk');
-    await page.getByRole('radio').click();
+    await page.getByRole('checkbox', { name: /Tôi đã kiểm tra số ô/ }).check();
     await page.getByLabel('Tên shop hoa').fill('Shop kiểm thử');
     await page.getByLabel('Số điện thoại kinh doanh').fill('0901234567');
     await page.getByLabel('Email liên hệ công việc').fill('shop@example.invalid');
     await selectAddressSuggestion(page, 'Địa chỉ kiểm thử không có thiết bị thật');
-    await page.getByLabel('Tên ngân hàng').fill('Ngân hàng kiểm thử');
+    await chooseVietnamBank(page, 'Tên ngân hàng', 'VCB', 'Ngoại thương Việt Nam');
     await page.getByLabel('Tên chủ tài khoản').fill('NGUOI KIEM THU');
     await page.getByLabel('Số tài khoản ngân hàng').fill('00123456');
     // Editing address after selecting suggestion invalidates coordinates and blocks submit
@@ -280,7 +267,7 @@ test.describe('Coordinator onboarding acceptance boundaries', () => {
     await page.route('**/api/**', async (route) => {
       const path = new URL(route.request().url()).pathname;
       if (path === '/api/auth/me') return route.fulfill({ json: customer });
-      if (path === '/api/kiosk-packages') return route.fulfill({ json: [trial] });
+      if (path === '/api/kiosk-packages') return route.fulfill({ json: pricing });
       if (path === '/api/member/kiosk-applications/current') {
         attempts++;
         if (attempts === 1) {
@@ -317,7 +304,7 @@ test.describe('Coordinator onboarding acceptance boundaries', () => {
       const request = route.request();
       const path = new URL(request.url()).pathname;
       if (path === '/api/auth/me') return route.fulfill({ json: customer });
-      if (path === '/api/kiosk-packages') return route.fulfill({ json: [trial] });
+      if (path === '/api/kiosk-packages') return route.fulfill({ json: pricing });
       if (path === '/api/member/kiosk-applications/current') {
         return route.fulfill({ json: createdApp || refundedApp });
       }
@@ -342,13 +329,12 @@ test.describe('Coordinator onboarding acceptance boundaries', () => {
     ).toBeVisible();
     await expect(page.locator('.kiosk-last-app-panel details')).toBeVisible();
 
-    await expect(page.getByRole('radio')).toBeVisible();
-    await page.getByRole('radio').click();
+    await page.getByRole('checkbox', { name: /Tôi đã kiểm tra số ô/ }).check();
     await page.getByLabel('Tên shop hoa').fill('Shop Tái Đăng Ký Sau Hoàn Tiền');
     await page.getByLabel('Số điện thoại kinh doanh').fill('0908889999');
     await page.getByLabel('Email liên hệ công việc').fill('reapply@example.invalid');
     await selectAddressSuggestion(page, '999 Đường Lê Lợi, Quận 1');
-    await page.getByLabel('Tên ngân hàng').fill('Vietcombank');
+    await chooseVietnamBank(page, 'Tên ngân hàng', 'Vietcombank', 'Ngoại thương Việt Nam');
     await page.getByLabel('Tên chủ tài khoản').fill('NGUYEN HOAN TIEN');
     await page.getByLabel('Số tài khoản ngân hàng').fill('001122334455');
     await page.getByRole('button', { name: 'Nộp hồ sơ thuê kiosk' }).click();
@@ -375,7 +361,7 @@ test.describe('Coordinator onboarding acceptance boundaries', () => {
       const request = route.request();
       const path = new URL(request.url()).pathname;
       if (path === '/api/auth/me') return route.fulfill({ json: customer });
-      if (path === '/api/kiosk-packages') return route.fulfill({ json: [trial] });
+      if (path === '/api/kiosk-packages') return route.fulfill({ json: pricing });
       if (path === '/api/member/kiosk-applications/current') {
         return route.fulfill({ json: appState });
       }
@@ -419,7 +405,7 @@ test.describe('Coordinator onboarding acceptance boundaries', () => {
       const request = route.request();
       const path = new URL(request.url()).pathname;
       if (path === '/api/auth/me') return route.fulfill({ json: currentSession });
-      if (path === '/api/kiosk-packages') return route.fulfill({ json: [trial] });
+      if (path === '/api/kiosk-packages') return route.fulfill({ json: pricing });
       if (path === '/api/member/kiosk-applications/current') {
         const app = currentSession.id === 'user-aaa-111' ? appForUserA : appForUserB;
         if (!app) return route.fulfill({ status: 404, json: {} });
@@ -446,12 +432,12 @@ test.describe('Coordinator onboarding acceptance boundaries', () => {
 
     await mockGoongPlaces(page, 10.771, 106.701);
     await page.goto('/thue-kiosk');
-    await page.getByRole('radio').click();
+    await page.getByRole('checkbox', { name: /Tôi đã kiểm tra số ô/ }).check();
     await page.getByLabel('Tên shop hoa').fill('Shop Riêng Của User A');
     await page.getByLabel('Số điện thoại kinh doanh').fill('0901112222');
     await page.getByLabel('Email liên hệ công việc').fill('usera@example.invalid');
     await selectAddressSuggestion(page, '111 Đường A, Phường 1, Quận 1');
-    await page.getByLabel('Tên ngân hàng').fill('VCB');
+    await chooseVietnamBank(page, 'Tên ngân hàng', 'VCB', 'Ngoại thương Việt Nam');
     await page.getByLabel('Tên chủ tài khoản').fill('USER A');
     await page.getByLabel('Số tài khoản ngân hàng').fill('111222333');
     await page.getByRole('button', { name: 'Nộp hồ sơ thuê kiosk' }).click();

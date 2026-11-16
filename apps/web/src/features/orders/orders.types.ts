@@ -1,3 +1,8 @@
+import type { components } from '../../../../../packages/contracts/src/generated/api';
+
+export type RequestedPreorderAccessory = components['schemas']['RequestedPreorderAccessory'];
+export type QuotedPreorderAccessory = components['schemas']['QuotedPreorderAccessory'];
+
 export type WebOrder = {
   id: string;
   kind: 'CUSTOM' | 'STOCK';
@@ -9,6 +14,11 @@ export type WebOrder = {
   pickupAt: string;
   pickupBefore: string;
   quotedPrice: number | null;
+  quotedFlowerPrice?: number | string | null;
+  quotedAccessoryTotal?: number | string;
+  quoteVersion?: number | string;
+  requestedAccessories?: RequestedPreorderAccessory[];
+  quotedAccessories?: QuotedPreorderAccessory[];
   quoteNote: string | null;
   quoteExpiresAt: string | null;
   orderId: string | null;

@@ -82,6 +82,13 @@ for (const width of [390, 1440]) {
     await expect(page.getByText('Tổng công việc', { exact: true })).toHaveCount(0);
     const disclosure = page.locator('.technician-task-body > summary');
     await expect(disclosure).toContainText('Bắt đầu xử lý');
+    await expect(page.getByLabel('Lọc trạng thái', { exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Chỉ đường Google Maps' })).toHaveAttribute(
+      'href',
+      /google.com\/maps\/dir\/.*destination=/,
+    );
+    const initialAction = await disclosure.boundingBox();
+    expect(initialAction!.y + initialAction!.height).toBeLessThanOrEqual(844);
     await disclosure.click();
     await page
       .getByLabel('Nội dung cập nhật', { exact: true })

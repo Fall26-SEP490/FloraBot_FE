@@ -1,8 +1,16 @@
 import { catalogQueryKeys, catalogReturnPath } from '@/features/catalog/catalog.navigation';
 import { accountPath } from '@/features/portal/config/roleRoutes';
+import { validPaymentCode } from '@/features/orders/payment-return';
 
 export function postLoginPath(role: string, search: string): string {
   const target = new URLSearchParams(search).get('returnUrl');
+  if (target === '/thue-kiosk' && (role === 'CUSTOMER' || role === 'SELLER')) return target;
+  if ((role === 'CUSTOMER' || role === 'SELLER') && target?.startsWith('/tai-khoan?')) {
+    const code = validPaymentCode(
+      new URLSearchParams(target.slice('/tai-khoan?'.length)).get('orderCode'),
+    );
+    if (code) return `/tai-khoan?orderCode=${code}`;
+  }
   if (role === 'CUSTOMER' && target) {
     // Explicit account destinations only. Query identifiers are validated, hashes are allowlisted.
     const account =

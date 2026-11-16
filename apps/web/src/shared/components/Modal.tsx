@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { useEffect, useEffectEvent, useId, useRef, type ReactNode } from 'react';
 import { X } from '@florabot/ui';
 // Modal foundation styles are provided globally via site.css (@import './modal.css')
 
@@ -31,6 +31,7 @@ export function Modal({
   const titleId = useId();
   const descriptionId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
+  const closeOnEscape = useEffectEvent(() => onClose());
 
   useEffect(() => {
     if (!open) return;
@@ -46,7 +47,7 @@ export function Modal({
       if (event.key === 'Escape' && !closeDisabled) {
         event.preventDefault();
         event.stopPropagation();
-        onClose();
+        closeOnEscape();
         return;
       }
       if (event.key !== 'Tab' || !panel) return;
@@ -76,7 +77,7 @@ export function Modal({
       }
       previousFocus?.focus();
     };
-  }, [closeDisabled, onClose, open]);
+  }, [closeDisabled, open]);
 
   if (!open) return null;
   return (

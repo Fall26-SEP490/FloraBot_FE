@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test';
-import { mockPayos } from './payos.fixture';
 
 for (const role of ['CUSTOMER', 'SELLER']) {
   for (const width of [390, 1440]) {
@@ -7,7 +6,6 @@ for (const role of ['CUSTOMER', 'SELLER']) {
       page,
     }) => {
       await page.setViewportSize({ width, height: 900 });
-      await mockPayos(page);
       const application = {
         id: '70000000-0000-0000-0000-000000000001',
         shopName: 'Shop kiểm thử',
@@ -28,6 +26,7 @@ for (const role of ['CUSTOMER', 'SELLER']) {
         canVoluntaryCancel: true,
       };
       let links = 0;
+      let failLink = false;
       let reconciles = 0;
       await page.route('**/hub/**', (route) => route.abort());
       await page.route('**/api/**', async (route) => {
@@ -44,13 +43,19 @@ for (const role of ['CUSTOMER', 'SELLER']) {
           });
         if (path.endsWith('/payment-link')) {
           links++;
+          if (failLink) return route.fulfill({ status: 503, json: {} });
           await new Promise((resolve) => setTimeout(resolve, 250));
           return route.fulfill({
-            json: { checkoutUrl: 'https://pay.payos.vn/web/rental-test', orderCode: 123456 },
+            json: {
+              checkoutUrl: 'https://pay.payos.vn/web/rental-test',
+              orderCode: 123456,
+              qrCode: '000201TEST-RENTAL',
+            },
           });
         }
         if (path.endsWith('/reconcile')) {
           reconciles++;
+          await new Promise((resolve) => setTimeout(resolve, 350));
           return route.fulfill({ json: application });
         }
         if (path === '/api/member/kiosk-applications/current')
@@ -72,23 +77,38 @@ for (const role of ['CUSTOMER', 'SELLER']) {
       await page.goto('/thue-kiosk');
       await page.getByRole('button', { name: 'Thanh toán phí thuê', exact: true }).click();
       const dialog = page.getByRole('dialog', { name: 'Thanh toán phí thuê kiosk' });
-      await expect(dialog.getByTitle('Thanh toán bảo mật qua PayOS')).toBeVisible();
-      await expect(dialog).toContainText(/40\.000\s*[đ₫]/);
+      await expect(dialog.getByRole('img', { name: 'Mã QR thanh toán PayOS' })).toBeVisible();
+      await expect(dialog).toContainText(/40[.,]000\s*[đ₫]/);
       expect(links).toBe(1);
       expect(page.context().pages()).toHaveLength(1);
+      if (role === 'CUSTOMER' && width === 390) {
+        await dialog.getByRole('button', { name: 'Đóng', exact: true }).click();
+        failLink = true;
+        await page.getByRole('button', { name: 'Thanh toán phí thuê', exact: true }).click();
+        await expect(dialog.getByRole('alert')).toBeVisible();
+        await expect(dialog.getByRole('img', { name: 'Mã QR thanh toán PayOS' })).toHaveCount(0);
+        await expect(
+          dialog.getByRole('button', { name: 'Kiểm tra thanh toán', exact: true }),
+        ).toBeVisible();
+      }
       await expect(page).toHaveURL(/thue-kiosk$/);
       await dialog.getByRole('button', { name: 'Kiểm tra thanh toán', exact: true }).click();
+      await expect(dialog.getByRole('button', { name: 'Đang kiểm tra…' })).toBeDisabled();
+      await expect(dialog.getByText(/đừng thanh toán lại/)).toBeVisible();
       expect(reconciles).toBe(1);
       await expect(page.getByRole('heading', { name: 'Đã thanh toán thành công' })).toHaveCount(0);
       application.status = 'PAID_REVIEW';
-      await page.evaluate(() =>
-        (
-          window as unknown as { payosTestConfig: { onSuccess: () => void } }
-        ).payosTestConfig.onSuccess(),
-      );
+      await dialog.getByRole('button', { name: 'Kiểm tra thanh toán', exact: true }).click();
       await expect(dialog).toHaveCount(0);
       await expect(page.getByRole('heading', { name: 'Đã thanh toán thành công' })).toBeVisible();
-      expect(links).toBe(1);
+      expect(links).toBe(role === 'CUSTOMER' && width === 390 ? 2 : 1);
+      if (width === 390) {
+        await page.goto('/tai-khoan?orderCode=123456&status=CANCELLED');
+        await expect(page).toHaveURL(
+          new RegExp(`/thue-kiosk\\?applicationId=${application.id}.*#rental-application`),
+        );
+        await expect(page.getByRole('heading', { name: 'Đã thanh toán thành công' })).toBeVisible();
+      }
     });
   }
 }

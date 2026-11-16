@@ -1,3 +1,4 @@
+import { fillPickup } from '../fixtures/quotation';
 import { expect, test, type Page } from '@playwright/test';
 import { randomBytes, randomInt, randomUUID } from 'node:crypto';
 import {
@@ -57,17 +58,16 @@ test.describe('FloraBot Role Workflows Integration', () => {
     const catalogItem1 = page.locator('.flower-catalog li').filter({ hasText: fixture.flowerName });
     await catalogItem1.getByRole('button', { name: 'Chọn mẫu và cách nhận' }).click();
 
-    await page.getByLabel('Thời gian mong muốn nhận hoa').fill(pickupStr);
+    await fillPickup(page, pickupStr);
     await page
-      .getByLabel('Dịp tặng, màu hoa, ngân sách và lời nhắn')
+      .getByLabel('Bạn muốn bó hoa như thế nào?')
       .fill('Hoa lụa vàng đồng chúc mừng khai trương sang trọng, ngân sách 500.000 đ');
-    await page.getByRole('checkbox').check();
 
     const preorder1Req = page.waitForResponse(
       (response) =>
         response.url().endsWith('/api/member/preorders') && response.request().method() === 'POST',
     );
-    await page.getByRole('button', { name: 'Gửi yêu cầu để shop báo giá', exact: true }).click();
+    await page.getByRole('button', { name: 'Gửi yêu cầu báo giá', exact: true }).click();
     const preorder1Res = await preorder1Req;
     expect(preorder1Res.status()).toBe(200);
     const preorder1Id = ((await preorder1Res.json()) as { result: string }).result;
@@ -81,17 +81,16 @@ test.describe('FloraBot Role Workflows Integration', () => {
     const catalogItem2 = page.locator('.flower-catalog li').filter({ hasText: fixture.flowerName });
     await catalogItem2.getByRole('button', { name: 'Chọn mẫu và cách nhận' }).click();
 
-    await page.getByLabel('Thời gian mong muốn nhận hoa').fill(pickupStr);
+    await fillPickup(page, pickupStr);
     await page
-      .getByLabel('Dịp tặng, màu hoa, ngân sách và lời nhắn')
+      .getByLabel('Bạn muốn bó hoa như thế nào?')
       .fill('Đơn hoa mẫu riêng thứ hai để kiểm tra từ chối báo giá');
-    await page.getByRole('checkbox').check();
 
     const preorder2Req = page.waitForResponse(
       (response) =>
         response.url().endsWith('/api/member/preorders') && response.request().method() === 'POST',
     );
-    await page.getByRole('button', { name: 'Gửi yêu cầu để shop báo giá', exact: true }).click();
+    await page.getByRole('button', { name: 'Gửi yêu cầu báo giá', exact: true }).click();
     const preorder2Res = await preorder2Req;
     expect(preorder2Res.status()).toBe(200);
     const preorder2Id = ((await preorder2Res.json()) as { result: string }).result;
@@ -105,17 +104,16 @@ test.describe('FloraBot Role Workflows Integration', () => {
     const catalogItem3 = page.locator('.flower-catalog li').filter({ hasText: fixture.flowerName });
     await catalogItem3.getByRole('button', { name: 'Chọn mẫu và cách nhận' }).click();
 
-    await page.getByLabel('Thời gian mong muốn nhận hoa').fill(pickupStr);
+    await fillPickup(page, pickupStr);
     await page
-      .getByLabel('Dịp tặng, màu hoa, ngân sách và lời nhắn')
+      .getByLabel('Bạn muốn bó hoa như thế nào?')
       .fill('Đơn hoa mẫu riêng thứ ba để kiểm tra khách tự hủy yêu cầu');
-    await page.getByRole('checkbox').check();
 
     const preorder3Req = page.waitForResponse(
       (response) =>
         response.url().endsWith('/api/member/preorders') && response.request().method() === 'POST',
     );
-    await page.getByRole('button', { name: 'Gửi yêu cầu để shop báo giá', exact: true }).click();
+    await page.getByRole('button', { name: 'Gửi yêu cầu báo giá', exact: true }).click();
     const preorder3Res = await preorder3Req;
     expect(preorder3Res.status()).toBe(200);
     const preorder3Id = ((await preorder3Res.json()) as { result: string }).result;
@@ -161,10 +159,10 @@ test.describe('FloraBot Role Workflows Integration', () => {
       .filter({ hasText: preorder1Id.slice(0, 8) });
     await sellerRow1.locator('summary').click();
     await sellerRow1.getByRole('button', { name: 'Báo giá hoặc từ chối' }).click();
-    await sellerRow1.getByLabel('Giá trọn gói (đồng)').fill('500000');
+    await sellerRow1.getByLabel('Giá bó hoa (đồng)').fill('500000');
     await sellerRow1.getByLabel('Giờ bắt đầu nhận').fill(pickupStr);
     await sellerRow1
-      .getByLabel('Mô tả mẫu hoa, điều kiện hoặc lý do từ chối')
+      .getByLabel('Ghi chú cho khách')
       .fill('Shop đồng ý thực hiện hoa lụa vàng đồng theo yêu cầu');
     await sellerRow1.getByLabel('Tôi đã đối chiếu và xác nhận thông tin trên.').check();
 
@@ -173,7 +171,7 @@ test.describe('FloraBot Role Workflows Integration', () => {
         response.url().includes(`/preorders/${preorder1Id}/quote`) &&
         response.request().method() === 'POST',
     );
-    await sellerRow1.getByRole('button', { name: 'Xác nhận gửi' }).click();
+    await sellerRow1.getByRole('button', { name: 'Gửi báo giá' }).click();
     expect((await quoteReq).status()).toBe(200);
     await expect(sellerRow1.locator('summary')).toContainText('Đã có báo giá');
 
@@ -185,7 +183,7 @@ test.describe('FloraBot Role Workflows Integration', () => {
     await sellerRow2.getByRole('button', { name: 'Báo giá hoặc từ chối' }).click();
     await sellerRow2.getByLabel('Shop chưa thể nhận đơn này').check();
     await sellerRow2
-      .getByLabel('Mô tả mẫu hoa, điều kiện hoặc lý do từ chối')
+      .getByLabel('Lý do từ chối')
       .fill('Shop hiện đã hết phụ kiện và bình cho mẫu hoa lụa này');
     await sellerRow2.getByLabel('Tôi đã đối chiếu và xác nhận thông tin trên.').check();
 
@@ -194,7 +192,7 @@ test.describe('FloraBot Role Workflows Integration', () => {
         response.url().includes(`/preorders/${preorder2Id}/quote`) &&
         response.request().method() === 'POST',
     );
-    await sellerRow2.getByRole('button', { name: 'Xác nhận gửi' }).click();
+    await sellerRow2.getByRole('button', { name: 'Xác nhận từ chối' }).click();
     expect((await rejectReq).status()).toBe(200);
     await expect(sellerRow2.locator('summary')).toContainText('Shop chưa thể nhận đơn');
 
@@ -231,7 +229,7 @@ test.describe('FloraBot Role Workflows Integration', () => {
     ).toContainText('500.000 đ');
 
     // Customer accepts the quote to transition to AWAITING_PAYMENT (pending-payment)
-    await custRow1.getByRole('button', { name: 'Kiểm tra báo giá' }).click();
+    await custRow1.getByRole('button', { name: 'Xác nhận báo giá' }).click();
     await custRow1.getByLabel('Tôi đồng ý với giá, ghi chú và lịch nhận của shop.').check();
 
     const acceptReq = page.waitForResponse(
@@ -507,9 +505,9 @@ test.describe('FloraBot Role Workflows Integration', () => {
     await expect(staffDeliveryCard.locator('.staff-task-label')).toHaveText('Chờ bắt đầu');
 
     // Transition 1 -> 2: ASSIGNED -> IN_PROGRESS
-    await staffDeliveryCard.getByLabel('Bước tiếp theo').selectOption('IN_PROGRESS');
+    await staffDeliveryCard.getByRole('button', { name: 'Mở công việc' }).click();
     await staffDeliveryCard
-      .getByLabel('Nội dung cập nhật')
+      .getByLabel('Ghi chú khi bắt đầu')
       .fill('Bắt đầu quy trình giao hoa thử nghiệm theo phân công.');
 
     const startDeliveryReq = page.waitForResponse(
@@ -522,9 +520,9 @@ test.describe('FloraBot Role Workflows Integration', () => {
     await expect(staffDeliveryCard.locator('.staff-task-label')).toHaveText('Đang thực hiện');
 
     // Transition 2 -> 3: IN_PROGRESS -> SUBMITTED (simulated delivery report; does not assert stock happened)
-    await staffDeliveryCard.getByLabel('Bước tiếp theo').selectOption('SUBMITTED');
+    await staffDeliveryCard.getByText('Viết báo cáo', { exact: true }).click();
     await staffDeliveryCard
-      .getByLabel('Nội dung cập nhật')
+      .getByLabel('Kết quả công việc')
       .fill('Báo cáo giao hoa thử nghiệm: đã hoàn thành giao hoa và kiểm tra vị trí tủ.');
 
     const submitDeliveryReq = page.waitForResponse(

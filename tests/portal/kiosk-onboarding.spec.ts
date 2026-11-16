@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { chooseVietnamBank } from '../fixtures/vietnam-bank';
 import AxeBuilder from '@axe-core/playwright';
 import { mockPayos } from './payos.fixture';
 
@@ -193,7 +194,7 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/thue-kiosk');
 
-    await expect(page.getByRole('heading', { name: 'Cấu hình kiosk của bạn' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Chọn số ô muốn thuê' })).toBeVisible();
 
     // Accessibility check on catalog & form
     const a11yResult = await new AxeBuilder({ page })
@@ -214,12 +215,13 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     await page.getByLabel('Tên shop hoa').fill('Tiệm Hoa Xinh');
     await page.getByLabel('Số điện thoại kinh doanh').fill('0901234567');
     await page.getByLabel('Email liên hệ công việc').fill('contact@tiemhoaxinh.vn');
-    await page.getByLabel('Tên ngân hàng').fill('Vietcombank');
+    await chooseVietnamBank(page, 'Tên ngân hàng', 'Vietcombank', 'Ngoại thương Việt Nam');
     await page.getByLabel('Tên chủ tài khoản').fill('NGUYEN VAN A');
     await page.getByLabel('Số tài khoản ngân hàng').fill('0071001234567');
 
     const addressInput = page.getByRole('combobox', { name: /Địa chỉ lắp đặt cụ thể/ });
     const mapRegion = page.getByRole('region', { name: 'Bản đồ chọn tọa độ lắp đặt kiosk' });
+    await expect(mapRegion).toHaveCount(0);
 
     // 1. Loading & Error states on Goong Autocomplete
     autocompleteMode = 'error';
@@ -235,19 +237,22 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     await expect(
       page.getByText('Không tìm thấy địa chỉ phù hợp. Vui lòng thử từ khóa chi tiết hơn.'),
     ).toBeVisible();
+    await page.getByRole('button', { name: 'Ghim thủ công trên bản đồ' }).click();
+    await expect(mapRegion).toBeVisible();
+    await page.getByRole('button', { name: 'Thu gọn bản đồ' }).click();
 
-    // Click submit with unselected address & blank coordinates
+    // An address without a pin cannot be sent.
     await page.getByRole('button', { name: 'Nộp hồ sơ thuê kiosk' }).click();
-    await expect(
-      page.getByText('Vui lòng chọn một địa chỉ từ danh sách gợi ý của Goong.'),
-    ).toBeVisible();
-    await expect(page.getByText('ô trống không đồng nghĩa với 0')).toBeVisible();
+    const mapToggle = page.getByRole('button', { name: 'Chọn trên bản đồ' });
+    await expect(mapToggle).toHaveAccessibleDescription(/Chưa ghim vị trí lắp đặt/);
+    await expect(mapToggle).toBeFocused();
 
     // 3. Keyboard navigation (ArrowDown, Escape, Enter) & Suggestion Selection
+    await page.mouse.move(0, 0);
     autocompleteMode = 'ok';
     await addressInput.fill('123 Nguyễn Huệ');
     const listbox = page.getByRole('listbox', { name: 'Gợi ý địa chỉ Goong' });
-    await expect(listbox).toBeVisible();
+    await expect(listbox.getByRole('option')).toHaveCount(2);
 
     await addressInput.press('Escape');
     await expect(listbox).toHaveCount(0);
@@ -255,39 +260,31 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     await addressInput.press('ArrowDown');
     await expect(listbox).toBeVisible();
     await addressInput.press('ArrowDown');
+    await expect(listbox.getByRole('option').nth(1)).toHaveAttribute('aria-selected', 'true');
     await addressInput.press('Enter');
 
     await expect(addressInput).toHaveValue('125 Nguyễn Huệ, Bến Nghé, Quận 1, TP.HCM');
+    await expect(page.getByText('Đã ghim vị trí', { exact: true })).toBeVisible();
+    await expect(mapRegion).toHaveCount(0);
+    await page.getByRole('button', { name: 'Kiểm tra vị trí trên bản đồ' }).click();
     await expect(mapRegion).toHaveAttribute('data-has-pin', 'true');
     await expect(mapRegion).toHaveAttribute('data-pin-lat', '10.775123');
     await expect(mapRegion).toHaveAttribute('data-pin-lon', '106.701456');
-    await expect(
-      page.getByText('Đã chọn địa chỉ gợi ý và cập nhật ghim vị trí trên bản đồ.'),
-    ).toBeVisible();
 
-    // 4. Editing address after selecting suggestion clears coordinates & pin and requires re-selecting
+    // 4. Editing the address clears the pin.
     await addressInput.fill('123 Nguyễn Huệ sửa tay');
     await expect(mapRegion).toHaveAttribute('data-has-pin', 'false');
-    await expect(
-      page.getByText(
-        'Bạn vừa chỉnh sửa địa chỉ. Vui lòng chọn lại một gợi ý từ danh sách để xác nhận tọa độ.',
-      ),
-    ).toBeVisible();
+    await expect(page.getByText('Địa chỉ đã đổi. Vui lòng ghim lại vị trí.')).toBeVisible();
     await page.getByRole('button', { name: 'Nộp hồ sơ thuê kiosk' }).click();
-    await expect(
-      page.getByText('Vui lòng chọn một địa chỉ từ danh sách gợi ý của Goong.'),
-    ).toBeVisible();
+    await expect(page.locator('.kiosk-map-picker-block').getByRole('alert')).toContainText(
+      'Chưa ghim vị trí lắp đặt',
+    );
     expect(submittedPayload).toBeNull();
 
-    // Re-select first suggestion ("123 Nguyễn Huệ, Bến Nghé, Quận 1, TP.HCM")
-    await addressInput.fill('123 Nguyễn');
-    await expect(listbox).toBeVisible();
-    await listbox.getByRole('option').first().click();
-    await expect(addressInput).toHaveValue('123 Nguyễn Huệ, Bến Nghé, Quận 1, TP.HCM');
-    await expect(mapRegion).toHaveAttribute('data-pin-lat', '10.776889');
-    await expect(mapRegion).toHaveAttribute('data-pin-lon', '106.700806');
+    await page.getByRole('button', { name: 'Thu gọn bản đồ' }).click();
+    await mapToggle.click();
 
-    // 5. Overlaid GPS button updates marker while keeping current selected address
+    // 5. GPS supplies the pin for a manually entered address.
     await page.context().grantPermissions(['geolocation']);
     await page.context().setGeolocation({ latitude: 10.779999, longitude: 106.699888 });
     const gpsBtn = page.getByRole('button', { name: 'Dùng vị trí hiện tại' });
@@ -295,7 +292,7 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     await gpsBtn.click();
     await expect(mapRegion).toHaveAttribute('data-pin-lat', '10.779999');
     await expect(mapRegion).toHaveAttribute('data-pin-lon', '106.699888');
-    await expect(addressInput).toHaveValue('123 Nguyễn Huệ, Bến Nghé, Quận 1, TP.HCM');
+    await expect(addressInput).toHaveValue('123 Nguyễn Huệ sửa tay');
     await expect(
       page.getByText(
         'Đã cập nhật ghim bản đồ theo vị trí hiện tại. Địa chỉ đang chọn được giữ nguyên.',
@@ -316,7 +313,7 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     // Submit form successfully
     await page.getByRole('button', { name: 'Nộp hồ sơ thuê kiosk' }).click();
     expect(submittedPayload).toMatchObject({
-      installationAddress: '123 Nguyễn Huệ, Bến Nghé, Quận 1, TP.HCM',
+      installationAddress: '123 Nguyễn Huệ sửa tay',
       latitude: 10.779999,
       longitude: 106.699888,
     });
@@ -324,20 +321,24 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     // Verify Application Status Timeline rendered
     await expect(page.getByText('Hồ sơ thuê: Tiệm Hoa Xinh')).toBeVisible();
     await expect(page.getByText('Chờ thanh toán phí thuê')).toBeVisible();
+    await expect(
+      page.getByText('Hồ sơ đã gửi. Thanh toán để FloraBot tiếp tục xử lý.'),
+    ).toBeVisible();
 
     // Test Payment link 503 handling:
     await page.getByRole('button', { name: 'Thanh toán phí thuê' }).click();
-    await expect(page.getByText('Cổng thanh toán payOS đang bảo trì')).toBeVisible();
+    const checkout = page.getByRole('dialog', { name: 'Thanh toán phí thuê kiosk' });
+    await expect(checkout.getByRole('alert')).toContainText('Cổng thanh toán payOS đang bảo trì');
 
     await mockPayos(page);
     // Retry opens the checkout immediately after the payment-link response.
-    await page.getByRole('button', { name: 'Thanh toán phí thuê' }).click();
+    await checkout.getByRole('button', { name: 'Tải lại mã QR' }).click();
     await expect(
       page
         .getByRole('dialog', { name: 'Thanh toán phí thuê kiosk' })
         .getByRole('img', { name: 'Mã QR thanh toán PayOS' }),
     ).toBeVisible();
-    await expect(page.locator('a[href^="https://pay.payos.vn"]')).toHaveCount(0);
+    await expect(checkout.getByRole('link')).toHaveCount(0);
 
     // Test Server Reconciliation:
     await page

@@ -5,6 +5,45 @@ const kioskId = '40000000-0000-0000-0000-000000000001';
 const productId = '30000000-0000-0000-0000-000000000001';
 const slotId = '40000000-0000-0000-0001-000000000001';
 
+for (const width of [390, 1440]) {
+  test(`Created draft stays visible after twelve older drafts at ${width}`, async ({ page }) => {
+    const state = await fixture(page);
+    await page.setViewportSize({ width, height: 844 });
+    const old = Array.from({ length: 12 }, (_, i) => ({
+      id: `old-${i}`,
+      name: `Mẫu cũ ${i}`,
+      status: 'DRAFT',
+      price: 120000,
+      tags: [],
+    }));
+    await page.route('**/api/me/products', (route) =>
+      route.request().method() !== 'GET'
+        ? route.fallback()
+        : route.fulfill({
+            json: [
+              ...old,
+              ...(state.writes.length
+                ? [{ id: productId, name: 'Hoa mới', status: 'DRAFT', price: 350000, tags: [] }]
+                : []),
+            ],
+          }),
+    );
+    await page.goto('/seller/products');
+    await page.getByRole('button', { name: 'Thêm mẫu hoa', exact: true }).click();
+    const form = page.getByRole('form', { name: 'Thêm mẫu hoa mới' });
+    await form.getByLabel('Tên mẫu hoa', { exact: true }).fill('Hoa mới');
+    await form.getByLabel('Giá bán niêm yết (VNĐ)', { exact: true }).fill('350000');
+    for (const dimension of ['Dài (cm)', 'Rộng (cm)', 'Cao (cm)']) {
+      await form.getByLabel(dimension, { exact: true }).fill('30');
+    }
+    await form.locator('button[type="submit"]').click();
+    const card = page.locator(`#product-created-${productId}`);
+    await expect(card).toHaveAttribute('open', '');
+    await expect(card).toBeFocused();
+    await expect(card.locator('summary')).toBeInViewport();
+  });
+}
+
 async function fixture(page: Page) {
   const state = { quantity: 5, writes: [] as Record<string, unknown>[], stockAttempts: 0 };
   await page.route('**/hub/**', (route) => route.abort());
@@ -81,7 +120,7 @@ test('Creating a product validates shop quantity and sends the absolute count', 
   const state = await fixture(page);
   await page.goto('/seller/products');
   await page.getByRole('button', { name: 'Thêm mẫu hoa', exact: true }).click();
-  const form = page.getByRole('form', { name: 'Thêm mẫu hoa giả mới' });
+  const form = page.getByRole('form', { name: 'Thêm mẫu hoa mới' });
   await form.getByLabel('Tên mẫu hoa', { exact: true }).fill('Hoa mới');
   await form.getByLabel('Giá bán niêm yết (VNĐ)', { exact: true }).fill('350000');
   await form.getByLabel('Dài (cm)', { exact: true }).fill('30');

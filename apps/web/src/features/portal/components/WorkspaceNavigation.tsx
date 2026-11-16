@@ -69,17 +69,7 @@ export function WorkspaceUserMenu({
   const pathname = usePathname();
   const [openedPath, setOpenedPath] = useState<string | null>(null);
   const menuOpen = openedPath === pathname;
-  const links: UserMenuLink[] = [
-    role === 'SELLER'
-      ? { href: '/tai-khoan', label: 'Tài khoản và hồ sơ', icon: 'profile' }
-      : { href: '/ho-so', label: 'Hồ sơ cá nhân', icon: 'profile' },
-    ...(role === 'SELLER'
-      ? [
-          { href: '/tai-khoan#web-orders', label: 'Đơn đặt trước', icon: 'orders' as const },
-          { href: '/tai-khoan#member-orders', label: 'Lịch sử mua', icon: 'history' as const },
-        ]
-      : []),
-  ];
+  const links: UserMenuLink[] = [{ href: '/ho-so', label: 'Hồ sơ cá nhân', icon: 'profile' }];
 
   return (
     <UserMenu

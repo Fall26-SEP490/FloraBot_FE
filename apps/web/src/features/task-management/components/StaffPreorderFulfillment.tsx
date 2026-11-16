@@ -4,21 +4,40 @@ import { Button } from '@florabot/ui';
 import { ApiError, queryClient, request } from '@/shared/lib/api';
 import PreorderLoadingButton from '@/features/orders/PreorderLoadingButton';
 import { usePreorderLoadingAccess } from '@/features/orders/usePreorderLoadingAccess';
+import { PreorderPackingList } from '@/features/orders/PreorderAccessories';
+import type { QuotedPreorderAccessory } from '@/features/orders/orders.types';
 
 type Preorder = {
   requestId: string;
   orderCode: string;
   productName: string;
   pickupAt: string;
+  accessories?: QuotedPreorderAccessory[];
 };
 type Slot = { id: string; slotCode: string; zone: string | null };
 type Options = { preorders: Preorder[]; slots: Slot[] };
 
+export function staffPreordersQuery(taskId: string, actorId?: string) {
+  return {
+    queryKey: ['staff-preorders', taskId, actorId],
+    queryFn: () => request<Options>(`/staff/tasks/${taskId}/preorders`),
+  };
+}
+
+export function preorderBlocker(options: Options) {
+  if (!options.preorders.length) return 'Không có đơn đặt trước đủ điều kiện nạp.';
+  if (!options.slots.some((slot) => slot.zone === 'PREORDER'))
+    return 'Không có ô trống phù hợp cho đơn đặt trước.';
+  return null;
+}
+
 export default function StaffPreorderFulfillment({
   taskId,
+  actorId,
   active,
 }: {
   taskId: string;
+  actorId: string;
   active: boolean;
 }) {
   const [open, setOpen] = useState(false);
@@ -36,8 +55,7 @@ export default function StaffPreorderFulfillment({
   const [notice, setNotice] = useState('');
   const [uncertain, setUncertain] = useState(false);
   const options = useQuery({
-    queryKey: ['staff-preorders', taskId],
-    queryFn: () => request<Options>(`/staff/tasks/${taskId}/preorders`),
+    ...staffPreordersQuery(taskId, actorId),
     enabled: open && active,
   });
   const validSlots = options.data?.slots.filter((slot) => slot.zone === 'PREORDER') ?? [];
@@ -95,7 +113,7 @@ export default function StaffPreorderFulfillment({
 
   return (
     <details onToggle={(event) => setOpen(event.currentTarget.open)}>
-      <summary>Nạp đơn đặt trước đã thanh toán</summary>
+      <summary>Nạp hoa cho đơn đặt trước</summary>
       {!active ? (
         <p>Chuyển công việc sang “Đang thực hiện” trước khi nạp đơn đặt trước.</p>
       ) : options.isPending ? (
@@ -107,11 +125,13 @@ export default function StaffPreorderFulfillment({
             Tải lại
           </Button>
         </p>
+      ) : options.data.preorders.length === 0 ? (
+        <p>Chưa có đơn đã thanh toán đến giờ nạp tại tủ này.</p>
+      ) : validSlots.length === 0 ? (
+        <p>Chưa có ô trống dành cho đơn đặt trước.</p>
       ) : (
         <form onSubmit={(event) => void submit(event)}>
-          <p>
-            Chỉ các đơn đã thanh toán trong thời gian giao và ô phù hợp tại kiosk này được hiển thị.
-          </p>
+          <p>Chọn đơn đến giờ nạp, rồi chọn ô và nhập mã trên tem bó hoa.</p>
           <label htmlFor={`preorder-${taskId}`}>Đơn đặt trước</label>
           <select
             id={`preorder-${taskId}`}
@@ -131,6 +151,11 @@ export default function StaffPreorderFulfillment({
               </option>
             ))}
           </select>
+          <PreorderPackingList
+            items={
+              options.data.preorders.find((order) => order.requestId === requestId)?.accessories
+            }
+          />
           <label htmlFor={`preorder-slot-${taskId}`}>Ô PREORDER trống</label>
           <select
             id={`preorder-slot-${taskId}`}
@@ -163,10 +188,6 @@ export default function StaffPreorderFulfillment({
             Nhập mã trên tem QR để theo dõi bó hoa trong kho. Shop gửi OTP 8 số tới email của khách
             sau khi hoa sẵn sàng.
           </p>
-          {options.data.preorders.length === 0 && (
-            <p>Chưa có đơn đã thanh toán trong thời gian giao.</p>
-          )}
-          {validSlots.length === 0 && <p>Chưa có ô PREORDER trống phù hợp.</p>}
           {requestId && slotId && (
             <PreorderLoadingButton
               key={`${requestId}:${slotId}`}
@@ -189,21 +210,23 @@ export default function StaffPreorderFulfillment({
           >
             {busy ? 'Đang ghi nhận…' : 'Xác nhận đã nạp vào ô'}
           </Button>
-          {uncertain && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setUncertain(false);
-                void options.refetch();
-              }}
-            >
-              Tải lại để kiểm tra
-            </Button>
-          )}
         </form>
       )}
       {error && <p role="alert">{error}</p>}
+      {uncertain && (
+        <div className="staff-stock-result">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setUncertain(false);
+              void options.refetch();
+            }}
+          >
+            Tải lại để kiểm tra
+          </Button>
+        </div>
+      )}
       {notice && <p role="status">{notice}</p>}
     </details>
   );

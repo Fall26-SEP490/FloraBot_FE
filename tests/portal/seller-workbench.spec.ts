@@ -3,6 +3,45 @@ import AxeBuilder from '@axe-core/playwright';
 import { setupSellerUsability, sampleRequest, shopId } from '../fixtures/seller-usability';
 
 const ordersPath = `**/api/sellers/${shopId}/preorders?*`;
+
+test('Seller quote form on mobile keeps totals unknown when accessory pricing fails', async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await setupSellerUsability(page);
+  await page.route(ordersPath, (route) =>
+    route.fulfill({
+      json: {
+        page: 1,
+        hasMore: false,
+        items: [
+          {
+            ...sampleRequest,
+            requestedAccessories: [{ accessoryId: 'bow', name: 'Nơ lụa', quantity: 1 }],
+          },
+        ],
+      },
+    }),
+  );
+  await page.route('**/api/me/products', (route) =>
+    route.fulfill({ json: [{ id: sampleRequest.productId, price: 350000 }] }),
+  );
+  await page.route(`**/api/sellers/${shopId}/accessories`, (route) =>
+    route.fulfill({ status: 503, json: {} }),
+  );
+  await page.goto('/seller/orders');
+  const row = page.locator(`#preorder-${sampleRequest.id}`);
+  await row.locator(':scope > summary').click();
+  await row.getByRole('button', { name: 'Báo giá hoặc từ chối' }).click();
+  await expect(row.getByLabel('Giá bó hoa (đồng)')).toHaveValue('350000');
+  await expect(row.getByText('Chưa xác minh được giá một số phụ kiện.')).toBeVisible();
+  await expect(row.getByText('Chưa đủ thông tin', { exact: true })).toBeVisible();
+  await expect(row.getByLabel('Số lượng xác nhận Nơ lụa')).toBeHidden();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await row
+    .locator('form.order-action-card')
+    .screenshot({ path: testInfo.outputPath('seller-quote-390.png') });
+});
 for (const width of [390, 1440]) {
   test(`Seller workbench leads to matching work across API pages at ${width}`, async ({ page }) => {
     const model = await setupSellerUsability(page);
@@ -111,7 +150,7 @@ test('Seller distinguishes unpaid work and keeps the existing quote and stock fo
   await page.getByRole('button', { name: 'Chờ báo giá 1', exact: true }).click();
   await page.locator(`#preorder-${sampleRequest.id} > summary`).click();
   await page.getByRole('button', { name: 'Báo giá hoặc từ chối', exact: true }).click();
-  await expect(page.getByLabel('Giá trọn gói (đồng)', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('Giá bó hoa (đồng)', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Đang chuẩn bị 1', exact: true }).click();
   await page.locator('#preorder-paid-order > summary').click();
   await page.getByRole('button', { name: 'Nạp hoa cho đơn này', exact: true }).click();
@@ -196,7 +235,7 @@ test('Seller can load a partial queue without losing an open quote draft', async
     await expect(page.locator('#web-orders')).toContainText('Còn đơn chưa được tải');
     await page.locator(`#preorder-${sampleRequest.id} > summary`).click();
     await page.getByRole('button', { name: 'Báo giá hoặc từ chối', exact: true }).first().click();
-    const price = page.getByLabel('Giá trọn gói (đồng)', { exact: true });
+    const price = page.getByLabel('Giá bó hoa (đồng)', { exact: true });
     await price.fill('325000');
     await more.click();
     await expect(more).toBeDisabled();

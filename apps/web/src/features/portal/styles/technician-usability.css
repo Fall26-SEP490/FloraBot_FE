@@ -1,4 +1,44 @@
 /* Technician: work orders first, on-site controls on phones. */
+.technician-workspace #staff-tasks .staff-task-toolbar {
+  padding: 0 0 12px;
+  border: 0;
+  border-bottom: 1px solid var(--color-workspace-line);
+  border-radius: 0;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.technician-workspace #staff-tasks .staff-task-toolbar select {
+  min-width: 0;
+  width: 100%;
+}
+
+.technician-workspace #staff-tasks .staff-task-toolbar > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.technician-workspace #staff-tasks .staff-task-toolbar > .button {
+  width: auto;
+  flex: 0 0 auto;
+  padding-inline: 10px;
+}
+
+.technician-workspace #staff-tasks .staff-task-toolbar label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.technician-workspace #staff-tasks .staff-destination-text a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  text-underline-offset: 3px;
+}
+
 .workspace-portal-root.platform-workspace
   .technician-workspace.technician-workspace
   .dashboard-page-heading {
@@ -77,8 +117,8 @@
   width: fit-content;
   min-height: 44px;
   padding: 0.6rem 1rem;
-  color: #174b35;
-  background: #eaf2eb;
+  color: #ffffff;
+  background: #174b35;
   border-radius: 8px;
   font-weight: 700;
   cursor: pointer;

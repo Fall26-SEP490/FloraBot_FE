@@ -69,6 +69,12 @@
 .customer-account-content {
   min-width: 0;
 }
+.customer-account-content > .kiosk-onboarding-container {
+  padding: 0;
+}
+.customer-account-content .kiosk-onboarding-container :is(.kiosk-breadcrumb, .kiosk-lease-eyebrow) {
+  display: none;
+}
 .customer-inbox-empty {
   display: grid;
   justify-items: center;

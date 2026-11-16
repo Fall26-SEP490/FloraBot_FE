@@ -50,6 +50,20 @@
 .site-hotline-button:hover {
   background: #143e29;
 }
+.flower-detail-inline-hotline {
+  display: none;
+}
+@media (max-width: 767px) {
+  body:has(.flower-detail-page) .site-hotline-button {
+    display: none;
+  }
+  .flower-detail-inline-hotline {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    text-decoration: underline;
+  }
+}
 .site-hotline-button:focus-visible {
   outline: 3px solid #1e5037;
   outline-offset: 3px;

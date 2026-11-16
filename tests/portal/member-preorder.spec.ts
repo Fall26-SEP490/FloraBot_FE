@@ -1,3 +1,4 @@
+import { fillPickup } from '../fixtures/quotation';
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
@@ -22,6 +23,16 @@ const flower = {
   photo: null,
   bouquets: ['50000000-0000-0000-0000-000000000001'],
 };
+
+test.beforeEach(async ({ page }) => {
+  await page.route('**/api/kiosks/*/preorder-availability*', (route) =>
+    route.fulfill({ json: { available: true } }),
+  );
+  await page.route('**/api/member/kiosks/*/catalog/accessories', (route) =>
+    route.fulfill({ status: 404, json: {} }),
+  );
+});
+
 test('CUSTOMER places CUSTOM with selected kiosk and no door action', async ({ page }) => {
   const role = 'CUSTOMER';
   const otherKiosk = {
@@ -41,6 +52,7 @@ test('CUSTOMER places CUSTOM with selected kiosk and no door action', async ({ p
     expect(input.productId).toBe(flower.productId);
     expect(input.kioskId).toBe(otherKiosk.kioskId);
     expect(input).not.toHaveProperty('bouquetId');
+    expect(input).not.toHaveProperty('accessories');
     expect(input.id).toMatch(/^[a-f0-9-]{36}$/);
     submitted++;
     await route.fulfill({ json: { result: input.id } });
@@ -50,7 +62,7 @@ test('CUSTOMER places CUSTOM with selected kiosk and no door action', async ({ p
     .getByRole('button', { name: /báo giá/i })
     .first()
     .click();
-  await expect(page.getByText('email đăng nhập của bạn', { exact: true })).toBeVisible();
+  await expect(page.getByText(/email đăng nhập của bạn/)).toHaveCount(0);
   await expect(page.getByText(/OTP gửi qua SMS/)).toHaveCount(0);
   await page.getByLabel('Tủ nhận hoa').selectOption(otherKiosk.kioskId);
   {
@@ -58,21 +70,22 @@ test('CUSTOMER places CUSTOM with selected kiosk and no door action', async ({ p
     const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
       .toISOString()
       .slice(0, 16);
-    await page.getByLabel('Thời gian mong muốn nhận hoa').fill(local);
+    await fillPickup(page, local);
     await page
-      .getByLabel('Dịp tặng, màu hoa, ngân sách và lời nhắn')
+      .getByLabel('Bạn muốn bó hoa như thế nào?')
       .fill('Hoa sinh nhật màu hồng, ngân sách 400.000 đồng');
   }
-  await page.getByRole('checkbox').check();
+
   const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
   expect(axe.violations).toEqual([]);
   await page
     .getByRole('button', {
-      name: 'Gửi yêu cầu để shop báo giá',
+      name: 'Gửi yêu cầu báo giá',
       exact: true,
     })
     .click();
   await expect(page.getByRole('heading', { name: 'Đã nhận yêu cầu của bạn' })).toBeVisible();
+  await expect(page.getByText(/mã nhận hoa sẽ được gửi đến email đăng nhập/)).toBeVisible();
   expect(submitted).toBe(1);
 });
 
@@ -85,7 +98,7 @@ test('SELLER cannot create a customer preorder in the FE', async ({ page }) => {
   );
   await page.goto('/dat-hoa');
   await page.getByRole('button', { name: /báo giá/i }).click();
-  await expect(page.getByRole('button', { name: 'Gửi yêu cầu để shop báo giá' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Gửi yêu cầu báo giá' })).toHaveCount(0);
 });
 
 test('same flower at one kiosk keeps Walk-in view separate from Pre-order', async ({ page }) => {
@@ -176,14 +189,15 @@ test('legacy API design templates still place CUSTOM requests without guessing s
   await page.getByRole('button', { name: /báo giá/i }).click();
   await expect(page.getByRole('radio')).toHaveCount(0);
   const date = new Date(Date.now() + 48 * 60 * 60 * 1000);
+  await fillPickup(
+    page,
+    new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16),
+  );
   await page
-    .getByLabel('Thời gian mong muốn nhận hoa')
-    .fill(new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16));
-  await page
-    .getByLabel('Dịp tặng, màu hoa, ngân sách và lời nhắn')
+    .getByLabel('Bạn muốn bó hoa như thế nào?')
     .fill('Hoa sinh nhật màu hồng, ngân sách 400.000 đồng');
-  await page.getByRole('checkbox').check();
-  await page.getByRole('button', { name: 'Gửi yêu cầu để shop báo giá', exact: true }).click();
+
+  await page.getByRole('button', { name: 'Gửi yêu cầu báo giá', exact: true }).click();
   await expect(page.locator('.flower-request').getByRole('alert')).toContainText(
     'Kiosk không nhận đơn mới',
   );

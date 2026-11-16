@@ -13,6 +13,28 @@ type Options = {
   actions: { id: string; qrCode: string; createdAt: string }[];
 };
 type Fields = Omit<Payload, 'id'> & { confirm: boolean };
+
+export function staffStockQuery(
+  taskId: string,
+  actorId: string | undefined,
+  scopeKey: string,
+  apiBase: string,
+) {
+  return {
+    queryKey: ['staff-stock', taskId, actorId, scopeKey],
+    queryFn: () => request<Options>(`${apiBase}/${taskId}/stock`),
+  };
+}
+
+export function walkInBlocker(options: Options) {
+  const hasSlot = options.slots.some((slot) => slot.zone === 'WALK_IN');
+  const hasProduct = options.products.length > 0;
+  if (!hasSlot && !hasProduct) return 'Thiếu cả ô Walk-in trống và mẫu hoa có thể nạp.';
+  if (!hasSlot) return 'Không có ô Walk-in trống phù hợp.';
+  if (!hasProduct) return 'Không có mẫu hoa có thể nạp.';
+  return null;
+}
+
 function restore(key: string): Payload | null {
   try {
     const value = JSON.parse(sessionStorage.getItem(key) || 'null') as Payload | null;
@@ -52,8 +74,7 @@ export default function StaffStock({
   const form = useForm<Fields>();
   const path = `${apiBase}/${taskId}/stock`;
   const options = useQuery({
-    queryKey: ['staff-stock', taskId, actorId, scopeKey],
-    queryFn: () => request<Options>(path),
+    ...staffStockQuery(taskId, actorId, scopeKey, apiBase),
     enabled: open,
   });
   const walkInSlots = options.data?.slots.filter((slot) => slot.zone === 'WALK_IN') ?? [];
@@ -94,7 +115,7 @@ export default function StaffStock({
   }
   return (
     <details onToggle={(event) => setOpen(event.currentTarget.open)}>
-      <summary>Nạp hoa và xem kết quả</summary>
+      <summary>Nạp hoa bán tại tủ</summary>
       {attempt ? (
         <>
           <p>Đang chờ xác nhận bó hoa có mã {attempt.qrCode}.</p>
@@ -192,27 +213,23 @@ export default function StaffStock({
       ) : (
         <p>
           {active
-            ? 'Không còn ô trống hoặc sản phẩm hợp lệ. Kiểm tra với chủ shop trước khi nạp.'
+            ? `${walkInBlocker(options.data) ?? ''} Kiểm tra với chủ shop trước khi nạp.`
             : 'Chỉ có thể nạp hoa khi công việc đang thực hiện. Bạn vẫn có thể xem các bó đã ghi nhận bên dưới.'}
         </p>
       )}
       {error && <p role="alert">{error}</p>}
       {notice && <p role="status">{notice}</p>}
-      {options.data && (
-        <>
-          <h4>Các bó đã ghi nhận trong công việc</h4>
-          {options.data.actions.length === 0 ? (
-            <p>Chưa có bó hoa được ghi nhận.</p>
-          ) : (
-            <ul>
-              {options.data.actions.map((item) => (
-                <li key={item.id}>
-                  {item.qrCode} · {new Date(item.createdAt).toLocaleString('vi-VN')}
-                </li>
-              ))}
-            </ul>
-          )}
-        </>
+      {options.data && options.data.actions.length > 0 && (
+        <div className="staff-stock-result">
+          <h4>Bó hoa đã nạp</h4>
+          <ul>
+            {options.data.actions.map((item) => (
+              <li key={item.id}>
+                {item.qrCode} · {new Date(item.createdAt).toLocaleString('vi-VN')}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </details>
   );

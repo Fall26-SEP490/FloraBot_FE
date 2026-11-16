@@ -185,14 +185,14 @@
 }
 
 /* Pagination: Trang trước / Trang X / Trang sau */
-.stock-actions {
+.flower-shop-page:not(.flower-detail-page) .stock-actions {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.65rem;
   margin: 2.75rem 0 1.5rem;
 }
-.stock-actions .button {
+.flower-shop-page:not(.flower-detail-page) .stock-actions .button {
   height: 38px;
   min-height: 38px;
   padding: 0 1.25rem;
@@ -205,16 +205,16 @@
   cursor: pointer;
   transition: all 0.15s ease;
 }
-.stock-actions .button:hover:not(:disabled) {
+.flower-shop-page:not(.flower-detail-page) .stock-actions .button:hover:not(:disabled) {
   background: #f2f7f1;
   border-color: #183e2b;
 }
-.stock-actions .button:disabled {
+.flower-shop-page:not(.flower-detail-page) .stock-actions .button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
   border-color: #e5ece3;
 }
-.stock-actions span {
+.flower-shop-page:not(.flower-detail-page) .stock-actions span {
   display: inline-flex;
   align-items: center;
   justify-content: center;

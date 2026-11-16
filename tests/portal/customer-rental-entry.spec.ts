@@ -51,8 +51,8 @@ async function fixture(page: Page) {
   });
   return state;
 }
-for (const width of [390, 1078, 1440]) {
-  test(`Pending rental is visible before flower orders and links to real payment screen at ${width}px`, async ({
+for (const width of [375, 1078, 1440]) {
+  test(`Account navigation opens the pending rental and keeps the rental tab selected at ${width}px`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 });
@@ -80,18 +80,8 @@ for (const width of [390, 1078, 1440]) {
     await expect(pay).toHaveAttribute('href', '/thue-kiosk');
     await expect(pay).toBeInViewport();
     const bounds = await panel.boundingBox();
-    const orders = await page
-      .getByRole('region', { name: 'Đơn đang theo dõi', exact: true })
-      .boundingBox();
+    const orders = await page.getByRole('region', { name: 'Đơn hàng', exact: true }).boundingBox();
     expect(bounds!.y).toBeLessThan(orders!.y);
-    if (width === 390)
-      await page.getByRole('button', { name: 'Mục tài khoản', exact: true }).click();
-    await expect(
-      page
-        .getByRole('navigation', { name: 'Điều hướng tài khoản' })
-        .getByRole('link', { name: 'Thuê kiosk', exact: true }),
-    ).toHaveAttribute('href', '/thue-kiosk');
-    if (width === 390) await page.keyboard.press('Escape');
     const axe = await new AxeBuilder({ page })
       .include('#main')
       .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
@@ -104,7 +94,11 @@ for (const width of [390, 1078, 1440]) {
       path: test.info().outputPath(`rental-overview-${width}.png`),
       fullPage: true,
     });
-    await pay.click();
+    const nav = page.getByRole('navigation', { name: 'Điều hướng tài khoản' });
+    const toggle = page.getByRole('button', { name: 'Mục tài khoản', exact: true });
+    const rentalTab = nav.getByRole('link', { name: 'Thuê kiosk', exact: true });
+    if (width === 375) await toggle.click();
+    await rentalTab.click();
     await expect(page).toHaveURL(/thue-kiosk$/);
     await expect(
       page.getByRole('heading', { name: 'Hồ sơ thuê: Tiệm hoa đồng nai', exact: true }),
@@ -112,6 +106,14 @@ for (const width of [390, 1078, 1440]) {
     await expect(
       page.getByRole('button', { name: 'Thanh toán phí thuê', exact: true }),
     ).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    if (width === 375) await toggle.click();
+    await expect(rentalTab).toHaveAttribute('aria-current', 'page');
+    await page.screenshot({ path: test.info().outputPath(`rental-tab-${width}.png`) });
+    await nav.getByRole('link', { name: 'Đơn hàng', exact: true }).click();
+    await expect(page.getByRole('region', { name: 'Đơn hàng', exact: true })).toBeVisible();
     expect(state.writes).toEqual([]);
   });
 }
@@ -124,18 +126,13 @@ for (const status of [
   'REFUND_PENDING',
   'REFUNDED',
 ]) {
-  test(`Rental ${status} never offers another payment`, async ({ page }) => {
+  test(`Rental ${status} does not duplicate its status on the orders page`, async ({ page }) => {
     const state = await fixture(page);
     state.application.status = status;
     await page.goto('/tai-khoan');
     const panel = page.getByRole('region', { name: 'Hồ sơ thuê kiosk', exact: true });
-    await expect(panel).toContainText('Tiệm hoa đồng nai');
-    await expect(
-      panel.getByRole('link', { name: 'Thanh toán thuê kiosk', exact: true }),
-    ).toHaveCount(0);
-    await expect(
-      panel.getByRole('link', { name: 'Xem hồ sơ thuê kiosk', exact: true }),
-    ).toHaveAttribute('href', '/thue-kiosk');
+    await expect(page.getByRole('region', { name: 'Đơn hàng', exact: true })).toBeVisible();
+    await expect(panel).toHaveCount(0);
     expect(state.writes).toEqual([]);
   });
 }
@@ -143,34 +140,34 @@ test('404 means no application, without fabricated status or payment price', asy
   const state = await fixture(page);
   state.status = 404;
   await page.goto('/tai-khoan');
-  await expect(page.getByRole('link', { name: 'Tìm hiểu thuê kiosk', exact: true })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Đơn hàng', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Tìm hiểu thuê kiosk', exact: true })).toHaveCount(0);
   await expect(page.getByRole('region', { name: 'Hồ sơ thuê kiosk', exact: true })).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Thanh toán thuê kiosk', exact: true })).toHaveCount(
     0,
   );
   expect(state.writes).toEqual([]);
 });
-test('API failure stays distinct from no rental and can be retried independently', async ({
+test('A rental API error stays on the dedicated rental page and can be retried there', async ({
   page,
 }) => {
   const state = await fixture(page);
   state.status = 503;
   await page.goto('/tai-khoan');
-  const panel = page.getByRole('region', { name: 'Hồ sơ thuê kiosk', exact: true });
-  await expect(panel.getByRole('alert')).toContainText('Chưa tải được hồ sơ');
-  await expect(page.getByRole('region', { name: 'Đơn đang theo dõi', exact: true })).toBeVisible();
-  await expect(panel.getByRole('link', { name: 'Thanh toán thuê kiosk', exact: true })).toHaveCount(
-    0,
+  await expect(page.getByRole('region', { name: 'Đơn hàng', exact: true })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Hồ sơ thuê kiosk', exact: true })).toHaveCount(0);
+  await page.goto('/thue-kiosk');
+  await expect(page.getByRole('main').getByRole('alert')).toContainText(
+    'Lỗi tải thông tin hồ sơ từ máy chủ',
   );
   state.status = 200;
-  await panel.getByRole('button', { name: 'Tải lại hồ sơ thuê', exact: true }).click();
+  await page.getByRole('button', { name: 'Thử lại', exact: true }).click();
   await expect(
-    panel.getByRole('link', { name: 'Thanh toán thuê kiosk', exact: true }),
+    page.getByRole('button', { name: 'Thanh toán phí thuê', exact: true }),
   ).toBeVisible();
-  expect(state.requests).toBe(2);
   expect(state.writes).toEqual([]);
 });
-test('Loading offers a safe route without inventing a payable rental', async ({ page }) => {
+test('Rental stays secondary while its application is loading', async ({ page }) => {
   await fixture(page);
   let release: () => void = () => {};
   const gate = new Promise<void>((resolve) => {
@@ -182,13 +179,8 @@ test('Loading offers a safe route without inventing a payable rental', async ({ 
   });
   await page.goto('/tai-khoan');
   const panel = page.getByRole('region', { name: 'Hồ sơ thuê kiosk', exact: true });
-  await expect(panel.getByRole('status')).toContainText('Đang kiểm tra');
-  await expect(panel.getByRole('link', { name: 'Thanh toán thuê kiosk', exact: true })).toHaveCount(
-    0,
-  );
-  await expect(
-    panel.getByRole('link', { name: 'Xem hồ sơ thuê kiosk', exact: true }),
-  ).toHaveAttribute('href', '/thue-kiosk');
+  await expect(page.getByRole('region', { name: 'Đơn hàng', exact: true })).toBeVisible();
+  await expect(panel).toHaveCount(0);
   release();
   await expect(
     panel.getByRole('link', { name: 'Thanh toán thuê kiosk', exact: true }),

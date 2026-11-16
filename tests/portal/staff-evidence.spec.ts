@@ -23,7 +23,7 @@ for (const admin of [false, true])
           items: [
             {
               id: 'task',
-              kind: 'INCIDENT',
+              kind: admin ? 'INCIDENT' : 'DELIVERY',
               status: admin ? 'SUBMITTED' : 'IN_PROGRESS',
               version: 2,
               assigneeName: 'Thảo',
@@ -69,6 +69,7 @@ for (const admin of [false, true])
       return route.abort('failed');
     });
     await page.goto(admin ? '/admin/tasks' : '/staff');
+    if (!admin) await page.locator('.staff-task-open').click();
     const panel = page.locator('.staff-evidence');
     await expect(panel.locator('summary')).toBeVisible();
     expect(reads).toBe(0);
@@ -82,7 +83,7 @@ for (const admin of [false, true])
     await expect(panel.getByRole('button', { name: 'Ảnh trang trước' })).toHaveCount(0);
     await expect(panel.getByRole('button', { name: 'Ảnh trang tiếp' })).toHaveCount(0);
     showMultiplePages = true;
-    await panel.getByRole('button', { name: 'Cập nhật ảnh' }).click();
+    await panel.getByRole('button', { name: 'Tải lại ảnh', exact: true }).click();
     await panel.getByRole('button', { name: 'Ảnh trang tiếp' }).click();
     await expect(panel.getByText('Chưa có ảnh minh chứng ở trang này.')).toBeVisible();
     await panel.getByRole('button', { name: 'Ảnh trang trước' }).click();
@@ -99,6 +100,7 @@ for (const admin of [false, true])
       await panel.getByRole('button', { name: 'Gắn ảnh vào công việc' }).click();
       await expect(panel.getByRole('alert')).toContainText('Chưa xác nhận được ảnh');
       await page.reload();
+      await page.locator('.staff-task-open').click();
       await panel.locator('summary').click();
       await panel.getByRole('button', { name: 'Kiểm tra kết quả gửi ảnh' }).click();
       await expect(panel.getByText('Đã gắn ảnh vào công việc.')).toBeVisible();

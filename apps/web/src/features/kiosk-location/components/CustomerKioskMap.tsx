@@ -14,9 +14,7 @@ import {
   isValidLatitude,
   isValidLongitude,
   getKioskStatusLabel,
-  buildGoogleMapsDirectionsUrl,
   getMapTileConfig,
-  buildGoongDirectionsUrl,
 } from '../kiosk-location.utils';
 
 interface CustomerKioskMapProps {
@@ -24,7 +22,6 @@ interface CustomerKioskMapProps {
   userOrigin: { lat: number; lon: number } | null;
   selectedKioskId: string | null;
   onSelectKiosk?: (id: string) => void;
-  onSelectedPositionChange?: (pos: { x: number; y: number } | null) => void;
 }
 
 function getKioskMarkerStatus(status: CustomerKioskLocationItem['status']) {
@@ -37,18 +34,34 @@ function createKioskMarkerElement(kiosk: CustomerKioskLocationItem) {
   const marker = document.createElement('button');
   marker.type = 'button';
   marker.className = `customer-map-kiosk-marker marker-${getKioskMarkerStatus(kiosk.status)}`;
-  marker.setAttribute('aria-label', `Kiosk ${kiosk.name}: ${getKioskStatusLabel(kiosk.status)}`);
+  marker.setAttribute('aria-label', `${kiosk.name}: ${getKioskStatusLabel(kiosk.status)}`);
   marker.title = `${kiosk.name} · ${getKioskStatusLabel(kiosk.status)}`;
 
   const pin = document.createElement('span');
   pin.className = 'customer-map-kiosk-pin';
   pin.setAttribute('aria-hidden', 'true');
 
-  const glyph = document.createElement('span');
-  glyph.className = 'customer-map-kiosk-glyph';
-  glyph.textContent = '✿';
-  pin.appendChild(glyph);
+  const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  icon.setAttribute('viewBox', '0 0 24 30');
+  icon.setAttribute('width', '32');
+  icon.setAttribute('height', '40');
+  const outline = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  outline.setAttribute(
+    'd',
+    'M12 1C6.48 1 2 5.48 2 11c0 7.5 10 18 10 18s10-10.5 10-18C22 5.48 17.52 1 12 1Z',
+  );
+  outline.setAttribute('fill', 'currentColor');
+  outline.setAttribute('stroke', '#fff');
+  outline.setAttribute('stroke-width', '1.5');
+  const center = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  center.setAttribute('cx', '12');
+  center.setAttribute('cy', '11');
+  center.setAttribute('r', '3.5');
+  center.setAttribute('fill', '#fff');
+  icon.append(outline, center);
+  pin.appendChild(icon);
   marker.appendChild(pin);
+  marker.setAttribute('aria-pressed', 'false');
 
   return marker;
 }
@@ -58,7 +71,6 @@ export default function CustomerKioskMap({
   userOrigin,
   selectedKioskId,
   onSelectKiosk,
-  onSelectedPositionChange,
 }: CustomerKioskMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const tileConfig = getMapTileConfig();
@@ -81,21 +93,10 @@ export default function CustomerKioskMap({
   const [tileError, setTileError] = useState(false);
   const [mapReady, setMapReady] = useState(false);
   const onSelectKioskRef = useRef(onSelectKiosk);
-  const onSelectedPositionChangeRef = useRef(onSelectedPositionChange);
-  const kiosksRef = useRef(kiosks);
-  const prevPosRef = useRef<{ x: number; y: number } | null>(null);
-
-  useEffect(() => {
-    kiosksRef.current = kiosks;
-  }, [kiosks]);
 
   useEffect(() => {
     onSelectKioskRef.current = onSelectKiosk;
   }, [onSelectKiosk]);
-
-  useEffect(() => {
-    onSelectedPositionChangeRef.current = onSelectedPositionChange;
-  }, [onSelectedPositionChange]);
 
   // Step 1: Initialize Map engine once on mount
   useEffect(() => {
@@ -283,78 +284,9 @@ export default function CustomerKioskMap({
       // Add kiosk markers
       kiosks.forEach((kiosk) => {
         if (isValidLatitude(kiosk.latitude) && isValidLongitude(kiosk.longitude)) {
-          const statusLabel = getKioskStatusLabel(kiosk.status);
           const markerEl = createKioskMarkerElement(kiosk);
-
-          // Popup container
-          const popupContainer = document.createElement('div');
-          popupContainer.className = 'customer-kiosk-popup';
-          popupContainer.style.fontFamily = 'inherit';
-          popupContainer.style.fontSize = '14px';
-          popupContainer.style.lineHeight = '1.4';
-
-          const titleEl = document.createElement('div');
-          titleEl.style.fontWeight = '700';
-          titleEl.style.color = '#183e2b';
-          titleEl.textContent = kiosk.name;
-          popupContainer.appendChild(titleEl);
-
-          const metaEl = document.createElement('div');
-          metaEl.style.fontSize = '12px';
-          metaEl.style.color = '#476451';
-          metaEl.textContent = `Mã: ${kiosk.code} · Trạng thái: ${statusLabel}`;
-          popupContainer.appendChild(metaEl);
-
-          const addressEl = document.createElement('div');
-          addressEl.style.marginTop = '4px';
-          addressEl.style.fontSize = '13px';
-          addressEl.textContent = kiosk.address || 'Chưa cập nhật địa chỉ';
-          popupContainer.appendChild(addressEl);
-
-          const actionEl = document.createElement('div');
-          actionEl.style.marginTop = '8px';
-          actionEl.style.display = 'flex';
-          actionEl.style.gap = '8px';
-
-          const googleDirUrl = buildGoogleMapsDirectionsUrl(kiosk.latitude, kiosk.longitude);
-          const goongDirUrl = buildGoongDirectionsUrl(
-            kiosk.latitude,
-            kiosk.longitude,
-            userOrigin?.lat,
-            userOrigin?.lon,
-          );
-
-          const gLink = document.createElement('a');
-          gLink.href = googleDirUrl;
-          gLink.target = '_blank';
-          gLink.rel = 'noopener noreferrer';
-          gLink.style.color = '#174b35';
-          gLink.style.fontWeight = '600';
-          gLink.style.fontSize = '12px';
-          gLink.style.textDecoration = 'underline';
-          gLink.textContent = 'Google Maps →';
-          actionEl.appendChild(gLink);
-
-          const goongLink = document.createElement('a');
-          goongLink.href = goongDirUrl;
-          goongLink.target = '_blank';
-          goongLink.rel = 'noopener noreferrer';
-          goongLink.style.color = '#2563eb';
-          goongLink.style.fontWeight = '600';
-          goongLink.style.fontSize = '12px';
-          goongLink.style.textDecoration = 'underline';
-          goongLink.textContent = 'Goong Maps →';
-          actionEl.appendChild(goongLink);
-
-          popupContainer.appendChild(actionEl);
-
-          const popup = new maplibregl.Popup({ offset: 30, maxWidth: '280px' }).setDOMContent(
-            popupContainer,
-          );
-
           const marker = new maplibregl.Marker({ element: markerEl, anchor: 'bottom' })
             .setLngLat([kiosk.longitude, kiosk.latitude])
-            .setPopup(popup)
             .addTo(map);
 
           markerEl.addEventListener('click', () => {
@@ -412,63 +344,21 @@ export default function CustomerKioskMap({
 
       kiosks.forEach((kiosk) => {
         if (isValidLatitude(kiosk.latitude) && isValidLongitude(kiosk.longitude)) {
-          const statusLabel = getKioskStatusLabel(kiosk.status);
           const markerElement = createKioskMarkerElement(kiosk);
           const markerIcon = L.divIcon({
             html: markerElement,
             className: 'customer-leaflet-kiosk-icon leaflet-interactive',
-            iconSize: [40, 48],
-            iconAnchor: [20, 46],
-            popupAnchor: [0, -42],
+            iconSize: [44, 48],
+            iconAnchor: [22, 46],
           });
           const marker = L.marker([kiosk.latitude, kiosk.longitude], {
             icon: markerIcon,
-            keyboard: true,
+            keyboard: false,
+            interactive: false,
             title: kiosk.name,
           }).addTo(map);
 
-          const dirUrl = buildGoogleMapsDirectionsUrl(kiosk.latitude, kiosk.longitude);
-
-          const popupContainer = document.createElement('div');
-          popupContainer.className = 'customer-kiosk-popup';
-          popupContainer.style.fontFamily = 'inherit';
-          popupContainer.style.fontSize = '14px';
-          popupContainer.style.lineHeight = '1.4';
-
-          const titleEl = document.createElement('div');
-          titleEl.style.fontWeight = '700';
-          titleEl.style.color = '#183e2b';
-          titleEl.textContent = kiosk.name;
-          popupContainer.appendChild(titleEl);
-
-          const metaEl = document.createElement('div');
-          metaEl.style.fontSize = '12px';
-          metaEl.style.color = '#476451';
-          metaEl.textContent = `Mã: ${kiosk.code} · Trạng thái: ${statusLabel}`;
-          popupContainer.appendChild(metaEl);
-
-          const addressEl = document.createElement('div');
-          addressEl.style.marginTop = '4px';
-          addressEl.style.fontSize = '13px';
-          addressEl.textContent = kiosk.address || 'Chưa cập nhật địa chỉ';
-          popupContainer.appendChild(addressEl);
-
-          const actionEl = document.createElement('div');
-          actionEl.style.marginTop = '8px';
-          const linkEl = document.createElement('a');
-          linkEl.href = dirUrl;
-          linkEl.target = '_blank';
-          linkEl.rel = 'noopener noreferrer';
-          linkEl.style.color = '#174b35';
-          linkEl.style.fontWeight = '600';
-          linkEl.style.textDecoration = 'underline';
-          linkEl.textContent = 'Chỉ đường trên Google Maps →';
-          actionEl.appendChild(linkEl);
-          popupContainer.appendChild(actionEl);
-
-          marker.bindPopup(popupContainer);
-
-          marker.on('click', () => {
+          markerElement.addEventListener('click', () => {
             onSelectKioskRef.current?.(kiosk.id);
           });
 
@@ -492,96 +382,14 @@ export default function CustomerKioskMap({
     }
   }, [kiosks, userOrigin, mapReady, isGoong]);
 
-  // Step 2.5: Report screen coordinates of selected marker for anchored modal
-  useEffect(() => {
-    if (!selectedKioskId) {
-      if (prevPosRef.current !== null) {
-        prevPosRef.current = null;
-        onSelectedPositionChangeRef.current?.(null);
-      }
-      return;
-    }
-
-    const kiosk = kiosksRef.current.find((k) => k.id === selectedKioskId);
-    const lat = kiosk?.latitude;
-    const lon = kiosk?.longitude;
-    if (
-      !kiosk ||
-      lat === null ||
-      lat === undefined ||
-      lon === null ||
-      lon === undefined ||
-      !isValidLatitude(lat) ||
-      !isValidLongitude(lon)
-    ) {
-      if (prevPosRef.current !== null) {
-        prevPosRef.current = null;
-        onSelectedPositionChangeRef.current?.(null);
-      }
-      return;
-    }
-
-    const validLat: number = lat;
-    const validLon: number = lon;
-
-    const updateScreenPosition = () => {
-      let p: { x: number; y: number } | null = null;
-      if (isGoong) {
-        const map = mapLibreRef.current;
-        if (!map) return;
-        const pt = map.project([validLon, validLat]);
-        p = { x: Math.round(pt.x), y: Math.round(pt.y) };
-      } else {
-        const map = leafletMapRef.current;
-        if (!map) return;
-        const pt = map.latLngToContainerPoint([validLat, validLon]);
-        p = { x: Math.round(pt.x), y: Math.round(pt.y) };
-      }
-
-      if (p) {
-        if (prevPosRef.current && prevPosRef.current.x === p.x && prevPosRef.current.y === p.y) {
-          return;
-        }
-        prevPosRef.current = p;
-        onSelectedPositionChangeRef.current?.(p);
-      }
-    };
-
-    updateScreenPosition();
-
-    if (isGoong) {
-      const map = mapLibreRef.current;
-      if (map) {
-        map.on('move', updateScreenPosition);
-        map.on('zoom', updateScreenPosition);
-        map.on('resize', updateScreenPosition);
-        return () => {
-          map.off('move', updateScreenPosition);
-          map.off('zoom', updateScreenPosition);
-          map.off('resize', updateScreenPosition);
-        };
-      }
-    } else {
-      const map = leafletMapRef.current;
-      if (map) {
-        map.on('move', updateScreenPosition);
-        map.on('zoom', updateScreenPosition);
-        map.on('resize', updateScreenPosition);
-        return () => {
-          map.off('move', updateScreenPosition);
-          map.off('zoom', updateScreenPosition);
-          map.off('resize', updateScreenPosition);
-        };
-      }
-    }
-  }, [selectedKioskId, isGoong, mapReady]);
-
   // Step 3: Handle selectedKioskId changes without rebuilding markers
   useEffect(() => {
     if (isGoong) {
       const map = mapLibreRef.current;
       mapLibreMarkersRef.current.forEach((candidate, kioskId) => {
-        candidate.getElement().classList.toggle('is-selected', kioskId === selectedKioskId);
+        const element = candidate.getElement();
+        element.classList.toggle('is-selected', kioskId === selectedKioskId);
+        element.setAttribute('aria-pressed', String(kioskId === selectedKioskId));
       });
       if (!selectedKioskId) return;
       const marker = mapLibreMarkersRef.current.get(selectedKioskId);
@@ -590,26 +398,25 @@ export default function CustomerKioskMap({
         map.flyTo({
           center: lngLat,
           zoom: Math.max(map.getZoom(), 14),
-          offset: [0, -50],
+          offset: [0, -70],
+          duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 400,
         });
-        if (!marker.getPopup().isOpen()) {
-          marker.togglePopup();
-        }
       }
     } else {
       const map = leafletMapRef.current;
       leafletMarkersRef.current.forEach((candidate, kioskId) => {
         const markerElement = candidate.getElement()?.querySelector('.customer-map-kiosk-marker');
         markerElement?.classList.toggle('is-selected', kioskId === selectedKioskId);
+        markerElement?.setAttribute('aria-pressed', String(kioskId === selectedKioskId));
+        candidate.setZIndexOffset(kioskId === selectedKioskId ? 1000 : 0);
       });
       if (!selectedKioskId) return;
       const marker = leafletMarkersRef.current.get(selectedKioskId);
       if (map && marker) {
-        marker.openPopup();
         map.setView(marker.getLatLng(), Math.max(map.getZoom(), 14));
       }
     }
-  }, [selectedKioskId, kiosks, isGoong]);
+  }, [selectedKioskId, kiosks, isGoong, mapReady, userOrigin]);
 
   return (
     <div className="customer-kiosk-map-container">

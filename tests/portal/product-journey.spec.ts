@@ -1,3 +1,4 @@
+import { fillPickup } from '../fixtures/quotation';
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 const productId = '30000000-0000-0000-0000-000000000001';
@@ -39,6 +40,12 @@ async function fixture(page: Page, stock?: { available: boolean; rejectNext?: bo
     if (path === '/api/auth/me')
       return route.fulfill({
         json: { id: 'customer-product-test', name: 'Khách test', role: 'CUSTOMER' },
+      });
+    if (path.endsWith('/preorder-availability'))
+      return route.fulfill({ json: { available: true } });
+    if (path.endsWith('/catalog/accessories'))
+      return route.fulfill({
+        json: [{ id: 'bow', name: 'Nơ lụa', price: 10000, availableQuantity: 2 }],
       });
     if (path === '/api/shop/catalog') {
       state.catalogReads++;
@@ -102,16 +109,30 @@ for (const width of [390, 1440]) {
     await page.getByRole('button', { name: 'Yêu cầu báo giá', exact: true }).click();
     const dialog = page.getByRole('dialog', { name: 'Yêu cầu báo giá', exact: true });
     await expect(dialog).toBeVisible();
-    await expect(dialog.locator('.flower-request-kiosk-content')).toContainText(flower.address);
+    await dialog.getByLabel('Tủ nhận hoa', { exact: true }).selectOption(kioskId);
+    await expect(dialog.locator('.flower-request-kiosk-address')).toContainText(flower.address);
     await expect(
-      dialog.getByRole('button', { name: 'Gửi yêu cầu để shop báo giá', exact: true }),
+      dialog.getByRole('button', { name: 'Gửi yêu cầu báo giá', exact: true }),
     ).toBeInViewport();
-    await dialog.getByRole('checkbox').check();
+
     await dialog.getByLabel('Tủ nhận hoa', { exact: true }).selectOption(otherKioskId);
-    await expect(dialog.getByRole('checkbox')).not.toBeChecked();
-    await expect(dialog.locator('.flower-request-kiosk-content')).toContainText(
+    await expect(dialog.getByRole('checkbox')).toHaveCount(0);
+    await expect(dialog.locator('.flower-request-kiosk-address')).toContainText(
       '219 Nguyễn Văn Tăng',
     );
+    const brief = dialog.getByLabel('Bạn muốn bó hoa như thế nào?');
+    const suggestion = dialog.getByRole('button', { name: 'Sinh nhật', exact: true });
+    await suggestion.click();
+    await expect(suggestion).toHaveAttribute('aria-disabled', 'true');
+    await suggestion.evaluate((button: HTMLButtonElement) => button.click());
+    await expect(brief).toHaveValue('Tặng sinh nhật, hoa tông pastel');
+    await dialog.getByRole('button', { name: 'Thêm Nơ lụa' }).click();
+    await expect(dialog.getByRole('status', { name: 'Số lượng Nơ lụa' })).toHaveText('1');
+    if (width === 390) {
+      const button = dialog.getByRole('button', { name: 'Gửi yêu cầu báo giá', exact: true });
+      const box = await button.boundingBox();
+      expect(box && box.y + box.height <= 950).toBeTruthy();
+    }
     expect(
       (
         await new AxeBuilder({ page })
@@ -130,6 +151,12 @@ for (const width of [390, 1440]) {
       path: test.info().outputPath(`quotation-${width}.png`),
       fullPage: false,
     });
+    if (width === 390) {
+      await dialog.locator('.flower-request-scroll').evaluate((el) => {
+        el.scrollTop = el.scrollHeight;
+      });
+      await page.screenshot({ path: test.info().outputPath('quotation-accessories.png') });
+    }
     expect(state.writes).toEqual([]);
   });
 }
@@ -139,22 +166,36 @@ test('Product quotation focuses invalid fields and sends only the selected kiosk
   const state = await fixture(page);
   const dialog = await open(page);
   await dialog.getByLabel('Tủ nhận hoa', { exact: true }).selectOption(otherKioskId);
-  await dialog.getByRole('checkbox').check();
-  const submit = dialog.getByRole('button', { name: 'Gửi yêu cầu để shop báo giá', exact: true });
+
+  const submit = dialog.getByRole('button', { name: 'Gửi yêu cầu báo giá', exact: true });
+  await expect(
+    dialog.getByText('Chọn ngày và giờ bạn muốn nhận hoa.', { exact: true }),
+  ).toBeVisible();
   await submit.click();
-  const pickup = dialog.getByLabel('Thời gian mong muốn nhận hoa', { exact: true });
+  const pickup = dialog.getByLabel('Ngày nhận hoa', { exact: true });
   await expect(pickup).toBeFocused();
   await expect(pickup).toHaveAttribute('aria-invalid', 'true');
   await expect(
     dialog.getByRole('alert').filter({ hasText: 'Chọn thời gian nhận trong tương lai' }),
   ).toBeVisible();
-  await pickup.fill(await future(page));
+  await fillPickup(dialog, await future(page));
+  const calendar = dialog.getByLabel('Chọn ngày trên lịch', { exact: true });
+  await expect(calendar).toBeVisible();
+  await calendar.fill((await future(page, 2)).split('T')[0]);
+  await expect(pickup).toHaveValue(
+    (await future(page, 2)).split('T')[0].split('-').reverse().join('/'),
+  );
+  await pickup.fill((await future(page)).split('T')[0].split('-').reverse().join('/'));
+  await expect(calendar).toHaveValue((await future(page)).split('T')[0]);
+  await expect(dialog.getByText('Nhập mong muốn ít nhất 10 ký tự để shop báo giá.')).toBeVisible();
   await submit.click();
-  const brief = dialog.getByLabel('Dịp tặng, màu hoa, ngân sách và lời nhắn', { exact: true });
+  const brief = dialog.getByLabel('Bạn muốn bó hoa như thế nào?', { exact: true });
   await expect(brief).toBeFocused();
   await expect(brief).toHaveAttribute('aria-invalid', 'true');
   expect(state.writes).toEqual([]);
   await brief.fill('Hoa hồng tông pastel, ngân sách 400.000 đồng');
+  await expect(dialog.locator('.flower-request-ready')).toContainText('Tủ nhận thứ hai');
+  await expect(dialog.locator('.flower-request-ready')).toContainText(/\d{2}\/\d{2}\/\d{4}/);
   await submit.click();
   await expect(
     dialog.getByRole('heading', { name: 'Đã nhận yêu cầu của bạn', exact: true }),
@@ -170,14 +211,13 @@ test('Product quotation rejects a date beyond 30 days without creating an order'
 }) => {
   const state = await fixture(page);
   const dialog = await open(page);
+  await dialog.getByLabel('Tủ nhận hoa', { exact: true }).selectOption(kioskId);
+  await fillPickup(dialog, await future(page, 31));
   await dialog
-    .getByLabel('Thời gian mong muốn nhận hoa', { exact: true })
-    .fill(await future(page, 31));
-  await dialog
-    .getByLabel('Dịp tặng, màu hoa, ngân sách và lời nhắn', { exact: true })
+    .getByLabel('Bạn muốn bó hoa như thế nào?', { exact: true })
     .fill('Lời nhắn để shop chuẩn bị hoa');
-  await dialog.getByRole('checkbox').check();
-  await dialog.getByRole('button', { name: 'Gửi yêu cầu để shop báo giá', exact: true }).click();
+
+  await dialog.getByRole('button', { name: 'Gửi yêu cầu báo giá', exact: true }).click();
   await expect(dialog.getByRole('alert').filter({ hasText: 'tối đa 30 ngày tới' })).toBeVisible();
   expect(state.writes).toEqual([]);
 });
@@ -188,12 +228,12 @@ test('A preorder that sells out during quotation refreshes the catalog and block
   const state = await fixture(page, { available: true, rejectNext: true });
   const dialog = await open(page);
   await dialog.getByLabel('Tủ nhận hoa', { exact: true }).selectOption(kioskId);
-  await dialog.getByLabel('Thời gian mong muốn nhận hoa', { exact: true }).fill(await future(page));
-  const brief = dialog.getByLabel('Dịp tặng, màu hoa, ngân sách và lời nhắn', { exact: true });
+  await fillPickup(dialog, await future(page));
+  const brief = dialog.getByLabel('Bạn muốn bó hoa như thế nào?', { exact: true });
   await brief.fill('Hoa hồng tông pastel, ngân sách 400.000 đồng');
-  await dialog.getByRole('checkbox').check();
+
   const readsBeforeSubmit = state.catalogReads;
-  const submit = dialog.getByRole('button', { name: 'Gửi yêu cầu để shop báo giá', exact: true });
+  const submit = dialog.getByRole('button', { name: 'Gửi yêu cầu báo giá', exact: true });
   await submit.click();
   await expect(dialog.getByRole('alert').filter({ hasText: 'Mẫu hoa đã hết hàng' })).toBeVisible();
   await expect(submit).toBeDisabled();

@@ -73,7 +73,7 @@ export function ProductCreateForm({
       };
       const created = await postProduct(payload);
       await queryClient.invalidateQueries({ queryKey: ['products', sellerId] });
-      setSuccessMessage('Đã tạo mẫu hoa giả mới ở trạng thái Bản nháp.');
+      setSuccessMessage('Đã tạo mẫu hoa mới ở trạng thái Bản nháp.');
       form.reset();
       if (onSuccess) onSuccess(created?.id);
     } catch (err) {
@@ -88,9 +88,9 @@ export function ProductCreateForm({
       className="product-catalog-form"
       noValidate
       onSubmit={form.handleSubmit(onSubmit)}
-      aria-label="Thêm mẫu hoa giả mới"
+      aria-label="Thêm mẫu hoa mới"
     >
-      <h3 className="sr-only">Thêm mẫu hoa giả mới</h3>
+      <h3 className="sr-only">Thêm mẫu hoa mới</h3>
       <div className="product-form-badge-strip">
         <span className="product-badge-pill">Bản nháp</span>
         <span className="product-badge-note">
@@ -297,7 +297,7 @@ export function ProductCreateForm({
           id="create-product-description"
           rows={2}
           maxLength={2000}
-          placeholder="Mô tả phong cách, chất liệu bó hoa giả cao cấp…"
+          placeholder="Mô tả phong cách, chất liệu bó hoa…"
           disabled={!canEdit || submitting}
           {...form.register('description')}
           aria-invalid={!!form.formState.errors.description}
@@ -580,7 +580,7 @@ export function ProductMetadataEditor({
           id={`${idPrefix}-description`}
           rows={2}
           maxLength={2000}
-          placeholder="Mô tả phong cách, chất liệu bó hoa giả cao cấp…"
+          placeholder="Mô tả phong cách, chất liệu bó hoa…"
           disabled={!canEdit || submitting}
           {...form.register('description')}
           aria-invalid={!!form.formState.errors.description}

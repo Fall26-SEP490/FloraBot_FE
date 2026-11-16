@@ -34,11 +34,23 @@ export default function ProductManagement({ session }: { session: Session }) {
   const [createNotice, setCreateNotice] = useState('');
   const [expandedProductId, setExpandedProductId] = useState<string | null>(null);
   const createNoticeRef = useRef<HTMLParagraphElement>(null);
+  const [createdId, setCreatedId] = useState<string | null>(null);
+  const pendingScroll = useRef<string | null>(null);
 
   useEffect(() => {
     if (!createNotice) return;
-    createNoticeRef.current?.focus();
-  }, [createNotice]);
+    const target = pendingScroll.current;
+    if (!target) {
+      createNoticeRef.current?.focus();
+      return;
+    }
+    const card = document.getElementById(`product-created-${target}`);
+    if (card) {
+      card.scrollIntoView({ block: 'start' });
+      card.focus({ preventScroll: true });
+      pendingScroll.current = null;
+    }
+  }, [createNotice, createdId]);
 
   const sellerId = session.sellerId;
   const query = useQuery<Product[]>({
@@ -67,14 +79,16 @@ export default function ProductManagement({ session }: { session: Session }) {
   const inactiveCount = allProducts.filter((p) => p.status === 'INACTIVE').length;
 
   const normalizedSearch = search.trim().toLocaleLowerCase('vi');
-  const filteredProducts = allProducts.filter((product) => {
-    const matchSearch =
-      !normalizedSearch ||
-      product.name.toLocaleLowerCase('vi').includes(normalizedSearch) ||
-      product.tags?.some((t) => t.toLocaleLowerCase('vi').includes(normalizedSearch));
-    const matchStatus = filter === 'ALL' || product.status === filter;
-    return matchSearch && matchStatus;
-  });
+  const filteredProducts = allProducts
+    .filter((product) => {
+      const matchSearch =
+        !normalizedSearch ||
+        product.name.toLocaleLowerCase('vi').includes(normalizedSearch) ||
+        product.tags?.some((t) => t.toLocaleLowerCase('vi').includes(normalizedSearch));
+      const matchStatus = filter === 'ALL' || product.status === filter;
+      return matchSearch && matchStatus;
+    })
+    .sort((a, b) => Number(b.id === createdId) - Number(a.id === createdId));
 
   const safePage = clampPage(page, filteredProducts.length, PAGE_SIZE);
   const pageItems = paginate(filteredProducts, safePage, PAGE_SIZE);
@@ -216,9 +230,16 @@ export default function ProductManagement({ session }: { session: Session }) {
               onSuccess={(createdProductId) => {
                 setShowCreateForm(false);
                 if (createdProductId) {
+                  setSearch('');
+                  setFilter('DRAFT');
+                  setPage(1);
                   setExpandedProductId(createdProductId);
+                  pendingScroll.current = createdProductId;
+                  setCreatedId(createdProductId);
                 }
-                setCreateNotice('Đã tạo mẫu hoa giả mới ở trạng thái Bản nháp.');
+                setCreateNotice(
+                  'Đã tạo bản nháp. Tiếp theo: thêm ảnh mẫu, rồi bật bán khi mẫu đã sẵn sàng.',
+                );
               }}
               onCancel={() => setShowCreateForm(false)}
             />
@@ -280,6 +301,8 @@ export default function ProductManagement({ session }: { session: Session }) {
           {pageItems.map((product) => (
             <li key={product.id}>
               <details
+                id={`product-created-${product.id}`}
+                tabIndex={-1}
                 open={expandedProductId === product.id ? true : undefined}
                 onToggle={(event) => {
                   if (!event.currentTarget.open && expandedProductId === product.id) {
@@ -291,7 +314,7 @@ export default function ProductManagement({ session }: { session: Session }) {
                   <div className="product-order-heading">
                     <strong>{product.name}</strong>
                     <span className="product-kind">
-                      {product.inventoryKind === 'LEGACY_FRESH' ? 'Hoa tươi' : 'Hoa giả cao cấp'}
+                      {product.inventoryKind === 'LEGACY_FRESH' ? 'Hoa tươi' : 'Hoa thành phẩm'}
                     </span>
                     <span className="product-status" data-status={product.status}>
                       {statusNames[product.status] || product.status}

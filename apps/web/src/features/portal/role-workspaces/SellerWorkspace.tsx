@@ -8,6 +8,10 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@florabot/ui';
 import { ApiError, logoutSession, sessionQuery, type Session } from '@/shared/lib/api';
 import { accountPath } from '@/features/portal/config/roleRoutes';
+import {
+  sellerShopProfileQuery,
+  shopAccountName,
+} from '@/features/profile/seller-shop-profile.api';
 import WorkspaceNavigation, { WorkspaceHeader } from '../components/WorkspaceNavigation';
 import { findSellerNavHub } from '../components/SellerNavigation';
 import SellerGuide from '../components/SellerGuide';
@@ -135,6 +139,7 @@ function PortalUpdates() {
 export default function SellerWorkspace({ section = 'overview' }: { section?: string }) {
   const { t } = useTranslation();
   const session = useQuery({ ...sessionQuery, refetchInterval: 60_000 });
+  const shop = useQuery(sellerShopProfileQuery(session.data));
   const logout = useMutation({
     mutationFn: logoutSession,
     onSuccess: async () => {
@@ -173,7 +178,7 @@ export default function SellerWorkspace({ section = 'overview' }: { section?: st
     <>
       <WorkspaceHeader
         workspaceRole="SELLER"
-        name={session.data.name}
+        name={shopAccountName(session.data, shop.data)}
         busy={logout.isPending}
         onLogout={() => logout.mutate()}
       />

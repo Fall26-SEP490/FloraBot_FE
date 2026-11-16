@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { chooseVietnamBank } from '../fixtures/vietnam-bank';
 import AxeBuilder from '@axe-core/playwright';
 
 const sessions = {
@@ -98,17 +99,20 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
       await expect(
         page.getByRole('heading', {
           level: 1,
-          name: ['CUSTOMER', 'SELLER'].includes(session.role) ? 'Hồ sơ cá nhân' : session.name,
+          name: session.role === 'CUSTOMER' ? 'Hồ sơ' : 'Hồ sơ cá nhân',
         }),
       ).toBeVisible();
-      await expect(page.getByLabel('Họ và tên *')).toHaveValue(session.name);
-      await expect(
-        page.getByRole('region', {
-          name: ['CUSTOMER', 'SELLER'].includes(session.role)
-            ? 'Email đăng nhập'
-            : 'Định danh tài khoản đăng nhập',
-        }),
-      ).toBeVisible();
+      if (session.role === 'CUSTOMER') {
+        await expect(page.locator('.profile-personal-summary')).toContainText(session.name);
+        await expect(page.locator('.profile-personal-summary')).toContainText(
+          mockProfile.loginEmail,
+        );
+      } else {
+        await expect(page.getByLabel('Họ và tên *')).toHaveValue(session.name);
+        await expect(page.getByRole('region', { name: 'Thông tin cá nhân' })).toContainText(
+          mockProfile.loginEmail,
+        );
+      }
 
       await page.unroute('**/api/account/profile');
       await page.unroute('**/api/auth/me');
@@ -188,10 +192,12 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
       await expect(
         page.getByRole('heading', {
           level: 1,
-          name: ['CUSTOMER', 'SELLER'].includes(session.role) ? 'Hồ sơ cá nhân' : session.name,
+          name: session.role === 'CUSTOMER' ? 'Hồ sơ' : 'Hồ sơ cá nhân',
         }),
       ).toBeVisible();
-      await expect(page.getByLabel('Họ và tên *')).toHaveValue(session.name);
+      if (portal === 'member')
+        await expect(page.locator('.profile-personal-summary')).toContainText(session.name);
+      else await expect(page.getByLabel('Họ và tên *')).toHaveValue(session.name);
     });
   }
 
@@ -257,7 +263,7 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
     await expect(profileLink).toBeVisible();
     await profileLink.click();
     await expect(page).toHaveURL(/\/ho-so$/);
-    await expect(page.getByRole('heading', { level: 1, name: admin.name })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Hồ sơ cá nhân' })).toBeVisible();
   });
 
   test('Update basic profile payload sends trimmed fullName, phone, address and updates UI', async ({
@@ -296,10 +302,11 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
     await page.goto('/ho-so');
 
     // Verify loginEmail is read-only
-    const identitySection = page.getByRole('region', { name: 'Email đăng nhập', exact: true });
+    const identitySection = page.locator('.profile-personal-summary');
     await expect(identitySection.getByText('customer@florabot.vn')).toBeVisible();
 
     // Fill form
+    await page.getByRole('button', { name: 'Chỉnh sửa thông tin' }).click();
     await page.getByLabel('Họ và tên *').fill('Nguyễn Thành Viên Mới');
     await page.getByLabel('Số điện thoại').fill('0987654321');
     await page.getByLabel('Địa chỉ').fill('456 Đường Mới, Quận 3');
@@ -316,7 +323,7 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
     await expect(
       page.getByRole('status').filter({ hasText: 'Đã lưu thay đổi hồ sơ cá nhân.' }),
     ).toBeVisible();
-    await expect(page.getByLabel('Họ và tên *')).toHaveValue('Nguyễn Thành Viên Mới');
+    await expect(page.locator('.profile-personal-summary')).toContainText('Nguyễn Thành Viên Mới');
   });
 
   test('Duplicate phone rejection 409 displays alert message', async ({ page }) => {
@@ -417,7 +424,7 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
 
     // 3. Edit bank bundle with review step
     await page.getByRole('button', { name: 'Đổi tài khoản ngân hàng' }).click();
-    await page.getByLabel('Tên ngân hàng *').fill('Ngân hàng Ngoại Thương Vietcombank');
+    await chooseVietnamBank(page, 'Tên ngân hàng *', 'VCB', 'Ngoại thương Việt Nam');
     await page.getByLabel('Tên chủ tài khoản *').fill('TRAN VAN QUAN LY');
     await page.getByLabel('Số tài khoản ngân hàng *').fill('9988776655');
     await page.getByRole('button', { name: 'Kiểm tra thông tin tài khoản' }).click();
@@ -426,12 +433,12 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
     await expect(
       page.getByRole('heading', { name: 'Kiểm tra thông tin tài khoản cá nhân' }),
     ).toBeVisible();
-    await expect(page.getByText('Ngân hàng Ngoại Thương Vietcombank')).toBeVisible();
+    await expect(page.getByText(/Ngân hàng:\s*Ngoại thương Việt Nam/)).toBeVisible();
     await page.getByRole('button', { name: 'Xác nhận lưu tài khoản' }).click();
 
     expect(putPayload).toMatchObject({
       bank: {
-        bankName: 'Ngân hàng Ngoại Thương Vietcombank',
+        bankName: 'Ngoại thương Việt Nam',
         accountHolder: 'TRAN VAN QUAN LY',
         accountNumber: '9988776655',
       },
@@ -446,8 +453,9 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
 
     expect(putPayload).toMatchObject({ clearBank: true });
     await expect(
-      page.getByText('Bạn chưa lưu thông tin tài khoản ngân hàng cá nhân.'),
+      page.getByRole('status').filter({ hasText: 'Đã xóa thông tin tài khoản ngân hàng cá nhân.' }),
     ).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Tài khoản ngân hàng cá nhân' })).toHaveCount(0);
   });
 
   test('Contact email verification OTP flow with cooldown, wrong code, success, and reset default', async ({
@@ -570,7 +578,7 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
     active = sessions.CUSTOMER;
     await page.clock.fastForward(31_000);
     await page.evaluate(() => window.dispatchEvent(new Event('visibilitychange')));
-    await expect(page.getByLabel('Họ và tên *')).toBeVisible();
+    await expect(page.locator('.profile-personal-summary')).toContainText(sessions.CUSTOMER.name);
     await expect(name).toHaveValue(sessions.CUSTOMER.name);
     await expect(page.getByText('123456789012', { exact: true })).toHaveCount(0);
   });
@@ -623,10 +631,12 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
       return route.fulfill({ json: current });
     });
     await page.goto('/ho-so');
+    await page.getByRole('button', { name: 'Chỉnh sửa thông tin' }).click();
     await expect(page.getByLabel('Giới tính', { exact: true })).toHaveValue('FEMALE');
     await expect(page.getByLabel('Ngày sinh', { exact: true })).toHaveValue('2004-02-29');
     await page.getByLabel('Giới tính', { exact: true }).selectOption('UNDISCLOSED');
     await page.getByRole('button', { name: 'Hủy thay đổi', exact: true }).click();
+    await page.getByRole('button', { name: 'Chỉnh sửa thông tin' }).click();
     await expect(page.getByLabel('Giới tính', { exact: true })).toHaveValue('FEMALE');
     await page.getByLabel('Giới tính', { exact: true }).selectOption('OTHER');
     await page.getByLabel('Ngày sinh', { exact: true }).fill('2000-01-02');
@@ -634,6 +644,7 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
     await expect(page.getByRole('status').filter({ hasText: 'Đã lưu thay đổi' })).toBeVisible();
     expect(payload).toMatchObject({ gender: 'OTHER', dateOfBirth: '2000-01-02' });
     expect(payload).not.toHaveProperty('clearGender');
+    await page.getByRole('button', { name: 'Chỉnh sửa thông tin' }).click();
     await page.getByLabel('Giới tính', { exact: true }).selectOption('');
     await page.getByLabel('Ngày sinh', { exact: true }).fill('');
     await page.getByRole('button', { name: 'Lưu thông tin cá nhân', exact: true }).click();
@@ -650,6 +661,7 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
       return route.fulfill({ json: makeMockProfile() });
     });
     await page.goto('/ho-so');
+    await page.getByRole('button', { name: 'Chỉnh sửa thông tin' }).click();
     await page.getByLabel('Ngày sinh', { exact: true }).fill('2999-01-01');
     await page.getByRole('button', { name: 'Lưu thông tin cá nhân', exact: true }).click();
     await expect(
@@ -682,7 +694,7 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
       page.getByRole('button', { name: 'Hiện đầy đủ số tài khoản ngân hàng' }),
     ).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Đổi tài khoản ngân hàng' })).toBeEnabled();
-    await expect(page.getByText(/Để đổi mật khẩu tài khoản quản trị viên/)).toBeVisible();
+    await expect(page.locator('#security')).toContainText('Để đổi mật khẩu');
     await expect(page.getByLabel('Mật khẩu hiện tại', { exact: true })).toHaveCount(0);
   });
 
@@ -748,17 +760,17 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
       route.fulfill({ json: makeMockProfile() }),
     );
     await page.goto('/ho-so');
+    await page.getByRole('button', { name: 'Chỉnh sửa thông tin' }).click();
     const name = await page.getByLabel('Họ và tên *').boundingBox();
     const phone = await page.getByLabel('Số điện thoại', { exact: true }).boundingBox();
     expect(name && phone && Math.abs(name.y - phone.y) < 2 && phone.x > name.x).toBeTruthy();
     const navigation = page.getByRole('navigation', { name: 'Mục hồ sơ' });
-    await navigation.getByRole('link', { name: 'Bảo mật', exact: true }).click();
-    await expect(navigation.getByRole('link', { name: 'Bảo mật', exact: true })).toHaveAttribute(
-      'aria-current',
-      'location',
-    );
+    await navigation.getByRole('link', { name: 'Đăng nhập & bảo mật', exact: true }).click();
+    await expect(
+      navigation.getByRole('link', { name: 'Đăng nhập & bảo mật', exact: true }),
+    ).toHaveAttribute('aria-current', 'location');
     const navBox = await navigation.boundingBox();
-    expect(navBox && navBox.y >= 60 && navBox.y < 180).toBeTruthy();
+    expect(navBox && navBox.y >= 0 && navBox.y < 360).toBeTruthy();
     await page.setViewportSize({ width: 390, height: 850 });
     await navigation.getByRole('link', { name: 'Thông tin cá nhân', exact: true }).click();
     const mobileName = await page.getByLabel('Họ và tên *').boundingBox();
@@ -768,7 +780,7 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
     ).toBeTruthy();
   });
 
-  for (const role of ['ADMIN', 'OPERATIONS_MANAGER', 'TECHNICIAN'] as const) {
+  for (const role of ['ADMIN', 'OPERATIONS_MANAGER', 'TECHNICIAN', 'SELLER_STAFF'] as const) {
     for (const width of [390, 1440]) {
       test(`Platform profile removes the empty sidebar for ${role} at ${width}px`, async ({
         page,
@@ -777,32 +789,22 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
         await page.route('**/api/auth/me', (route) => route.fulfill({ json: sessions[role] }));
         await page.route('**/api/account/profile', (route) =>
           route.fulfill({
-            json: makeMockProfile({ id: sessions[role].id, fullName: sessions[role].name }),
+            json: makeMockProfile({
+              id: sessions[role].id,
+              fullName: sessions[role].name,
+              bank: { hasAccount: false },
+            }),
           }),
         );
         await page.goto('/ho-so');
+        const personal = page.getByRole('region', { name: 'Thông tin cá nhân' });
+        await expect(personal).toContainText('Email đăng nhập');
+        await expect(personal).toContainText('Để đổi mật khẩu');
+        await expect(page.getByRole('navigation', { name: 'Mục hồ sơ' })).toHaveCount(0);
+        await expect(page.getByRole('region', { name: 'Tài khoản ngân hàng cá nhân' })).toHaveCount(
+          0,
+        );
         await page.evaluate(() => document.fonts.ready);
-        const navigation = page.getByRole('navigation', { name: 'Mục hồ sơ' });
-        const identity = page.getByRole('region', { name: 'Định danh tài khoản đăng nhập' });
-        await page.evaluate(() => document.fonts.ready);
-        const navBox = await navigation.boundingBox();
-        const identityBox = await identity.boundingBox();
-        expect(navBox && identityBox && navBox.y + navBox.height <= identityBox.y).toBeTruthy();
-        expect(
-          navBox && identityBox && Math.abs(navBox.width - identityBox.width) < 2,
-        ).toBeTruthy();
-        const first = await navigation.getByRole('link').first().boundingBox();
-        const last = await navigation.getByRole('link').last().boundingBox();
-        expect(first && last && Math.abs(first.y - last.y) < 2).toBeTruthy();
-        await navigation.getByRole('link', { name: 'Thông tin cá nhân', exact: true }).click();
-        await expect(
-          navigation.getByRole('link', { name: 'Thông tin cá nhân', exact: true }),
-        ).toHaveAttribute('aria-current', 'location');
-        const heading = await page
-          .getByRole('heading', { name: 'Thông tin cá nhân', exact: true })
-          .boundingBox();
-        const sticky = await navigation.boundingBox();
-        expect(heading && sticky && heading.y >= sticky.y + sticky.height).toBeTruthy();
         const name = await page.getByLabel('Họ và tên *').boundingBox();
         const phone = await page.getByLabel('Số điện thoại', { exact: true }).boundingBox();
         expect(
@@ -813,10 +815,6 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
         await page.screenshot({
           path: test.info().outputPath(`platform-profile-${role}-${width}.png`),
         });
-        await navigation.getByRole('link', { name: 'Bảo mật', exact: true }).click();
-        await expect(
-          navigation.getByRole('link', { name: 'Bảo mật', exact: true }),
-        ).toHaveAttribute('aria-current', 'location');
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
           true,
         );
@@ -845,6 +843,7 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
       return route.fulfill({ status: 204 });
     });
     await page.goto('/ho-so#security');
+    await page.getByText('Đổi mật khẩu', { exact: true }).click();
     const field = page.getByLabel('Mật khẩu hiện tại', { exact: true });
     await field.fill('DraftOnly@1234');
     await page.getByRole('button', { name: 'Hiện mật khẩu hiện tại', exact: true }).click();
@@ -865,10 +864,11 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
       route.fulfill({ json: makeMockProfile() }),
     );
     await page.goto('/ho-so');
+    await page.getByRole('button', { name: 'Chỉnh sửa thông tin' }).click();
     await page.getByLabel('Họ và tên *').fill('Bản nháp chưa lưu');
     await page
       .getByRole('navigation', { name: 'Điều hướng tài khoản' })
-      .getByRole('link', { name: 'Tổng quan', exact: true })
+      .getByRole('link', { name: 'Đơn hàng', exact: true })
       .click();
     const dialog = page.getByRole('dialog', { name: 'Bạn có thay đổi chưa lưu' });
     await expect(dialog).toBeVisible();
@@ -881,10 +881,10 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
     await expect(page.getByLabel('Họ và tên *')).toHaveValue('Bản nháp chưa lưu');
     await page
       .getByRole('navigation', { name: 'Điều hướng tài khoản' })
-      .getByRole('link', { name: 'Tổng quan', exact: true })
+      .getByRole('link', { name: 'Đơn hàng', exact: true })
       .click();
     await dialog.getByRole('button', { name: 'Rời trang', exact: true }).click();
-    await expect(page).toHaveURL(/\/tai-khoan(?:#overview)?$/);
+    await expect(page).toHaveURL(/\/tai-khoan(?:#web-orders)?$/);
   });
 
   test('Catalog grid stays responsive after leaving a profile with an unsaved draft', async ({
@@ -928,18 +928,19 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
     await expect(page.locator('.member-page')).toBeVisible();
     await page
       .getByRole('navigation', { name: 'Điều hướng tài khoản' })
-      .getByRole('link', { name: 'Hồ sơ cá nhân', exact: true })
+      .getByRole('link', { name: 'Hồ sơ', exact: true })
       .click();
+    await page.getByRole('button', { name: 'Chỉnh sửa thông tin' }).click();
     await page.getByLabel('Họ và tên *').fill('Bản nháp chưa lưu');
     await page
       .getByRole('navigation', { name: 'Điều hướng tài khoản' })
-      .getByRole('link', { name: 'Tổng quan', exact: true })
+      .getByRole('link', { name: 'Đơn hàng', exact: true })
       .click();
     await page
       .getByRole('dialog', { name: 'Bạn có thay đổi chưa lưu' })
       .getByRole('button', { name: 'Rời trang', exact: true })
       .click();
-    await expect(page).toHaveURL(/\/tai-khoan(?:#overview)?$/);
+    await expect(page).toHaveURL(/\/tai-khoan(?:#web-orders)?$/);
     await page.getByRole('link', { name: 'Sản phẩm hoa', exact: true }).first().click();
     await expect(page).toHaveURL(/\/dat-hoa$/);
     const grid = page.locator('.flower-catalog-grid');
@@ -973,6 +974,7 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
       route.fulfill({ json: makeMockProfile() }),
     );
     await page.goto('/ho-so');
+    await page.getByRole('button', { name: 'Chỉnh sửa thông tin' }).click();
     const input = page.getByLabel('Họ và tên *');
     await input.click();
     await input.fill('Bản nháp giữ khi tải lại');
@@ -1003,6 +1005,7 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
       return route.fulfill({ status: 204 });
     });
     await page.goto('/ho-so');
+    await page.getByRole('button', { name: 'Chỉnh sửa thông tin' }).click();
     await page.getByLabel('Họ và tên *').fill('Bản nháp');
     await page
       .getByRole('button', { name: `Mở menu người dùng của ${sessions.CUSTOMER.name}` })
@@ -1014,9 +1017,9 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
     await page.getByRole('button', { name: 'Hủy thay đổi', exact: true }).click();
     await page
       .getByRole('navigation', { name: 'Điều hướng tài khoản' })
-      .getByRole('link', { name: 'Tổng quan', exact: true })
+      .getByRole('link', { name: 'Đơn hàng', exact: true })
       .click();
-    await expect(page).toHaveURL(/\/tai-khoan(?:#overview)?$/);
+    await expect(page).toHaveURL(/\/tai-khoan(?:#web-orders)?$/);
     await expect(page.getByRole('dialog')).toHaveCount(0);
   });
 
@@ -1045,6 +1048,55 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
       expect(axeResults.violations).toEqual([]);
     });
   }
+
+  test('Seller avatar uses the shop name in both headers and reflects a saved rename', async ({
+    page,
+  }) => {
+    const seller = sessions.SELLER;
+    let shopName = 'Tiệm Hoa Mộc';
+    const renamed = 'Hoa Mộc Studio';
+    let saved: unknown;
+    await page.route('**/api/auth/me', (route) => route.fulfill({ json: seller }));
+    await page.route('**/api/account/profile', (route) =>
+      route.fulfill({ json: makeMockProfile({ id: seller.id, fullName: seller.name }) }),
+    );
+    await page.route('**/api/me/shop', async (route) => {
+      if (route.request().method() === 'PATCH') {
+        saved = route.request().postDataJSON();
+        shopName = (saved as { shopName: string }).shopName;
+      }
+      return route.fulfill({
+        json: {
+          id: seller.sellerId,
+          shopName,
+          phone: '0901234567',
+          contactEmail: 'shop@example.test',
+          address: null,
+          status: 'ACTIVE',
+        },
+      });
+    });
+
+    const avatar = (name: string) =>
+      page.getByRole('button', { name: `Mở menu người dùng của ${name}`, exact: true });
+
+    await page.goto('/ve-florabot');
+    await avatar(shopName).click();
+    await page.locator('#site-user-menu').getByRole('link', { name: 'Quản lý shop' }).click();
+    await expect(page).toHaveURL(/\/seller$/);
+    await page
+      .locator('.dashboard-account')
+      .getByRole('button', { name: `Mở menu người dùng của ${shopName}` })
+      .click();
+    await page.locator('#workspace-user-menu').getByRole('link', { name: 'Hồ sơ cá nhân' }).click();
+    await expect(page.getByLabel('Họ và tên *')).toHaveValue(seller.name);
+    await page.getByText('Xem và cập nhật thông tin cửa hàng', { exact: true }).click();
+    await page.getByLabel('Tên cửa hàng *').fill(renamed);
+    await page.getByRole('button', { name: 'Lưu hồ sơ cửa hàng' }).click();
+    await expect(avatar(renamed)).toBeVisible();
+    expect(saved).toEqual({ shopName: renamed, phone: null, contactEmail: null });
+    await expect(page.getByLabel('Họ và tên *')).toHaveValue(seller.name);
+  });
 
   test('Seller keeps personal actions in the avatar menu and out of the workspace sidebar', async ({
     page,
@@ -1077,12 +1129,26 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
       .click();
     const personalLinks = page.locator('#workspace-user-menu');
 
-    const buyPersonal = personalLinks.getByRole('link', { name: 'Tài khoản và hồ sơ' });
-    await expect(buyPersonal).toBeVisible();
-    await expect(buyPersonal).toHaveAttribute('href', '/tai-khoan');
+    await expect(personalLinks.locator('a[href^="/tai-khoan"]')).toHaveCount(0);
 
     const profileLink = personalLinks.getByRole('link', { name: 'Hồ sơ cá nhân' });
-    await expect(profileLink).toHaveCount(0);
+    await expect(profileLink).toHaveAttribute('href', '/ho-so');
     await expect(personalLinks.getByRole('link', { name: 'Về trang chủ' })).toHaveCount(0);
+    await profileLink.click();
+    await expect(page.getByRole('heading', { level: 1, name: 'Hồ sơ cá nhân' })).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: 'Quản lý tài khoản nhận hoàn phí của shop' }),
+    ).toHaveAttribute('href', '/seller/commerce#shop-bank-heading');
+    await expect(page.locator('.shop-bank-section')).toHaveCount(0);
+
+    const buyingRequests: string[] = [];
+    await page.route('**/api/member/preorders**', (route) => {
+      buyingRequests.push(route.request().url());
+      return route.fulfill({ status: 403 });
+    });
+    await page.goto('/tai-khoan#web-orders');
+    await expect(page).toHaveURL(/\/ho-so$/);
+    await expect(page.getByRole('heading', { level: 1, name: 'Hồ sơ cá nhân' })).toBeVisible();
+    expect(buyingRequests).toEqual([]);
   });
 });

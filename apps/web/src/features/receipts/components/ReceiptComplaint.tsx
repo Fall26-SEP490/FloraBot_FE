@@ -27,17 +27,39 @@ const empty: Fields = { reason: '', photo: '' };
 export default function ReceiptComplaint({
   orderId,
   trackingToken,
+  onCheckReceipt,
   onSaved,
+  canComplain,
+  receiptRevision,
 }: {
   orderId: string;
   trackingToken: string;
+  onCheckReceipt: () => Promise<boolean>;
   onSaved: () => void;
+  canComplain: boolean;
+  receiptRevision: number;
 }) {
   const [editing, setEditing] = useState(false);
   const [review, setReview] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [checkReceipt, setCheckReceipt] = useState(false);
-  const [error, setError] = useState('');
+  const [blockedRevision, setBlockedRevision] = useState<number | null>(null);
+  const checkReceipt = !canComplain || blockedRevision === receiptRevision;
+  function setCheckReceipt(value: boolean) {
+    setBlockedRevision(value ? receiptRevision : null);
+  }
+  const [checkingReceipt, setCheckingReceipt] = useState(false);
+  const [errorState, setErrorState] = useState('');
+  const [errorRevision, setErrorRevision] = useState(receiptRevision);
+  function setError(value: string) {
+    setErrorState(value);
+    setErrorRevision(receiptRevision);
+  }
+  const error =
+    !canComplain && editing
+      ? 'Biên nhận hiện không cho phép gửi phản ánh. Nội dung đang nhập vẫn được giữ để bạn xem lại.'
+      : errorRevision === receiptRevision
+        ? errorState
+        : '';
   const form = useForm<Fields>({ resolver: zodResolver(schema), defaultValues: empty });
   const controller = useRef<AbortController | null>(null);
   const sending = useRef(false);
@@ -55,7 +77,7 @@ export default function ReceiptComplaint({
   }, [editing, review, form]);
 
   async function submit(values: Fields) {
-    if (sending.current || checkReceipt) return;
+    if (sending.current || checkReceipt || !canComplain) return;
     sending.current = true;
     setSaving(true);
     setError('');
@@ -80,16 +102,16 @@ export default function ReceiptComplaint({
       if (active.signal.aborted) return;
       if (response.ok) {
         form.reset(empty);
+        setEditing(false);
+        setCheckReceipt(false);
         onSaved();
         return;
       }
       if (response.status >= 500) throw new Error('unknown-outcome');
       if (response.status === 404 || response.status === 409) {
         setCheckReceipt(true);
-        setEditing(false);
-        form.reset(empty);
         setError(
-          'Trạng thái hoặc thời hạn phản ánh đã thay đổi, hoặc hai mã chưa khớp. Chọn “Cập nhật trạng thái” để cập nhật trước khi tiếp tục.',
+          'Trạng thái hoặc thời hạn phản ánh đã thay đổi. Chọn “Kiểm tra trạng thái biên nhận” trước khi tiếp tục.',
         );
       } else {
         setError(
@@ -101,12 +123,10 @@ export default function ReceiptComplaint({
       setReview(false);
     } catch {
       if (!active.signal.aborted) {
-        form.reset(empty);
-        setEditing(false);
         setReview(false);
         setCheckReceipt(true);
         setError(
-          'Chưa xác nhận được kết quả gửi. Phản ánh có thể đã được ghi nhận. Chọn “Cập nhật trạng thái” để kiểm tra trước khi gửi lại.',
+          'Chưa xác nhận được kết quả gửi. Nội dung và ảnh vẫn được giữ. Hãy kiểm tra trạng thái biên nhận trước khi gửi lại.',
         );
       }
     } finally {
@@ -115,6 +135,7 @@ export default function ReceiptComplaint({
     }
   }
 
+  if (!editing && !canComplain) return null;
   return (
     <div className="receipt-complaint">
       <h3>Có điều gì chưa như mong đợi?</h3>
@@ -122,7 +143,7 @@ export default function ReceiptComplaint({
         Hãy kể cho chúng tôi vấn đề của bó hoa bạn nhận được. Mỗi đơn chỉ gửi một phản ánh; đội ngũ
         sẽ xem xét trước khi quyết định cách xử lý.
       </p>
-      {!editing && !checkReceipt && (
+      {!editing && (
         <Button
           ref={opener}
           variant="outline"
@@ -197,13 +218,35 @@ export default function ReceiptComplaint({
             </div>
           )}
           <div className="receipt-actions">
-            <Button type="submit" disabled={saving}>
-              {saving
-                ? 'Đang gửi phản ánh…'
-                : review
-                  ? 'Xác nhận gửi phản ánh'
-                  : 'Kiểm tra phản ánh'}
-            </Button>
+            {checkReceipt ? (
+              <Button
+                type="button"
+                disabled={checkingReceipt}
+                onClick={async () => {
+                  setCheckingReceipt(true);
+                  try {
+                    if (await onCheckReceipt()) {
+                      setCheckReceipt(false);
+                      setError('');
+                    } else {
+                      setError('Chưa xác nhận được bạn có thể gửi lại. Bản nháp vẫn được giữ.');
+                    }
+                  } finally {
+                    setCheckingReceipt(false);
+                  }
+                }}
+              >
+                {checkingReceipt ? 'Đang kiểm tra…' : 'Kiểm tra trạng thái biên nhận'}
+              </Button>
+            ) : (
+              <Button type="submit" disabled={saving}>
+                {saving
+                  ? 'Đang gửi phản ánh…'
+                  : review
+                    ? 'Xác nhận gửi phản ánh'
+                    : 'Kiểm tra phản ánh'}
+              </Button>
+            )}
             {review && (
               <Button
                 type="button"

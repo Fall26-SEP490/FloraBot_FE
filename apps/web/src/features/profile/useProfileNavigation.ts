@@ -3,25 +3,25 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 export type ProfileSectionItem = readonly [id: string, label: string];
 
 export const profileSections: readonly ProfileSectionItem[] = [
-  ['identity-heading', 'Tài khoản'],
   ['basic-info-heading', 'Thông tin cá nhân'],
-  ['contact-email-heading', 'Email liên hệ'],
   ['personal-bank-heading', 'Ngân hàng'],
   ['security', 'Bảo mật'],
 ] as const;
 
 export function getProfileSections(
   role?: string | null,
-  hasShopBank?: boolean,
+  hasPersonalBank?: boolean,
 ): readonly ProfileSectionItem[] {
-  if (role !== 'SELLER') return profileSections;
+  if (role === 'CUSTOMER') return profileSections;
+  if (role !== 'SELLER')
+    return [
+      ['basic-info-heading', 'Thông tin cá nhân'],
+      ...(hasPersonalBank ? ([['personal-bank-heading', 'Ngân hàng cá nhân']] as const) : []),
+    ];
   return [
-    ['identity-heading', 'Tài khoản'],
     ['basic-info-heading', 'Thông tin cá nhân'],
-    ['contact-email-heading', 'Email liên hệ'],
-    ['personal-bank-heading', 'Ngân hàng'],
+    ['personal-bank-heading', 'Ngân hàng cá nhân'],
     ['seller-shop-heading', 'Hồ sơ shop'],
-    ...(hasShopBank ? ([['shop-bank-heading', 'Ngân hàng shop']] as const) : []),
     ['security', 'Bảo mật'],
   ];
 }
@@ -45,7 +45,7 @@ export function useProfileNavigation(
   ready: boolean,
   sections: readonly ProfileSectionItem[] = profileSections,
 ) {
-  const [activeSection, setCurrentSection] = useState<string>('identity-heading');
+  const [activeSection, setCurrentSection] = useState<string>('basic-info-heading');
   const requestedSection = useRef<string | null>(null);
 
   const setActiveSection = useCallback((id: string) => {
@@ -71,7 +71,7 @@ export function useProfileNavigation(
         ? navigation.getBoundingClientRect().bottom
         : (header?.getBoundingClientRect().bottom ?? 0);
       const threshold = top + Math.min(120, Math.max(80, (innerHeight - top) * 0.16));
-      let current: string = sections[0]?.[0] ?? 'identity-heading';
+      let current: string = sections[0]?.[0] ?? 'basic-info-heading';
       if (window.scrollY > 1) {
         for (const [id] of sections) {
           const element = document.getElementById(id);
@@ -79,7 +79,7 @@ export function useProfileNavigation(
           if ((section?.getBoundingClientRect().top ?? Infinity) <= threshold) current = id;
         }
         if (Math.ceil(window.scrollY + innerHeight) >= document.documentElement.scrollHeight - 2)
-          current = 'security';
+          current = sections.at(-1)?.[0] ?? current;
       }
       current = requestedSection.current ?? current;
       if (current !== previousSection && horizontal && navigation) {

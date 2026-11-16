@@ -26,7 +26,6 @@ import {
   orderStage,
   sellerOrderActionLabel,
   customerOrderActionLabel,
-  customerOrderHint,
   sellerOrderHint,
   statusName,
   money,
@@ -36,7 +35,12 @@ import type { OrderFilter, Page, SendPreorderPickupOtpResponse, WebOrder } from 
 import styles from './seller-orders.module.css';
 import customerStyles from './customer-orders.module.css';
 import './admin-preorders.css';
+import { fetchMemberHistory } from '../customer-account/customer-account.api';
+import { CustomerPurchaseCard } from '../customer-account/CustomerPurchaseCard';
+import type { CustomerHistoryItem } from '../customer-account/customer-account.types';
 import { CustomerQuoteDetails, CustomerPaymentReturn } from './CustomerQuoteDetails';
+import { PreorderAccessories, PreorderPackingList } from './PreorderAccessories';
+import accessoryStyles from './preorder-accessories.module.css';
 import CustomerPickupGuide from './CustomerPickupGuide';
 import CustomerOrderChat from './CustomerOrderChat';
 import PreorderLoadingButton from './PreorderLoadingButton';
@@ -45,6 +49,7 @@ import AssignPreorderStock from './AssignPreorderStock';
 import { readSellerQueue, sellerQueueKey, SELLER_RESULT_SIZE } from './seller-queue';
 import { rememberPreorderPayment } from './payment-return';
 import ProductThumbnail from '../product-management/components/ProductThumbnail';
+import { fetchProducts } from '../product-management/product.api';
 
 const sellerFilters: { value: OrderFilter; label: string }[] = [
   { value: 'all', label: 'Tất cả' },
@@ -79,6 +84,7 @@ function OrderActions({
   base,
   mode,
   role,
+  userId,
   page,
   filter,
   onReload,
@@ -87,9 +93,10 @@ function OrderActions({
   base: string;
   mode: 'member' | 'seller' | 'admin';
   role?: string;
+  userId?: string;
   page: number;
   filter: OrderFilter;
-  onReload: () => Promise<void>;
+  onReload: () => Promise<WebOrder>;
 }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -109,13 +116,72 @@ function OrderActions({
   const [paymentLink, setPaymentLink] = useState<
     components['schemas']['PaymentLinkResponse'] | null
   >(null);
+  const [paymentOpen, setPaymentOpen] = useState(false);
+  const [hadPaymentLink, setHadPaymentLink] = useState(false);
+  const [loadingPayment, setLoadingPayment] = useState(false);
+  const paymentResult = useRef<HTMLDivElement>(null);
   const [checking, setChecking] = useState(false);
   const sending = useRef(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  const [price, setPrice] = useState(String(row.quotedPrice || ''));
+  const [priceDraft, setPriceDraft] = useState<string | null>(null);
+  const [quoteQuantities, setQuoteQuantities] = useState<Record<string, number>>({});
+  const requestedAccessories = row.requestedAccessories ?? [];
+  const [unavailableQuote, setUnavailableQuote] = useState<WebOrder['quoteVersion'] | null>(null);
+  const accessoryStockBlocked =
+    unavailableQuote !== null && unavailableQuote === (row.quoteVersion ?? 0);
   const [note, setNote] = useState('');
   const [reject, setReject] = useState(false);
+  const editingQuote = mode === 'seller' && action === 'quote' && !reject;
+  const products = useQuery({
+    queryKey: ['products', row.sellerId],
+    queryFn: fetchProducts,
+    enabled: editingQuote && row.quotedFlowerPrice == null && row.quotedPrice == null,
+    staleTime: 0,
+  });
+  const accessoryCatalog = useQuery({
+    queryKey: ['seller-accessories', row.sellerId],
+    queryFn: () =>
+      request<components['schemas']['SellerAccessoryResponse'][]>(
+        `/sellers/${row.sellerId}/accessories`,
+      ),
+    enabled: editingQuote && requestedAccessories.length > 0,
+    staleTime: 0,
+  });
+  const sample = Array.isArray(products.data)
+    ? products.data.find((item) => item.id === row.productId)?.price
+    : undefined;
+  const price = priceDraft ?? (sample != null && Number(sample) > 0 ? String(sample) : '');
+  const catalogItems = Array.isArray(accessoryCatalog.data) ? accessoryCatalog.data : [];
+  const accessoryLines = requestedAccessories.map((item) => {
+    const quantity = quoteQuantities[item.accessoryId] ?? 0;
+    const current = catalogItems.find(
+      (entry) => entry.id === item.accessoryId && entry.kioskId === row.kioskId,
+    );
+    const unitPrice = current?.status === 'ACTIVE' ? Number(current.price) : NaN;
+    return {
+      ...item,
+      accepted: quantity,
+      lineTotal:
+        quantity === 0
+          ? 0
+          : Number.isSafeInteger(unitPrice) && unitPrice > 0
+            ? unitPrice * quantity
+            : null,
+      stockIssue:
+        accessoryCatalog.isSuccess &&
+        Array.isArray(accessoryCatalog.data) &&
+        quantity > 0 &&
+        (current?.status !== 'ACTIVE' || Number(current.stockQuantity) < quantity),
+    };
+  });
+  const accessoryTotal = accessoryLines.some((item) => item.lineTotal === null)
+    ? null
+    : accessoryLines.reduce((sum, item) => sum + (item.lineTotal ?? 0), 0);
+  const projectedTotal =
+    price.trim() && Number(price) > 0 && accessoryTotal !== null
+      ? Number(price) + accessoryTotal
+      : null;
   const [pickup, setPickup] = useState(() => {
     const date = new Date(row.pickupAt);
     return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
@@ -134,12 +200,14 @@ function OrderActions({
     price: number | null;
     pickupAt: string;
     note: string | null;
+    quoteVersion?: number | string;
   } | null>(null);
   const reviewedQuoteChanged = Boolean(
     reviewedQuote &&
     (reviewedQuote.price !== row.quotedPrice ||
       reviewedQuote.pickupAt !== row.pickupAt ||
-      reviewedQuote.note !== row.quoteNote),
+      reviewedQuote.note !== row.quoteNote ||
+      reviewedQuote.quoteVersion !== row.quoteVersion),
   );
   const [otpSending, setOtpSending] = useState(false);
   const otpSendingRef = useRef(false);
@@ -225,6 +293,13 @@ function OrderActions({
   }
   const quoteExpired = Boolean(row.quoteExpiresAt && new Date(row.quoteExpiresAt).getTime() <= now);
   const paymentExpired = Boolean(row.payBefore && new Date(row.payBefore).getTime() <= now);
+  const showingPayment = mode === 'member' && paymentOpen && row.orderStatus === 'AWAITING_PAYMENT';
+  const paymentWasOpen = useRef(false);
+  useEffect(() => {
+    if (paymentWasOpen.current && !showingPayment && paymentOpen)
+      paymentResult.current?.focus({ preventScroll: true });
+    paymentWasOpen.current = showingPayment;
+  }, [showingPayment, paymentOpen]);
   const hasQuotedPrice = row.quotedPrice != null && Number.isFinite(row.quotedPrice);
   const slots = useQuery({
     queryKey: ['seller-kiosk-slots', row.sellerId, row.kioskId],
@@ -250,6 +325,7 @@ function OrderActions({
       mode === 'member' &&
       kind === 'accept' &&
       (!hasQuotedPrice ||
+        accessoryStockBlocked ||
         reviewedQuoteChanged ||
         (row.quoteExpiresAt && new Date(row.quoteExpiresAt).getTime() <= Date.now()))
     ) {
@@ -269,6 +345,11 @@ function OrderActions({
     }
     sending.current = true;
     setBusy(true);
+    if (kind === 'payment-link') {
+      setPaymentOpen(true);
+      setLoadingPayment(true);
+      setPaymentLink(null);
+    }
     setError('');
     setNotice('');
     try {
@@ -289,12 +370,21 @@ function OrderActions({
           orderCode <= 0
         )
           throw new Error('Liên kết thanh toán không hợp lệ.');
-        rememberPreorderPayment(row.id, page, orderCode);
+        rememberPreorderPayment(row.id, page, orderCode, userId);
         setPaymentLink({ ...result, checkoutUrl: validation.url });
+        setHadPaymentLink(true);
       } else {
         setAction(null);
         setConfirm(false);
-        setNotice('Đã cập nhật yêu cầu.');
+        setNotice(
+          kind === 'quote'
+            ? reject
+              ? 'Đã từ chối yêu cầu.'
+              : row.state === 'QUOTED'
+                ? 'Đã cập nhật báo giá.'
+                : 'Đã gửi báo giá.'
+            : 'Đã cập nhật yêu cầu.',
+        );
       }
     } catch (cause) {
       if (
@@ -312,18 +402,35 @@ function OrderActions({
           /* Keep the in-memory lock. */
         }
       }
-      setError(
-        cause instanceof ApiError
-          ? cause.message
-          : 'Chưa xác nhận được kết quả. Chọn cập nhật để kiểm tra trước khi gửi lại.',
-      );
+      if (kind === 'accept' && cause instanceof ApiError && cause.status === 409) {
+        setAction(null);
+        setConfirm(false);
+        setReviewedQuote(null);
+        if (cause.code === 'PREORDER_ACCESSORY_OUT_OF_STOCK') {
+          setUnavailableQuote(row.quoteVersion ?? 0);
+        } else {
+          setError(
+            `Không thể xác nhận báo giá: ${cause.message} Hãy kiểm tra lại báo giá từ shop.`,
+          );
+        }
+      } else {
+        setError(
+          cause instanceof ApiError
+            ? cause.message
+            : 'Chưa xác nhận được kết quả. Chọn cập nhật để kiểm tra trước khi gửi lại.',
+        );
+      }
     } finally {
       await queryClient.invalidateQueries({ queryKey: ['web-orders'] });
+      if (kind === 'accept' || kind === 'cancel') {
+        void queryClient.invalidateQueries({ queryKey: ['preorder-accessories', row.kioskId] });
+      }
       if (mode === 'seller' && kind === 'fulfill') {
         await queryClient.invalidateQueries({ queryKey: ['products'] });
       }
       sending.current = false;
       setBusy(false);
+      if (kind === 'payment-link') setLoadingPayment(false);
     }
   }
   const canCancel =
@@ -338,105 +445,132 @@ function OrderActions({
     setNote('');
   }
 
+  const sellerWaitingForQuote = mode === 'seller' && row.state === 'QUOTED' && !row.orderStatus;
+  const sellerWaitingForPayment = mode === 'seller' && row.orderStatus === 'AWAITING_PAYMENT';
+  const quoteStage = sellerWaitingForQuote
+    ? quoteExpired
+      ? 'Báo giá hết hạn'
+      : 'Chờ khách xác nhận'
+    : sellerWaitingForPayment
+      ? 'Chờ thanh toán'
+      : mode === 'member' && row.state === 'QUOTED' && !row.orderId
+        ? 'Xác nhận báo giá'
+        : mode === 'member' && row.orderStatus === 'AWAITING_PAYMENT'
+          ? 'Chờ thanh toán'
+          : 'Báo giá & thanh toán';
   const progress = (
     <ol className="order-progress" aria-label="Tiến độ đơn đặt hoa">
-      {['Yêu cầu', 'Báo giá & thanh toán', 'Chuẩn bị', 'Sẵn sàng nhận', 'Hoàn tất'].map(
-        (label, index) => (
-          <li
-            key={label}
-            data-complete={
-              index < orderStage(row) || (mode === 'seller' && row.orderStatus === 'COMPLETED')
-            }
-            aria-current={index === orderStage(row) ? 'step' : undefined}
-          >
-            <span aria-hidden="true">
-              {mode === 'seller' && (index < orderStage(row) || row.orderStatus === 'COMPLETED')
-                ? '✓'
-                : index + 1}
-            </span>
-            <div>
-              {label}
-              {mode === 'seller' && (
-                <span className="sr-only">
-                  {index < orderStage(row) || row.orderStatus === 'COMPLETED'
-                    ? ' — đã hoàn thành'
-                    : index === orderStage(row)
-                      ? ' — hiện tại'
-                      : ' — chưa đến'}
-                </span>
-              )}
-            </div>
-          </li>
-        ),
-      )}
+      {['Yêu cầu', quoteStage, 'Chuẩn bị', 'Sẵn sàng nhận', 'Hoàn tất'].map((label, index) => (
+        <li
+          key={label}
+          data-complete={
+            index < orderStage(row) ||
+            ((mode === 'seller' || mode === 'member') && row.orderStatus === 'COMPLETED')
+          }
+          aria-current={index === orderStage(row) ? 'step' : undefined}
+        >
+          <span aria-hidden="true">
+            {mode === 'seller' && (index < orderStage(row) || row.orderStatus === 'COMPLETED')
+              ? '✓'
+              : index + 1}
+          </span>
+          <div>
+            {label}
+            {(mode === 'seller' || mode === 'member') && (
+              <span className="sr-only">
+                {index < orderStage(row) || row.orderStatus === 'COMPLETED'
+                  ? ' — đã hoàn thành'
+                  : index === orderStage(row)
+                    ? ' — hiện tại'
+                    : ' — chưa đến'}
+              </span>
+            )}
+          </div>
+        </li>
+      ))}
     </ol>
   );
   return (
-    <div className="web-order-actions">
+    <div
+      className={
+        mode === 'member' ? `web-order-actions ${customerStyles.orderDetails}` : 'web-order-actions'
+      }
+    >
       {mode === 'seller' &&
-        (!orderClosed(row) || row.orderStatus === 'COMPLETED') &&
+        (!orderClosed(row) || (mode === 'seller' && row.orderStatus === 'COMPLETED')) &&
         !['DISPUTED', 'DISPENSE_FAILED'].includes(row.orderStatus ?? '') &&
         progress}
-      <div
-        className={mode === 'seller' && orderClosed(row) ? 'order-closed-note' : 'order-next-step'}
-        role="note"
-      >
-        {!(mode === 'seller' && orderClosed(row)) && (
-          <strong>{mode === 'admin' ? 'Tình trạng xử lý' : 'Bước tiếp theo'}</strong>
-        )}
-        <p>{mode === 'member' ? customerOrderHint(row) : orderNextStep(row, mode)}</p>
-      </div>
-      {mode === 'member' &&
-        !(
-          mode === 'member' &&
-          ((!row.orderId && row.state === 'QUOTED') || row.orderStatus === 'AWAITING_PAYMENT')
-        ) &&
-        !orderClosed(row) &&
-        !['DISPUTED', 'DISPENSE_FAILED'].includes(row.orderStatus ?? '') &&
-        progress}
-      {mode === 'member' && <CustomerQuoteDetails row={row} now={now} />}
-      {mode === 'member' &&
-        row.orderStatus === 'AWAITING_PAYMENT' &&
-        !paymentExpired &&
-        paymentLink && (
-          <PayosCheckout
-            checkoutUrl={paymentLink.checkoutUrl}
-            qrCode={paymentLink.qrCode}
-            amount={paymentLink.amount}
-            orderCode={paymentLink.orderCode}
-            recipientName={paymentLink.recipientName}
-            recipientAccountMasked={paymentLink.recipientAccountMasked}
-            title="Thanh toán đơn hoa"
-            description={[
-              row.shopName || 'Đơn đặt hoa',
-              money(Number(paymentLink.amount)),
-              paymentLink.recipientAccountMasked
-                ? [
-                    'Tài khoản nhận của shop',
-                    paymentLink.recipientName,
-                    paymentLink.recipientAccountMasked,
-                  ]
-                    .filter(Boolean)
-                    .join(' ')
-                : null,
-            ]
-              .filter(Boolean)
-              .join(' · ')}
-            onClose={(result) => {
-              setPaymentLink(null);
-              setNotice(
-                result === 'success'
-                  ? 'Đang cập nhật trạng thái thanh toán từ hệ thống. Nếu đã trả tiền, chờ xác nhận trước khi thanh toán lại.'
-                  : 'Đã đóng màn hình thanh toán. Xem trạng thái đơn bên dưới.',
-              );
-              void onReload();
-            }}
-            onRefresh={() => void onReload()}
-            onRetryQr={() => void send('payment-link', {})}
-            isLoadingQr={busy || uncertain}
-            qrError={error}
-          />
-        )}
+      {action !== 'quote' && mode !== 'member' && (
+        <div
+          className={
+            mode === 'seller' && orderClosed(row) ? 'order-closed-note' : 'order-next-step'
+          }
+          role="note"
+        >
+          {!(mode === 'seller' && orderClosed(row)) && (
+            <strong>
+              {sellerWaitingForQuote
+                ? quoteExpired
+                  ? 'Báo giá đã hết hạn'
+                  : 'Đã gửi báo giá · Chờ khách xác nhận'
+                : sellerWaitingForPayment
+                  ? 'Khách đã xác nhận · Chờ thanh toán'
+                  : mode === 'admin'
+                    ? 'Tình trạng xử lý'
+                    : 'Bước tiếp theo'}
+            </strong>
+          )}
+          <p>
+            {sellerWaitingForQuote && quoteExpired
+              ? 'Chỉnh sửa và gửi báo giá mới nếu shop vẫn nhận được yêu cầu.'
+              : sellerWaitingForQuote || sellerWaitingForPayment
+                ? 'Bạn có thể chuẩn bị hoa sau khi đơn đã thanh toán.'
+                : orderNextStep(row, mode)}
+          </p>
+        </div>
+      )}
+      {mode === 'member' && (
+        <div ref={paymentResult} tabIndex={-1}>
+          <CustomerQuoteDetails row={row} now={now} />
+        </div>
+      )}
+      {accessoryStockBlocked && row.state === 'QUOTED' && !row.orderId && (
+        <p role="alert" className="error">
+          Phụ kiện trong báo giá không còn đủ. Hãy nhắn shop cập nhật báo giá trước khi xác nhận
+          lại.
+        </p>
+      )}
+      {showingPayment && (
+        <PayosCheckout
+          checkoutUrl={paymentLink?.checkoutUrl}
+          qrCode={paymentLink?.qrCode}
+          amount={paymentLink?.amount ?? row.quotedPrice}
+          orderCode={paymentLink?.orderCode}
+          recipientName={paymentLink?.recipientName}
+          recipientAccountMasked={paymentLink?.recipientAccountMasked}
+          title="Thanh toán đơn hoa"
+          description={row.shopName || 'Đơn đặt hoa'}
+          onClose={() => setPaymentOpen(false)}
+          onRefresh={async () => {
+            const fresh = await onReload();
+            if (uncertain) {
+              setUncertain(false);
+              try {
+                sessionStorage.removeItem(uncertaintyKey);
+              } catch {
+                /* In-memory state still applies. */
+              }
+            }
+            return fresh.orderStatus !== 'AWAITING_PAYMENT';
+          }}
+          onRetryQr={() => void send('payment-link', {})}
+          isLoadingQr={loadingPayment}
+          qrError={error}
+          expired={paymentExpired}
+          retryDisabled={uncertain}
+          allowStatusCheck={hadPaymentLink || uncertain}
+        />
+      )}
       {mode === 'admin' && (
         <>
           {row.address && (
@@ -486,6 +620,9 @@ function OrderActions({
           )}
         </div>
       )}
+      {mode !== 'member' && action !== 'quote' && action !== 'fulfill' && (
+        <PreorderAccessories row={row} showTotal={mode === 'seller'} />
+      )}
       {mode === 'member' && <CustomerPickupGuide row={row} now={now} />}
       {mode === 'member' && row.orderId && row.trackingToken && (
         <a
@@ -495,25 +632,29 @@ function OrderActions({
           Xem biên nhận và hỗ trợ hoàn tiền
         </a>
       )}
-      {mode === 'member' && role === 'CUSTOMER' && !action && !uncertain && (
-        <CustomerOrderChat row={row} page={page} filter={filter} />
-      )}
       {!action && mode !== 'admin' && (
-        <div className="stock-actions">
+        <div
+          className={
+            mode === 'member' ? `stock-actions ${customerStyles.memberActionRow}` : 'stock-actions'
+          }
+        >
           {mode === 'member' && row.state === 'QUOTED' && !row.orderId && (
             <Button
-              disabled={busy || uncertain || !hasQuotedPrice || quoteExpired}
+              disabled={
+                busy || uncertain || !hasQuotedPrice || quoteExpired || accessoryStockBlocked
+              }
               onClick={() => {
                 setReviewedQuote({
                   price: row.quotedPrice,
                   pickupAt: row.pickupAt,
                   note: row.quoteNote,
+                  quoteVersion: row.quoteVersion,
                 });
                 setAction('accept');
                 setConfirm(false);
               }}
             >
-              Kiểm tra báo giá
+              Xác nhận báo giá
             </Button>
           )}
           {mode === 'member' && row.orderStatus === 'AWAITING_PAYMENT' && (
@@ -525,15 +666,47 @@ function OrderActions({
               {busy ? 'Đang mở thanh toán…' : 'Thanh toán ngay'}
             </Button>
           )}
+          {mode === 'member' && role === 'CUSTOMER' && !uncertain && (
+            <CustomerOrderChat
+              row={row}
+              page={page}
+              filter={filter}
+              className={customerStyles.orderChatInline}
+            />
+          )}
           {mode === 'seller' && ['REQUESTED', 'QUOTED'].includes(row.state) && (
             <Button
+              variant={sellerWaitingForQuote ? 'outline' : 'default'}
               disabled={busy || uncertain}
               onClick={() => {
+                const savedPrice = row.quotedFlowerPrice ?? row.quotedPrice;
+                setPriceDraft(savedPrice == null ? null : String(savedPrice));
+                setNote(row.quoteNote ?? '');
+                setReject(false);
+                const date = new Date(row.pickupAt);
+                setPickup(
+                  new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
+                    .toISOString()
+                    .slice(0, 16),
+                );
+                setQuoteQuantities(
+                  Object.fromEntries(
+                    requestedAccessories.map(({ accessoryId, quantity }) => [
+                      accessoryId,
+                      Number(
+                        row.state === 'QUOTED'
+                          ? (row.quotedAccessories?.find((item) => item.accessoryId === accessoryId)
+                              ?.quantity ?? 0)
+                          : quantity,
+                      ),
+                    ]),
+                  ),
+                );
                 setAction('quote');
                 setConfirm(false);
               }}
             >
-              Báo giá hoặc từ chối
+              {sellerWaitingForQuote ? 'Chỉnh sửa báo giá' : 'Báo giá hoặc từ chối'}
             </Button>
           )}
           {mode === 'seller' &&
@@ -569,7 +742,12 @@ function OrderActions({
             </Button>
           )}
           {canCancel && (
-            <Button variant="outline" disabled={busy || uncertain} onClick={openCancellation}>
+            <Button
+              variant="outline"
+              className={mode === 'member' ? customerStyles.cancelButton : undefined}
+              disabled={busy || uncertain}
+              onClick={openCancellation}
+            >
               Hủy yêu cầu
             </Button>
           )}
@@ -606,6 +784,15 @@ function OrderActions({
                 pickupAt: new Date(pickup).toISOString(),
                 note,
                 reject,
+                ...(!reject &&
+                  requestedAccessories.length > 0 && {
+                    accessories: requestedAccessories.flatMap(({ accessoryId, quantity }) => {
+                      const accepted = quoteQuantities[accessoryId] ?? 0;
+                      return accepted > 0 && accepted <= Number(quantity)
+                        ? [{ accessoryId, quantity: accepted }]
+                        : [];
+                    }),
+                  }),
               });
             if (action === 'fulfill') {
               const loadingAccessId = getCurrentAccessId();
@@ -644,7 +831,7 @@ function OrderActions({
               {action === 'accept'
                 ? 'Xác nhận mẫu, giá và lịch nhận'
                 : action === 'quote'
-                  ? 'Phản hồi yêu cầu đặt hoa'
+                  ? 'Báo giá cho khách'
                   : action === 'fulfill'
                     ? fulfillStep === 1
                       ? 'Chọn ô nhận hoa'
@@ -659,7 +846,7 @@ function OrderActions({
             )}
             {action === 'accept' && reviewedQuoteChanged && (
               <p role="alert" className="error">
-                Shop đã cập nhật báo giá trong lúc bạn xem. Đóng phần xác nhận rồi chọn Kiểm tra báo
+                Shop đã cập nhật báo giá trong lúc bạn xem. Đóng phần xác nhận rồi chọn Xác nhận báo
                 giá để xem lại.
               </p>
             )}
@@ -675,25 +862,98 @@ function OrderActions({
                 </label>
                 {!reject && (
                   <>
-                    <label htmlFor={`quote-price-${row.id}`}>Giá trọn gói (đồng)</label>
-                    <input
-                      id={`quote-price-${row.id}`}
-                      type="number"
-                      min="1000"
-                      max="100000000"
-                      step="1000"
-                      required
-                      value={price}
-                      onChange={(event) => setPrice(event.target.value)}
-                    />
-                    <label htmlFor={`quote-pickup-${row.id}`}>Giờ bắt đầu nhận</label>
-                    <input
-                      id={`quote-pickup-${row.id}`}
-                      type="datetime-local"
-                      required
-                      value={pickup}
-                      onChange={(event) => setPickup(event.target.value)}
-                    />
+                    <div className={accessoryStyles.quoteFields}>
+                      <div>
+                        <label htmlFor={`quote-price-${row.id}`}>Giá bó hoa (đồng)</label>
+                        <input
+                          id={`quote-price-${row.id}`}
+                          type="number"
+                          min="1000"
+                          max="100000000"
+                          step="1"
+                          required
+                          value={price}
+                          onChange={(event) => setPriceDraft(event.target.value)}
+                        />
+                        {priceDraft === null && (products.isFetching || !price) && (
+                          <small>
+                            {products.isFetching
+                              ? 'Đang lấy giá mẫu…'
+                              : 'Chưa có giá mẫu. Nhập giá bó hoa.'}
+                          </small>
+                        )}
+                      </div>
+                      <div>
+                        <label htmlFor={`quote-pickup-${row.id}`}>Giờ bắt đầu nhận</label>
+                        <input
+                          id={`quote-pickup-${row.id}`}
+                          type="datetime-local"
+                          required
+                          value={pickup}
+                          onChange={(event) => setPickup(event.target.value)}
+                        />
+                      </div>
+                    </div>
+                    {requestedAccessories.length > 0 && (
+                      <section className={accessoryStyles.section} aria-label="Xác nhận phụ kiện">
+                        <strong>Phụ kiện khách yêu cầu</strong>
+                        <ul className={accessoryStyles.quoteLines}>
+                          {accessoryLines.map(
+                            ({ accessoryId, name, accepted, lineTotal, stockIssue }) => (
+                              <li key={accessoryId}>
+                                <span>
+                                  {name} × {accepted || '0'}
+                                  {accepted === 0 && ' · Không nhận'}
+                                  {stockIssue && (
+                                    <small className="error">
+                                      Kiểm tra tồn hoặc giảm số lượng.
+                                    </small>
+                                  )}
+                                </span>
+                                {accepted > 0 && (
+                                  <strong>
+                                    {lineTotal === null ? 'Chưa có giá' : money(lineTotal)}
+                                  </strong>
+                                )}
+                              </li>
+                            ),
+                          )}
+                        </ul>
+                        <details className={accessoryStyles.quoteAdjust}>
+                          <summary>Điều chỉnh phụ kiện</summary>
+                          <p>Giảm số lượng nếu thiếu hàng. Nhập 0 để bỏ món.</p>
+                          {requestedAccessories.map(({ accessoryId, name, quantity }) => (
+                            <div key={accessoryId} className={accessoryStyles.quoteOption}>
+                              <label htmlFor={`quote-accessory-${row.id}-${accessoryId}`}>
+                                {name} · yêu cầu {quantity}
+                              </label>
+                              <input
+                                id={`quote-accessory-${row.id}-${accessoryId}`}
+                                aria-label={`Số lượng xác nhận ${name}`}
+                                type="number"
+                                min={0}
+                                max={Number(quantity)}
+                                step={1}
+                                value={quoteQuantities[accessoryId] ?? 0}
+                                onChange={(event) => {
+                                  const value = Number(event.target.value);
+                                  if (
+                                    Number.isInteger(value) &&
+                                    value >= 0 &&
+                                    value <= Number(quantity)
+                                  ) {
+                                    setQuoteQuantities((current) => ({
+                                      ...current,
+                                      [accessoryId]: value,
+                                    }));
+                                  }
+                                }}
+                              />
+                            </div>
+                          ))}
+                        </details>
+                      </section>
+                    )}
                   </>
                 )}
               </>
@@ -703,7 +963,9 @@ function OrderActions({
                 <label htmlFor={`order-note-${row.id}`}>
                   {action === 'cancel'
                     ? 'Lý do hủy'
-                    : 'Mô tả mẫu hoa, điều kiện hoặc lý do từ chối'}
+                    : reject
+                      ? 'Lý do từ chối'
+                      : 'Ghi chú cho khách'}
                 </label>
                 <textarea
                   id={`order-note-${row.id}`}
@@ -714,6 +976,23 @@ function OrderActions({
                   onChange={(event) => setNote(event.target.value)}
                 />
               </>
+            )}
+            {editingQuote && (
+              <div className={accessoryStyles.quoteTotal}>
+                <span>Tổng dự kiến</span>
+                <strong aria-live="polite">
+                  {projectedTotal === null ? 'Chưa đủ thông tin' : money(projectedTotal)}
+                </strong>
+                <small>
+                  {accessoryTotal === null
+                    ? accessoryCatalog.isFetching
+                      ? 'Đang lấy giá phụ kiện…'
+                      : 'Chưa xác minh được giá một số phụ kiện.'
+                    : requestedAccessories.length > 0
+                      ? `Tiền phụ kiện: ${money(accessoryTotal)}. Tồn và tổng chính thức được kiểm tra khi gửi.`
+                      : 'Giá chính thức được xác nhận khi gửi báo giá.'}
+                </small>
+              </div>
             )}
             {action === 'fulfill' && fulfillStep === 1 && (
               <>
@@ -808,8 +1087,9 @@ function OrderActions({
             {action === 'fulfill' && fulfillStep === 2 && (
               <div className="fulfill-review">
                 <p>
-                  Chỉ xác nhận sau khi đã đặt đúng bó hoa vào ô. Thao tác này giữ ô cho khách, chưa
-                  mở cửa nhận hoa.
+                  Chỉ xác nhận sau khi đã đặt đúng bó hoa
+                  {row.quotedAccessories?.length ? ' và phụ kiện' : ''} vào ô. Thao tác này giữ ô
+                  cho khách, chưa mở cửa nhận hoa.
                 </p>
                 <dl>
                   <div>
@@ -828,6 +1108,7 @@ function OrderActions({
                     <dd>{qr}</dd>
                   </div>
                 </dl>
+                <PreorderPackingList items={row.quotedAccessories} />
                 <PreorderLoadingButton
                   key={slot}
                   path={`/me/preorders/${row.id}/loading-access`}
@@ -901,7 +1182,11 @@ function OrderActions({
                           ? 'Xác nhận nạp hoa'
                           : action === 'accept' && mode === 'member'
                             ? 'Đồng ý báo giá'
-                            : 'Xác nhận gửi'}
+                            : action === 'quote'
+                              ? sellerWaitingForQuote
+                                ? 'Cập nhật báo giá'
+                                : 'Gửi báo giá'
+                              : 'Xác nhận gửi'}
                 </Button>
               )}
               <Button
@@ -960,9 +1245,14 @@ function OrderActions({
         </div>
       )}
       <p role="alert" className="error">
-        {error}
+        {showingPayment ? '' : error}
       </p>
-      <p role="status">{notice}</p>
+      <p
+        role="status"
+        className={sellerWaitingForQuote && notice === 'Đã gửi báo giá.' ? 'sr-only' : undefined}
+      >
+        {notice}
+      </p>
     </div>
   );
 }
@@ -992,7 +1282,7 @@ export default function WebRequests({
     Number.isSafeInteger(initialPage) && initialPage > 0 ? initialPage : 1,
   );
   const [filter, setFilter] = useState<OrderFilter>(
-    filters.find((value) => value === initialFilter) ?? 'all',
+    mode === 'member' ? 'all' : (filters.find((value) => value === initialFilter) ?? 'all'),
   );
   const [resultPage, setResultPage] = useState<number | null>(null);
   const [queueLimit, setQueueLimit] = useState(50);
@@ -1020,8 +1310,46 @@ export default function WebRequests({
       mode === 'seller' && previousQuery?.queryKey[1] === base ? previous : undefined,
     enabled: mode !== 'seller' || Boolean(sellerId),
   });
+  const history = useQuery({
+    queryKey: ['member-history', session.data?.id, page],
+    queryFn: () => fetchMemberHistory(page),
+    enabled: mode === 'member' && Boolean(session.data?.id),
+  });
+  const historyItems = (history.data?.items ?? []).filter(
+    (order) =>
+      !query.data?.items.some(
+        (row) => row.orderId === order.id || (row.orderCode && row.orderCode === order.orderCode),
+      ),
+  );
+  const purchaseRows: (WebOrder & { purchase: CustomerHistoryItem })[] = historyItems.map(
+    (order) => ({
+      id: `purchase-${order.id}`,
+      kind: 'STOCK',
+      state: order.status,
+      orderStatus: order.status,
+      orderId: order.id,
+      orderCode: order.orderCode,
+      productName: order.items.join(', '),
+      shopName: order.shopName,
+      pickupAt: order.createdAt,
+      pickupBefore: '',
+      quotedPrice: Number(order.totalAmount),
+      productId: '',
+      kioskId: '',
+      sellerId: '',
+      instructions: '',
+      quoteNote: null,
+      quoteExpiresAt: null,
+      checkoutId: null,
+      trackingToken: null,
+      ready: false,
+      payBefore: null,
+      purchase: order,
+    }),
+  );
   const items = query.data?.items ?? [];
   const returnedRequest = mode === 'member' || mode === 'seller' ? params.get('requestId') : null;
+  const [openMemberOrder, setOpenMemberOrder] = useState(returnedRequest);
   const [readyNotice, setReadyNotice] = useState('');
   const previousReady = useRef<Map<string, boolean>>(new Map());
   const scrolledRequest = useRef<string | null>(null);
@@ -1041,6 +1369,9 @@ export default function WebRequests({
     if (returnedRequest && query.data && scrolledRequest.current !== returnedRequest) {
       const target = document.getElementById(`preorder-${returnedRequest}`);
       if (target) {
+        const historyGroup = target.closest<HTMLDetailsElement>('details[data-order-history]');
+        if (historyGroup) historyGroup.open = true;
+        if (mode === 'member' && target instanceof HTMLDetailsElement) target.open = true;
         target.scrollIntoView({ block: 'center' });
         if (mode === 'seller')
           target.querySelector<HTMLElement>('summary')?.focus({ preventScroll: true });
@@ -1049,9 +1380,11 @@ export default function WebRequests({
     }
   }, [returnedRequest, query.data, mode]);
   const Container = mode === 'seller' ? 'div' : 'section';
-  const filtered = items.filter(
+  const loadedItems: (WebOrder & { purchase?: CustomerHistoryItem })[] =
+    mode === 'member' ? [...items, ...purchaseRows] : items;
+  const filtered = loadedItems.filter(
     (row) =>
-      matchesOrderFilter(row, filter, mode) &&
+      (mode === 'member' || matchesOrderFilter(row, filter, mode)) &&
       (mode !== 'admin' ||
         !search.trim() ||
         searchable(
@@ -1082,12 +1415,234 @@ export default function WebRequests({
   const displayItems =
     mode === 'seller'
       ? filtered.slice((displayPage - 1) * SELLER_RESULT_SIZE, displayPage * SELLER_RESULT_SIZE)
-      : filtered;
+      : mode === 'member'
+        ? [...filtered].sort(
+            (a, b) =>
+              Number(matchesOrderFilter(b, 'attention', 'member')) -
+              Number(matchesOrderFilter(a, 'attention', 'member')),
+          )
+        : filtered;
   const interventionCount =
     mode === 'admin'
       ? items.filter((row) => matchesOrderFilter(row, 'attention', 'admin')).length
       : 0;
   const filterName = sellerFilters.find((item) => item.value === filter)?.label ?? 'Tất cả';
+  const memberGroups = [
+    {
+      id: 'attention',
+      title: 'Cần bạn xử lý',
+      rows: displayItems.filter((row) => matchesOrderFilter(row, 'attention', 'member')),
+    },
+    {
+      id: 'tracking',
+      title: 'Đang theo dõi',
+      rows: displayItems
+        .filter((row) => !orderClosed(row) && !matchesOrderFilter(row, 'attention', 'member'))
+        .sort((a, b) => Number(b.ready) - Number(a.ready)),
+    },
+    { id: 'history', title: 'Đã kết thúc', rows: displayItems.filter(orderClosed) },
+  ];
+  const openMemberHistory =
+    Boolean(returnedRequest && memberGroups[2].rows.some((row) => row.id === returnedRequest)) ||
+    (typeof window !== 'undefined' && window.location.hash === '#member-orders');
+  const renderOrder = (row: (typeof displayItems)[number]) =>
+    row.purchase ? (
+      <CustomerPurchaseCard key={row.id} order={row.purchase} disclosureGroup="customer-orders" />
+    ) : (
+      <li key={row.id}>
+        <details
+          id={`preorder-${row.id}`}
+          name={mode === 'member' ? 'customer-orders' : undefined}
+          open={row.id === (mode === 'member' ? openMemberOrder : returnedRequest) || undefined}
+          onToggle={
+            mode === 'member'
+              ? (event) => {
+                  const isOpen = event.currentTarget.open;
+                  setOpenMemberOrder((current) =>
+                    isOpen ? row.id : current === row.id ? null : current,
+                  );
+                }
+              : undefined
+          }
+        >
+          <summary
+            className={
+              mode === 'seller'
+                ? styles.orderSummary
+                : mode === 'member'
+                  ? customerStyles.summary
+                  : 'admin-preorder-row'
+            }
+          >
+            {mode === 'seller' ? (
+              <span className={styles.orderHeading}>
+                <strong>{row.orderCode || `Yêu cầu ${row.id.slice(0, 8)}`}</strong>
+                <span className={styles.kind}>
+                  {row.kind === 'CUSTOM' ? 'Hoa theo yêu cầu' : 'Hoa có sẵn'}
+                </span>
+                <span
+                  className={styles.status}
+                  data-status={
+                    row.ready && row.orderStatus === 'PAID' ? 'READY' : row.orderStatus || row.state
+                  }
+                >
+                  {statusName(row)}
+                </span>
+              </span>
+            ) : mode === 'member' ? (
+              <span className={customerStyles.content}>
+                <span className={customerStyles.heading}>
+                  <strong>{row.productName || 'Hoa theo yêu cầu'}</strong>
+                  <span
+                    className="order-status-pill"
+                    data-status={
+                      row.ready && row.orderStatus === 'PAID'
+                        ? 'READY'
+                        : row.orderStatus || row.state
+                    }
+                  >
+                    {statusName(row)}
+                  </span>
+                </span>
+                <span className={customerStyles.shop}>
+                  {row.shopName || 'Shop nhận yêu cầu'} ·{' '}
+                  {row.orderCode || `Yêu cầu ${row.id.slice(0, 8)}`}
+                </span>
+                <span className={customerStyles.facts}>
+                  <span>
+                    <small>Tủ nhận hoa</small>
+                    <span>{row.kioskName || 'Xem địa điểm trong chi tiết'}</span>
+                  </span>
+                  <span>
+                    <small>
+                      {row.orderStatus === 'PAID' && row.ready
+                        ? 'Giờ nhận hoa'
+                        : row.state === 'REQUESTED'
+                          ? 'Giờ nhận mong muốn'
+                          : 'Lịch nhận'}
+                    </small>
+                    <span>
+                      {when(row.pickupAt)}
+                      {row.orderStatus === 'PAID' && row.ready && row.pickupBefore && (
+                        <> – {when(row.pickupBefore)}</>
+                      )}
+                    </span>
+                  </span>
+                  <span>
+                    <small>Giá shop báo</small>
+                    <strong>
+                      {row.quotedPrice == null ? 'Chưa có báo giá' : money(row.quotedPrice)}
+                    </strong>
+                  </span>
+                </span>
+                <span className={customerStyles.next}>
+                  <span className={customerStyles.action}>
+                    <span className={customerStyles.actionExpand}>
+                      {customerOrderActionLabel(row)} <ArrowRight size={16} aria-hidden="true" />
+                    </span>
+                    <span className={customerStyles.actionCollapse}>
+                      Thu gọn <ChevronDown size={16} aria-hidden="true" />
+                    </span>
+                  </span>
+                </span>
+              </span>
+            ) : (
+              <>
+                <span className="admin-preorder-cell">
+                  <strong>{row.orderCode || `Yêu cầu ${row.id.slice(0, 8)}`}</strong>
+                  <small>
+                    {row.productName || (row.kind === 'CUSTOM' ? 'Hoa theo yêu cầu' : 'Hoa có sẵn')}
+                  </small>
+                </span>
+                <span className="admin-preorder-cell">
+                  <strong>{row.shopName || 'Chưa rõ shop'}</strong>
+                  <small>{row.kioskName || 'Chưa rõ tủ nhận'}</small>
+                </span>
+                <span className="admin-preorder-cell admin-preorder-schedule">
+                  <span>{when(row.pickupAt)}</span>
+                  <small>{row.quotedPrice == null ? 'Chưa báo giá' : money(row.quotedPrice)}</small>
+                </span>
+                <span className="admin-preorder-state">
+                  <span
+                    className="order-status-pill"
+                    data-status={
+                      row.ready && row.orderStatus === 'PAID'
+                        ? 'READY'
+                        : row.orderStatus || row.state
+                    }
+                  >
+                    {statusName(row)}
+                  </span>
+                  <ChevronDown size={17} aria-hidden="true" />
+                </span>
+              </>
+            )}
+            {mode === 'seller' && (
+              <>
+                <span className={styles.orderBody}>
+                  <span className={styles.product}>
+                    <ProductThumbnail
+                      sellerId={sellerId ?? row.sellerId}
+                      productId={row.productId}
+                      productName={row.productName || 'mẫu hoa'}
+                      className={styles.flowerIcon}
+                    />
+                    <span>
+                      <small>Mẫu hoa</small>
+                      <strong>{row.productName || 'Hoa theo yêu cầu'}</strong>
+                    </span>
+                  </span>
+                  <span>
+                    <small>Tủ nhận hoa</small>
+                    <strong>{row.kioskName || row.kioskId}</strong>
+                    {row.address && <span className={styles.address}>{row.address}</span>}
+                  </span>
+                  <span>
+                    <small>Thời gian nhận</small>
+                    <strong>{pickupDate(row.pickupAt)}</strong>
+                    <span className={styles.address}>
+                      {pickupClock(row.pickupAt)} –{' '}
+                      {pickupDayKey(row.pickupAt) !== pickupDayKey(row.pickupBefore)
+                        ? `${pickupDate(row.pickupBefore)} · `
+                        : ''}
+                      {pickupClock(row.pickupBefore)}
+                    </span>
+                  </span>
+                  <span className={styles.price}>
+                    <small>Giá xác nhận</small>
+                    <strong>
+                      {row.quotedPrice == null ? 'Chưa báo giá' : money(row.quotedPrice)}
+                    </strong>
+                  </span>
+                </span>
+                <span className={styles.disclosure}>
+                  <span className={styles.nextTask}>{sellerOrderHint(row)}</span>
+                  <span className={styles.showDetails}>
+                    {sellerOrderActionLabel(row)} <ArrowRight size={15} aria-hidden="true" />
+                  </span>
+                  <span className={styles.hideDetails}>Thu gọn chi tiết</span>
+                </span>
+              </>
+            )}
+          </summary>
+          <OrderActions
+            row={row}
+            base={base}
+            mode={mode}
+            role={session.data?.role}
+            userId={session.data?.id}
+            page={page}
+            filter={filter}
+            onReload={async () => {
+              const fresh = await query.refetch();
+              const updated = fresh.data?.items.find((item) => item.id === row.id);
+              if (fresh.isError || !updated) throw new Error('Order could not be reloaded.');
+              return updated;
+            }}
+          />
+        </details>
+      </li>
+    );
   return (
     <Container
       id="web-orders"
@@ -1095,9 +1650,26 @@ export default function WebRequests({
       aria-labelledby="web-orders-title"
     >
       {mode === 'member' ? (
-        <h1 id="web-orders-title" className="account-orders-title">
-          Đơn đặt trước
-        </h1>
+        <header className={customerStyles.pageHeading}>
+          <h1 id="web-orders-title" className="account-orders-title">
+            Đơn hàng
+          </h1>
+          <Button
+            variant="outline"
+            disabled={query.isFetching || history.isFetching}
+            onClick={() => {
+              void query.refetch();
+              void history.refetch();
+            }}
+          >
+            <RefreshCw
+              size={16}
+              aria-hidden="true"
+              className={query.isFetching || history.isFetching ? 'spin' : ''}
+            />{' '}
+            Làm mới
+          </Button>
+        </header>
       ) : (
         <h2 id="web-orders-title" className={mode === 'seller' ? 'sr-only' : undefined}>
           {mode === 'admin' ? 'Danh sách đơn từ website' : 'Đơn đặt trước từ website'}
@@ -1115,7 +1687,7 @@ export default function WebRequests({
           {readyNotice}
         </p>
       )}
-      {mode === 'member' && <p>Theo dõi yêu cầu, duyệt báo giá và xem lịch nhận hoa của bạn.</p>}
+
       {mode === 'admin' && (
         <>
           <div className="admin-preorder-toolbar" role="group" aria-label="Bộ lọc đơn đặt trước">
@@ -1303,81 +1875,30 @@ export default function WebRequests({
                 ? ` · Hiển thị ${(displayPage - 1) * SELLER_RESULT_SIZE + 1}–${Math.min(displayPage * SELLER_RESULT_SIZE, filtered.length)}`
                 : ''}
               .{' '}
-              {query.data.hasMore
+              {query.data?.hasMore
                 ? `Còn đơn chưa được tải; kết quả hiện tính trên ${items.length} yêu cầu đã tải.`
                 : `Đã tìm trên ${items.length} yêu cầu của shop.`}
             </p>
           )}
         </>
       )}
-      {mode === 'member' && query.data && items.length > 0 && (
-        <>
-          <div
-            className={customerStyles.filters}
-            role="group"
-            aria-label="Tóm tắt trang đơn đang xem"
-          >
-            {(
-              [
-                { value: 'all', label: 'Tất cả' },
-                { value: 'attention', label: 'Cần bạn xử lý' },
-                { value: 'preparing', label: 'Đang chuẩn bị' },
-                { value: 'ready', label: 'Chờ nhận hoa' },
-              ] as const
-            ).map(({ value, label }) => (
-              <button
-                key={value}
-                type="button"
-                aria-pressed={filter === value}
-                onClick={() => setFilter(value)}
-              >
-                {label}
-                <span>
-                  {items.filter((row) => matchesOrderFilter(row, value, 'member')).length}
-                </span>
-              </button>
-            ))}
-          </div>
-          <p className="quiet order-page-note">
-            Thống kê và bộ lọc tính trên {items.length} đơn ở trang {page}.
-          </p>
-        </>
+      {mode === 'member' && query.isError && !query.data && !history.isError && (
+        <p role="alert">
+          Chưa tải được đơn đặt trước. Chọn Làm mới để thử lại; giao dịch mua hoa vẫn hiển thị bên
+          dưới.
+        </p>
       )}
-      {mode === 'member' && (
-        <div className={`queue-filter-bar order-filter-bar ${customerStyles.toolbar}`}>
-          <div className="filter-group">
-            <label htmlFor={`order-filter-${mode}`} className="sr-only">
-              Lọc yêu cầu trong trang
-            </label>
-            <select
-              id={`order-filter-${mode}`}
-              aria-label="Lọc yêu cầu trong trang"
-              value={filter}
-              onChange={(event) => setFilter(event.target.value as OrderFilter)}
-            >
-              <option value="all">Tất cả yêu cầu trong trang</option>
-              <option value="attention">Cần bạn phản hồi</option>
-              <option value="requested">Chờ báo giá</option>
-              <option value="quoted">Đã có báo giá</option>
-              <option value="payment">Chờ thanh toán</option>
-              <option value="preparing">Đang chuẩn bị</option>
-              <option value="ready">Sẵn sàng tại tủ</option>
-              <option value="closed">Đã kết thúc</option>
-            </select>
-          </div>
-          <Button
-            variant="outline"
-            disabled={query.isFetching}
-            onClick={() => void query.refetch()}
-          >
-            <RefreshCw size={16} aria-hidden="true" className={query.isFetching ? 'spin' : ''} />
-            {query.isFetching ? 'Đang cập nhật…' : 'Làm mới'}
+      {mode === 'member' && history.isError && (
+        <div role="alert" className={customerStyles.historyNotice}>
+          Chưa tải được giao dịch mua hoa. Bạn vẫn có thể xử lý đơn đặt trước.
+          <Button variant="outline" onClick={() => void history.refetch()}>
+            Tải lại giao dịch
           </Button>
         </div>
       )}
-      {query.isPending ? (
+      {query.isPending && (mode !== 'member' || history.isPending) ? (
         <p role="status">Đang tải yêu cầu…</p>
-      ) : query.isError ? (
+      ) : query.isError && !query.data && (mode !== 'member' || history.isError) ? (
         <p role="alert">Chưa tải được yêu cầu. Hãy chọn cập nhật để thử lại.</p>
       ) : (
         <>
@@ -1388,7 +1909,17 @@ export default function WebRequests({
               ) : (
                 <ClipboardList size={32} aria-hidden="true" />
               )}
-              <h3>{items.length ? 'Không tìm thấy yêu cầu phù hợp' : 'Chưa có đơn đặt trước'}</h3>
+              <h3>
+                {mode === 'member'
+                  ? history.isPending
+                    ? 'Đang tải giao dịch…'
+                    : loadedItems.length || query.data?.hasMore || history.data?.hasMore || page > 1
+                      ? 'Chưa có đơn ở trang này'
+                      : 'Chưa có đơn hàng'
+                  : items.length
+                    ? 'Không tìm thấy yêu cầu phù hợp'
+                    : 'Chưa có đơn đặt trước'}
+              </h3>
               <p>
                 {items.length
                   ? mode === 'seller'
@@ -1400,11 +1931,18 @@ export default function WebRequests({
                     ? 'Chọn một mẫu hoa bạn thích và gửi mong muốn cho shop. Đơn của bạn sẽ xuất hiện tại đây.'
                     : 'Chưa có yêu cầu ở trang này.'}
               </p>
-              {mode === 'member' && items.length === 0 && page === 1 && (
-                <Link href="/dat-hoa" className="button button-outline">
-                  Khám phá hoa <ArrowRight size={16} aria-hidden="true" />
-                </Link>
-              )}
+              {mode === 'member' &&
+                !history.isPending &&
+                !history.isError &&
+                !query.isError &&
+                loadedItems.length === 0 &&
+                !query.data?.hasMore &&
+                !history.data?.hasMore &&
+                page === 1 && (
+                  <Link href="/dat-hoa" className="button button-outline">
+                    Khám phá hoa <ArrowRight size={16} aria-hidden="true" />
+                  </Link>
+                )}
             </div>
           )}
           {mode === 'admin' && displayItems.length > 0 && (
@@ -1415,190 +1953,42 @@ export default function WebRequests({
               <span>Trạng thái</span>
             </div>
           )}
-          <ul
-            className={
-              mode === 'seller'
-                ? styles.orderList
-                : mode === 'member'
-                  ? 'member-orders customer-order-list'
-                  : 'admin-preorder-list'
-            }
-          >
-            {displayItems.map((row) => (
-              <li key={row.id}>
-                <details id={`preorder-${row.id}`} open={row.id === returnedRequest || undefined}>
-                  <summary
-                    className={
-                      mode === 'seller'
-                        ? styles.orderSummary
-                        : mode === 'member'
-                          ? customerStyles.summary
-                          : 'admin-preorder-row'
-                    }
-                  >
-                    {mode === 'seller' ? (
-                      <span className={styles.orderHeading}>
-                        <strong>{row.orderCode || `Yêu cầu ${row.id.slice(0, 8)}`}</strong>
-                        <span className={styles.kind}>
-                          {row.kind === 'CUSTOM' ? 'Hoa theo yêu cầu' : 'Hoa có sẵn'}
-                        </span>
-                        <span
-                          className={styles.status}
-                          data-status={
-                            row.ready && row.orderStatus === 'PAID'
-                              ? 'READY'
-                              : row.orderStatus || row.state
-                          }
-                        >
-                          {statusName(row)}
-                        </span>
-                      </span>
-                    ) : mode === 'member' ? (
-                      <span className={customerStyles.content}>
-                        <span className={customerStyles.heading}>
-                          <strong>{row.productName || 'Hoa theo yêu cầu'}</strong>
-                          <span
-                            className="order-status-pill"
-                            data-status={
-                              row.ready && row.orderStatus === 'PAID'
-                                ? 'READY'
-                                : row.orderStatus || row.state
-                            }
-                          >
-                            {statusName(row)}
-                          </span>
-                        </span>
-                        <span className={customerStyles.shop}>
-                          {row.shopName || 'Shop nhận yêu cầu'} ·{' '}
-                          {row.orderCode || `Yêu cầu ${row.id.slice(0, 8)}`}
-                        </span>
-                        <span className={customerStyles.facts}>
-                          <span>
-                            <small>Tủ nhận hoa</small>
-                            <span>{row.kioskName || 'Xem địa điểm trong chi tiết'}</span>
-                          </span>
-                          <span>
-                            <small>
-                              Lịch nhận {row.state === 'REQUESTED' ? 'mong muốn' : 'dự kiến'}
-                            </small>
-                            <span>{when(row.pickupAt)}</span>
-                          </span>
-                          <span>
-                            <small>Giá shop báo</small>
-                            <strong>
-                              {row.quotedPrice == null ? 'Chưa có báo giá' : money(row.quotedPrice)}
-                            </strong>
-                          </span>
-                        </span>
-                        <span className={customerStyles.next}>
-                          <span>{customerOrderHint(row)}</span>
-                          <span className={customerStyles.action}>
-                            {customerOrderActionLabel(row)}{' '}
-                            <ArrowRight size={16} aria-hidden="true" />
-                          </span>
-                        </span>
-                      </span>
-                    ) : (
-                      <>
-                        <span className="admin-preorder-cell">
-                          <strong>{row.orderCode || `Yêu cầu ${row.id.slice(0, 8)}`}</strong>
-                          <small>
-                            {row.productName ||
-                              (row.kind === 'CUSTOM' ? 'Hoa theo yêu cầu' : 'Hoa có sẵn')}
-                          </small>
-                        </span>
-                        <span className="admin-preorder-cell">
-                          <strong>{row.shopName || 'Chưa rõ shop'}</strong>
-                          <small>{row.kioskName || 'Chưa rõ tủ nhận'}</small>
-                        </span>
-                        <span className="admin-preorder-cell admin-preorder-schedule">
-                          <span>{when(row.pickupAt)}</span>
-                          <small>
-                            {row.quotedPrice == null ? 'Chưa báo giá' : money(row.quotedPrice)}
-                          </small>
-                        </span>
-                        <span className="admin-preorder-state">
-                          <span
-                            className="order-status-pill"
-                            data-status={
-                              row.ready && row.orderStatus === 'PAID'
-                                ? 'READY'
-                                : row.orderStatus || row.state
-                            }
-                          >
-                            {statusName(row)}
-                          </span>
-                          <ChevronDown size={17} aria-hidden="true" />
-                        </span>
-                      </>
-                    )}
-                    {mode === 'seller' && (
-                      <>
-                        <span className={styles.orderBody}>
-                          <span className={styles.product}>
-                            <ProductThumbnail
-                              sellerId={sellerId ?? row.sellerId}
-                              productId={row.productId}
-                              productName={row.productName || 'mẫu hoa'}
-                              className={styles.flowerIcon}
-                            />
-                            <span>
-                              <small>Mẫu hoa</small>
-                              <strong>{row.productName || 'Hoa theo yêu cầu'}</strong>
-                            </span>
-                          </span>
-                          <span>
-                            <small>Tủ nhận hoa</small>
-                            <strong>{row.kioskName || row.kioskId}</strong>
-                            {row.address && <span className={styles.address}>{row.address}</span>}
-                          </span>
-                          <span>
-                            <small>Thời gian nhận</small>
-                            <strong>{pickupDate(row.pickupAt)}</strong>
-                            <span className={styles.address}>
-                              {pickupClock(row.pickupAt)} –{' '}
-                              {pickupDayKey(row.pickupAt) !== pickupDayKey(row.pickupBefore)
-                                ? `${pickupDate(row.pickupBefore)} · `
-                                : ''}
-                              {pickupClock(row.pickupBefore)}
-                            </span>
-                          </span>
-                          <span className={styles.price}>
-                            <small>Giá xác nhận</small>
-                            <strong>
-                              {row.quotedPrice == null ? 'Chưa báo giá' : money(row.quotedPrice)}
-                            </strong>
-                          </span>
-                        </span>
-                        <span className={styles.disclosure}>
-                          <span className={styles.nextTask}>{sellerOrderHint(row)}</span>
-                          <span className={styles.showDetails}>
-                            {sellerOrderActionLabel(row)}{' '}
-                            <ArrowRight size={15} aria-hidden="true" />
-                          </span>
-                          <span className={styles.hideDetails}>Thu gọn chi tiết</span>
-                        </span>
-                      </>
-                    )}
-                  </summary>
-                  <OrderActions
-                    row={row}
-                    base={base}
-                    mode={mode}
-                    role={session.data?.role}
-                    page={page}
-                    filter={filter}
-                    onReload={async () => {
-                      const fresh = await query.refetch();
-                      if (fresh.isError || !fresh.data?.items.some((item) => item.id === row.id))
-                        throw new Error('Order could not be reloaded.');
-                    }}
-                  />
-                </details>
-              </li>
-            ))}
-          </ul>
-          {mode === 'seller' && query.data.hasMore && (
+          {mode === 'member' ? (
+            <div className={customerStyles.orderGroups}>
+              {memberGroups.map(
+                ({ id, title, rows }) =>
+                  rows.length > 0 &&
+                  (id === 'history' ? (
+                    <details
+                      key={id}
+                      data-order-history
+                      className={customerStyles.orderHistory}
+                      open={openMemberHistory || undefined}
+                    >
+                      <summary>
+                        {title}
+                        <ChevronDown size={16} aria-hidden="true" />
+                      </summary>
+                      <ul className="member-orders customer-order-list">{rows.map(renderOrder)}</ul>
+                    </details>
+                  ) : (
+                    <section
+                      key={id}
+                      className={customerStyles.orderGroup}
+                      aria-labelledby={`order-group-${id}`}
+                    >
+                      <h2 id={`order-group-${id}`}>{title}</h2>
+                      <ul className="member-orders customer-order-list">{rows.map(renderOrder)}</ul>
+                    </section>
+                  )),
+              )}
+            </div>
+          ) : (
+            <ul className={mode === 'seller' ? styles.orderList : 'admin-preorder-list'}>
+              {displayItems.map(renderOrder)}
+            </ul>
+          )}
+          {mode === 'seller' && query.data?.hasMore && (
             <div className={styles.loadMore}>
               <p>Chưa tải hết đơn của shop. Tải thêm để tiếp tục tìm và thống kê.</p>
               <Button
@@ -1610,7 +2000,9 @@ export default function WebRequests({
               </Button>
             </div>
           )}
-          {(mode === 'seller' ? totalResultPages > 1 : page > 1 || query.data.hasMore) && (
+          {(mode === 'seller'
+            ? totalResultPages > 1
+            : page > 1 || query.data?.hasMore || (mode === 'member' && history.data?.hasMore)) && (
             <nav className="order-pagination" aria-label="Phân trang đơn đặt trước">
               <Button
                 variant="outline"
@@ -1620,7 +2012,7 @@ export default function WebRequests({
                 }
               >
                 <ArrowLeft size={15} aria-hidden="true" />
-                <span>{mode === 'member' ? 'Yêu cầu trước' : 'Trang trước'}</span>
+                <span>Trang trước</span>
               </Button>
               <span className="order-page-indicator">
                 Trang {displayPage}
@@ -1629,14 +2021,17 @@ export default function WebRequests({
               <Button
                 variant="outline"
                 disabled={
-                  (mode === 'seller' ? displayPage >= totalResultPages : !query.data.hasMore) ||
-                  query.isFetching
+                  (mode === 'seller'
+                    ? displayPage >= totalResultPages
+                    : !(query.data?.hasMore || (mode === 'member' && history.data?.hasMore))) ||
+                  query.isFetching ||
+                  (mode === 'member' && history.isFetching)
                 }
                 onClick={() =>
                   mode === 'seller' ? setResultPage(displayPage + 1) : setPage((value) => value + 1)
                 }
               >
-                <span>{mode === 'member' ? 'Yêu cầu sau' : 'Trang sau'}</span>
+                <span>Trang sau</span>
                 <ArrowRight size={15} aria-hidden="true" />
               </Button>
             </nav>

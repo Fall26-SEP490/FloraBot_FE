@@ -321,7 +321,14 @@
 
 /* A quiet messenger layout keeps the conversation as the focal point. */
 
-.workspace-portal-root.member-account-root .member-page #web-orders,
+.workspace-portal-root.member-account-root .member-page #web-orders {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
 .workspace-portal-root.member-account-root .member-page #member-orders {
   margin: 0;
   padding: clamp(1.2rem, 3vw, 2rem);

@@ -230,7 +230,7 @@ for (const width of [390, 1440])
     await modal.press('Escape');
     await expect(add).toBeFocused();
     await add.click();
-    const form = page.getByRole('form', { name: 'Thêm mẫu hoa giả mới' });
+    const form = page.getByRole('form', { name: 'Thêm mẫu hoa mới' });
     await form.getByRole('button', { name: 'Tạo mẫu hoa', exact: true }).click();
     expect(model.writes).toEqual([]);
     await form.getByLabel('Tên mẫu hoa', { exact: true }).fill('Mẫu mới kiểm thử');

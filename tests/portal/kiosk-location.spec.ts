@@ -480,6 +480,54 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
 });
 
 test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
+  for (const width of [390, 1440]) {
+    test(`Simple pins match card statuses and select the list without opening a map detail card at ${width}px`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 950 });
+      await page.route('**/api/auth/me', (route) => route.fulfill({ status: 401, json: {} }));
+      await page.route('**/api/kiosks', (route) =>
+        route.fulfill({ json: sampleCustomerLocations }),
+      );
+      await page.goto('/tim-kiosk');
+      const item = page.locator('#kiosk-item-kiosk-01');
+      await item.locator('.customer-btn-focus').click();
+      const selectedPin = page.locator('.customer-map-kiosk-marker.is-selected');
+      await expect(selectedPin).toHaveCount(1);
+      await expect(selectedPin).toHaveAttribute('aria-pressed', 'true');
+      await expect(selectedPin.locator('svg circle')).toBeVisible();
+      await expect(
+        page.locator('.customer-map-floating-card, .maplibregl-popup, .leaflet-popup'),
+      ).toHaveCount(0);
+      for (const [index, state] of ['active', 'maintenance', 'offline'].entries()) {
+        const badge = page.locator(
+          `#kiosk-item-${sampleCustomerLocations[index].id} .customer-status-badge`,
+        );
+        const color = await badge.evaluate((el) => getComputedStyle(el).color);
+        await expect(page.locator(`.marker-${state} .customer-map-kiosk-pin`).first()).toHaveCSS(
+          'color',
+          color,
+        );
+        await expect(page.locator(`.dot-${state}`)).toHaveCSS('background-color', color);
+      }
+      await expect(item).toHaveCSS('box-shadow', 'none');
+      await page.screenshot({
+        path: test.info().outputPath(`locator-${width}.png`),
+        fullPage: false,
+      });
+      const offlinePin = page.locator('.customer-map-kiosk-marker.marker-offline');
+      await offlinePin.focus();
+      await page.keyboard.press('Enter');
+      await expect(offlinePin).toHaveAttribute('aria-pressed', 'true');
+      const offlineCard = page.locator('#kiosk-item-kiosk-03');
+      await expect(offlineCard).toHaveClass(/is-selected/);
+      await expect(offlineCard).toBeVisible();
+      await expect(page.locator('.customer-map-floating-card')).toHaveCount(0);
+      await page.locator('.customer-quick-search-input').fill('Maintenance');
+      await expect(page.locator('.customer-results-count')).toHaveText('1');
+    });
+  }
+
   test('Customer page displays array response, handles status labels (MAINTENANCE=Bảo trì) and XSS prevention', async ({
     page,
   }) => {
@@ -519,10 +567,6 @@ test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
       .locator('.customer-kiosk-item')
       .filter({ hasText: 'Kiosk Maintenance Hub' });
     await expect(maintItem.locator('.customer-status-badge')).toHaveText('Bảo trì');
-    await expect(maintItem.locator('.customer-maintenance-notice')).toContainText(
-      'Kiosk đang trong quá trình bảo trì kỹ thuật',
-    );
-
     // OFFLINE = Ngoại tuyến
     const offlineItem = page
       .locator('.customer-kiosk-item')
@@ -561,11 +605,12 @@ test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
     );
     await expect(mapMarkers).toHaveCount(sampleCustomerLocations.length);
     await xssItem.locator('.customer-btn-focus').click();
-    const popupContent = page.locator('.maplibregl-popup-content, .leaflet-popup-content');
-    await expect(popupContent).toContainText('999 XSS Ave <img');
-    await expect(popupContent.locator('img, script')).toHaveCount(0);
+    await expect(xssItem.locator('img, script')).toHaveCount(0);
+    await expect(
+      page.locator('.customer-map-floating-card, .maplibregl-popup, .leaflet-popup'),
+    ).toHaveCount(0);
 
-    // Confirm script still hasn't fired in the Leaflet DOM popup
+    // Selecting a pin never inserts HTML from kiosk data.
     const xssFiredAfterPopup = await page.evaluate(
       () => (window as unknown as { __xss_fired?: boolean }).__xss_fired,
     );
@@ -621,7 +666,8 @@ test.describe('Public Customer Kiosk Locator (/tim-kiosk)', () => {
     await page.locator('.customer-btn-geolocate').click();
 
     const activeLocation = page.locator('.customer-geo-active-bar');
-    await expect(activeLocation).toContainText('10.780');
+    await expect(activeLocation).toContainText('Đang dùng vị trí của bạn');
+    await expect(activeLocation).not.toContainText(/10\.780|106\.700/);
     await expect.poll(() => requestCount).toBe(1);
 
     // Clear origin

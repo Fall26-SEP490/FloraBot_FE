@@ -18,6 +18,7 @@ import {
 import { getRoleLabel } from '@/features/portal/config/roleRoutes';
 import { workspaceBase } from '@/features/portal/config/workspaceSections';
 import { ConfirmDialog, Modal } from '../../shared/components/Modal';
+import { VietnamBankSelect } from '@/shared/components/VietnamBankSelect';
 import GoogleAccountLink from '../auth/GoogleAccountLink';
 import { passwordRule } from '../auth/auth.schemas';
 import { changeMemberPassword } from '../customer-account/customer-account.api';
@@ -39,20 +40,12 @@ import type {
 } from './profile.types';
 import { phonePattern, emailPattern, asciiAlphanumeric, hasControlChars } from './profile.schemas';
 import { basicPayload, basicValues, validBirthDate, vietnamToday } from './profile.utils';
-import ShopBankSection from '../finance/components/payment-channels/ShopBankSection';
+import { CustomerLoyaltySummary } from '../customer-account/CustomerLoyaltySummary';
 import { getProfileSections, useProfileNavigation } from './useProfileNavigation';
 import { useProfileDraftGuard } from './useProfileDraftGuard';
+import { sellerShopProfileQuery, updateSellerShopProfile } from './seller-shop-profile.api';
 
-interface SellerShopProfileData {
-  id: string;
-  shopName: string;
-  phone: string | null;
-  contactEmail: string | null;
-  address: string | null;
-  status: string;
-}
-
-function SellerShopProfileSection() {
+function SellerShopProfileSection({ session }: { session: Session }) {
   const [open, setOpen] = useState(false);
   const [shopNameDraft, setShopNameDraft] = useState<string | null>(null);
   const [phoneDraft, setPhoneDraft] = useState<string | null>(null);
@@ -61,11 +54,8 @@ function SellerShopProfileSection() {
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
 
-  const shopQuery = useQuery({
-    queryKey: ['seller-shop-profile'],
-    queryFn: () => request<SellerShopProfileData>('/me/shop'),
-    enabled: open,
-  });
+  const shopOptions = sellerShopProfileQuery(session);
+  const shopQuery = useQuery({ ...shopOptions, enabled: open && shopOptions.enabled });
 
   const shopName = shopNameDraft ?? shopQuery.data?.shopName ?? '';
   const phone = phoneDraft ?? shopQuery.data?.phone ?? '';
@@ -73,7 +63,7 @@ function SellerShopProfileSection() {
 
   async function handleSaveShop(event: React.FormEvent) {
     event.preventDefault();
-    if (saving) return;
+    if (saving || !shopQuery.data) return;
     const trimmedName = shopName.trim();
     const trimmedPhone = phone.trim();
     const trimmedEmail = contactEmail.trim();
@@ -81,21 +71,29 @@ function SellerShopProfileSection() {
       setError('Tên cửa hàng phải từ 2 đến 120 ký tự.');
       return;
     }
+    const payload = {
+      shopName: trimmedName === shopQuery.data.shopName.trim() ? null : trimmedName,
+      phone: trimmedPhone === (shopQuery.data.phone?.trim() || '') ? null : trimmedPhone,
+      contactEmail:
+        trimmedEmail.toLowerCase() === (shopQuery.data.contactEmail?.trim().toLowerCase() || '')
+          ? null
+          : trimmedEmail,
+    };
+    if (Object.values(payload).every((value) => value === null)) {
+      setError('');
+      setNotice('Không có thay đổi để lưu.');
+      return;
+    }
     setSaving(true);
     setError('');
     setNotice('');
     try {
-      const updated = await request<SellerShopProfileData>(
-        '/me/shop',
-        {
-          shopName: trimmedName,
-          phone: trimmedPhone,
-          contactEmail: trimmedEmail,
-        },
-        true,
-        'PATCH',
-      );
-      queryClient.setQueryData(['seller-shop-profile'], updated);
+      const updated = await updateSellerShopProfile(payload);
+      await queryClient.cancelQueries({ queryKey: shopOptions.queryKey, exact: true });
+      queryClient.setQueryData(shopOptions.queryKey, updated);
+      setShopNameDraft(null);
+      setPhoneDraft(null);
+      setContactEmailDraft(null);
       setNotice('Đã cập nhật hồ sơ cửa hàng.');
     } catch (cause) {
       setError(cause instanceof ApiError ? cause.message : 'Chưa lưu được hồ sơ cửa hàng.');
@@ -109,6 +107,13 @@ function SellerShopProfileSection() {
       <div className="profile-section-heading">
         <h2 id="seller-shop-heading">Hồ sơ cửa hàng (Shop hoa)</h2>
         <p>Quản lý tên hiển thị, số điện thoại kinh doanh và email liên hệ của shop.</p>
+        {session.sellerId && (
+          <p>
+            <Link id="shop-bank-heading" href="/seller/commerce#shop-bank-heading">
+              Quản lý tài khoản nhận hoàn phí của shop
+            </Link>
+          </p>
+        )}
       </div>
       <details
         className="profile-security-disclosure"
@@ -118,7 +123,10 @@ function SellerShopProfileSection() {
         <summary>Xem và cập nhật thông tin cửa hàng</summary>
         {open && (
           <div className="profile-disclosure-body">
-            {shopQuery.isPending && <p role="status">Đang tải thông tin cửa hàng…</p>}
+            {!shopOptions.enabled && <p>Tài khoản chưa có cửa hàng liên kết.</p>}
+            {shopOptions.enabled && shopQuery.isPending && (
+              <p role="status">Đang tải thông tin cửa hàng…</p>
+            )}
             {shopQuery.isError && (
               <p role="alert" className="profile-status-message profile-status-error">
                 {shopQuery.error instanceof ApiError
@@ -261,6 +269,29 @@ export default function PersonalProfile({ embedded = false }: { embedded?: boole
 
 function PersonalProfileContent({ embedded }: { embedded: boolean }) {
   const session = useQuery(sessionQuery);
+  const compact = embedded && session.data?.role === 'CUSTOMER';
+  const [profileGroup, setProfileGroup] = useState('basic-info-heading');
+  const [basicEditing, setBasicEditing] = useState(false);
+  useEffect(() => {
+    if (!compact) return;
+    const sync = () => {
+      const hash = window.location.hash.slice(1);
+      setProfileGroup(
+        hash === 'security'
+          ? 'security'
+          : hash === 'personal-bank-heading'
+            ? hash
+            : 'basic-info-heading',
+      );
+    };
+    sync();
+    window.addEventListener('hashchange', sync);
+    window.addEventListener('popstate', sync);
+    return () => {
+      window.removeEventListener('hashchange', sync);
+      window.removeEventListener('popstate', sync);
+    };
+  }, [compact]);
   const active = useRef(true);
   const revealVersion = useRef(0);
   useEffect(() => {
@@ -363,11 +394,15 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
       targetContactEmail.trim() !== '' ||
       contactMode === 'otp',
   );
+  const hasPersonalBank = Boolean(profile.data?.bank?.hasAccount);
   const sections = useMemo(
-    () => getProfileSections(session.data?.role, Boolean(session.data?.sellerId)),
-    [session.data?.role, session.data?.sellerId],
+    () => getProfileSections(session.data?.role, hasPersonalBank),
+    [session.data?.role, hasPersonalBank],
   );
-  const { activeSection, setActiveSection } = useProfileNavigation(profile.isSuccess, sections);
+  const { activeSection, setActiveSection } = useProfileNavigation(
+    profile.isSuccess && !compact,
+    sections,
+  );
 
   const handleChangePassword = async (values: {
     currentPassword: string;
@@ -652,6 +687,7 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
       void queryClient.invalidateQueries({ queryKey: ['member-profile'] });
 
       basicForm.reset(basicValues(updated));
+      setBasicEditing(false);
       setBasicNotice('Đã lưu thay đổi hồ sơ cá nhân.');
     } catch (cause) {
       if (!isCurrentIdentity()) return;
@@ -938,15 +974,20 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
   return (
     <main id="main">
       <div
-        className={['profile-page', 'profile-refined', embedded ? 'profile-embedded' : null]
+        className={[
+          'profile-page',
+          'profile-refined',
+          embedded ? 'profile-embedded' : null,
+          compact ? 'profile-compact' : null,
+        ]
           .filter(Boolean)
           .join(' ')}
       >
         {/* Navigation Breadcrumb */}
-        <nav aria-label="Đường dẫn điều hướng" className="profile-breadcrumb">
+        <nav aria-label="Đường dẫn điều hướng" className="profile-breadcrumb" hidden={compact}>
           <Link href={homeUrl}>
             <ArrowRight size={14} className="profile-back-icon" aria-hidden="true" />
-            {role === 'CUSTOMER' ? 'Khu vực cá nhân' : 'Bảng điều khiển quản lý'}
+            {role === 'CUSTOMER' ? 'Khu vực cá nhân' : 'Về khu vực làm việc'}
           </Link>
           <span aria-hidden="true">/</span>
           <span aria-current="page">Hồ sơ cá nhân</span>
@@ -955,8 +996,7 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
         {/* Profile Header */}
         {embedded ? (
           <header className="account-profile-heading">
-            <h1>Hồ sơ cá nhân</h1>
-            <p>Cập nhật thông tin liên hệ và quản lý bảo mật tài khoản.</p>
+            <h1>{compact ? 'Hồ sơ' : 'Hồ sơ cá nhân'}</h1>
           </header>
         ) : (
           <header className="profile-header">
@@ -965,9 +1005,8 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
                 {initialAvatar}
               </span>
               <div className="profile-header-titles">
-                <span className="profile-eyebrow">HỒ SƠ CÁ NHÂN</span>
-                <h1>{currentProfile.fullName || 'Hồ sơ người dùng'}</h1>
-                <p>Thông tin của bạn, luôn trong tầm tay.</p>
+                <h1>Hồ sơ cá nhân</h1>
+                {currentProfile.fullName && <p>{currentProfile.fullName}</p>}
               </div>
             </div>
             <span className="profile-badge profile-badge-neutral">{roleLabel}</span>
@@ -976,43 +1015,53 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
 
         {/* Quick navigation anchor chips */}
         <div className="profile-layout">
-          <nav aria-label="Mục hồ sơ" className="profile-quick-nav">
-            {sections.map(([id, label]) => (
-              <a
-                key={id}
-                href={`#${id}`}
-                onClick={() => setActiveSection(id)}
-                aria-current={activeSection === id ? 'location' : undefined}
-              >
-                {label}
-              </a>
-            ))}
-          </nav>
+          {(compact || sections.length > 1) && (
+            <nav aria-label="Mục hồ sơ" className="profile-quick-nav">
+              {(compact
+                ? [
+                    ['basic-info-heading', 'Thông tin cá nhân'],
+                    ['security', 'Đăng nhập & bảo mật'],
+                    ['personal-bank-heading', 'Ngân hàng'],
+                  ]
+                : sections
+              ).map(([id, label]) => (
+                <a
+                  key={id}
+                  href={`#${id}`}
+                  onClick={(event) => {
+                    if (compact) {
+                      event.preventDefault();
+                      if (id !== 'personal-bank-heading') {
+                        revealVersion.current++;
+                        setRevealedData(null);
+                      }
+                      setProfileGroup(id);
+                      window.history.replaceState(null, '', `#${id}`);
+                    } else setActiveSection(id);
+                  }}
+                  aria-current={
+                    (compact ? profileGroup : activeSection) === id ? 'location' : undefined
+                  }
+                >
+                  {label}
+                </a>
+              ))}
+            </nav>
+          )}
           <div className="profile-content">
-            {/* Section 1: Read-only Login Identity & Role */}
+            {/* Section 2: Editable Basic Form (fullName, phone, address) */}
             <section
-              aria-labelledby="identity-heading"
-              className="profile-section profile-identity"
+              aria-labelledby="basic-info-heading"
+              className="profile-section"
+              hidden={compact && profileGroup !== 'basic-info-heading'}
             >
               <div className="profile-section-heading">
-                <h2 id="identity-heading">
-                  {embedded ? 'Email đăng nhập' : 'Định danh tài khoản đăng nhập'}
-                </h2>
-                {!embedded && <p>Email dùng để đăng nhập, chỉ xem tại đây.</p>}
-              </div>
-              <dl className="profile-summary-grid">
-                <div className="profile-summary-item">
-                  <dt className={embedded ? 'sr-only' : undefined}>Email đăng nhập</dt>
-                  <dd>{currentProfile.loginEmail || 'Chưa thiết lập'}</dd>
-                </div>
-              </dl>
-            </section>
-
-            {/* Section 2: Editable Basic Form (fullName, phone, address) */}
-            <section aria-labelledby="basic-info-heading" className="profile-section">
-              <div className="profile-section-heading">
                 <h2 id="basic-info-heading">Thông tin cá nhân</h2>
-                <p>Cập nhật thông tin để shop và đội ngũ FloraBot hỗ trợ bạn chính xác hơn.</p>
+                {compact && !basicEditing && (
+                  <Button variant="outline" onClick={() => setBasicEditing(true)}>
+                    Chỉnh sửa thông tin
+                  </Button>
+                )}
               </div>
 
               {basicNotice && !basicForm.formState.isDirty && (
@@ -1025,11 +1074,49 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
                   {basicError}
                 </p>
               )}
+              {!compact && (
+                <div id="identity-heading" className="profile-login-info">
+                  <dl>
+                    <div>
+                      <dt>Email đăng nhập</dt>
+                      <dd>{currentProfile.loginEmail || 'Chưa thiết lập'}</dd>
+                    </div>
+                  </dl>
+                  {!isMember && (
+                    <p id="security">Để đổi mật khẩu, vui lòng liên hệ quản trị viên FloraBot.</p>
+                  )}
+                  {!isMember && !hasPersonalBank && bankNotice && <p role="status">{bankNotice}</p>}
+                </div>
+              )}
 
+              {compact && !basicEditing && (
+                <>
+                  <dl className="profile-summary-grid profile-personal-summary">
+                    <div>
+                      <dt>Họ và tên</dt>
+                      <dd>{currentProfile.fullName || 'Chưa cung cấp'}</dd>
+                    </div>
+                    <div>
+                      <dt>Email đăng nhập</dt>
+                      <dd>{currentProfile.loginEmail || 'Chưa thiết lập'}</dd>
+                    </div>
+                    <div>
+                      <dt>Số điện thoại</dt>
+                      <dd>{currentProfile.phone || 'Chưa cung cấp'}</dd>
+                    </div>
+                    <div>
+                      <dt>Địa chỉ</dt>
+                      <dd>{currentProfile.address || 'Chưa cung cấp'}</dd>
+                    </div>
+                  </dl>
+                  <CustomerLoyaltySummary />
+                </>
+              )}
               <form
                 noValidate
                 onSubmit={(event) => void basicForm.handleSubmit(onSaveBasic)(event)}
                 className="profile-form profile-basic-form"
+                hidden={compact && !basicEditing}
                 aria-busy={basicSaving}
               >
                 <div className="profile-form-group">
@@ -1126,9 +1213,10 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
                   <Button
                     type="button"
                     variant="outline"
-                    disabled={profileSaving || !basicForm.formState.isDirty}
+                    disabled={profileSaving || (!compact && !basicForm.formState.isDirty)}
                     onClick={() => {
                       basicForm.reset(basicValues(currentProfile));
+                      setBasicEditing(false);
                       setBasicError('');
                       setBasicNotice('');
                     }}
@@ -1140,15 +1228,23 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
             </section>
 
             {/* Section 3: Verified Contact Email Section */}
-            <section aria-labelledby="contact-email-heading" className="profile-section">
+            <section
+              aria-labelledby="contact-email-heading"
+              className="profile-section"
+              hidden={compact && profileGroup !== 'basic-info-heading'}
+            >
               <div className="profile-section-heading">
-                <h2 id="contact-email-heading">Email liên hệ nhận thông báo</h2>
-                <p>Nhận thông báo đơn hàng và dịch vụ tại địa chỉ bạn thường dùng.</p>
+                <h2 id="contact-email-heading">
+                  {compact ? 'Email nhận thông báo' : 'Email liên hệ nhận thông báo'}
+                </h2>
+                {!compact && <p>Nhận thông báo đơn hàng và dịch vụ tại địa chỉ bạn thường dùng.</p>}
               </div>
 
-              <div className="profile-disclaimer-card">
-                Đổi email liên hệ cần xác thực OTP và không làm thay đổi email đăng nhập.
-              </div>
+              {(!compact || contactMode !== 'idle') && (
+                <p className="profile-form-hint">
+                  Đổi email liên hệ cần xác thực OTP và không làm thay đổi email đăng nhập.
+                </p>
+              )}
 
               {contactNotice && (
                 <p role="status" className="profile-status-message profile-status-success">
@@ -1161,14 +1257,25 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
                 </p>
               )}
 
-              <dl className="profile-summary-grid">
+              <dl
+                className={
+                  compact ? 'profile-summary-grid profile-contact-summary' : 'profile-summary-grid'
+                }
+              >
                 <div className="profile-summary-item">
-                  <dt>Email liên hệ hiện tại</dt>
+                  <dt className={compact ? 'sr-only' : undefined}>Email liên hệ hiện tại</dt>
                   <dd>
-                    {currentProfile.contactEmail || currentProfile.loginEmail || 'Chưa thiết lập'}
+                    {compact && currentProfile.contactEmailIsDefault
+                      ? 'Dùng email đăng nhập'
+                      : currentProfile.contactEmail ||
+                        currentProfile.loginEmail ||
+                        'Chưa thiết lập'}
                   </dd>
                 </div>
-                <div className="profile-summary-item">
+                <div
+                  className="profile-summary-item"
+                  hidden={compact && currentProfile.contactEmailIsDefault}
+                >
                   <dt>Trạng thái xác thực</dt>
                   <dd>
                     {currentProfile.contactEmailIsDefault ? (
@@ -1322,18 +1429,27 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
               )}
             </section>
 
-            {/* Section 4: Optional Personal Bank Section */}
-            <section aria-labelledby="personal-bank-heading" className="profile-section">
+            {/* Members may use a personal bank for purchase refunds. Existing records remain manageable for other roles. */}
+            <section
+              aria-labelledby="personal-bank-heading"
+              className="profile-section"
+              hidden={
+                (!isMember && !hasPersonalBank) ||
+                (compact && profileGroup !== 'personal-bank-heading')
+              }
+            >
               <div className="profile-section-heading">
                 <h2 id="personal-bank-heading">Tài khoản ngân hàng cá nhân</h2>
                 <p>Thêm tài khoản để hỗ trợ hoàn tiền hoặc đối soát khi cần.</p>
               </div>
 
-              <div className="profile-disclaimer-card">
-                {role === 'SELLER'
-                  ? 'Tài khoản cá nhân này độc lập với Ngân hàng shop (dùng nhận hoàn phí thuê kiosk) và Kênh PayOS (dùng nhận tiền bán hoa). Sửa tài khoản tại đây không cập nhật ngân hàng shop.'
-                  : 'Thông tin được che khi hiển thị. Hãy kiểm tra chính xác trước khi lưu.'}
-              </div>
+              {(!compact || bankMode !== 'idle' || currentProfile.bank?.hasAccount) && (
+                <div className="profile-disclaimer-card">
+                  {role === 'SELLER'
+                    ? 'Tài khoản cá nhân này độc lập với Ngân hàng shop (dùng nhận hoàn phí thuê kiosk) và Kênh PayOS (dùng nhận tiền bán hoa). Sửa tài khoản tại đây không cập nhật ngân hàng shop.'
+                    : 'Thông tin được che khi hiển thị. Hãy kiểm tra chính xác trước khi lưu.'}
+                </div>
+              )}
 
               {bankNotice && (
                 <p role="status" className="profile-status-message profile-status-success">
@@ -1436,7 +1552,7 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
                       </div>
                     </div>
                   ) : (
-                    <div className="profile-bank-details">
+                    <div className="profile-bank-details profile-bank-empty">
                       <p>Bạn chưa lưu thông tin tài khoản ngân hàng cá nhân.</p>
                       <div className="profile-actions">
                         <Button
@@ -1457,17 +1573,15 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
                 <form onSubmit={handleReviewBank} className="profile-form" noValidate>
                   <div className="profile-form-group">
                     <label htmlFor="bank-name-input">Tên ngân hàng *</label>
-                    <input
+                    <VietnamBankSelect
                       id="bank-name-input"
-                      type="text"
-                      autoComplete="off"
-                      maxLength={120}
                       value={bankValues.bankName}
-                      onChange={(e) =>
-                        setBankValues((prev) => ({ ...prev, bankName: e.target.value }))
-                      }
-                      aria-invalid={!!bankErrors.bankName}
-                      aria-describedby="bank-name-error"
+                      onValueChange={(bankName) => {
+                        setBankValues((prev) => ({ ...prev, bankName }));
+                        setBankErrors((prev) => ({ ...prev, bankName: undefined }));
+                      }}
+                      invalid={!!bankErrors.bankName}
+                      describedBy={bankErrors.bankName ? 'bank-name-error' : undefined}
                       required
                     />
                     {bankErrors.bankName && (
@@ -1599,23 +1713,17 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
               />
             </section>
 
-            {/* Section 4b: Seller Shop Profile & Shop Bank */}
-            {role === 'SELLER' && (
-              <>
-                <SellerShopProfileSection />
-                {session.data?.sellerId && (
-                  <ShopBankSection
-                    sellerId={session.data.sellerId}
-                    variant="embedded"
-                    sectionId="shop-bank-heading"
-                  />
-                )}
-              </>
-            )}
+            {/* Section 4b: Seller Shop Profile */}
+            {role === 'SELLER' && <SellerShopProfileSection session={session.data} />}
 
             {/* Section 5: Security & Google Linking (Customer and Seller only) */}
             {isMember && (
-              <section id="security" aria-labelledby="security-heading" className="profile-section">
+              <section
+                id="security"
+                aria-labelledby="security-heading"
+                className="profile-section"
+                hidden={compact && profileGroup !== 'security'}
+              >
                 <div className="profile-section-heading">
                   <h2 id="security-heading">Bảo mật tài khoản</h2>
                   <p>Quản lý mật khẩu và phương thức đăng nhập.</p>
@@ -1721,17 +1829,6 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
                     }}
                   />
                 )}
-              </section>
-            )}
-            {!isMember && (
-              <section id="security" aria-labelledby="security-heading" className="profile-section">
-                <div className="profile-section-heading">
-                  <h2 id="security-heading">Bảo mật tài khoản</h2>
-                  <p>
-                    Để đổi mật khẩu tài khoản {roleLabel.toLowerCase()}, vui lòng liên hệ quản trị
-                    viên FloraBot.
-                  </p>
-                </div>
               </section>
             )}
           </div>

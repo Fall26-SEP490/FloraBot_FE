@@ -5,7 +5,7 @@ div.management-modal.payos-checkout-modal {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.25rem;
+  gap: 0.875rem;
   padding: 0.5rem 0;
 }
 .payos-qr-section {
@@ -14,9 +14,39 @@ div.management-modal.payos-checkout-modal {
   align-items: center;
   text-align: center;
 }
+.payos-checkout-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.875rem;
+  width: 100%;
+  min-width: 0;
+}
+.payos-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--color-text-muted, #526653);
+  font-size: 0.875rem;
+  text-align: center;
+}
+.payos-steps li {
+  padding: 0.35rem 0;
+  border-bottom: 2px solid var(--color-border, #dae4d9);
+}
+.payos-steps [aria-current='step'] {
+  color: var(--color-text-main, #183e2b);
+  border-color: #1b5c43;
+  font-weight: 700;
+}
 .payos-qr-box {
   background: #ffffff;
-  padding: 1rem;
+  padding: 0.5rem;
   border-radius: 12px;
   border: 1px solid var(--color-border, #e5e7eb);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
@@ -28,6 +58,7 @@ div.management-modal.payos-checkout-modal {
 .payos-qr-svg {
   display: block;
   max-width: 100%;
+  width: min(230px, 100%);
   height: auto;
 }
 .payos-qr-error {
@@ -41,12 +72,52 @@ div.management-modal.payos-checkout-modal {
   font-weight: 500;
   color: var(--color-text-main, #1f2937);
 }
+.payos-qr-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 7rem;
+  margin: 0;
+}
+.payos-loading-icon {
+  animation: payos-loading 0.9s linear infinite;
+}
+@keyframes payos-loading {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .payos-loading-icon {
+    animation: none;
+  }
+  .payos-verifying .payos-loading-icon {
+    display: none;
+  }
+}
+.payos-verifying {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.payos-verifying .payos-loading-icon {
+  flex-shrink: 0;
+}
+.payos-confirmed-icon {
+  display: inline-block;
+  vertical-align: -0.16em;
+  margin-inline-end: 0.35em;
+  color: var(--color-text-main, #183e2b);
+}
+.payos-mobile-link {
+  display: none;
+}
 .payos-payment-details {
   width: 100%;
   background: var(--color-workspace-surface-hover, #f9fafb);
   border: 1px solid var(--color-border, #e5e7eb);
   border-radius: 8px;
-  padding: 0.875rem 1rem;
+  padding: 0.625rem 0.875rem;
   display: flex;
   flex-direction: column;
   gap: 0.625rem;
@@ -65,7 +136,7 @@ div.management-modal.payos-checkout-modal {
   font-weight: 600;
   color: var(--color-text-main, #111827);
   text-align: right;
-  word-break: break-all;
+  overflow-wrap: anywhere;
 }
 .payos-detail-value.payos-amount {
   font-size: 1.125rem;
@@ -101,12 +172,52 @@ div.management-modal.payos-checkout-modal {
   flex-shrink: 0;
 }
 @media (max-width: 640px) {
-  .payos-checkout-footer {
+  div.management-modal.payos-checkout-modal {
+    display: flex;
     flex-direction: column;
-    align-items: stretch;
+    overflow: hidden;
+  }
+  .payos-checkout-modal > .management-modal-header,
+  .payos-checkout-footer {
+    flex-shrink: 0;
+  }
+  .payos-native-checkout {
+    min-height: 0;
+    padding-bottom: 0;
+  }
+  .payos-checkout-content {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+  .payos-checkout-content > * {
+    flex-shrink: 0;
+  }
+  .payos-checkout-footer .payos-feedback:empty {
+    display: none;
+  }
+  .payos-mobile-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin-top: 0.25rem;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  .payos-steps {
+    font-size: 0.8rem;
+  }
+  .payos-qr-svg {
+    width: clamp(145px, 44vw, 175px);
+  }
+  .payos-checkout-footer {
+    gap: 0.6rem;
+    padding-top: 0.65rem;
   }
   .payos-checkout-footer-buttons {
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     width: 100%;
   }
   .payos-checkout-footer-buttons .button {

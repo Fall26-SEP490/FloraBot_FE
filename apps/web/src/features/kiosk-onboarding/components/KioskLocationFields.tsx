@@ -7,7 +7,6 @@ import {
 } from '../../kiosk-location/kiosk-location.api';
 import type { GoongPrediction } from '../../kiosk-location/kiosk-location.types';
 import { isValidLatitude, isValidLongitude } from '../../kiosk-location/kiosk-location.utils';
-import type { KioskLocationSource } from '../onboarding.types';
 
 const DEBOUNCE_MS = 300;
 const MIN_SEARCH_CHARS = 3;
@@ -16,7 +15,6 @@ export interface KioskLocationFieldsProps {
   installationAddress: string;
   addressSelected: boolean;
   addressEditedAfterSelect: boolean;
-  locationSource: KioskLocationSource;
   onAddressChange: (val: string) => void;
   onSuggestionSelect: (address: string, lat: number, lon: number) => void;
   addressError?: string;
@@ -34,7 +32,6 @@ export function KioskLocationFields({
   installationAddress,
   addressSelected,
   addressEditedAfterSelect,
-  locationSource,
   onAddressChange,
   onSuggestionSelect,
   addressError,
@@ -48,6 +45,8 @@ export function KioskLocationFields({
   onRequestGps,
 }: KioskLocationFieldsProps) {
   const listboxId = useId();
+  const mapId = useId();
+  const mapToggleRef = useRef<HTMLButtonElement>(null);
   const comboboxWrapRef = useRef<HTMLDivElement>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchAbortRef = useRef<AbortController | null>(null);
@@ -64,6 +63,7 @@ export function KioskLocationFields({
   const [activeIndex, setActiveIndex] = useState(-1);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState('');
+  const [mapOpen, setMapOpen] = useState(false);
 
   // Cleanup any in-flight requests and timers on unmount
   useEffect(() => {
@@ -136,7 +136,6 @@ export function KioskLocationFields({
             setSearchStatus('empty');
             setActiveIndex(-1);
           }
-          setIsOpen(true);
         })
         .catch((err: unknown) => {
           if (controller.signal.aborted || requestId !== searchRequestIdRef.current) return;
@@ -148,13 +147,18 @@ export function KioskLocationFields({
               : 'Không thể tải gợi ý địa chỉ từ Goong. Vui lòng thử lại.',
           );
           setActiveIndex(-1);
-          setIsOpen(true);
         });
     }, DEBOUNCE_MS);
   };
 
-  const handleInputChange = (val: string) => {
+  const cancelPendingDetail = () => {
+    detailAbortRef.current?.abort();
+    detailRequestIdRef.current += 1;
+    setDetailLoading(false);
     setDetailError('');
+  };
+  const handleInputChange = (val: string) => {
+    cancelPendingDetail();
     onAddressChange(val);
     triggerAutocompleteSearch(val);
   };
@@ -267,7 +271,7 @@ export function KioskLocationFields({
 
   return (
     <fieldset className="kiosk-form-group">
-      <legend>Vị trí & Địa chỉ đề xuất đặt kiosk</legend>
+      <legend>Vị trí lắp đặt</legend>
 
       <div className="kiosk-form-field">
         <label htmlFor="installation-address-input">
@@ -299,7 +303,7 @@ export function KioskLocationFields({
                 }
               }}
               onKeyDown={handleKeyDown}
-              placeholder="Nhập ít nhất 3 ký tự để tìm địa chỉ gợi ý từ Goong..."
+              placeholder="Nhập số nhà, đường, phường/xã"
               required
               aria-invalid={Boolean(addressError || detailError)}
               aria-describedby={describedByIds || undefined}
@@ -381,26 +385,44 @@ export function KioskLocationFields({
                   })}
                 </div>
               )}
+              {searchStatus !== 'loading' && (
+                <button
+                  type="button"
+                  className="lease-address-map-link"
+                  onClick={() => {
+                    setIsOpen(false);
+                    setActiveIndex(-1);
+                    setMapOpen(true);
+                    mapToggleRef.current?.focus();
+                  }}
+                >
+                  <MapPin size={16} aria-hidden="true" /> Ghim thủ công trên bản đồ
+                </button>
+              )}
             </div>
           )}
         </div>
 
         <small id="installation-address-hint" className="kiosk-field-hint">
-          Nhập từ 3 ký tự trở lên và chọn một địa chỉ gợi ý để đồng bộ ghim trên bản đồ.
+          Chọn địa chỉ gợi ý để ghim tự động. Nếu không thấy, nhập địa chỉ rồi chọn trên bản đồ.
         </small>
 
         {detailLoading && (
           <p className="kiosk-address-detail-status" role="status" aria-live="polite">
             <RefreshCw size={14} className="spin" aria-hidden="true" />
-            <span>Đang lấy tọa độ chi tiết của địa điểm...</span>
+            <span>Đang xác định vị trí…</span>
           </p>
         )}
 
-        {addressEditedAfterSelect && !addressSelected && !addressError && !detailError && (
-          <p className="kiosk-address-reselect-notice" role="status" aria-live="polite">
-            Bạn vừa chỉnh sửa địa chỉ. Vui lòng chọn lại một gợi ý từ danh sách để xác nhận tọa độ.
-          </p>
-        )}
+        {addressEditedAfterSelect &&
+          !hasValidPin &&
+          !addressError &&
+          !detailError &&
+          !coordinatesError && (
+            <p className="kiosk-address-reselect-notice" role="status" aria-live="polite">
+              Địa chỉ đã đổi. Vui lòng ghim lại vị trí.
+            </p>
+          )}
 
         {(addressError || detailError) && (
           <p id="address-error" className="kiosk-field-error" role="alert">
@@ -410,46 +432,30 @@ export function KioskLocationFields({
       </div>
 
       <div className="kiosk-map-picker-block">
-        <div className="map-picker-header">
-          <div>
-            <span className="map-picker-title">Ghim vị trí chính xác trên bản đồ</span>
-            <small className="kiosk-field-hint">
-              Chọn gợi ý địa chỉ phía trên, bấm trực tiếp vào bản đồ hoặc dùng nút định vị ở góc bản
-              đồ để tinh chỉnh ghim.
-            </small>
-          </div>
-        </div>
-
-        <div
-          className={`kiosk-location-pin-status ${addressSelected && hasValidPin ? 'is-ready' : 'is-pending'}`}
-          role="status"
-          aria-live="polite"
-        >
-          {addressSelected && hasValidPin ? (
-            <>
-              <CheckCircle2 size={16} aria-hidden="true" />
-              <span>
-                {locationSource === 'map'
-                  ? 'Đã chọn địa chỉ và tinh chỉnh ghim vị trí trên bản đồ.'
-                  : locationSource === 'gps'
-                    ? 'Đã chọn địa chỉ và cập nhật ghim vị trí từ GPS.'
-                    : 'Đã chọn địa chỉ gợi ý và cập nhật ghim vị trí trên bản đồ.'}
-              </span>
-            </>
-          ) : hasValidPin ? (
-            <>
-              <MapPin size={16} aria-hidden="true" />
-              <span>
-                Đã cập nhật ghim vị trí trên bản đồ. Vui lòng chọn thêm một địa chỉ từ gợi ý Goong
-                phía trên.
-              </span>
-            </>
-          ) : (
-            <>
-              <MapPin size={16} aria-hidden="true" />
-              <span>Chưa có ghim vị trí. Hãy chọn một địa chỉ gợi ý hoặc chấm trên bản đồ.</span>
-            </>
-          )}
+        <div className="lease-map-controls">
+          <span className="lease-pin-status" role="status">
+            {hasValidPin && (
+              <>
+                <CheckCircle2 size={16} aria-hidden="true" /> Đã ghim vị trí
+              </>
+            )}
+          </span>
+          <button
+            ref={mapToggleRef}
+            type="button"
+            className="button button-outline lease-map-toggle"
+            aria-expanded={mapOpen}
+            aria-controls={mapId}
+            aria-describedby={coordinatesError ? `${mapId}-error` : undefined}
+            onClick={() => setMapOpen((open) => !open)}
+          >
+            <MapPin size={16} aria-hidden="true" />
+            {mapOpen
+              ? 'Thu gọn bản đồ'
+              : hasValidPin
+                ? 'Kiểm tra vị trí trên bản đồ'
+                : 'Chọn trên bản đồ'}
+          </button>
         </div>
 
         {gpsMessage && (
@@ -461,20 +467,30 @@ export function KioskLocationFields({
           </p>
         )}
 
-        <div className="kiosk-picker-embed">
-          <KioskPickerMap
-            latitude={latitude}
-            longitude={longitude}
-            onLocationSelect={onLocationSelect}
-            onRequestGps={onRequestGps}
-            gpsLoading={gpsLoading}
-            interactive={true}
-            ariaLabel="Bản đồ chọn tọa độ lắp đặt kiosk"
-          />
+        <div id={mapId} hidden={!mapOpen}>
+          {mapOpen && (
+            <div className="kiosk-picker-embed">
+              <KioskPickerMap
+                latitude={latitude}
+                longitude={longitude}
+                onLocationSelect={(lat, lon) => {
+                  cancelPendingDetail();
+                  onLocationSelect(lat, lon);
+                }}
+                onRequestGps={() => {
+                  cancelPendingDetail();
+                  onRequestGps();
+                }}
+                gpsLoading={gpsLoading}
+                interactive={true}
+                ariaLabel="Bản đồ chọn tọa độ lắp đặt kiosk"
+              />
+            </div>
+          )}
         </div>
 
         {coordinatesError && (
-          <p role="alert" className="kiosk-field-error">
+          <p id={`${mapId}-error`} role="alert" className="kiosk-field-error">
             {coordinatesError}
           </p>
         )}

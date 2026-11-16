@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 for (const role of ['CUSTOMER', 'SELLER']) {
-  for (const width of [390, 820, 1440]) {
+  for (const width of [375, 820, 1440]) {
     test(`Rental layout, pricing and consent for ${role} at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 1000 });
       await page.route('**/api/**', async (route) => {
@@ -33,7 +33,7 @@ for (const role of ['CUSTOMER', 'SELLER']) {
         return route.fulfill({ json: {} });
       });
       await page.goto('/thue-kiosk');
-      await expect(page.getByRole('heading', { name: 'Cấu hình kiosk của bạn' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Chọn số ô muốn thuê' })).toBeVisible();
       await expect(
         page.getByRole('heading', {
           name: role === 'SELLER' ? 'Kiosk mới sẽ đặt ở đâu?' : 'Thông tin đăng ký',
@@ -60,9 +60,7 @@ for (const role of ['CUSTOMER', 'SELLER']) {
       ).toBeDisabled();
       await walk.fill('2');
       if (role === 'CUSTOMER')
-        await expect(
-          page.getByText('Tài khoản nhận hoàn phí thuê kiosk', { exact: true }),
-        ).toBeVisible();
+        await expect(page.getByText('Tài khoản nhận hoàn phí', { exact: true })).toBeVisible();
       else await expect(page.locator('.lease-profile-note')).toBeVisible();
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),

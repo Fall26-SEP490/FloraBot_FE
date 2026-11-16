@@ -128,26 +128,25 @@ export function useKioskApplicationForm(pricingVersion = 0, additional = false) 
     }
   };
 
-  const validateAndGetPayload = (): CreateKioskApplicationRequest | null => {
-    const result = validateKioskApplicationDraft({
-      walkInSlots,
-      preorderSlots,
-      pricingVersion,
-      additional,
-      shopName,
-      phone,
-      contactEmail,
-      installationAddress,
-      addressSelected,
-      latInput,
-      lonInput,
-      bankName,
-      bankHolder,
-      bankAccountNumber,
-    });
+  const validation = validateKioskApplicationDraft({
+    walkInSlots,
+    preorderSlots,
+    pricingVersion,
+    additional,
+    shopName,
+    phone,
+    contactEmail,
+    installationAddress,
+    latInput,
+    lonInput,
+    bankName,
+    bankHolder,
+    bankAccountNumber,
+  });
 
-    setFormErrors(result.errors);
-    return result.sanitizedPayload;
+  const validateAndGetPayload = (): CreateKioskApplicationRequest | null => {
+    setFormErrors(validation.errors);
+    return validation.sanitizedPayload;
   };
 
   const clearFieldError = (field: string) => {
@@ -186,6 +185,7 @@ export function useKioskApplicationForm(pricingVersion = 0, additional = false) 
     bankAccountNumber,
     setBankAccountNumber,
     formErrors,
+    validationErrors: validation.errors,
     clearFieldError,
     handleAddressChange,
     handleSuggestionSelect,

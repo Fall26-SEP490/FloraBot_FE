@@ -25,7 +25,7 @@ for (const admin of [false, true])
           items: [
             {
               id: 'task',
-              kind: 'INCIDENT',
+              kind: admin ? 'INCIDENT' : 'DELIVERY',
               status: 'COMPLETED',
               version: 4,
               assigneeName: 'Thảo',
@@ -80,6 +80,10 @@ for (const admin of [false, true])
       });
     });
     await page.goto(admin ? '/admin/tasks' : '/staff');
+    if (!admin) {
+      await page.getByText('Lịch sử công việc', { exact: true }).click();
+      await page.getByRole('button', { name: 'Xem báo cáo' }).click();
+    }
     const panel = page.locator('.staff-task-details');
     await expect(panel.locator('summary')).toBeVisible();
     expect(reads).toBe(0);

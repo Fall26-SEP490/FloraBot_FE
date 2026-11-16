@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
-import { Button, MapPin, Store } from '@florabot/ui';
+import { Button, ChevronDown, MapPin, Store } from '@florabot/ui';
 import { ApiError, queryClient, request } from '@/shared/lib/api';
 import StaffIncidentResolution from '../../incidents/StaffIncidentResolution';
-import StaffStock from '../../inventory/StaffStock';
+import StaffStock, { staffStockQuery, walkInBlocker } from '../../inventory/StaffStock';
 import StaffInventoryMaintenance, {
   useStaffInventoryMaintenance,
 } from '../../inventory/StaffInventoryMaintenance';
@@ -14,28 +14,35 @@ import StaffEvidence from './StaffEvidence';
 import StaffReassignment from './StaffReassignment';
 import StaffTaskDetails, { staffTaskDetailsQuery } from './StaffTaskDetails';
 import TechnicianRepairAccess from './TechnicianRepairAccess';
-import StaffPreorderFulfillment from './StaffPreorderFulfillment';
+import StaffPreorderFulfillment, {
+  preorderBlocker,
+  staffPreordersQuery,
+} from './StaffPreorderFulfillment';
 
 export function TaskItem({
   task,
   mode,
-  role,
+  actorRole: role,
   actorId,
   sellerId,
   apiBase,
   directoryEndpoint,
   canReassign,
   readOnly,
+  staffOpen = false,
+  onToggleStaff,
 }: {
   task: Task;
   mode: 'worker' | 'manager' | 'oversight';
-  role: ActiveTaskRole;
+  actorRole: ActiveTaskRole;
   actorId?: string;
   sellerId?: string | null;
   apiBase: string;
   directoryEndpoint?: string;
   canReassign: boolean;
   readOnly: boolean;
+  staffOpen?: boolean;
+  onToggleStaff?: () => void;
 }) {
   const isWorker = mode === 'worker';
   const isTechnician = isWorker && role === 'TECHNICIAN';
@@ -52,9 +59,46 @@ export function TaskItem({
   const [showCancellation, setShowCancellation] = useState(false);
   const staffDelivery =
     isWorker && role === 'SELLER_STAFF' && !!actorId && task.kind === 'DELIVERY';
+  const compactStaff = isWorker && role === 'SELLER_STAFF';
+  const CardTitle = compactStaff ? 'h4' : 'h3';
   const startingDelivery = staffDelivery && task.status === 'ASSIGNED';
   const canWorkOnInventory = staffDelivery && task.status === 'IN_PROGRESS';
-  const inventory = useStaffInventoryMaintenance(task.id, actorId, canWorkOnInventory);
+  const cardRef = useRef<HTMLElement>(null);
+  const [nearViewport, setNearViewport] = useState(false);
+  useEffect(() => {
+    if (!canWorkOnInventory || !cardRef.current || typeof IntersectionObserver === 'undefined')
+      return;
+    const observer = new IntersectionObserver(([entry]) => setNearViewport(entry.isIntersecting), {
+      rootMargin: '160px',
+    });
+    observer.observe(cardRef.current);
+    return () => observer.disconnect();
+  }, [canWorkOnInventory]);
+  const checkInventory =
+    canWorkOnInventory &&
+    (staffOpen || nearViewport || typeof IntersectionObserver === 'undefined');
+  const inventory = useStaffInventoryMaintenance(task.id, actorId, checkInventory, staffOpen);
+  const checkGeneralOptions = checkInventory && inventory.isSuccess && inventory.data === null;
+  const stockPreview = useQuery({
+    ...staffStockQuery(task.id, actorId, sellerId ? `seller:${sellerId}` : apiBase, apiBase),
+    enabled: checkGeneralOptions,
+  });
+  const preorderPreview = useQuery({
+    ...staffPreordersQuery(task.id, actorId),
+    enabled: checkGeneralOptions,
+  });
+  const whyStock = stockPreview.isSuccess ? walkInBlocker(stockPreview.data) : null;
+  const whyPreorder = preorderPreview.isSuccess ? preorderBlocker(preorderPreview.data) : null;
+  const blocker =
+    !canWorkOnInventory || staffOpen
+      ? null
+      : inventory.isSuccess && inventory.data?.sessionStage === 'Recovered'
+        ? 'Phiên lỗi đã kết thúc. Nhờ chủ shop giao lại công việc.'
+        : inventory.isSuccess && inventory.data?.sessionStage === 'NeedsInspection'
+          ? `Ô ${inventory.data.slotCode} cần kiểm tra trước khi làm tiếp.`
+          : inventory.isSuccess && inventory.data === null && whyStock && whyPreorder
+            ? `${whyStock} ${whyPreorder}`
+            : null;
   const needsRepairContext =
     isTechnician && task.kind === 'INCIDENT' && task.status === 'IN_PROGRESS';
   const repairDetails = useQuery({
@@ -261,6 +305,125 @@ export function TaskItem({
             ]
           : [];
 
+  const transitionForm = (
+    <form
+      noValidate
+      onSubmit={form.handleSubmit((values) =>
+        submit(compactStaff ? { ...values, status: choices[0] } : values),
+      )}
+      className="staff-transition-form"
+    >
+      {!compactStaff && (
+        <>
+          <div className="staff-transition-header">
+            <h4>
+              {canCancelOpenTask
+                ? 'Hủy công việc'
+                : startingDelivery
+                  ? 'Bắt đầu công việc'
+                  : 'Cập nhật tiến độ & Báo cáo'}
+            </h4>
+            <p>
+              {canCancelOpenTask
+                ? 'Nhập lý do hủy để nhân viên biết.'
+                : isTechnician
+                  ? task.kind === 'KIOSK_REMOVAL'
+                    ? 'Chọn bước tiếp theo và nhập báo cáo tháo dỡ (hoặc đính kèm ảnh minh chứng) để quản lý xác nhận bàn giao.'
+                    : 'Chọn bước tiếp theo và nhập nội dung để quản lý theo dõi xử lý sự cố.'
+                  : 'Chọn bước tiếp theo và nhập nội dung cập nhật.'}
+            </p>
+          </div>
+          <div className="staff-form-group">
+            <label htmlFor={`action-${task.id}`}>Bước tiếp theo</label>
+            <select
+              id={`action-${task.id}`}
+              {...form.register('status', { required: true })}
+              disabled={busy || uncertain}
+            >
+              {choices.map((choice) => (
+                <option key={choice} value={choice}>
+                  {choice === 'IN_PROGRESS' && isManager
+                    ? 'Yêu cầu kiểm tra lại'
+                    : choice === 'CANCELLED'
+                      ? 'Hủy công việc'
+                      : TASK_STATUS_LABELS[choice]}
+                </option>
+              ))}
+            </select>
+          </div>
+        </>
+      )}
+      <div className="staff-form-group">
+        <label htmlFor={`report-${task.id}`}>
+          {compactStaff
+            ? startingDelivery
+              ? 'Ghi chú khi bắt đầu'
+              : 'Kết quả công việc'
+            : canCancelOpenTask
+              ? 'Lý do hủy'
+              : 'Nội dung cập nhật'}
+        </label>
+        {quickTemplates.length > 0 && (
+          <div className="staff-quick-templates" aria-label="Gợi ý nội dung">
+            <span className="staff-quick-label">Gợi ý nhanh:</span>
+            <div className="staff-quick-chips">
+              {quickTemplates.map((template) => (
+                <button
+                  key={template.value}
+                  type="button"
+                  className="staff-chip-btn"
+                  onClick={() => form.setValue('report', template.value, { shouldValidate: true })}
+                >
+                  {template.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        <textarea
+          id={`report-${task.id}`}
+          maxLength={2000}
+          rows={3}
+          placeholder={
+            canCancelOpenTask
+              ? 'Nhập lý do hủy (ít nhất 10 ký tự)…'
+              : 'Nhập nội dung (ít nhất 10 ký tự)…'
+          }
+          {...form.register('report', {
+            validate: (value) => (value?.trim().length ?? 0) >= 10 || 'Mô tả ít nhất 10 ký tự.',
+          })}
+          aria-invalid={Boolean(reportError)}
+          aria-describedby={reportError ? `report-error-${task.id}` : undefined}
+          disabled={busy}
+        />
+        {reportError && (
+          <p id={`report-error-${task.id}`} className="error" role="alert">
+            {reportError}
+          </p>
+        )}
+      </div>
+      <Button
+        type="submit"
+        disabled={busy || uncertain || needsLatestVersion}
+        className="staff-submit-btn"
+      >
+        {busy
+          ? 'Đang cập nhật…'
+          : canCancelOpenTask
+            ? 'Xác nhận hủy'
+            : isTechnician
+              ? task.status === 'ASSIGNED'
+                ? 'Bắt đầu xử lý'
+                : 'Gửi báo cáo'
+              : startingDelivery
+                ? 'Bắt đầu'
+                : canWorkOnInventory
+                  ? 'Gửi báo cáo'
+                  : 'Xác nhận cập nhật'}
+      </Button>
+    </form>
+  );
+
   const taskContent = (
     <>
       {canWorkOnInventory && actorId && (
@@ -290,7 +453,7 @@ export function TaskItem({
             />
           )}
           {inventory.data === null && (
-            <StaffPreorderFulfillment taskId={task.id} active={task.status === 'IN_PROGRESS'} />
+            <StaffPreorderFulfillment taskId={task.id} actorId={actorId} active />
           )}
         </div>
       )}
@@ -317,114 +480,18 @@ export function TaskItem({
           </Button>
         </div>
       )}
-      {choices.length > 0 && (!needsRepairContext || (repairDetails.isSuccess && !slotRepair)) && (
-        <form noValidate onSubmit={form.handleSubmit(submit)} className="staff-transition-form">
-          <div className="staff-transition-header">
-            <h4>
-              {canCancelOpenTask
-                ? 'Hủy công việc'
-                : startingDelivery
-                  ? 'Bắt đầu công việc'
-                  : 'Cập nhật tiến độ & Báo cáo'}
-            </h4>
-            <p>
-              {canCancelOpenTask
-                ? 'Nhập lý do hủy để nhân viên biết.'
-                : isTechnician
-                  ? task.kind === 'KIOSK_REMOVAL'
-                    ? 'Chọn bước tiếp theo và nhập báo cáo tháo dỡ (hoặc đính kèm ảnh minh chứng) để quản lý xác nhận bàn giao.'
-                    : 'Chọn bước tiếp theo và nhập nội dung để quản lý theo dõi xử lý sự cố.'
-                  : startingDelivery
-                    ? 'Nhập ghi chú hoặc chọn gợi ý, rồi bấm Bắt đầu. Thao tác tại tủ sẽ hiện khi công việc chuyển sang Đang thực hiện.'
-                    : canWorkOnInventory
-                      ? 'Sau khi thực hiện và ghi nhận thao tác tại tủ, gửi kết quả để chủ shop duyệt.'
-                      : 'Chọn bước tiếp theo và nhập nội dung cập nhật.'}
-            </p>
-          </div>
-          <div className="staff-form-group">
-            <label htmlFor={`action-${task.id}`}>Bước tiếp theo</label>
-            <select
-              id={`action-${task.id}`}
-              {...form.register('status', { required: true })}
-              disabled={busy || uncertain}
-            >
-              {choices.map((choice) => (
-                <option key={choice} value={choice}>
-                  {choice === 'IN_PROGRESS' && isManager
-                    ? 'Yêu cầu kiểm tra lại'
-                    : choice === 'CANCELLED'
-                      ? 'Hủy công việc'
-                      : TASK_STATUS_LABELS[choice]}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="staff-form-group">
-            <label htmlFor={`report-${task.id}`}>
-              {canCancelOpenTask ? 'Lý do hủy' : 'Nội dung cập nhật'}
-            </label>
-            {quickTemplates.length > 0 && (
-              <div className="staff-quick-templates" aria-label="Gợi ý nội dung">
-                <span className="staff-quick-label">Gợi ý nhanh:</span>
-                <div className="staff-quick-chips">
-                  {quickTemplates.map((template) => (
-                    <button
-                      key={template.value}
-                      type="button"
-                      className="staff-chip-btn"
-                      onClick={() =>
-                        form.setValue('report', template.value, { shouldValidate: true })
-                      }
-                    >
-                      {template.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-            <textarea
-              id={`report-${task.id}`}
-              maxLength={2000}
-              rows={3}
-              placeholder={
-                canCancelOpenTask
-                  ? 'Nhập lý do hủy (ít nhất 10 ký tự)…'
-                  : 'Nhập nội dung (ít nhất 10 ký tự)…'
-              }
-              {...form.register('report', {
-                validate: (value) => (value?.trim().length ?? 0) >= 10 || 'Mô tả ít nhất 10 ký tự.',
-              })}
-              aria-invalid={Boolean(reportError)}
-              aria-describedby={reportError ? `report-error-${task.id}` : undefined}
-              disabled={busy}
-            />
-            {reportError && (
-              <p id={`report-error-${task.id}`} className="error" role="alert">
-                {reportError}
-              </p>
-            )}
-          </div>
-          <Button
-            type="submit"
-            disabled={busy || uncertain || needsLatestVersion}
-            className="staff-submit-btn"
-          >
-            {busy
-              ? 'Đang cập nhật…'
-              : canCancelOpenTask
-                ? 'Xác nhận hủy'
-                : isTechnician
-                  ? task.status === 'ASSIGNED'
-                    ? 'Bắt đầu xử lý'
-                    : 'Gửi báo cáo'
-                  : startingDelivery
-                    ? 'Bắt đầu'
-                    : canWorkOnInventory
-                      ? 'Gửi báo cáo'
-                      : 'Xác nhận cập nhật'}
-          </Button>
-        </form>
-      )}
+      {choices.length > 0 &&
+        (!needsRepairContext || (repairDetails.isSuccess && !slotRepair)) &&
+        (compactStaff && canWorkOnInventory ? (
+          <details className="staff-report-disclosure">
+            <summary>
+              Viết báo cáo <ChevronDown size={16} aria-hidden="true" />
+            </summary>
+            {transitionForm}
+          </details>
+        ) : (
+          transitionForm
+        ))}
       {task.report && (
         <div className="staff-latest-report">
           <strong>
@@ -568,20 +635,23 @@ export function TaskItem({
   );
   return (
     <article
-      className={role === 'SELLER_STAFF' ? 'staff-task-card' : 'staff-task-card member-empty'}
+      ref={cardRef}
+      className={
+        compactStaff ? 'staff-task-card staff-task-compact' : 'staff-task-card member-empty'
+      }
       aria-labelledby={`task-${task.id}`}
     >
       <div className="staff-task-heading">
         <div>
-          <h3 id={`task-${task.id}`}>
+          <CardTitle id={`task-${task.id}`}>
             {task.kind === 'INCIDENT'
               ? 'Kiểm tra sự cố'
               : task.kind === 'KIOSK_REMOVAL'
                 ? 'Tháo dỡ kiosk'
                 : 'Giao hoa'}{' '}
             · {task.kioskName}
-          </h3>
-          {!isTechnician && (
+          </CardTitle>
+          {!isTechnician && !compactStaff && (
             <p className="staff-assignee-text">Người thực hiện: {task.assigneeName}</p>
           )}
         </div>
@@ -594,11 +664,25 @@ export function TaskItem({
           <MapPin size={15} aria-hidden="true" />
           <span className="staff-destination-text">
             <span>{task.address}</span>
-            {task.shopName ? <span className="staff-destination-shop">{task.shopName}</span> : null}
+            {isTechnician && task.address && (
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(task.address)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Chỉ đường Google Maps
+              </a>
+            )}
+            {task.shopName && !compactStaff ? (
+              <span className="staff-destination-shop">{task.shopName}</span>
+            ) : null}
           </span>
         </p>
         {task.instructions && (
-          <div className="staff-instructions-callout">
+          <div
+            className="staff-instructions-callout"
+            data-preview={compactStaff && !staffOpen ? 'true' : undefined}
+          >
             <div className="staff-instructions-head">
               <Store size={14} aria-hidden="true" />
               <strong>
@@ -610,8 +694,34 @@ export function TaskItem({
             <p>{task.instructions}</p>
           </div>
         )}
+        {blocker && (
+          <p className="staff-task-blocker">
+            <strong>Chưa thể thao tác:</strong> {blocker}
+          </p>
+        )}
       </div>
-      {isTechnician ? (
+      {compactStaff ? (
+        <>
+          <Button
+            type="button"
+            variant={
+              !staffOpen && (task.status === 'ASSIGNED' || task.status === 'IN_PROGRESS')
+                ? 'default'
+                : 'outline'
+            }
+            className="staff-task-open"
+            aria-expanded={staffOpen}
+            aria-controls={`staff-body-${task.id}`}
+            onClick={onToggleStaff}
+          >
+            {staffOpen ? 'Thu gọn' : startingDelivery ? 'Mở công việc' : nextLabel}
+            <ChevronDown size={16} aria-hidden="true" />
+          </Button>
+          <div id={`staff-body-${task.id}`} className="staff-task-body" hidden={!staffOpen}>
+            {taskContent}
+          </div>
+        </>
+      ) : isTechnician ? (
         <details
           className="technician-task-body"
           onToggle={(event) => setTaskOpen(event.currentTarget.open)}

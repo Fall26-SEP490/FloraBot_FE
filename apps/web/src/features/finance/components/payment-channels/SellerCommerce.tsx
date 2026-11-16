@@ -95,7 +95,7 @@ export default function SellerCommerce({ session }: { session: Session }) {
   return (
     <div className="business-stack">
       {/* 1. Ngân hàng shop: dùng làm thông tin nhận hoàn phí thuê kiosk */}
-      <ShopBankSection sellerId={sellerId} />
+      <ShopBankSection sellerId={sellerId} sectionId="shop-bank-heading" />
 
       {/* 2. Kênh PayOS Seller: dùng nhận tiền bán hoa từ kiosk */}
       <section className="business-panel" aria-labelledby="seller-channel-title">

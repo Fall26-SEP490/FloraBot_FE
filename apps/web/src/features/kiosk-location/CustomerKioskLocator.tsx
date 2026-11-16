@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -37,7 +37,6 @@ export default function CustomerKioskLocator() {
     if (typeof window === 'undefined') return null;
     return new URLSearchParams(window.location.search).get('kiosk');
   });
-  const [selectedMarkerPos, setSelectedMarkerPos] = useState<{ x: number; y: number } | null>(null);
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'MAINTENANCE' | 'OFFLINE'>(
     'ALL',
   );
@@ -47,14 +46,6 @@ export default function CustomerKioskLocator() {
   const [mobileTab, setMobileTab] = useState<'list' | 'map'>('list');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-
-  const handlePositionChange = useCallback((pos: { x: number; y: number } | null) => {
-    setSelectedMarkerPos((prev) => {
-      if (!prev && !pos) return prev;
-      if (prev && pos && prev.x === pos.x && prev.y === pos.y) return prev;
-      return pos;
-    });
-  }, []);
 
   useEffect(() => {
     if (selectedKioskId) {
@@ -132,21 +123,10 @@ export default function CustomerKioskLocator() {
   const activeCount = items.filter((k) => isKioskActive(k.status)).length;
   const maintenanceCount = items.filter((k) => k.status === 'MAINTENANCE').length;
   const offlineCount = items.filter((k) => k.status === 'OFFLINE').length;
-  const selectedKiosk = items.find((k) => k.id === selectedKioskId) || null;
-  const selectedIsOnline = selectedKiosk ? isKioskActive(selectedKiosk.status) : false;
-  const selectedIsMaintenance = selectedKiosk?.status === 'MAINTENANCE';
-
   const regionCounts = availableRegions.reduce<Record<string, number>>((acc, r) => {
     acc[r] = items.filter((k) => k.region === r).length;
     return acc;
   }, {});
-
-  const selectedDirectionsUrl =
-    selectedKiosk &&
-    isValidLatitude(selectedKiosk.latitude) &&
-    isValidLongitude(selectedKiosk.longitude)
-      ? buildGoogleMapsDirectionsUrl(selectedKiosk.latitude, selectedKiosk.longitude)
-      : null;
 
   const displayedItems = useMemo(() => {
     return items.filter((kiosk) => {
@@ -189,13 +169,9 @@ export default function CustomerKioskLocator() {
     <main id="main" className="customer-kiosk-page">
       <header className="customer-kiosk-header">
         <div className="customer-kiosk-header-content">
-          <span className="customer-kiosk-eyebrow">
-            <MapPin size={14} aria-hidden="true" />
-            Mạng lưới kiosk FloraBot
-          </span>
           <h1>Tìm kiosk nhận hoa FloraBot</h1>
           <p className="customer-kiosk-lead">
-            Tìm điểm nhận hoa thuận tiện, xem trạng thái tủ và mở chỉ đường ngay trên bản đồ.
+            Tìm theo tên, địa chỉ hoặc chọn tủ trên bản đồ để xem vị trí.
           </p>
         </div>
       </header>
@@ -372,13 +348,11 @@ export default function CustomerKioskLocator() {
               <div
                 className="customer-geo-active-bar"
                 role="region"
-                aria-label="Bộ lọc khoảng cách"
+                aria-label="Trạng thái định vị"
               >
                 <span className="customer-geo-active-label">
                   <Navigation size={13} aria-hidden="true" />
-                  <span>
-                    Vị trí: {userOrigin.lat.toFixed(3)}, {userOrigin.lon.toFixed(3)}
-                  </span>
+                  <span>Đang dùng vị trí của bạn</span>
                 </span>
                 <button
                   type="button"
@@ -514,7 +488,10 @@ export default function CustomerKioskLocator() {
         >
           <div className="customer-kiosk-unified-card">
             <div className="customer-results-heading-row">
-              <h2 id="results-title">Điểm nhận hoa</h2>
+              <h2 id="results-title">
+                Điểm nhận hoa{' '}
+                <span className="customer-results-count">{displayedItems.length}</span>
+              </h2>
               <Button
                 variant="outline"
                 onClick={() => void kiosksQuery.refetch()}
@@ -591,15 +568,12 @@ export default function CustomerKioskLocator() {
                 )}
 
               {/* Kiosk Cards List */}
-              <div
-                className={`customer-kiosk-list-wrap ${selectedKiosk ? 'has-active-selection' : ''}`}
-              >
+              <div className="customer-kiosk-list-wrap">
                 {displayedItems.length > 0 && (
                   <ul className="customer-kiosk-list" aria-label="Danh sách các kiosk FloraBot">
                     {displayedItems.map((kiosk) => {
                       const isOnline = isKioskActive(kiosk.status);
                       const isMaintenance = kiosk.status === 'MAINTENANCE';
-                      const isOffline = kiosk.status === 'OFFLINE';
                       const statusLabel = getKioskStatusLabel(kiosk.status);
                       const hasCoordinates =
                         isValidLatitude(kiosk.latitude) && isValidLongitude(kiosk.longitude);
@@ -618,7 +592,25 @@ export default function CustomerKioskLocator() {
                             <div className="customer-item-main">
                               <div className="customer-item-header">
                                 <div className="customer-item-title-row">
-                                  <h3 className="customer-kiosk-name">{kiosk.name}</h3>
+                                  <h3 className="customer-kiosk-name">
+                                    {hasCoordinates ? (
+                                      <button
+                                        type="button"
+                                        className="customer-btn-focus"
+                                        aria-pressed={selectedKioskId === kiosk.id}
+                                        aria-label={`Xem ${kiosk.name} trên bản đồ`}
+                                        onClick={() => {
+                                          setSelectedKioskId(kiosk.id);
+                                          setMobileTab('map');
+                                        }}
+                                      >
+                                        {kiosk.name}
+                                        <ArrowUpRight size={14} aria-hidden="true" />
+                                      </button>
+                                    ) : (
+                                      kiosk.name
+                                    )}
+                                  </h3>
                                   <span
                                     className={`customer-status-badge ${
                                       isOnline
@@ -646,29 +638,6 @@ export default function CustomerKioskLocator() {
                                   <span>{kiosk.address || 'Chưa cập nhật địa chỉ cụ thể'}</span>
                                 </p>
 
-                                {/* Compact status notice when not online */}
-                                {isMaintenance && (
-                                  <p className="customer-maintenance-notice" role="note">
-                                    <CircleAlert
-                                      size={13}
-                                      aria-hidden="true"
-                                      className="customer-notice-icon"
-                                    />
-                                    <span>Kiosk đang trong quá trình bảo trì kỹ thuật.</span>
-                                  </p>
-                                )}
-
-                                {isOffline && (
-                                  <p className="customer-offline-notice" role="note">
-                                    <CircleAlert
-                                      size={13}
-                                      aria-hidden="true"
-                                      className="customer-notice-icon"
-                                    />
-                                    <span>Kiosk hiện tạm ngưng nhận hoa tại tủ.</span>
-                                  </p>
-                                )}
-
                                 {!hasCoordinates && (
                                   <span className="customer-no-coords-note">
                                     <MapPin size={12} aria-hidden="true" />
@@ -682,25 +651,11 @@ export default function CustomerKioskLocator() {
                                     className={`customer-btn-shop ${!isOnline ? 'is-secondary-cta' : ''}`}
                                   >
                                     <Store size={14} aria-hidden="true" />
-                                    <span>{isOnline ? 'Xem mẫu hoa' : 'Xem hoa tham khảo'}</span>
+                                    <span>Xem mẫu hoa</span>
                                   </Link>
 
                                   {hasCoordinates && (
                                     <div className="customer-item-action-subrow">
-                                      <Button
-                                        type="button"
-                                        variant="outline"
-                                        className="customer-btn-focus"
-                                        onClick={() => {
-                                          setSelectedKioskId(kiosk.id);
-                                          setMobileTab('map');
-                                        }}
-                                        title="Định vị kiosk này trên bản đồ"
-                                      >
-                                        <MapPin size={13} aria-hidden="true" />
-                                        <span>Định vị</span>
-                                      </Button>
-
                                       {directionsUrl && (
                                         <a
                                           href={directionsUrl}
@@ -796,94 +751,11 @@ export default function CustomerKioskLocator() {
             kiosks={displayedItems}
             userOrigin={userOrigin}
             selectedKioskId={selectedKioskId}
-            onSelectKiosk={(id) => setSelectedKioskId(id)}
-            onSelectedPositionChange={handlePositionChange}
+            onSelectKiosk={(id) => {
+              setSelectedKioskId(id);
+              setMobileTab('list');
+            }}
           />
-
-          {/* Floating Preview Card on Map */}
-          {selectedKiosk && (
-            <div
-              className={`customer-map-floating-card ${selectedMarkerPos ? 'is-anchored' : ''} ${
-                selectedMarkerPos && selectedMarkerPos.y < 230 ? 'is-flipped' : ''
-              }`}
-              style={
-                selectedMarkerPos
-                  ? {
-                      left: `${selectedMarkerPos.x}px`,
-                      top:
-                        selectedMarkerPos.y < 230
-                          ? `${selectedMarkerPos.y + 10}px`
-                          : `${selectedMarkerPos.y - 54}px`,
-                    }
-                  : undefined
-              }
-            >
-              <div className="customer-floating-card-body">
-                <div className="customer-floating-content">
-                  <div className="customer-floating-card-header">
-                    <div className="customer-floating-card-title">
-                      <h4 className="customer-kiosk-name">{selectedKiosk.name}</h4>
-                    </div>
-                    <div className="customer-floating-header-right">
-                      <span
-                        className={`customer-status-badge ${
-                          selectedIsOnline
-                            ? 'status-active'
-                            : selectedIsMaintenance
-                              ? 'status-maintenance'
-                              : 'status-offline'
-                        }`}
-                        title={getKioskStatusLabel(selectedKiosk.status)}
-                        aria-label={getKioskStatusLabel(selectedKiosk.status)}
-                      >
-                        <span className="customer-status-dot" aria-hidden="true" />
-                        <span className="customer-status-text">
-                          {getKioskStatusLabel(selectedKiosk.status)}
-                        </span>
-                      </span>
-                      <button
-                        type="button"
-                        className="customer-floating-close-btn"
-                        onClick={() => {
-                          setSelectedKioskId(null);
-                          setSelectedMarkerPos(null);
-                        }}
-                        aria-label="Đóng chi tiết kiosk"
-                        title="Đóng chi tiết"
-                      >
-                        <X size={16} aria-hidden="true" />
-                      </button>
-                    </div>
-                  </div>
-                  <p className="customer-floating-address">
-                    <MapPin size={13} aria-hidden="true" className="customer-icon-pin" />
-                    <span>{selectedKiosk.address || 'Chưa cập nhật địa chỉ'}</span>
-                  </p>
-                  <div className="customer-floating-actions">
-                    {selectedDirectionsUrl && (
-                      <a
-                        href={selectedDirectionsUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="customer-btn-directions"
-                        aria-label={`Chỉ đường đến ${selectedKiosk.name} trên Google Maps`}
-                      >
-                        <Navigation size={13} aria-hidden="true" />
-                        <span>Chỉ đường</span>
-                        <ArrowUpRight size={12} aria-hidden="true" />
-                      </a>
-                    )}
-                    <Link
-                      href="/dat-hoa"
-                      className={`customer-btn-shop ${!selectedIsOnline ? 'is-secondary-cta' : ''}`}
-                    >
-                      {selectedIsOnline ? 'Xem mẫu hoa' : 'Xem hoa tham khảo'}
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </section>
       </div>
     </main>

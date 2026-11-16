@@ -9,9 +9,9 @@ const receipt: components['schemas']['ReceiptResponse'] = {
   orderCode: 'FB-TEST-001',
   status: 'COMPLETED',
   createdAt: '2026-10-07T10:00:00Z',
-  subtotal: 350000,
+  subtotal: 390000,
   discount: 0,
-  total: 350000,
+  total: 390000,
   completedAt: '2026-10-07T10:05:00Z',
   disputeDeadline: '2026-10-08T10:05:00Z',
   hasComplaint: false,
@@ -26,8 +26,65 @@ const receipt: components['schemas']['ReceiptResponse'] = {
       total: 350000,
       status: 'PICKED_UP',
     },
+    {
+      name: 'Nơ trang trí',
+      quantity: 2,
+      unitPrice: 20000,
+      total: 40000,
+      status: 'PICKED_UP',
+    },
   ],
 };
+
+test('An uncertain complaint keeps the draft and requires a receipt refresh before retry', async ({
+  page,
+}) => {
+  let reads = 0;
+  let sends = 0;
+  await page.route('**/api/receipts/lookup', (route) => {
+    reads++;
+    return route.fulfill({ json: receipt });
+  });
+  await page.route(`**/api/receipts/${id}/evidence`, (route) =>
+    route.fulfill({ json: { reference: 'evidence:v1:test-photo' } }),
+  );
+  await page.route('**/api/receipts/flows/open_dispute', (route) => {
+    sends++;
+    return route.fulfill({ status: 500, json: {} });
+  });
+  await page.goto(`/receipt#order=${id}&token=${token}`);
+  await page.getByRole('button', { name: 'Xem biên nhận', exact: true }).click();
+  await page.getByRole('button', { name: 'Gửi phản ánh về hoa' }).click();
+  const form = page.getByRole('form', { name: 'Phản ánh về hoa' });
+  await form.getByLabel('Vấn đề với bó hoa').fill('Bó hoa bị dập khi nhận tại tủ.');
+  await form
+    .locator('input[type=file]')
+    .setInputFiles({ name: 'hoa.png', mimeType: 'image/png', buffer: Buffer.from('mock') });
+  await form.getByRole('button', { name: 'Tải ảnh minh chứng' }).click();
+  await expect(form.getByRole('status')).toContainText('Đã lưu ảnh');
+  await form.getByRole('button', { name: 'Kiểm tra phản ánh' }).click();
+  await form.getByRole('button', { name: 'Xác nhận gửi phản ánh' }).click();
+  const check = form.getByRole('button', { name: 'Kiểm tra trạng thái biên nhận' });
+  await expect(check).toBeVisible();
+  await expect(form.getByLabel('Vấn đề với bó hoa')).toHaveValue('Bó hoa bị dập khi nhận tại tủ.');
+  await expect(form.getByRole('status')).toContainText('hoa.png');
+  await expect(form.getByRole('button', { name: 'Hủy phản ánh' })).toBeEnabled();
+  await page.getByRole('button', { name: 'Cập nhật trạng thái', exact: true }).click();
+  await expect(form.getByRole('button', { name: 'Kiểm tra phản ánh' })).toBeEnabled();
+  await expect(form.getByLabel('Vấn đề với bó hoa')).toHaveValue('Bó hoa bị dập khi nhận tại tủ.');
+  expect(reads).toBe(2);
+  expect(sends).toBe(1);
+  await form.getByRole('button', { name: 'Kiểm tra phản ánh' }).click();
+  await form.getByRole('button', { name: 'Xác nhận gửi phản ánh' }).click();
+  await page.route('**/api/receipts/lookup', (route) =>
+    route.fulfill({ json: { ...receipt, canComplain: false } }),
+  );
+  await page.getByRole('button', { name: 'Cập nhật trạng thái', exact: true }).click();
+  await expect(form.getByLabel('Vấn đề với bó hoa')).toHaveValue('Bó hoa bị dập khi nhận tại tủ.');
+  await expect(form.getByRole('button', { name: 'Hủy phản ánh' })).toBeEnabled();
+  await form.getByRole('button', { name: 'Hủy phản ánh' }).click();
+  await expect(form).toHaveCount(0);
+});
 
 for (const width of [390, 1440]) {
   test(`Public receipt keeps capability private and accessible at ${width}`, async ({
@@ -52,6 +109,9 @@ for (const width of [390, 1440]) {
     await page.getByRole('button', { name: 'Xem biên nhận', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Đơn FB-TEST-001' })).toBeFocused();
     await expect(page.getByText('Bó hoa cúc dành tặng mẹ')).toBeVisible();
+    await expect(
+      page.locator('.receipt-items li').filter({ hasText: 'Nơ trang trí' }),
+    ).toContainText('40.000');
     await expect(page.getByRole('button', { name: 'Xóa thông tin', exact: true })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Hủy tra cứu', exact: true })).toHaveCount(0);
     expect(calls).toBe(1);

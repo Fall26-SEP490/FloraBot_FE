@@ -87,7 +87,7 @@ export default function ProductEditor({
               <dt>Loại mẫu hoa</dt>
               <dd>
                 {product.inventoryKind === 'ARTIFICIAL'
-                  ? 'Hoa giả cao cấp (không áp dụng thời hạn tươi)'
+                  ? 'Hoa thành phẩm'
                   : product.inventoryKind === 'LEGACY_FRESH' || product.shelfLifeHours
                     ? `Dữ liệu hoa tươi cũ (hạn bán ${product.shelfLifeHours || 48} giờ)`
                     : 'Hoa thành phẩm'}

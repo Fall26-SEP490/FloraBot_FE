@@ -39,14 +39,26 @@ test('Seller staff fulfills only paid preorder into a PREORDER slot', async ({ p
   await page.route('**/api/staff/tasks/task-1/preorders', (route) =>
     route.fulfill({
       json: {
-        preorders: [
-          {
-            requestId: 'order-1',
-            orderCode: 'FB-001',
-            productName: 'Hoa hồng',
-            pickupAt: new Date(Date.now() + 3600000).toISOString(),
-          },
-        ],
+        preorders:
+          writes > 0
+            ? []
+            : [
+                {
+                  requestId: 'order-1',
+                  orderCode: 'FB-001',
+                  productName: 'Hoa hồng',
+                  pickupAt: new Date(Date.now() + 3600000).toISOString(),
+                  accessories: [
+                    {
+                      accessoryId: 'bow-1',
+                      name: 'Nơ xanh',
+                      quantity: 2,
+                      unitPrice: 15000,
+                      lineTotal: 30000,
+                    },
+                  ],
+                },
+              ],
         slots: [
           { id: 'slot-p', slotCode: 'P01', zone: 'PREORDER' },
           { id: 'slot-w', slotCode: 'W01', zone: 'WALK_IN' },
@@ -77,7 +89,8 @@ test('Seller staff fulfills only paid preorder into a PREORDER slot', async ({ p
     });
   });
   await page.goto('/staff');
-  await page.getByText('Nạp đơn đặt trước đã thanh toán', { exact: true }).click();
+  await page.getByRole('button', { name: 'Tiếp tục xử lý' }).click();
+  await page.getByText('Nạp hoa cho đơn đặt trước', { exact: true }).click();
   await expect(page.getByLabel('Đơn đặt trước')).toBeVisible();
   await expect(
     page.getByLabel('Ô PREORDER trống').locator('option[value="slot-null"]'),
@@ -86,6 +99,9 @@ test('Seller staff fulfills only paid preorder into a PREORDER slot', async ({ p
     0,
   );
   await page.getByLabel('Đơn đặt trước').selectOption('order-1');
+  await expect(page.getByRole('region', { name: 'Phụ kiện cần đóng gói' })).toContainText(
+    'Nơ xanh × 2',
+  );
   await page.getByLabel('Ô PREORDER trống').selectOption('slot-p');
   await page.getByLabel('Mã định danh bó hoa').fill('BOUQUET-001');
   await expect(page.getByRole('button', { name: 'Xác nhận đã nạp vào ô' })).toBeDisabled();
@@ -100,5 +116,7 @@ test('Seller staff fulfills only paid preorder into a PREORDER slot', async ({ p
   await expect(page.getByText(/Đang có lượt nạp tại ô này/)).toBeVisible();
   await page.getByRole('button', { name: 'Xác nhận đã nạp vào ô' }).click();
   await expect(page.getByText('Đã ghi nhận hoa của đơn vào ô PREORDER.')).toBeVisible();
+  await expect(page.getByText('Chưa có đơn đã thanh toán đến giờ nạp tại tủ này.')).toBeVisible();
+  await expect(page.getByLabel('Đơn đặt trước')).toHaveCount(0);
   expect(writes).toBe(1);
 });

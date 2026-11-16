@@ -31,7 +31,8 @@ interface KioskApplicationFormProps {
   errorBannerRef: RefObject<HTMLDivElement | null>;
   isPending: boolean;
   disabled?: boolean;
-  onSubmit: (e: React.FormEvent) => void;
+  submitHint?: string;
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
 }
 
 export function KioskApplicationForm({
@@ -46,6 +47,7 @@ export function KioskApplicationForm({
   errorBannerRef,
   isPending,
   disabled = false,
+  submitHint,
   onSubmit,
 }: KioskApplicationFormProps) {
   return (
@@ -204,19 +206,28 @@ export function KioskApplicationForm({
         )}
         {rentalReview}
 
-        {disabled && !isPending && (
-          <p className="lease-submit-hint">
-            Chọn số ô hợp lệ và đánh dấu xác nhận phí thuê để có thể gửi hồ sơ.
+        {submitHint && !isPending && (
+          <p id="lease-submit-hint" className="lease-submit-hint">
+            {submitHint}
           </p>
         )}
         <div className="kiosk-form-actions">
-          <Button type="submit" disabled={isPending || disabled} className="submit-application-btn">
+          <Button
+            type="submit"
+            disabled={isPending || disabled}
+            className="submit-application-btn"
+            aria-describedby={
+              submitHint && !isPending
+                ? 'lease-submit-hint lease-submit-payment-note'
+                : 'lease-submit-payment-note'
+            }
+          >
             {isPending ? 'Đang gửi hồ sơ...' : 'Nộp hồ sơ thuê kiosk'}
           </Button>
-          <Link href="/tai-khoan" className="button button-outline">
-            Quay lại tài khoản
-          </Link>
         </div>
+        <p id="lease-submit-payment-note" className="lease-submit-hint">
+          Gửi hồ sơ chưa thu tiền. Bạn thanh toán ở bước tiếp theo.
+        </p>
       </form>
     </section>
   );

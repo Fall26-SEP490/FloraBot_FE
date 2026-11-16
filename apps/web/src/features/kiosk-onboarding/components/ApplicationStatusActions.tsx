@@ -1,4 +1,4 @@
-import { CircleAlert } from '@florabot/ui';
+import { CheckCircle2, CircleAlert } from '@florabot/ui';
 import type { KioskApplicationResponse } from '../../installations/installations.types';
 
 interface ApplicationStatusActionsProps {
@@ -9,7 +9,10 @@ export function ApplicationStatusActions({ appData }: ApplicationStatusActionsPr
   if (appData.status === 'PAID_REVIEW') {
     return (
       <div className="status-action-box" data-action="paid-review">
-        <h3>Đã thanh toán thành công</h3>
+        <h3>
+          <CheckCircle2 className="payos-confirmed-icon" size={18} aria-hidden="true" />
+          Đã thanh toán thành công
+        </h3>
         <p>
           Khoản phí thuê {Number(appData.annualFee).toLocaleString('vi-VN')} đ đã được ghi nhận.
           Quản lý vận hành FloraBot sẽ liên hệ với bạn qua số điện thoại{' '}

@@ -1,3 +1,4 @@
+import { fillPickup } from '../fixtures/quotation';
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
@@ -5,6 +6,14 @@ const sellerId = '20000000-0000-0000-0000-000000000001';
 const kioskId = '40000000-0000-0000-0000-000000000001';
 const productId = '30000000-0000-0000-0000-000000000001';
 const slotId = '60000000-0000-0000-0000-000000000001';
+const bow = {
+  id: '50000000-0000-0000-0000-000000000001',
+  name: 'Nơ trang trí',
+  price: 20000,
+  availableQuantity: 5,
+  shopName: 'Shop kiểm thử',
+};
+const card = { ...bow, id: '50000000-0000-0000-0000-000000000002', name: 'Thiệp', price: 10000 };
 const pickupAt = new Date(Date.now() + 4 * 3600000).toISOString();
 const flower = {
   productId,
@@ -41,6 +50,17 @@ function order() {
     pickupAt,
     pickupBefore: new Date(Date.now() + 6 * 3600000).toISOString(),
     quotedPrice: null as number | null,
+    quotedFlowerPrice: null as number | null,
+    quotedAccessoryTotal: 0,
+    quoteVersion: 0,
+    requestedAccessories: [] as { accessoryId: string; name: string; quantity: number }[],
+    quotedAccessories: [] as {
+      accessoryId: string;
+      name: string;
+      quantity: number;
+      unitPrice: number;
+      lineTotal: number;
+    }[],
     quoteNote: null as string | null,
     quoteExpiresAt: new Date(Date.now() + 3600000).toISOString(),
     orderId: null as string | null,
@@ -65,6 +85,19 @@ async function common(
   await page.route('**/hub/**', (route) => route.fulfill({ status: 503 }));
   await page.route('**/api/**', async (route) => {
     const path = new URL(route.request().url()).pathname.replace('/api', '');
+    if (path === `/member/kiosks/${kioskId}/catalog/accessories`)
+      return route.fulfill({ json: [bow, card] });
+    if (path === '/me/products')
+      return route.fulfill({ json: [{ id: productId, price: flower.price }] });
+    if (path === `/sellers/${sellerId}/accessories`)
+      return route.fulfill({
+        json: [bow, card].map((item) => ({
+          ...item,
+          kioskId,
+          status: 'ACTIVE',
+          stockQuantity: item.availableQuantity,
+        })),
+      });
     if (path.endsWith('/preorder-availability'))
       return route.fulfill({
         json: {
@@ -163,6 +196,9 @@ test('Preorder picker hides full kiosks and sorts available ones by customer loc
   await page.route(`**/api/kiosks/${full}/preorder-availability*`, (route) =>
     route.fulfill({ json: { available: false, status: 'CAPACITY_EXHAUSTED' } }),
   );
+  await page.route(`**/api/member/kiosks/${near}/catalog/accessories`, (route) =>
+    route.fulfill({ json: [] }),
+  );
   await page.goto('/dat-hoa');
   await page
     .getByRole('button', { name: /báo giá/i })
@@ -171,8 +207,64 @@ test('Preorder picker hides full kiosks and sorts available ones by customer loc
   const picker = page.getByLabel('Tủ nhận hoa', { exact: true });
   await expect(picker.locator('option:not([disabled])')).toHaveText(['A - tủ xa', 'Z - tủ gần']);
   await expect(picker).toHaveValue('');
-  await page.getByRole('button', { name: 'Xếp tủ gần tôi' }).click();
-  await expect(picker.locator('option:not([disabled])')).toHaveText(['Z - tủ gần', 'A - tủ xa']);
+  await page.getByRole('button', { name: 'Tìm tủ gần tôi' }).click();
+  await expect(picker.locator('option:not([disabled])')).toHaveText([
+    /Z - tủ gần · Khoảng/,
+    /A - tủ xa · Khoảng/,
+  ]);
+  await expect(page.locator('.flower-request-nearest')).toContainText('Z - tủ gần');
+  await picker.selectOption(kioskId);
+  await page.getByRole('button', { name: 'Thêm Nơ trang trí' }).click();
+  await page.getByRole('button', { name: 'Tăng số lượng Nơ trang trí' }).click();
+  const quantity = page.getByRole('status', { name: 'Số lượng Nơ trang trí', exact: true });
+  await expect(quantity).toHaveText('2');
+  await page.getByRole('button', { name: 'Giảm số lượng Nơ trang trí' }).click();
+  await expect(quantity).toHaveText('1');
+  await page.getByRole('button', { name: 'Chọn tủ này', exact: true }).click();
+  await expect(picker).toHaveValue(near);
+  await expect(page.getByText('Đã chọn tủ gần nhất', { exact: true })).toBeVisible();
+  await expect(page.getByText(/Phụ kiện ở tủ cũ đã được bỏ/)).toBeVisible();
+  await expect(page.getByText('Tủ này hiện không có phụ kiện.')).toBeVisible();
+  await picker.selectOption(kioskId);
+  await expect(page.getByRole('button', { name: 'Thêm Nơ trang trí' })).toBeVisible();
+  await expect(quantity).toHaveCount(0);
+});
+
+test('Nearest kiosk search explains a denied location permission', async ({ page }) => {
+  await common(
+    page,
+    () => 'CUSTOMER',
+    () => [],
+  );
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'geolocation', {
+      configurable: true,
+      value: {
+        getCurrentPosition: (_success: unknown, fail: (error: { code: number }) => void) =>
+          fail({ code: 1 }),
+      },
+    });
+  });
+  await page.route('**/api/shop/catalog?*', (route) =>
+    route.fulfill({
+      json: {
+        items: [flower, { ...flower, kioskId: 'another-kiosk', kioskName: 'Tủ khác' }],
+        page: 1,
+        hasMore: false,
+      },
+    }),
+  );
+  await page.goto('/dat-hoa');
+  await page
+    .getByRole('button', { name: /báo giá/i })
+    .first()
+    .click();
+  const locate = page.getByRole('button', { name: 'Tìm tủ gần tôi' });
+  await locate.click();
+  await expect(page.getByText(/Bạn chưa cho phép truy cập vị trí/)).toBeVisible();
+  await expect(locate).toBeEnabled();
+  await expect(page.getByLabel('Tủ nhận hoa', { exact: true })).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Chọn tủ này' })).toHaveCount(0);
 });
 
 test('Seller assigns a paid preorder and exact slot to shop staff before the bouquet QR is available', async ({
@@ -213,12 +305,13 @@ test('Seller assigns a paid preorder and exact slot to shop staff before the bou
   expect(assigned).toBe(true);
 });
 
-test('Customer request → seller quote → customer acceptance/payment → seller stock → admin reports', async ({
+test('Customer request with accessories → seller quote → customer payment → packing → admin details', async ({
   page,
 }) => {
   let role = 'CUSTOMER';
   const row = order();
   let created = false;
+  let firstRequest: unknown;
   const writes: string[] = [];
   await common(
     page,
@@ -227,21 +320,49 @@ test('Customer request → seller quote → customer acceptance/payment → sell
     async (path, body) => {
       writes.push(path);
       if (path === '/member/preorders') {
+        expect(body).toEqual(firstRequest);
         expect(body.productId).toBe(productId);
+        expect(body.accessories).toEqual([
+          { accessoryId: bow.id, quantity: 2 },
+          { accessoryId: card.id, quantity: 1 },
+        ]);
+        row.requestedAccessories = [
+          { accessoryId: bow.id, name: bow.name, quantity: 2 },
+          { accessoryId: card.id, name: card.name, quantity: 1 },
+        ];
         created = true;
         row.id = String(body.id);
         return { result: row.id };
       }
       if (path.endsWith('/quote')) {
         expect(role).toBe('SELLER');
+        expect(body.price).toBe(380000);
+        expect(body.accessories).toEqual([{ accessoryId: bow.id, quantity: 1 }]);
         row.state = 'QUOTED';
-        row.quotedPrice = Number(body.price);
+        row.quotedFlowerPrice = Number(body.price);
+        row.quotedAccessoryTotal = bow.price;
+        row.quotedPrice = row.quotedFlowerPrice + row.quotedAccessoryTotal;
+        row.quoteVersion += 1;
+        row.quotedAccessories = [
+          {
+            accessoryId: bow.id,
+            name: bow.name,
+            quantity: 1,
+            unitPrice: bow.price,
+            lineTotal: bow.price,
+          },
+        ];
         row.quoteNote = String(body.note);
         row.pickupAt = String(body.pickupAt);
         return { result: row.id };
       }
       if (path.endsWith('/accept')) {
-        expect(body.price).toBe(row.quotedPrice);
+        expect(body).toEqual({
+          price: 400000,
+          pickupAt: row.pickupAt,
+          note: row.quoteNote,
+          quoteVersion: 1,
+        });
         row.state = 'ORDERED';
         row.orderStatus = 'AWAITING_PAYMENT';
         row.orderId = '80000000-0000-0000-0000-000000000001';
@@ -249,13 +370,16 @@ test('Customer request → seller quote → customer acceptance/payment → sell
         row.trackingToken = 'ABCD2345';
         return { result: row.id };
       }
-      if (path.endsWith('/payment-link'))
+      if (path.endsWith('/payment-link')) {
+        expect(path).toBe(`/member/preorders/${row.id}/payment-link`);
+        expect(body).toEqual({});
         return {
           checkoutUrl: 'https://pay.payos.vn/web/test-order',
           qrCode: '000201010212TEST-BANK-QR',
           amount: row.quotedPrice,
           orderCode: 123456,
         };
+      }
       if (path.endsWith('/loading-access')) {
         expect(body.slotId).toBe(slotId);
         return {
@@ -286,6 +410,11 @@ test('Customer request → seller quote → customer acceptance/payment → sell
       return undefined;
     },
   );
+  await page.route('**/api/member/preorders', (route) => {
+    if (route.request().method() !== 'POST' || firstRequest) return route.fallback();
+    firstRequest = route.request().postDataJSON();
+    return route.fulfill({ status: 408, json: { detail: 'Chưa xác nhận được kết quả' } });
+  });
   await page.goto('/dat-hoa');
   await page.getByRole('button', { name: /báo giá/i }).click();
   const localPickup = new Date(
@@ -293,10 +422,15 @@ test('Customer request → seller quote → customer acceptance/payment → sell
   )
     .toISOString()
     .slice(0, 16);
-  await page.getByLabel('Thời gian mong muốn nhận hoa').fill(localPickup);
-  await page.getByLabel('Dịp tặng, màu hoa, ngân sách và lời nhắn').fill(row.instructions);
-  await page.getByRole('checkbox').check();
-  await page.getByRole('button', { name: 'Gửi yêu cầu để shop báo giá', exact: true }).click();
+  await fillPickup(page, localPickup);
+  await page.getByLabel('Bạn muốn bó hoa như thế nào?').fill(row.instructions);
+  await page.getByRole('button', { name: 'Thêm Nơ trang trí' }).click();
+  await page.getByRole('button', { name: 'Tăng số lượng Nơ trang trí' }).click();
+  await page.getByRole('button', { name: 'Thêm Thiệp' }).click();
+
+  await page.getByRole('button', { name: 'Gửi yêu cầu báo giá', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Giảm số lượng Nơ trang trí' })).toBeDisabled();
+  await page.getByRole('button', { name: 'Gửi lại cùng yêu cầu', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Đã nhận yêu cầu của bạn' })).toBeVisible();
   role = 'SELLER';
   await page.goto('/seller/orders');
@@ -310,19 +444,40 @@ test('Customer request → seller quote → customer acceptance/payment → sell
   await page.locator('details[id^="preorder-"] > summary').click();
   await expect(page.getByText(row.instructions)).toBeVisible();
   await page.getByRole('button', { name: 'Báo giá hoặc từ chối' }).click();
-  await page.getByLabel('Giá trọn gói (đồng)').fill('380000');
-  await page
-    .getByLabel('Mô tả mẫu hoa, điều kiện hoặc lý do từ chối')
-    .fill('Hoa giả pastel theo yêu cầu, giá gồm phụ kiện.');
+  await expect(page.getByLabel('Giá bó hoa (đồng)')).toHaveValue('350000');
+  await expect(page.getByText('400.000 đ', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('Số lượng xác nhận Nơ trang trí')).toBeHidden();
+  await page.getByText('Điều chỉnh phụ kiện', { exact: true }).click();
+  await page.getByLabel('Giá bó hoa (đồng)').fill('380000');
+  await expect(page.getByText('430.000 đ', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('Số lượng xác nhận Nơ trang trí')).toHaveValue('2');
+  await page.getByLabel('Số lượng xác nhận Nơ trang trí').fill('1');
+  await page.getByLabel('Số lượng xác nhận Thiệp').fill('0');
+  await page.getByLabel('Ghi chú cho khách').fill('Hoa giả pastel theo yêu cầu, giá gồm phụ kiện.');
   await page
     .getByRole('checkbox', { name: 'Tôi đã đối chiếu và xác nhận thông tin trên.' })
     .check();
-  await page.getByRole('button', { name: 'Xác nhận gửi', exact: true }).click();
+  await expect(page.getByText('400.000 đ', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Gửi báo giá', exact: true }).click();
   await expect(page.getByText('Đã có báo giá', { exact: true })).toBeVisible();
+  await expect(
+    page.getByText('Đã gửi báo giá · Chờ khách xác nhận', { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('region', { name: 'Chi tiết báo giá' }).getByText('400.000 đ', { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Báo giá hoặc từ chối' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Chỉnh sửa báo giá' }).click();
+  await expect(page.getByRole('button', { name: 'Cập nhật báo giá', exact: true })).toBeVisible();
   role = 'CUSTOMER';
   await page.goto('/tai-khoan#web-orders');
   await page.locator('details[id^="preorder-"] > summary').click();
-  await page.getByRole('button', { name: 'Kiểm tra báo giá' }).click();
+  const breakdown = page.getByRole('region', { name: 'Chi tiết báo giá' });
+  await expect(breakdown).toContainText('380.000 đ');
+  await expect(breakdown).toContainText('20.000 đ');
+  await expect(breakdown).toContainText('Nơ trang trí: shop nhận 1/2');
+  await expect(breakdown).toContainText('Thiệp: shop không nhận');
+  await page.getByRole('button', { name: 'Xác nhận báo giá' }).click();
   await page
     .getByRole('checkbox', { name: 'Tôi đồng ý với giá, ghi chú và lịch nhận của shop.' })
     .check();
@@ -356,6 +511,9 @@ test('Customer request → seller quote → customer acceptance/payment → sell
   await page.getByRole('button', { name: 'Tiếp tục kiểm tra' }).click();
   await expect(page.locator('.fulfill-review')).toContainText('P01');
   await expect(page.locator('.fulfill-review')).toContainText('TEST-BOUQUET-01');
+  await expect(page.getByRole('region', { name: 'Phụ kiện cần đóng gói' })).toContainText(
+    'Nơ trang trí × 1',
+  );
   await page.getByRole('button', { name: 'Quay lại', exact: true }).click();
   await expect(page.getByLabel('Mã định danh bó hoa')).toHaveValue('TEST-BOUQUET-01');
   await page.getByRole('button', { name: 'Tiếp tục kiểm tra' }).click();
@@ -393,11 +551,15 @@ test('Customer request → seller quote → customer acceptance/payment → sell
   await expect(page.getByLabel('Thông tin nhận hoa tại Kiosk')).toContainText(
     'Đã thanh toán nhưng chưa nhận hoa?',
   );
-  role = 'ADMIN';
-  await page.goto('/admin/reports');
-  await expect(page.getByRole('cell', { name: 'Sự cố thiết bị đang mở' })).toBeVisible();
-  await page.getByLabel('Chọn báo cáo').selectOption('v_platform_revenue');
-  await expect(page.getByText(/Chưa có dữ liệu cho báo cáo này/)).toBeVisible();
+  const admin = await page.context().newPage();
+  await common(
+    admin,
+    () => 'ADMIN',
+    () => [row],
+  );
+  await admin.goto('/admin/orders');
+  await admin.locator('.admin-preorder-row').click();
+  await expect(admin.getByRole('region', { name: 'Chi tiết báo giá' })).toContainText('20.000 đ');
 });
 
 test('payOS return opens the saved request and trusts server status instead of callback status', async ({
@@ -466,6 +628,10 @@ for (const failure of ['untrusted-url', 'server-error'] as const)
     await expect(pending).toHaveAttribute('aria-busy', 'true');
     await page.screenshot({ path: `artifacts/preorder-payment-${width}.png`, fullPage: true });
     release();
+    const dialog = page.getByRole('dialog', { name: 'Thanh toán đơn hoa' });
+    await expect(dialog.getByRole('alert')).toBeVisible();
+    await expect(dialog.getByRole('link')).toHaveCount(0);
+    await dialog.getByRole('button', { name: 'Đóng', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Kiểm tra kết quả từ máy chủ' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Thanh toán ngay', exact: true })).toBeDisabled();
     await expect(page).toHaveURL(/\/tai-khoan#web-orders$/);
@@ -584,9 +750,9 @@ test('Every sample catalog item is display-only, including items with illustrati
     .first()
     .click();
   await expect(page.getByText(/Không tạo đơn, thanh toán hoặc tin nhắn cho mẫu này/)).toBeVisible();
-  await expect(
-    page.getByRole('button', { name: 'Gửi yêu cầu để shop báo giá', exact: true }),
-  ).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Gửi yêu cầu báo giá', exact: true })).toHaveCount(
+    0,
+  );
   await page.getByRole('button', { name: 'Đóng mẫu đang chọn' }).click();
   await page.getByRole('button', { name: 'Nhắn tin với shop', exact: true }).first().click();
   await expect(page.getByText(/Mẫu minh họa chưa gắn với shop thật/)).toBeVisible();

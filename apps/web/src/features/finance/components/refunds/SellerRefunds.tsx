@@ -43,6 +43,7 @@ const refundStatusStyles: Record<string, { bg: string; color: string; border: st
 function RefundCard({ id, sellerId }: { id: string; sellerId: string }) {
   const base = `/sellers/${sellerId}/refunds/${id}`;
   const [bank, setBank] = useState<Bank | null>(null);
+  const [transferDraftOpen, setTransferDraftOpen] = useState(false);
   const [reason, setReason] = useState('');
   const [providerReference, setProviderReference] = useState('');
   const [transferredAt, setTransferredAt] = useState('');
@@ -55,20 +56,29 @@ function RefundCard({ id, sellerId }: { id: string; sellerId: string }) {
   });
   useEffect(() => {
     const hide = () => {
-      if (document.hidden) setBank(null);
+      if (document.hidden) {
+        setBank(null);
+        setConfirmed(false);
+      }
     };
     document.addEventListener('visibilitychange', hide);
     return () => document.removeEventListener('visibilitychange', hide);
   }, []);
   useEffect(() => {
     if (!bank) return;
-    const timer = window.setTimeout(() => setBank(null), 60_000);
+    const timer = window.setTimeout(() => {
+      setBank(null);
+      setConfirmed(false);
+    }, 60_000);
     return () => window.clearTimeout(timer);
   }, [bank]);
   const reveal = useMutation({
     mutationFn: () =>
       request<Bank>(`${base}/bank-details`, { reason: reason.trim() }, true, 'POST'),
-    onSuccess: setBank,
+    onSuccess: (details) => {
+      setTransferDraftOpen(true);
+      if (!document.hidden) setBank(details);
+    },
   });
   const submit = useMutation({
     mutationFn: () => {
@@ -92,6 +102,9 @@ function RefundCard({ id, sellerId }: { id: string; sellerId: string }) {
     },
     onSuccess: async () => {
       setBank(null);
+      setTransferDraftOpen(false);
+      setProviderReference('');
+      setTransferredAt('');
       setEvidenceTicket('');
       setConfirmed(false);
       setNotice('Đã gửi chứng từ chuyển khoản để quản trị viên đối chiếu.');
@@ -100,11 +113,23 @@ function RefundCard({ id, sellerId }: { id: string; sellerId: string }) {
     },
   });
   if (detail.isPending) return <p role="status">Đang tải khoản hoàn…</p>;
-  if (detail.isError || !detail.data)
+  if (!detail.data)
     return <p role="alert">{detail.error?.message || 'Không tìm thấy khoản hoàn.'}</p>;
   const item = detail.data;
   return (
     <div className="business-refund-detail">
+      {detail.isError && (
+        <div role="alert">
+          Chưa tải được trạng thái mới. Bản nháp vẫn được giữ.
+          <Button
+            variant="outline"
+            onClick={() => void detail.refetch()}
+            disabled={detail.isFetching}
+          >
+            Tải lại khoản hoàn
+          </Button>
+        </div>
+      )}
       <h3>
         Đơn {item.orderCode} · <span className="refund-amount">{money(item.amount)}</span>
       </h3>
@@ -173,7 +198,9 @@ function RefundCard({ id, sellerId }: { id: string; sellerId: string }) {
             disabled={reason.trim().length < 5 || reveal.isPending}
             onClick={() => reveal.mutate()}
           >
-            Xem tài khoản nhận tiền
+            {transferDraftOpen && !bank
+              ? 'Hiện lại tài khoản nhận tiền'
+              : 'Xem tài khoản nhận tiền'}
           </Button>
         </div>
       )}
@@ -192,7 +219,7 @@ function RefundCard({ id, sellerId }: { id: string; sellerId: string }) {
         </div>
       )}
       {item.canSubmitTransfer &&
-        bank &&
+        transferDraftOpen &&
         (!item.submission || item.submission.status === 'REJECTED') && (
           <div className="business-form">
             <p>
@@ -200,6 +227,11 @@ function RefundCard({ id, sellerId }: { id: string; sellerId: string }) {
                 ? 'Chứng từ trước đó bị từ chối. Vui lòng kiểm tra lại và gửi chứng từ chuyển khoản mới (tối đa 3 lần gửi lại).'
                 : 'Chỉ gửi xác nhận sau khi bạn đã tự chuyển khoản đúng số tiền và tài khoản trên.'}
             </p>
+            {!bank && (
+              <p role="status">
+                Bản nháp vẫn được giữ. Hiện lại tài khoản nhận tiền trước khi gửi xác nhận.
+              </p>
+            )}
             <label htmlFor={`refund-reference-${id}`}>Mã giao dịch ngân hàng</label>
             <input
               id={`refund-reference-${id}`}
@@ -228,9 +260,24 @@ function RefundCard({ id, sellerId }: { id: string; sellerId: string }) {
               />{' '}
               Tôi đã chuyển đúng {money(item.amount)} và đối chiếu tài khoản người nhận.
             </label>
+            {!bank && (
+              <div>
+                <p>Bản nháp vẫn còn. Hiện lại tài khoản để đối chiếu trước khi gửi.</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={reason.trim().length < 5 || reveal.isPending}
+                  onClick={() => reveal.mutate()}
+                >
+                  {reveal.isPending ? 'Đang lấy tài khoản…' : 'Hiện lại tài khoản nhận tiền'}
+                </Button>
+              </div>
+            )}
             <Button
               disabled={
                 submit.isPending ||
+                detail.isError ||
+                !bank ||
                 !confirmed ||
                 !evidenceTicket ||
                 providerReference.trim().length < 3 ||
@@ -270,10 +317,9 @@ export default function SellerRefunds({ session }: { session: Session }) {
           Làm mới
         </Button>
       </div>
+      {refunds.isError && <p role="alert">{refunds.error.message}</p>}
       {refunds.isPending ? (
         <p role="status">Đang tải khoản hoàn…</p>
-      ) : refunds.isError ? (
-        <p role="alert">{refunds.error.message}</p>
       ) : refunds.data?.items.length ? (
         <div className="business-card-list">
           {refunds.data.items.map((item) => (
@@ -308,9 +354,9 @@ export default function SellerRefunds({ session }: { session: Session }) {
             </details>
           ))}
         </div>
-      ) : (
+      ) : !refunds.isError ? (
         <p>Chưa có khoản hoàn trực tiếp.</p>
-      )}
+      ) : null}
       {refunds.data && (
         <div className="business-pagination">
           <Button variant="outline" disabled={page <= 1} onClick={() => setPage(page - 1)}>

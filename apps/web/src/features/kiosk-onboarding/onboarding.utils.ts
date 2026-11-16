@@ -45,8 +45,6 @@ export function validateKioskApplicationDraft(
   } else if (trimmedAddress.length < 5) {
     errors.installationAddress =
       'Địa chỉ lắp đặt quá ngắn, vui lòng ghi rõ số nhà, đường, phường/xã.';
-  } else if (draft.addressSelected === false) {
-    errors.installationAddress = 'Vui lòng chọn một địa chỉ từ danh sách gợi ý của Goong.';
   }
 
   // Coordinates check: parse current text directly; blank is NOT zero!
@@ -60,9 +58,9 @@ export function validateKioskApplicationDraft(
     lonResult.value === null
   ) {
     errors.coordinates =
-      latResult.error ||
-      lonResult.error ||
-      'Vui lòng ghim vị trí trên bản đồ hoặc chọn địa chỉ gợi ý (ô trống không đồng nghĩa với 0).';
+      !draft.latInput.trim() || !draft.lonInput.trim()
+        ? 'Chưa ghim vị trí lắp đặt. Chọn địa chỉ gợi ý hoặc ghim trên bản đồ.'
+        : latResult.error || lonResult.error || 'Vị trí ghim chưa hợp lệ.';
   }
 
   const trimmedBankName = draft.bankName.trim();

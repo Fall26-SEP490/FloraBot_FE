@@ -4,15 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import {
-  LayoutDashboard,
-  Menu,
-  MessageSquare,
-  Package,
-  RotateCcw,
-  Store,
-  User,
-} from '@florabot/ui';
+import { Menu, MessageSquare, Package, Store, User } from '@florabot/ui';
 import { sessionQuery } from '@/shared/lib/api';
 import { getCustomerUnreadCount } from '@/features/chat/api';
 import '../workspace-styles.css';
@@ -70,27 +62,25 @@ export default function CustomerWorkspace({
     };
   }, []);
 
-  if (screen === 'thue-kiosk') return <CustomerKioskOnboarding />;
-  if (screen === 'profile' && !['CUSTOMER', 'SELLER'].includes(session.data?.role ?? '')) {
-    return <PersonalProfile />;
+  const isCustomer = session.data?.role === 'CUSTOMER';
+  if (!isCustomer) {
+    if (screen === 'thue-kiosk') return <CustomerKioskOnboarding />;
+    if (screen === 'profile') return <PersonalProfile />;
+    return <MemberAccount />;
   }
 
   const items = [
-    { href: '/tai-khoan#overview', label: 'Tổng quan', icon: LayoutDashboard },
-    { href: '/tai-khoan#web-orders', label: 'Đơn đặt trước', icon: Package },
-    ...(session.data?.role === 'CUSTOMER'
-      ? [{ href: '/tai-khoan#member-chats', label: 'Tin nhắn', icon: MessageSquare }]
-      : []),
-    { href: '/tai-khoan#member-orders', label: 'Lịch sử mua', icon: RotateCcw },
-    { href: '/ho-so', label: 'Hồ sơ cá nhân', icon: User },
-    ...(session.data?.role === 'CUSTOMER'
-      ? [{ href: '/thue-kiosk', label: 'Thuê kiosk', icon: Store }]
-      : []),
+    { href: '/tai-khoan#web-orders', label: 'Đơn hàng', icon: Package },
+    { href: '/tai-khoan#member-chats', label: 'Tin nhắn', icon: MessageSquare },
+    { href: '/ho-so', label: 'Hồ sơ', icon: User },
+    { href: '/thue-kiosk', label: 'Thuê kiosk', icon: Store },
   ];
   const current =
-    screen === 'profile'
-      ? '/ho-so'
-      : `/tai-khoan${searchParams.get('chat') ? '#member-chats' : hash || '#overview'}`;
+    screen === 'thue-kiosk'
+      ? '/thue-kiosk'
+      : screen === 'profile'
+        ? '/ho-so'
+        : `/tai-khoan${searchParams.get('chat') ? '#member-chats' : ['', '#overview', '#web-orders', '#member-orders'].includes(hash) ? '#web-orders' : hash || '#overview'}`;
 
   const navigationOpen = navigationOpenAt === current;
   const currentLabel = items.find((item) => item.href === current)?.label ?? 'Tài khoản của tôi';
@@ -142,7 +132,9 @@ export default function CustomerWorkspace({
         </nav>
       </aside>
       <div className="customer-account-content">
-        {screen === 'member' ? <MemberAccount /> : <PersonalProfile embedded />}
+        {screen === 'member' && <MemberAccount />}
+        {screen === 'profile' && <PersonalProfile embedded />}
+        {screen === 'thue-kiosk' && <CustomerKioskOnboarding />}
       </div>
     </div>
   );
