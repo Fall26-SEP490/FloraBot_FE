@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { readCatalogQuery } from '../catalog.navigation';
 import { PRICE_TIER_ACTIVE_LABELS } from '../catalog.constants';
+import { flowerTags } from '@/shared/lib/flower-tags';
 import type {
   ActiveFilterItem,
   AvailabilityFilter,
@@ -26,6 +27,7 @@ export function useCatalogFilters(
     search,
     priceFilter,
     occasionFilter,
+    flowerFilter,
     shopFilter,
     kioskFilter,
     availabilityFilter,
@@ -45,6 +47,7 @@ export function useCatalogFilters(
   const setSearch = (value: string) => update('search', value.trim());
   const setPriceFilter = (value: PriceFilter) => update('price', value);
   const setOccasionFilter = (value: string) => update('occasion', value);
+  const setFlowerFilter = (value: string) => update('flower', value);
   const setShopFilter = (value: string) => update('shop', value);
   const setKioskFilter = (value: string) => update('kiosk', value);
   const setAvailabilityFilter = (value: AvailabilityFilter) => update('mode', value);
@@ -57,11 +60,21 @@ export function useCatalogFilters(
         search,
         priceFilter,
         occasionFilter,
+        flowerFilter,
         shopFilter,
         kioskFilter,
         availabilityFilter,
       }),
-    [rawItems, search, priceFilter, occasionFilter, shopFilter, kioskFilter, availabilityFilter],
+    [
+      rawItems,
+      search,
+      priceFilter,
+      occasionFilter,
+      flowerFilter,
+      shopFilter,
+      kioskFilter,
+      availabilityFilter,
+    ],
   );
 
   const displayedItems = useMemo(
@@ -76,6 +89,7 @@ export function useCatalogFilters(
     search.trim() ||
     priceFilter !== 'all' ||
     occasionFilter !== 'all' ||
+    flowerFilter !== 'all' ||
     shopFilter !== 'all' ||
     kioskFilter !== 'all' ||
     availabilityFilter !== 'all',
@@ -83,6 +97,13 @@ export function useCatalogFilters(
 
   const activeFilters = (() => {
     const list: ActiveFilterItem[] = [];
+    if (flowerFilter !== 'all') {
+      list.push({
+        id: 'flower',
+        label: flowerTags[flowerFilter as keyof typeof flowerTags],
+        onClear: () => setFlowerFilter('all'),
+      });
+    }
     if (search.trim()) {
       list.push({
         id: 'search',
@@ -134,7 +155,17 @@ export function useCatalogFilters(
   const resetFilters = () => {
     setDraftState({ search: '', value: '' });
     const params = new URLSearchParams(window.location.search);
-    for (const key of ['search', 'price', 'occasion', 'shop', 'kiosk', 'mode', 'sort', 'page'])
+    for (const key of [
+      'search',
+      'price',
+      'occasion',
+      'flower',
+      'shop',
+      'kiosk',
+      'mode',
+      'sort',
+      'page',
+    ])
       params.delete(key);
     window.history.pushState(null, '', '/dat-hoa' + (params.size ? '?' + params.toString() : ''));
   };
@@ -150,6 +181,8 @@ export function useCatalogFilters(
     setPriceFilter,
     occasionFilter,
     setOccasionFilter,
+    flowerFilter,
+    setFlowerFilter,
     shopFilter,
     setShopFilter,
     kioskFilter,

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { flowerColors, flowerTags, tagIsKnown } from '@/shared/lib/flower-tags';
 
 const quantitySchema = z
   .number('Nhập tồn bó tại shop bằng số.')
@@ -75,18 +76,32 @@ export const productMetadataSchema = z
     }
   });
 
-export const productCreateSchema = z.intersection(
-  productMetadataSchema,
-  z.object({
-    quantity: quantitySchema,
-    kioskId: z
-      .string()
-      .regex(
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
-        'Chọn kiosk thuộc quyền quản lý của shop.',
-      ),
-  }),
-);
+export const productCreateSchema = z
+  .intersection(
+    productMetadataSchema,
+    z.object({
+      quantity: quantitySchema,
+      kioskId: z
+        .string()
+        .regex(
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+          'Chọn kiosk thuộc quyền quản lý của shop.',
+        ),
+    }),
+  )
+  .superRefine((data, ctx) => {
+    const tags = data.tagsInput.split(',').map((tag) => tag.trim());
+    if (
+      !tags.some((tag) => tagIsKnown(tag, 'flower', flowerTags)) ||
+      !tags.some((tag) => tagIsKnown(tag, 'color', flowerColors))
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['tagsInput'],
+        message: 'Chọn ít nhất một loại hoa và một màu.',
+      });
+    }
+  });
 
 export type ProductFormValues = z.infer<typeof productMetadataSchema>;
 export type ProductCreateFormValues = z.infer<typeof productCreateSchema>;

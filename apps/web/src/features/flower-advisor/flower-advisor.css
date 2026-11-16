@@ -1,0 +1,108 @@
+.flower-advisor-launch {
+  position: fixed;
+  inset-inline-end: 1.25rem;
+  inset-block-end: 1.25rem;
+  z-index: 20;
+  padding: 0.7rem 1rem;
+  border: 0;
+  border-radius: 2rem;
+  background: #21553c;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.flower-advisor {
+  position: fixed;
+  inset: auto 1rem 1rem auto;
+  margin: 0;
+  width: min(26rem, calc(100vw - 2rem));
+  max-height: min(36rem, calc(100dvh - 2rem));
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #c7d6c9;
+  border-radius: 1rem;
+  background: #fff;
+  color: #193428;
+  box-shadow: 0 1rem 3rem #152e2526;
+}
+
+.flower-advisor[open] {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.flower-advisor::backdrop {
+  background: #101e1950;
+}
+
+.flower-advisor header,
+.flower-advisor form {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #edf4ef;
+}
+
+.flower-advisor button,
+.flower-advisor input {
+  min-height: 2.5rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid #b2c8b9;
+  border-radius: 0.55rem;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+}
+
+.flower-advisor button:enabled {
+  cursor: pointer;
+}
+.flower-advisor button:disabled {
+  opacity: 0.6;
+}
+.flower-advisor input {
+  flex: 1;
+  min-width: 0;
+}
+.flower-advisor-messages {
+  overflow: auto;
+  padding: 0.75rem 1rem;
+}
+.flower-advisor-messages p {
+  margin: 0.5rem 0;
+  overflow-wrap: anywhere;
+}
+.flower-advisor-prompts {
+  display: grid;
+  gap: 0.4rem;
+}
+.flower-advisor-prompts button {
+  text-align: start;
+}
+.flower-advisor-question {
+  background: #edf4ef;
+  padding: 0.6rem;
+  border-radius: 0.55rem;
+}
+.flower-advisor article {
+  border: 1px solid #d1dfd4;
+  border-radius: 0.55rem;
+  padding: 0.6rem;
+  margin: 0.4rem 0;
+}
+.flower-advisor article span {
+  display: block;
+}
+
+.flower-advisor-photo {
+  display: block;
+  width: 100%;
+  max-height: 9rem;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  margin-bottom: 0.5rem;
+}

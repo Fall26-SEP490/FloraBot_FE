@@ -7,6 +7,7 @@ import { catalogReturnPath } from './catalog.navigation';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Button, MapPin, MessageSquare, Store } from '@florabot/ui';
 import { request, sessionQuery } from '@/shared/lib/api';
+import { flowerTagLabel } from '@/shared/lib/flower-tags';
 import { MOCK_CATALOG_ITEMS } from './mocks/mockCatalog';
 import type { CatalogItem, CatalogResponse } from './catalog.types';
 import {
@@ -19,6 +20,7 @@ import {
 } from './catalog.utils';
 import { FlowerRequestPanel } from './components/FlowerRequestPanel';
 import { ChatNoticeDialog } from './components/ChatNoticeDialog';
+import { ProductReviews } from './components/ProductReviews';
 import { useCustomerChat } from './hooks/useCustomerChat';
 import './styles/catalog.css';
 
@@ -34,7 +36,9 @@ async function findItem(
       (entry) => entry.productId === productId && entry.kioskId === kioskId,
     );
     if (zone !== undefined) {
-      const item = matches.find((entry) => entry.zone === zone);
+      const item = matches.find(
+        (entry) => entry.zone === zone || (zone === 'PREORDER' && entry.zone == null),
+      );
       if (item) return item;
     } else {
       const webItem = matches.find((entry) => entry.zone == null || entry.zone === 'PREORDER');
@@ -84,6 +88,13 @@ export default function FlowerDetail({
         : findItem(productId, kioskId, zone),
   });
   const item = query.data;
+  const tags = [
+    ...new Set(
+      [...(item?.tags ?? []), item?.occasion ?? '']
+        .map((tag) => flowerTagLabel(tag.trim()))
+        .filter(Boolean),
+    ),
+  ];
   const resumedItem =
     resumeOrder && item && session.data?.role === 'CUSTOMER' && canOrderOnWeb(item) ? item : null;
   useEffect(() => {
@@ -269,7 +280,14 @@ export default function FlowerDetail({
                 </section>
               )}
 
-              {/* Mô tả sản phẩm thực tế */}
+              {tags.length > 0 && (
+                <ul className="flower-detail-tags" aria-label="Đặc điểm mẫu hoa">
+                  {tags.map((tag) => (
+                    <li key={tag}>{tag}</li>
+                  ))}
+                </ul>
+              )}
+
               {item.description?.trim() ? (
                 <section
                   className="flower-detail-description"
@@ -293,6 +311,14 @@ export default function FlowerDetail({
             </div>
           </div>
         </article>
+      )}
+
+      {item && isPreorder(item) && !item.isDemoSample && (
+        <ProductReviews
+          key={item.productId + ':' + (session.data?.id ?? '')}
+          productId={item.productId}
+          customerId={session.data?.role === 'CUSTOMER' ? session.data.id : undefined}
+        />
       )}
 
       <FlowerRequestPanel

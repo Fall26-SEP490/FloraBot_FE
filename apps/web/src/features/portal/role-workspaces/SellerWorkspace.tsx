@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@florabot/ui';
 import { ApiError, logoutSession, sessionQuery, type Session } from '@/shared/lib/api';
 import { accountPath } from '@/features/portal/config/roleRoutes';
+import { FlowerAdvisor } from '../../flower-advisor/FlowerAdvisor';
 import {
   sellerShopProfileQuery,
   shopAccountName,
@@ -183,6 +184,7 @@ export default function SellerWorkspace({ section = 'overview' }: { section?: st
         onLogout={() => logout.mutate()}
       />
       <div className="dashboard-shell seller-workspace">
+        <FlowerAdvisor audience="seller" />
         <WorkspaceNavigation key={section} workspaceRole="SELLER" section={section} />
         <main id="main" className="workspace dashboard-content seller-content">
           <PortalUpdates />

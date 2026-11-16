@@ -2,6 +2,7 @@ import { RotateCcw, SlidersHorizontal, X } from '@florabot/ui';
 import { OCCASIONS, PRICE_TIERS } from '../catalog.constants';
 import type { CatalogFiltersController } from '../hooks/useCatalogFilters';
 import { CatalogFilterGroup, type FilterOption } from './CatalogFilterGroup';
+import { flowerTags } from '@/shared/lib/flower-tags';
 
 interface CatalogSidebarProps {
   filters: CatalogFiltersController;
@@ -193,6 +194,20 @@ export function CatalogSidebar({
       </div>
 
       <div className="catalog-sidebar-scroll-body">
+        <label>
+          Loại hoa
+          <select
+            value={filters.flowerFilter}
+            onChange={(event) => filters.setFlowerFilter(event.target.value)}
+          >
+            <option value="all">Tất cả loại hoa</option>
+            {Object.entries(flowerTags).map(([code, label]) => (
+              <option key={code} value={code}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
         <CatalogFilterGroup title="Hình thức nhận hoa" options={availabilityOptions} />
         <CatalogFilterGroup title="Khoảng giá" options={priceOptions} />
         {(availableKiosks.length > 1 || kioskFilter !== 'all') && (

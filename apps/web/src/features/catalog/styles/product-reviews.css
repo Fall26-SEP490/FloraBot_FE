@@ -1,0 +1,96 @@
+.flower-reviews {
+  width: min(100%, 68rem);
+  margin: 2rem auto 0;
+  padding: clamp(1rem, 3vw, 2rem);
+  border: 1px solid #d5e0d6;
+  border-radius: 1rem;
+  color: #173b2a;
+  background: white;
+}
+
+.flower-review-summary,
+.flower-review-meta,
+.flower-review-scores,
+.flower-review-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+}
+
+.flower-review-summary {
+  margin: 1rem 0;
+}
+
+.flower-review-summary dd {
+  margin: 0.25rem 0 0;
+  font-weight: 700;
+}
+
+.flower-review-list {
+  list-style: none;
+  padding: 0;
+}
+
+.flower-review-list li {
+  padding: 1rem 0;
+  border-top: 1px solid #d5e0d6;
+  overflow-wrap: anywhere;
+}
+
+.flower-review-list p {
+  white-space: pre-wrap;
+}
+
+.flower-review-meta span {
+  color: #805812;
+}
+
+.flower-review-list img {
+  display: block;
+  object-fit: cover;
+  border-radius: 0.5rem;
+}
+
+.flower-review-form fieldset {
+  display: grid;
+  gap: 1rem;
+  border: 0;
+  padding: 0;
+  margin: 1rem 0;
+}
+
+.flower-review-form label {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.flower-review-scores label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.flower-review-form textarea {
+  padding: 0.6rem;
+  border: 1px solid #7a9383;
+  border-radius: 0.375rem;
+  resize: vertical;
+}
+
+.flower-reviews button {
+  border: 1px solid #28523b;
+  border-radius: 0.375rem;
+  padding: 0.35rem 0.75rem;
+  background: white;
+  color: inherit;
+}
+
+.flower-review-form button[type='submit'] {
+  background: #173b2a;
+  color: white;
+}
+
+.flower-reviews button:disabled {
+  opacity: 0.55;
+}

@@ -233,6 +233,8 @@ test('Create artificial flower for an owned kiosk: validation, conflict handling
   // Fix tags and description
   await createForm.getByLabel('Từ khóa tìm kiếm (phân cách bằng dấu phẩy)').fill('hoa lụa, decor');
   await createForm.getByLabel('Mô tả sản phẩm').fill('Hoa cẩm tú cầu chất liệu lụa bền đẹp.');
+  await createForm.getByLabel('Loại hoa (bắt buộc)').selectOption('flower:hydrangea');
+  await createForm.getByLabel('Màu chủ đạo (bắt buộc)').selectOption('color:pink');
 
   // First submit -> 409 conflict from server
   await createForm.getByRole('button', { name: 'Tạo mẫu hoa' }).click();
@@ -249,7 +251,7 @@ test('Create artificial flower for an owned kiosk: validation, conflict handling
   expect(lastCapturedPayload).not.toHaveProperty('id');
   expect(lastCapturedPayload?.name).toBe('Bó cẩm tú cầu giả');
   expect(lastCapturedPayload?.price).toBe(280000);
-  expect(lastCapturedPayload?.tags).toEqual(['hoa lụa', 'decor']);
+  expect(lastCapturedPayload?.tags).toEqual(['hoa lụa', 'decor', 'flower:hydrangea', 'color:pink']);
   expect(lastCapturedPayload?.lengthCm).toBe(25.5);
   expect(lastCapturedPayload?.widthCm).toBe(15);
   expect(lastCapturedPayload?.heightCm).toBe(40);

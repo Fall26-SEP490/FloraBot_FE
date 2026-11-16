@@ -238,6 +238,8 @@ for (const width of [390, 1440])
     await form.getByLabel('Dài (cm)', { exact: true }).fill('25');
     await form.getByLabel('Rộng (cm)', { exact: true }).fill('15');
     await form.getByLabel('Cao (cm)', { exact: true }).fill('35');
+    await form.getByLabel('Loại hoa (bắt buộc)').selectOption('flower:rose');
+    await form.getByLabel('Màu chủ đạo (bắt buộc)').selectOption('color:pink');
     await form.getByRole('button', { name: 'Tạo mẫu hoa', exact: true }).click();
     await expect(modal).toBeHidden();
     expect(model.writes).toEqual([
@@ -248,7 +250,8 @@ for (const width of [390, 1440])
           name: 'Mẫu mới kiểm thử',
           description: '',
           price: 280000,
-          tags: [],
+          tags: ['flower:rose', 'color:pink'],
+          quantity: 0,
           lengthCm: 25,
           widthCm: 15,
           heightCm: 35,

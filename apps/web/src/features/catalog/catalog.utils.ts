@@ -88,6 +88,7 @@ export interface FilterCriteria {
   search: string;
   priceFilter: PriceFilter;
   occasionFilter: string;
+  flowerFilter?: string;
   shopFilter: string;
   kioskFilter: string;
   availabilityFilter: AvailabilityFilter;
@@ -97,6 +98,12 @@ export function filterCatalogItems(items: CatalogItem[], criteria: FilterCriteri
   return items.filter((item) => {
     if (!matchesSearch(item, criteria.search)) return false;
     if (!matchesPrice(item.price, criteria.priceFilter)) return false;
+    if (
+      criteria.flowerFilter &&
+      criteria.flowerFilter !== 'all' &&
+      !item.tags?.includes(`flower:${criteria.flowerFilter}`)
+    )
+      return false;
     if (criteria.occasionFilter !== 'all' && !matchesOccasion(item, criteria.occasionFilter)) {
       return false;
     }

@@ -413,6 +413,25 @@
 }
 
 /* 7. Description Section */
+.flower-detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+
+.flower-detail-tags li {
+  border: 1px solid #c9dacf;
+  border-radius: 999px;
+  background: #edf5ee;
+  color: #234734;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
 .flower-detail-description {
   margin: 0 0 1.15rem;
   padding: 0.95rem 1.05rem;

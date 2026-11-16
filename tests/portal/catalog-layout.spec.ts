@@ -173,6 +173,7 @@ test('flower image opens its detail page and allows ordering', async ({ page }) 
 test('detail page resolves product and kiosk beyond first API page on direct navigation', async ({
   page,
 }) => {
+  await page.route('**/api/shop/products/p1/reviews?*', (route) => route.fulfill({ json: {} }));
   await page.route('**/api/shop/catalog?*', (route) => {
     const pageNumber = new URL(route.request().url()).searchParams.get('page');
     return route.fulfill({
@@ -202,6 +203,7 @@ test('detail page resolves product and kiosk beyond first API page on direct nav
   });
   await page.goto('/dat-hoa/p1/k1');
   await expect(page.getByRole('heading', { name: 'Hoa hồng', exact: true })).toBeVisible();
+  await expect(page.getByText('Chưa tải được đánh giá.')).toBeVisible();
   await expect(page.getByText('Kiosk A', { exact: true })).toHaveCount(0);
   await expect(page.locator('.flower-detail-product-copy')).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Nơi nhận hoa' })).toHaveCount(0);

@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
+import { FlowerTagFields } from './FlowerTagFields';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@florabot/ui';
 import { queryClient } from '@/shared/lib/api';
@@ -173,17 +174,18 @@ export function ProductCreateForm({
         </div>
 
         <div className="form-field">
-          <label htmlFor="create-product-tags">Từ khóa tìm kiếm (phân cách bằng dấu phẩy)</label>
-          <input
-            id="create-product-tags"
-            type="text"
-            placeholder="hoa hồng, hoa lụa, quà tặng"
-            disabled={!canEdit || submitting}
-            {...form.register('tagsInput')}
-            aria-invalid={!!form.formState.errors.tagsInput}
-            aria-describedby={
-              form.formState.errors.tagsInput ? 'create-product-tags-error' : undefined
-            }
+          <Controller
+            control={form.control}
+            name="tagsInput"
+            render={({ field }) => (
+              <FlowerTagFields
+                id="create-product-tags"
+                value={field.value}
+                onChange={field.onChange}
+                disabled={!canEdit || submitting}
+                required
+              />
+            )}
           />
           {form.formState.errors.tagsInput && (
             <p className="error" id="create-product-tags-error">
@@ -483,15 +485,17 @@ export function ProductMetadataEditor({
       </div>
 
       <div className="form-field">
-        <label htmlFor={`${idPrefix}-tags`}>Từ khóa tìm kiếm (phân cách bằng dấu phẩy)</label>
-        <input
-          id={`${idPrefix}-tags`}
-          type="text"
-          placeholder="hoa hồng, hoa lụa, quà tặng"
-          disabled={!canEdit || submitting}
-          {...form.register('tagsInput')}
-          aria-invalid={!!form.formState.errors.tagsInput}
-          aria-describedby={form.formState.errors.tagsInput ? `${idPrefix}-tags-error` : undefined}
+        <Controller
+          control={form.control}
+          name="tagsInput"
+          render={({ field }) => (
+            <FlowerTagFields
+              id={`${idPrefix}-tags`}
+              value={field.value}
+              onChange={field.onChange}
+              disabled={!canEdit || submitting}
+            />
+          )}
         />
         {form.formState.errors.tagsInput && (
           <p className="error" id={`${idPrefix}-tags-error`}>

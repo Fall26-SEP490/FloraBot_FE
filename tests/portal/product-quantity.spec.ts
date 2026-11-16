@@ -31,6 +31,8 @@ for (const width of [390, 1440]) {
     await page.goto('/seller/products');
     await page.getByRole('button', { name: 'Thêm mẫu hoa', exact: true }).click();
     const form = page.getByRole('form', { name: 'Thêm mẫu hoa mới' });
+    await form.getByLabel('Loại hoa (bắt buộc)').selectOption('flower:rose');
+    await form.getByLabel('Màu chủ đạo (bắt buộc)').selectOption('color:pink');
     await form.getByLabel('Tên mẫu hoa', { exact: true }).fill('Hoa mới');
     await form.getByLabel('Giá bán niêm yết (VNĐ)', { exact: true }).fill('350000');
     for (const dimension of ['Dài (cm)', 'Rộng (cm)', 'Cao (cm)']) {
@@ -121,6 +123,8 @@ test('Creating a product validates shop quantity and sends the absolute count', 
   await page.goto('/seller/products');
   await page.getByRole('button', { name: 'Thêm mẫu hoa', exact: true }).click();
   const form = page.getByRole('form', { name: 'Thêm mẫu hoa mới' });
+  await form.getByLabel('Loại hoa (bắt buộc)').selectOption('flower:rose');
+  await form.getByLabel('Màu chủ đạo (bắt buộc)').selectOption('color:pink');
   await form.getByLabel('Tên mẫu hoa', { exact: true }).fill('Hoa mới');
   await form.getByLabel('Giá bán niêm yết (VNĐ)', { exact: true }).fill('350000');
   await form.getByLabel('Dài (cm)', { exact: true }).fill('30');
@@ -134,10 +138,15 @@ test('Creating a product validates shop quantity and sends the absolute count', 
     await expect(count).toHaveAttribute('aria-invalid', 'true');
     expect(state.writes).toHaveLength(0);
   }
+  await form.getByLabel('Mô tả sản phẩm').fill('Bó hồng lụa màu hồng.');
   await count.fill('8');
   await form.locator('button[type="submit"]').click();
   await expect.poll(() => state.writes.length).toBe(1);
-  expect(state.writes[0].quantity).toBe(8);
+  expect(state.writes[0]).toMatchObject({
+    quantity: 8,
+    description: 'Bó hồng lụa màu hồng.',
+    tags: ['flower:rose', 'color:pink'],
+  });
 });
 
 test('Metadata edits preserve concurrent stock deductions and explicit zero resets stock', async ({
