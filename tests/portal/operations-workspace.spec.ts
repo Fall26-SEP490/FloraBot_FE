@@ -419,6 +419,19 @@ test('Manager assigns dismantling technician, confirms handover without mandator
     updatedAt: '2026-11-14T03:00:00Z',
   };
   let archived = false;
+  await page.route('**/api/operations/staff-tasks/01a1d899-0000-7000-8000-000000000001', (route) =>
+    route.fulfill({
+      json: {
+        kioskStatus: archived ? 'DISABLED' : 'OFFLINE',
+        slotCode: null,
+        slotStatus: null,
+        incident: null,
+        history: [],
+        page: 1,
+        hasMore: false,
+      },
+    }),
+  );
 
   await page.route('**/api/operations/kiosk-termination-requests?*', (route) =>
     route.fulfill({ json: { items: [record], page: 1, limit: 20, hasMore: false } }),
@@ -494,6 +507,10 @@ test('Manager assigns dismantling technician, confirms handover without mandator
   await expect(page.getByText('Đã hoàn tất tháo dỡ và bàn giao')).toBeVisible();
   await page.getByRole('button', { name: 'Lưu trữ tủ K-HCM-06' }).click();
   await page.getByRole('button', { name: 'Xác nhận lưu trữ tủ' }).click();
-  await expect(page.getByText(/Đã lưu trữ tủ K-HCM-06/)).toBeVisible();
+  await expect(page.getByText(/Đã ngừng sử dụng và lưu trữ tủ K-HCM-06/)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Lưu trữ tủ K-HCM-06' })).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Đã ngừng sử dụng và lưu trữ tủ' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Lưu trữ tủ K-HCM-06' })).toHaveCount(0);
   expect(archived).toBe(true);
 });

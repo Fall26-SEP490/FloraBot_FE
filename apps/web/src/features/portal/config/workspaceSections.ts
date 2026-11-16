@@ -91,11 +91,11 @@ export const workspaceSections = {
       'Khách hàng',
       'Tạo tài khoản, cập nhật thông tin và quản lý trạng thái khách hàng.',
     ],
-    ['tasks', 'Công việc kỹ thuật', 'Phân công sự cố và kiểm tra báo cáo của kỹ thuật viên.'],
+    ['tasks', 'Sự cố & công việc', 'Tiếp nhận sự cố, giao kỹ thuật viên và nghiệm thu kết quả.'],
     [
       'maintenance-recovery',
-      'Phiên bảo trì hết hạn',
-      'Khôi phục các ô đang khóa sau khi kiểm tra tại tủ.',
+      'Khôi phục phiên thao tác',
+      'Kết thúc phiên nạp, thu hồi hoặc thay hoa đã hết hạn sau khi xác minh thực tế.',
     ],
     [
       'installations',
@@ -103,7 +103,11 @@ export const workspaceSections = {
       'Tiếp nhận hồ sơ thuê kiosk, xác nhận liên hệ, phân công kỹ thuật và nghiệm thu bàn giao.',
     ],
     ['technicians', 'Kỹ thuật viên', 'Tạo tài khoản và quản lý trạng thái Kỹ thuật viên.'],
-    ['terminations', 'Chấm dứt thuê kiosk', 'Xét duyệt yêu cầu và ghi nhận bàn giao kiosk.'],
+    [
+      'terminations',
+      'Chấm dứt thuê kiosk',
+      'Duyệt yêu cầu, điều phối tháo dỡ, nghiệm thu bàn giao và lưu trữ kiosk.',
+    ],
   ],
 } as const;
 export type WorkspaceRole = keyof typeof workspaceSections;

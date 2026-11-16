@@ -94,7 +94,9 @@ export type IncidentCandidate = {
   id: string;
   kioskId: string;
   reason: string;
-  location: { kioskName: string } | null;
+  location: { kioskName: string; kioskCode?: string } | null;
+  slot?: { slotCode?: string } | null;
+  createdAt?: string;
 };
 
 export type StaffDirectoryMember = {

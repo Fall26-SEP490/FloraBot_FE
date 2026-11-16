@@ -38,6 +38,7 @@ export default function StaffTaskDetails({
   const details = useQuery({
     ...staffTaskDetailsQuery(taskId, apiBase, scopeKey, actorId, version, page),
     enabled: open,
+    refetchInterval: open ? 30_000 : false,
   });
   return (
     <details className="staff-task-details" onToggle={(event) => setOpen(event.currentTarget.open)}>
@@ -143,13 +144,6 @@ export default function StaffTaskDetails({
                 </Button>
               </>
             )}
-            <Button
-              variant="outline"
-              disabled={details.isFetching}
-              onClick={() => void details.refetch()}
-            >
-              Tải lại chi tiết
-            </Button>
           </div>
         </>
       )}

@@ -377,9 +377,7 @@ test.describe('Portal UI Polish Verification - Viewports and A11y', () => {
       );
 
       await page.goto('/operations/tasks');
-      await expect(page.getByRole('heading', { level: 1 })).toContainText(
-        'Điều phối công việc kỹ thuật',
-      );
+      await expect(page.getByRole('heading', { level: 1 })).toContainText('Sự cố & công việc');
       await expect(page.getByText('Quản lý vận hành').first()).toBeVisible();
 
       const a11y = await new AxeBuilder({ page })

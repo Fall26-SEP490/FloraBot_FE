@@ -73,7 +73,7 @@ test('Staff sees work grouped ahead of history and can read why loading is block
   await board.getByText('Lịch sử công việc', { exact: true }).click();
   await expect(board.getByRole('article', { name: 'Giao hoa · Tủ cũ 1' })).toBeVisible();
   await board
-    .getByRole('navigation', { name: 'Phân trang: Đã duyệt' })
+    .getByRole('navigation', { name: 'Phân trang: Đã hoàn thành' })
     .getByRole('button', {
       name: 'Trang sau',
     })

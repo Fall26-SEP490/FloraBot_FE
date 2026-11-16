@@ -250,7 +250,9 @@ test('KIOSK_REMOVAL task shows dismantling label and Manager completion guidance
   });
 
   await page.goto('/operations/tasks');
+  await page.getByRole('button', { name: /Chờ duyệt báo cáo/ }).click();
   const card = page.getByRole('article', { name: 'Tháo dỡ kiosk · Kiosk Quận 3' });
+  await card.locator('.manager-task-details > summary').click();
   await expect(card).toBeVisible();
   await expect(card.getByText('Hướng dẫn từ quản lý:', { exact: true })).toBeVisible();
   await expect(card.locator('select option[value="COMPLETED"]')).toHaveCount(0);

@@ -55,7 +55,7 @@ export function DeleteKioskModal({
   return (
     <Modal
       open
-      title="Lưu trữ tủ khỏi kho?"
+      title="Ngừng sử dụng và lưu trữ tủ?"
       onClose={close}
       closeDisabled={deletion.isPending}
       className="installation-modal installation-delete-modal"
@@ -63,7 +63,10 @@ export function DeleteKioskModal({
     >
       <div className="inventory-delete-warning">
         <CircleAlert size={23} aria-hidden="true" />
-        <p>Tủ sẽ rời kho khả dụng. Lịch sử đơn hàng, thanh toán và vận hành được giữ lại.</p>
+        <p>
+          Tủ sẽ ngừng sử dụng và không còn trong kho khả dụng hoặc danh sách cấp phát. Đây là xóa
+          mềm; lịch sử đơn hàng, thanh toán và vận hành được giữ lại.
+        </p>
       </div>
       <dl className="inventory-delete-summary">
         <div>

@@ -124,11 +124,11 @@ export default function OperationsWorkspace({ section = 'overview' }: { section?
                       : section === 'installations'
                         ? 'Hồ sơ thuê & lắp đặt'
                         : section === 'tasks'
-                          ? 'Điều phối công việc kỹ thuật'
+                          ? 'Sự cố & công việc'
                           : section === 'terminations'
                             ? 'Chấm dứt thuê kiosk'
                             : section === 'maintenance-recovery'
-                              ? 'Phiên bảo trì hết hạn'
+                              ? 'Khôi phục phiên thao tác'
                               : 'Tổng quan vận hành'}
               </h1>
               {section !== 'overview' && (
@@ -144,9 +144,9 @@ export default function OperationsWorkspace({ section = 'overview' }: { section?
                           : section === 'tasks'
                             ? 'Phân công sự cố, điều chỉnh người phụ trách và duyệt báo cáo khắc phục.'
                             : section === 'terminations'
-                              ? 'Xem xét yêu cầu và ghi nhận bàn giao kiosk.'
+                              ? 'Duyệt chấm dứt, điều phối tháo dỡ, nghiệm thu bàn giao và lưu trữ tủ.'
                               : section === 'maintenance-recovery'
-                                ? 'Kiểm tra cửa và hoa tại tủ trước khi khôi phục ô đang khóa.'
+                                ? 'Chỉ xử lý các phiên nạp, thu hồi hoặc thay hoa đã hết hạn và cần kiểm tra.'
                                 : `Chào ${session.data.name}, xem các việc cần xử lý tại đây.`}
                 </p>
               )}

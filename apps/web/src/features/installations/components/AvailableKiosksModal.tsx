@@ -34,7 +34,9 @@ export function AvailableKiosksModal({ open, onClose, session }: AvailableKiosks
   };
   const handleDeleted = async (kiosk: EligibleKioskResponse) => {
     await removeFromInventory(kiosk.id);
-    setDeleteSuccess(`Đã lưu trữ tủ ${kiosk.code}.`);
+    setDeleteSuccess(
+      `Đã ngừng sử dụng và lưu trữ tủ ${kiosk.code}. Tủ không còn trong kho khả dụng.`,
+    );
     setDeleteTarget(null);
   };
   const [slotFilter, setSlotFilter] = useState('ALL');
@@ -238,8 +240,9 @@ export function AvailableKiosksModal({ open, onClose, session }: AvailableKiosks
         )}
         <div className="installation-modal-footer">
           <p id="inventory-delete-policy">
-            Chọn tủ khi xếp lịch. Có thể lưu trữ tủ OFFLINE đã kết thúc thuê và không còn việc đang
-            xử lý.
+            Kho hiển thị tủ đủ điều kiện cấp phát cho hồ sơ thuê mới. Nút Xóa là lưu trữ mềm để
+            ngừng sử dụng tủ; tủ đã lưu trữ không còn trong kho này. Hồ sơ chấm dứt thuê được xử lý
+            tại mục Chấm dứt thuê kiosk.
           </p>
           <Button variant="outline" onClick={onClose}>
             Đóng

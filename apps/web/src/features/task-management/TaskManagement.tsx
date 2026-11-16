@@ -77,6 +77,14 @@ function FilteredTaskList(props: StaffTasksProps) {
       : '',
   );
   const [reload, setReload] = useState(0);
+  const [transitionResult, setTransitionResult] = useState<{
+    id: string;
+    kioskName: string;
+    status: string;
+  } | null>(null);
+  const [managerView, setManagerView] = useState<'incidents' | 'tasks' | 'review'>(
+    props.initialStatus === 'SUBMITTED' ? 'review' : props.initialStatus ? 'tasks' : 'incidents',
+  );
   const scopeKey = sellerId ? `seller:${sellerId}` : apiBase;
   const tasks = useQuery({
     queryKey: ['staff-tasks', role ?? 'none', actorId ?? 'none', scopeKey, page, status],
@@ -128,7 +136,13 @@ function FilteredTaskList(props: StaffTasksProps) {
     <section
       id="staff-tasks"
       className={
-        isPlatform ? 'platform-task-panel' : role === 'SELLER' ? 'seller-task-panel' : undefined
+        role === 'OPERATIONS_MANAGER'
+          ? 'platform-task-panel manager-service-desk'
+          : isPlatform
+            ? 'platform-task-panel'
+            : role === 'SELLER'
+              ? 'seller-task-panel'
+              : undefined
       }
       aria-labelledby="staff-tasks-title"
     >
@@ -181,153 +195,260 @@ function FilteredTaskList(props: StaffTasksProps) {
             </div>
           </div>
         )}
-      {(role === 'SELLER' || role === 'OPERATIONS_MANAGER') && tasks.isSuccess && (
+      {role === 'SELLER' && tasks.isSuccess && (
         <p className={role === 'SELLER' ? 'seller-task-count' : 'manager-task-count'} role="status">
           {tasks.data.items.length} công việc trong trang {page}
           {status ? ` · ${TASK_STATUS_LABELS[status] || status}` : ''}.
           {tasks.data.hasMore ? ' Còn công việc ở trang sau.' : ''}
         </p>
       )}
-      {canAssign && actorId && (
-        <AdminTaskAssignment
-          actorId={actorId}
-          apiBase={apiBase}
-          role={role}
-          allowedKinds={allowedKinds}
-          directoryEndpoint={directoryEndpoint}
-          incidentsEndpoint={incidentsEndpoint}
-          deliveryScopesEndpoint={deliveryScopesEndpoint}
-          sellerId={sellerId}
-        />
+      {role === 'OPERATIONS_MANAGER' && (
+        <nav className="manager-desk-navigation" aria-label="Khu vực xử lý sự cố">
+          {(
+            [
+              ['incidents', 'Sự cố', 'Tiếp nhận & phân công', ClipboardList],
+              ['tasks', 'Công việc đã giao', 'Theo dõi kỹ thuật viên', RefreshCw],
+              ['review', 'Chờ duyệt báo cáo', 'Kiểm tra & nghiệm thu', CheckCircle2],
+            ] as const
+          ).map(([view, title, caption, Icon]) => (
+            <button
+              key={view}
+              type="button"
+              aria-pressed={managerView === view}
+              aria-controls={view === 'incidents' ? 'manager-incident-area' : 'manager-task-area'}
+              onClick={() => {
+                setManagerView(view);
+                setStatus(view === 'review' ? 'SUBMITTED' : '');
+                setPage(1);
+              }}
+            >
+              <span className="manager-desk-nav-icon">
+                <Icon size={20} aria-hidden="true" />
+              </span>
+              <span>
+                <strong>{title}</strong>
+                <small>{caption}</small>
+              </span>
+            </button>
+          ))}
+        </nav>
       )}
-      <div className="staff-task-toolbar">
-        <div>
-          <label
-            htmlFor="task-status"
-            className={
-              role === 'SELLER' || role === 'OPERATIONS_MANAGER' || role === 'TECHNICIAN'
-                ? undefined
-                : 'sr-only'
-            }
+      {role === 'OPERATIONS_MANAGER' && transitionResult && (
+        <div className="manager-transition-result" role="status">
+          <div>
+            <strong>
+              {transitionResult.status === 'COMPLETED'
+                ? 'Đã xác nhận hoàn thành'
+                : 'Đã cập nhật công việc'}
+            </strong>
+            <p>
+              {transitionResult.kioskName} ·{' '}
+              {TASK_STATUS_LABELS[transitionResult.status] || transitionResult.status}
+            </p>
+          </div>
+          {transitionResult.status === 'COMPLETED' && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                setManagerView('tasks');
+                setStatus('COMPLETED');
+                setPage(1);
+              }}
+            >
+              Xem công việc hoàn thành
+            </Button>
+          )}
+          <button
+            type="button"
+            aria-label="Đóng thông báo kết quả công việc"
+            onClick={() => setTransitionResult(null)}
           >
-            Lọc trạng thái
-          </label>
-          <select
-            id="task-status"
-            value={status}
-            onChange={(event) => {
-              setStatus(event.target.value);
-              setPage(1);
+            ×
+          </button>
+        </div>
+      )}
+      <div
+        id="manager-incident-area"
+        hidden={role === 'OPERATIONS_MANAGER' && managerView !== 'incidents'}
+      >
+        {canAssign && actorId && (
+          <AdminTaskAssignment
+            actorId={actorId}
+            apiBase={apiBase}
+            role={role}
+            allowedKinds={allowedKinds}
+            directoryEndpoint={directoryEndpoint}
+            incidentsEndpoint={incidentsEndpoint}
+            deliveryScopesEndpoint={deliveryScopesEndpoint}
+            sellerId={sellerId}
+          />
+        )}
+      </div>
+      <div
+        id="manager-task-area"
+        hidden={role === 'OPERATIONS_MANAGER' && managerView === 'incidents'}
+      >
+        {role === 'OPERATIONS_MANAGER' && (
+          <div className="operations-section-heading operations-assigned-heading">
+            <div>
+              <span className="operations-eyebrow">THEO DÕI & NGHIỆM THU</span>
+              <h2>{managerView === 'review' ? 'Báo cáo chờ duyệt' : 'Công việc đã giao'}</h2>
+            </div>
+            {tasks.isSuccess && (
+              <span className="operations-result-count">
+                {tasks.data.items.length} kết quả · Trang {page}
+              </span>
+            )}
+          </div>
+        )}
+        <div className="staff-task-toolbar">
+          <div hidden={role === 'OPERATIONS_MANAGER' && managerView === 'review'}>
+            <label
+              htmlFor="task-status"
+              className={
+                role === 'SELLER' || role === 'OPERATIONS_MANAGER' || role === 'TECHNICIAN'
+                  ? undefined
+                  : 'sr-only'
+              }
+            >
+              Lọc trạng thái
+            </label>
+            <select
+              id="task-status"
+              value={status}
+              onChange={(event) => {
+                setStatus(event.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="">Tất cả trạng thái</option>
+              {Object.entries(TASK_STATUS_LABELS).map(([value, text]) => (
+                <option key={value} value={value}>
+                  {text}
+                </option>
+              ))}
+            </select>
+          </div>
+          {role === 'OPERATIONS_MANAGER' && managerView === 'tasks' && (
+            <Button
+              variant="outline"
+              aria-pressed={status === 'COMPLETED'}
+              onClick={() => {
+                setStatus(status === 'COMPLETED' ? '' : 'COMPLETED');
+                setPage(1);
+              }}
+            >
+              Đã hoàn thành
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            aria-label="Tải lại công việc"
+            disabled={tasks.isFetching}
+            onClick={async () => {
+              const result = await tasks.refetch();
+              if (!result.isError) setReload((value) => value + 1);
             }}
           >
-            <option value="">Tất cả trạng thái</option>
-            {Object.entries(TASK_STATUS_LABELS).map(([value, text]) => (
-              <option key={value} value={value}>
-                {text}
-              </option>
-            ))}
-          </select>
+            <RefreshCw size={15} aria-hidden="true" className={tasks.isFetching ? 'spin' : ''} />
+            {role === 'TECHNICIAN' ? 'Làm mới' : 'Tải lại công việc'}
+          </Button>
         </div>
-        <Button
-          variant="outline"
-          aria-label="Tải lại công việc"
-          disabled={tasks.isFetching}
-          onClick={async () => {
-            const result = await tasks.refetch();
-            if (!result.isError) setReload((value) => value + 1);
-          }}
-        >
-          <RefreshCw size={15} aria-hidden="true" className={tasks.isFetching ? 'spin' : ''} />
-          {role === 'TECHNICIAN' ? 'Làm mới' : 'Tải lại công việc'}
-        </Button>
-      </div>
-      {tasks.isPending ? (
-        <p role="status">Đang tải công việc…</p>
-      ) : !tasks.data ? (
-        <p role="alert">Chưa tải được công việc. Kiểm tra kết nối và thử tải lại.</p>
-      ) : (
-        <>
-          {tasks.isError && (
-            <p role="status">Chưa tải được công việc mới nhất. Đang hiển thị danh sách đã tải.</p>
-          )}
-          {tasks.data.items.length === 0 ? (
-            <div className="operations-empty">
-              <ClipboardList size={36} aria-hidden="true" />
-              <h3>Chưa có công việc</h3>
-              <p>
-                {role === 'OPERATIONS_MANAGER'
-                  ? status
-                    ? 'Thử chọn trạng thái khác để xem công việc.'
-                    : 'Mở Phân công công việc mới để chọn sự cố và người xử lý.'
-                  : 'Chưa có công việc trong danh sách này.'}
-              </p>
-              {role === 'SELLER' && (
+        {tasks.isPending ? (
+          <p role="status">Đang tải công việc…</p>
+        ) : !tasks.data ? (
+          <p role="alert">Chưa tải được công việc. Kiểm tra kết nối và thử tải lại.</p>
+        ) : (
+          <>
+            {tasks.isError && (
+              <p role="status">Chưa tải được công việc mới nhất. Đang hiển thị danh sách đã tải.</p>
+            )}
+            {tasks.data.items.length === 0 ? (
+              <div className="operations-empty">
+                <ClipboardList size={36} aria-hidden="true" />
+                <h3>
+                  {role === 'OPERATIONS_MANAGER' && managerView === 'review'
+                    ? 'Chưa có báo cáo chờ duyệt'
+                    : 'Chưa có công việc'}
+                </h3>
                 <p>
-                  {status || page > 1
-                    ? 'Thử bỏ lọc trạng thái hoặc quay về trang đầu.'
-                    : 'Mở “Phân công công việc mới” để chọn nhân viên và tủ giao hoa.'}{' '}
-                  <Link href="/seller/staff">Quản lý nhân viên shop</Link>
+                  {role === 'OPERATIONS_MANAGER'
+                    ? managerView === 'review'
+                      ? 'Báo cáo của kỹ thuật viên sẽ xuất hiện tại đây sau khi được gửi.'
+                      : status
+                        ? 'Thử chọn trạng thái khác để xem công việc.'
+                        : 'Mở Phân công công việc mới để chọn sự cố và người xử lý.'
+                    : 'Chưa có công việc trong danh sách này.'}
                 </p>
-              )}
-              {isPlatform && role !== 'OPERATIONS_MANAGER' && (
-                <p className="platform-empty-hint">
-                  {status || page > 1
-                    ? 'Thử đổi bộ lọc hoặc quay về trang đầu để xem các công việc khác.'
-                    : role === 'TECHNICIAN'
-                      ? 'Khi được quản lý phân công, thông tin địa điểm, hướng dẫn và tiến độ sẽ xuất hiện tại đây.'
-                      : 'Các công việc được ghi nhận và phân công sẽ xuất hiện tại đây để theo dõi.'}
-                </p>
-              )}
-            </div>
-          ) : (
-            (mode === 'worker'
-              ? [...tasks.data.items].sort((a, b) => {
-                  const rank = (state: string) =>
-                    state === 'IN_PROGRESS' ? 0 : state === 'ASSIGNED' ? 1 : 2;
-                  return rank(a.status) - rank(b.status);
-                })
-              : tasks.data.items
-            ).map((task) => (
-              <TaskItem
-                key={`${task.id}-${role === 'TECHNICIAN' ? task.status : task.version}-${reload}`}
-                task={task}
-                mode={mode}
-                actorRole={role}
-                actorId={actorId}
-                sellerId={sellerId}
-                apiBase={apiBase}
-                directoryEndpoint={directoryEndpoint}
-                canReassign={canReassign}
-                readOnly={readOnly}
-              />
-            ))
-          )}
-          {(page > 1 ||
-            (role === 'SELLER_STAFF' ? tasks.data.hasMore : tasks.data.items.length > 0)) && (
-            <nav aria-label="Phân trang công việc" className="order-pagination">
-              <Button
-                variant="outline"
-                disabled={page === 1 || tasks.isFetching}
-                onClick={() => setPage(page - 1)}
-              >
-                <ArrowLeft size={16} aria-hidden="true" />
-                <span>Trang trước</span>
-              </Button>
-              <span className="order-pagination-indicator" aria-live="polite">
-                Trang {page}
-              </span>
-              <Button
-                variant="outline"
-                disabled={!tasks.data.hasMore || tasks.isFetching}
-                onClick={() => setPage(page + 1)}
-              >
-                <span>Trang sau</span>
-                <ArrowRight size={16} aria-hidden="true" />
-              </Button>
-            </nav>
-          )}
-        </>
-      )}
+                {role === 'SELLER' && (
+                  <p>
+                    {status || page > 1
+                      ? 'Thử bỏ lọc trạng thái hoặc quay về trang đầu.'
+                      : 'Mở “Phân công công việc mới” để chọn nhân viên và tủ giao hoa.'}{' '}
+                    <Link href="/seller/staff">Quản lý nhân viên shop</Link>
+                  </p>
+                )}
+                {isPlatform && role !== 'OPERATIONS_MANAGER' && (
+                  <p className="platform-empty-hint">
+                    {status || page > 1
+                      ? 'Thử đổi bộ lọc hoặc quay về trang đầu để xem các công việc khác.'
+                      : role === 'TECHNICIAN'
+                        ? 'Khi được quản lý phân công, thông tin địa điểm, hướng dẫn và tiến độ sẽ xuất hiện tại đây.'
+                        : 'Các công việc được ghi nhận và phân công sẽ xuất hiện tại đây để theo dõi.'}
+                  </p>
+                )}
+              </div>
+            ) : (
+              (mode === 'worker'
+                ? [...tasks.data.items].sort((a, b) => {
+                    const rank = (state: string) =>
+                      state === 'IN_PROGRESS' ? 0 : state === 'ASSIGNED' ? 1 : 2;
+                    return rank(a.status) - rank(b.status);
+                  })
+                : tasks.data.items
+              ).map((task) => (
+                <TaskItem
+                  key={`${task.id}-${role === 'TECHNICIAN' ? task.status : task.version}-${reload}`}
+                  task={task}
+                  mode={mode}
+                  actorRole={role}
+                  actorId={actorId}
+                  sellerId={sellerId}
+                  apiBase={apiBase}
+                  directoryEndpoint={directoryEndpoint}
+                  canReassign={canReassign}
+                  readOnly={readOnly}
+                  onTransition={role === 'OPERATIONS_MANAGER' ? setTransitionResult : undefined}
+                />
+              ))
+            )}
+            {(page > 1 ||
+              (role === 'SELLER_STAFF' ? tasks.data.hasMore : tasks.data.items.length > 0)) && (
+              <nav aria-label="Phân trang công việc" className="order-pagination">
+                <Button
+                  variant="outline"
+                  disabled={page === 1 || tasks.isFetching}
+                  onClick={() => setPage(page - 1)}
+                >
+                  <ArrowLeft size={16} aria-hidden="true" />
+                  <span>Trang trước</span>
+                </Button>
+                <span className="order-pagination-indicator" aria-live="polite">
+                  Trang {page}
+                </span>
+                <Button
+                  variant="outline"
+                  disabled={!tasks.data.hasMore || tasks.isFetching}
+                  onClick={() => setPage(page + 1)}
+                >
+                  <span>Trang sau</span>
+                  <ArrowRight size={16} aria-hidden="true" />
+                </Button>
+              </nav>
+            )}
+          </>
+        )}
+      </div>
     </section>
   );
 }

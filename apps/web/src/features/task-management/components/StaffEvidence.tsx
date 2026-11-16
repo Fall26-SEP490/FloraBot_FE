@@ -49,6 +49,7 @@ export default function StaffEvidence({
     queryKey: ['staff-evidence', taskId, actorId ?? 'none', scopeKey, version, page],
     queryFn: () => request<TaskEvidencePage>(`${path}?page=${page}`),
     enabled: open,
+    refetchInterval: open ? 30_000 : false,
   });
   function clearAttempt() {
     sessionStorage.removeItem(key);
@@ -151,13 +152,6 @@ export default function StaffEvidence({
                 </Button>
               </>
             )}
-            <Button
-              variant="outline"
-              disabled={evidence.isFetching}
-              onClick={() => void evidence.refetch()}
-            >
-              Tải lại ảnh
-            </Button>
           </div>
         </>
       )}

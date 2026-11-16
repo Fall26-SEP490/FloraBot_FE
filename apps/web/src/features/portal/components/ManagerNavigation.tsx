@@ -3,12 +3,17 @@ import Link from 'next/link';
 import { Boxes, ClipboardList, LayoutDashboard, Search, Store, Users, X } from '@florabot/ui';
 const groups = [
   {
-    title: 'Xử lý công việc',
+    title: 'Kiosk & hợp đồng',
     items: [
-      { key: 'installations', title: 'Hồ sơ thuê & Lắp đặt', icon: Boxes },
-      { key: 'tasks', title: 'Công việc kỹ thuật', icon: ClipboardList },
-      { key: 'maintenance-recovery', title: 'Phiên bảo trì hết hạn', icon: Boxes },
-      { key: 'terminations', title: 'Chấm dứt thuê kiosk', icon: Boxes },
+      { key: 'installations', title: 'Thuê & lắp đặt kiosk', icon: Boxes },
+      { key: 'terminations', title: 'Chấm dứt & lưu trữ tủ', icon: Boxes },
+    ],
+  },
+  {
+    title: 'Sự cố & khôi phục',
+    items: [
+      { key: 'tasks', title: 'Sự cố & công việc', icon: ClipboardList },
+      { key: 'maintenance-recovery', title: 'Khôi phục phiên thao tác', icon: Boxes },
     ],
   },
   {
