@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery } from '@tanstack/react-query';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,12 +10,23 @@ import { queryClient, request, type Session } from '@/shared/lib/api';
 import ReportFault from '../incidents/ReportFault';
 import ReturnFlowers from '../orders/ReturnFlowers';
 import RemoveSlotBouquet from './RemoveSlotBouquet';
-import SlotMaintenance, { startMaintenance } from './SlotMaintenance';
+import SlotMaintenance, {
+  maintenancePath,
+  startMaintenance,
+  type MaintenanceSession,
+} from './SlotMaintenance';
 import AssignInventoryTask from './AssignInventoryTask';
 import SellerRepairApprovals from './SellerRepairApprovals';
 import { Modal } from '@/shared/components/Modal';
 import './styles/seller-stock.css';
-import { slotNeedsAttention, slotSaleState, slotWarning, type SellerSlot } from './slot-state';
+import {
+  slotMaintenanceProgress,
+  slotNeedsAttention,
+  slotSaleState,
+  slotWarning,
+  type SellerSlot,
+  type SlotMaintenanceProgress,
+} from './slot-state';
 
 // Never infer the selling zone from the slot code.
 type Slot = SellerSlot;
@@ -36,15 +47,21 @@ type Product = components['schemas']['ProductResponse'];
 type SellerKiosk = components['schemas']['SellerKioskDto'];
 type ProductPhotoPage = components['schemas']['ProductPhotoPage'];
 
-function SlotStatus({ slot }: { slot: Slot }) {
+function SlotStatus({ slot, progress }: { slot: Slot; progress: SlotMaintenanceProgress | null }) {
   const state = slotSaleState(slot);
-  const warning = slotWarning(slot);
+  const primary = state.key === 'LOCKED' && progress ? progress : state;
+  const warning = progress ? null : slotWarning(slot);
   return (
     <span className="stock-slot-statuses">
-      <span className="slot-status-pill" data-status={state.key}>
-        {state.label}
+      <span className="slot-status-pill" data-status={primary.key}>
+        {primary.label}
       </span>
-      {warning && warning !== state.label && (
+      {progress && progress !== primary && (
+        <span className="slot-status-pill" data-status={progress.key}>
+          {progress.label}
+        </span>
+      )}
+      {warning && warning !== primary.label && (
         <span className="slot-status-pill" data-status={slot.status}>
           {warning}
         </span>
@@ -415,7 +432,34 @@ export default function SellerStock({ session }: { session: Session }) {
     queryKey: ['seller-kiosk-slots', sellerId, selectedKioskId],
     queryFn: () => request<Slot[]>(`/me/kiosks/${selectedKioskId}/slots`),
     enabled: !!sellerId && !!selectedKioskId,
+    refetchInterval: (query) =>
+      query.state.data?.some((slot) => slot.status === 'LOCKED' && slot.sensorEnabled)
+        ? 4_000
+        : false,
   });
+  const allSlots = slots.data || [];
+  const legacySlots = allSlots.filter(
+    (slot) =>
+      slot.status === 'LOCKED' &&
+      slot.sensorEnabled &&
+      (slot.doorState === undefined || slot.maintenanceStage === undefined),
+  );
+  const legacySessions = useQueries({
+    queries: legacySlots.map((slot) => ({
+      queryKey: ['slot-maintenance-active', selectedKioskId, slot.id],
+      queryFn: async () =>
+        (await request<MaintenanceSession | undefined>(
+          `${maintenancePath(selectedKioskId, slot.id)}/active`,
+        )) ?? null,
+      refetchInterval: 4_000,
+    })),
+  });
+  const legacyProgress = new Map(
+    legacySlots.map((slot, index) => [
+      slot.id,
+      legacySessions[index]?.isSuccess ? legacySessions[index].data : null,
+    ]),
+  );
   const products = useQuery({
     queryKey: ['products', sellerId],
     queryFn: () => request<Product[]>('/me/products'),
@@ -477,7 +521,6 @@ export default function SellerStock({ session }: { session: Session }) {
 
   const selectedKiosk = kiosks.data?.find((kiosk) => kiosk.id === selectedKioskId);
   const canStock = session.sellerStatus === 'ACTIVE';
-  const allSlots = slots.data || [];
   const empty = allSlots.filter((slot) => slot.status === 'RENTED_EMPTY' && !slot.bouquetId);
   const walkInSlots = allSlots.filter((slot) => slotZone(slot) === 'WALK_IN');
   const matchingEmpty = empty.filter((slot) => slotZone(slot) === 'WALK_IN');
@@ -488,9 +531,12 @@ export default function SellerStock({ session }: { session: Session }) {
 
   const selectedSlot = matchingEmpty.find((slot) => slot.id === selectedSlotId);
   const detailSlot = allSlots.find((slot) => slot.id === detailSlotId);
+  const detailProgress = detailSlot
+    ? slotMaintenanceProgress(detailSlot, legacyProgress.get(detailSlot.id))
+    : null;
   const available = products.data?.filter((product) => product.status === 'ACTIVE') || [];
   const selectedProduct = available.find((product) => product.id === selectedProductId);
-  const slotsLoading = !!selectedKioskId && (slots.isPending || slots.isFetching);
+  const slotsLoading = !!selectedKioskId && slots.isPending;
   const slotSelectDisabled =
     !selectedKioskId || stock.isPending || slotsLoading || slots.isError || !matchingEmpty.length;
   const productSelectDisabled =
@@ -870,6 +916,7 @@ export default function SellerStock({ session }: { session: Session }) {
                   ? products.data?.find((item) => item.id === slot.productId)
                   : undefined;
                 const hasBouquet = !!slot.bouquetId || !!slot.productId;
+                const progress = slotMaintenanceProgress(slot, legacyProgress.get(slot.id));
 
                 return (
                   <li key={slot.id}>
@@ -884,7 +931,7 @@ export default function SellerStock({ session }: { session: Session }) {
                           <strong>Ô {slot.slotCode}</strong>
                           <span className="quiet slot-zone-label">{zone}</span>
                         </div>
-                        <SlotStatus slot={slot} />
+                        <SlotStatus slot={slot} progress={progress} />
                       </div>
 
                       <div className="stock-slot-card-body">
@@ -898,17 +945,20 @@ export default function SellerStock({ session }: { session: Session }) {
                             {hasBouquet
                               ? slotProduct?.name || 'Bó hoa đang trong tủ'
                               : zType === 'WALK_IN'
-                                ? 'Ô trống sẵn sàng nạp hoa'
+                                ? slot.status === 'RENTED_EMPTY'
+                                  ? 'Ô trống sẵn sàng nạp hoa'
+                                  : 'Chưa ghi nhận hoa trong ô'
                                 : zType === 'PREORDER'
                                   ? 'Ô dành cho đơn đặt trước'
                                   : 'Chưa phân loại · không thể nạp hoa'}
                           </span>
                           <span className="stock-slot-product-sub">
-                            {hasBouquet
-                              ? slot.priceSnapshot != null
-                                ? `Giá niêm yết khi nạp: ${money(slot.priceSnapshot)}`
-                                : 'Đã ghi nhận bó hoa trong ô'
-                              : 'Nhấn để cấu hình hoặc kiểm tra ô'}
+                            {progress?.hint ||
+                              (hasBouquet
+                                ? slot.priceSnapshot != null
+                                  ? `Giá niêm yết khi nạp: ${money(slot.priceSnapshot)}`
+                                  : 'Đã ghi nhận bó hoa trong ô'
+                                : 'Nhấn để xem chi tiết ô')}
                           </span>
                         </div>
                       </div>
@@ -934,7 +984,7 @@ export default function SellerStock({ session }: { session: Session }) {
               {detailSlot && (
                 <div className="stock-slot-modal-body" key={detailSlot.id}>
                   <div className="stock-slot-modal-status">
-                    <SlotStatus slot={detailSlot} />
+                    <SlotStatus slot={detailSlot} progress={detailProgress} />
                     <span>{zoneLabels[slotZone(detailSlot)]}</span>
                   </div>
                   {(detailSlot.orderCode || detailSlot.orderId) && (

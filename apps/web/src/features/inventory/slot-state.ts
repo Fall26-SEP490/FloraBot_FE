@@ -11,7 +11,54 @@ export type SellerSlot = components['schemas']['SellerSlotResponse'] & {
   sensorEnabled?: boolean;
   sensorReady?: boolean;
   manualRetryEnabled?: boolean;
+  doorState?: 'OPEN' | 'CLOSED' | 'UNKNOWN' | null;
+  maintenanceStage?: string | null;
 };
+
+export type SlotMaintenanceProgress = { key: string; label: string; hint: string };
+
+export function slotMaintenanceProgress(
+  slot: Pick<SellerSlot, 'status' | 'doorState' | 'maintenanceStage'>,
+  session?: { stage: string; substate: string | null; currentCmdId: string | null } | null,
+): SlotMaintenanceProgress | null {
+  if (slot.status !== 'LOCKED') return null;
+  const stage = slot.maintenanceStage === undefined ? session?.stage : slot.maintenanceStage;
+  if (stage === 'NeedsInspection') {
+    return { key: 'FAULT', label: 'Cần kiểm tra ô', hint: 'Mở chi tiết để xem cách xử lý.' };
+  }
+  if (stage === 'Completed' || stage === 'Recovered') return null;
+  if (slot.doorState === 'OPEN') {
+    return {
+      key: 'DOOR_OPEN',
+      label: 'Cửa đang mở',
+      hint: stage === 'AwaitLoading' ? 'Đặt hoa vào ô rồi đóng cửa.' : 'Đóng cửa sau khi thao tác.',
+    };
+  }
+  if (stage !== 'AwaitLoading' && stage !== 'AwaitRemoval') return null;
+  if (session?.substate === 'RemovalClosedEmptyConfirmed' && !session.currentCmdId) {
+    return { key: 'DOOR_PENDING', label: 'Chờ mở lại', hint: 'Mở lại cửa để đặt hoa mới vào ô.' };
+  }
+  if (slot.doorState === 'CLOSED') {
+    return {
+      key: 'DOOR_PENDING',
+      label: stage === 'AwaitLoading' ? 'Đang xác nhận nạp' : 'Đang xác nhận thu hồi',
+      hint: 'Cửa đã đóng. Hệ thống đang kiểm tra cảm biến hoa.',
+    };
+  }
+  // The older session API records that the door opened, but cannot say whether it is still open.
+  if (session?.substate === 'LoadingDoorOpened' || session?.substate === 'RemovalDoorOpened') {
+    return {
+      key: 'DOOR_PENDING',
+      label: 'Đã xác nhận mở cửa',
+      hint: 'Đóng cửa sau khi thao tác và chờ hệ thống xác nhận.',
+    };
+  }
+  return {
+    key: 'DOOR_PENDING',
+    label: 'Chờ mở cửa',
+    hint: 'Chờ tủ xác nhận cửa đã mở rồi mới thao tác.',
+  };
+}
 
 type SlotState = Pick<
   SellerSlot,

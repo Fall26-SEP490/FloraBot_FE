@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import { ApiError, queryClient, request } from '@/shared/lib/api';
-import type { SellerSlot } from './slot-state';
+import { slotMaintenanceProgress, type SellerSlot } from './slot-state';
 
 export type MaintenanceAction = 'LOAD' | 'REMOVE' | 'REPLACE';
 
@@ -123,6 +123,7 @@ export default function SlotMaintenance({
     current?.substate === 'Initial' &&
     !!current.currentCmdId &&
     (current.stage === 'AwaitRemoval' || current.stage === 'AwaitLoading');
+  const progress = current && !sessionClosed ? slotMaintenanceProgress(slot, current) : null;
   useEffect(() => {
     if (!current || sessionClosed) return;
     try {
@@ -147,6 +148,7 @@ export default function SlotMaintenance({
     mutationFn: () => startMaintenance({ kioskId, slot, action, productId, reason }),
     onSuccess: (result) => {
       queryClient.setQueryData(['slot-maintenance', kioskId, slot.id, result.id], result);
+      queryClient.setQueryData(activeQueryKey, result);
       setSavedSessionId(result.id);
       void queryClient.invalidateQueries({ queryKey: ['seller-kiosk-slots', sellerId, kioskId] });
     },
@@ -162,6 +164,11 @@ export default function SlotMaintenance({
       ),
     onSuccess: (result) => {
       queryClient.setQueryData(['slot-maintenance', kioskId, slot.id, sessionId], result);
+      setSavedSessionId(result.id);
+      queryClient.setQueryData(
+        activeQueryKey,
+        result.stage === 'Completed' || result.stage === 'Recovered' ? null : result,
+      );
       if (result.stage === 'Completed' || result.stage === 'Recovered') {
         void queryClient.invalidateQueries({ queryKey: ['seller-kiosk-slots', sellerId, kioskId] });
       }
@@ -188,7 +195,10 @@ export default function SlotMaintenance({
         'POST',
       ),
     onSuccess: async () => {
-      await session.refetch();
+      await Promise.all([
+        session.refetch(),
+        queryClient.invalidateQueries({ queryKey: activeQueryKey }),
+      ]);
     },
   });
 
@@ -253,9 +263,10 @@ export default function SlotMaintenance({
             {actionLabels[current.action]} ·{' '}
             {sessionExpired
               ? 'Phiên đã hết hạn'
-              : waitingForDoor
-                ? 'Đang chờ tủ xác nhận mở cửa'
-                : stageLabels[current.stage] || current.stage}
+              : (progress?.label ??
+                (waitingForDoor
+                  ? 'Đang chờ tủ xác nhận mở cửa'
+                  : stageLabels[current.stage] || current.stage))}
           </strong>
           <p>
             {current.stage === 'Recovered'
@@ -269,9 +280,11 @@ export default function SlotMaintenance({
                     : current.action === 'REPLACE' &&
                         current.substate === 'RemovalClosedEmptyConfirmed'
                       ? 'Hoa cũ đã được lấy ra. Mở cửa lần nữa để đặt hoa mới vào.'
-                      : waitingForDoor
-                        ? 'Hệ thống đã tiếp nhận yêu cầu mở ô. Chờ cửa mở thực tế. Nếu cửa vẫn đóng, chọn “Kiểm tra tiến độ”.'
-                        : 'Thao tác với hoa thật, đóng cửa ô, rồi chờ tín hiệu cảm biến. Trạng thái sẽ tự cập nhật.'}
+                      : (progress?.key === 'DOOR_OPEN' || slot.doorState === 'CLOSED') && progress
+                        ? progress.hint
+                        : waitingForDoor
+                          ? 'Hệ thống đã tiếp nhận yêu cầu mở ô. Chờ cửa mở thực tế. Nếu cửa vẫn đóng, chọn “Kiểm tra tiến độ”.'
+                          : 'Thao tác với hoa thật, đóng cửa ô, rồi chờ tín hiệu cảm biến. Trạng thái sẽ tự cập nhật.'}
           </p>
           {active && (
             <p className="quiet">

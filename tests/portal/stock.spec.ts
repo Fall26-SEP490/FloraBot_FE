@@ -545,6 +545,7 @@ for (const expireOnCheck of [false, true])
       manualRetryEnabled: true,
     };
     let confirmed = false;
+    let doorState = 'UNKNOWN';
     const progress = {
       id: '',
       kioskId,
@@ -568,7 +569,14 @@ for (const expireOnCheck of [false, true])
         });
       if (path === `/api/sellers/${sellerId}/kiosks`)
         return route.fulfill({ json: [{ id: kioskId, code: 'K01', name: 'Tủ kiểm thử' }] });
-      if (path === `/api/me/kiosks/${kioskId}/slots`) return route.fulfill({ json: [slot] });
+      if (path === `/api/me/kiosks/${kioskId}/slots`)
+        return route.fulfill({
+          json: [
+            expireOnCheck
+              ? slot
+              : { ...slot, doorState, maintenanceStage: confirmed ? progress.stage : null },
+          ],
+        });
       if (path === '/api/me/products')
         return route.fulfill({
           json: [{ id: productId, name: 'Hoa hồng', status: 'ACTIVE', price: 350000 }],
@@ -620,15 +628,27 @@ for (const expireOnCheck of [false, true])
     await page.getByLabel('2. Chọn mẫu hoa').selectOption(productId);
     await page.getByRole('button', { name: 'Mở ô để nạp hoa' }).click();
     const modal = page.getByRole('dialog', { name: 'Chi tiết ô A01' });
-    await expect(modal).toContainText('Đang chờ tủ xác nhận mở cửa');
+    const card = page.getByRole('button', { name: 'Xem chi tiết ô A01' });
+    await expect(card).toContainText('Chờ mở cửa');
+    await expect(card).not.toContainText('Cửa đang mở');
+    await expect(card).not.toContainText('Ô trống sẵn sàng nạp hoa');
     expect(maintenanceCalls).toBe(1);
     expect(oldFlowCalls).toBe(0);
     await page.evaluate(() => localStorage.clear());
     await page.reload();
-    await page.getByRole('button', { name: 'Xem chi tiết ô A01' }).click();
-    await expect(page.getByRole('dialog', { name: 'Chi tiết ô A01' })).toContainText(
-      'Đang chờ tủ xác nhận mở cửa',
-    );
+    await expect(card).toContainText('Chờ mở cửa');
+    if (expireOnCheck) {
+      progress.substate = 'LoadingDoorOpened';
+      await expect(card).toContainText('Đã xác nhận mở cửa');
+      await expect(card).not.toContainText('Cửa đang mở');
+    } else {
+      doorState = 'OPEN';
+      await expect(card).toContainText('Cửa đang mở');
+      doorState = 'CLOSED';
+      await expect(card).toContainText('Đang xác nhận nạp');
+      await expect(card).not.toContainText('Đã nạp hoa');
+    }
+    await card.click();
     await modal.getByRole('button', { name: 'Kiểm tra tiến độ' }).click();
     if (expireOnCheck) {
       await expect(modal).toContainText('Phiên đã hết hạn');
@@ -638,7 +658,5 @@ for (const expireOnCheck of [false, true])
       return;
     }
     await expect(modal).toContainText('Đã hoàn tất');
-    await expect(page.getByRole('button', { name: 'Xem chi tiết ô A01' })).toContainText(
-      'Đã nạp hoa',
-    );
+    await expect(card).toContainText('Đã nạp hoa');
   });

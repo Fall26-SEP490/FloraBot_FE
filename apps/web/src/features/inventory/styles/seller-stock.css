@@ -634,6 +634,8 @@
 }
 
 .seller-workspace .seller-stock.stock-page .slot-status-pill[data-status='ON_SALE'],
+.seller-workspace .seller-stock.stock-page .slot-status-pill[data-status='DOOR_OPEN'],
+.stock-slot-modal .slot-status-pill[data-status='DOOR_OPEN'],
 .stock-slot-modal .slot-status-pill[data-status='ON_SALE'] {
   background: #dcfce7;
   color: #14532d;
@@ -666,6 +668,8 @@
 }
 
 .seller-workspace .seller-stock.stock-page .slot-status-pill[data-status='RENTED_EMPTY'],
+.seller-workspace .seller-stock.stock-page .slot-status-pill[data-status='DOOR_PENDING'],
+.stock-slot-modal .slot-status-pill[data-status='DOOR_PENDING'],
 .stock-slot-modal .slot-status-pill[data-status='RENTED_EMPTY'] {
   background: #e0f2fe;
   color: #0c4a6e;
