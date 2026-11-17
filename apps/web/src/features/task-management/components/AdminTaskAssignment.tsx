@@ -210,25 +210,27 @@ export default function AdminTaskAssignment({
               nạp hoa được nhân viên ghi nhận khi thực hiện công việc.
             </p>
           )}
-          <div className={effectiveRole === 'SELLER' ? 'assignment-kind-note' : undefined}>
-            <label htmlFor="assignment-kind">Loại công việc</label>
-            <select
-              id="assignment-kind"
-              value={kind}
-              disabled={busy || allowedKinds.length <= 1}
-              onChange={(event) => {
-                setKind(event.target.value);
-                form.resetField('target');
-              }}
-            >
-              {allowedKinds.includes('INCIDENT') && (
-                <option value="INCIDENT">Kiểm tra sự cố</option>
-              )}
-              {allowedKinds.includes('DELIVERY') && (
-                <option value="DELIVERY">Giao hoa cho shop</option>
-              )}
-            </select>
-          </div>
+          {effectiveRole !== 'SELLER' && (
+            <div>
+              <label htmlFor="assignment-kind">Loại công việc</label>
+              <select
+                id="assignment-kind"
+                value={kind}
+                disabled={busy || allowedKinds.length <= 1}
+                onChange={(event) => {
+                  setKind(event.target.value);
+                  form.resetField('target');
+                }}
+              >
+                {allowedKinds.includes('INCIDENT') && (
+                  <option value="INCIDENT">Kiểm tra sự cố</option>
+                )}
+                {allowedKinds.includes('DELIVERY') && (
+                  <option value="DELIVERY">Giao hoa cho shop</option>
+                )}
+              </select>
+            </div>
+          )}
           {staff.isPending || targetQuery.isPending ? (
             <p role="status">Đang tải thông tin phân công…</p>
           ) : staff.isError || targetQuery.isError ? (

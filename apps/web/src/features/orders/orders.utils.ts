@@ -83,6 +83,8 @@ export function matchesOrderFilter(row: OrderPhase, filter: OrderFilter, mode: O
   switch (filter) {
     case 'attention':
       return needsOrderAction(row, mode);
+    case 'tracking':
+      return !orderClosed(row) && !needsOrderAction(row, mode);
     case 'requested':
       return !row.orderStatus && row.state === 'REQUESTED';
     case 'quoted':

@@ -113,6 +113,8 @@ export function PortalScreenRouter({
       return <AdminLoginScreen />;
     case 'receipt':
       return <Receipt />;
+    case 'complaint':
+      return <Receipt complaintOnly />;
     case 'guest-history':
       return <GuestHistory />;
     case 'login':

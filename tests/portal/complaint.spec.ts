@@ -26,8 +26,7 @@ test.beforeEach(async ({ page }) => {
     return route.fulfill({ json: { reference: 'evidence:v1:test-reference' } });
   });
   await page.route('**/api/receipts/lookup', (route) => route.fulfill({ json: receipt }));
-  await page.goto(`/receipt#order=${id}&token=${token}`);
-  await page.getByRole('button', { name: 'Xem biên nhận', exact: true }).click();
+  await page.goto(`/phan-anh#order=${id}&token=${token}`);
 });
 
 for (const width of [390, 1440])
@@ -51,7 +50,6 @@ for (const width of [390, 1440])
       });
       return route.fulfill({ json: { result: 'dispute-id' } });
     });
-    await page.getByRole('button', { name: 'Gửi phản ánh về hoa' }).click();
     await page.getByRole('button', { name: 'Kiểm tra phản ánh', exact: true }).click();
     await expect(page.getByLabel('Vấn đề với bó hoa')).toBeFocused();
     await page.getByLabel('Vấn đề với bó hoa').fill('Hoa bị dập khi nhận tại tủ.');
@@ -64,6 +62,11 @@ for (const width of [390, 1440])
     });
     await page.getByRole('button', { name: 'Tải ảnh minh chứng', exact: true }).click();
     await expect(page.getByText(/Đã lưu ảnh evidence.png/)).toBeVisible();
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+    await page.screenshot({
+      path: test.info().outputPath(`complaint-form-${width}.png`),
+      fullPage: true,
+    });
     expect(
       (
         await new AxeBuilder({ page })
@@ -99,7 +102,6 @@ test('Lost complaint response blocks another submission until receipt is checked
     attempts++;
     return route.abort();
   });
-  await page.getByRole('button', { name: 'Gửi phản ánh về hoa' }).click();
   await page.getByLabel('Vấn đề với bó hoa').fill('Hoa bị dập khi nhận tại tủ.');
   await page
     .getByLabel('Ảnh minh chứng', { exact: true })
@@ -128,7 +130,6 @@ test('Server rejection and expired eligibility do not invite another complaint',
   page,
 }) => {
   await page.route('**/flows/open_dispute', (route) => route.fulfill({ status: 409 }));
-  await page.getByRole('button', { name: 'Gửi phản ánh về hoa' }).click();
   await page.getByLabel('Vấn đề với bó hoa').fill('Hoa bị dập khi nhận tại tủ.');
   await page
     .getByLabel('Ảnh minh chứng', { exact: true })
@@ -144,6 +145,8 @@ test('Server rejection and expired eligibility do not invite another complaint',
     route.fulfill({ json: { ...receipt, canComplain: false } }),
   );
   await page.getByRole('button', { name: 'Cập nhật trạng thái', exact: true }).click();
-  await expect(page.getByText('Đã hết thời hạn gửi phản ánh cho đơn này.')).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Đã hết hạn phản ánh', exact: true }),
+  ).toBeVisible();
   await expect(page.getByRole('button', { name: 'Gửi phản ánh về hoa' })).toHaveCount(0);
 });

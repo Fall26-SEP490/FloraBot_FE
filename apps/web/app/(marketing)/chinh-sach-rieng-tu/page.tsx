@@ -63,11 +63,10 @@ export default function Page() {
                 không cần tạo tài khoản.
               </p>
               <p>
-                Sau khi nhận hoa thành công, bạn có thể chủ động lưu biên nhận trên thiết bị riêng.
-                Trình duyệt lưu ID đơn, mã tra cứu, mã đơn và ngày lưu, tối đa 50 biên nhận; không
-                tự đồng bộ sang thiết bị khác. Người dùng chung thiết bị có thể xem các biên nhận đã
-                lưu. Bạn có thể xóa từng bản lưu hoặc toàn bộ trong mục Biên nhận đã lưu. Việc xóa
-                bản lưu không xóa giao dịch trong hệ thống. Kiosk không tự lưu danh sách này.
+                Mã tra cứu biên nhận không được tự lưu trên thiết bị. Nếu bạn đã lưu biên nhận từ
+                phiên bản trước, bản lưu chỉ có trên trình duyệt đó và người dùng chung thiết bị có
+                thể xem được. Bạn vẫn có thể xóa từng bản lưu hoặc toàn bộ danh sách; việc xóa bản
+                lưu không xóa giao dịch trong hệ thống.
               </p>
               <a className="text-link" href="/lich-su-mua">
                 Quản lý biên nhận đã lưu

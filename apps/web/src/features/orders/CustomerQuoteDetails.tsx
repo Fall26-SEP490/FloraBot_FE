@@ -1,10 +1,22 @@
-import { CheckCircle2, Clock } from '@florabot/ui';
+import type { ReactNode } from 'react';
+import { CheckCircle2, ChevronDown, Clock } from '@florabot/ui';
 import type { WebOrder } from './orders.types';
 import { customerOrderHint, money, statusName, when } from './orders.utils';
 import styles from './customer-orders.module.css';
 import { PreorderAccessories } from './PreorderAccessories';
+import CustomerPickupGuide from './CustomerPickupGuide';
 
-export function CustomerQuoteDetails({ row, now }: { row: WebOrder; now: number }) {
+export function CustomerQuoteDetails({
+  row,
+  now,
+  pickupAction,
+  children,
+}: {
+  row: WebOrder;
+  now: number;
+  pickupAction?: ReactNode;
+  children?: ReactNode;
+}) {
   const quoting = row.state === 'QUOTED' && !row.orderId;
   const paying = row.orderStatus === 'AWAITING_PAYMENT';
   const deadline = quoting ? row.quoteExpiresAt : paying ? row.payBefore : null;
@@ -26,30 +38,13 @@ export function CustomerQuoteDetails({ row, now }: { row: WebOrder; now: number 
     <div
       role="region"
       className={styles.quoteReview}
+      data-pickup={(row.orderStatus === 'PAID' && row.ready) || row.orderStatus === 'DISPENSING'}
       aria-label={
         quoting ? 'Báo giá của shop' : paying ? 'Thông tin thanh toán' : 'Thông tin đơn hoa'
       }
     >
-      <div className={styles.quoteAmountBlock}>
-        <div className={styles.quotePrice}>
-          {row.orderStatus === 'PAID' && (
-            <p role="status">
-              <CheckCircle2 className="payos-confirmed-icon" size={16} aria-hidden="true" />
-              <b>Đã thanh toán.</b>{' '}
-              {row.ready ? 'Hoa đã sẵn sàng tại tủ.' : 'Shop đang chuẩn bị hoa.'}
-            </p>
-          )}
-          <span>
-            {paying ? 'Số tiền cần thanh toán' : quoting ? 'Tổng báo giá' : 'Giá đã chốt'}
-          </span>
-          <strong>{hasPrice ? money(row.quotedPrice!) : 'Chưa có báo giá'}</strong>
-          {quoting && <p>Đồng ý báo giá trước, thanh toán sau.</p>}
-          {paying && <p>Chọn “Thanh toán ngay” để thanh toán qua PayOS ngay tại đây.</p>}
-          {!quoting && !paying && row.orderStatus !== 'PAID' && <p>{customerOrderHint(row)}</p>}
-        </div>
-        <PreorderAccessories row={row} compact />
-      </div>
       <div className={styles.quotePickupBlock}>
+        <h3 className={styles.detailHeading}>Thông tin nhận hoa</h3>
         <dl className={styles.quoteFacts}>
           <div>
             <dt>Tủ nhận hoa</dt>
@@ -67,7 +62,42 @@ export function CustomerQuoteDetails({ row, now }: { row: WebOrder; now: number 
               )}
             </dd>
           </div>
-          {(quoting || paying) && (
+        </dl>
+        {row.quoteNote && (
+          <div className={styles.quoteNote}>
+            <strong>{row.state === 'REJECTED' ? 'Phản hồi của shop' : 'Ghi chú của shop'}</strong>
+            <p>{row.quoteNote}</p>
+          </div>
+        )}
+      </div>
+      <div className={styles.quoteAmountBlock}>
+        <div className={styles.quotePrice}>
+          {row.orderStatus === 'PAID' && (
+            <p role="status">
+              <CheckCircle2 className="payos-confirmed-icon" size={16} aria-hidden="true" />
+              <span>
+                <b>Đã thanh toán.</b>{' '}
+                {row.ready ? 'Hoa đã sẵn sàng tại tủ.' : 'Shop đang chuẩn bị hoa.'}
+              </span>
+            </p>
+          )}
+          <span>
+            {paying
+              ? 'Số tiền cần thanh toán'
+              : quoting
+                ? 'Tổng báo giá'
+                : hasPrice
+                  ? 'Giá đã chốt'
+                  : 'Báo giá'}
+          </span>
+          <strong>{hasPrice ? money(row.quotedPrice!) : 'Chưa có báo giá'}</strong>
+          {quoting && <p>Đồng ý báo giá trước, thanh toán sau.</p>}
+          {paying && <p>Chọn “Thanh toán ngay” để thanh toán qua PayOS ngay tại đây.</p>}
+          {!quoting && !paying && row.orderStatus !== 'PAID' && <p>{customerOrderHint(row)}</p>}
+        </div>
+        <PreorderAccessories row={row} compact />
+        {(quoting || paying) && (
+          <dl className={styles.quoteFacts}>
             <div className={styles.quoteDeadline}>
               <dt>
                 <Clock size={14} aria-hidden="true" />
@@ -75,33 +105,32 @@ export function CustomerQuoteDetails({ row, now }: { row: WebOrder; now: number 
               </dt>
               <dd>{time(deadline)}</dd>
             </div>
-          )}
-        </dl>
-        {row.quoteNote && (
-          <div className={styles.quoteNote}>
-            <strong>Ghi chú của shop</strong>
-            <p>{row.quoteNote}</p>
-          </div>
+          </dl>
+        )}
+        {quoting && !hasPrice && (
+          <p role="alert" className={styles.expiry}>
+            Báo giá chưa có số tiền hợp lệ. Hãy liên hệ shop để kiểm tra trước khi xác nhận.
+          </p>
+        )}
+        {expired && (
+          <p role="note" className={styles.expiry}>
+            {quoting
+              ? 'Báo giá đã hết hạn. Hãy liên hệ shop để cập nhật giá và lịch nhận.'
+              : 'Đã hết hạn thanh toán của đơn này. Tải lại trang để kiểm tra trạng thái; không thanh toán bằng liên kết cũ.'}
+          </p>
         )}
       </div>
-      {quoting && !hasPrice && (
-        <p role="alert" className={styles.expiry}>
-          Báo giá chưa có số tiền hợp lệ. Hãy liên hệ shop để kiểm tra trước khi xác nhận.
-        </p>
-      )}
-      {expired && (
-        <p role="note" className={styles.expiry}>
-          {quoting
-            ? 'Báo giá đã hết hạn. Hãy liên hệ shop để cập nhật giá và lịch nhận.'
-            : 'Đã hết hạn thanh toán của đơn này. Làm mới để kiểm tra trạng thái; không thanh toán bằng liên kết cũ.'}
-        </p>
-      )}
+      <CustomerPickupGuide row={row} now={now} contactAction={pickupAction} />
       {row.instructions && (
         <details className={styles.originalRequest}>
-          <summary>Yêu cầu bạn đã gửi</summary>
+          <summary>
+            <span>Yêu cầu bạn đã gửi</span>
+            <ChevronDown size={16} aria-hidden="true" />
+          </summary>
           <p>{row.instructions}</p>
         </details>
       )}
+      <div className={styles.interaction}>{children}</div>
     </div>
   );
 }
@@ -123,13 +152,13 @@ export function CustomerPaymentReturn({
         {loading
           ? 'Đang kiểm tra trạng thái thanh toán của đơn…'
           : failed
-            ? 'Chưa kiểm tra được thanh toán. Chọn Làm mới để thử lại.'
+            ? 'Chưa kiểm tra được thanh toán. Tải lại trang để thử lại.'
             : !row
-              ? 'Chưa tìm thấy đơn trong trang này. Kiểm tra danh sách đơn hoặc chọn Làm mới.'
+              ? 'Chưa tìm thấy đơn trong trang này. Kiểm tra danh sách đơn hoặc tải lại trang.'
               : confirmed
                 ? 'Thanh toán đã được hệ thống xác nhận. Xem lịch nhận và tiến độ đơn bên dưới.'
                 : row.orderStatus === 'AWAITING_PAYMENT'
-                  ? 'Hệ thống chưa xác nhận thanh toán. Nếu đã trả tiền, chờ cập nhật hoặc chọn Làm mới; đừng thanh toán lại ngay.'
+                  ? 'Hệ thống chưa xác nhận thanh toán. Nếu đã trả tiền, chờ cập nhật hoặc tải lại trang; đừng thanh toán lại ngay.'
                   : `Trạng thái hiện tại: ${statusName(row)}. Xem chi tiết đơn bên dưới.`}
       </p>
     </div>

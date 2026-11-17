@@ -21,11 +21,22 @@ const STRIP_REQUEST_HEADERS = new Set([
   'expect',
 ]);
 
+const qualityEvidencePath =
+  /^\/api\/(receipts\/complaints|me\/complaints|admin\/quality-complaints|staff\/quality-complaints)\/[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}\/evidence\/[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i;
+
 async function handleProxy(req: NextRequest, context: { params: Promise<{ path?: string[] }> }) {
   try {
     const { path = [] } = await context.params;
     const search = req.nextUrl.search || '';
-    const targetUrl = `${apiOrigin}/api/${path.map(encodeURIComponent).join('/')}${search}`;
+    const apiPath = `/api/${path.map(encodeURIComponent).join('/')}`;
+    const qualityEvidence = qualityEvidencePath.exec(apiPath);
+    if (/(?:quality-complaints|(?:receipts|me)\/complaints)\/.*\/evidence(?:\/|$)/i.test(apiPath)) {
+      if (!qualityEvidence || search) return new Response(null, { status: 404 });
+      const allowed = qualityEvidence[1].toLowerCase() === 'receipts/complaints' ? 'POST' : 'GET';
+      if (req.method !== allowed)
+        return new Response(null, { status: 405, headers: { Allow: allowed } });
+    }
+    const targetUrl = `${apiOrigin}${apiPath}${search}`;
 
     const headers = new Headers();
     req.headers.forEach((value, key) => {
@@ -39,6 +50,10 @@ async function handleProxy(req: NextRequest, context: { params: Promise<{ path?:
       }
     });
     headers.set('origin', apiOrigin);
+    if (qualityEvidence?.[1].toLowerCase() === 'receipts/complaints') {
+      headers.delete('cookie');
+      headers.delete('authorization');
+    }
 
     const method = req.method.toUpperCase();
     const hasBody = method !== 'GET' && method !== 'HEAD';
@@ -53,6 +68,8 @@ async function handleProxy(req: NextRequest, context: { params: Promise<{ path?:
     });
 
     const responseHeaders = new Headers();
+    if (qualityEvidence && upstream.status >= 300 && upstream.status < 400)
+      return new Response(null, { status: 502, headers: { 'Cache-Control': 'no-store' } });
     upstream.headers.forEach((value, key) => {
       const lower = key.toLowerCase();
       if (

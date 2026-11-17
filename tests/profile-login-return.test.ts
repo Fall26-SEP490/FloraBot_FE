@@ -63,3 +63,14 @@ it('returns a customer to the exact kiosk support page without allowing external
     ),
   ).toBe('/tai-khoan');
 });
+it('preserves the selected purchase and list page after signing in', () => {
+  const target =
+    '/tai-khoan?requestId=purchase-90000000-0000-0000-0000-000000000001&page=2#web-orders';
+  expect(postLoginPath('CUSTOMER', '?returnUrl=' + encodeURIComponent(target))).toBe(target);
+  expect(
+    postLoginPath(
+      'CUSTOMER',
+      '?returnUrl=' + encodeURIComponent(target.replace('page=2', 'page=2&page=3')),
+    ),
+  ).toBe('/tai-khoan');
+});

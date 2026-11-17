@@ -57,6 +57,7 @@ function SiteHeader() {
       '/dat-lai-mat-khau',
       '/admin/login',
       '/receipt',
+      '/phan-anh',
       '/lich-su-mua',
     ].includes(pathname),
     retryOnMount: false,
@@ -291,17 +292,11 @@ const SiteFooter = memo(function SiteFooter() {
             <Link href="/chinh-sach-rieng-tu" prefetch={false}>
               Chính sách riêng tư
             </Link>
-            <Link href="/lich-su-mua" prefetch={false}>
-              Biên nhận đã lưu
-            </Link>
           </nav>
         </div>
         <div className="footer-col">
           <h3 className="footer-heading">Dành cho shop</h3>
           <nav aria-label="Dành cho đối tác shop">
-            <Link href="/tai-khoan" prefetch={false}>
-              Tài khoản của bạn
-            </Link>
             <Link href="/thue-kiosk" prefetch={false}>
               Thuê tủ kiosk
             </Link>

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Layout from '@/features/marketing/MarketingLayout';
 import { HelpCircle, MapPin, Package, ShieldCheck, Store } from '@florabot/ui';
+import { orderReturnPath } from '@/features/orders/order-navigation';
 
 export const metadata = {
   title: 'Liên hệ & hỗ trợ — FloraBot',
@@ -8,7 +9,17 @@ export const metadata = {
     'Theo dõi đơn, mở biên nhận để báo sự cố hoặc gửi yêu cầu tư vấn thuê tủ cho shop hoa.',
 };
 
-export default function LienHePage() {
+export default async function LienHePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ from?: string; orderCode?: string }>;
+}) {
+  const params = await searchParams;
+  const origin = orderReturnPath(typeof params.from === 'string' ? params.from : null);
+  const orderCode =
+    typeof params.orderCode === 'string' && /^[a-zA-Z0-9-]{1,80}$/.test(params.orderCode)
+      ? params.orderCode
+      : null;
   return (
     <Layout
       title="Liên hệ & hỗ trợ — FloraBot"
@@ -16,11 +27,21 @@ export default function LienHePage() {
     >
       <main id="main" className="content-page" tabIndex={-1}>
         <div className="guide-hero">
+          {origin && (
+            <Link className="text-link" href={origin}>
+              Quay lại đơn hàng
+            </Link>
+          )}
           <div className="guide-badge">
             <HelpCircle size={16} aria-hidden="true" />
             <span>Trung tâm hỗ trợ khách hàng & đối tác</span>
           </div>
           <h1>Bạn cần hỗ trợ điều gì?</h1>
+          {origin && orderCode && (
+            <p>
+              Hỗ trợ giao dịch <strong>{orderCode}</strong>.
+            </p>
+          )}
           <p>
             Chọn đúng khu vực hỗ trợ bên dưới để thông tin được chuyển thẳng đến bộ phận liên quan
             cùng mã đơn hoặc hồ sơ shop của bạn.
@@ -41,7 +62,7 @@ export default function LienHePage() {
               <div style={{ marginTop: 'auto', paddingTop: '0.75rem' }}>
                 <Link
                   className="button button-primary"
-                  href="/tai-khoan#web-orders"
+                  href={origin ?? '/tai-khoan#web-orders'}
                   style={{ width: '100%', fontSize: '0.85rem' }}
                 >
                   Mở đơn đặt trước

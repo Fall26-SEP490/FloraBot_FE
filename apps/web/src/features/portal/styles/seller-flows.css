@@ -32,20 +32,6 @@
     color: var(--seller-muted);
     font-size: 0.82rem;
   }
-  & .assignment-kind-note {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-    font-size: 0.8rem;
-  }
-  & .assignment-kind-note select {
-    width: auto;
-    min-width: 0;
-    background: #f4f7f1;
-    opacity: 1;
-    color: var(--seller-muted);
-  }
   & .assignment-form {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -374,13 +360,6 @@
     }
     & .seller-assignment > :not(summary) {
       margin: 16px;
-    }
-    & .assignment-kind-note {
-      display: block;
-    }
-    & .assignment-kind-note select {
-      width: 100%;
-      margin-top: 6px;
     }
     & .subscription-form {
       display: flex;

@@ -551,11 +551,6 @@
   box-shadow: 0 4px 12px rgba(23, 62, 44, 0.06);
 }
 
-.member-orders.customer-order-list > li details[open] summary {
-  border-bottom: 1px solid #e7eee5;
-  border-radius: 14px 14px 0 0;
-}
-
 .customer-order-list .order-status-pill {
   display: inline-flex;
   align-items: center;
@@ -580,6 +575,18 @@
   background: #eff6ff;
   color: #1e40af;
   border-color: #bfdbfe;
+}
+
+.customer-order-list .order-status-pill[data-status='DISPUTED'] {
+  background: #fff5e3;
+  color: #74450d;
+  border-color: #ecd5af;
+}
+
+.customer-order-list .order-status-pill[data-status='REFUNDED'] {
+  background: #f0f5ed;
+  color: #4c6656;
+  border-color: #dce7d8;
 }
 
 .customer-order-list

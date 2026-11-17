@@ -22,7 +22,7 @@ const receipt = {
 };
 
 for (const width of [390, 1440])
-  test(`Guest saves completed purchase explicitly and removes local history ${width}`, async ({
+  test(`Receipt never saves codes and legacy history remains removable at ${width}`, async ({
     page,
     browser,
     baseURL,
@@ -36,20 +36,18 @@ for (const width of [390, 1440])
       return route.fulfill({ json: receipt });
     });
     await page.goto(`/receipt#order=${id}&token=${token}`);
-    await page.getByRole('button', { name: 'Xem biên nhận', exact: true }).click();
-    const save = page.getByRole('button', { name: 'Lưu vào lịch sử trên thiết bị' });
-    await expect(save).toBeDisabled();
+    await expect(page.getByRole('heading', { name: 'Đơn FB-GUEST-001' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Lưu vào lịch sử trên thiết bị' })).toHaveCount(
+      0,
+    );
+    await expect(page.getByRole('checkbox')).toHaveCount(0);
     expect(await page.evaluate((key) => localStorage.getItem(key), storageKey)).toBeNull();
-    await page.getByRole('checkbox', { name: /Đây là thiết bị riêng/ }).check();
-    await save.click();
-    await save.click();
-    expect(
-      await page.evaluate(
-        (key) => JSON.parse(localStorage.getItem(key) || '[]').length,
-        storageKey,
-      ),
-    ).toBe(1);
-    await page.getByRole('link', { name: 'Biên nhận đã lưu trên thiết bị này' }).click();
+    // Preserve access to records explicitly saved before the save control was removed.
+    await page.evaluate(({ key, item }) => localStorage.setItem(key, JSON.stringify([item])), {
+      key: storageKey,
+      item: { orderId: id, token, orderCode: receipt.orderCode, savedAt: receipt.createdAt },
+    });
+    await page.goto('/lich-su-mua');
     await expect(page.getByRole('link', { name: 'Xem đơn FB-GUEST-001' })).toBeVisible();
     await page.reload();
     await expect(page.getByRole('link', { name: 'Xem đơn FB-GUEST-001' })).toBeVisible();
@@ -67,8 +65,6 @@ for (const width of [390, 1440])
     await isolated.close();
     await page.getByRole('link', { name: 'Xem đơn FB-GUEST-001' }).click();
     await expect(page).toHaveURL(/\/receipt$/);
-    await expect(page.getByLabel('Mã tra cứu', { exact: true })).toHaveValue(token);
-    await page.getByRole('button', { name: 'Xem biên nhận', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Đơn FB-GUEST-001' })).toBeVisible();
     expect(lookups).toBe(2);
     await page.goto('/lich-su-mua');
@@ -83,7 +79,6 @@ test('Pending receipt cannot enter completed purchase history', async ({ page })
     route.fulfill({ json: { ...receipt, status: 'AWAITING_PAYMENT', completedAt: null } }),
   );
   await page.goto(`/receipt#order=${id}&token=${token}`);
-  await page.getByRole('button', { name: 'Xem biên nhận', exact: true }).click();
   await expect(page.getByText('Đang chờ thanh toán', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Lưu vào lịch sử trên thiết bị' })).toHaveCount(0);
   expect(await page.evaluate((key) => localStorage.getItem(key), storageKey)).toBeNull();

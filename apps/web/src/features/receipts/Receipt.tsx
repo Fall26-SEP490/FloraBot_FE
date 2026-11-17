@@ -1,15 +1,18 @@
-import { useEffect, useRef, useState } from 'react';
-import { Button } from '@florabot/ui';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
+import { ArrowLeft, Button, CheckCircle2, ChevronDown, CircleAlert, Clock } from '@florabot/ui';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
 import '../portal/styles/portal.css';
 import './styles/receipt.css';
 import RefundAccount from '../finance/components/refunds/RefundAccount';
 import ReceiptComplaint from './components/ReceiptComplaint';
-import { saveReceipt } from './receipts.utils';
+import ReceiptPaper from './components/ReceiptPaper';
+import ComplaintOrderSummary from './components/ComplaintOrderSummary';
+import CustomerComplaintProgress from '../complaints/CustomerComplaintProgress';
+import ReceiptContextLink from './components/ReceiptContextLink';
+import { readReceiptContext, rememberReceiptContext } from './receipt-navigation';
+import type { ReceiptContext } from './receipt-navigation';
 
 type ReceiptData = components['schemas']['ReceiptResponse'];
-const money = (amount: number | string) =>
-  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(amount));
 const date = (value: string) =>
   new Date(value).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
 const statuses: Record<string, string> = {
@@ -24,39 +27,57 @@ const statuses: Record<string, string> = {
   EXPIRED: 'Đã hết hạn',
 };
 
-export default function Receipt() {
-  const [initial] = useState(() => new URLSearchParams(window.location.hash.slice(1)));
-  const [orderId, setOrderId] = useState(initial.get('order') || '');
-  const [token, setToken] = useState(initial.get('token') || '');
+export default function Receipt({ complaintOnly = false }: { complaintOnly?: boolean }) {
+  const [context, setContext] = useState(readReceiptContext);
+  useEffect(() => {
+    const sync = () => setContext(readReceiptContext());
+    window.addEventListener('hashchange', sync);
+    window.addEventListener('popstate', sync);
+    return () => {
+      window.removeEventListener('hashchange', sync);
+      window.removeEventListener('popstate', sync);
+    };
+  }, []);
+  return (
+    <ReceiptContent
+      key={JSON.stringify([complaintOnly, context])}
+      complaintOnly={complaintOnly}
+      initial={context}
+    />
+  );
+}
+
+function ReceiptContent({
+  complaintOnly,
+  initial,
+}: {
+  complaintOnly: boolean;
+  initial: ReceiptContext;
+}) {
+  const [orderId, setOrderId] = useState(initial.orderId);
+  const [token, setToken] = useState(initial.token);
+  const [openingLink, setOpeningLink] = useState(() =>
+    Boolean(initial.orderId.trim() && initial.token.trim()),
+  );
   const [receipt, setReceipt] = useState<ReceiptData | null>(null);
   const [receiptRevision, setReceiptRevision] = useState(0);
+  const [receiptCheckedAt, setReceiptCheckedAt] = useState(0);
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
-  const [personalDevice, setPersonalDevice] = useState(false);
-  const [saveNotice, setSaveNotice] = useState('');
+  const orderOrigin = orderId.trim() === initial.orderId.trim() ? initial.returnTo : null;
   const controller = useRef<AbortController | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
-  useEffect(() => {
-    const previous = document.title;
-    document.title = 'Biên nhận của bạn — FloraBot';
-    // Remove the capability from navigation history; saving requires explicit consent.
-    window.history.replaceState(window.history.state, '', window.location.pathname);
-    initial.delete('order');
-    initial.delete('token');
-    return () => {
-      document.title = previous;
-      controller.current?.abort();
-    };
-  }, [initial]);
+  const complaintStatus = useRef<HTMLDivElement>(null);
   const displayedReceiptId = receipt?.orderId;
+  const complaintAllowed = Boolean(receipt?.canComplain && !receipt.hasComplaint);
   useEffect(() => {
-    if (displayedReceiptId) heading.current?.focus();
-  }, [displayedReceiptId]);
+    if (!displayedReceiptId) return;
+    if (!complaintOnly) heading.current?.focus();
+    else if (!complaintAllowed) complaintStatus.current?.focus();
+  }, [displayedReceiptId, complaintOnly, complaintAllowed]);
 
   async function lookup(preserveReceipt = false): Promise<ReceiptData | null> {
     if (!preserveReceipt) {
-      setSaveNotice('');
-      setPersonalDevice(false);
       setReceipt(null);
     }
     setError('');
@@ -70,6 +91,7 @@ export default function Receipt() {
       return null;
     }
     controller.current?.abort();
+    rememberReceiptContext({ orderId, token, returnTo: orderOrigin });
     const active = new AbortController();
     controller.current = active;
     setPending(true);
@@ -97,6 +119,7 @@ export default function Receipt() {
       const result = (await response.json()) as ReceiptData;
       if (!active.signal.aborted) {
         setReceipt(result);
+        setReceiptCheckedAt(Date.now());
         setReceiptRevision((value) => value + 1);
         return result;
       }
@@ -113,263 +136,353 @@ export default function Receipt() {
     return null;
   }
 
+  const openLinkedReceipt = useEffectEvent(async () => {
+    if (!openingLink) return;
+    await lookup();
+    setOpeningLink(false);
+  });
+
+  useEffect(() => {
+    const previous = document.title;
+    document.title = complaintOnly
+      ? 'Phản ánh chất lượng hoa — FloraBot'
+      : 'Biên nhận của bạn — FloraBot';
+    rememberReceiptContext(initial);
+    let mounted = true;
+    // Wait for the current effect setup to survive React's development cleanup.
+    queueMicrotask(() => {
+      if (mounted) void openLinkedReceipt();
+    });
+    return () => {
+      mounted = false;
+      document.title = previous;
+      controller.current?.abort();
+    };
+  }, [initial, complaintOnly]);
+
+  const complaintExpired = Boolean(
+    receipt &&
+    !receipt.canComplain &&
+    receipt.disputeDeadline &&
+    Date.parse(receipt.disputeDeadline) <= receiptCheckedAt,
+  );
+
   return (
-    <main id="main" className="receipt-page">
+    <main
+      id="main"
+      className={complaintOnly ? 'receipt-page complaint-page' : 'receipt-page receipt-view'}
+    >
       <header className="receipt-heading">
-        <h1>Biên nhận của bạn</h1>
-        <p>Xem thông tin đơn, trạng thái nhận hoa và khoản hoàn.</p>
-        <a href="/lich-su-mua">Biên nhận đã lưu trên thiết bị này</a>
+        {orderOrigin ? (
+          <a href={orderOrigin} className="complaint-back" referrerPolicy="no-referrer">
+            <ArrowLeft size={16} aria-hidden="true" />
+            Quay lại đơn hàng
+          </a>
+        ) : complaintOnly && orderId && token ? (
+          <ReceiptContextLink
+            to="/receipt"
+            orderId={orderId}
+            trackingToken={token}
+            returnTo={null}
+            className="complaint-back"
+          >
+            <ArrowLeft size={16} aria-hidden="true" /> Quay lại biên nhận
+          </ReceiptContextLink>
+        ) : null}
+        <h1>{complaintOnly ? 'Phản ánh chất lượng hoa' : 'Biên nhận của bạn'}</h1>
+        <p>
+          {complaintOnly
+            ? 'Gửi tình trạng bó hoa bạn đã nhận để shop kiểm tra và hỗ trợ.'
+            : 'Xem thông tin đơn, trạng thái nhận hoa và khoản hoàn.'}
+        </p>
       </header>
-      <details className="receipt-lookup" open={!receipt || undefined}>
-        <summary>
-          {receipt ? 'Tra cứu lại hoặc cập nhật biên nhận' : 'Tra cứu bằng mã biên nhận'}
-        </summary>
-        <p className="quiet">
-          Nhập hai mã từ kiosk hoặc liên kết biên nhận trong đơn hàng. Mã tra cứu không phải OTP
-          nhận hoa trong email.
+      {complaintOnly && openingLink && (
+        <p role="status">
+          {complaintOnly ? 'Đang kiểm tra điều kiện phản ánh…' : 'Đang mở biên nhận…'}
         </p>
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            void lookup();
-          }}
-          aria-label="Tra cứu biên nhận"
+      )}
+      {!complaintOnly && (
+        <section
+          className="receipt-lookup"
+          aria-labelledby="receipt-lookup-title"
+          aria-busy={pending || openingLink}
         >
-          <label htmlFor="receipt-order">ID biên nhận</label>
-          <input
-            id="receipt-order"
-            value={orderId}
-            onChange={(event) => {
-              setOrderId(event.target.value);
-              setReceipt(null);
-            }}
-            autoComplete="off"
-            spellCheck={false}
-            maxLength={36}
-            readOnly={pending}
-            aria-describedby="receipt-help receipt-error"
-          />
-          <p className="quiet" id="receipt-help">
-            Dãy 36 ký tự tại kiosk, khác với mã đơn hàng. Quét QR để điền sẵn cả hai mã.
+          <h2 id="receipt-lookup-title">Tra cứu biên nhận</h2>
+          <p className="quiet">
+            Nhập hai mã từ kiosk hoặc liên kết biên nhận trong đơn hàng. Mã tra cứu không phải OTP
+            nhận hoa trong email.
           </p>
-          <label htmlFor="receipt-token">Mã tra cứu</label>
-          <input
-            id="receipt-token"
-            value={token}
-            onChange={(event) => {
-              setToken(event.target.value);
-              setReceipt(null);
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              void lookup();
             }}
-            autoComplete="off"
-            autoCapitalize="characters"
-            spellCheck={false}
-            maxLength={8}
-            readOnly={pending}
-            aria-describedby="receipt-error"
-          />
-          <p id="receipt-error" role="alert" className="error">
-            {!receipt && error}
-          </p>
-          <div className="receipt-actions">
-            <Button type="submit" disabled={pending}>
-              {pending ? 'Đang tra cứu…' : 'Xem biên nhận'}
-            </Button>
-            {pending && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  controller.current?.abort();
-                  setPending(false);
-                  setError('');
-                  document.getElementById('receipt-order')?.focus();
-                }}
-              >
-                Hủy tra cứu
+            aria-label="Tra cứu biên nhận"
+          >
+            <label htmlFor="receipt-order">ID biên nhận</label>
+            <input
+              id="receipt-order"
+              value={orderId}
+              onChange={(event) => {
+                setOrderId(event.target.value);
+                setReceipt(null);
+              }}
+              autoComplete="off"
+              spellCheck={false}
+              maxLength={36}
+              readOnly={pending || openingLink}
+              aria-describedby="receipt-help receipt-error"
+            />
+            <p className="quiet" id="receipt-help">
+              Dãy 36 ký tự tại kiosk, khác với mã đơn hàng.
+            </p>
+            <label htmlFor="receipt-token">Mã tra cứu</label>
+            <input
+              id="receipt-token"
+              value={token}
+              onChange={(event) => {
+                setToken(event.target.value);
+                setReceipt(null);
+              }}
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              maxLength={8}
+              readOnly={pending || openingLink}
+              aria-describedby="receipt-error"
+            />
+            <p id="receipt-error" role="alert" className="error">
+              {!receipt && error}
+            </p>
+            <div className="receipt-actions">
+              <Button type="submit" disabled={pending || openingLink}>
+                {pending ? 'Đang tra cứu…' : 'Xem biên nhận'}
               </Button>
-            )}
-          </div>
-        </form>
-        <p className="quiet receipt-privacy">
-          Giữ riêng hai mã: người có cả hai mã có thể xem và gửi yêu cầu cho đơn này. Chỉ lưu biên
-          nhận trên thiết bị riêng của bạn.
-        </p>
-      </details>
+              {pending && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    controller.current?.abort();
+                    setPending(false);
+                    setError('');
+                    document.getElementById('receipt-order')?.focus();
+                  }}
+                >
+                  Hủy tra cứu
+                </Button>
+              )}
+            </div>
+          </form>
+          <p className="quiet receipt-privacy">
+            Giữ riêng hai mã: người có cả hai mã có thể xem và gửi yêu cầu cho đơn này.
+          </p>
+        </section>
+      )}
+      {!complaintOnly && !receipt && (
+        <div className="receipt-preview-placeholder">
+          {openingLink || pending ? (
+            <p role="status">Đang mở biên nhận…</p>
+          ) : (
+            <>
+              <h2>Biên nhận sẽ hiển thị tại đây</h2>
+              <p>Nhập ID biên nhận và mã tra cứu để xem thông tin đơn hoa.</p>
+            </>
+          )}
+        </div>
+      )}
+      {complaintOnly && !openingLink && !receipt && (
+        <div className="complaint-state">
+          {error ? (
+            <>
+              <h2>Chưa tải được thông tin đơn</h2>
+              <p role="alert">{error}</p>
+              <Button disabled={pending} onClick={() => void lookup()}>
+                {pending ? 'Đang kiểm tra…' : 'Thử lại'}
+              </Button>
+            </>
+          ) : (
+            <>
+              <h2>Chọn đơn cần phản ánh</h2>
+              <p>Chọn đơn đã nhận hoa trong tài khoản hoặc dùng mã biên nhận nếu mua tại kiosk.</p>
+              <div className="receipt-actions">
+                <Button asChild>
+                  <a href="/tai-khoan#web-orders">Xem đơn hàng</a>
+                </Button>
+                <Button asChild variant="outline">
+                  <a href="/receipt">Tra cứu bằng mã biên nhận</a>
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
       {receipt && (
         <section className="receipt-result" aria-labelledby="receipt-result">
-          <div className="receipt-result-heading">
-            <h2 id="receipt-result" ref={heading} tabIndex={-1}>
-              Đơn {receipt.orderCode}
-            </h2>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={pending}
-              onClick={() => void lookup(true)}
-            >
-              Cập nhật trạng thái
-            </Button>
-          </div>
           {error && (
             <p role="alert" className="error">
               {error}
             </p>
           )}
-          <p className="receipt-status" data-status={receipt.status}>
-            {statuses[receipt.status] || 'Đang cập nhật trạng thái'}
-          </p>
-          <p>Đặt lúc {date(receipt.createdAt)}</p>
-          {['PAID', 'DISPENSING'].includes(receipt.status) && receipt.items.length > 0 && (
-            <details className="receipt-recovery">
-              <summary>Mã tra cứu khi cần hỗ trợ tại kiosk</summary>
-              <p>
-                Hai mã này khác với OTP nhận đơn đặt trước trong email. Chỉ nhập khi màn hình kiosk
-                yêu cầu tại mục “Đã thanh toán nhưng chưa nhận hoa?”. Biên nhận không xác nhận hoa
-                đã sẵn sàng hoặc tủ đã mở.
-              </p>
-              <dl className="receipt-totals" aria-label="Mã nhận hoa tại Kiosk">
-                <div>
-                  <dt>ID biên nhận (nhập tại Kiosk)</dt>
-                  <dd>
-                    <code>{receipt.orderId}</code>
-                  </dd>
-                </div>
-                <div>
-                  <dt>Mã biên nhận 8 ký tự</dt>
-                  <dd>
-                    <strong>{token.trim().toUpperCase()}</strong>
-                  </dd>
-                </div>
-              </dl>
-            </details>
-          )}
-          <h3>Chi tiết tiền hàng</h3>
-          <ul className="receipt-items">
-            {receipt.items.map((item, index) => (
-              <li key={index}>
-                <strong>{item.name}</strong>
-                <span>
-                  {item.quantity} × {money(item.unitPrice)}
-                </span>
-                <span>{money(item.total)}</span>
-              </li>
-            ))}
-          </ul>
-          <dl className="receipt-totals" aria-label="Tiền hàng và khoản hoàn">
-            <div>
-              <dt>Tiền hàng</dt>
-              <dd>{money(receipt.subtotal)}</dd>
-            </div>
-            <div>
-              <dt>Giảm giá</dt>
-              <dd>{money(receipt.discount)}</dd>
-            </div>
-            <div>
-              <dt>Tổng đơn</dt>
-              <dd>
-                <strong>{money(receipt.total)}</strong>
-              </dd>
-            </div>
-            <div>
-              <dt>Hoàn tiền đang chờ</dt>
-              <dd>{money(receipt.refunds.pendingAmount)}</dd>
-            </div>
-            <div>
-              <dt>Đã hoàn</dt>
-              <dd>{money(receipt.refunds.paidAmount)}</dd>
-            </div>
-          </dl>
-          {Number(receipt.refunds.pendingAmount) > 0 && (
-            <p>
-              {receipt.refundInformationProvided
-                ? 'Đã nhận thông tin tài khoản hoàn tiền. Khoản hoàn đang chờ được xử lý.'
-                : 'Khoản hoàn đang chờ thông tin tài khoản nhận tiền.'}
-            </p>
-          )}
-          {Number(receipt.refunds.pendingAmount) > 0 && (
-            <RefundAccount
-              orderId={receipt.orderId}
-              trackingToken={token.trim().toUpperCase()}
-              provided={receipt.refundInformationProvided}
-              onSaved={() =>
-                setReceipt((current) =>
-                  current ? { ...current, refundInformationProvided: true } : null,
-                )
-              }
+          {complaintOnly ? (
+            <ComplaintOrderSummary
+              receipt={receipt}
+              status={statuses[receipt.status] || 'Đang cập nhật trạng thái'}
+              headingRef={heading}
+              pending={pending}
+              onRefresh={() => void lookup(true)}
+              trackingToken={token}
+              returnTo={orderOrigin}
             />
-          )}
-          {receipt.completedAt && <p>Nhận hoa lúc {date(receipt.completedAt)}.</p>}
-          {receipt.completedAt && (
-            <section aria-labelledby="save-receipt-title">
-              <h3 id="save-receipt-title">Lưu biên nhận trên thiết bị riêng</h3>
-              <p>
-                Lưu biên nhận để xem lại mà không cần đăng nhập. Chỉ lưu trên điện thoại hoặc thiết
-                bị riêng của bạn.
-              </p>
-              <label className="receipt-save-consent">
-                <input
-                  type="checkbox"
-                  checked={personalDevice}
-                  onChange={(event) => setPersonalDevice(event.target.checked)}
-                />{' '}
-                Đây là thiết bị riêng của tôi; tôi đồng ý lưu mã tra cứu tại đây.
-              </label>
-              <Button
-                disabled={!personalDevice}
-                onClick={() => {
-                  try {
-                    saveReceipt({
-                      orderId: receipt.orderId,
-                      token: token.trim().toUpperCase(),
-                      orderCode: receipt.orderCode,
-                      savedAt: new Date().toISOString(),
-                    });
-                    setSaveNotice('Đã lưu. Bạn có thể xem lại trong Biên nhận đã lưu.');
-                  } catch (cause) {
-                    setSaveNotice(
-                      cause instanceof Error && cause.name === 'Error'
-                        ? cause.message
-                        : 'Không lưu được trên thiết bị này. Giữ mã QR để tra cứu lại.',
-                    );
-                  }
-                }}
-              >
-                Lưu vào lịch sử trên thiết bị
-              </Button>
-              <p role="status">{saveNotice}</p>
-            </section>
-          )}
-          {receipt.hasComplaint ? (
-            <p role="status">Đã ghi nhận phản ánh cho đơn này.</p>
-          ) : receipt.canComplain && receipt.disputeDeadline ? (
-            <p>Bạn có thể gửi phản ánh trước {date(receipt.disputeDeadline)}.</p>
           ) : (
-            receipt.disputeDeadline && <p>Đã hết thời hạn gửi phản ánh cho đơn này.</p>
+            <>
+              <ReceiptPaper
+                receipt={receipt}
+                status={statuses[receipt.status] || 'Đang cập nhật trạng thái'}
+                headingRef={heading}
+              />
+              <div className="receipt-actions receipt-paper-actions">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={pending}
+                  onClick={() => void lookup(true)}
+                >
+                  {pending ? 'Đang cập nhật…' : 'Cập nhật trạng thái'}
+                </Button>
+                {(receipt.status === 'COMPLETED' || receipt.hasComplaint) && (
+                  <Button asChild variant="outline">
+                    <ReceiptContextLink
+                      to="/phan-anh"
+                      orderId={receipt.orderId}
+                      trackingToken={token}
+                      returnTo={orderOrigin}
+                    >
+                      <CircleAlert size={16} aria-hidden="true" />
+                      {receipt.hasComplaint ? 'Theo dõi phản ánh' : 'Phản ánh về hoa'}
+                    </ReceiptContextLink>
+                  </Button>
+                )}
+              </div>
+              {['PAID', 'DISPENSING'].includes(receipt.status) && receipt.items.length > 0 && (
+                <details className="receipt-recovery">
+                  <summary>
+                    <span>Mã tra cứu khi cần hỗ trợ tại kiosk</span>
+                    <ChevronDown size={18} aria-hidden="true" />
+                  </summary>
+                  <p>
+                    Hai mã này khác với OTP nhận đơn đặt trước trong email. Chỉ nhập khi màn hình
+                    kiosk yêu cầu tại mục “Đã thanh toán nhưng chưa nhận hoa?”. Biên nhận không xác
+                    nhận hoa đã sẵn sàng hoặc tủ đã mở.
+                  </p>
+                  <dl className="receipt-totals" aria-label="Mã nhận hoa tại Kiosk">
+                    <div>
+                      <dt>ID biên nhận (nhập tại Kiosk)</dt>
+                      <dd>
+                        <code>{receipt.orderId}</code>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Mã biên nhận 8 ký tự</dt>
+                      <dd>
+                        <strong>{token.trim().toUpperCase()}</strong>
+                      </dd>
+                    </div>
+                  </dl>
+                </details>
+              )}
+              {Number(receipt.refunds.pendingAmount) > 0 && (
+                <>
+                  <p>
+                    {receipt.refundInformationProvided
+                      ? 'Đã nhận thông tin tài khoản hoàn tiền. Khoản hoàn đang chờ được xử lý.'
+                      : 'Khoản hoàn đang chờ thông tin tài khoản nhận tiền.'}
+                  </p>
+                  <RefundAccount
+                    orderId={receipt.orderId}
+                    trackingToken={token.trim().toUpperCase()}
+                    provided={receipt.refundInformationProvided}
+                    onSaved={() =>
+                      setReceipt((current) =>
+                        current ? { ...current, refundInformationProvided: true } : null,
+                      )
+                    }
+                  />
+                </>
+              )}
+            </>
           )}
-          {
-            <ReceiptComplaint
-              key={receipt.orderId}
-              orderId={receipt.orderId}
-              canComplain={receipt.canComplain && !receipt.hasComplaint}
-              receiptRevision={receiptRevision}
-              trackingToken={token.trim().toUpperCase()}
-              onCheckReceipt={async () => {
-                const fresh = await lookup(true);
-                return !!fresh && fresh.canComplain && !fresh.hasComplaint;
-              }}
-              onSaved={() =>
-                setReceipt((current) =>
-                  current
-                    ? { ...current, status: 'DISPUTED', canComplain: false, hasComplaint: true }
-                    : null,
-                )
+          {complaintOnly && (
+            <div className="complaint-work-panel">
+              <div
+                ref={complaintStatus}
+                tabIndex={-1}
+                className={!complaintAllowed ? 'complaint-state' : 'complaint-policy'}
+                data-state={
+                  receipt.hasComplaint ? 'reported' : complaintExpired ? 'expired' : undefined
+                }
+              >
+                {receipt.hasComplaint ? (
+                  <>
+                    <CheckCircle2 size={28} aria-hidden="true" />
+                    <h3>Đã gửi phản ánh</h3>
+                    <p role="status">Đã ghi nhận phản ánh cho đơn này.</p>
+                  </>
+                ) : receipt.canComplain && receipt.disputeDeadline ? (
+                  <p>Bạn có thể gửi phản ánh trước {date(receipt.disputeDeadline)}.</p>
+                ) : complaintExpired ? (
+                  <>
+                    <Clock size={28} aria-hidden="true" />
+                    <h3>Đã hết hạn phản ánh</h3>
+                    <p role="status">Hạn gửi: {date(receipt.disputeDeadline!)}.</p>
+                    {orderOrigin && (
+                      <a className="complaint-state-link" href={orderOrigin}>
+                        Về đơn hàng để nhắn shop
+                      </a>
+                    )}
+                  </>
+                ) : !receipt.canComplain ? (
+                  <>
+                    <CircleAlert size={28} aria-hidden="true" />
+                    <h3>Chưa thể gửi phản ánh</h3>
+                    <p role="status">
+                      {receipt.status !== 'COMPLETED'
+                        ? 'Chỉ có thể gửi phản ánh chất lượng sau khi đơn đã nhận hoa.'
+                        : 'Đơn này hiện chưa được hệ thống cho phép gửi phản ánh chất lượng hoa.'}
+                    </p>
+                  </>
+                ) : null}
+              </div>
+              {receipt.hasComplaint && (
+                <CustomerComplaintProgress
+                  key={receipt.orderId}
+                  orderId={receipt.orderId}
+                  trackingToken={token.trim().toUpperCase()}
+                />
+              )}
+              {
+                <ReceiptComplaint
+                  key={receipt.orderId}
+                  orderId={receipt.orderId}
+                  canComplain={receipt.canComplain && !receipt.hasComplaint}
+                  receiptRevision={receiptRevision}
+                  initiallyOpen
+                  trackingToken={token.trim().toUpperCase()}
+                  onCheckReceipt={async () => {
+                    const fresh = await lookup(true);
+                    return !!fresh && fresh.canComplain && !fresh.hasComplaint;
+                  }}
+                  onSaved={() =>
+                    setReceipt((current) =>
+                      current
+                        ? { ...current, status: 'DISPUTED', canComplain: false, hasComplaint: true }
+                        : null,
+                    )
+                  }
+                />
               }
-            />
-          }
-          <p className="quiet">
-            Mở “Tra cứu lại hoặc cập nhật biên nhận”, rồi chọn “Xem biên nhận” để tải trạng thái mới
-            nhất.
-          </p>
+            </div>
+          )}
         </section>
       )}
     </main>

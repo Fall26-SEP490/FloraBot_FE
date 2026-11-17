@@ -21,23 +21,26 @@ export function postLoginPath(role: string, search: string): string {
       const params = new URLSearchParams(account[1] ?? '');
       const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (
-        [...params.keys()].every(
-          (key) =>
-            params.getAll(key).length === 1 &&
-            ((['requestId', 'chat'].includes(key) && uuidPattern.test(params.get(key) ?? '')) ||
-              (key === 'page' && /^[1-9]\d{0,4}$/.test(params.get(key) ?? '')) ||
-              (key === 'filter' &&
-                [
-                  'all',
-                  'attention',
-                  'requested',
-                  'quoted',
-                  'payment',
-                  'preparing',
-                  'ready',
-                  'closed',
-                ].includes(params.get(key) ?? ''))),
-        )
+        [...params.keys()].every((key) => {
+          if (params.getAll(key).length !== 1) return false;
+          const value = params.get(key) ?? '';
+          if (key === 'requestId') return uuidPattern.test(value.replace(/^purchase-/, ''));
+          return (
+            (key === 'chat' && uuidPattern.test(value)) ||
+            (key === 'page' && /^[1-9]\d{0,4}$/.test(value)) ||
+            (key === 'filter' &&
+              [
+                'all',
+                'attention',
+                'requested',
+                'quoted',
+                'payment',
+                'preparing',
+                'ready',
+                'closed',
+              ].includes(value))
+          );
+        })
       )
         return target;
     }

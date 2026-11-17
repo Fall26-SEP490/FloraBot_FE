@@ -181,7 +181,6 @@ for (const width of [390, 1440]) {
     await page.getByRole('link', { name: 'Quay lại đơn đặt trước', exact: true }).click();
     await expect(page).toHaveURL(origin);
     await expect(page.locator('#preorder-request-1')).toHaveAttribute('open', '');
-    await expect(page.getByLabel('Lọc yêu cầu trong trang')).toHaveValue('ready');
     expect(state.writes).toEqual([]);
   });
 }

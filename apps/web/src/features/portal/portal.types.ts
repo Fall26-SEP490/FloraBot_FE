@@ -1,6 +1,7 @@
 export type PortalScreen =
   | 'admin-login'
   | 'receipt'
+  | 'complaint'
   | 'guest-history'
   | 'login'
   | 'register'

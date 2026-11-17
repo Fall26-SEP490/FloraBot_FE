@@ -5,6 +5,8 @@ export type Task = {
   id: string;
   incidentId?: string | null;
   kind: string;
+  workType?: string | null;
+  complaintId?: string | null;
   status: string;
   version: number;
   assigneeName: string;
