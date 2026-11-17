@@ -117,7 +117,9 @@ test('Admin recovers read errors and paginates without closing incidents', async
   await expect(section.getByText('Trang 2', { exact: true })).toBeVisible();
   await section.getByRole('button', { name: 'Trang sự cố trước' }).click();
   await section.locator('summary').click();
-  await expect(section.getByText('Chưa có ảnh đính kèm.')).toBeVisible();
+  await expect(
+    section.getByText('Phiếu chưa có ảnh báo sự cố hoặc ảnh công việc được liên kết.'),
+  ).toBeVisible();
   await expect(section.locator('form')).toHaveCount(0);
 });
 

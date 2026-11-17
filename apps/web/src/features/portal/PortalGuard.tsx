@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import { ApiError, sessionQuery } from '@/shared/lib/api';
@@ -50,7 +51,18 @@ export function PortalGuard({
       <main id="main" className="workspace">
         <h1>Chưa kết nối được FloraBot</h1>
         <p role="alert">Không tải được phiên làm việc. Kiểm tra kết nối rồi thử lại.</p>
-        <Button onClick={() => void session.refetch()}>Thử lại</Button>
+        <Button
+          disabled={session.isFetching}
+          aria-busy={session.isFetching}
+          onClick={() => void session.refetch()}
+        >
+          {session.isFetching ? 'Đang thử lại…' : 'Thử lại'}
+        </Button>
+        {isPlatformRole && (
+          <p>
+            <Link href="/admin/login">Về đăng nhập vận hành</Link>
+          </p>
+        )}
       </main>
     );
   return allowed ? <>{children}</> : null;

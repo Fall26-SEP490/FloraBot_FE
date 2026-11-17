@@ -14,7 +14,7 @@ type Incident = AdminIncidentResponse;
 type Detail = AdminIncidentDetail;
 type Page = AdminIncidentPage;
 
-function IncidentItem({ row }: { row: Incident }) {
+function IncidentItem({ row, hidden = false }: { row: Incident; hidden?: boolean }) {
   const [open, setOpen] = useState(false);
   const [evidencePage, setEvidencePage] = useState(1);
   const detail = useQuery({
@@ -25,14 +25,15 @@ function IncidentItem({ row }: { row: Incident }) {
       ),
     enabled: open,
   });
+  const incident = detail.data?.incident ?? row;
   return (
-    <li>
+    <li hidden={hidden}>
       <details onToggle={(event) => setOpen(event.currentTarget.open)}>
         <AdminDisclosureSummary
-          statusCode={row.status}
+          statusCode={incident.status}
           title={formatIncidentLabel(row)}
           meta={`${formatIncidentDate(row.createdAt)} · ${row.kind === 'DISPENSE_FAILED' ? 'Không giao được hoa' : 'Sự cố thiết bị'}`}
-          status={row.status === 'OPEN' ? 'Đang xử lý' : 'Đã giải quyết'}
+          status={incident.status === 'OPEN' ? 'Chưa đóng' : 'Đã giải quyết'}
         />
         {open && (
           <div className="incident-detail">
@@ -53,11 +54,13 @@ function IncidentItem({ row }: { row: Incident }) {
                 <p className="incident-text">{detail.data.incident.reason}</p>
                 <p className="quiet">Mã sự cố: {row.id}</p>
                 <h3>Ảnh minh chứng</h3>
-                <p className="quiet">
-                  Đường dẫn do người báo cung cấp, chưa xác minh nội dung. Ảnh mở ở tab mới.
-                </p>
+                {detail.data.evidence.items.length > 0 && (
+                  <p className="quiet">
+                    Gồm ảnh báo sự cố và ảnh công việc đã liên kết. Chọn ảnh để mở ở tab mới.
+                  </p>
+                )}
                 {detail.data.evidence.items.length === 0 ? (
-                  <p>Chưa có ảnh đính kèm.</p>
+                  <p>Phiếu chưa có ảnh báo sự cố hoặc ảnh công việc được liên kết.</p>
                 ) : (
                   <ul className="incident-evidence">
                     {detail.data.evidence.items.map((photo, index) => {
@@ -115,8 +118,8 @@ function IncidentItem({ row }: { row: Incident }) {
                 )}
                 {detail.data.incident.status === 'OPEN' ? (
                   <p className="quiet">
-                    Đang được theo dõi trong luồng vận hành. Quản lý vận hành tiếp nhận, phân công
-                    kỹ thuật viên và kiểm tra báo cáo. Admin xem tiến độ và ảnh minh chứng tại đây.
+                    Phiếu chưa đóng. Quản lý vận hành phụ trách tiếp nhận, phân công và nghiệm thu.
+                    Theo dõi công việc được giao tại mục Giám sát công việc.
                   </p>
                 ) : (
                   <>
@@ -141,6 +144,18 @@ function IncidentItem({ row }: { row: Incident }) {
 export default function AdminIncidents() {
   const [status, setStatus] = useState('OPEN');
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const normalizeSearch = (value: string) =>
+    value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/đ/g, 'd')
+      .replace(/[^a-z0-9]/g, '');
+  const matches = (row: Incident) =>
+    normalizeSearch(`${formatIncidentLabel(row)} ${row.reason} ${row.id}`).includes(
+      normalizeSearch(search.trim()),
+    );
   const queue = useQuery({
     queryKey: ['admin-incidents', status, page],
     queryFn: () => request<Page>(`/admin/incidents?status=${status}&page=${page}`),
@@ -183,6 +198,16 @@ export default function AdminIncidents() {
             <option value="RESOLVED_FIXED">Đã xử lý · mới nhất trước</option>
           </select>
         </div>
+        <div>
+          <label htmlFor="admin-incident-search">Tìm sự cố trong trang</label>
+          <input
+            id="admin-incident-search"
+            type="search"
+            value={search}
+            placeholder="Tên kiosk, ô tủ, nội dung hoặc mã sự cố"
+            onChange={(event) => setSearch(event.target.value)}
+          />
+        </div>
       </AdminFilterBar>
       {queue.isPending ? (
         <p role="status">Đang tải danh sách sự cố…</p>
@@ -199,9 +224,22 @@ export default function AdminIncidents() {
                 : 'Trang này không còn sự cố. Quay lại trang trước hoặc cập nhật danh sách.'}
             </p>
           )}
+          {queue.data.items.length > 0 && (
+            <p className="quiet" role="status">
+              {queue.data.items.filter(matches).length} / {queue.data.items.length} sự cố trong
+              trang {page}
+              {queue.data.hasMore ? ' · Còn trang tiếp theo' : ''}
+            </p>
+          )}
+          {search && queue.data.items.length > 0 && !queue.data.items.some(matches) && (
+            <p role="status">
+              Không có sự cố khớp tìm kiếm trong trang này. Xóa nội dung tìm kiếm hoặc chuyển trang
+              để xem thêm.
+            </p>
+          )}
           <ul className="admin-shop-list">
             {queue.data.items.map((row) => (
-              <IncidentItem key={row.id} row={row} />
+              <IncidentItem key={row.id} row={row} hidden={!matches(row)} />
             ))}
           </ul>
           <nav className="stock-actions" aria-label="Phân trang sự cố">

@@ -107,7 +107,7 @@ for (const width of [390, 1440])
     await expect(codeButton).toBeVisible();
     await expect(access.getByText('013582')).toHaveCount(0);
     await panel.locator('summary').click();
-    await panel.getByRole('button', { name: 'Kiểm tra kết quả xử lý' }).click();
+    await panel.getByRole('button', { name: 'Gửi lại báo cáo cùng mã thao tác' }).click();
     await expect(panel).toHaveCount(0);
     await expect(
       page.locator('article').getByText('Chờ duyệt báo cáo', { exact: true }),

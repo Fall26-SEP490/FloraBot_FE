@@ -27,6 +27,7 @@ async function installationFixture(page: Page, initialStatus = 'SCHEDULED') {
     loseAttachResponse: false,
     evidenceReadFailure: false,
     denySubmit: false,
+    loseStartResponse: false,
     denyList: false,
     denyDetail: false,
     loginBody: null as Record<string, string> | null,
@@ -126,6 +127,10 @@ async function installationFixture(page: Page, initialStatus = 'SCHEDULED') {
       if (path.endsWith('/start')) {
         expect(model.status).toBe('SCHEDULED');
         model.status = 'INSTALLING';
+        if (model.loseStartResponse) {
+          model.loseStartResponse = false;
+          return route.abort('connectionreset');
+        }
         return route.fulfill({ json: job() });
       }
       if (path.endsWith('/submit')) {
@@ -381,4 +386,38 @@ test('Invalid evidence does not upload and allows choosing a valid replacement',
     page.getByText('Đã tải lên và đính kèm ảnh test-installation.png thành công.'),
   ).toBeVisible();
   expect(model.uploadCount).toBe(1);
+});
+
+test('Installation report draft survives reload without submitting it', async ({ page }) => {
+  const model = await installationFixture(page, 'INSTALLING');
+  await page.goto('/technician/installations');
+  await page.locator('.tech-job-card').first().click();
+  const report = 'Đã kiểm tra nguồn điện. Đang bổ sung ảnh minh chứng.';
+  await page.getByLabel('Nội dung báo cáo chi tiết:').fill(report);
+  await page.reload();
+  await page.locator('.tech-job-card').first().click();
+  await expect(page.getByLabel('Nội dung báo cáo chi tiết:')).toHaveValue(report);
+  await expect(page.getByText(/Bản nháp đã lưu trong tab này/)).toBeVisible();
+  expect(model.writes.filter((write) => write.path.endsWith('/submit'))).toHaveLength(0);
+});
+
+test('A lost start response requires reading the committed state without starting again', async ({
+  page,
+}) => {
+  const model = await installationFixture(page);
+  model.loseStartResponse = true;
+  await page.goto('/technician/installations');
+  await page.locator('.tech-job-card').first().click();
+  await page.getByRole('button', { name: /Bắt đầu lắp đặt/ }).click();
+  const recheck = page.getByRole('button', { name: 'Kiểm tra trạng thái mới nhất', exact: true });
+  await expect(recheck).toBeVisible();
+  model.denyDetail = true;
+  await recheck.click();
+  await expect(recheck).toBeEnabled();
+  await expect(page.getByText('Cần kiểm tra trạng thái trước khi gửi lại')).toBeVisible();
+  model.denyDetail = false;
+  await recheck.click();
+  await expect(recheck).toHaveCount(0);
+  await expect(page.getByLabel('Nội dung báo cáo chi tiết:')).toBeVisible();
+  expect(model.writes.filter((write) => write.path.endsWith('/start'))).toHaveLength(1);
 });

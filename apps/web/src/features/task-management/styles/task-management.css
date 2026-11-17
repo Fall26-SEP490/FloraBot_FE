@@ -1621,3 +1621,60 @@
   margin: 6px 0 0;
   font-size: 13px;
 }
+#staff-tasks .task-page-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 0;
+}
+#staff-tasks .task-page-search label {
+  flex-basis: 100%;
+  font-size: 13px;
+  font-weight: 600;
+}
+#staff-tasks .task-page-search input {
+  flex: 1 1 240px;
+  min-width: 0;
+  min-height: 44px;
+  border: 1px solid #cbdad0;
+  border-radius: 9px;
+  padding: 10px 12px;
+  color: #1c4832;
+  background: #fff;
+  font: inherit;
+  font-size: 13px;
+}
+#staff-tasks .task-page-search p {
+  flex-basis: 100%;
+  margin: 0;
+  color: #566d5f;
+  font-size: 12px;
+}
+#staff-tasks .staff-task-card[hidden] {
+  display: none !important;
+}
+#staff-tasks .task-search-empty {
+  padding: 18px;
+  background: #f4f8f3;
+  border-radius: 10px;
+}
+.technician-workspace #staff-tasks .technician-task-body {
+  margin-top: 16px;
+}
+.technician-workspace #staff-tasks .technician-task-body > .technician-destination {
+  margin: 20px 0;
+}
+#staff-tasks .task-page-search p[role='status'] {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.workspace-portal-root.platform-workspace .technician-workspace #staff-tasks #manager-task-area {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}

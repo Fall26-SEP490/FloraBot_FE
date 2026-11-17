@@ -197,9 +197,16 @@ function AdminAuditLogsSection({
 
           {logs.isPending && <p role="status">Đang tải nhật ký kiểm toán…</p>}
           {logs.isError && (
-            <p role="alert" className="error">
-              Chưa tải được nhật ký kiểm toán.
-            </p>
+            <div role="alert">
+              <p className="error">Chưa tải được nhật ký kiểm toán.</p>
+              <Button
+                variant="outline"
+                disabled={logs.isFetching}
+                onClick={() => void logs.refetch()}
+              >
+                {logs.isFetching ? 'Đang tải…' : 'Thử lại nhật ký'}
+              </Button>
+            </div>
           )}
           {logs.data && logs.data.items.length === 0 && (
             <p role="status">Không có bản ghi nhật ký kiểm toán khớp bộ lọc.</p>
@@ -224,6 +231,21 @@ function AdminAuditLogsSection({
                     >
                       {selectedId === item.id ? 'Ẩn chi tiết' : 'Xem chi tiết'}
                     </Button>
+                    {selectedId === item.id && detail.isPending && (
+                      <p role="status">Đang tải chi tiết nhật ký…</p>
+                    )}
+                    {selectedId === item.id && detail.isError && (
+                      <div role="alert">
+                        <p>Chưa đọc được chi tiết nhật ký.</p>
+                        <Button
+                          variant="outline"
+                          disabled={detail.isFetching}
+                          onClick={() => void detail.refetch()}
+                        >
+                          {detail.isFetching ? 'Đang tải…' : 'Thử lại chi tiết nhật ký'}
+                        </Button>
+                      </div>
+                    )}
                     {selectedId === item.id && detail.data && (
                       <pre
                         style={{

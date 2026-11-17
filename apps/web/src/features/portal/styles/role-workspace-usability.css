@@ -1,0 +1,25 @@
+/* Disabled pagination and unavailable actions are not loading indicators. */
+.workspace-portal-root.platform-workspace:is(
+    [data-platform-role='admin'],
+    [data-platform-role='operations'],
+    [data-platform-role='technician']
+  ) {
+  & .dashboard-content button:disabled {
+    cursor: default;
+  }
+  & .dashboard-content button[data-busy='true']:disabled,
+  & .dashboard-content button[aria-busy='true']:disabled {
+    cursor: wait;
+  }
+  & .dashboard-content :is(input, select, textarea, button, summary, a):focus-visible {
+    outline: 2px solid #286448;
+    outline-offset: 3px;
+  }
+  & .dashboard-content :is(dd, .incident-text, .staff-task-body p) {
+    overflow-wrap: anywhere;
+  }
+}
+
+.workspace-portal-root.platform-workspace .admin-shop-list > li[hidden] {
+  display: none !important;
+}

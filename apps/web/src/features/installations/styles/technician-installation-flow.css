@@ -289,3 +289,29 @@
     }
   }
 }
+
+.technician-installations-view .installation-outcome-check {
+  padding: 18px;
+  border: 1px solid #e3cc8f;
+  border-radius: 12px;
+  background: #fffaf0;
+  color: #654b20;
+}
+.technician-installations-view .installation-outcome-check p {
+  margin: 10px 0 16px;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.technician-installations-view .installation-submit-checklist {
+  display: grid;
+  gap: 8px;
+  padding: 16px 0;
+  margin: 0 0 12px;
+  list-style: none;
+  font-size: 13px;
+  color: #596b5e;
+}
+.technician-installations-view .installation-submit-checklist li[data-complete='true'] {
+  color: #245e3a;
+}

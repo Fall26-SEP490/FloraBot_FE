@@ -97,9 +97,11 @@ export default function StaffTaskDetails({
                 <p>Kết quả xử lý: {details.data.incident.decision}</p>
               )}
               <p>
-                {role === 'TECHNICIAN' || role === 'OPERATIONS_MANAGER'
-                  ? 'Gửi báo cáo công việc để Quản lý vận hành xem xét. Báo cáo không tự hoàn tiền hoặc mở cửa tủ.'
-                  : 'Gửi báo cáo công việc để chủ shop theo dõi. Báo cáo không tự cập nhật tồn kho mở bán.'}
+                {role === 'ADMIN'
+                  ? 'Manager phụ trách phân công và nghiệm thu. Bạn đang xem thông tin giám sát.'
+                  : role === 'TECHNICIAN' || role === 'OPERATIONS_MANAGER'
+                    ? 'Gửi báo cáo công việc để Quản lý vận hành xem xét. Báo cáo không tự hoàn tiền hoặc mở cửa tủ.'
+                    : 'Gửi báo cáo công việc để chủ shop theo dõi. Báo cáo không tự cập nhật tồn kho mở bán.'}
               </p>
             </section>
           )}

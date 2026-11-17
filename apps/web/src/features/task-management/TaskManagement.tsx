@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -76,6 +76,8 @@ function FilteredTaskList(props: StaffTasksProps) {
       ? props.initialStatus
       : '',
   );
+  const [taskSearch, setTaskSearch] = useState('');
+  const searchRef = useRef<HTMLInputElement>(null);
   const [reload, setReload] = useState(0);
   const [focusedTaskId, setFocusedTaskId] = useState<string | null>(null);
   const [transitionResult, setTransitionResult] = useState<{
@@ -92,7 +94,7 @@ function FilteredTaskList(props: StaffTasksProps) {
     queryFn: () => request<TaskPage>(`${apiBase}?page=${page}${status ? `&status=${status}` : ''}`),
     enabled: isValidRole,
     refetchInterval: (query) =>
-      role === 'OPERATIONS_MANAGER'
+      role === 'OPERATIONS_MANAGER' || role === 'TECHNICIAN'
         ? 30_000
         : role === 'SELLER' &&
             query.state.data?.items.some(
@@ -110,6 +112,20 @@ function FilteredTaskList(props: StaffTasksProps) {
       </section>
     );
   }
+
+  const normalizeSearch = (value: string) =>
+    value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/đ/g, 'd')
+      .replace(/[^a-z0-9]/g, '');
+  const matchesSearch = (task: TaskPage['items'][number]) =>
+    !isPlatform ||
+    normalizeSearch(
+      `${task.kioskName} ${task.assigneeName} ${task.shopName || ''} ${task.id}`,
+    ).includes(normalizeSearch(taskSearch.trim()));
+  const matchedCount = tasks.data?.items.filter(matchesSearch).length ?? 0;
 
   const sectionTitle =
     role === 'OPERATIONS_MANAGER'
@@ -277,6 +293,7 @@ function FilteredTaskList(props: StaffTasksProps) {
             actorId={actorId}
             linkedTasks={tasks.data?.items ?? []}
             onOpenTask={(id) => {
+              setTaskSearch('');
               setFocusedTaskId(id);
               setManagerView('tasks');
               setStatus('');
@@ -329,6 +346,36 @@ function FilteredTaskList(props: StaffTasksProps) {
               <span className="operations-result-count">
                 {tasks.data.items.length} kết quả · Trang {page}
               </span>
+            )}
+          </div>
+        )}
+        {isPlatform && (
+          <div className="task-page-search">
+            <label htmlFor="task-page-search">Tìm công việc trong trang</label>
+            <input
+              id="task-page-search"
+              ref={searchRef}
+              type="search"
+              value={taskSearch}
+              placeholder="Tên tủ, người phụ trách hoặc mã công việc"
+              onChange={(event) => setTaskSearch(event.target.value)}
+            />
+            {taskSearch && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setTaskSearch('');
+                  searchRef.current?.focus({ preventScroll: true });
+                }}
+              >
+                Xóa tìm kiếm
+              </Button>
+            )}
+            {tasks.isSuccess && (
+              <p role="status">
+                {matchedCount} / {tasks.data.items.length} công việc trong trang {page}
+                {tasks.data.hasMore ? ' · Còn trang tiếp theo' : ''}
+              </p>
             )}
           </div>
         )}
@@ -398,6 +445,12 @@ function FilteredTaskList(props: StaffTasksProps) {
             {tasks.isError && (
               <p role="status">Chưa tải được công việc mới nhất. Đang hiển thị danh sách đã tải.</p>
             )}
+            {isPlatform && tasks.data.items.length > 0 && matchedCount === 0 && (
+              <p role="status" className="task-search-empty">
+                Không có công việc khớp tìm kiếm trong trang này. Xóa tìm kiếm hoặc chuyển trang để
+                xem thêm.
+              </p>
+            )}
             {tasks.data.items.length === 0 ? (
               <div className="operations-empty">
                 <ClipboardList size={36} aria-hidden="true" />
@@ -444,6 +497,7 @@ function FilteredTaskList(props: StaffTasksProps) {
               ).map((task) => (
                 <TaskItem
                   key={`${task.id}-${role === 'TECHNICIAN' ? task.status : task.version}-${reload}`}
+                  hidden={!matchesSearch(task)}
                   task={task}
                   focused={focusedTaskId === task.id}
                   mode={mode}

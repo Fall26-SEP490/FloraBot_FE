@@ -182,7 +182,7 @@ for (const width of [390, 1440]) {
     await expect(page.getByText('Tổng công việc', { exact: true })).toHaveCount(0);
     const disclosure = page.locator('.technician-task-body > summary');
     await expect(disclosure).toContainText('Bắt đầu xử lý');
-    await expect(page.getByLabel('Lọc trạng thái', { exact: true })).toBeVisible();
+    await expect(page.getByRole('navigation', { name: 'Chọn trạng thái công việc' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Chỉ đường Google Maps' })).toHaveAttribute(
       'href',
       /google.com\/maps\/dir\/.*destination=/,
@@ -193,6 +193,9 @@ for (const width of [390, 1440]) {
     await page
       .getByLabel('Nội dung cập nhật', { exact: true })
       .fill('Tôi đã đến tủ để kiểm tra cửa.');
+    await page.getByLabel('Tìm công việc trong trang', { exact: true }).fill('khong-co-tu-nay');
+    await expect(page.getByText(/Không có công việc khớp tìm kiếm trong trang này/)).toBeVisible();
+    await page.getByRole('button', { name: 'Xóa tìm kiếm', exact: true }).click();
     await disclosure.click();
     await disclosure.click();
     await expect(page.getByLabel('Nội dung cập nhật', { exact: true })).toHaveValue(

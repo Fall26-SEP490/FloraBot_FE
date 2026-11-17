@@ -12,6 +12,7 @@ import type { StaffDirectoryMember, TaskDetail } from '../task-management/task-m
 import type { KioskLocationChangeResponse, SellerKioskItem } from './kiosk-management.types';
 import '../finance/styles/commerce-subscriptions.css';
 import { terminationNextStep } from './termination-progress';
+import { requiresOutcomeCheck } from '@/shared/lib/mutation-outcome';
 import './styles/operations-usability.css';
 
 interface SlotLayoutRequestView {
@@ -358,6 +359,16 @@ function ManagerTerminationCard({
   const [evidenceReference, setEvidenceReference] = useState('');
   const [confirmArchive, setConfirmArchive] = useState(false);
   const [notice, setNotice] = useState('');
+  const [needsOutcomeCheck, setNeedsOutcomeCheck] = useState(false);
+  const [checkingOutcome, setCheckingOutcome] = useState(false);
+  const [outcomeCheckError, setOutcomeCheckError] = useState('');
+  const markUncertainOutcome = (error: unknown) => {
+    if (requiresOutcomeCheck(error)) {
+      setNeedsOutcomeCheck(true);
+      setConfirmArchive(false);
+      setNotice('');
+    }
+  };
   const managerRole = 'OPERATIONS_MANAGER' as const;
   const kioskState = useQuery({
     queryKey: ['termination-kiosk-state', item.kioskId, item.correlatedTaskId],
@@ -378,6 +389,7 @@ function ManagerTerminationCard({
         true,
         'POST',
       ),
+    onError: markUncertainOutcome,
     onSuccess: async () => {
       setNotice('Đã cập nhật kết quả xem xét.');
       onReviewed();
@@ -392,6 +404,7 @@ function ManagerTerminationCard({
         true,
         'POST',
       ),
+    onError: markUncertainOutcome,
     onSuccess: async () => {
       setInstructions('');
       setNotice('Đã phân công kỹ thuật viên tháo dỡ kiosk.');
@@ -409,6 +422,7 @@ function ManagerTerminationCard({
         true,
         'POST',
       ),
+    onError: markUncertainOutcome,
     onSuccess: async () => {
       setNotice(
         'Đã xác nhận bàn giao. Tiếp tục bước 4 để ngừng sử dụng và lưu trữ tủ khi đủ điều kiện.',
@@ -427,6 +441,7 @@ function ManagerTerminationCard({
         true,
         'DELETE',
       ),
+    onError: markUncertainOutcome,
     onSuccess: async () => {
       setConfirmArchive(false);
       setNotice(
@@ -440,6 +455,32 @@ function ManagerTerminationCard({
       ]);
     },
   });
+  async function checkLatestOutcome() {
+    if (checkingOutcome) return;
+    setCheckingOutcome(true);
+    setOutcomeCheckError('');
+    try {
+      await queryClient.refetchQueries(
+        { queryKey: ['operations-terminations'], type: 'active' },
+        { throwOnError: true },
+      );
+      if (item.status === 'COMPLETED' && item.correlatedTaskId)
+        await kioskState.refetch({ throwOnError: true });
+      await queryClient.invalidateQueries({ queryKey: ['staff-tasks'] });
+      review.reset();
+      assign.reset();
+      complete.reset();
+      archive.reset();
+      setNeedsOutcomeCheck(false);
+      setNotice(
+        'Đã tải trạng thái mới nhất. Kiểm tra tiến trình và điều kiện còn thiếu trước khi thao tác tiếp.',
+      );
+    } catch (error) {
+      setOutcomeCheckError(textError(error));
+    } finally {
+      setCheckingOutcome(false);
+    }
+  }
   const archived = archive.isSuccess || kioskState.data?.kioskStatus === 'DISABLED';
   const awaitingKioskState =
     item.status === 'COMPLETED' && Boolean(item.correlatedTaskId) && kioskState.isPending;
@@ -584,14 +625,14 @@ function ManagerTerminationCard({
             />
             <div className="business-inline">
               <Button
-                disabled={review.isPending || reason.trim().length < 10}
+                disabled={review.isPending || needsOutcomeCheck || reason.trim().length < 10}
                 onClick={() => review.mutate('ACCEPT')}
               >
                 Chấp thuận
               </Button>
               <Button
                 variant="outline"
-                disabled={review.isPending || reason.trim().length < 10}
+                disabled={review.isPending || needsOutcomeCheck || reason.trim().length < 10}
                 onClick={() => review.mutate('REJECT')}
               >
                 Từ chối
@@ -604,7 +645,12 @@ function ManagerTerminationCard({
             className="business-form termination-action-panel"
             onSubmit={(event) => {
               event.preventDefault();
-              if (assigneeId && instructions.trim().length >= 10) {
+              if (
+                !needsOutcomeCheck &&
+                !assign.isPending &&
+                assigneeId &&
+                instructions.trim().length >= 10
+              ) {
                 assign.mutate();
               }
             }}
@@ -620,7 +666,7 @@ function ManagerTerminationCard({
               required
               value={assigneeId}
               onChange={(event) => setAssigneeId(event.target.value)}
-              disabled={assign.isPending}
+              disabled={assign.isPending || needsOutcomeCheck}
             >
               <option value="">Chọn kỹ thuật viên</option>
               {technicians.map((tech) => (
@@ -641,12 +687,17 @@ function ManagerTerminationCard({
               placeholder="Nhập hướng dẫn kiểm tra, tháo dỡ và thu hồi kiosk tại điểm đặt…"
               value={instructions}
               onChange={(event) => setInstructions(event.target.value)}
-              disabled={assign.isPending}
+              disabled={assign.isPending || needsOutcomeCheck}
             />
             <div>
               <Button
                 type="submit"
-                disabled={assign.isPending || !assigneeId || instructions.trim().length < 10}
+                disabled={
+                  assign.isPending ||
+                  needsOutcomeCheck ||
+                  !assigneeId ||
+                  instructions.trim().length < 10
+                }
               >
                 {assign.isPending ? 'Đang phân công…' : 'Phân công tháo dỡ'}
               </Button>
@@ -696,7 +747,7 @@ function ManagerTerminationCard({
             <textarea
               id={`term-notes-${item.id}`}
               value={notes}
-              disabled={complete.isPending}
+              disabled={complete.isPending || needsOutcomeCheck}
               onChange={(event) => setNotes(event.target.value)}
             />
             <details className="termination-optional-evidence">
@@ -705,13 +756,16 @@ function ManagerTerminationCard({
                 <EvidenceUpload
                   id={`term-evidence-${item.id}`}
                   endpoint={`/api/operations/kiosk-termination-requests/${item.id}/evidence/upload`}
-                  disabled={complete.isPending}
+                  disabled={complete.isPending || needsOutcomeCheck}
                   onReference={setEvidenceReference}
                 />
               </div>
             </details>
             <div>
-              <Button disabled={complete.isPending} onClick={() => complete.mutate()}>
+              <Button
+                disabled={complete.isPending || needsOutcomeCheck}
+                onClick={() => complete.mutate()}
+              >
                 {complete.isPending ? 'Đang xác nhận…' : 'Xác nhận đã bàn giao'}
               </Button>
             </div>
@@ -767,7 +821,11 @@ function ManagerTerminationCard({
                     type="button"
                     variant="outline"
                     disabled={
-                      archive.isPending || awaitingKioskState || mustGoOffline || kioskState.isError
+                      archive.isPending ||
+                      needsOutcomeCheck ||
+                      awaitingKioskState ||
+                      mustGoOffline ||
+                      kioskState.isError
                     }
                     onClick={() => setConfirmArchive(true)}
                   >
@@ -789,6 +847,7 @@ function ManagerTerminationCard({
                         type="button"
                         disabled={
                           archive.isPending ||
+                          needsOutcomeCheck ||
                           awaitingKioskState ||
                           mustGoOffline ||
                           kioskState.isError
@@ -810,6 +869,23 @@ function ManagerTerminationCard({
                 )}
               </>
             )}
+          </div>
+        )}
+        {needsOutcomeCheck && (
+          <div className="termination-outcome-check" role="alert">
+            <strong>Cần kiểm tra lại trạng thái trước khi gửi tiếp</strong>
+            <p>
+              Phản hồi trước chưa xác nhận được kết quả hoặc hồ sơ đã thay đổi. Không bấm gửi lại để
+              tránh xử lý trùng.
+            </p>
+            <Button
+              variant="outline"
+              disabled={checkingOutcome}
+              onClick={() => void checkLatestOutcome()}
+            >
+              {checkingOutcome ? 'Đang kiểm tra…' : 'Kiểm tra kết quả mới nhất'}
+            </Button>
+            {outcomeCheckError && <p>{outcomeCheckError}</p>}
           </div>
         )}
         {notice && <p role="status">{notice}</p>}

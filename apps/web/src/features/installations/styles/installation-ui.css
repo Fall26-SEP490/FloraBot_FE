@@ -593,3 +593,17 @@ body
 .installation-delete-modal [aria-busy='true'] .button:disabled {
   cursor: wait;
 }
+
+.operations-detail-panel .installation-outcome-check {
+  margin: 18px 0;
+  padding: 18px;
+  border: 1px solid #e3cc8f;
+  border-radius: 12px;
+  background: #fffaf0;
+  color: #654b20;
+}
+.operations-detail-panel .installation-outcome-check p {
+  margin: 10px 0 16px;
+  font-size: 13px;
+  line-height: 1.65;
+}
