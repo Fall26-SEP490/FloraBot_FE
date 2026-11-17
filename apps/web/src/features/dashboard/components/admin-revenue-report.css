@@ -1,0 +1,95 @@
+.admin-revenue-scope {
+  margin: 16px 0;
+  padding: 14px 18px;
+  border: 1px solid #e6d7a9;
+  border-radius: 12px;
+  background: #fffaf0;
+  color: #755520;
+  font-size: 13px;
+}
+.admin-revenue-scope p {
+  margin: 6px 0 0;
+  line-height: 1.6;
+}
+.admin-revenue-filters {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 20px 0;
+}
+.admin-revenue-filters > div {
+  flex: 1;
+  min-width: 170px;
+}
+.admin-revenue-filters label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.admin-revenue-filters input,
+.admin-revenue-filters select {
+  min-height: 42px;
+  width: 100%;
+  margin: 0;
+  border: 1px solid #cddbd2;
+  border-radius: 9px;
+  padding: 10px 12px;
+  background: #fff;
+}
+.admin-revenue-summary {
+  margin: 20px 0;
+  padding: 20px;
+  border: 1px solid #dbe7de;
+  border-radius: 14px;
+  background: #f7faf7;
+}
+.admin-revenue-summary-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.admin-revenue-summary-heading h3 {
+  margin: 0;
+  font-size: 16px;
+}
+.admin-revenue-summary-heading span {
+  color: #576d60;
+  font-size: 12px;
+}
+.admin-revenue-summary dl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin: 0;
+}
+.admin-revenue-summary dl > div {
+  flex: 1;
+  min-width: 160px;
+}
+.admin-revenue-summary dt {
+  font-size: 13px;
+  color: #576d60;
+}
+.admin-revenue-summary dd {
+  font-size: 24px;
+  font-weight: 750;
+  color: #204e36;
+  margin: 8px 0 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  .admin-revenue-filters > div {
+    min-width: 100%;
+  }
+  .admin-revenue-filters > .button {
+    width: 100%;
+  }
+  .admin-revenue-summary {
+    padding: 16px;
+  }
+}

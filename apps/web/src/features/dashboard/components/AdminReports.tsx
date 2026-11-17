@@ -6,6 +6,13 @@ import { AdminFilterBar } from '@/features/portal/components/AdminUi';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import { request, type Session } from '@/shared/lib/api';
+import {
+  filterLoadedRevenue,
+  isRevenueReport,
+  revenueInteger,
+  sumLoadedRevenue,
+} from '../revenue-report.utils';
+import './admin-revenue-report.css';
 
 const reports = {
   v_admin_queue: {
@@ -262,6 +269,9 @@ function AdminAuditLogsSection({
 export default function AdminReports({ session }: { session: Session }) {
   const esp32Kiosk = useSearchParams().get('esp32Kiosk');
   const [report, setReport] = useState<ReportName>('v_admin_queue');
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
+  const [kiosk, setKiosk] = useState('');
   const [page, setPage] = useState(1);
   const config = reports[report];
   const query = useQuery({
@@ -274,7 +284,27 @@ export default function AdminReports({ session }: { session: Session }) {
     enabled: session.role === 'ADMIN',
   });
   if (session.role !== 'ADMIN') return null;
-  const rows = query.data ?? [];
+  const loadedRows = query.data ?? [];
+  const financial = isRevenueReport(report);
+  const filtered = financial
+    ? filterLoadedRevenue(report, loadedRows, { from, to, kiosk })
+    : { rows: loadedRows, invalidRange: false };
+  const rows = filtered.rows;
+  const kiosks = [
+    ...new Set(
+      loadedRows
+        .map((row) => row.kiosk)
+        .filter((value): value is string => typeof value === 'string'),
+    ),
+  ].sort((a, b) => a.localeCompare(b, 'vi'));
+  const metrics =
+    report === 'v_platform_revenue'
+      ? ([['doanh_thu_phi_goi', 'Phí thuê ghi sổ', true]] as const)
+      : ([
+          ['gmv', 'Giá trị đơn', true],
+          ['so_don', 'Số đơn', false],
+          ['giam_do_diem', 'Giảm bằng điểm', true],
+        ] as const);
   const pageCount = Math.max(1, Math.ceil(rows.length / 20));
   return (
     <section className="api-reports" aria-labelledby="api-reports-title">
@@ -299,6 +329,9 @@ export default function AdminReports({ session }: { session: Session }) {
             onChange={(event) => {
               setReport(event.target.value as ReportName);
               setPage(1);
+              setFrom('');
+              setTo('');
+              setKiosk('');
             }}
           >
             {Object.entries(reports).map(([key, item]) => (
@@ -310,16 +343,138 @@ export default function AdminReports({ session }: { session: Session }) {
         </div>
       </AdminFilterBar>
       <p>{config.description}</p>
-      <p className="quiet">
-        Hiển thị tối đa 100 dòng. Một số hàng đợi có cả hồ sơ từ quy trình thuê kiosk cũ.
-      </p>
+      {financial ? (
+        <>
+          <div className="admin-revenue-scope">
+            <strong>Phạm vi dữ liệu</strong>
+            <p>
+              Bộ lọc và số tổng bên dưới chỉ áp dụng trên dữ liệu đã tải, tối đa 100 dòng; chưa phải
+              tổng toàn hệ thống theo kỳ.
+            </p>
+            {loadedRows.length >= 100 && (
+              <p>Đã chạm giới hạn 100 dòng. Có thể còn dữ liệu chưa được tải.</p>
+            )}
+          </div>
+          <div
+            className="admin-revenue-filters"
+            role="group"
+            aria-label="Lọc dữ liệu báo cáo đã tải"
+          >
+            <div>
+              <label htmlFor="revenue-from">
+                {report === 'v_platform_revenue' ? 'Từ tháng' : 'Từ ngày'}
+              </label>
+              <input
+                id="revenue-from"
+                type={report === 'v_platform_revenue' ? 'month' : 'date'}
+                value={from}
+                max={to || undefined}
+                onInput={(event) => {
+                  setFrom(event.currentTarget.value);
+                  setPage(1);
+                }}
+                onChange={(event) => {
+                  setFrom(event.target.value);
+                  setPage(1);
+                }}
+              />
+            </div>
+            <div>
+              <label htmlFor="revenue-to">
+                {report === 'v_platform_revenue' ? 'Đến tháng' : 'Đến ngày'}
+              </label>
+              <input
+                id="revenue-to"
+                type={report === 'v_platform_revenue' ? 'month' : 'date'}
+                value={to}
+                min={from || undefined}
+                onInput={(event) => {
+                  setTo(event.currentTarget.value);
+                  setPage(1);
+                }}
+                onChange={(event) => {
+                  setTo(event.target.value);
+                  setPage(1);
+                }}
+              />
+            </div>
+            {report === 'v_revenue_daily' && (
+              <div>
+                <label htmlFor="revenue-kiosk">Kiosk trong dữ liệu đã tải</label>
+                <select
+                  id="revenue-kiosk"
+                  value={kiosk}
+                  onChange={(event) => {
+                    setKiosk(event.target.value);
+                    setPage(1);
+                  }}
+                >
+                  <option value="">Tất cả kiosk đã tải</option>
+                  {kiosks.map((code) => (
+                    <option key={code} value={code}>
+                      {code}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <Button
+              variant="outline"
+              onClick={() => {
+                setFrom('');
+                setTo('');
+                setKiosk('');
+                setPage(1);
+              }}
+            >
+              Đặt lại bộ lọc
+            </Button>
+          </div>
+          {filtered.invalidRange && (
+            <p role="alert" className="error">
+              Mốc bắt đầu phải trước hoặc bằng mốc kết thúc.
+            </p>
+          )}
+          {query.isSuccess && rows.length > 0 && !filtered.invalidRange && (
+            <section className="admin-revenue-summary" aria-label="Tổng hợp trong dữ liệu đã tải">
+              <div className="admin-revenue-summary-heading">
+                <h3>Tổng hợp dữ liệu đang xem</h3>
+                <span>
+                  {rows.length} / {loadedRows.length} dòng đã tải
+                </span>
+              </div>
+              <dl>
+                {metrics.map(([key, label, money]) => {
+                  const total = sumLoadedRevenue(rows, key);
+                  return (
+                    <div key={key}>
+                      <dt>{label}</dt>
+                      <dd>
+                        {total === null
+                          ? 'Chưa đủ dữ liệu hợp lệ'
+                          : `${total.toLocaleString('vi-VN')}${money ? ' đ' : ''}`}
+                      </dd>
+                    </div>
+                  );
+                })}
+              </dl>
+            </section>
+          )}
+        </>
+      ) : (
+        <p className="quiet">
+          Hiển thị tối đa 100 dòng. Một số hàng đợi có cả hồ sơ từ quy trình thuê kiosk cũ.
+        </p>
+      )}
       {query.isPending ? (
         <p role="status">Đang tải báo cáo…</p>
       ) : query.isError ? (
         <p role="alert">Chưa tải được báo cáo. Kiểm tra kết nối rồi chọn cập nhật.</p>
-      ) : !rows.length ? (
+      ) : filtered.invalidRange ? null : !rows.length ? (
         <p role="status" className="reports-empty">
-          Chưa có dữ liệu cho báo cáo này. Chọn báo cáo khác hoặc cập nhật để kiểm tra lại.
+          {financial && loadedRows.length > 0
+            ? 'Không có dòng phù hợp với bộ lọc trong dữ liệu đã tải.'
+            : 'Chưa có dữ liệu cho báo cáo này. Chọn báo cáo khác hoặc cập nhật để kiểm tra lại.'}
         </p>
       ) : (
         <>
@@ -349,7 +504,10 @@ export default function AdminReports({ session }: { session: Session }) {
                   <tr key={`${page}-${index}`}>
                     {config.columns.map(([key, label]) => (
                       <td key={key} data-label={label}>
-                        {displayValue(row[key])}
+                        {financial && ['gmv', 'giam_do_diem', 'doanh_thu_phi_goi'].includes(key)
+                          ? (revenueInteger(row[key])?.toLocaleString('vi-VN') ??
+                            'Dữ liệu không hợp lệ')
+                          : displayValue(row[key])}
                       </td>
                     ))}
                   </tr>
