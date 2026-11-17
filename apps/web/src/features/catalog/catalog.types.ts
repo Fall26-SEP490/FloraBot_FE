@@ -32,7 +32,6 @@ export interface CatalogFilterState {
   search: string;
   draft: string;
   priceFilter: PriceFilter;
-  occasionFilter: string;
   shopFilter: string;
   kioskFilter: string;
   availabilityFilter: AvailabilityFilter;

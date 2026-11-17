@@ -5745,7 +5745,7 @@ export interface paths {
         put?: never;
         /**
          * Tạo mẫu hoa và khai báo tồn bó tại shop
-         * @description quantity là số bó còn tại shop, số nguyên không âm; bỏ qua mặc định 0. Nạp thành công vào kiosk hoặc fulfill preorder trừ một bó. Thu hồi không tự cộng lại.
+         * @description Mẫu hoa thuộc shop của tài khoản Seller. kioskId chỉ được chấp nhận để tương thích với ứng dụng cũ và không được sử dụng. quantity là số bó còn tại shop, số nguyên không âm; bỏ qua mặc định 0. Chọn kiosk khi nạp hoa hoặc đặt trước. Nạp thành công vào kiosk hoặc fulfill preorder trừ một bó. Thu hồi không tự cộng lại.
          */
         post: {
             parameters: {
@@ -17534,8 +17534,6 @@ export interface components {
             reason: string;
         };
         CreateProductRequest: {
-            /** Format: uuid */
-            kioskId: string;
             name: string;
             description: null | string;
             /** Format: int64 */
@@ -17552,6 +17550,8 @@ export interface components {
              * @default 0
              */
             quantity: number | string;
+            /** Format: uuid */
+            kioskId?: null | string;
         };
         CreateRefundRequest: {
             /** Format: uuid */

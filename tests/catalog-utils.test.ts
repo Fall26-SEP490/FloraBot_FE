@@ -6,15 +6,14 @@ import {
   purchaseLabel,
   filterCatalogItems,
   formatPrice,
-  getOccasionBadgeClass,
   matchesAvailability,
-  matchesOccasion,
   matchesPrice,
   matchesSearch,
   sortCatalogItems,
   uniqueCatalogCards,
 } from '../apps/web/src/features/catalog/catalog.utils';
 import type { CatalogItem } from '../apps/web/src/features/catalog/catalog.types';
+import { readCatalogQuery } from '../apps/web/src/features/catalog/catalog.navigation';
 
 const sampleItem = (overrides?: Partial<CatalogItem>): CatalogItem => ({
   productId: 'prod-1',
@@ -28,8 +27,7 @@ const sampleItem = (overrides?: Partial<CatalogItem>): CatalogItem => ({
   address: 'Quận 1, TP.HCM',
   photo: null,
   bouquets: ['bq-1'],
-  occasion: 'Sinh nhật',
-  tags: ['Sinh nhật', 'Hồng'],
+  tags: ['flower:rose'],
   ...overrides,
 });
 
@@ -74,26 +72,10 @@ describe('Catalog Utilities - Price boundaries', () => {
   });
 });
 
-describe('Catalog Utilities - Occasion matching', () => {
-  it('matches via explicit occasion field', () => {
-    const item = sampleItem({ occasion: 'Khai trương', tags: [], description: '' });
-    expect(matchesOccasion(item, 'Khai trương')).toBe(true);
-    expect(matchesOccasion(item, 'Sinh nhật')).toBe(false);
-  });
-
-  it('matches via tags array', () => {
-    const item = sampleItem({ occasion: undefined, tags: ['Tốt nghiệp'], description: '' });
-    expect(matchesOccasion(item, 'Tốt nghiệp')).toBe(true);
-  });
-
-  it('matches via description substring case-insensitive', () => {
-    const item = sampleItem({
-      occasion: undefined,
-      tags: [],
-      description: 'Mẫu hoa thích hợp cho lễ KỶ NIỆM ngày cưới',
-    });
-    expect(matchesOccasion(item, 'Kỷ niệm')).toBe(true);
-  });
+it('ignores retired occasion links and validates supported flower types', () => {
+  expect(readCatalogQuery(new URLSearchParams('occasion=BIRTHDAY')).flowerFilter).toBe('all');
+  expect(readCatalogQuery(new URLSearchParams('flower=tulip')).flowerFilter).toBe('tulip');
+  expect(readCatalogQuery(new URLSearchParams('flower=invalid')).flowerFilter).toBe('all');
 });
 
 describe('Catalog Utilities - Search matching', () => {
@@ -172,23 +154,27 @@ describe('Catalog Utilities - Sorting', () => {
 
 describe('Catalog Utilities - Combined filtering and counts', () => {
   const items = [
-    sampleItem({ productId: '1', price: 250000, occasion: 'Sinh nhật', bouquets: ['b1'] }),
-    sampleItem({ productId: '2', price: 450000, occasion: 'Sinh nhật', bouquets: [] }),
+    sampleItem({ productId: '1', price: 250000, bouquets: ['b1'] }),
+    sampleItem({
+      productId: '2',
+      price: 450000,
+      bouquets: [],
+      tags: ['hoa hồng', 'FLOWER:ROSE'],
+    }),
     sampleItem({
       productId: '3',
       price: 800000,
-      occasion: 'Tốt nghiệp',
-      tags: ['Tốt nghiệp'],
+      tags: ['flower:sunflower'],
       description: 'Hoa chúc mừng tốt nghiệp',
       bouquets: ['b2'],
     }),
   ];
 
-  it('filters by occasion and price simultaneously', () => {
+  it('filters by flower type and price simultaneously', () => {
     const filtered = filterCatalogItems(items, {
       search: '',
       priceFilter: 'under300',
-      occasionFilter: 'Sinh nhật',
+      flowerFilter: 'rose',
       shopFilter: 'all',
       kioskFilter: 'all',
       availabilityFilter: 'all',
@@ -199,8 +185,8 @@ describe('Catalog Utilities - Combined filtering and counts', () => {
 
   it('computes aggregation counts correctly', () => {
     const counts = computeFilterCounts(items);
-    expect(counts.occasionCounts['Sinh nhật']).toBe(2);
-    expect(counts.occasionCounts['Tốt nghiệp']).toBe(1);
+    expect(counts.flowerCounts.rose).toBe(2);
+    expect(counts.flowerCounts.sunflower).toBe(1);
     expect(counts.priceCounts.under300).toBe(1);
     expect(counts.priceCounts.range300to600).toBe(1);
     expect(counts.priceCounts.range600to1000).toBe(1);
@@ -208,9 +194,7 @@ describe('Catalog Utilities - Combined filtering and counts', () => {
     expect(counts.availabilityCounts.custom).toBe(3);
   });
 
-  it('formats badge class and price', () => {
-    expect(getOccasionBadgeClass('Sinh nhật')).toBe('occasion-sinhnhat');
-    expect(getOccasionBadgeClass(undefined)).toBe('');
+  it('formats price', () => {
     expect(formatPrice(350000)).toBe('350.000');
   });
 });

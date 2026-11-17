@@ -2,14 +2,7 @@ import { useState } from 'react';
 import { Button, MapPin, MessageSquare, Store } from '@florabot/ui';
 import Link from 'next/link';
 import type { CatalogItem } from '../catalog.types';
-import {
-  canOrderOnWeb,
-  formatPrice,
-  getOccasionBadgeClass,
-  isPreorder,
-  isWalkIn,
-  purchaseLabel,
-} from '../catalog.utils';
+import { canOrderOnWeb, formatPrice, isPreorder, isWalkIn, purchaseLabel } from '../catalog.utils';
 
 interface FlowerCardProps {
   catalogHref?: string;
@@ -29,7 +22,6 @@ export function FlowerCard({
   const [failedPhoto, setFailedPhoto] = useState<string | null>(null);
   const illustrative = !item.photo || failedPhoto === item.photo;
   const walkIn = isWalkIn(item);
-  const occBadgeClass = getOccasionBadgeClass(item.occasion);
   const detailParams = new URLSearchParams();
   if (item.zone) detailParams.set('zone', item.zone);
   if (item.isDemoSample) detailParams.set('demo', '1');
@@ -65,11 +57,6 @@ export function FlowerCard({
             >
               {purchaseLabel(item)}
             </span>
-            {item.occasion && (
-              <span className={`flower-badge flower-badge-occasion ${occBadgeClass}`}>
-                {item.occasion}
-              </span>
-            )}
           </div>
         </Link>
 

@@ -27,7 +27,6 @@ it('finds a walk-in item on a later API page before filtering', async () => {
   const matches = filterCatalogItems(items, {
     search: '',
     priceFilter: 'all',
-    occasionFilter: 'all',
     shopFilter: 'all',
     kioskFilter: 'all',
     availabilityFilter: 'stock',

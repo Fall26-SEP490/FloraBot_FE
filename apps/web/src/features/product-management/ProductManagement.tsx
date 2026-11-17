@@ -17,8 +17,8 @@ import { queryClient, type Session } from '@/shared/lib/api';
 import { TablePagination } from '../../shared/components/DataTable';
 import { Modal } from '../../shared/components/Modal';
 import { clampPage, paginate } from '../../shared/pagination';
-import { fetchProducts, fetchSellerKiosks } from './product.api';
-import type { Product, SellerKiosk } from './product.types';
+import { fetchProducts } from './product.api';
+import type { Product } from './product.types';
 import { PAGE_SIZE, statusNames } from './product.types';
 import { errorText } from './product.utils';
 import ProductEditor from './components/ProductEditor';
@@ -56,12 +56,6 @@ export default function ProductManagement({ session }: { session: Session }) {
   const query = useQuery<Product[]>({
     queryKey: ['products', sellerId],
     queryFn: fetchProducts,
-    enabled: !!sellerId,
-  });
-
-  const kiosks = useQuery<SellerKiosk[]>({
-    queryKey: ['seller-kiosks', sellerId],
-    queryFn: () => fetchSellerKiosks(sellerId!),
     enabled: !!sellerId,
   });
 
@@ -145,7 +139,6 @@ export default function ProductManagement({ session }: { session: Session }) {
                   setCreateNotice('');
                   setShowCreateForm(true);
                 }}
-                disabled={kiosks.isPending || !kiosks.data?.length}
                 aria-expanded={showCreateForm}
                 aria-controls="product-create-section"
               >
@@ -217,15 +210,13 @@ export default function ProductManagement({ session }: { session: Session }) {
         <Modal
           open
           size="lg"
-          className="product-form-modal"
+          className="product-form-modal product-create-modal"
           title="Thêm mẫu hoa"
-          description="Nhập thông tin mẫu hoa trước khi đưa vào danh mục của shop."
           onClose={() => setShowCreateForm(false)}
         >
           <div id="product-create-section" className="product-create-container">
             <ProductCreateForm
               sellerId={sellerId}
-              kiosks={kiosks.data ?? []}
               canEdit={canEdit}
               onSuccess={(createdProductId) => {
                 setShowCreateForm(false);
@@ -245,20 +236,6 @@ export default function ProductManagement({ session }: { session: Session }) {
             />
           </div>
         </Modal>
-      )}
-
-      {kiosks.isError && (
-        <div className="product-alert error" role="alert">
-          <CircleAlert size={16} aria-hidden="true" />
-          <p>Chưa tải được kiosk của shop nên chưa thể tạo sản phẩm mới.</p>
-        </div>
-      )}
-
-      {!kiosks.isPending && !kiosks.isError && kiosks.data?.length === 0 && (
-        <div className="product-alert warning">
-          <CircleAlert size={16} aria-hidden="true" />
-          <p>Shop cần được phân bổ ít nhất một kiosk trước khi tạo sản phẩm mới.</p>
-        </div>
       )}
 
       {query.isPending && (

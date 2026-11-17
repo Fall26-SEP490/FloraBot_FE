@@ -23,21 +23,14 @@ export function useCatalogFilters(
 ) {
   const searchParams = useSearchParams();
   const state = readCatalogQuery(new URLSearchParams(searchParams.toString()));
-  const {
-    search,
-    priceFilter,
-    occasionFilter,
-    flowerFilter,
-    shopFilter,
-    kioskFilter,
-    availabilityFilter,
-    sortBy,
-  } = state;
+  const { search, priceFilter, flowerFilter, shopFilter, kioskFilter, availabilityFilter, sortBy } =
+    state;
   const [draftState, setDraftState] = useState({ search, value: search });
   const draft = draftState.search === search ? draftState.value : search;
   const setDraft = (value: string) => setDraftState({ search, value });
   const update = (key: string, value: string, resetPage = true) => {
     const params = new URLSearchParams(window.location.search);
+    params.delete('occasion');
     if (resetPage) params.delete('page');
     if (!value || value === 'all' || value === 'default' || (key === 'page' && value === '1'))
       params.delete(key);
@@ -46,7 +39,6 @@ export function useCatalogFilters(
   };
   const setSearch = (value: string) => update('search', value.trim());
   const setPriceFilter = (value: PriceFilter) => update('price', value);
-  const setOccasionFilter = (value: string) => update('occasion', value);
   const setFlowerFilter = (value: string) => update('flower', value);
   const setShopFilter = (value: string) => update('shop', value);
   const setKioskFilter = (value: string) => update('kiosk', value);
@@ -59,22 +51,12 @@ export function useCatalogFilters(
       filterCatalogItems(rawItems, {
         search,
         priceFilter,
-        occasionFilter,
         flowerFilter,
         shopFilter,
         kioskFilter,
         availabilityFilter,
       }),
-    [
-      rawItems,
-      search,
-      priceFilter,
-      occasionFilter,
-      flowerFilter,
-      shopFilter,
-      kioskFilter,
-      availabilityFilter,
-    ],
+    [rawItems, search, priceFilter, flowerFilter, shopFilter, kioskFilter, availabilityFilter],
   );
 
   const displayedItems = useMemo(
@@ -88,7 +70,6 @@ export function useCatalogFilters(
   const hasActiveFilters = Boolean(
     search.trim() ||
     priceFilter !== 'all' ||
-    occasionFilter !== 'all' ||
     flowerFilter !== 'all' ||
     shopFilter !== 'all' ||
     kioskFilter !== 'all' ||
@@ -112,13 +93,6 @@ export function useCatalogFilters(
           setSearch('');
           setDraft('');
         },
-      });
-    }
-    if (occasionFilter !== 'all') {
-      list.push({
-        id: 'occasion',
-        label: occasionFilter,
-        onClear: () => setOccasionFilter('all'),
       });
     }
     if (priceFilter !== 'all') {
@@ -179,8 +153,6 @@ export function useCatalogFilters(
     setDraft,
     priceFilter,
     setPriceFilter,
-    occasionFilter,
-    setOccasionFilter,
     flowerFilter,
     setFlowerFilter,
     shopFilter,

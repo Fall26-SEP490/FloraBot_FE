@@ -1,7 +1,7 @@
 import Layout from '@/features/marketing/MarketingLayout';
 import { LandingPricing } from '@/features/marketing/LandingPricing';
 import StorefrontFlowers from '@/features/marketing/StorefrontFlowers';
-import OccasionsCarousel from '@/features/marketing/OccasionsCarousel';
+import FlowerTypesCarousel from '@/features/marketing/FlowerTypesCarousel';
 import '@/features/marketing/styles/home-storefront.css';
 
 export const metadata = { title: 'FloraBot - Đặt hoa theo ý bạn, nhận tại tủ' };
@@ -65,8 +65,7 @@ export default function Page() {
         <div className="graphic-divider" aria-hidden="true" />
 
         <div className="home-content">
-          {/* Mục 3: Chọn hoa theo dịp / Shop by collections phong cách Laflora Dubai */}
-          <OccasionsCarousel />
+          <FlowerTypesCarousel />
 
           <StorefrontFlowers />
 

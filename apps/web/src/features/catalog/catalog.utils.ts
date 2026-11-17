@@ -1,4 +1,4 @@
-import { OCCASIONS, OCCASION_BADGE_CLASSES } from './catalog.constants';
+import { getFlowerTypeCodes } from '@/shared/lib/flower-tags';
 import type {
   AvailabilityCounts,
   AvailabilityFilter,
@@ -50,14 +50,6 @@ export function purchaseLabel(item: PreorderStatus): string {
   return isPreorder(item) ? 'Đặt trước' : 'Chưa xác định hình thức mua';
 }
 
-export function matchesOccasion(item: CatalogItem, occasion: string): boolean {
-  return Boolean(
-    item.occasion === occasion ||
-    item.tags?.includes(occasion) ||
-    item.description?.toLowerCase().includes(occasion.toLowerCase()),
-  );
-}
-
 export function matchesSearch(item: CatalogItem, query: string): boolean {
   if (!query.trim()) return true;
   const q = query.toLowerCase();
@@ -87,7 +79,6 @@ export function matchesAvailability(item: CatalogItem, filter: AvailabilityFilte
 export interface FilterCriteria {
   search: string;
   priceFilter: PriceFilter;
-  occasionFilter: string;
   flowerFilter?: string;
   shopFilter: string;
   kioskFilter: string;
@@ -101,12 +92,9 @@ export function filterCatalogItems(items: CatalogItem[], criteria: FilterCriteri
     if (
       criteria.flowerFilter &&
       criteria.flowerFilter !== 'all' &&
-      !item.tags?.includes(`flower:${criteria.flowerFilter}`)
+      !getFlowerTypeCodes(item.tags).some((code) => code === criteria.flowerFilter)
     )
       return false;
-    if (criteria.occasionFilter !== 'all' && !matchesOccasion(item, criteria.occasionFilter)) {
-      return false;
-    }
     if (criteria.shopFilter !== 'all' && item.shopName !== criteria.shopFilter) return false;
     if (criteria.kioskFilter !== 'all' && item.kioskName !== criteria.kioskFilter) return false;
     if (!matchesAvailability(item, criteria.availabilityFilter)) return false;
@@ -141,16 +129,13 @@ export function sortCatalogItems(
   });
 }
 
-export function getOccasionBadgeClass(occasion?: string): string {
-  if (!occasion) return '';
-  return OCCASION_BADGE_CLASSES[occasion] || '';
-}
-
 export function computeFilterCounts(items: CatalogItem[]) {
   const cards = uniqueCatalogCards(items);
-  const occasionCounts: Record<string, number> = {};
-  OCCASIONS.forEach((occ) => {
-    occasionCounts[occ] = cards.filter((item) => matchesOccasion(item, occ)).length;
+  const flowerCounts: Record<string, number> = {};
+  cards.forEach((item) => {
+    for (const code of getFlowerTypeCodes(item.tags)) {
+      flowerCounts[code] = (flowerCounts[code] ?? 0) + 1;
+    }
   });
 
   let under300 = 0;
@@ -187,7 +172,7 @@ export function computeFilterCounts(items: CatalogItem[]) {
   const availableKiosks = Array.from(new Set(items.map((i) => i.kioskName))).filter(Boolean);
 
   return {
-    occasionCounts,
+    flowerCounts,
     priceCounts,
     availabilityCounts,
     shopCounts,

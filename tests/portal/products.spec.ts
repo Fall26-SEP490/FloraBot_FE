@@ -136,15 +136,12 @@ test('Expired shop can read products but creation and editor are disabled', asyn
   await expect(page.getByRole('button', { name: 'Lưu trạng thái' })).toBeDisabled();
 });
 
-test('Create artificial flower for an owned kiosk: validation, conflict handling and 201 creation', async ({
-  page,
-}) => {
+test('Create draft: validation, retry and 201 creation', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 950 });
   const productsList = [{ ...product }];
   let createAttemptCount = 0;
   let lastCapturedPayload: Record<string, unknown> | null = null;
   const createdProductId = '30000000-0000-0000-0000-000000000088';
-  const kioskId = '40000000-0000-0000-0000-000000000001';
 
   await page.route('**/api/auth/me', (route) =>
     route.fulfill({
@@ -170,7 +167,7 @@ test('Create artificial flower for an owned kiosk: validation, conflict handling
       if (createAttemptCount === 1) {
         return route.fulfill({
           status: 409,
-          json: { detail: 'Dữ liệu kiosk vừa thay đổi. Vui lòng thử lại.' },
+          json: { detail: 'Chưa tạo được mẫu. Vui lòng thử lại.' },
         });
       }
       const newProduct = {
@@ -194,7 +191,7 @@ test('Create artificial flower for an owned kiosk: validation, conflict handling
   await page.goto('/seller/products');
 
   // Open create form
-  await page.getByRole('button', { name: 'Thêm bó hoa giả mới' }).click();
+  await page.getByRole('button', { name: 'Thêm mẫu hoa', exact: true }).click();
   const createForm = page.getByRole('form', { name: 'Thêm mẫu hoa mới' });
   await expect(createForm).toBeVisible();
 
@@ -204,12 +201,14 @@ test('Create artificial flower for an owned kiosk: validation, conflict handling
 
   // Fill name, invalid price 0
   await createForm.getByLabel('Tên mẫu hoa').fill('Bó cẩm tú cầu giả');
-  await createForm.getByLabel('Giá bán (đồng)', { exact: true }).fill('0');
+  await createForm.getByLabel('Giá bán (VNĐ)', { exact: true }).fill('0');
   await createForm.getByRole('button', { name: 'Tạo mẫu hoa' }).click();
   await expect(createForm.getByText('Giá bán phải lớn hơn 0.')).toBeVisible();
 
   // Fix price, test invalid dimensions (0 and >2 decimal places)
-  await createForm.getByLabel('Giá bán (đồng)', { exact: true }).fill('280000');
+  await createForm.getByLabel('Giá bán (VNĐ)', { exact: true }).fill('280000');
+  await createForm.getByRole('button', { name: 'Cẩm tú cầu', exact: true }).click();
+  await createForm.getByRole('button', { name: 'Hồng', exact: true }).click();
   await createForm.getByLabel('Dài (cm)').fill('0');
   await createForm.getByRole('button', { name: 'Tạo mẫu hoa' }).click();
   await expect(createForm.getByText('Chiều dài phải từ 0.01 cm trở lên.')).toBeVisible();
@@ -222,54 +221,43 @@ test('Create artificial flower for an owned kiosk: validation, conflict handling
   await createForm.getByLabel('Dài (cm)').fill('25.5');
   await createForm.getByLabel('Rộng (cm)').fill('15');
   await createForm.getByLabel('Cao (cm)').fill('40');
-  await createForm
-    .getByLabel('Từ khóa tìm kiếm (phân cách bằng dấu phẩy)')
-    .fill('hoa lụa, decor, hoa lụa');
+  await createForm.getByText('Thông tin bổ sung', { exact: false }).click();
+  await createForm.getByLabel('Từ khóa tìm kiếm').fill('hoa lụa, decor, hoa lụa');
+  await createForm.getByText('Thông tin bổ sung', { exact: false }).click();
   await createForm.getByRole('button', { name: 'Tạo mẫu hoa' }).click();
   await expect(
     createForm.getByText('Từ khóa trùng lặp: "hoa lụa". Mỗi từ khóa chỉ nhập một lần.'),
   ).toBeVisible();
+  await expect(createForm.getByLabel('Từ khóa tìm kiếm')).toBeFocused();
 
   // Fix tags and description
-  await createForm.getByLabel('Từ khóa tìm kiếm (phân cách bằng dấu phẩy)').fill('hoa lụa, decor');
+  await createForm.getByLabel('Từ khóa tìm kiếm').fill('hoa lụa, decor');
   await createForm.getByLabel('Mô tả sản phẩm').fill('Hoa cẩm tú cầu chất liệu lụa bền đẹp.');
-  await createForm.getByLabel('Loại hoa (bắt buộc)').selectOption('flower:hydrangea');
-  await createForm.getByLabel('Màu chủ đạo (bắt buộc)').selectOption('color:pink');
 
   // First submit -> 409 conflict from server
   await createForm.getByRole('button', { name: 'Tạo mẫu hoa' }).click();
-  await expect(createForm.getByRole('alert')).toHaveText(
-    'Dữ liệu kiosk vừa thay đổi. Vui lòng thử lại.',
-  );
+  await expect(createForm.getByRole('alert')).toHaveText('Chưa tạo được mẫu. Vui lòng thử lại.');
 
   // Second submit -> success 201. The backend generates the product id.
   await createForm.getByRole('button', { name: 'Tạo mẫu hoa' }).click();
-  await expect(
-    page.getByRole('status').filter({ hasText: 'Đã tạo mẫu hoa giả mới ở trạng thái Bản nháp.' }),
-  ).toBeFocused();
-  expect(lastCapturedPayload?.kioskId).toBe(kioskId);
+  const createdCard = page.locator(`#product-created-${createdProductId}`);
+  await expect(createdCard).toBeFocused();
+  expect(lastCapturedPayload).not.toHaveProperty('kioskId');
   expect(lastCapturedPayload).not.toHaveProperty('id');
   expect(lastCapturedPayload?.name).toBe('Bó cẩm tú cầu giả');
   expect(lastCapturedPayload?.price).toBe(280000);
-  expect(lastCapturedPayload?.tags).toEqual(['hoa lụa', 'decor', 'flower:hydrangea', 'color:pink']);
+  expect(lastCapturedPayload?.tags).toEqual(['flower:hydrangea', 'color:pink', 'hoa lụa', 'decor']);
   expect(lastCapturedPayload?.lengthCm).toBe(25.5);
   expect(lastCapturedPayload?.widthCm).toBe(15);
   expect(lastCapturedPayload?.heightCm).toBe(40);
 
   // Verify list updated with new item
   await expect(page.getByText('Bó cẩm tú cầu giả', { exact: true })).toBeVisible();
-  const newItemSummary = page.locator('.product-list li', { hasText: 'Bó cẩm tú cầu giả' });
-  await expect(newItemSummary.locator('.product-kind-badge')).toHaveText('Hoa giả');
-  await expect(newItemSummary.locator('.product-status')).toHaveText('Bản nháp');
+  await expect(createdCard.locator('.product-status')).toHaveText('Bản nháp');
 
   // A newly created product is expanded automatically so its result is immediately reviewable.
-  await expect(newItemSummary.locator('details')).toHaveAttribute('open', '');
-  await expect(
-    newItemSummary.getByText('Bó hoa giả cao cấp — không áp dụng thời hạn tươi.'),
-  ).toBeVisible();
-  await expect(
-    newItemSummary.getByText('Kích thước: 25.5 × 15 × 40 cm (Dài × Rộng × Cao)'),
-  ).toBeVisible();
+  await expect(createdCard).toHaveAttribute('open', '');
+  await expect(createdCard.getByText('25.5 × 15 × 40 cm (Dài × Rộng × Cao)')).toBeVisible();
 
   // A11y and viewport check
   expect(
