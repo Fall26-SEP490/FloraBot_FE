@@ -12,7 +12,6 @@ export interface PayosCheckoutProps {
   checkoutUrl?: string | null;
   qrCode?: string | null;
   amount?: number | string | null;
-  orderCode?: number | string | null;
   recipientName?: string | null;
   recipientAccountMasked?: string | null;
   title: string;
@@ -31,7 +30,6 @@ export default function PayosCheckout({
   checkoutUrl,
   qrCode,
   amount,
-  orderCode,
   recipientName,
   recipientAccountMasked,
   title,
@@ -74,13 +72,6 @@ export default function PayosCheckout({
       ? `Đã kiểm tra lúc ${checkedAt}. Hệ thống chưa ghi nhận thanh toán cho đơn hết hạn này. Nếu đã chuyển khoản, đừng thanh toán lại.`
       : 'Mã QR đã hết hạn. Nếu bạn đã chuyển khoản, hãy kiểm tra giao dịch trước khi thực hiện thao tác khác.'
     : 'Hệ thống chưa xác nhận thanh toán. Nếu bạn đã chuyển khoản, đừng thanh toán lại.';
-  const step =
-    expired || verification !== 'idle'
-      ? 2
-      : !isLoadingQr && (hasBankQr || validation.valid)
-        ? 1
-        : 0;
-
   return createPortal(
     <Modal
       open
@@ -92,13 +83,6 @@ export default function PayosCheckout({
     >
       <div className="payos-native-checkout">
         <div className="payos-checkout-content">
-          <ol className="payos-steps" aria-label="Tiến độ thanh toán">
-            {['Mã QR', 'Chuyển khoản', 'Xác nhận'].map((label, index) => (
-              <li key={label} aria-current={index === step ? 'step' : undefined}>
-                {label}
-              </li>
-            ))}
-          </ol>
           <div className="payos-qr-section" aria-busy={isLoadingQr}>
             <div className="payos-qr-box">
               {expired ? (
@@ -157,12 +141,6 @@ export default function PayosCheckout({
                 </span>
               </div>
             )}
-            {orderCode != null && (
-              <div className="payos-detail-row">
-                <span className="payos-detail-label">Mã giao dịch</span>
-                <span className="payos-detail-value payos-code">{orderCode}</span>
-              </div>
-            )}
             {(recipientName || recipientAccountMasked) && (
               <div className="payos-detail-row">
                 <span className="payos-detail-label">Tài khoản nhận</span>
@@ -191,7 +169,7 @@ export default function PayosCheckout({
               ) : isLoadingQr || !canCheckStatus ? (
                 ''
               ) : (
-                'Nếu đã chuyển khoản, hãy kiểm tra để xem giao dịch đã được xác nhận chưa.'
+                'Đã chuyển khoản? Kiểm tra trạng thái của giao dịch.'
               )}
             </p>
           )}
@@ -207,7 +185,7 @@ export default function PayosCheckout({
                   ? 'Đang kiểm tra…'
                   : verification === 'error'
                     ? 'Kiểm tra lại'
-                    : 'Kiểm tra thanh toán'}
+                    : 'Kiểm tra trạng thái'}
               </Button>
             )}
             <Button variant="outline" onClick={onClose}>

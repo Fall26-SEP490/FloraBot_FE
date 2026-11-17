@@ -39,13 +39,12 @@ export function PaymentActions({
         </Button>
         <Button variant="outline" onClick={onReconcile} disabled={isReconciling}>
           <RefreshCw className={isReconciling ? 'kiosk-spin' : ''} size={18} aria-hidden="true" />
-          Kiểm tra thanh toán
+          Kiểm tra trạng thái
         </Button>
       </div>
 
       <p className="kiosk-help-text">
-        Quét mã QR bằng ứng dụng ngân hàng ngay trên FloraBot. Trạng thái hồ sơ được cập nhật sau
-        khi xác nhận giao dịch.
+        Quét VietQR bằng ứng dụng ngân hàng. Hệ thống cập nhật hồ sơ sau khi ghi nhận thanh toán.
       </p>
     </div>
   );

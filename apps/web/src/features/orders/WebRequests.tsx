@@ -140,10 +140,10 @@ function OrderActions({
     staleTime: 0,
   });
   const accessoryCatalog = useQuery({
-    queryKey: ['seller-accessories', row.sellerId],
+    queryKey: ['seller-accessories', row.sellerId, 'ALL'],
     queryFn: () =>
       request<components['schemas']['SellerAccessoryResponse'][]>(
-        `/sellers/${row.sellerId}/accessories`,
+        `/sellers/${row.sellerId}/accessories?scope=ALL`,
       ),
     enabled: editingQuote && requestedAccessories.length > 0,
     staleTime: 0,
@@ -152,36 +152,52 @@ function OrderActions({
     ? products.data.find((item) => item.id === row.productId)?.price
     : undefined;
   const price = priceDraft ?? (sample != null && Number(sample) > 0 ? String(sample) : '');
+  const accessoryCatalogVerified =
+    accessoryCatalog.isSuccess && Array.isArray(accessoryCatalog.data);
   const catalogItems = Array.isArray(accessoryCatalog.data) ? accessoryCatalog.data : [];
   const accessoryLines = requestedAccessories.map((item) => {
     const quantity = quoteQuantities[item.accessoryId] ?? 0;
+    // Older requests can still reference accessories attached to their original pickup kiosk.
     const current = catalogItems.find(
-      (entry) => entry.id === item.accessoryId && entry.kioskId === row.kioskId,
+      (entry) =>
+        entry.id === item.accessoryId && (entry.kioskId === null || entry.kioskId === row.kioskId),
     );
     const unitPrice = current?.status === 'ACTIVE' ? Number(current.price) : NaN;
+    const stock = current?.status === 'ACTIVE' ? Number(current.stockQuantity) : 0;
+    const available = accessoryCatalogVerified
+      ? Number.isSafeInteger(stock) && stock > 0
+        ? stock
+        : 0
+      : null;
     return {
       ...item,
       accepted: quantity,
+      available,
       lineTotal:
         quantity === 0
           ? 0
           : Number.isSafeInteger(unitPrice) && unitPrice > 0
             ? unitPrice * quantity
             : null,
-      stockIssue:
-        accessoryCatalog.isSuccess &&
-        Array.isArray(accessoryCatalog.data) &&
-        quantity > 0 &&
-        (current?.status !== 'ACTIVE' || Number(current.stockQuantity) < quantity),
+      stockIssue: available !== null && quantity > available,
     };
   });
-  const accessoryTotal = accessoryLines.some((item) => item.lineTotal === null)
-    ? null
-    : accessoryLines.reduce((sum, item) => sum + (item.lineTotal ?? 0), 0);
+  const accessoryStockIssue = accessoryLines.some((item) => item.stockIssue);
+  const accessoryVerificationNeeded = accessoryLines.some(
+    (item) => item.accepted > 0 && (!accessoryCatalogVerified || item.lineTotal === null),
+  );
+  const quoteBlocked = editingQuote && (accessoryStockIssue || accessoryVerificationNeeded);
+  const accessoryTotal =
+    accessoryStockIssue || accessoryVerificationNeeded
+      ? null
+      : accessoryLines.reduce((sum, item) => sum + (item.lineTotal ?? 0), 0);
   const projectedTotal =
     price.trim() && Number(price) > 0 && accessoryTotal !== null
       ? Number(price) + accessoryTotal
       : null;
+  const editableAccessories = accessoryLines.filter(
+    (item) => !item.stockIssue && (item.available === null || item.available > 0),
+  );
   const [pickup, setPickup] = useState(() => {
     const date = new Date(row.pickupAt);
     return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
@@ -196,6 +212,11 @@ function OrderActions({
   } = usePreorderLoadingAccess();
   const [fulfillStep, setFulfillStep] = useState<1 | 2>(1);
   const [confirm, setConfirm] = useState(false);
+  function changeQuoteQuantity(accessoryId: string, quantity: number) {
+    setQuoteQuantities((current) => ({ ...current, [accessoryId]: quantity }));
+    setConfirm(false);
+    setError('');
+  }
   const [reviewedQuote, setReviewedQuote] = useState<{
     price: number | null;
     pickupAt: string;
@@ -388,6 +409,16 @@ function OrderActions({
       }
     } catch (cause) {
       if (
+        kind === 'quote' &&
+        !reject &&
+        requestedAccessories.length > 0 &&
+        cause instanceof ApiError &&
+        [400, 409, 422].includes(cause.status)
+      ) {
+        setConfirm(false);
+        void queryClient.invalidateQueries({ queryKey: ['seller-accessories', row.sellerId] });
+      }
+      if (
         !(cause instanceof ApiError) ||
         ((cause.status >= 500 || cause.status === 408) &&
           !(
@@ -423,7 +454,8 @@ function OrderActions({
     } finally {
       await queryClient.invalidateQueries({ queryKey: ['web-orders'] });
       if (kind === 'accept' || kind === 'cancel') {
-        void queryClient.invalidateQueries({ queryKey: ['preorder-accessories', row.kioskId] });
+        void queryClient.invalidateQueries({ queryKey: ['preorder-accessories', row.sellerId] });
+        void queryClient.invalidateQueries({ queryKey: ['seller-accessories', row.sellerId] });
       }
       if (mode === 'seller' && kind === 'fulfill') {
         await queryClient.invalidateQueries({ queryKey: ['products'] });
@@ -545,7 +577,6 @@ function OrderActions({
           checkoutUrl={paymentLink?.checkoutUrl}
           qrCode={paymentLink?.qrCode}
           amount={paymentLink?.amount ?? row.quotedPrice}
-          orderCode={paymentLink?.orderCode}
           recipientName={paymentLink?.recipientName}
           recipientAccountMasked={paymentLink?.recipientAccountMasked}
           title="Thanh toán đơn hoa"
@@ -773,6 +804,10 @@ function OrderActions({
               setFulfillStep(1);
               return;
             }
+            if (quoteBlocked) {
+              setError('Kiểm tra hoặc điều chỉnh phụ kiện trước khi gửi báo giá.');
+              return;
+            }
             if (!confirm) {
               setError('Đọc lại thông tin và đánh dấu xác nhận trước khi gửi.');
               return;
@@ -899,18 +934,54 @@ function OrderActions({
                         <strong>Phụ kiện khách yêu cầu</strong>
                         <ul className={accessoryStyles.quoteLines}>
                           {accessoryLines.map(
-                            ({ accessoryId, name, accepted, lineTotal, stockIssue }) => (
+                            ({
+                              accessoryId,
+                              name,
+                              quantity,
+                              accepted,
+                              available,
+                              lineTotal,
+                              stockIssue,
+                            }) => (
                               <li key={accessoryId}>
-                                <span>
-                                  {name} × {accepted || '0'}
-                                  {accepted === 0 && ' · Không nhận'}
-                                  {stockIssue && (
-                                    <small className="error">
-                                      Kiểm tra tồn hoặc giảm số lượng.
+                                <div>
+                                  <span>
+                                    {name}
+                                    {accepted > 0 && ` × ${accepted}`}
+                                  </span>
+                                  {stockIssue ? (
+                                    <>
+                                      <small className="error">
+                                        Khách chọn {quantity} ·{' '}
+                                        {available === 0 ? 'Đã hết hàng' : `Kho còn ${available}`}
+                                      </small>
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        disabled={busy}
+                                        aria-label={
+                                          available === 0
+                                            ? `Bỏ ${name} khỏi báo giá`
+                                            : `Dùng ${available} ${name} còn lại`
+                                        }
+                                        onClick={() =>
+                                          changeQuoteQuantity(accessoryId, available ?? 0)
+                                        }
+                                      >
+                                        {available === 0
+                                          ? 'Bỏ khỏi báo giá'
+                                          : `Dùng ${available} còn lại`}
+                                      </Button>
+                                    </>
+                                  ) : accepted === 0 ? (
+                                    <small>Đã bỏ khỏi báo giá · Khách chọn {quantity}</small>
+                                  ) : accepted < Number(quantity) ? (
+                                    <small>
+                                      Khách chọn {quantity} · Báo giá {accepted}
                                     </small>
-                                  )}
-                                </span>
-                                {accepted > 0 && (
+                                  ) : null}
+                                </div>
+                                {accepted > 0 && !stockIssue && (
                                   <strong>
                                     {lineTotal === null ? 'Chưa có giá' : money(lineTotal)}
                                   </strong>
@@ -919,39 +990,93 @@ function OrderActions({
                             ),
                           )}
                         </ul>
-                        <details className={accessoryStyles.quoteAdjust}>
-                          <summary>Điều chỉnh phụ kiện</summary>
-                          <p>Giảm số lượng nếu thiếu hàng. Nhập 0 để bỏ món.</p>
-                          {requestedAccessories.map(({ accessoryId, name, quantity }) => (
-                            <div key={accessoryId} className={accessoryStyles.quoteOption}>
-                              <label htmlFor={`quote-accessory-${row.id}-${accessoryId}`}>
-                                {name} · yêu cầu {quantity}
-                              </label>
-                              <input
-                                id={`quote-accessory-${row.id}-${accessoryId}`}
-                                aria-label={`Số lượng xác nhận ${name}`}
-                                type="number"
-                                min={0}
-                                max={Number(quantity)}
-                                step={1}
-                                value={quoteQuantities[accessoryId] ?? 0}
-                                onChange={(event) => {
-                                  const value = Number(event.target.value);
-                                  if (
-                                    Number.isInteger(value) &&
-                                    value >= 0 &&
-                                    value <= Number(quantity)
-                                  ) {
-                                    setQuoteQuantities((current) => ({
-                                      ...current,
-                                      [accessoryId]: value,
-                                    }));
-                                  }
-                                }}
-                              />
-                            </div>
-                          ))}
-                        </details>
+                        {accessoryStockIssue && (
+                          <p role="status">Cập nhật các món thiếu hàng trước khi gửi báo giá.</p>
+                        )}
+                        {accessoryCatalogVerified === false && accessoryCatalog.isError && (
+                          <div>
+                            <p role="status">Chưa kiểm tra được tồn phụ kiện.</p>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => void accessoryCatalog.refetch()}
+                              disabled={accessoryCatalog.isFetching || busy}
+                            >
+                              Kiểm tra lại tồn
+                            </Button>
+                          </div>
+                        )}
+                        {editableAccessories.length > 0 && (
+                          <details className={accessoryStyles.quoteAdjust}>
+                            <summary>Điều chỉnh phụ kiện</summary>
+                            {editableAccessories.map(
+                              ({ accessoryId, name, quantity, available, accepted }) => (
+                                <div key={accessoryId} className={accessoryStyles.quoteOption}>
+                                  {accepted > 0 ? (
+                                    <label htmlFor={`quote-accessory-${row.id}-${accessoryId}`}>
+                                      {name} · yêu cầu {quantity}
+                                    </label>
+                                  ) : (
+                                    <span>
+                                      {name} · yêu cầu {quantity}
+                                    </span>
+                                  )}
+                                  {accepted > 0 && (
+                                    <input
+                                      id={`quote-accessory-${row.id}-${accessoryId}`}
+                                      aria-label={`Số lượng xác nhận ${name}`}
+                                      type="number"
+                                      min={1}
+                                      max={Math.min(
+                                        Number(quantity),
+                                        available ?? Number(quantity),
+                                      )}
+                                      step={1}
+                                      value={accepted}
+                                      onChange={(event) => {
+                                        const value = Number(event.target.value);
+                                        if (
+                                          Number.isInteger(value) &&
+                                          value > 0 &&
+                                          value <=
+                                            Math.min(
+                                              Number(quantity),
+                                              available ?? Number(quantity),
+                                            )
+                                        ) {
+                                          changeQuoteQuantity(accessoryId, value);
+                                        }
+                                      }}
+                                    />
+                                  )}
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    disabled={busy}
+                                    aria-label={
+                                      accepted > 0
+                                        ? `Bỏ ${name} khỏi báo giá`
+                                        : `Thêm lại ${name} vào báo giá`
+                                    }
+                                    onClick={() =>
+                                      changeQuoteQuantity(
+                                        accessoryId,
+                                        accepted > 0
+                                          ? 0
+                                          : Math.min(
+                                              Number(quantity),
+                                              available ?? Number(quantity),
+                                            ),
+                                      )
+                                    }
+                                  >
+                                    {accepted > 0 ? 'Bỏ món' : 'Thêm lại'}
+                                  </Button>
+                                </div>
+                              ),
+                            )}
+                          </details>
+                        )}
                       </section>
                     )}
                   </>
@@ -985,9 +1110,11 @@ function OrderActions({
                 </strong>
                 <small>
                   {accessoryTotal === null
-                    ? accessoryCatalog.isFetching
-                      ? 'Đang lấy giá phụ kiện…'
-                      : 'Chưa xác minh được giá một số phụ kiện.'
+                    ? accessoryStockIssue
+                      ? 'Có phụ kiện không đủ tồn.'
+                      : accessoryCatalog.isFetching
+                        ? 'Đang lấy giá phụ kiện…'
+                        : 'Chưa xác minh được giá một số phụ kiện.'
                     : requestedAccessories.length > 0
                       ? `Tiền phụ kiện: ${money(accessoryTotal)}. Tồn và tổng chính thức được kiểm tra khi gửi.`
                       : 'Giá chính thức được xác nhận khi gửi báo giá.'}
@@ -1160,6 +1287,7 @@ function OrderActions({
                   type="submit"
                   disabled={
                     busy ||
+                    quoteBlocked ||
                     (action === 'fulfill' &&
                       (!loadingAccessId || !fulfillSlots.some((item) => item.id === slot))) ||
                     (mode === 'member' &&

@@ -235,7 +235,6 @@ function KioskRenewalCard({
           checkoutUrl={payment?.data.checkoutUrl}
           qrCode={payment?.data.qrCode}
           amount={payment?.data.amount ?? renewal.price}
-          orderCode={payment?.data.orderCode}
           title="Thanh toán gia hạn kiosk"
           description={kiosk.name || kiosk.code}
           recipientName={payment?.data.recipientName}

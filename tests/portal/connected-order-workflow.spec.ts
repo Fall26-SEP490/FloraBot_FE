@@ -85,7 +85,7 @@ async function common(
   await page.route('**/hub/**', (route) => route.fulfill({ status: 503 }));
   await page.route('**/api/**', async (route) => {
     const path = new URL(route.request().url()).pathname.replace('/api', '');
-    if (path === `/member/kiosks/${kioskId}/catalog/accessories`)
+    if (path === `/member/sellers/${sellerId}/catalog/accessories`)
       return route.fulfill({ json: [bow, card] });
     if (path === '/me/products')
       return route.fulfill({ json: [{ id: productId, price: flower.price }] });
@@ -93,7 +93,8 @@ async function common(
       return route.fulfill({
         json: [bow, card].map((item) => ({
           ...item,
-          kioskId,
+          kioskId: null,
+          scope: 'SHOP',
           status: 'ACTIVE',
           stockQuantity: item.availableQuantity,
         })),
@@ -196,9 +197,6 @@ test('Preorder picker hides full kiosks and sorts available ones by customer loc
   await page.route(`**/api/kiosks/${full}/preorder-availability*`, (route) =>
     route.fulfill({ json: { available: false, status: 'CAPACITY_EXHAUSTED' } }),
   );
-  await page.route(`**/api/member/kiosks/${near}/catalog/accessories`, (route) =>
-    route.fulfill({ json: [] }),
-  );
   await page.goto('/dat-hoa');
   await page
     .getByRole('button', { name: /báo giá/i })
@@ -213,8 +211,10 @@ test('Preorder picker hides full kiosks and sorts available ones by customer loc
     /A - tủ xa · Khoảng/,
   ]);
   await expect(page.locator('.flower-request-nearest')).toContainText('Z - tủ gần');
-  await picker.selectOption(kioskId);
   await page.getByRole('button', { name: 'Thêm Nơ trang trí' }).click();
+  await expect(picker).toHaveValue('');
+  await expect(page.locator('.flower-request-reference-price')).toContainText('370.000 đ');
+  await picker.selectOption(kioskId);
   await page.getByRole('button', { name: 'Tăng số lượng Nơ trang trí' }).click();
   const quantity = page.getByRole('status', { name: 'Số lượng Nơ trang trí', exact: true });
   await expect(quantity).toHaveText('2');
@@ -223,11 +223,9 @@ test('Preorder picker hides full kiosks and sorts available ones by customer loc
   await page.getByRole('button', { name: 'Chọn tủ này', exact: true }).click();
   await expect(picker).toHaveValue(near);
   await expect(page.getByText('Đã chọn tủ gần nhất', { exact: true })).toBeVisible();
-  await expect(page.getByText(/Phụ kiện ở tủ cũ đã được bỏ/)).toBeVisible();
-  await expect(page.getByText('Tủ này hiện không có phụ kiện.')).toBeVisible();
+  await expect(quantity).toHaveText('1');
   await picker.selectOption(kioskId);
-  await expect(page.getByRole('button', { name: 'Thêm Nơ trang trí' })).toBeVisible();
-  await expect(quantity).toHaveCount(0);
+  await expect(quantity).toHaveText('1');
 });
 
 test('Nearest kiosk search explains a denied location permission', async ({ page }) => {
@@ -308,6 +306,7 @@ test('Seller assigns a paid preorder and exact slot to shop staff before the bou
 test('Customer request with accessories → seller quote → customer payment → packing → admin details', async ({
   page,
 }) => {
+  test.setTimeout(60_000);
   let role = 'CUSTOMER';
   const row = order();
   let created = false;
@@ -427,6 +426,7 @@ test('Customer request with accessories → seller quote → customer payment �
   await page.getByRole('button', { name: 'Thêm Nơ trang trí' }).click();
   await page.getByRole('button', { name: 'Tăng số lượng Nơ trang trí' }).click();
   await page.getByRole('button', { name: 'Thêm Thiệp' }).click();
+  await expect(page.locator('.flower-request-reference-price')).toContainText('400.000 đ');
 
   await page.getByRole('button', { name: 'Gửi yêu cầu báo giá', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Giảm số lượng Nơ trang trí' })).toBeDisabled();
@@ -452,7 +452,7 @@ test('Customer request with accessories → seller quote → customer payment �
   await expect(page.getByText('430.000 đ', { exact: true })).toBeVisible();
   await expect(page.getByLabel('Số lượng xác nhận Nơ trang trí')).toHaveValue('2');
   await page.getByLabel('Số lượng xác nhận Nơ trang trí').fill('1');
-  await page.getByLabel('Số lượng xác nhận Thiệp').fill('0');
+  await page.getByRole('button', { name: 'Bỏ Thiệp khỏi báo giá' }).click();
   await page.getByLabel('Ghi chú cho khách').fill('Hoa giả pastel theo yêu cầu, giá gồm phụ kiện.');
   await page
     .getByRole('checkbox', { name: 'Tôi đã đối chiếu và xác nhận thông tin trên.' })

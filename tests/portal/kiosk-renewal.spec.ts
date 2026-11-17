@@ -164,7 +164,7 @@ test('Reload restores the pending kiosk renewal and pays its existing subscripti
   await expect(card.getByRole('button', { name: 'Tiếp tục thanh toán' })).toBeVisible();
   await card.getByRole('button', { name: 'Tiếp tục thanh toán' }).click();
   state.paid = true;
-  await dialog.getByRole('button', { name: 'Kiểm tra thanh toán', exact: true }).click();
+  await dialog.getByRole('button', { name: 'Kiểm tra trạng thái', exact: true }).click();
   await expect(dialog).toHaveCount(0);
   await expect(card.getByRole('button', { name: 'Gia hạn thêm 12 tháng' })).toBeVisible();
 });

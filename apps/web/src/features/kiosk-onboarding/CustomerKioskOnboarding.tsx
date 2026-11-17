@@ -282,7 +282,6 @@ function CustomerKioskContent({
             checkoutUrl={actions.validatedCheckoutUrl}
             qrCode={actions.latestPaymentData?.qrCode}
             amount={actions.latestPaymentData?.amount ?? appData.annualFee}
-            orderCode={actions.latestPaymentData?.orderCode}
             recipientName={actions.latestPaymentData?.recipientName}
             recipientAccountMasked={actions.latestPaymentData?.recipientAccountMasked}
             title="Thanh toán phí thuê kiosk"

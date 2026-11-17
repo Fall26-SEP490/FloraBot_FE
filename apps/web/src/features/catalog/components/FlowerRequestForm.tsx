@@ -185,29 +185,24 @@ export function FlowerRequestForm({
       : undefined;
   const kioskId = selectedKiosk?.kioskId ?? '';
   const [accessorySelection, setAccessorySelection] = useState<{
-    kioskId: string;
+    sellerId: string;
     items: AccessoryInput[];
-  }>({ kioskId: '', items: [] });
-  const [kioskChangeNotice, setKioskChangeNotice] = useState('');
+  }>({ sellerId: item.sellerId, items: [] });
   const selectedAccessories =
-    accessorySelection.kioskId === kioskId ? accessorySelection.items : [];
+    accessorySelection.sellerId === item.sellerId ? accessorySelection.items : [];
   function chooseKiosk(nextKioskId: string) {
     if (nextKioskId === kioskId) return;
-    setKioskChangeNotice(
-      selectedAccessories.length
-        ? 'Phụ kiện ở tủ cũ đã được bỏ. Bạn có thể chọn lại phụ kiện tại tủ này.'
-        : '',
-    );
     setChosenKioskId(nextKioskId);
-    setAccessorySelection({ kioskId: nextKioskId, items: [] });
     setError('');
   }
   const accessories = useQuery({
-    queryKey: ['preorder-accessories', kioskId],
-    enabled: Boolean(kioskId && session.data?.role === 'CUSTOMER'),
+    queryKey: ['preorder-accessories', item.sellerId],
+    enabled: Boolean(
+      item.sellerId && !item.isDemoSample && isPreorder(item) && session.data?.role === 'CUSTOMER',
+    ),
     queryFn: async () => {
       const catalog = await request<AccessoryCatalog>(
-        `/member/kiosks/${kioskId}/catalog/accessories`,
+        `/member/sellers/${item.sellerId}/catalog/accessories`,
       );
       if (!Array.isArray(catalog)) throw new Error('Danh sách phụ kiện không hợp lệ.');
       return catalog;
@@ -219,10 +214,17 @@ export function FlowerRequestForm({
     const entry = accessories.data?.find(({ id }) => id === accessoryId);
     return !entry || Number(quantity) > Number(entry.availableQuantity);
   });
+  const accessorySubtotal =
+    invalidAccessories || (accessories.isError && selectedAccessories.length)
+      ? null
+      : selectedAccessories.reduce((sum, { accessoryId, quantity }) => {
+          const entry = accessories.data?.find(({ id }) => id === accessoryId);
+          return sum + Number(entry?.price) * Number(quantity);
+        }, 0);
   function setAccessoryQuantity(accessoryId: string, quantity: number) {
     const other = selectedAccessories.filter((entry) => entry.accessoryId !== accessoryId);
     setAccessorySelection({
-      kioskId,
+      sellerId: item.sellerId,
       items: quantity > 0 ? [...other, { accessoryId, quantity }] : other,
     });
     setError('');
@@ -319,7 +321,7 @@ export function FlowerRequestForm({
     kioskId: string;
     pickupAt: string;
     instructions: string;
-    accessories?: AccessoryInput[];
+    accessories: AccessoryInput[];
   } | null>(null);
   const sending = useRef(false);
 
@@ -363,7 +365,7 @@ export function FlowerRequestForm({
         kioskId: selectedKiosk.kioskId,
         pickupAt: pickupDate.toISOString(),
         instructions: brief,
-        ...(selectedAccessories.length > 0 && { accessories: selectedAccessories }),
+        accessories: selectedAccessories,
       };
     }
     sending.current = true;
@@ -402,7 +404,9 @@ export function FlowerRequestForm({
         }
         setError(
           cause instanceof ApiError
-            ? cause.message
+            ? cause.code === 'PREORDER_ACCESSORY_NOT_IN_SHOP'
+              ? 'Phụ kiện đã chọn không còn thuộc kho shop. Kiểm tra lại hoặc chọn chỉ đặt hoa.'
+              : cause.message
             : 'Chưa xác nhận được kết quả. Kiểm tra tài khoản hoặc gửi lại cùng yêu cầu.',
         );
       }
@@ -534,12 +538,152 @@ export function FlowerRequestForm({
             <p>Shop sẽ gửi báo giá và lịch nhận để bạn kiểm tra.</p>
           </div>
           <div className="flower-request-reference-price">
-            <span>Giá mẫu</span>
-            <strong>{formatPrice(item.price)} đ</strong>
+            <span>{selectedAccessories.length ? 'Tổng tạm tính' : 'Giá mẫu'}</span>
+            <strong aria-live="polite">
+              {accessorySubtotal === null
+                ? 'Chưa xác định'
+                : `${formatPrice(item.price + accessorySubtotal)} đ`}
+            </strong>
           </div>
         </div>
         <fieldset disabled={busy || uncertain}>
           <legend className="sr-only">Đặt trước, shop chuẩn bị theo yêu cầu</legend>
+          {item.sellerId &&
+            (!accessories.isSuccess ||
+              Boolean(accessories.data?.length) ||
+              selectedAccessories.length > 0) && (
+              <section
+                className="flower-request-field flower-request-accessories"
+                aria-label="Phụ kiện kèm hoa"
+              >
+                <h3 className="flower-request-accessory-title">
+                  <Package size={18} aria-hidden="true" />
+                  Phụ kiện kèm hoa <span>Tùy chọn</span>
+                </h3>
+                <p className="quiet">
+                  Shop gói cùng bó hoa. Tồn được kiểm tra lại khi bạn đồng ý báo giá.
+                </p>
+                {accessories.isPending ? (
+                  <p role="status">Đang tải phụ kiện của shop…</p>
+                ) : accessories.isError ? (
+                  <>
+                    <p role="status">
+                      Chưa tải được phụ kiện. Bạn có thể thử lại hoặc chỉ đặt hoa.
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => void accessories.refetch()}
+                    >
+                      Tải lại phụ kiện
+                    </Button>
+                  </>
+                ) : accessories.data?.length ? (
+                  <>
+                    <div className="preorder-accessory-options">
+                      {accessories.data.map((entry) => {
+                        const available = Math.min(2_147_483_647, Number(entry.availableQuantity));
+                        const quantity = Number(
+                          selectedAccessories.find(({ accessoryId }) => accessoryId === entry.id)
+                            ?.quantity ?? 0,
+                        );
+                        const atLimit =
+                          quantity >= available ||
+                          (quantity === 0 && selectedAccessories.length >= 20);
+                        return (
+                          <div key={entry.id} className="preorder-accessory-option">
+                            <span>
+                              <strong>{entry.name}</strong>
+                              <small>{formatPrice(Number(entry.price))} đ</small>
+                              {quantity > 0 && quantity === available && (
+                                <small>Đã chọn hết số lượng có sẵn</small>
+                              )}
+                            </span>
+                            <div
+                              className={`preorder-accessory-stepper ${quantity > 0 ? 'has-quantity' : ''}`}
+                            >
+                              {quantity > 0 && (
+                                <Button
+                                  key="decrease"
+                                  type="button"
+                                  variant="outline"
+                                  aria-label={`Giảm số lượng ${entry.name}`}
+                                  onClick={(event) => {
+                                    if (quantity === 1) {
+                                      event.currentTarget.parentElement
+                                        ?.querySelector<HTMLButtonElement>('[data-increase]')
+                                        ?.focus({ preventScroll: true });
+                                    }
+                                    setAccessoryQuantity(entry.id, quantity - 1);
+                                  }}
+                                >
+                                  <Minus size={16} aria-hidden="true" />
+                                </Button>
+                              )}
+                              {quantity > 0 && (
+                                <output key="quantity" aria-label={`Số lượng ${entry.name}`}>
+                                  {quantity}
+                                </output>
+                              )}
+                              <Button
+                                key="increase"
+                                type="button"
+                                variant="outline"
+                                data-increase=""
+                                aria-label={
+                                  quantity > 0
+                                    ? `Tăng số lượng ${entry.name}`
+                                    : available > 0
+                                      ? `Thêm ${entry.name}`
+                                      : `${entry.name} hết hàng`
+                                }
+                                aria-disabled={atLimit}
+                                onClick={() => {
+                                  if (!atLimit) setAccessoryQuantity(entry.id, quantity + 1);
+                                }}
+                              >
+                                {(quantity > 0 || available > 0) && (
+                                  <Plus size={16} aria-hidden="true" />
+                                )}
+                                {quantity === 0 && (available > 0 ? 'Thêm' : 'Hết hàng')}
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {selectedAccessories.length >= 20 && (
+                      <p className="quiet">Đã chọn tối đa 20 loại phụ kiện.</p>
+                    )}
+                  </>
+                ) : (
+                  <p className="quiet">Shop hiện không có phụ kiện khả dụng.</p>
+                )}
+                {invalidAccessories && (
+                  <p role="alert">Một số phụ kiện đã đổi tồn kho. Vui lòng kiểm tra lại.</p>
+                )}
+                {selectedAccessories.length > 0 && (
+                  <div className="flower-request-accessory-summary">
+                    <p>
+                      {accessorySubtotal === null
+                        ? 'Chưa tính được tiền phụ kiện'
+                        : `Phụ kiện: ${formatPrice(accessorySubtotal)} đ`}
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flower-request-clear-accessories"
+                      onClick={() => {
+                        setAccessorySelection({ sellerId: item.sellerId, items: [] });
+                        setError('');
+                      }}
+                    >
+                      Bỏ chọn
+                    </Button>
+                  </div>
+                )}
+              </section>
+            )}
           <div className="flower-request-field">
             <label htmlFor={`kiosk-${item.productId}`}>Tủ nhận hoa</label>
             <select
@@ -634,7 +778,6 @@ export function FlowerRequestForm({
                 )}
               </div>
             )}
-            {kioskChangeNotice && <p role="status">{kioskChangeNotice}</p>}
           </div>
           <div className="flower-request-field">
             <div className="flower-request-date-fields">
@@ -802,135 +945,6 @@ export function FlowerRequestForm({
               Nhập từ 10 đến 2.000 ký tự.
             </p>
           </div>
-          {selectedKiosk && (
-            <section
-              className="flower-request-field flower-request-accessories"
-              aria-label="Phụ kiện kèm hoa"
-            >
-              <h3 className="flower-request-accessory-title">
-                <Package size={18} aria-hidden="true" />
-                Phụ kiện kèm hoa <span>Tùy chọn</span>
-              </h3>
-              <p className="quiet">Chọn thêm để shop chuẩn bị cùng bó hoa.</p>
-              {accessories.isPending ? (
-                <p role="status">Đang tải phụ kiện của tủ…</p>
-              ) : accessories.isError ? (
-                <>
-                  <p role="status">Chưa tải được phụ kiện. Bạn có thể thử lại hoặc chỉ đặt hoa.</p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => void accessories.refetch()}
-                  >
-                    Tải lại phụ kiện
-                  </Button>
-                </>
-              ) : accessories.data?.length ? (
-                <>
-                  <div className="preorder-accessory-options">
-                    {accessories.data.map((entry) => {
-                      const available = Math.min(2_147_483_647, Number(entry.availableQuantity));
-                      const quantity = Number(
-                        selectedAccessories.find(({ accessoryId }) => accessoryId === entry.id)
-                          ?.quantity ?? 0,
-                      );
-                      const atLimit =
-                        quantity >= available ||
-                        (quantity === 0 && selectedAccessories.length >= 20);
-                      return (
-                        <div key={entry.id} className="preorder-accessory-option">
-                          <span>
-                            <strong>{entry.name}</strong>
-                            <small>{formatPrice(Number(entry.price))} đ</small>
-                            {quantity > 0 && quantity === available && (
-                              <small>Đã chọn hết số lượng có sẵn</small>
-                            )}
-                          </span>
-                          <div
-                            className={`preorder-accessory-stepper ${quantity > 0 ? 'has-quantity' : ''}`}
-                          >
-                            {quantity > 0 && (
-                              <Button
-                                key="decrease"
-                                type="button"
-                                variant="outline"
-                                aria-label={`Giảm số lượng ${entry.name}`}
-                                onClick={(event) => {
-                                  if (quantity === 1) {
-                                    event.currentTarget.parentElement
-                                      ?.querySelector<HTMLButtonElement>('[data-increase]')
-                                      ?.focus({ preventScroll: true });
-                                  }
-                                  setAccessoryQuantity(entry.id, quantity - 1);
-                                }}
-                              >
-                                <Minus size={16} aria-hidden="true" />
-                              </Button>
-                            )}
-                            {quantity > 0 && (
-                              <output key="quantity" aria-label={`Số lượng ${entry.name}`}>
-                                {quantity}
-                              </output>
-                            )}
-                            <Button
-                              key="increase"
-                              type="button"
-                              variant="outline"
-                              data-increase=""
-                              aria-label={
-                                quantity > 0
-                                  ? `Tăng số lượng ${entry.name}`
-                                  : available > 0
-                                    ? `Thêm ${entry.name}`
-                                    : `${entry.name} hết hàng`
-                              }
-                              aria-disabled={atLimit}
-                              onClick={() => {
-                                if (!atLimit) setAccessoryQuantity(entry.id, quantity + 1);
-                              }}
-                            >
-                              {(quantity > 0 || available > 0) && (
-                                <Plus size={16} aria-hidden="true" />
-                              )}
-                              {quantity === 0 && (available > 0 ? 'Thêm' : 'Hết hàng')}
-                            </Button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {selectedAccessories.length >= 20 && (
-                    <p className="quiet">Đã chọn tối đa 20 loại phụ kiện.</p>
-                  )}
-                </>
-              ) : (
-                <p className="quiet">Tủ này hiện không có phụ kiện.</p>
-              )}
-              {invalidAccessories && (
-                <p role="alert">Một số phụ kiện đã đổi tồn kho. Vui lòng kiểm tra lại.</p>
-              )}
-              {selectedAccessories.length > 0 && (
-                <div className="flower-request-accessory-summary">
-                  <p>
-                    Đã chọn{' '}
-                    {selectedAccessories.reduce((sum, entry) => sum + Number(entry.quantity), 0)}{' '}
-                    món
-                  </p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flower-request-clear-accessories"
-                    onClick={() => {
-                      setAccessorySelection({ kioskId, items: [] });
-                      setError('');
-                    }}
-                  >
-                    Bỏ chọn
-                  </Button>
-                </div>
-              )}
-            </section>
-          )}
         </fieldset>
         <p role="alert" className="error">
           {error}

@@ -343,7 +343,7 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     // Test Server Reconciliation:
     await page
       .getByRole('dialog', { name: 'Thanh toán phí thuê kiosk' })
-      .getByRole('button', { name: 'Kiểm tra thanh toán', exact: true })
+      .getByRole('button', { name: 'Kiểm tra trạng thái', exact: true })
       .click();
     await expect(page.getByText('Đã thanh toán - Chờ duyệt')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Đã thanh toán thành công' })).toBeVisible();

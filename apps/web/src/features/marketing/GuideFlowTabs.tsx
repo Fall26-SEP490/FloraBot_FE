@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState, type ComponentType, type KeyboardEvent } from 'react';
-import { ClipboardList, Package, QrCode, Send, ShieldCheck, Unlock, Wallet } from '@florabot/ui';
+import { ClipboardList, Package, Send, ShieldCheck, Unlock, Wallet } from '@florabot/ui';
 
 type FlowId = 'available' | 'custom';
 
@@ -24,26 +24,21 @@ const flows: Flow[] = [
   {
     id: 'available',
     label: 'Mua có sẵn',
-    description: 'Bốn bước nhanh gọn khi chọn mẫu hoa nghệ thuật đang có sẵn tại kiosk.',
+    description: 'Chọn hoa, thanh toán và nhận ngay tại kiosk.',
     steps: [
       {
-        title: 'Chọn hoa & kiosk',
-        description: 'Chọn mẫu đang có sẵn và điểm nhận thuận tiện với bạn.',
+        title: 'Chọn hoa tại kiosk',
+        description: 'Chọn bó hoa đang có sẵn trên màn hình kiosk.',
         icon: Package,
       },
       {
-        title: 'Thanh toán an toàn',
-        description: 'Kiểm tra đơn và hoàn tất thanh toán trực tuyến.',
+        title: 'Thanh toán bằng VietQR',
+        description: 'Kiểm tra đơn và quét mã bằng ứng dụng ngân hàng.',
         icon: ShieldCheck,
       },
       {
-        title: 'Nhận QR & PIN',
-        description: 'Hệ thống cung cấp mã QR và PIN 6 số để nhận hoa.',
-        icon: QrCode,
-      },
-      {
         title: 'Mở tủ & nhận hoa',
-        description: 'Quét QR hoặc nhập PIN để mở đúng ô tại kiosk.',
+        description: 'Khi hệ thống ghi nhận thanh toán, chờ ô mở rồi lấy hoa.',
         icon: Unlock,
       },
     ],
@@ -65,12 +60,12 @@ const flows: Flow[] = [
       },
       {
         title: 'Thanh toán & chuẩn bị',
-        description: 'Xác nhận thanh toán để shop hoàn thiện và nạp hoa vào tủ.',
+        description: 'Thanh toán theo báo giá. Khi hệ thống ghi nhận, shop sẽ chuẩn bị hoa.',
         icon: Wallet,
       },
       {
         title: 'Nhận hoa tại kiosk',
-        description: 'Đến đúng giờ hẹn và dùng QR hoặc PIN 6 số để mở ô.',
+        description: 'Đến đúng tủ và nhập mã nhận hoa 8 số được gửi qua email.',
         icon: Unlock,
       },
     ],

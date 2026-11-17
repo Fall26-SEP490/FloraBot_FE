@@ -22,28 +22,6 @@ div.management-modal.payos-checkout-modal {
   width: 100%;
   min-width: 0;
 }
-.payos-steps {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-items: center;
-  gap: 0.5rem;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  color: var(--color-text-muted, #526653);
-  font-size: 0.875rem;
-  text-align: center;
-}
-.payos-steps li {
-  padding: 0.35rem 0;
-  border-bottom: 2px solid var(--color-border, #dae4d9);
-}
-.payos-steps [aria-current='step'] {
-  color: var(--color-text-main, #183e2b);
-  border-color: #1b5c43;
-  font-weight: 700;
-}
 .payos-qr-box {
   background: #ffffff;
   padding: 0.5rem;
@@ -143,12 +121,6 @@ div.management-modal.payos-checkout-modal {
   color: #047857;
   white-space: nowrap;
 }
-.payos-detail-value.payos-code {
-  font-family: monospace;
-  background: rgba(0, 0, 0, 0.05);
-  padding: 0.125rem 0.375rem;
-  border-radius: 4px;
-}
 .payos-checkout-footer {
   width: 100%;
   border-top: 1px solid var(--color-border, #e5e7eb);
@@ -204,9 +176,6 @@ div.management-modal.payos-checkout-modal {
     margin-top: 0.25rem;
     text-decoration: underline;
     text-underline-offset: 0.2em;
-  }
-  .payos-steps {
-    font-size: 0.8rem;
   }
   .payos-qr-svg {
     width: clamp(145px, 44vw, 175px);

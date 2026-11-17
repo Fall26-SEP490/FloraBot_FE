@@ -1,15 +1,17 @@
 import { useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Button, MapPin, RefreshCw } from '@florabot/ui';
+import { Button, RefreshCw } from '@florabot/ui';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
-import { ApiError, request, type Session } from '@/shared/lib/api';
+import { ApiError, queryClient, request, type Session } from '@/shared/lib/api';
 
 type Accessory = components['schemas']['SellerAccessoryResponse'];
-const kioskStatuses: Record<string, string> = {
-  ONLINE: 'Tủ đang trực tuyến',
-  OFFLINE: 'Tủ đang mất kết nối',
-  MAINTENANCE: 'Tủ đang bảo trì',
-};
+function validPrice(value: string) {
+  return /^\d+$/.test(value) && Number.isSafeInteger(Number(value)) && Number(value) > 0;
+}
+
+function validName(value: string) {
+  return value.length >= 2 && value.length <= 120;
+}
 
 function Restock({
   item,
@@ -78,12 +80,12 @@ function Restock({
     if (crudBusy) return;
     const trimmedName = editName.trim();
     const numericPrice = Number(editPrice);
-    if (!trimmedName || trimmedName.length > 200) {
-      setCrudError('Tên phụ kiện từ 1 đến 200 ký tự.');
+    if (!validName(trimmedName)) {
+      setCrudError('Tên phụ kiện từ 2 đến 120 ký tự.');
       return;
     }
-    if (!Number.isFinite(numericPrice) || numericPrice < 0) {
-      setCrudError('Giá phụ kiện không được âm.');
+    if (!validPrice(editPrice)) {
+      setCrudError('Nhập giá phụ kiện là số nguyên lớn hơn 0.');
       return;
     }
     setCrudBusy(true);
@@ -134,17 +136,9 @@ function Restock({
   return (
     <li className="accessory-card">
       <div className="accessory-card-header">
-        <div>
-          <h3>{item.name}</h3>
-          <p className="accessory-kiosk-info">
-            <MapPin size={14} aria-hidden="true" />
-            <span>
-              {item.kioskName} · {item.kioskCode} · {item.kioskAddress}
-            </span>
-          </p>
-        </div>
+        <h3>{item.name}</h3>
         <div className="accessory-meta-pills">
-          <span className="accessory-stock-pill" data-empty={item.stockQuantity === 0}>
+          <span className="accessory-stock-pill" data-empty={Number(item.stockQuantity) === 0}>
             Tồn hiện tại: <strong>{item.stockQuantity}</strong>
           </span>
           <span className="accessory-price-pill">
@@ -158,9 +152,6 @@ function Restock({
       <p className="accessory-status-strip">
         <span className="accessory-pill" data-active={item.status === 'ACTIVE'}>
           {item.status === 'ACTIVE' ? 'Phụ kiện đang bật bán' : 'Phụ kiện đang tắt bán'}
-        </span>
-        <span className="kiosk-status-pill" data-status={item.kioskStatus}>
-          {kioskStatuses[item.kioskStatus] || `Trạng thái tủ: ${item.kioskStatus}`}
         </span>
       </p>
 
@@ -178,7 +169,7 @@ function Restock({
                 <input
                   id={`accessory-name-${item.id}`}
                   value={editName}
-                  maxLength={200}
+                  maxLength={120}
                   disabled={crudBusy}
                   onChange={(e) => setEditName(e.target.value)}
                 />
@@ -188,8 +179,8 @@ function Restock({
                 <input
                   id={`accessory-price-${item.id}`}
                   type="number"
-                  min={0}
-                  step={1000}
+                  min={1}
+                  step={1}
                   value={editPrice}
                   disabled={crudBusy}
                   onChange={(e) => setEditPrice(e.target.value)}
@@ -258,8 +249,7 @@ function Restock({
         {review !== undefined && (
           <div ref={reviewPanel} tabIndex={-1} className="accessory-review-panel">
             <p>
-              Bổ sung <strong>{review}</strong> {item.name} tại {item.kioskName} ({item.kioskCode}).
-              Chỉ xác nhận sau khi đã đặt phụ kiện vào đúng tủ.
+              Bổ sung <strong>{review}</strong> {item.name} vào kho shop?
             </p>
             <div className="stock-actions">
               <Button type="button" disabled={pending} onClick={() => void submit()}>
@@ -295,9 +285,7 @@ function Restock({
 
 export default function SellerAccessories({ session }: { session: Session }) {
   const [search, setSearch] = useState('');
-  const [kiosk, setKiosk] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
-  const [newKioskId, setNewKioskId] = useState('');
   const [newName, setNewName] = useState('');
   const [newPrice, setNewPrice] = useState('');
   const [creating, setCreating] = useState(false);
@@ -305,33 +293,29 @@ export default function SellerAccessories({ session }: { session: Session }) {
   const [createError, setCreateError] = useState('');
 
   const inventory = useQuery({
-    queryKey: ['seller-accessories', session.sellerId],
-    queryFn: () => request<Accessory[]>(`/sellers/${session.sellerId}/accessories`),
+    queryKey: ['seller-accessories', session.sellerId, 'SHOP'],
+    queryFn: () => request<Accessory[]>(`/sellers/${session.sellerId}/accessories?scope=SHOP`),
     enabled: !!session.sellerId,
     refetchOnMount: 'always',
   });
-  const sellerKiosks = useQuery({
-    queryKey: ['seller-kiosks', session.sellerId],
-    queryFn: () =>
-      request<components['schemas']['SellerKioskDto'][]>(`/sellers/${session.sellerId}/kiosks`),
-    enabled: createOpen && !!session.sellerId,
-  });
+  function refreshInventory() {
+    return Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['seller-accessories', session.sellerId] }),
+      queryClient.invalidateQueries({ queryKey: ['preorder-accessories', session.sellerId] }),
+    ]);
+  }
 
   async function handleCreateAccessory(event: React.FormEvent) {
     event.preventDefault();
     if (!session.sellerId || creating) return;
     const trimmedName = newName.trim();
     const numericPrice = Number(newPrice);
-    if (!newKioskId) {
-      setCreateError('Chọn tủ kiosk áp dụng phụ kiện.');
+    if (!validName(trimmedName)) {
+      setCreateError('Tên phụ kiện từ 2 đến 120 ký tự.');
       return;
     }
-    if (!trimmedName || trimmedName.length > 200) {
-      setCreateError('Tên phụ kiện từ 1 đến 200 ký tự.');
-      return;
-    }
-    if (newPrice.trim() === '' || !Number.isFinite(numericPrice) || numericPrice < 0) {
-      setCreateError('Giá phụ kiện không được âm.');
+    if (!validPrice(newPrice)) {
+      setCreateError('Nhập giá phụ kiện là số nguyên lớn hơn 0.');
       return;
     }
     setCreating(true);
@@ -340,16 +324,18 @@ export default function SellerAccessories({ session }: { session: Session }) {
     try {
       await request<{ id: string }>(
         `/sellers/${session.sellerId}/accessories`,
-        { kioskId: newKioskId, name: trimmedName, price: numericPrice },
+        {
+          name: trimmedName,
+          price: numericPrice,
+        } satisfies components['schemas']['CreateSellerAccessory'],
         true,
         'POST',
       );
       setNewName('');
       setNewPrice('');
       setSearch('');
-      setKiosk('');
       setCreateNotice(`Đã thêm phụ kiện ${trimmedName}.`);
-      await inventory.refetch();
+      await refreshInventory();
     } catch (cause) {
       setCreateError(cause instanceof ApiError ? cause.message : 'Chưa tạo được phụ kiện mới.');
     } finally {
@@ -363,22 +349,14 @@ export default function SellerAccessories({ session }: { session: Session }) {
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/đ/g, 'd');
-  const visible = items.filter(
-    (item) =>
-      (!kiosk || item.kioskId === kiosk) &&
-      fold(`${item.name} ${item.kioskName} ${item.kioskCode}`).includes(fold(search.trim())),
-  );
-  const kiosks = [...new Map(items.map((item) => [item.kioskId, item])).values()];
+  const visible = items.filter((item) => fold(item.name).includes(fold(search.trim())));
   if (!session.sellerId) return null;
   return (
     <section className="seller-accessories" aria-labelledby="accessories-title">
       <div className="accessory-page-header">
         <div>
-          <h2 id="accessories-title">Phụ kiện chỉ dành cho đơn đặt trước</h2>
-          <p>
-            Phụ kiện chỉ áp dụng cho đơn đặt trước. Xem tồn phụ kiện ở từng tủ và ghi nhận số lượng
-            vừa bổ sung. Thao tác này chỉ cộng tồn, không tự bật bán phụ kiện hay mở cửa tủ.
-          </p>
+          <h2 id="accessories-title">Kho phụ kiện của shop</h2>
+          <p>Dùng chung cho đơn đặt trước ở mọi tủ của shop.</p>
         </div>
         <Button
           variant="outline"
@@ -396,32 +374,16 @@ export default function SellerAccessories({ session }: { session: Session }) {
         open={createOpen}
         onToggle={(e) => setCreateOpen(e.currentTarget.open)}
       >
-        <summary>Thêm phụ kiện mới cho tủ</summary>
+        <summary>Thêm phụ kiện mới</summary>
         {createOpen && (
           <form className="accessory-restock-box" onSubmit={(e) => void handleCreateAccessory(e)}>
             <div className="accessory-filters">
-              <div>
-                <label htmlFor="new-accessory-kiosk">Tủ áp dụng</label>
-                <select
-                  id="new-accessory-kiosk"
-                  value={newKioskId}
-                  disabled={creating || sellerKiosks.isPending}
-                  onChange={(e) => setNewKioskId(e.target.value)}
-                >
-                  <option value="">Chọn tủ kiosk</option>
-                  {sellerKiosks.data?.map((k) => (
-                    <option key={k.id} value={k.id}>
-                      {k.name} · {k.code}
-                    </option>
-                  ))}
-                </select>
-              </div>
               <div>
                 <label htmlFor="new-accessory-name">Tên phụ kiện</label>
                 <input
                   id="new-accessory-name"
                   value={newName}
-                  maxLength={200}
+                  maxLength={120}
                   disabled={creating}
                   onChange={(e) => setNewName(e.target.value)}
                   placeholder="Ví dụ: Thiệp chúc mừng, Nơ lụa…"
@@ -432,8 +394,8 @@ export default function SellerAccessories({ session }: { session: Session }) {
                 <input
                   id="new-accessory-price"
                   type="number"
-                  min={0}
-                  step={1000}
+                  min={1}
+                  step={1}
                   value={newPrice}
                   disabled={creating}
                   onChange={(e) => setNewPrice(e.target.value)}
@@ -467,33 +429,17 @@ export default function SellerAccessories({ session }: { session: Session }) {
               type="search"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Tên phụ kiện, tên hoặc mã tủ…"
+              placeholder="Nhập tên phụ kiện…"
             />
           </div>
-          <div>
-            <label htmlFor="accessory-kiosk">Tủ chứa phụ kiện</label>
-            <select
-              id="accessory-kiosk"
-              value={kiosk}
-              onChange={(event) => setKiosk(event.target.value)}
-            >
-              <option value="">Tất cả tủ</option>
-              {kiosks.map((item) => (
-                <option key={item.kioskId} value={item.kioskId}>
-                  {item.kioskName} · {item.kioskCode}
-                </option>
-              ))}
-            </select>
-          </div>
           <p role="status">
-            Hiển thị {visible.length} / {items.length} phụ kiện theo tủ.
+            Hiển thị {visible.length} / {items.length} phụ kiện.
           </p>
-          {(search || kiosk) && (
+          {search && (
             <Button
               variant="outline"
               onClick={() => {
                 setSearch('');
-                setKiosk('');
               }}
             >
               Xóa bộ lọc phụ kiện
@@ -509,11 +455,11 @@ export default function SellerAccessories({ session }: { session: Session }) {
         </p>
       )}
       {inventory.isSuccess && inventory.data.length === 0 && (
-        <p className="seller-empty-state">Shop chưa có phụ kiện được thiết lập tại tủ.</p>
+        <p className="seller-empty-state">Kho shop chưa có phụ kiện. Thêm phụ kiện để bắt đầu.</p>
       )}
       {items.length > 0 && visible.length === 0 && (
         <p role="status" className="seller-empty-state">
-          Không có phụ kiện khớp bộ lọc. Thử đổi tủ hoặc xóa tìm kiếm.
+          Không tìm thấy phụ kiện phù hợp. Thử tên khác hoặc xóa tìm kiếm.
         </p>
       )}
       <ul className="admin-shop-list accessory-list">
@@ -522,7 +468,7 @@ export default function SellerAccessories({ session }: { session: Session }) {
             key={item.id}
             item={item}
             sellerId={session.sellerId!}
-            refresh={inventory.refetch}
+            refresh={refreshInventory}
           />
         ))}
       </ul>

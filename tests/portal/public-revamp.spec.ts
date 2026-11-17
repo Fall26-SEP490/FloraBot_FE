@@ -435,7 +435,7 @@ test.describe('Guide Page (/huong-dan-dat-hoa) and Contact (/lien-he) Overhaul',
     const availableTab = page.getByRole('tab', { name: 'Mua có sẵn' });
     const customTab = page.getByRole('tab', { name: 'Đặt mẫu riêng' });
     await expect(availableTab).toHaveAttribute('aria-selected', 'true');
-    await expect(page.getByRole('heading', { name: 'Chọn hoa & kiosk' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Chọn hoa tại kiosk' })).toBeVisible();
 
     await customTab.click();
     await expect(customTab).toHaveAttribute('aria-selected', 'true');

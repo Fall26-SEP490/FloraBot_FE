@@ -7976,6 +7976,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/member/sellers/{sellerId}/catalog/accessories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Shared preorder accessory catalog for this seller. Only active shop accessories with available stock are returned. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sellerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PreorderAccessoryCatalogItem"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/member/kiosks/{kioskId}/catalog/accessories": {
         parameters: {
             query?: never;
@@ -7983,7 +8021,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Customer catalog for the active seller/kiosk lease. Only active accessories with available stock are returned; stock is revalidated when the customer accepts the quote. */
+        /** @description Compatibility lookup: resolves the kiosk seller and returns its shared shop accessories. */
         get: {
             parameters: {
                 query?: never;
@@ -8060,7 +8098,9 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    scope?: "SHOP" | "KIOSK" | "ALL";
+                };
                 header?: never;
                 path: {
                     sellerId: string;
@@ -8096,12 +8136,17 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description OK */
-                200: {
+                /** @description Created */
+                201: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                        };
+                    };
                 };
             };
         };
@@ -16591,7 +16636,7 @@ export interface components {
         };
         CreateSellerAccessory: {
             /** Format: uuid */
-            kioskId: string;
+            kioskId?: string | null;
             name: string;
             /** Format: int64 */
             price: number | string;
@@ -17976,11 +18021,13 @@ export interface components {
             stockQuantity: number | string;
             status: string;
             /** Format: uuid */
-            kioskId: string;
-            kioskCode: string;
-            kioskName: string;
-            kioskAddress: string;
-            kioskStatus: string;
+            kioskId: string | null;
+            kioskCode: string | null;
+            kioskName: string | null;
+            kioskAddress: string | null;
+            kioskStatus: string | null;
+            /** @enum {string} */
+            scope: "SHOP" | "KIOSK";
         };
         SellerAccountResponse: {
             /** Format: uuid */
