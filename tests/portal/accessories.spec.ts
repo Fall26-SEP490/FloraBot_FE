@@ -45,14 +45,11 @@ for (const width of [390, 1440]) {
       price: 25000,
       stockQuantity: 0,
       status: 'INACTIVE',
-      kioskId: 'kiosk-a',
-      kioskCode: 'FPT-01',
-      kioskName: 'Đại học FPT',
-      kioskAddress: 'Thủ Đức',
-      kioskStatus: 'OFFLINE',
+      kioskId: null,
+      scope: 'SHOP',
     };
     let writes = 0;
-    await page.route('**/api/sellers/seller-a/accessories', (route) =>
+    await page.route('**/api/sellers/seller-a/accessories?scope=SHOP', (route) =>
       route.fulfill({ json: [item] }),
     );
     await page.route('**/flows/restock_accessory', (route) => {
@@ -65,7 +62,7 @@ for (const width of [390, 1440]) {
     const section = page.locator('.seller-accessories');
     await expect(section.getByRole('heading', { level: 2 })).toBeVisible();
     await expect(section.getByText('Phụ kiện đang tắt bán', { exact: true })).toBeVisible();
-    await expect(section.getByText('Tủ đang mất kết nối', { exact: true })).toBeVisible();
+    await expect(section.getByRole('combobox')).toHaveCount(0);
     await section.getByRole('button', { name: 'Kiểm tra số lượng' }).click();
     await expect(section.getByLabel('Số lượng bổ sung cho Thiệp hoa')).toBeFocused();
     await expect(section.getByRole('alert')).toContainText('Nhập số lượng nguyên');
@@ -106,50 +103,49 @@ for (const width of [390, 1440]) {
 
 test('Accessory inventory handles empty state and retry after failure', async ({ page }) => {
   let reads = 0;
-  await page.route('**/api/**/accessories', (route) =>
+  await page.route('**/api/**/accessories?scope=SHOP', (route) =>
     ++reads === 1 ? route.fulfill({ status: 503, json: {} }) : route.fulfill({ json: [] }),
   );
   await page.goto('/seller/accessories');
   const section = page.locator('.seller-accessories');
   await expect(section.getByRole('alert')).toContainText('Chưa tải được tồn mới nhất');
   await section.getByRole('button', { name: 'Làm mới tồn phụ kiện' }).click();
-  await expect(section.getByText('Shop chưa có phụ kiện được thiết lập tại tủ.')).toBeVisible();
+  await expect(
+    section.getByText('Kho shop chưa có phụ kiện. Thêm phụ kiện để bắt đầu.'),
+  ).toBeVisible();
 });
 
 test('Seller automatically sees a created accessory after reloading', async ({ page }) => {
-  const kiosk = { id: 'kiosk-a', name: 'Đại học FPT', code: 'FPT-01' };
   const item = {
     id: 'accessory-new',
     name: 'Nơ lụa',
     price: 15000,
     stockQuantity: 0,
     status: 'ACTIVE',
-    kioskId: kiosk.id,
-    kioskName: kiosk.name,
-    kioskCode: kiosk.code,
-    kioskAddress: 'Thủ Đức',
-    kioskStatus: 'ONLINE',
+    kioskId: null,
+    scope: 'SHOP',
   };
   let writes = 0;
-  await page.route('**/api/sellers/seller-a/kiosks', (route) => route.fulfill({ json: [kiosk] }));
-  await page.route('**/api/sellers/seller-a/accessories', (route) => {
+  await page.route(/\/api\/sellers\/seller-a\/accessories(?:\?scope=SHOP)?$/, (route) => {
     if (route.request().method() === 'POST') {
       expect(route.request().postDataJSON()).toEqual({
-        kioskId: kiosk.id,
         name: item.name,
         price: item.price,
       });
       writes++;
       return route.fulfill({ status: 201, json: { id: item.id } });
     }
+    expect(new URL(route.request().url()).searchParams.get('scope')).toBe('SHOP');
     return route.fulfill({ json: writes ? [item] : [] });
   });
 
   await page.goto('/seller/accessories');
   const section = page.locator('.seller-accessories');
-  await expect(section.getByText('Shop chưa có phụ kiện được thiết lập tại tủ.')).toBeVisible();
-  await section.getByText('Thêm phụ kiện mới cho tủ', { exact: true }).click();
-  await section.getByLabel('Tủ áp dụng').selectOption(kiosk.id);
+  await expect(
+    section.getByText('Kho shop chưa có phụ kiện. Thêm phụ kiện để bắt đầu.'),
+  ).toBeVisible();
+  await section.getByText('Thêm phụ kiện mới', { exact: true }).click();
+  await expect(section.getByRole('combobox')).toHaveCount(0);
   await section.getByLabel('Tên phụ kiện', { exact: true }).fill(item.name);
   await section.getByLabel('Giá bán (VND)').fill(String(item.price));
   await section.getByRole('button', { name: 'Tạo phụ kiện' }).click();

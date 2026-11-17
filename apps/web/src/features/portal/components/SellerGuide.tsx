@@ -36,8 +36,8 @@ const guides: Record<string, Guide> = {
   accessories: {
     title: 'Hướng dẫn phụ kiện',
     steps: [
-      'Phụ kiện áp dụng cho đơn đặt trước tại từng tủ.',
-      'Chỉ xác nhận bổ sung sau khi đã đặt phụ kiện vào tủ.',
+      'Tồn cũ ở tủ không tự chuyển vào kho shop. Đối chiếu số lượng thực tế trước khi bổ sung.',
+      'Khi chuẩn bị đơn, đóng gói phụ kiện cùng bó hoa và nạp vào cùng một ô tại tủ khách chọn.',
     ],
     href: '/seller/products',
     action: 'Xem mẫu hoa',

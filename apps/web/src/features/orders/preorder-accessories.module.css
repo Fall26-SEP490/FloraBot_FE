@@ -47,9 +47,13 @@
 
 .quoteOption {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(5rem, 7rem);
+  grid-template-columns: minmax(0, 1fr) minmax(3.5rem, 6rem) auto;
   align-items: center;
   gap: 8px;
+}
+
+.quoteOption > button {
+  grid-column: 3;
 }
 
 .quoteFields {
@@ -84,6 +88,10 @@
 
 .quoteLines small {
   display: block;
+}
+
+.quoteLines button {
+  margin-top: 6px;
 }
 
 .quoteAdjust {

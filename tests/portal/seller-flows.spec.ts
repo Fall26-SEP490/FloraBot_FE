@@ -66,9 +66,7 @@ for (const width of [390, 1440]) {
     expect(model.writes).toEqual([]);
   });
 
-  test(`Seller accessories filter the correct kiosk and preserve restock review at ${width}`, async ({
-    page,
-  }) => {
+  test(`Seller searches shared accessories and reviews restock at ${width}`, async ({ page }) => {
     const model = await setupSellerUsability(page);
     await page.setViewportSize({ width, height: 950 });
     const rows = [
@@ -78,11 +76,8 @@ for (const width of [390, 1440]) {
         price: 15000,
         stockQuantity: 8,
         status: 'ACTIVE',
-        kioskId,
-        kioskName: 'Tủ A',
-        kioskCode: 'K-A',
-        kioskAddress: 'Địa chỉ A',
-        kioskStatus: 'ONLINE',
+        kioskId: null,
+        scope: 'SHOP',
       },
       {
         id: 'accessory-b',
@@ -90,14 +85,13 @@ for (const width of [390, 1440]) {
         price: 10000,
         stockQuantity: 3,
         status: 'ACTIVE',
-        kioskId: 'kiosk-b',
-        kioskName: 'Tủ B',
-        kioskCode: 'K-B',
-        kioskAddress: 'Địa chỉ B',
-        kioskStatus: 'OFFLINE',
+        kioskId: null,
+        scope: 'SHOP',
       },
     ];
-    await page.route('**/api/sellers/*/accessories', (route) => route.fulfill({ json: rows }));
+    await page.route('**/api/sellers/*/accessories?scope=SHOP', (route) =>
+      route.fulfill({ json: rows }),
+    );
     let sends = 0;
     await page.route('**/flows/restock_accessory', (route) => {
       sends++;
@@ -110,14 +104,15 @@ for (const width of [390, 1440]) {
     await page.getByLabel('Tìm phụ kiện', { exact: true }).fill('DEN');
     await expect(page.locator('.accessory-card')).toHaveCount(1);
     await expect(page.locator('.accessory-card')).toContainText('Đèn trang trí');
-    await page.getByLabel('Tủ chứa phụ kiện', { exact: true }).selectOption('kiosk-b');
-    await expect(page.getByText('Không có phụ kiện khớp bộ lọc.', { exact: false })).toBeVisible();
+    await page.getByLabel('Tìm phụ kiện', { exact: true }).fill('không tồn tại');
+    await expect(
+      page.getByText('Không tìm thấy phụ kiện phù hợp.', { exact: false }),
+    ).toBeVisible();
     await page.getByRole('button', { name: 'Xóa bộ lọc phụ kiện', exact: true }).click();
-    await page.getByLabel('Tủ chứa phụ kiện', { exact: true }).selectOption('kiosk-b');
-    const card = page.locator('.accessory-card');
+    const card = page.locator('.accessory-card').filter({ hasText: 'Thiệp hoa' });
     await card.getByLabel('Số lượng bổ sung cho Thiệp hoa', { exact: true }).fill('2');
     await card.getByRole('button', { name: 'Kiểm tra số lượng', exact: true }).click();
-    await expect(card).toContainText('Chỉ xác nhận sau khi đã đặt phụ kiện vào đúng tủ.');
+    await expect(card).toContainText('Bổ sung 2 Thiệp hoa vào kho shop?');
     expect(sends).toBe(0);
     expect(
       (

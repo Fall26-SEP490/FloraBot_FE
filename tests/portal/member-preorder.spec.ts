@@ -28,7 +28,7 @@ test.beforeEach(async ({ page }) => {
   await page.route('**/api/kiosks/*/preorder-availability*', (route) =>
     route.fulfill({ json: { available: true } }),
   );
-  await page.route('**/api/member/kiosks/*/catalog/accessories', (route) =>
+  await page.route('**/api/member/sellers/*/catalog/accessories', (route) =>
     route.fulfill({ status: 404, json: {} }),
   );
 });
@@ -52,7 +52,7 @@ test('CUSTOMER places CUSTOM with selected kiosk and no door action', async ({ p
     expect(input.productId).toBe(flower.productId);
     expect(input.kioskId).toBe(otherKiosk.kioskId);
     expect(input).not.toHaveProperty('bouquetId');
-    expect(input).not.toHaveProperty('accessories');
+    expect(input.accessories).toEqual([]);
     expect(input.id).toMatch(/^[a-f0-9-]{36}$/);
     submitted++;
     await route.fulfill({ json: { result: input.id } });

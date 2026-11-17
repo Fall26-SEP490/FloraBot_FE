@@ -26,7 +26,7 @@ test('Seller quote form on mobile keeps totals unknown when accessory pricing fa
   await page.route('**/api/me/products', (route) =>
     route.fulfill({ json: [{ id: sampleRequest.productId, price: 350000 }] }),
   );
-  await page.route(`**/api/sellers/${shopId}/accessories`, (route) =>
+  await page.route(`**/api/sellers/${shopId}/accessories?scope=ALL`, (route) =>
     route.fulfill({ status: 503, json: {} }),
   );
   await page.goto('/seller/orders');
@@ -42,6 +42,65 @@ test('Seller quote form on mobile keeps totals unknown when accessory pricing fa
     .locator('form.order-action-card')
     .screenshot({ path: testInfo.outputPath('seller-quote-390.png') });
 });
+
+test('Seller must explicitly resolve accessory shortages before submitting a quote', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await setupSellerUsability(page);
+  const requestedAccessories = [
+    { accessoryId: 'bow', name: 'Nơ lụa', quantity: 2 },
+    { accessoryId: 'card', name: 'Thiệp', quantity: 1 },
+  ];
+  await page.route(ordersPath, (route) =>
+    route.fulfill({
+      json: { items: [{ ...sampleRequest, requestedAccessories }], page: 1, hasMore: false },
+    }),
+  );
+  await page.route(`**/api/sellers/${shopId}/accessories?scope=ALL`, (route) =>
+    route.fulfill({
+      json: [
+        { id: 'bow', price: 10000, stockQuantity: 1, status: 'ACTIVE', kioskId: null },
+        { id: 'card', price: 5000, stockQuantity: 0, status: 'ACTIVE', kioskId: null },
+      ],
+    }),
+  );
+  let sent = 0;
+  await page.route(`**/api/sellers/${shopId}/preorders/${sampleRequest.id}/quote`, (route) => {
+    sent++;
+    expect(route.request().postDataJSON()).toMatchObject({
+      price: 350000,
+      accessories: [{ accessoryId: 'bow', quantity: 1 }],
+    });
+    return route.fulfill({ json: { result: sampleRequest.id } });
+  });
+  await page.goto('/seller/orders');
+  const row = page.locator(`#preorder-${sampleRequest.id}`);
+  await row.locator(':scope > summary').click();
+  await row.getByRole('button', { name: 'Báo giá hoặc từ chối' }).click();
+  const accessories = row.getByRole('region', { name: 'Xác nhận phụ kiện' });
+  await expect(accessories.getByText('Khách chọn 2 · Kho còn 1')).toBeVisible();
+  await expect(accessories.getByText('Khách chọn 1 · Đã hết hàng')).toBeVisible();
+  await row.getByLabel('Ghi chú cho khách').fill('Bó hoa theo yêu cầu của khách.');
+  const confirm = row.getByRole('checkbox', {
+    name: 'Tôi đã đối chiếu và xác nhận thông tin trên.',
+  });
+  await confirm.check();
+  const submit = row.getByRole('button', { name: 'Gửi báo giá', exact: true });
+  await expect(submit).toBeDisabled();
+  await accessories.getByRole('button', { name: 'Dùng 1 Nơ lụa còn lại' }).click();
+  await expect(submit).toBeDisabled();
+  await accessories.getByRole('button', { name: 'Bỏ Thiệp khỏi báo giá' }).click();
+  await expect(confirm).not.toBeChecked();
+  await expect(accessories.getByText('Đã bỏ khỏi báo giá · Khách chọn 1')).toBeVisible();
+  await expect(row.getByText('360.000 đ', { exact: true })).toBeVisible();
+  expect(sent).toBe(0);
+  await confirm.check();
+  await submit.click();
+  await expect(row.getByText('Đã gửi báo giá.')).toBeVisible();
+  expect(sent).toBe(1);
+});
+
 for (const width of [390, 1440]) {
   test(`Seller workbench leads to matching work across API pages at ${width}`, async ({ page }) => {
     const model = await setupSellerUsability(page);

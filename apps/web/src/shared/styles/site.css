@@ -752,6 +752,10 @@ html {
   margin: 2rem 0 0;
 }
 
+.guide-steps-grid:where(:has(> :last-child:nth-child(3))) {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .guide-step-card {
   position: relative;
   min-width: 0;

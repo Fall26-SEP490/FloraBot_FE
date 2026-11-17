@@ -88,17 +88,17 @@ for (const role of ['CUSTOMER', 'SELLER']) {
         await expect(dialog.getByRole('alert')).toBeVisible();
         await expect(dialog.getByRole('img', { name: 'Mã QR thanh toán PayOS' })).toHaveCount(0);
         await expect(
-          dialog.getByRole('button', { name: 'Kiểm tra thanh toán', exact: true }),
+          dialog.getByRole('button', { name: 'Kiểm tra trạng thái', exact: true }),
         ).toBeVisible();
       }
       await expect(page).toHaveURL(/thue-kiosk$/);
-      await dialog.getByRole('button', { name: 'Kiểm tra thanh toán', exact: true }).click();
+      await dialog.getByRole('button', { name: 'Kiểm tra trạng thái', exact: true }).click();
       await expect(dialog.getByRole('button', { name: 'Đang kiểm tra…' })).toBeDisabled();
       await expect(dialog.getByText(/đừng thanh toán lại/)).toBeVisible();
       expect(reconciles).toBe(1);
       await expect(page.getByRole('heading', { name: 'Đã thanh toán thành công' })).toHaveCount(0);
       application.status = 'PAID_REVIEW';
-      await dialog.getByRole('button', { name: 'Kiểm tra thanh toán', exact: true }).click();
+      await dialog.getByRole('button', { name: 'Kiểm tra trạng thái', exact: true }).click();
       await expect(dialog).toHaveCount(0);
       await expect(page.getByRole('heading', { name: 'Đã thanh toán thành công' })).toBeVisible();
       expect(links).toBe(role === 'CUSTOMER' && width === 390 ? 2 : 1);

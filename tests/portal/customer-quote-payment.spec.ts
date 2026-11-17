@@ -221,7 +221,7 @@ test('Checking an expired QR reports a fresh verification time', async ({ page }
   const dialog = page.getByRole('dialog', { name: 'Thanh toán đơn hoa' });
   await expect(dialog.getByRole('img', { name: 'Mã QR thanh toán PayOS' })).toBeVisible();
   state.row.payBefore = '2020-01-01T00:00:00Z';
-  await dialog.getByRole('button', { name: 'Kiểm tra thanh toán', exact: true }).click();
+  await dialog.getByRole('button', { name: 'Kiểm tra trạng thái', exact: true }).click();
   await expect(dialog.getByText(/Đã kiểm tra lúc/)).toBeVisible();
   await expect(dialog.getByText(/chưa ghi nhận thanh toán cho đơn hết hạn này/)).toBeVisible();
 });
@@ -308,7 +308,7 @@ for (const width of [390, 1440]) {
     ).toBeVisible();
     await expect(dialog).toContainText('360.000');
     if (width === 390) {
-      for (const name of ['Kiểm tra thanh toán', 'Đóng']) {
+      for (const name of ['Kiểm tra trạng thái', 'Đóng']) {
         const bounds = await dialog.getByRole('button', { name, exact: true }).boundingBox();
         expect(bounds).not.toBeNull();
         expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(844);
@@ -340,7 +340,7 @@ for (const width of [390, 1440]) {
       if (verificationError) return route.fulfill({ status: 503, json: {} });
       await route.fulfill({ json: { items: [state.row], page: 1, hasMore: false } });
     });
-    await dialog.getByRole('button', { name: 'Kiểm tra thanh toán', exact: true }).click();
+    await dialog.getByRole('button', { name: 'Kiểm tra trạng thái', exact: true }).click();
     await expect(dialog.getByRole('button', { name: 'Đang kiểm tra…' })).toBeDisabled();
     await expect(dialog.getByText(/đừng thanh toán lại/)).toBeVisible();
     expect(links).toBe(1);
@@ -348,14 +348,14 @@ for (const width of [390, 1440]) {
     await expect(dialog).toBeVisible();
     if (width === 390) {
       verificationError = true;
-      await dialog.getByRole('button', { name: 'Kiểm tra thanh toán', exact: true }).click();
+      await dialog.getByRole('button', { name: 'Kiểm tra trạng thái', exact: true }).click();
       await expect(dialog.getByRole('alert')).toContainText('Chưa kiểm tra được giao dịch');
       verificationError = false;
     }
     state.row.orderStatus = 'PAID';
     await dialog
       .getByRole('button', {
-        name: width === 390 ? 'Kiểm tra lại' : 'Kiểm tra thanh toán',
+        name: width === 390 ? 'Kiểm tra lại' : 'Kiểm tra trạng thái',
         exact: true,
       })
       .click();
@@ -383,7 +383,7 @@ test('Preorder cannot open a payment link while the seller channel is unavailabl
   await pay.click();
   const dialog = page.getByRole('dialog', { name: 'Thanh toán đơn hoa' });
   await expect(dialog.getByRole('alert')).toContainText('Kênh nhận tiền của shop chưa sẵn sàng');
-  await expect(dialog.getByRole('button', { name: 'Kiểm tra thanh toán' })).toHaveCount(0);
+  await expect(dialog.getByRole('button', { name: 'Kiểm tra trạng thái' })).toHaveCount(0);
   await expect(dialog.getByRole('link')).toHaveCount(0);
   await dialog.getByRole('button', { name: 'Đóng', exact: true }).click();
   await expect(pay).toBeEnabled();
@@ -465,7 +465,7 @@ for (const qrCode of [null, 'https://pay.payos.vn/web/not-a-bank-qr']) {
       await expect(dialog.getByRole('img', { name: 'Mã QR thanh toán PayOS' })).toBeVisible();
       expect(attempts).toBe(2);
       expect(page.context().pages()).toHaveLength(1);
-      await dialog.getByRole('button', { name: 'Kiểm tra thanh toán', exact: true }).click();
+      await dialog.getByRole('button', { name: 'Kiểm tra trạng thái', exact: true }).click();
       await expect(dialog).toBeVisible();
       expect(state.row.orderStatus).toBe('AWAITING_PAYMENT');
       await dialog.getByRole('button', { name: 'Đóng', exact: true }).click();

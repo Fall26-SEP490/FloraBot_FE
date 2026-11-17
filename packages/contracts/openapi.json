@@ -7827,12 +7827,46 @@
         }
       }
     },
+    "/api/member/sellers/{sellerId}/catalog/accessories": {
+      "get": {
+        "tags": [
+          "Preorders"
+        ],
+        "description": "Shared preorder accessory catalog for this seller. Only active shop accessories with available stock are returned.",
+        "parameters": [
+          {
+            "name": "sellerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PreorderAccessoryCatalogItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/member/kiosks/{kioskId}/catalog/accessories": {
       "get": {
         "tags": [
           "Preorders"
         ],
-        "description": "Customer catalog for the active seller/kiosk lease. Only active accessories with available stock are returned; stock is revalidated when the customer accepts the quote.",
+        "description": "Compatibility lookup: resolves the kiosk seller and returns its shared shop accessories.",
         "parameters": [
           {
             "name": "kioskId",
@@ -7908,6 +7942,18 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "SHOP",
+                "KIOSK",
+                "ALL"
+              ]
+            }
           }
         ],
         "responses": {
@@ -7952,8 +7998,24 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "OK"
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -18930,14 +18992,16 @@
       },
       "CreateSellerAccessory": {
         "required": [
-          "kioskId",
           "name",
           "price"
         ],
         "type": "object",
         "properties": {
           "kioskId": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "format": "uuid"
           },
           "name": {
@@ -24348,7 +24412,8 @@
           "kioskCode",
           "kioskName",
           "kioskAddress",
-          "kioskStatus"
+          "kioskStatus",
+          "scope"
         ],
         "type": "object",
         "properties": {
@@ -24379,20 +24444,42 @@
             "type": "string"
           },
           "kioskId": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "format": "uuid"
           },
           "kioskCode": {
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "kioskName": {
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "kioskAddress": {
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "kioskStatus": {
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "SHOP",
+              "KIOSK"
+            ]
           }
         },
         "additionalProperties": false

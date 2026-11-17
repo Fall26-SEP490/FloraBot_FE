@@ -13,14 +13,14 @@ import {
 
 export const metadata = {
   title: 'Hướng dẫn đặt & nhận hoa — FloraBot',
-  description: 'Cách đặt mẫu riêng, mua hoa có sẵn và nhận hoa tại tủ bằng mã QR hoặc PIN.',
+  description: 'Cách đặt mẫu riêng, mua hoa có sẵn và nhận hoa tại kiosk FloraBot.',
 };
 
 export default function HuongDanDatHoaPage() {
   return (
     <Layout
       title="Hướng dẫn đặt & nhận hoa — FloraBot"
-      description="Cách đặt mẫu riêng, mua hoa có sẵn và nhận hoa tại tủ bằng mã QR hoặc PIN."
+      description="Cách đặt mẫu riêng, mua hoa có sẵn và nhận hoa tại kiosk FloraBot."
     >
       <main id="main" className="guide-fullwidth-page" tabIndex={-1}>
         {/* Section 1: Hero (Clean White) */}
@@ -62,9 +62,7 @@ export default function HuongDanDatHoaPage() {
                   </div>
                   <span className="guide-card-badge">Nhanh nhất</span>
                 </div>
-                <p>
-                  Chọn mẫu hoa nghệ thuật đang có sẵn tại kiosk, thanh toán online và nhận mã mở tủ.
-                </p>
+                <p>Chọn hoa tại kiosk, thanh toán bằng VietQR rồi chờ ô mở để nhận hoa.</p>
                 <div className="guide-pill-group" aria-label="Ưu điểm">
                   <span className="guide-pill">Nhận ngay trong ngày</span>
                   <span className="guide-pill">Không chờ chuẩn bị</span>
