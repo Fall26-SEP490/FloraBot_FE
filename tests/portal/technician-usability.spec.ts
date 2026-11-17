@@ -73,6 +73,58 @@ async function fixture(page: Page, mode: 'data' | 'empty' | 'error' | 'slow' = '
   return { writes };
 }
 
+test('Technician opens the kiosk health tab and reads all four slots', async ({
+  page,
+}, testInfo) => {
+  await fixture(page);
+  await page.route('**/api/staff/kiosk-health', (route) =>
+    route.fulfill({
+      json: [
+        { id: 'kiosk12', code: 'K-HCM-12', name: 'Kiosk 12', status: 'ONLINE' },
+        { id: 'kiosk10', code: 'K-HCM-10', name: 'Kiosk 10', status: 'OFFLINE' },
+      ],
+    }),
+  );
+  await page.route('**/api/staff/kiosk-health/*', (route) => {
+    const fresh = route.request().url().endsWith('/kiosk12');
+    return route.fulfill({
+      json: {
+        kioskStatus: fresh ? 'ONLINE' : 'OFFLINE',
+        isFresh: fresh,
+        observedAt: new Date().toISOString(),
+        slots: [1, 2, 3, 4].map((i) => ({
+          slotCode: `S0${i}`,
+          flowerDetected: i === 1,
+          doorClosed: true,
+          lastCycle: null,
+        })),
+      },
+    });
+  });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/technician');
+  await page.getByRole('link', { name: 'Sức khỏe kiosk' }).click();
+  await expect(page).toHaveURL(/\/technician\/kiosk-health$/);
+  await expect(page.getByRole('link', { name: 'Sức khỏe kiosk' })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+  const panel = page.getByRole('region', { name: 'Sức khỏe thiết bị IoT' });
+  for (const slot of ['S01', 'S02', 'S03', 'S04']) {
+    await expect(panel.getByRole('heading', { name: `Ô ${slot}` })).toBeVisible();
+  }
+  expect(
+    (await new AxeBuilder({ page }).include('.technician-kiosk-health').analyze()).violations,
+  ).toEqual([]);
+  await panel.screenshot({ path: testInfo.outputPath('kiosk-health-1440.png') });
+  await page.setViewportSize({ width: 390, height: 900 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
+  await panel.screenshot({ path: testInfo.outputPath('kiosk-health-390.png') });
+  await page.getByLabel('Kiosk được giao').selectOption('kiosk10');
+  await expect(panel.getByText('Mất kết nối', { exact: false })).toBeVisible();
+  await expect(panel.getByText('Phát hiện vật', { exact: true })).toHaveCount(0);
+});
+
 for (const width of [390, 1440]) {
   test(`Technical can distinguish a door timeout from stale readings at ${width}`, async ({
     page,

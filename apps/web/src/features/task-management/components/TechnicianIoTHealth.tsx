@@ -18,15 +18,17 @@ const cycles: Record<string, string> = {
 };
 
 export default function TechnicianIoTHealth({
-  taskId,
+  path,
   actorId,
+  wholeKiosk = false,
 }: {
-  taskId: string;
+  path: string;
   actorId?: string;
+  wholeKiosk?: boolean;
 }) {
   const query = useQuery({
-    queryKey: ['technician-iot-health', taskId, actorId],
-    queryFn: () => request<Health>(`/staff/tasks/${taskId}/iot-health`),
+    queryKey: ['technician-iot-health', path, actorId],
+    queryFn: () => request<Health>(path),
     refetchInterval: 5_000,
     retry: false,
   });
@@ -34,7 +36,7 @@ export default function TechnicianIoTHealth({
   const fresh = data?.isFresh === true && query.fetchStatus !== 'paused';
   return (
     <section aria-label="Sức khỏe thiết bị IoT">
-      <h4>Sức khỏe thiết bị IoT</h4>
+      {wholeKiosk ? <h2>Tình trạng thiết bị</h2> : <h4>Sức khỏe thiết bị IoT</h4>}
       {query.isPending && <p role="status">Đang đọc tín hiệu từ tủ…</p>}
       {query.isError && <p role="alert">Chưa tải được dữ liệu IoT. Hãy thử đọc lại.</p>}
       {data && !query.isError && (
@@ -46,44 +48,52 @@ export default function TechnicianIoTHealth({
               ? `Lần đo gần nhất ${formatTaskDate(data.observedAt)}`
               : 'Chưa nhận được bản đo từ tủ'}
           </p>
+          {wholeKiosk && (
+            <p>
+              Heartbeat gần nhất{' '}
+              {data.lastHeartbeatAt ? formatTaskDate(data.lastHeartbeatAt) : 'chưa ghi nhận'}
+            </p>
+          )}
           {!fresh && <p>Đang chờ dữ liệu mới. Trạng thái từng ô chưa xác định.</p>}
-          {data.slots?.length === 0 && <p>Công việc này chưa có ô để kiểm tra.</p>}
-          {data.slots?.map((slot) => (
-            <div key={slot.slotCode}>
-              <h5>Ô {slot.slotCode}</h5>
-              <dl className="account-details">
-                <div>
-                  <dt>LM393 · Cảm biến hoa</dt>
-                  <dd>
-                    {!fresh || slot.flowerDetected == null
-                      ? 'Chưa xác định'
-                      : slot.flowerDetected
-                        ? 'Phát hiện vật'
-                        : 'Không phát hiện vật'}
-                  </dd>
-                </div>
-                <div>
-                  <dt>MC-38 · Cảm biến cửa</dt>
-                  <dd>
-                    {!fresh || slot.doorClosed == null
-                      ? 'Chưa xác định'
-                      : slot.doorClosed
-                        ? 'Báo cửa đóng'
-                        : 'Báo cửa mở'}
-                  </dd>
-                </div>
-                <div>
-                  <dt>Lần thao tác cửa gần nhất</dt>
-                  <dd>
-                    {fresh && slot.lastCycle
-                      ? (cycles[slot.lastCycle] ?? 'Chưa xác định')
-                      : 'Chưa xác định'}
-                    {fresh && slot.lastCycleAt && ` · ${formatTaskDate(slot.lastCycleAt)}`}
-                  </dd>
-                </div>
-              </dl>
-            </div>
-          ))}
+          {data.slots?.length === 0 && <p>Chưa có ô tủ để kiểm tra.</p>}
+          <div className={wholeKiosk ? 'technician-kiosk-slots' : undefined}>
+            {data.slots?.map((slot) => (
+              <div key={slot.slotCode}>
+                {wholeKiosk ? <h3>Ô {slot.slotCode}</h3> : <h5>Ô {slot.slotCode}</h5>}
+                <dl className="account-details">
+                  <div>
+                    <dt>LM393 · Cảm biến hoa</dt>
+                    <dd>
+                      {!fresh || slot.flowerDetected == null
+                        ? 'Chưa xác định'
+                        : slot.flowerDetected
+                          ? 'Phát hiện vật'
+                          : 'Không phát hiện vật'}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>MC-38 · Cảm biến cửa</dt>
+                    <dd>
+                      {!fresh || slot.doorClosed == null
+                        ? 'Chưa xác định'
+                        : slot.doorClosed
+                          ? 'Báo cửa đóng'
+                          : 'Báo cửa mở'}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Lần thao tác cửa gần nhất</dt>
+                    <dd>
+                      {fresh && slot.lastCycle
+                        ? (cycles[slot.lastCycle] ?? 'Chưa xác định')
+                        : 'Chưa xác định'}
+                      {fresh && slot.lastCycleAt && ` · ${formatTaskDate(slot.lastCycleAt)}`}
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+            ))}
+          </div>
           <p className="quiet">
             Nếu tín hiệu không khớp thực tế, hãy kiểm tra dây cảm biến, nam châm, nguồn khóa và cơ
             cấu chốt tại ô. Tủ hiện chưa đo dòng qua khóa điện.

@@ -44,7 +44,9 @@ export default function StaffTaskDetails({
   return (
     <details className="staff-task-details" onToggle={(event) => setOpen(event.currentTarget.open)}>
       <summary>Thông tin tủ, sự cố và lịch sử công việc</summary>
-      {open && role === 'TECHNICIAN' && <TechnicianIoTHealth taskId={taskId} actorId={actorId} />}
+      {open && role === 'TECHNICIAN' && (
+        <TechnicianIoTHealth path={`/staff/tasks/${taskId}/iot-health`} actorId={actorId} />
+      )}
       {details.isPending ? (
         <p role="status">Đang tải thông tin công việc…</p>
       ) : details.isError ? (

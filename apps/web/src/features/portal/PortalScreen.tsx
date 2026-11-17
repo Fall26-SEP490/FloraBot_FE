@@ -167,7 +167,7 @@ export function PortalScreenRouter({
       return (
         <div className="workspace-portal-root platform-workspace" data-platform-role="technician">
           <PortalGuard requiredRole="TECHNICIAN">
-            <TechnicianWorkspace />
+            <TechnicianWorkspace section={section} />
           </PortalGuard>
         </div>
       );
