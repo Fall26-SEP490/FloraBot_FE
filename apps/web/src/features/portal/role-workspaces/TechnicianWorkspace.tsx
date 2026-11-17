@@ -24,6 +24,11 @@ const StaffTasks = dynamic(() => import('../../task-management/TaskManagement'),
   loading: () => <p role="status">Đang tải công việc kỹ thuật…</p>,
 });
 
+const TechnicianKioskHealth = dynamic(
+  () => import('../../task-management/components/TechnicianKioskHealth'),
+  { loading: () => <p role="status">Đang tải sức khỏe kiosk…</p> },
+);
+
 export default function TechnicianWorkspace({ section = 'tasks' }: { section?: string }) {
   const session = useQuery({ ...sessionQuery, refetchInterval: 60_000 });
   const logout = useMutation({
@@ -70,6 +75,8 @@ export default function TechnicianWorkspace({ section = 'tasks' }: { section?: s
               key={`${session.data.id}:${session.data.role}`}
               session={session.data}
             />
+          ) : section === 'kiosk-health' ? (
+            <TechnicianKioskHealth key={session.data.id} actorId={session.data.id} />
           ) : (
             <>
               <div className="dashboard-page-heading">

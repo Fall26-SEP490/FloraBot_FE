@@ -6185,6 +6185,80 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/staff/kiosk-health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kiosks assigned to the technician for installation or repair */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TechnicianKioskHealthSummary"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/kiosk-health/{kioskId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Latest hardware signals from all compartments of an assigned kiosk */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kioskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TechnicianTaskTelemetry"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/staff/tasks/{taskId}/iot-health": {
         parameters: {
             query?: never;
@@ -18729,6 +18803,13 @@ export interface components {
             id: string;
             code: string;
             zone: null | string;
+        };
+        TechnicianKioskHealthSummary: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            status: string;
         };
         TechnicianSlotTelemetry: {
             slotCode: string;

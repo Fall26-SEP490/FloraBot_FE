@@ -177,7 +177,7 @@ export default function WorkspaceNavigation({
               onKeyDown={handleEscape}
               onClick={closeMenu}
               href="/technician"
-              aria-current={section !== 'installations' ? 'page' : undefined}
+              aria-current={section === 'tasks' ? 'page' : undefined}
             >
               <ClipboardList size={19} aria-hidden="true" />
               Công việc kỹ thuật
@@ -190,6 +190,15 @@ export default function WorkspaceNavigation({
             >
               <Boxes size={19} aria-hidden="true" />
               Lắp đặt Kiosk
+            </Link>
+            <Link
+              onKeyDown={handleEscape}
+              onClick={closeMenu}
+              href="/technician/kiosk-health"
+              aria-current={section === 'kiosk-health' ? 'page' : undefined}
+            >
+              <ShieldCheck size={19} aria-hidden="true" />
+              Sức khỏe kiosk
             </Link>
           </>
         ) : role === 'SELLER_STAFF' ? (
