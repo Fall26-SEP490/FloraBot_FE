@@ -15,6 +15,7 @@ interface InstallationActionCardsProps {
   appDetail: KioskApplicationResponse;
   isManager: boolean;
   actionPending: boolean;
+  actionBlocked?: boolean;
   activeTechnicians: AccountDirectoryItem[];
   techniciansQuery: UseQueryResult<AccountDirectoryItem[], Error>;
   eligibleKiosks: EligibleKioskResponse[];
@@ -46,6 +47,7 @@ export function InstallationActionCards({
   appDetail,
   isManager,
   actionPending,
+  actionBlocked = false,
   activeTechnicians,
   techniciansQuery,
   eligibleKiosks,
@@ -86,7 +88,7 @@ export function InstallationActionCards({
   const timeWindow = windowDraft ?? appDetail.timeWindow ?? DEFAULT_TIME_WINDOW;
 
   return (
-    <fieldset disabled={actionPending} aria-busy={actionPending}>
+    <fieldset disabled={actionPending || actionBlocked} aria-busy={actionPending}>
       <legend className="sr-only">Xử lý hồ sơ</legend>
 
       {appDetail.reviewNote && (

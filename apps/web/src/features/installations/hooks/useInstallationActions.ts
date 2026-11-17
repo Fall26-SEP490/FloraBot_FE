@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { ApiError, request } from '@/shared/lib/api';
+import { requiresOutcomeCheck } from '@/shared/lib/mutation-outcome';
 import type {
   KioskApplicationResponse,
   ProvisionKioskKeyResponse,
@@ -27,6 +28,15 @@ export function useInstallationActions({
 }: UseInstallationActionsOptions) {
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const [needsOutcomeCheck, setNeedsOutcomeCheck] = useState(false);
+  const markOutcomeCheck = (error: unknown) => {
+    setActionSuccess(null);
+    if (requiresOutcomeCheck(error)) setNeedsOutcomeCheck(true);
+  };
+  const clearOutcomeCheck = () => {
+    setNeedsOutcomeCheck(false);
+    setActionError(null);
+  };
 
   const confirmMutation = useMutation({
     mutationFn: ({ id, note }: { id: string; note: string }) =>
@@ -37,6 +47,7 @@ export function useInstallationActions({
       invalidateSelf();
     },
     onError: (err) => {
+      markOutcomeCheck(err);
       setActionError(err instanceof ApiError ? err.message : 'Chưa xác nhận được liên hệ.');
     },
   });
@@ -67,6 +78,7 @@ export function useInstallationActions({
       invalidateSelf();
     },
     onError: (err) => {
+      markOutcomeCheck(err);
       setActionError(err instanceof ApiError ? err.message : 'Chưa lưu được lịch lắp đặt.');
     },
   });
@@ -80,6 +92,7 @@ export function useInstallationActions({
       invalidateSelf();
     },
     onError: (err) => {
+      markOutcomeCheck(err);
       setActionError(
         err instanceof ApiError
           ? err.message
@@ -97,6 +110,7 @@ export function useInstallationActions({
       invalidateSelf();
     },
     onError: (err) => {
+      markOutcomeCheck(err);
       setActionError(err instanceof ApiError ? err.message : 'Chưa gửi được yêu cầu sửa lại.');
     },
   });
@@ -110,6 +124,7 @@ export function useInstallationActions({
       invalidateSelf();
     },
     onError: (err) => {
+      markOutcomeCheck(err);
       setActionError(err instanceof ApiError ? err.message : 'Chưa từ chối được hồ sơ.');
     },
   });
@@ -125,6 +140,7 @@ export function useInstallationActions({
       invalidateSelf();
     },
     onError: (err) => {
+      markOutcomeCheck(err);
       setActionError(
         err instanceof ApiError ? err.message : 'Chưa xử lý được sự cố bất khả kháng.',
       );
@@ -142,6 +158,7 @@ export function useInstallationActions({
       });
     },
     onError: (err) => {
+      markOutcomeCheck(err);
       setActionError(err instanceof ApiError ? err.message : 'Chưa cấp được khóa thiết bị.');
     },
   });
@@ -224,6 +241,8 @@ export function useInstallationActions({
   };
 
   return {
+    needsOutcomeCheck,
+    clearOutcomeCheck,
     actionError,
     setActionError,
     actionSuccess,

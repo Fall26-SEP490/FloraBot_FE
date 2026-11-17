@@ -8,6 +8,12 @@ import type {
 } from '../installations.types';
 import { validateEvidenceFile } from '../installations.utils';
 import { technicianErrorMessage } from '../technician-errors';
+import { requiresOutcomeCheck } from '@/shared/lib/mutation-outcome';
+import {
+  installationReportDraftKey,
+  readInstallationReportDraft,
+  saveInstallationReportDraft,
+} from '../installation-report-draft';
 
 interface UseTechnicianActionsOptions {
   session: Session;
@@ -29,12 +35,19 @@ export function useTechnicianActions({
   onInvalidate,
   fileInputRef,
 }: UseTechnicianActionsOptions) {
-  const [reportText, setReportText] = useState('');
+  const draftKey = installationReportDraftKey(session.id, jobId);
+  const [reportText, setReportTextState] = useState(() => readInstallationReportDraft(draftKey));
+  const [draftSaved, setDraftSaved] = useState(true);
+  const setReportText = (text: string) => {
+    setReportTextState(text);
+    setDraftSaved(saveInstallationReportDraft(draftKey, text));
+  };
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadStatus, setUploadStatus] = useState('');
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [needsOutcomeCheck, setNeedsOutcomeCheck] = useState(false);
   const uploadBusy = useRef(false);
   // Retain the ticket and attachment ID when upload succeeds but attachment is interrupted.
   const uploadedPhoto = useRef<UploadedPhoto | null>(null);
@@ -43,12 +56,17 @@ export function useTechnicianActions({
   const startMutation = useMutation({
     mutationFn: (targetJobId: string) =>
       request<TechnicianInstallationDetail>(`/staff/kiosk-installations/${targetJobId}/start`, {}),
+    onMutate: () => {
+      setActionError(null);
+      setActionSuccess(null);
+    },
     onSuccess: (updated) => {
       setActionSuccess(`Đã bắt đầu công việc tại điểm: ${updated.shopName}`);
       setActionError(null);
       onInvalidate();
     },
     onError: (err) => {
+      if (requiresOutcomeCheck(err)) setNeedsOutcomeCheck(true);
       setActionError(technicianErrorMessage(err, 'Chưa bắt đầu được công việc.'));
       onInvalidate();
     },
@@ -157,6 +175,10 @@ export function useTechnicianActions({
       request<TechnicianInstallationDetail>(`/staff/kiosk-installations/${targetJobId}/submit`, {
         report,
       }),
+    onMutate: () => {
+      setActionError(null);
+      setActionSuccess(null);
+    },
     onSuccess: (updated) => {
       setActionSuccess(
         `Đã nộp báo cáo lắp đặt cho ${updated.shopName}. Hồ sơ chuyển sang Chờ nghiệm thu.`,
@@ -166,6 +188,7 @@ export function useTechnicianActions({
       onInvalidate();
     },
     onError: (err) => {
+      if (requiresOutcomeCheck(err)) setNeedsOutcomeCheck(true);
       setActionError(
         technicianErrorMessage(
           err,
@@ -176,9 +199,30 @@ export function useTechnicianActions({
     },
   });
 
+  const recheckMutation = useMutation({
+    mutationFn: () => request<TechnicianInstallationDetail>(`/staff/kiosk-installations/${jobId}`),
+    onSuccess: (updated) => {
+      queryClient.setQueryData(['technician-installation-detail', session.id, jobId], updated);
+      setNeedsOutcomeCheck(false);
+      setActionError(null);
+      setActionSuccess('Đã kiểm tra trạng thái mới nhất. Xem bước tiếp theo trước khi thao tác.');
+      onInvalidate();
+    },
+    onError: (error) =>
+      setActionError(
+        technicianErrorMessage(
+          error,
+          'Chưa đọc được trạng thái mới nhất. Giữ bản nháp và thử kiểm tra lại.',
+        ),
+      ),
+  });
+
   return {
     reportText,
+    needsOutcomeCheck,
+    recheckMutation,
     setReportText,
+    draftSaved,
     selectedFile,
     setSelectedFile,
     uploadStatus,

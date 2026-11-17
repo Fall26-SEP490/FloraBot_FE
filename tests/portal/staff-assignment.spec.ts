@@ -84,11 +84,11 @@ test('Operations Manager assigns INCIDENT and recovers the same request after re
   ).toEqual([]);
 
   await page.getByRole('button', { name: 'Giao công việc', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Kiểm tra lại yêu cầu' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Thử lại với mã yêu cầu cũ' })).toBeVisible();
   expect(writes).toBe(1);
 
   await page.reload();
-  await page.getByRole('button', { name: 'Kiểm tra lại yêu cầu' }).click();
+  await page.getByRole('button', { name: 'Thử lại với mã yêu cầu cũ' }).click();
   await expect(
     page.getByText('Đã phân công. Nhân viên sẽ thấy công việc trong tài khoản.'),
   ).toBeVisible();
@@ -190,12 +190,12 @@ test('Shop Owner assigns DELIVERY to own seller staff and recovers the same requ
   ).toEqual([]);
 
   await page.getByRole('button', { name: 'Giao công việc', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Kiểm tra lại yêu cầu' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Thử lại với mã yêu cầu cũ' })).toBeVisible();
   expect(writes).toBe(1);
 
   await page.reload();
   await page.getByText('Phân công công việc mới', { exact: true }).click();
-  await page.getByRole('button', { name: 'Kiểm tra lại yêu cầu' }).click();
+  await page.getByRole('button', { name: 'Thử lại với mã yêu cầu cũ' }).click();
   await expect(
     page.getByText('Đã phân công. Nhân viên sẽ thấy công việc trong tài khoản.'),
   ).toBeVisible();

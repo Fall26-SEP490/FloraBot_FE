@@ -36,7 +36,10 @@ export function TechnicianJobDetailCard({
 
   const {
     reportText,
+    needsOutcomeCheck,
+    recheckMutation,
     setReportText,
+    draftSaved,
     selectedFile,
     setSelectedFile,
     uploadStatus,
@@ -68,6 +71,7 @@ export function TechnicianJobDetailCard({
   const handleSubmitReport = () => {
     if (
       selectedJob.status !== 'INSTALLING' ||
+      needsOutcomeCheck ||
       uploading ||
       submitReportMutation.isPending ||
       evidenceQuery.isError ||
@@ -134,6 +138,23 @@ export function TechnicianJobDetailCard({
         <div role="alert" className="kiosk-field-error-banner">
           <CircleAlert size={18} aria-hidden="true" />
           <span>{actionError}</span>
+        </div>
+      )}
+
+      {needsOutcomeCheck && (
+        <div className="installation-outcome-check" role="alert">
+          <strong>Cần kiểm tra trạng thái trước khi gửi lại</strong>
+          <p>
+            Chưa xác nhận được kết quả lần trước hoặc hồ sơ đã thay đổi. Bản nháp được giữ lại; hãy
+            đọc trạng thái mới nhất để tránh gửi trùng.
+          </p>
+          <Button
+            variant="outline"
+            disabled={recheckMutation.isPending}
+            onClick={() => recheckMutation.mutate()}
+          >
+            {recheckMutation.isPending ? 'Đang kiểm tra…' : 'Kiểm tra trạng thái mới nhất'}
+          </Button>
         </div>
       )}
 
@@ -243,7 +264,7 @@ export function TechnicianJobDetailCard({
           </p>
           <Button
             onClick={() => startMutation.mutate(selectedJob.id)}
-            disabled={startMutation.isPending}
+            disabled={startMutation.isPending || needsOutcomeCheck}
           >
             <ListChecks size={18} aria-hidden="true" />
             {startMutation.isPending ? 'Đang cập nhật...' : 'Bắt đầu lắp đặt'}
@@ -293,12 +314,41 @@ export function TechnicianJobDetailCard({
               <p id={`${reportInputId}-hint`} className="kiosk-help-text">
                 Viết ít nhất 10 ký tự. Cần đính kèm thành công ít nhất 1 ảnh trước khi gửi.
               </p>
+              {reportText && (
+                <p className="kiosk-help-text" role="status">
+                  {draftSaved
+                    ? 'Bản nháp đã lưu trong tab này theo tài khoản và phiếu lắp đặt. Chưa gửi lên hệ thống.'
+                    : 'Trình duyệt không lưu được bản nháp. Hãy sao chép nội dung trước khi đổi phiếu hoặc tải lại trang.'}
+                </p>
+              )}
             </div>
 
+            <ul className="installation-submit-checklist" aria-label="Điều kiện nộp báo cáo">
+              <li
+                data-complete={
+                  !evidenceQuery.isPending && !evidenceQuery.isError && evidenceItems.length > 0
+                }
+              >
+                Ảnh minh chứng:{' '}
+                {uploading
+                  ? 'đang tải lên'
+                  : evidenceQuery.isPending
+                    ? 'đang kiểm tra'
+                    : evidenceQuery.isError
+                      ? 'chưa đọc được danh sách ảnh'
+                      : evidenceItems.length
+                        ? `${evidenceItems.length} ảnh đã đính kèm`
+                        : 'cần ít nhất 1 ảnh'}
+              </li>
+              <li data-complete={validateReportText(reportText).valid}>
+                Nội dung: {reportText.trim().length} ký tự · tối thiểu 10 ký tự
+              </li>
+            </ul>
             <Button
               onClick={handleSubmitReport}
               disabled={
                 submitReportMutation.isPending ||
+                needsOutcomeCheck ||
                 uploading ||
                 evidenceQuery.isError ||
                 evidenceQuery.isPending ||

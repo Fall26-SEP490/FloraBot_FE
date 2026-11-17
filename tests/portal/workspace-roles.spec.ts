@@ -454,7 +454,7 @@ test.describe('FloraBot Identity Foundation - Workspace and Roles', () => {
     await page.getByRole('button', { name: 'Phân công mới', exact: true }).click();
     // Verify old un-scoped retry attempt was NOT restored:
     await expect(page.getByText('Chỉ thị cũ từ phiên trước')).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Kiểm tra lại yêu cầu' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Thử lại với mã yêu cầu cũ' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Giao công việc' })).toBeVisible();
 
     // 3. Switch scope to Seller Shop 2: does NOT reveal or replay Shop 1's pending assignment
@@ -491,7 +491,7 @@ test.describe('FloraBot Identity Foundation - Workspace and Roles', () => {
     await page.getByText('Phân công công việc mới', { exact: true }).click();
     // Shop 1's persisted assignment is NOT replayed in Shop 2
     await expect(page.getByText('Giao hoa cho shop 1')).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Kiểm tra lại yêu cầu' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Thử lại với mã yêu cầu cũ' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Giao công việc' })).toBeVisible();
 
     // 4. Missing / absent role fails closed:

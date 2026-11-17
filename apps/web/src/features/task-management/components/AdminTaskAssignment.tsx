@@ -70,19 +70,26 @@ export default function AdminTaskAssignment({
     enabled: kind === 'INCIDENT' && !attempt,
     refetchInterval: effectiveRole === 'OPERATIONS_MANAGER' ? 30_000 : false,
   });
-  const searchTerm = incidentSearch.trim().toLocaleLowerCase('vi');
+  const normalizeSearch = (value: string) =>
+    value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/đ/g, 'd')
+      .replace(/[^a-z0-9]/g, '');
+  const searchTerm = normalizeSearch(incidentSearch.trim());
   const matchingIncidents = (incidents.data?.items ?? []).filter((incident) =>
-    [
-      incident.reason,
-      incident.id,
-      incident.location?.kioskName,
-      incident.location?.kioskCode,
-      incident.slot?.slotCode,
-    ]
-      .filter(Boolean)
-      .join(' ')
-      .toLocaleLowerCase('vi')
-      .includes(searchTerm),
+    normalizeSearch(
+      [
+        incident.reason,
+        incident.id,
+        incident.location?.kioskName,
+        incident.location?.kioskCode,
+        incident.slot?.slotCode,
+      ]
+        .filter(Boolean)
+        .join(' '),
+    ).includes(searchTerm),
   );
   matchingIncidents.sort((a, b) => {
     const first = a.createdAt ? Date.parse(a.createdAt) || 0 : 0;
@@ -187,8 +194,12 @@ export default function AdminTaskAssignment({
             .
           </p>
           <p>{attempt.instructions}</p>
+          <p>
+            Thử lại sẽ gửi cùng nội dung và mã yêu cầu trước đó, không tạo mã mới. Đây là thao tác
+            gửi lại, không chỉ tải danh sách.
+          </p>
           <Button disabled={busy} onClick={() => void send(attempt)}>
-            {busy ? 'Đang kiểm tra…' : 'Kiểm tra lại yêu cầu'}
+            {busy ? 'Đang gửi lại…' : 'Thử lại với mã yêu cầu cũ'}
           </Button>
         </>
       ) : (

@@ -33,9 +33,11 @@ export function TaskItem({
   onToggleStaff,
   onTransition,
   focused = false,
+  hidden = false,
 }: {
   task: Task;
   focused?: boolean;
+  hidden?: boolean;
   mode: 'worker' | 'manager' | 'oversight';
   actorRole: ActiveTaskRole;
   actorId?: string;
@@ -699,49 +701,52 @@ export function TaskItem({
       )}
     </>
   );
+  const taskDestination = (
+    <div className={`staff-task-destination-card${isTechnician ? 'technician-destination' : ''}`}>
+      <p className="staff-destination-address">
+        <MapPin size={15} aria-hidden="true" />
+        <span className="staff-destination-text">
+          <span>{task.address}</span>
+          {isTechnician && task.address && (
+            <a
+              href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(task.address)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Chỉ đường Google Maps
+            </a>
+          )}
+          {task.shopName && !compactStaff ? (
+            <span className="staff-destination-shop">{task.shopName}</span>
+          ) : null}
+        </span>
+      </p>
+      {task.instructions && (
+        <div
+          className="staff-instructions-callout"
+          data-preview={compactStaff && !staffOpen ? 'true' : undefined}
+        >
+          <div className="staff-instructions-head">
+            <Store size={14} aria-hidden="true" />
+            <strong>
+              {task.kind === 'INCIDENT' || task.kind === 'KIOSK_REMOVAL'
+                ? 'Hướng dẫn từ quản lý:'
+                : 'Ghi chú từ shop:'}
+            </strong>
+          </div>
+          <p>{task.instructions}</p>
+        </div>
+      )}
+      {blocker && (
+        <p className="staff-task-blocker">
+          <strong>Chưa thể thao tác:</strong> {blocker}
+        </p>
+      )}
+    </div>
+  );
   const taskDetails = (
     <>
-      <div className={`staff-task-destination-card${isTechnician ? 'technician-destination' : ''}`}>
-        <p className="staff-destination-address">
-          <MapPin size={15} aria-hidden="true" />
-          <span className="staff-destination-text">
-            <span>{task.address}</span>
-            {isTechnician && task.address && (
-              <a
-                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(task.address)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Chỉ đường Google Maps
-              </a>
-            )}
-            {task.shopName && !compactStaff ? (
-              <span className="staff-destination-shop">{task.shopName}</span>
-            ) : null}
-          </span>
-        </p>
-        {task.instructions && (
-          <div
-            className="staff-instructions-callout"
-            data-preview={compactStaff && !staffOpen ? 'true' : undefined}
-          >
-            <div className="staff-instructions-head">
-              <Store size={14} aria-hidden="true" />
-              <strong>
-                {task.kind === 'INCIDENT' || task.kind === 'KIOSK_REMOVAL'
-                  ? 'Hướng dẫn từ quản lý:'
-                  : 'Ghi chú từ shop:'}
-              </strong>
-            </div>
-            <p>{task.instructions}</p>
-          </div>
-        )}
-        {blocker && (
-          <p className="staff-task-blocker">
-            <strong>Chưa thể thao tác:</strong> {blocker}
-          </p>
-        )}
-      </div>
+      {!isTechnician && taskDestination}
       {compactStaff ? (
         <>
           <Button
@@ -783,6 +788,7 @@ export function TaskItem({
                     ? 'Manager đã xác nhận hoàn thành công việc.'
                     : 'Công việc đã được hủy.'}
           </p>
+          {taskDestination}
           {taskContent}
         </details>
       ) : (
@@ -793,6 +799,7 @@ export function TaskItem({
   return (
     <article
       ref={cardRef}
+      hidden={hidden}
       className={
         compactStaff ? 'staff-task-card staff-task-compact' : 'staff-task-card member-empty'
       }

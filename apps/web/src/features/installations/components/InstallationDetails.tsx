@@ -1,6 +1,6 @@
 import { ApplicationRentalSummary } from '../../kiosk-pricing/ApplicationRentalSummary';
 import { Esp32ConfigurationPanel } from '../../kiosk-management/Esp32ConfigurationPanel';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button, Check, CircleAlert, RefreshCw, X } from '@florabot/ui';
 import { ApiError, type Session } from '@/shared/lib/api';
 import { KIOSK_STATUS_LABELS } from '../installations.constants';
@@ -30,6 +30,7 @@ export function InstallationDetails({
   onInvalidateQueue,
 }: InstallationDetailsProps) {
   const panelRef = useRef<HTMLElement>(null);
+  const [checkingOutcome, setCheckingOutcome] = useState(false);
 
   const {
     selectedAppQuery,
@@ -50,6 +51,9 @@ export function InstallationDetails({
 
   const {
     actionError,
+    setActionError,
+    needsOutcomeCheck,
+    clearOutcomeCheck,
     actionSuccess,
     actionPending,
     confirmMutation,
@@ -69,6 +73,24 @@ export function InstallationDetails({
     onShowProvisionedKey,
     assignedKioskCode: appDetail?.assignedKioskCode,
   });
+
+  async function checkLatestOutcome() {
+    if (checkingOutcome) return;
+    setCheckingOutcome(true);
+    try {
+      await selectedAppQuery.refetch({ throwOnError: true });
+      clearOutcomeCheck();
+      invalidateSelf();
+    } catch (error) {
+      setActionError(
+        error instanceof Error
+          ? error.message
+          : 'Chưa đọc được hồ sơ mới nhất. Hãy kiểm tra lại trước khi gửi tiếp.',
+      );
+    } finally {
+      setCheckingOutcome(false);
+    }
+  }
 
   const activeStep = appDetail ? getOperationsActiveStep(appDetail.status, needsSchedule) : -1;
 
@@ -117,6 +139,23 @@ export function InstallationDetails({
         <div role="alert" className="kiosk-field-error-banner">
           <CircleAlert size={18} aria-hidden="true" />
           <span>{actionError}</span>
+        </div>
+      )}
+
+      {needsOutcomeCheck && (
+        <div className="installation-outcome-check" role="alert">
+          <strong>Cần kiểm tra kết quả trước khi thao tác tiếp</strong>
+          <p>
+            Hồ sơ có thể đã thay đổi hoặc yêu cầu trước chưa rõ kết quả. Hệ thống tạm khóa thao tác
+            gửi để tránh xử lý trùng.
+          </p>
+          <Button
+            variant="outline"
+            disabled={checkingOutcome}
+            onClick={() => void checkLatestOutcome()}
+          >
+            {checkingOutcome ? 'Đang kiểm tra…' : 'Kiểm tra hồ sơ mới nhất'}
+          </Button>
         </div>
       )}
 
@@ -300,6 +339,7 @@ export function InstallationDetails({
             appDetail={appDetail}
             isManager={isManager}
             actionPending={actionPending}
+            actionBlocked={needsOutcomeCheck || selectedAppQuery.isError}
             activeTechnicians={activeTechnicians}
             techniciansQuery={techniciansQuery}
             eligibleKiosks={eligibleKiosks}

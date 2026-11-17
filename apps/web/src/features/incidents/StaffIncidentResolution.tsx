@@ -94,9 +94,12 @@ export default function StaffIncidentResolution({
       </p>
       {attempt ? (
         <>
-          <p>Có kết quả sửa chữa đang chờ xác nhận.</p>
+          <p>
+            Có kết quả sửa chữa đang chờ xác nhận. Thử lại sẽ gửi báo cáo bằng cùng mã thao tác
+            trước đó, không tạo mã mới.
+          </p>
           <Button disabled={busy} onClick={() => void send(attempt)}>
-            {busy ? 'Đang kiểm tra…' : 'Kiểm tra kết quả xử lý'}
+            {busy ? 'Đang gửi lại…' : 'Gửi lại báo cáo cùng mã thao tác'}
           </Button>
         </>
       ) : (
