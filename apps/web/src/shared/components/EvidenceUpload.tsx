@@ -11,6 +11,7 @@ export default function EvidenceUpload({
   error,
   anonymous = false,
   receiptToken,
+  helpText,
 }: {
   id: string;
   endpoint: string;
@@ -20,6 +21,7 @@ export default function EvidenceUpload({
   error?: string;
   anonymous?: boolean;
   receiptToken?: string;
+  helpText?: string;
 }) {
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
@@ -119,8 +121,8 @@ export default function EvidenceUpload({
         </span>
       </div>
       <p id={`${id}-help`} className="quiet">
-        Ảnh lưu riêng tư để đội ngũ xử lý hồ sơ. Chọn PNG, JPEG hoặc WebP tối đa 5 MB; tránh chụp
-        thông tin cá nhân không cần thiết.
+        {helpText ??
+          'Ảnh lưu riêng tư để đội ngũ xử lý hồ sơ. Chọn PNG, JPEG hoặc WebP tối đa 5 MB; tránh chụp thông tin cá nhân không cần thiết.'}
       </p>
       <Button
         type="button"

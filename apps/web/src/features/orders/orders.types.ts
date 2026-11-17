@@ -51,7 +51,15 @@ export type OrderPhase = {
 export type OrderMode = 'member' | 'seller' | 'admin';
 
 export type OrderFilter =
-  'all' | 'attention' | 'requested' | 'quoted' | 'payment' | 'preparing' | 'ready' | 'closed';
+  | 'all'
+  | 'attention'
+  | 'tracking'
+  | 'requested'
+  | 'quoted'
+  | 'payment'
+  | 'preparing'
+  | 'ready'
+  | 'closed';
 
 export type SendPreorderPickupOtpResponse = {
   requestId: string;

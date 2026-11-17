@@ -31,6 +31,7 @@ export default function ReceiptComplaint({
   onSaved,
   canComplain,
   receiptRevision,
+  initiallyOpen = false,
 }: {
   orderId: string;
   trackingToken: string;
@@ -38,8 +39,9 @@ export default function ReceiptComplaint({
   onSaved: () => void;
   canComplain: boolean;
   receiptRevision: number;
+  initiallyOpen?: boolean;
 }) {
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(() => initiallyOpen && canComplain);
   const [review, setReview] = useState(false);
   const [saving, setSaving] = useState(false);
   const [blockedRevision, setBlockedRevision] = useState<number | null>(null);
@@ -138,11 +140,8 @@ export default function ReceiptComplaint({
   if (!editing && !canComplain) return null;
   return (
     <div className="receipt-complaint">
-      <h3>Có điều gì chưa như mong đợi?</h3>
-      <p>
-        Hãy kể cho chúng tôi vấn đề của bó hoa bạn nhận được. Mỗi đơn chỉ gửi một phản ánh; đội ngũ
-        sẽ xem xét trước khi quyết định cách xử lý.
-      </p>
+      <h3>Nội dung phản ánh</h3>
+      <p>Mỗi đơn gửi một phản ánh, kèm ảnh hoa khi nhận.</p>
       {!editing && (
         <Button
           ref={opener}
@@ -181,8 +180,7 @@ export default function ReceiptComplaint({
               aria-describedby="complaint-reason-help complaint-reason-error"
             />
             <p className="quiet" id="complaint-reason-help">
-              Mô tả tình trạng khi nhận hoa. Không cần ghi số điện thoại, địa chỉ hay thông tin ngân
-              hàng.
+              Không ghi thông tin cá nhân hoặc tài khoản ngân hàng.
             </p>
             <p className="error" id="complaint-reason-error">
               {form.formState.errors.reason?.message}
@@ -200,6 +198,7 @@ export default function ReceiptComplaint({
                   error={form.formState.errors.photo?.message}
                   anonymous
                   receiptToken={trackingToken}
+                  helpText="PNG, JPEG hoặc WebP, tối đa 5 MB. Ảnh minh chứng được lưu riêng tư."
                 />
               )}
             />

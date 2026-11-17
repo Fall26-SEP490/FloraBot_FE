@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import { ApiError, queryClient, request } from '@/shared/lib/api';
+import type { components } from '../../../../../packages/contracts/src/generated/api';
+
+type Access = components['schemas']['MaintenanceAccessIssued'];
 
 type InventoryScope = {
   slotCode: string;
@@ -22,9 +25,10 @@ export function useStaffInventoryMaintenance(
   actorId: string | undefined,
   enabled: boolean,
   watch = enabled,
+  scopeVersion?: string,
 ) {
   return useQuery({
-    queryKey: ['staff-inventory-maintenance', taskId, actorId],
+    queryKey: ['staff-inventory-maintenance', taskId, actorId, scopeVersion],
     enabled,
     queryFn: async () => {
       try {
@@ -46,9 +50,11 @@ export function useStaffInventoryMaintenance(
 export default function StaffInventoryMaintenance({
   taskId,
   scope,
+  useKioskCode = false,
 }: {
   taskId: string;
   scope: InventoryScope;
+  useKioskCode?: boolean;
 }) {
   const [reason, setReason] = useState('');
   const operation =
@@ -62,11 +68,16 @@ export default function StaffInventoryMaintenance({
             ? 'OPEN_NEXT'
             : null;
   const issue = useMutation({
+    gcTime: useKioskCode ? 0 : undefined,
     mutationFn: (step: keyof typeof operations) =>
-      request(`/staff/tasks/${taskId}/inventory-maintenance/open`, {
-        operation: step,
-        reason: step === 'OPEN_FOR_CHECK' ? reason.trim() : null,
-      }),
+      request<Access>(
+        `/staff/tasks/${taskId}/inventory-maintenance/${useKioskCode ? 'access' : 'open'}`,
+        {
+          operation: step,
+          reason: step === 'OPEN_FOR_CHECK' ? reason.trim() : null,
+        },
+        !useKioskCode,
+      ),
     onSettled: () =>
       queryClient.invalidateQueries({ queryKey: ['staff-inventory-maintenance', taskId] }),
   });
@@ -100,9 +111,20 @@ export default function StaffInventoryMaintenance({
           />
         </label>
       )}
-      {issue.isSuccess && scope.sessionStage !== 'Completed' && (
-        <p role="status">Đã gửi yêu cầu mở ô. Chờ tủ phản hồi.</p>
-      )}
+      {issue.isSuccess &&
+        scope.sessionStage !== 'Completed' &&
+        (useKioskCode ? (
+          <p role="status">
+            Nhập mã <strong>{issue.data.code}</strong> vào mục “Nhập mã thao tác tủ” tại kiosk. Hạn
+            dùng:{' '}
+            {new Date(issue.data.expiresAt).toLocaleTimeString('vi-VN', {
+              timeZone: 'Asia/Ho_Chi_Minh',
+            })}
+            .
+          </p>
+        ) : (
+          <p role="status">Đã gửi yêu cầu mở ô. Chờ tủ phản hồi.</p>
+        ))}
       {operation && (
         <Button
           type="button"
@@ -110,7 +132,11 @@ export default function StaffInventoryMaintenance({
           disabled={issue.isPending || (operation === 'OPEN_FOR_CHECK' && reason.trim().length < 5)}
           onClick={() => issue.mutate(operation)}
         >
-          {issue.isPending ? 'Đang gửi yêu cầu…' : operations[operation]}
+          {issue.isPending
+            ? 'Đang gửi yêu cầu…'
+            : useKioskCode
+              ? 'Lấy mã mở ô tại kiosk'
+              : operations[operation]}
         </Button>
       )}
       {issue.error && <p role="alert">{issue.error.message}</p>}

@@ -83,6 +83,7 @@ const SellerTerminations = dynamic(() =>
   import('../../kiosk-management/KioskTerminations').then((mod) => mod.SellerTerminations),
 );
 const SellerRefunds = dynamic(() => import('../../finance/components/refunds/SellerRefunds'));
+const QualityComplaintQueue = dynamic(() => import('../../complaints/QualityComplaintQueue'));
 
 const StaffTasks = dynamic(() => import('../../task-management/TaskManagement'), {
   loading: () => <p role="status">Đang tải danh sách công việc…</p>,
@@ -216,6 +217,9 @@ export default function SellerWorkspace({ section = 'overview' }: { section?: st
           )}
           <SubscriptionBanner session={session.data} section={section} />
           {section === 'overview' && <DashboardOverview session={session.data} />}
+          {section === 'complaints' && session.data.sellerId && (
+            <QualityComplaintQueue sellerId={session.data.sellerId} />
+          )}
           {section === 'orders' && (
             <WebRequests mode="seller" sellerId={session.data.sellerId || undefined} />
           )}

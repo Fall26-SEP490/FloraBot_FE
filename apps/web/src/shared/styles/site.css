@@ -54,7 +54,7 @@
   display: none;
 }
 @media (max-width: 767px) {
-  body:has(.flower-detail-page) .site-hotline-button {
+  body:has(.flower-detail-page, .receipt-page) .site-hotline-button {
     display: none;
   }
   .flower-detail-inline-hotline {

@@ -52,9 +52,7 @@ test('An uncertain complaint keeps the draft and requires a receipt refresh befo
     sends++;
     return route.fulfill({ status: 500, json: {} });
   });
-  await page.goto(`/receipt#order=${id}&token=${token}`);
-  await page.getByRole('button', { name: 'Xem biên nhận', exact: true }).click();
-  await page.getByRole('button', { name: 'Gửi phản ánh về hoa' }).click();
+  await page.goto(`/phan-anh#order=${id}&token=${token}`);
   const form = page.getByRole('form', { name: 'Phản ánh về hoa' });
   await form.getByLabel('Vấn đề với bó hoa').fill('Bó hoa bị dập khi nhận tại tủ.');
   await form
@@ -86,7 +84,7 @@ test('An uncertain complaint keeps the draft and requires a receipt refresh befo
   await expect(form).toHaveCount(0);
 });
 
-for (const width of [390, 1440]) {
+for (const width of [375, 390, 1440]) {
   test(`Public receipt keeps capability private and accessible at ${width}`, async ({
     page,
     context,
@@ -105,13 +103,34 @@ for (const width of [390, 1440]) {
     });
     await page.goto(`/receipt#order=${id}&token=${token}`);
     await expect(page).toHaveURL(/\/receipt$/);
-    await expect(page.getByLabel('Mã tra cứu', { exact: true })).toHaveValue(token);
-    await page.getByRole('button', { name: 'Xem biên nhận', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Đơn FB-TEST-001' })).toBeFocused();
+    await expect(page.getByLabel('Mã tra cứu', { exact: true })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Lưu biên nhận trên thiết bị riêng' }),
+    ).toHaveCount(0);
+    await expect(page.getByRole('checkbox')).toHaveCount(0);
+    await expect(page.getByRole('form', { name: 'Phản ánh về hoa' })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Phản ánh về hoa', exact: true })).toHaveAttribute(
+      'href',
+      /^\/phan-anh#/,
+    );
     await expect(page.getByText('Bó hoa cúc dành tặng mẹ')).toBeVisible();
     await expect(
       page.locator('.receipt-items li').filter({ hasText: 'Nơ trang trí' }),
     ).toContainText('40.000');
+    await expect(page.locator('.receipt-totals dt')).toHaveText(['Tiền hàng', 'Tổng đơn']);
+    if (width < 768) await expect(page.locator('.site-hotline-button')).toBeHidden();
+    if (width < 580) {
+      const idBox = await page.getByLabel('ID biên nhận', { exact: true }).boundingBox();
+      const tokenBox = await page.getByLabel('Mã tra cứu', { exact: true }).boundingBox();
+      expect(Math.abs(idBox!.width - tokenBox!.width)).toBeLessThan(1);
+    }
+    if (width >= 1000) {
+      const formBox = await page.locator('.receipt-lookup').boundingBox();
+      const paperBox = await page.locator('.receipt-paper').boundingBox();
+      expect(formBox!.x + formBox!.width).toBeLessThan(paperBox!.x);
+      expect(Math.abs(formBox!.y - paperBox!.y)).toBeLessThan(2);
+    }
     await expect(page.getByRole('button', { name: 'Xóa thông tin', exact: true })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Hủy tra cứu', exact: true })).toHaveCount(0);
     expect(calls).toBe(1);
@@ -130,10 +149,29 @@ for (const width of [390, 1440]) {
     );
     await page.screenshot({ path: `.impeccable/review/receipt-${width}.png`, fullPage: true });
     await page.reload();
-    await expect(page.getByLabel('Mã tra cứu', { exact: true })).toHaveValue('');
-    await expect(page.getByRole('heading', { name: 'Đơn FB-TEST-001' })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'Đơn FB-TEST-001' })).toBeVisible();
+    await expect(page.getByLabel('Mã tra cứu', { exact: true })).toBeVisible();
+    expect(calls).toBe(2);
+    expect(
+      await page.evaluate(() => JSON.stringify({ ...localStorage, ...sessionStorage })),
+    ).not.toContain(token);
   });
 }
+
+test('A failed receipt link leaves the codes available for manual retry', async ({ page }) => {
+  let calls = 0;
+  await page.route('**/api/receipts/lookup', (route) => {
+    calls++;
+    return calls === 1 ? route.fulfill({ status: 500 }) : route.fulfill({ json: receipt });
+  });
+  await page.goto(`/receipt#order=${id}&token=${token}`);
+  await expect(page.getByRole('main').getByRole('alert')).toContainText('Chưa tải được biên nhận');
+  await expect(page.getByLabel('Mã tra cứu', { exact: true })).toHaveValue(token);
+  expect(calls).toBe(1);
+  await page.getByRole('button', { name: 'Xem biên nhận', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Đơn FB-TEST-001' })).toBeVisible();
+  expect(calls).toBe(2);
+});
 
 test('Receipt validates input, handles denial and cancels lookup without losing entered codes', async ({
   page,

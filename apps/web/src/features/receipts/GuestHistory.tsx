@@ -49,8 +49,8 @@ export default function GuestHistory() {
       {notice && <p role="status">{notice}</p>}
       {state.items.length === 0 && !state.error ? (
         <p>
-          Chưa có biên nhận đã lưu. Quét QR tại tủ bằng điện thoại, xem biên nhận và chọn lưu sau
-          khi nhận hoa thành công.
+          Chưa có biên nhận đã lưu trên trình duyệt này. Bạn có thể xem đơn trong tài khoản hoặc tra
+          cứu bằng mã biên nhận.
         </p>
       ) : (
         <ul className="receipt-items">

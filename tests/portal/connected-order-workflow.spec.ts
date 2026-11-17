@@ -541,12 +541,9 @@ test('Customer request with accessories → seller quote → customer payment �
   role = 'CUSTOMER';
   await page.goto('/tai-khoan#web-orders');
   await page.locator('details[id^="preorder-"] > summary').click();
-  await expect(
-    page.getByText('Nhập OTP 8 chữ số được gửi tới email đăng nhập của bạn.'),
-  ).toBeVisible();
-  await page
-    .getByText('Hỗ trợ khi đã thanh toán nhưng chưa nhận được hoa', { exact: true })
-    .click();
+  const pickupGuide = page.getByRole('region', { name: 'Hướng dẫn nhận hoa', exact: true });
+  await expect(pickupGuide).toContainText('OTP 8 chữ số');
+  await pickupGuide.getByText('Chưa nhận được hoa?', { exact: true }).click();
   await expect(page.getByLabel('Thông tin nhận hoa tại Kiosk')).toContainText('ABCD2345');
   await expect(page.getByLabel('Thông tin nhận hoa tại Kiosk')).toContainText(
     'Đã thanh toán nhưng chưa nhận hoa?',
@@ -634,7 +631,7 @@ for (const failure of ['untrusted-url', 'server-error'] as const)
     await dialog.getByRole('button', { name: 'Đóng', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Kiểm tra kết quả từ máy chủ' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Thanh toán ngay', exact: true })).toBeDisabled();
-    await expect(page).toHaveURL(/\/tai-khoan#web-orders$/);
+    await expect(page).toHaveURL(new RegExp(`/tai-khoan\\?requestId=${row.id}#web-orders$`));
     expect(attempts).toBe(1);
     expect(
       await page.evaluate(() => sessionStorage.getItem('florabot-preorder-payment')),

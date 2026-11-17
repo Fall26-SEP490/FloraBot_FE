@@ -168,9 +168,7 @@ test('Shop Owner assigns DELIVERY to own seller staff and recovers the same requ
   await page.goto('/seller/tasks');
   await page.getByText('Phân công công việc mới', { exact: true }).click();
 
-  // Verify wrong-kind action absent: INCIDENT is not allowed for Shop Owner
-  await expect(page.locator('#assignment-kind option[value="INCIDENT"]')).toHaveCount(0);
-  await expect(page.getByLabel('Loại công việc')).toHaveValue('DELIVERY');
+  await expect(page.getByLabel('Loại công việc')).toHaveCount(0);
 
   await page.getByRole('button', { name: 'Giao công việc', exact: true }).click();
   await expect(page.getByText('Chọn nhân viên phụ trách.', { exact: true })).toBeVisible();
@@ -211,7 +209,12 @@ test('Shop Owner assigns DELIVERY to own seller staff and recovers the same requ
   expect(
     requestedUrls
       .filter((p) => p.startsWith('/api/') && !p.startsWith('/api/auth'))
-      .every((p) => p.startsWith('/api/sellers/shop-lan/') || p === '/api/me/staff-tasks'),
+      .every(
+        (p) =>
+          p.startsWith('/api/sellers/shop-lan/') ||
+          p === '/api/me/staff-tasks' ||
+          p === '/api/me/shop',
+      ),
   ).toBe(true);
 });
 
@@ -263,6 +266,14 @@ test('Manager sees a repair verification conflict and can retry after reloading'
     if (path === '/api/operations/staff-tasks') {
       return route.fulfill({ json: { items: [task], page: 1, hasMore: false } });
     }
+    if (path === '/api/operations/incidents') {
+      return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
+    }
+    if (path === '/api/operations/staff-tasks/task-to-review') {
+      return route.fulfill({
+        json: { ...task, kioskStatus: 'ONLINE', history: [], page: 1, hasMore: false },
+      });
+    }
     if (path === '/api/operations/staff-tasks/task-to-review/transition') {
       expect(route.request().postDataJSON()).toMatchObject({
         status: 'COMPLETED',
@@ -288,6 +299,10 @@ test('Manager sees a repair verification conflict and can retry after reloading'
   await expect(card.getByRole('alert')).toContainText('Chưa duyệt được báo cáo');
   await expect(confirm).toBeDisabled();
   await page.getByRole('button', { name: 'Tải lại công việc' }).click();
+  await expect(page.getByRole('button', { name: 'Tải lại công việc' })).toBeEnabled();
+  if ((await card.locator('.manager-task-details').getAttribute('open')) === null) {
+    await card.locator('.manager-task-details > summary').click();
+  }
   await card.getByLabel('Nội dung cập nhật').fill('Đã đối chiếu báo cáo sửa và tín hiệu tại tủ.');
   await confirm.click();
   await expect(confirm).toHaveCount(0);

@@ -32,14 +32,6 @@ export function readReceipts(): SavedReceipt[] {
   return items;
 }
 
-export function saveReceipt(item: SavedReceipt) {
-  if (!valid(item)) throw new Error('Thông tin biên nhận không hợp lệ.');
-  const previous = readReceipts().filter((value) => value.orderId !== item.orderId);
-  if (previous.length >= 50)
-    throw new Error('Đã lưu 50 biên nhận. Xóa một biên nhận cũ trước khi lưu thêm.');
-  localStorage.setItem(RECEIPT_STORAGE_KEY, JSON.stringify([item, ...previous]));
-}
-
 export function removeReceipt(orderId: string) {
   localStorage.setItem(
     RECEIPT_STORAGE_KEY,

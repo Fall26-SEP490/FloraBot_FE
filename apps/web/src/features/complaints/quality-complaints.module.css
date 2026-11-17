@@ -1,0 +1,76 @@
+.flow,
+.form,
+.queue {
+  display: grid;
+  gap: 0.85rem;
+  min-width: 0;
+}
+.flow p,
+.form p {
+  margin: 0;
+}
+.flow ul {
+  margin-block: 0.4rem;
+  padding-inline-start: 1.25rem;
+}
+.flow li + li {
+  margin-block-start: 0.65rem;
+}
+.flow summary,
+.row > summary {
+  min-height: 44px;
+  cursor: pointer;
+  padding-block: 0.65rem;
+}
+.row {
+  border: 1px solid #dce7d8;
+  border-radius: 12px;
+  padding: 0.4rem 1rem 1rem;
+  background: #fff;
+}
+.row > summary {
+  color: #183e2b;
+  font-weight: 650;
+}
+.row:not([open]) {
+  padding-block-end: 0.4rem;
+}
+.actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.actions button,
+.form :is(button, select, input) {
+  min-height: 44px;
+}
+.form {
+  align-items: start;
+  border-top: 1px solid #dce7d8;
+  padding-block-start: 1rem;
+}
+.form label,
+.queue label {
+  display: grid;
+  gap: 0.35rem;
+}
+.form :is(select, textarea),
+.queue select {
+  width: 100%;
+  min-width: 0;
+}
+.form textarea {
+  min-height: 6rem;
+}
+.text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.photo {
+  display: block;
+  max-width: min(100%, 28rem);
+  max-height: 24rem;
+  height: auto;
+  object-fit: contain;
+}

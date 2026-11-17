@@ -3,6 +3,7 @@ import Link from 'next/link';
 import {
   LayoutDashboard,
   ClipboardList,
+  CircleAlert,
   Flower2,
   Boxes,
   Users,
@@ -31,6 +32,13 @@ export const sellerNavHubs: readonly { title: string; items: readonly SellerNavH
         label: 'Đơn đặt trước',
         icon: ClipboardList,
         sections: ['orders'],
+        tabs: null,
+      },
+      {
+        key: 'complaints',
+        label: 'Phản ánh chất lượng',
+        icon: CircleAlert,
+        sections: ['complaints'],
         tabs: null,
       },
       {

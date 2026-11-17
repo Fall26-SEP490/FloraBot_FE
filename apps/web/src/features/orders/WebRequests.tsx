@@ -15,6 +15,8 @@ import {
   ArrowLeft,
   ArrowRight,
   Flower2,
+  CircleAlert,
+  X,
 } from '@florabot/ui';
 import { ApiError, queryClient, request, sessionQuery } from '@/shared/lib/api';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
@@ -25,7 +27,6 @@ import {
   orderNextStep,
   orderStage,
   sellerOrderActionLabel,
-  customerOrderActionLabel,
   sellerOrderHint,
   statusName,
   money,
@@ -39,10 +40,18 @@ import { fetchMemberHistory } from '../customer-account/customer-account.api';
 import { CustomerPurchaseCard } from '../customer-account/CustomerPurchaseCard';
 import type { CustomerHistoryItem } from '../customer-account/customer-account.types';
 import { CustomerQuoteDetails, CustomerPaymentReturn } from './CustomerQuoteDetails';
+import CustomerOrderSummary from './CustomerOrderSummary';
 import { PreorderAccessories, PreorderPackingList } from './PreorderAccessories';
 import accessoryStyles from './preorder-accessories.module.css';
-import CustomerPickupGuide from './CustomerPickupGuide';
 import CustomerOrderChat from './CustomerOrderChat';
+import {
+  ORDER_FILTERS,
+  orderReturnHref,
+  readOrderScroll,
+  rememberOrderView,
+} from './order-navigation';
+import ReceiptContextLink from '../receipts/components/ReceiptContextLink';
+import { pickupWindow } from './pickup-window';
 import PreorderLoadingButton from './PreorderLoadingButton';
 import { usePreorderLoadingAccess } from './usePreorderLoadingAccess';
 import AssignPreorderStock from './AssignPreorderStock';
@@ -61,6 +70,22 @@ const sellerFilters: { value: OrderFilter; label: string }[] = [
   { value: 'ready', label: 'Sẵn sàng' },
   { value: 'closed', label: 'Đã kết thúc' },
 ];
+const memberFilters: { value: OrderFilter; label: string }[] = [
+  { value: 'all', label: 'Tất cả' },
+  { value: 'attention', label: 'Cần bạn xử lý' },
+  { value: 'tracking', label: 'Đang theo dõi' },
+  { value: 'ready', label: 'Sẵn sàng tại tủ' },
+  { value: 'closed', label: 'Đã kết thúc' },
+];
+
+const memberReceiptStatuses = new Set([
+  'PAID',
+  'DISPENSING',
+  'COMPLETED',
+  'DISPENSE_FAILED',
+  'DISPUTED',
+  'REFUNDED',
+]);
 const pickupDate = (value: string) =>
   new Date(value).toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
 const pickupClock = (value: string) =>
@@ -104,6 +129,10 @@ function OrderActions({
     return () => window.clearInterval(timer);
   }, []);
   const [action, setAction] = useState<'quote' | 'fulfill' | 'cancel' | 'accept' | null>(null);
+  const actionHeading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (mode === 'member' && action) actionHeading.current?.focus();
+  }, [action, mode]);
   const [busy, setBusy] = useState(false);
   const uncertaintyKey = `florabot-web-order-uncertain:${base}:${row.id}`;
   const [uncertain, setUncertain] = useState(() => {
@@ -479,6 +508,15 @@ function OrderActions({
 
   const sellerWaitingForQuote = mode === 'seller' && row.state === 'QUOTED' && !row.orderStatus;
   const sellerWaitingForPayment = mode === 'seller' && row.orderStatus === 'AWAITING_PAYMENT';
+  const pickupTiming = pickupWindow(row.pickupAt, row.pickupBefore, now);
+  const showPickupChat =
+    mode === 'member' &&
+    role === 'CUSTOMER' &&
+    !uncertain &&
+    !action &&
+    row.orderStatus === 'PAID' &&
+    row.ready &&
+    (pickupTiming === 'expired' || pickupTiming === 'unknown');
   const quoteStage = sellerWaitingForQuote
     ? quoteExpired
       ? 'Báo giá hết hạn'
@@ -522,50 +560,8 @@ function OrderActions({
       ))}
     </ol>
   );
-  return (
-    <div
-      className={
-        mode === 'member' ? `web-order-actions ${customerStyles.orderDetails}` : 'web-order-actions'
-      }
-    >
-      {mode === 'seller' &&
-        (!orderClosed(row) || (mode === 'seller' && row.orderStatus === 'COMPLETED')) &&
-        !['DISPUTED', 'DISPENSE_FAILED'].includes(row.orderStatus ?? '') &&
-        progress}
-      {action !== 'quote' && mode !== 'member' && (
-        <div
-          className={
-            mode === 'seller' && orderClosed(row) ? 'order-closed-note' : 'order-next-step'
-          }
-          role="note"
-        >
-          {!(mode === 'seller' && orderClosed(row)) && (
-            <strong>
-              {sellerWaitingForQuote
-                ? quoteExpired
-                  ? 'Báo giá đã hết hạn'
-                  : 'Đã gửi báo giá · Chờ khách xác nhận'
-                : sellerWaitingForPayment
-                  ? 'Khách đã xác nhận · Chờ thanh toán'
-                  : mode === 'admin'
-                    ? 'Tình trạng xử lý'
-                    : 'Bước tiếp theo'}
-            </strong>
-          )}
-          <p>
-            {sellerWaitingForQuote && quoteExpired
-              ? 'Chỉnh sửa và gửi báo giá mới nếu shop vẫn nhận được yêu cầu.'
-              : sellerWaitingForQuote || sellerWaitingForPayment
-                ? 'Bạn có thể chuẩn bị hoa sau khi đơn đã thanh toán.'
-                : orderNextStep(row, mode)}
-          </p>
-        </div>
-      )}
-      {mode === 'member' && (
-        <div ref={paymentResult} tabIndex={-1}>
-          <CustomerQuoteDetails row={row} now={now} />
-        </div>
-      )}
+  const interaction = (
+    <>
       {accessoryStockBlocked && row.state === 'QUOTED' && !row.orderId && (
         <p role="alert" className="error">
           Phụ kiện trong báo giá không còn đủ. Hãy nhắn shop cập nhật báo giá trước khi xác nhận
@@ -654,15 +650,6 @@ function OrderActions({
       {mode !== 'member' && action !== 'quote' && action !== 'fulfill' && (
         <PreorderAccessories row={row} showTotal={mode === 'seller'} />
       )}
-      {mode === 'member' && <CustomerPickupGuide row={row} now={now} />}
-      {mode === 'member' && row.orderId && row.trackingToken && (
-        <a
-          href={`/receipt#order=${encodeURIComponent(row.orderId)}&token=${encodeURIComponent(row.trackingToken)}`}
-          referrerPolicy="no-referrer"
-        >
-          Xem biên nhận và hỗ trợ hoàn tiền
-        </a>
-      )}
       {!action && mode !== 'admin' && (
         <div
           className={
@@ -697,7 +684,7 @@ function OrderActions({
               {busy ? 'Đang mở thanh toán…' : 'Thanh toán ngay'}
             </Button>
           )}
-          {mode === 'member' && role === 'CUSTOMER' && !uncertain && (
+          {mode === 'member' && role === 'CUSTOMER' && !uncertain && !showPickupChat && (
             <CustomerOrderChat
               row={row}
               page={page}
@@ -705,6 +692,38 @@ function OrderActions({
               className={customerStyles.orderChatInline}
             />
           )}
+          {mode === 'member' &&
+            row.orderId &&
+            row.trackingToken &&
+            memberReceiptStatuses.has(row.orderStatus ?? '') && (
+              <Button asChild variant="outline">
+                <ReceiptContextLink
+                  to="/receipt"
+                  orderId={row.orderId}
+                  trackingToken={row.trackingToken}
+                  returnTo={orderReturnHref(row.id, page, filter)}
+                >
+                  <ClipboardList size={16} aria-hidden="true" />
+                  Xem biên nhận
+                </ReceiptContextLink>
+              </Button>
+            )}
+          {mode === 'member' &&
+            ['COMPLETED', 'DISPUTED'].includes(row.orderStatus ?? '') &&
+            row.orderId &&
+            row.trackingToken && (
+              <Button asChild variant="outline" className={customerStyles.complaintButton}>
+                <ReceiptContextLink
+                  to="/phan-anh"
+                  orderId={row.orderId}
+                  trackingToken={row.trackingToken}
+                  returnTo={orderReturnHref(row.id, page, filter)}
+                >
+                  <CircleAlert size={16} aria-hidden="true" />
+                  {row.orderStatus === 'DISPUTED' ? 'Theo dõi phản ánh' : 'Phản ánh về hoa'}
+                </ReceiptContextLink>
+              </Button>
+            )}
           {mode === 'seller' && ['REQUESTED', 'QUOTED'].includes(row.state) && (
             <Button
               variant={sellerWaitingForQuote ? 'outline' : 'default'}
@@ -862,7 +881,7 @@ function OrderActions({
                 </li>
               </ol>
             )}
-            <h3>
+            <h3 ref={mode === 'member' ? actionHeading : undefined} tabIndex={-1}>
               {action === 'accept'
                 ? 'Xác nhận mẫu, giá và lịch nhận'
                 : action === 'quote'
@@ -875,8 +894,8 @@ function OrderActions({
             </h3>
             {action === 'accept' && reviewedQuote && (
               <p>
-                Kiểm tra báo giá ở trên, rồi đánh dấu đồng ý để xác nhận với shop. Bước này chưa trừ
-                tiền; bạn sẽ thanh toán ở bước tiếp theo.
+                Đối chiếu giá, ghi chú và lịch nhận trước khi đồng ý. Bạn sẽ thanh toán ở bước tiếp
+                theo.
               </p>
             )}
             {action === 'accept' && reviewedQuoteChanged && (
@@ -1381,6 +1400,63 @@ function OrderActions({
       >
         {notice}
       </p>
+    </>
+  );
+  return (
+    <div
+      className={
+        mode === 'member' ? `web-order-actions ${customerStyles.orderDetails}` : 'web-order-actions'
+      }
+    >
+      {mode === 'seller' &&
+        (!orderClosed(row) || (mode === 'seller' && row.orderStatus === 'COMPLETED')) &&
+        !['DISPUTED', 'DISPENSE_FAILED'].includes(row.orderStatus ?? '') &&
+        progress}
+      {action !== 'quote' && mode !== 'member' && (
+        <div
+          className={
+            mode === 'seller' && orderClosed(row) ? 'order-closed-note' : 'order-next-step'
+          }
+          role="note"
+        >
+          {!(mode === 'seller' && orderClosed(row)) && (
+            <strong>
+              {sellerWaitingForQuote
+                ? quoteExpired
+                  ? 'Báo giá đã hết hạn'
+                  : 'Đã gửi báo giá · Chờ khách xác nhận'
+                : sellerWaitingForPayment
+                  ? 'Khách đã xác nhận · Chờ thanh toán'
+                  : mode === 'admin'
+                    ? 'Tình trạng xử lý'
+                    : 'Bước tiếp theo'}
+            </strong>
+          )}
+          <p>
+            {sellerWaitingForQuote && quoteExpired
+              ? 'Chỉnh sửa và gửi báo giá mới nếu shop vẫn nhận được yêu cầu.'
+              : sellerWaitingForQuote || sellerWaitingForPayment
+                ? 'Bạn có thể chuẩn bị hoa sau khi đơn đã thanh toán.'
+                : orderNextStep(row, mode)}
+          </p>
+        </div>
+      )}
+      {mode === 'member' && (
+        <div ref={paymentResult} tabIndex={-1} className={customerStyles.detailFocus}>
+          <CustomerQuoteDetails
+            row={row}
+            now={now}
+            pickupAction={
+              showPickupChat ? (
+                <CustomerOrderChat row={row} page={page} filter={filter} />
+              ) : undefined
+            }
+          >
+            {interaction}
+          </CustomerQuoteDetails>
+        </div>
+      )}
+      {mode !== 'member' && interaction}
     </div>
   );
 }
@@ -1396,21 +1472,11 @@ export default function WebRequests({
   const params = useSearchParams();
   const initialPage = Number(params.get('page'));
   const initialFilter = params.get('filter');
-  const filters: OrderFilter[] = [
-    'all',
-    'attention',
-    'requested',
-    'quoted',
-    'payment',
-    'preparing',
-    'ready',
-    'closed',
-  ];
   const [page, setPage] = useState(
     Number.isSafeInteger(initialPage) && initialPage > 0 ? initialPage : 1,
   );
   const [filter, setFilter] = useState<OrderFilter>(
-    mode === 'member' ? 'all' : (filters.find((value) => value === initialFilter) ?? 'all'),
+    ORDER_FILTERS.find((value) => value === initialFilter) ?? 'all',
   );
   const [resultPage, setResultPage] = useState<number | null>(null);
   const [queueLimit, setQueueLimit] = useState(50);
@@ -1481,6 +1547,14 @@ export default function WebRequests({
   const [readyNotice, setReadyNotice] = useState('');
   const previousReady = useRef<Map<string, boolean>>(new Map());
   const scrolledRequest = useRef<string | null>(null);
+  function changePage(next: number) {
+    if (mode === 'member') {
+      scrolledRequest.current = null;
+      setOpenMemberOrder(null);
+      rememberOrderView(null, next, filter);
+    }
+    setPage(next);
+  }
   useEffect(() => {
     if (mode !== 'member' || !query.data) return;
     for (const row of query.data.items) {
@@ -1500,34 +1574,31 @@ export default function WebRequests({
         const historyGroup = target.closest<HTMLDetailsElement>('details[data-order-history]');
         if (historyGroup) historyGroup.open = true;
         if (mode === 'member' && target instanceof HTMLDetailsElement) target.open = true;
-        target.scrollIntoView({ block: 'center' });
+        const savedScroll = mode === 'member' ? readOrderScroll(returnedRequest, page) : null;
+        if (savedScroll != null) window.scrollTo({ top: savedScroll, behavior: 'instant' });
+        else target.scrollIntoView({ block: 'center' });
         if (mode === 'seller')
           target.querySelector<HTMLElement>('summary')?.focus({ preventScroll: true });
         scrolledRequest.current = returnedRequest;
       }
     }
-  }, [returnedRequest, query.data, mode]);
+  }, [returnedRequest, query.data, history.data, mode, page]);
   const Container = mode === 'seller' ? 'div' : 'section';
   const loadedItems: (WebOrder & { purchase?: CustomerHistoryItem })[] =
     mode === 'member' ? [...items, ...purchaseRows] : items;
+  const searchNeedle = searchable(search.trim());
+  const matchesSearch = (row: WebOrder) =>
+    !searchNeedle ||
+    searchable(
+      [row.orderCode, row.id, row.productName, row.shopName, row.kioskName, row.address]
+        .filter(Boolean)
+        .join(' '),
+    ).includes(searchNeedle);
   const filtered = loadedItems.filter(
     (row) =>
-      (mode === 'member' || matchesOrderFilter(row, filter, mode)) &&
-      (mode !== 'admin' ||
-        !search.trim() ||
-        searchable(
-          [row.orderCode, row.id, row.productName, row.shopName, row.kioskName, row.address]
-            .filter(Boolean)
-            .join(' '),
-        ).includes(searchable(search.trim()))) &&
-      (mode !== 'seller' ||
-        ((!search.trim() ||
-          searchable(
-            [row.orderCode, row.id, row.productName, row.kioskName, row.address]
-              .filter(Boolean)
-              .join(' '),
-          ).includes(searchable(search.trim()))) &&
-          (!pickupDay || pickupDayKey(row.pickupAt) === pickupDay))),
+      matchesOrderFilter(row, filter, mode) &&
+      matchesSearch(row) &&
+      (mode !== 'seller' || !pickupDay || pickupDayKey(row.pickupAt) === pickupDay),
   );
   const targetIndex = returnedRequest
     ? filtered.findIndex((row) => row.id === returnedRequest)
@@ -1572,16 +1643,50 @@ export default function WebRequests({
   ];
   const openMemberHistory =
     Boolean(returnedRequest && memberGroups[2].rows.some((row) => row.id === returnedRequest)) ||
+    filter === 'closed' ||
+    Boolean(searchNeedle) ||
     (typeof window !== 'undefined' && window.location.hash === '#member-orders');
+  function rememberMemberAction(
+    event: { target: EventTarget | null; currentTarget: HTMLDetailsElement },
+    requestId: string,
+  ) {
+    if (!(event.target instanceof Element)) return;
+    const trigger = event.target.closest('a,button,summary');
+    if (!trigger) return;
+    const closing =
+      trigger.tagName === 'SUMMARY' &&
+      trigger.parentElement === event.currentTarget &&
+      event.currentTarget.open;
+    scrolledRequest.current = closing ? null : requestId;
+    rememberOrderView(closing ? null : requestId, page, filter);
+  }
   const renderOrder = (row: (typeof displayItems)[number]) =>
     row.purchase ? (
-      <CustomerPurchaseCard key={row.id} order={row.purchase} disclosureGroup="customer-orders" />
+      <CustomerPurchaseCard
+        key={row.id}
+        order={row.purchase}
+        disclosureGroup="customer-orders"
+        supportHref={`/lien-he?${new URLSearchParams({
+          orderCode: row.purchase.orderCode,
+          from: orderReturnHref(row.id, page, filter),
+        })}`}
+        id={`preorder-${row.id}`}
+        open={row.id === openMemberOrder || undefined}
+        onClickCapture={(event) => rememberMemberAction(event, row.id)}
+        onToggle={(event) => {
+          const isOpen = event.currentTarget.open;
+          setOpenMemberOrder((current) => (isOpen ? row.id : current === row.id ? null : current));
+        }}
+      />
     ) : (
       <li key={row.id}>
         <details
           id={`preorder-${row.id}`}
           name={mode === 'member' ? 'customer-orders' : undefined}
           open={row.id === (mode === 'member' ? openMemberOrder : returnedRequest) || undefined}
+          onClickCapture={
+            mode === 'member' ? (event) => rememberMemberAction(event, row.id) : undefined
+          }
           onToggle={
             mode === 'member'
               ? (event) => {
@@ -1618,62 +1723,7 @@ export default function WebRequests({
                 </span>
               </span>
             ) : mode === 'member' ? (
-              <span className={customerStyles.content}>
-                <span className={customerStyles.heading}>
-                  <strong>{row.productName || 'Hoa theo yêu cầu'}</strong>
-                  <span
-                    className="order-status-pill"
-                    data-status={
-                      row.ready && row.orderStatus === 'PAID'
-                        ? 'READY'
-                        : row.orderStatus || row.state
-                    }
-                  >
-                    {statusName(row)}
-                  </span>
-                </span>
-                <span className={customerStyles.shop}>
-                  {row.shopName || 'Shop nhận yêu cầu'} ·{' '}
-                  {row.orderCode || `Yêu cầu ${row.id.slice(0, 8)}`}
-                </span>
-                <span className={customerStyles.facts}>
-                  <span>
-                    <small>Tủ nhận hoa</small>
-                    <span>{row.kioskName || 'Xem địa điểm trong chi tiết'}</span>
-                  </span>
-                  <span>
-                    <small>
-                      {row.orderStatus === 'PAID' && row.ready
-                        ? 'Giờ nhận hoa'
-                        : row.state === 'REQUESTED'
-                          ? 'Giờ nhận mong muốn'
-                          : 'Lịch nhận'}
-                    </small>
-                    <span>
-                      {when(row.pickupAt)}
-                      {row.orderStatus === 'PAID' && row.ready && row.pickupBefore && (
-                        <> – {when(row.pickupBefore)}</>
-                      )}
-                    </span>
-                  </span>
-                  <span>
-                    <small>Giá shop báo</small>
-                    <strong>
-                      {row.quotedPrice == null ? 'Chưa có báo giá' : money(row.quotedPrice)}
-                    </strong>
-                  </span>
-                </span>
-                <span className={customerStyles.next}>
-                  <span className={customerStyles.action}>
-                    <span className={customerStyles.actionExpand}>
-                      {customerOrderActionLabel(row)} <ArrowRight size={16} aria-hidden="true" />
-                    </span>
-                    <span className={customerStyles.actionCollapse}>
-                      Thu gọn <ChevronDown size={16} aria-hidden="true" />
-                    </span>
-                  </span>
-                </span>
-              </span>
+              <CustomerOrderSummary row={row} />
             ) : (
               <>
                 <span className="admin-preorder-cell">
@@ -1778,26 +1828,9 @@ export default function WebRequests({
       aria-labelledby="web-orders-title"
     >
       {mode === 'member' ? (
-        <header className={customerStyles.pageHeading}>
-          <h1 id="web-orders-title" className="account-orders-title">
-            Đơn hàng
-          </h1>
-          <Button
-            variant="outline"
-            disabled={query.isFetching || history.isFetching}
-            onClick={() => {
-              void query.refetch();
-              void history.refetch();
-            }}
-          >
-            <RefreshCw
-              size={16}
-              aria-hidden="true"
-              className={query.isFetching || history.isFetching ? 'spin' : ''}
-            />{' '}
-            Làm mới
-          </Button>
-        </header>
+        <h1 id="web-orders-title" className="sr-only">
+          Đơn hàng
+        </h1>
       ) : (
         <h2 id="web-orders-title" className={mode === 'seller' ? 'sr-only' : undefined}>
           {mode === 'admin' ? 'Danh sách đơn từ website' : 'Đơn đặt trước từ website'}
@@ -1811,11 +1844,55 @@ export default function WebRequests({
         />
       )}
       {mode === 'member' && (
-        <p role="status" aria-live="polite">
+        <p role="status" aria-live="polite" className="sr-only">
           {readyNotice}
         </p>
       )}
-
+      {mode === 'member' && (
+        <div className={customerStyles.memberToolbar}>
+          <div className={customerStyles.memberSearch}>
+            <label>
+              <span className="sr-only">Tìm đơn hàng trong trang</span>
+              <input
+                type="search"
+                placeholder="Tìm hoa, shop hoặc mã đơn"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+            </label>
+            {search && (
+              <button
+                type="button"
+                className={customerStyles.memberSearchClear}
+                aria-label="Xóa từ khóa tìm kiếm"
+                onClick={() => setSearch('')}
+              >
+                <X size={15} aria-hidden="true" />
+              </button>
+            )}
+          </div>
+          <label className={customerStyles.memberFilter}>
+            <span className="sr-only">Lọc đơn hàng</span>
+            <select
+              value={filter}
+              onChange={(event) => {
+                const value = event.currentTarget.value as OrderFilter;
+                setFilter(value);
+                if (value !== 'all') setOpenMemberOrder(null);
+              }}
+            >
+              {!memberFilters.some(({ value }) => value === filter) && (
+                <option value={filter}>{filterName}</option>
+              )}
+              {memberFilters.map(({ value, label }) => (
+                <option key={value} value={value}>
+                  {value === 'all' ? 'Tất cả trạng thái' : label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      )}
       {mode === 'admin' && (
         <>
           <div className="admin-preorder-toolbar" role="group" aria-label="Bộ lọc đơn đặt trước">
@@ -2011,10 +2088,12 @@ export default function WebRequests({
         </>
       )}
       {mode === 'member' && query.isError && !query.data && !history.isError && (
-        <p role="alert">
-          Chưa tải được đơn đặt trước. Chọn Làm mới để thử lại; giao dịch mua hoa vẫn hiển thị bên
-          dưới.
-        </p>
+        <p role="alert">Chưa tải được đơn đặt trước; giao dịch mua hoa vẫn hiển thị bên dưới.</p>
+      )}
+      {mode === 'member' && query.isError && (
+        <Button variant="outline" disabled={query.isFetching} onClick={() => void query.refetch()}>
+          Tải lại đơn đặt trước
+        </Button>
       )}
       {mode === 'member' && history.isError && (
         <div role="alert" className={customerStyles.historyNotice}>
@@ -2042,7 +2121,9 @@ export default function WebRequests({
                   ? history.isPending
                     ? 'Đang tải giao dịch…'
                     : loadedItems.length || query.data?.hasMore || history.data?.hasMore || page > 1
-                      ? 'Chưa có đơn ở trang này'
+                      ? loadedItems.length
+                        ? 'Không tìm thấy đơn phù hợp'
+                        : 'Chưa có đơn ở trang này'
                       : 'Chưa có đơn hàng'
                   : items.length
                     ? 'Không tìm thấy yêu cầu phù hợp'
@@ -2055,10 +2136,28 @@ export default function WebRequests({
                     : mode === 'admin'
                       ? 'Thử đổi trạng thái hoặc từ khóa. Bộ lọc áp dụng cho trang đang xem.'
                       : 'Không có yêu cầu phù hợp bộ lọc trong trang này.'
-                  : mode === 'member' && page === 1
-                    ? 'Chọn một mẫu hoa bạn thích và gửi mong muốn cho shop. Đơn của bạn sẽ xuất hiện tại đây.'
-                    : 'Chưa có yêu cầu ở trang này.'}
+                  : mode === 'member' &&
+                      (filter !== 'all' || Boolean(searchNeedle)) &&
+                      loadedItems.length > 0
+                    ? 'Không có đơn phù hợp bộ lọc trong trang này. Thử xóa lọc hoặc kiểm tra trang khác.'
+                    : mode === 'member' && page === 1
+                      ? 'Chọn một mẫu hoa bạn thích và gửi mong muốn cho shop. Đơn của bạn sẽ xuất hiện tại đây.'
+                      : 'Chưa có yêu cầu ở trang này.'}
               </p>
+              {mode === 'member' &&
+                (filter !== 'all' || Boolean(searchNeedle)) &&
+                loadedItems.length > 0 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setFilter('all');
+                      setSearch('');
+                    }}
+                  >
+                    Xóa bộ lọc
+                  </Button>
+                )}
               {mode === 'member' &&
                 !history.isPending &&
                 !history.isError &&
@@ -2094,7 +2193,7 @@ export default function WebRequests({
                       open={openMemberHistory || undefined}
                     >
                       <summary>
-                        {title}
+                        {title} <span className={customerStyles.groupCount}>{rows.length}</span>
                         <ChevronDown size={16} aria-hidden="true" />
                       </summary>
                       <ul className="member-orders customer-order-list">{rows.map(renderOrder)}</ul>
@@ -2105,7 +2204,9 @@ export default function WebRequests({
                       className={customerStyles.orderGroup}
                       aria-labelledby={`order-group-${id}`}
                     >
-                      <h2 id={`order-group-${id}`}>{title}</h2>
+                      <h2 id={`order-group-${id}`}>
+                        {title} <span className={customerStyles.groupCount}>{rows.length}</span>
+                      </h2>
                       <ul className="member-orders customer-order-list">{rows.map(renderOrder)}</ul>
                     </section>
                   )),
@@ -2136,7 +2237,7 @@ export default function WebRequests({
                 variant="outline"
                 disabled={displayPage === 1 || query.isFetching}
                 onClick={() =>
-                  mode === 'seller' ? setResultPage(displayPage - 1) : setPage((value) => value - 1)
+                  mode === 'seller' ? setResultPage(displayPage - 1) : changePage(page - 1)
                 }
               >
                 <ArrowLeft size={15} aria-hidden="true" />
@@ -2156,7 +2257,7 @@ export default function WebRequests({
                   (mode === 'member' && history.isFetching)
                 }
                 onClick={() =>
-                  mode === 'seller' ? setResultPage(displayPage + 1) : setPage((value) => value + 1)
+                  mode === 'seller' ? setResultPage(displayPage + 1) : changePage(page + 1)
                 }
               >
                 <span>Trang sau</span>

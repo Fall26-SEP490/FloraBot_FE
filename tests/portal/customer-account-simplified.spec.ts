@@ -154,7 +154,10 @@ for (const width of [390, 1440]) {
     await page.goto('/tai-khoan');
     await expect(
       page.getByRole('heading', { level: 1, name: 'Đơn hàng', exact: true }),
-    ).toBeVisible();
+    ).toBeAttached();
+    await expect(page.getByRole('searchbox', { name: 'Tìm đơn hàng trong trang' })).toBeVisible();
+    await expect(page.getByRole('combobox', { name: 'Lọc đơn hàng' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Làm mới', exact: true })).toHaveCount(0);
     const nav = page.getByRole('navigation', { name: 'Điều hướng tài khoản' });
     if (width === 390) await page.getByRole('button', { name: 'Mục tài khoản' }).click();
     await expect(nav.getByRole('link')).toHaveCount(4);

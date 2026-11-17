@@ -71,24 +71,35 @@ export default function StaffTaskBoard({
   function renderGroup(group: (typeof groups)[number]) {
     if (!hasContent(group)) return null;
     const { status, title, query, page, tasks } = group;
+    const qualityTasks = tasks.filter((task) => task.workType === 'FLOWER_QUALITY');
+    const otherTasks = tasks.filter((task) => task.workType !== 'FLOWER_QUALITY');
+    const renderTask = (task: (typeof tasks)[number]) => (
+      <TaskItem
+        key={`${task.id}-${task.version}-${reload}`}
+        task={task}
+        mode="worker"
+        actorRole="SELLER_STAFF"
+        actorId={actorId}
+        sellerId={sellerId}
+        apiBase={apiBase}
+        canReassign={false}
+        readOnly={readOnly}
+        staffOpen={openTaskId === task.id}
+        onToggleStaff={() => setOpenTaskId((current) => (current === task.id ? null : task.id))}
+      />
+    );
     return (
       <section key={status} className="staff-task-group" aria-labelledby={`staff-group-${status}`}>
         <h3 id={`staff-group-${status}`}>{title}</h3>
-        {tasks.map((task) => (
-          <TaskItem
-            key={`${task.id}-${task.version}-${reload}`}
-            task={task}
-            mode="worker"
-            actorRole="SELLER_STAFF"
-            actorId={actorId}
-            sellerId={sellerId}
-            apiBase={apiBase}
-            canReassign={false}
-            readOnly={readOnly}
-            staffOpen={openTaskId === task.id}
-            onToggleStaff={() => setOpenTaskId((current) => (current === task.id ? null : task.id))}
-          />
-        ))}
+        {qualityTasks.length > 0 && (
+          <div role="group" aria-label="Xử lý chất lượng hoa">
+            <p>
+              <strong>Xử lý chất lượng hoa</strong>
+            </p>
+            {qualityTasks.map(renderTask)}
+          </div>
+        )}
+        {otherTasks.map(renderTask)}
         {!tasks.length && <p>Trang này không còn công việc.</p>}
         {(page > 1 || query.data?.hasMore) && (
           <nav aria-label={`Phân trang: ${title}`} className="order-pagination">
@@ -130,9 +141,12 @@ export default function StaffTaskBoard({
             const results = await Promise.all(queries.map((query) => query.refetch()));
             if (results.every((result) => !result.isError)) setReload((value) => value + 1);
             await Promise.all(
-              ['staff-inventory-maintenance', 'staff-stock', 'staff-preorders'].map((key) =>
-                queryClient.invalidateQueries({ queryKey: [key] }),
-              ),
+              [
+                'staff-inventory-maintenance',
+                'staff-stock',
+                'staff-preorders',
+                'staff-quality',
+              ].map((key) => queryClient.invalidateQueries({ queryKey: [key] })),
             );
           }}
         >

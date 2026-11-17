@@ -9,6 +9,7 @@ import {
 } from '../chat/customer-chat.navigation';
 import type { OrderFilter, WebOrder } from './orders.types';
 import styles from './customer-orders.module.css';
+import { orderReturnHref } from './order-navigation';
 
 export default function CustomerOrderChat({
   row,
@@ -34,10 +35,7 @@ export default function CustomerOrderChat({
       const chat = await openCustomerChat({ sellerId: row.sellerId, productId: row.productId });
       rememberOpenedCustomerChat(chat);
       queryClient.removeQueries({ queryKey: ['member-chats'] });
-      const from = new URLSearchParams({ requestId: row.id });
-      if (page > 1) from.set('page', String(page));
-      if (filter !== 'all') from.set('filter', filter);
-      router.push(customerConversationHref(chat.id, `/tai-khoan?${from}#web-orders`));
+      router.push(customerConversationHref(chat.id, orderReturnHref(row.id, page, filter)));
     } catch (cause) {
       setError(formatChatError(cause));
     } finally {

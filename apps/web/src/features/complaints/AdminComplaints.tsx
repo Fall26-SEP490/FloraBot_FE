@@ -13,6 +13,7 @@ import type {
   ResolveDisputeRequest,
 } from './complaints.types';
 import { formatComplaintDate, formatComplaintMoney, safeUrl } from './complaints.utils';
+import QualityComplaintQueue from './QualityComplaintQueue';
 
 type Row = AdminComplaintResponse;
 type Detail = AdminComplaintDetail;
@@ -31,7 +32,13 @@ const schema = z.object({
 });
 type Fields = z.infer<typeof schema>;
 
-function Complaint({ row, onSaved }: { row: Row; onSaved: (message: string) => void }) {
+function Complaint({
+  row,
+  onSaved,
+}: {
+  row: Pick<Row, 'id' | 'status' | 'orderCode' | 'createdAt'> & Partial<Pick<Row, 'orderTotal'>>;
+  onSaved: (message: string) => void;
+}) {
   const [open, setOpen] = useState(false);
   const [review, setReview] = useState<Fields | null>(null);
   const [saving, setSaving] = useState(false);
@@ -89,6 +96,10 @@ function Complaint({ row, onSaved }: { row: Row; onSaved: (message: string) => v
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['admin-complaints'] }),
         queryClient.invalidateQueries({ queryKey: ['admin-complaint', row.id] }),
+        queryClient.invalidateQueries({ queryKey: ['quality-queue', '/admin/quality-complaints'] }),
+        queryClient.invalidateQueries({
+          queryKey: ['quality-complaint', '/admin/quality-complaints'],
+        }),
       ]);
       sending.current = false;
       setSaving(false);
@@ -99,9 +110,11 @@ function Complaint({ row, onSaved }: { row: Row; onSaved: (message: string) => v
       <details onToggle={(event) => setOpen(event.currentTarget.open)}>
         <AdminDisclosureSummary
           statusCode={row.status}
-          title={`Đơn ${row.orderCode}`}
+          title={row.orderTotal === undefined ? 'Mở quyết định hoàn tiền' : `Đơn ${row.orderCode}`}
           meta={formatComplaintDate(row.createdAt)}
-          status={formatComplaintMoney(row.orderTotal)}
+          status={
+            row.orderTotal === undefined ? 'Chờ xét duyệt' : formatComplaintMoney(row.orderTotal)
+          }
         />
         {open && (
           <div className="incident-detail">
@@ -244,10 +257,18 @@ function Complaint({ row, onSaved }: { row: Row; onSaved: (message: string) => v
                       <h3>
                         {detail.data.complaint.status === 'RESOLVED_REFUND'
                           ? `Đã duyệt hoàn ${formatComplaintMoney(detail.data.complaint.refundAmount ?? 0)}`
-                          : 'Đã từ chối hoàn tiền'}
+                          : detail.data.complaint.status === 'RESOLVED_FIXED'
+                            ? 'Đã xử lý chất lượng hoa'
+                            : detail.data.complaint.status === 'CANCELLED'
+                              ? 'Đã hủy phản ánh'
+                              : 'Đã từ chối hoàn tiền'}
                       </h3>
                       <p className="incident-text">{detail.data.complaint.decision}</p>
-                      <p>Đây là kết quả xét duyệt, không phải xác nhận đã chuyển khoản.</p>
+                      {detail.data.complaint.status === 'RESOLVED_REFUND' && (
+                        <p>
+                          Đã duyệt khoản hoàn. Kiểm tra trạng thái chuyển khoản ở mục Hoàn tiền.
+                        </p>
+                      )}
                     </>
                   )
                 )}
@@ -279,6 +300,7 @@ function Complaint({ row, onSaved }: { row: Row; onSaved: (message: string) => v
 }
 
 export default function AdminComplaints() {
+  const [showQuality, setShowQuality] = useState(false);
   const [status, setStatus] = useState('OPEN');
   const [page, setPage] = useState(1);
   const [notice, setNotice] = useState('');
@@ -289,81 +311,115 @@ export default function AdminComplaints() {
   const queue = useQuery({
     queryKey: ['admin-complaints', status, page],
     queryFn: () => request<Queue>(`/admin/complaints?status=${status}&page=${page}`),
+    enabled: !showQuality,
   });
   return (
     <section className="admin-complaints" aria-labelledby="complaints-title">
       <h2 id="complaints-title">Danh sách phản ánh của khách</h2>
-      <p>
-        Xem phản ánh và ghi nhận quyết định cho từng đơn. Phản ánh đang mở được xếp cũ nhất trước.
-      </p>
-      <AdminFilterBar
-        actions={
-          <>
-            <Button
-              variant="outline"
-              disabled={queue.isFetching}
-              onClick={() => {
-                setPage(1);
-                void queryClient.invalidateQueries({ queryKey: ['admin-complaints'] });
-              }}
-            >
-              Cập nhật phản ánh
-            </Button>
-          </>
-        }
-      >
-        <div>
-          <label htmlFor="complaint-status">Trạng thái phản ánh</label>
-          <select
-            id="complaint-status"
-            value={status}
-            onChange={(event) => {
-              setStatus(event.target.value);
-              setPage(1);
-            }}
+      <div className="stock-actions" role="group" aria-label="Nhóm hồ sơ">
+        <Button
+          type="button"
+          variant={!showQuality ? 'default' : 'outline'}
+          aria-pressed={!showQuality}
+          onClick={() => setShowQuality(false)}
+        >
+          Tất cả phản ánh
+        </Button>
+        <Button
+          type="button"
+          variant={showQuality ? 'default' : 'outline'}
+          aria-pressed={showQuality}
+          onClick={() => setShowQuality(true)}
+        >
+          Hồ sơ chất lượng hoa
+        </Button>
+      </div>
+      {showQuality ? (
+        <QualityComplaintQueue
+          onAdminDetail={(row) => (
+            <ul className="admin-shop-list">
+              <Complaint row={row} onSaved={setNotice} />
+            </ul>
+          )}
+        />
+      ) : (
+        <>
+          <p>
+            Xem phản ánh và ghi nhận quyết định cho từng đơn. Phản ánh đang mở được xếp cũ nhất
+            trước.
+          </p>
+          <AdminFilterBar
+            actions={
+              <>
+                <Button
+                  variant="outline"
+                  disabled={queue.isFetching}
+                  onClick={() => {
+                    setPage(1);
+                    void queryClient.invalidateQueries({ queryKey: ['admin-complaints'] });
+                  }}
+                >
+                  Cập nhật phản ánh
+                </Button>
+              </>
+            }
           >
-            <option value="OPEN">Chờ xem xét</option>
-            <option value="RESOLVED_REFUND">Đã duyệt hoàn</option>
-            <option value="RESOLVED_REJECT">Đã từ chối hoàn</option>
-          </select>
-        </div>
-      </AdminFilterBar>
+            <div>
+              <label htmlFor="complaint-status">Trạng thái phản ánh</label>
+              <select
+                id="complaint-status"
+                value={status}
+                onChange={(event) => {
+                  setStatus(event.target.value);
+                  setPage(1);
+                }}
+              >
+                <option value="OPEN">Chờ xem xét</option>
+                <option value="RESOLVED_REFUND">Đã duyệt hoàn</option>
+                <option value="RESOLVED_REJECT">Đã từ chối hoàn</option>
+                <option value="RESOLVED_FIXED">Đã xử lý chất lượng</option>
+                <option value="CANCELLED">Đã hủy</option>
+              </select>
+            </div>
+          </AdminFilterBar>
+          {queue.isPending ? (
+            <p role="status">Đang tải phản ánh…</p>
+          ) : queue.isError ? (
+            <p role="alert" className="error">
+              Chưa tải được danh sách. Chọn “Cập nhật phản ánh” để thử lại.
+            </p>
+          ) : (
+            <>
+              {queue.data.items.length === 0 && <p>Chưa có phản ánh ở trang này.</p>}
+              <ul className="admin-shop-list">
+                {queue.data.items.map((row) => (
+                  <Complaint key={row.id} row={row} onSaved={setNotice} />
+                ))}
+              </ul>
+              <div className="stock-actions">
+                <Button
+                  variant="outline"
+                  disabled={page === 1 || queue.isFetching}
+                  onClick={() => setPage((value) => value - 1)}
+                >
+                  Trang phản ánh trước
+                </Button>
+                <span>Trang {page}</span>
+                <Button
+                  variant="outline"
+                  disabled={!queue.data.hasMore || queue.isFetching}
+                  onClick={() => setPage((value) => value + 1)}
+                >
+                  Trang phản ánh tiếp
+                </Button>
+              </div>
+            </>
+          )}
+        </>
+      )}
       <p role="status" tabIndex={-1} ref={noticeRef}>
         {notice}
       </p>
-      {queue.isPending ? (
-        <p role="status">Đang tải phản ánh…</p>
-      ) : queue.isError ? (
-        <p role="alert" className="error">
-          Chưa tải được danh sách. Chọn “Cập nhật phản ánh” để thử lại.
-        </p>
-      ) : (
-        <>
-          {queue.data.items.length === 0 && <p>Chưa có phản ánh ở trang này.</p>}
-          <ul className="admin-shop-list">
-            {queue.data.items.map((row) => (
-              <Complaint key={row.id} row={row} onSaved={setNotice} />
-            ))}
-          </ul>
-          <div className="stock-actions">
-            <Button
-              variant="outline"
-              disabled={page === 1 || queue.isFetching}
-              onClick={() => setPage((value) => value - 1)}
-            >
-              Trang phản ánh trước
-            </Button>
-            <span>Trang {page}</span>
-            <Button
-              variant="outline"
-              disabled={!queue.data.hasMore || queue.isFetching}
-              onClick={() => setPage((value) => value + 1)}
-            >
-              Trang phản ánh tiếp
-            </Button>
-          </div>
-        </>
-      )}
     </section>
   );
 }

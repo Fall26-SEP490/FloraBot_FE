@@ -11,6 +11,8 @@ import StaffInventoryMaintenance, {
 import { TASK_DETAIL_STATES, TASK_STATUS_LABELS } from '../task-management.constants';
 import type { ActiveTaskRole, Task } from '../task-management.types';
 import StaffEvidence from './StaffEvidence';
+import QualityComplaintDetails from '../../complaints/QualityComplaintDetails';
+import type { QualityComplaint } from '../../complaints/quality-complaints.api';
 import StaffReassignment from './StaffReassignment';
 import StaffTaskDetails, { staffTaskDetailsQuery } from './StaffTaskDetails';
 import TechnicianRepairAccess from './TechnicianRepairAccess';
@@ -63,6 +65,8 @@ export function TaskItem({
   const isManager = mode === 'manager';
   const [taskOpen, setTaskOpen] = useState(false);
   const [showCancellation, setShowCancellation] = useState(false);
+  const qualityTask = task.workType === 'FLOWER_QUALITY';
+  const [qualityEvidencePage, setQualityEvidencePage] = useState(1);
   const staffDelivery =
     isWorker && role === 'SELLER_STAFF' && !!actorId && task.kind === 'DELIVERY';
   const compactStaff = isWorker && role === 'SELLER_STAFF';
@@ -86,8 +90,29 @@ export function TaskItem({
   const checkInventory =
     canWorkOnInventory &&
     (staffOpen || nearViewport || typeof IntersectionObserver === 'undefined');
-  const inventory = useStaffInventoryMaintenance(task.id, actorId, checkInventory, staffOpen);
-  const checkGeneralOptions = checkInventory && inventory.isSuccess && inventory.data === null;
+  const quality = useQuery({
+    queryKey: ['staff-quality', actorId, task.id, task.version, qualityEvidencePage],
+    enabled: qualityTask && staffDelivery && staffOpen,
+    queryFn: () =>
+      request<QualityComplaint>(
+        `/staff/tasks/${task.id}/quality?evidencePage=${qualityEvidencePage}`,
+      ),
+    refetchInterval: staffOpen && task.status === 'IN_PROGRESS' ? 8000 : false,
+  });
+  const qualityReplacement = quality.data?.replacement;
+  const assignedReplacement =
+    qualityReplacement && ['PLANNED', 'LOADED'].includes(qualityReplacement.state);
+  const inventory = useStaffInventoryMaintenance(
+    task.id,
+    actorId,
+    checkInventory && (!qualityTask || Boolean(assignedReplacement)),
+    staffOpen,
+    qualityTask && qualityReplacement
+      ? `${qualityReplacement.taskId}:${qualityReplacement.state}`
+      : undefined,
+  );
+  const checkGeneralOptions =
+    !qualityTask && checkInventory && inventory.isSuccess && inventory.data === null;
   const stockPreview = useQuery({
     ...staffStockQuery(task.id, actorId, sellerId ? `seller:${sellerId}` : apiBase, apiBase),
     enabled: checkGeneralOptions,
@@ -146,9 +171,16 @@ export function TaskItem({
   const [editingInstructions, setEditingInstructions] = useState(false);
   const waitingForInventory =
     canWorkOnInventory &&
+    (!qualityTask || Boolean(assignedReplacement)) &&
     (inventory.isPending ||
       inventory.isError ||
       (!!inventory.data && inventory.data.sessionStage !== 'Completed'));
+  const waitingForQuality =
+    qualityTask &&
+    staffDelivery &&
+    (!quality.isSuccess ||
+      (quality.data.replacement?.state === 'PLANNED' &&
+        inventory.data?.sessionStage !== 'Completed'));
   const canEditInstructions =
     !readOnly &&
     !isWorker &&
@@ -205,16 +237,18 @@ export function TaskItem({
       ? []
       : isManager
         ? task.status === 'SUBMITTED'
-          ? task.kind === 'KIOSK_REMOVAL'
-            ? ['IN_PROGRESS', 'CANCELLED']
-            : ['COMPLETED', 'IN_PROGRESS', 'CANCELLED']
+          ? qualityTask
+            ? []
+            : task.kind === 'KIOSK_REMOVAL'
+              ? ['IN_PROGRESS', 'CANCELLED']
+              : ['COMPLETED', 'IN_PROGRESS', 'CANCELLED']
           : ['ASSIGNED', 'IN_PROGRESS'].includes(task.status)
             ? ['CANCELLED']
             : []
         : isWorker
           ? task.status === 'ASSIGNED'
             ? ['IN_PROGRESS']
-            : task.status === 'IN_PROGRESS' && !waitingForInventory
+            : task.status === 'IN_PROGRESS' && !waitingForInventory && !waitingForQuality
               ? ['SUBMITTED']
               : []
           : [];
@@ -313,7 +347,7 @@ export function TaskItem({
             (value) => ({ label: value, value }),
           )
         : []
-    : !staffDelivery
+    : !staffDelivery || qualityTask
       ? []
       : task.status === 'ASSIGNED'
         ? [
@@ -518,13 +552,45 @@ export function TaskItem({
   );
   const taskContent = (
     <>
-      {canWorkOnInventory && actorId && (
+      {qualityTask && staffDelivery && (
+        <div className="staff-stocking-section">
+          <h4>Xử lý chất lượng hoa</h4>
+          {quality.isPending ? (
+            <p role="status">Đang tải phản ánh liên quan…</p>
+          ) : quality.isError ? (
+            <>
+              <p role="alert">Chưa tải được phản ánh của công việc.</p>
+              <Button variant="outline" onClick={() => void quality.refetch()}>
+                Tải lại phản ánh
+              </Button>
+            </>
+          ) : (
+            <QualityComplaintDetails
+              detail={quality.data}
+              scope="staff"
+              onPage={setQualityEvidencePage}
+            />
+          )}
+        </div>
+      )}
+      {qualityTask && role === 'SELLER' && (
+        <p>
+          Duyệt hoặc trả báo cáo ở <a href="/seller/complaints">Phản ánh chất lượng</a>.
+        </p>
+      )}
+      {canWorkOnInventory && actorId && (!qualityTask || inventory.data || inventory.isError) && (
         <div className="staff-stocking-section">
           <div className="staff-stocking-header">
             <h4>Thao tác tại tủ</h4>
           </div>
           {inventory.isPending && <p role="status">Đang tải thao tác được giao…</p>}
-          {inventory.data && <StaffInventoryMaintenance taskId={task.id} scope={inventory.data} />}
+          {inventory.data && (
+            <StaffInventoryMaintenance
+              taskId={task.id}
+              scope={inventory.data}
+              useKioskCode={qualityTask}
+            />
+          )}
           {inventory.isError && (
             <p role="alert">
               Chưa tải được thao tác được giao
@@ -534,7 +600,7 @@ export function TaskItem({
               </Button>
             </p>
           )}
-          {inventory.data === null && (
+          {!qualityTask && inventory.data === null && (
             <StaffStock
               taskId={task.id}
               actorId={actorId}
@@ -544,7 +610,7 @@ export function TaskItem({
               apiBase={apiBase}
             />
           )}
-          {inventory.data === null && (
+          {!qualityTask && inventory.data === null && (
             <StaffPreorderFulfillment taskId={task.id} actorId={actorId} active />
           )}
         </div>
@@ -813,7 +879,9 @@ export function TaskItem({
               ? 'Kiểm tra sự cố'
               : task.kind === 'KIOSK_REMOVAL'
                 ? 'Tháo dỡ kiosk'
-                : 'Giao hoa'}{' '}
+                : qualityTask
+                  ? 'Xử lý chất lượng hoa'
+                  : 'Giao hoa'}{' '}
             · {task.kioskName}
           </CardTitle>
           {!isTechnician && !compactStaff && (

@@ -33,7 +33,6 @@ const receipt: components['schemas']['ReceiptResponse'] = {
 test.beforeEach(async ({ page }) => {
   await page.route('**/api/receipts/lookup', (route) => route.fulfill({ json: receipt }));
   await page.goto(`/receipt#order=${id}&token=${token}`);
-  await page.getByRole('button', { name: 'Xem biên nhận', exact: true }).click();
 });
 
 for (const width of [390, 1440])
@@ -129,7 +128,6 @@ test('Lost refund-account response clears inputs and never retries automatically
   await expect(page.getByLabel('Số tài khoản ngân hàng', { exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Xác nhận gửi tài khoản' })).toHaveCount(0);
   expect(writes).toBe(1);
-  await page.locator('.receipt-lookup > summary').click();
   await page.getByLabel('Mã tra cứu', { exact: true }).fill('');
   await expect(page.getByRole('heading', { name: 'Tài khoản nhận hoàn', exact: true })).toHaveCount(
     0,

@@ -1,5 +1,6 @@
 import { catalogReturnPath } from '../catalog/catalog.navigation';
 import type { CustomerSellerChatItem } from './types';
+import { orderReturnPath } from '../orders/order-navigation';
 
 export function customerChatReturn(
   value: string | null,
@@ -29,28 +30,10 @@ export function customerChatReturn(
     };
   }
   if (url.pathname === '/tai-khoan' && url.hash === '#web-orders') {
-    const id = url.searchParams.get('requestId');
-    if (!id || !/^[a-zA-Z0-9-]{1,80}$/.test(id)) return null;
-    const params = new URLSearchParams({ requestId: id });
-    const page = Number(url.searchParams.get('page'));
-    if (Number.isSafeInteger(page) && page > 1 && page <= 100000) params.set('page', String(page));
-    const filter = url.searchParams.get('filter');
-    if (
-      filter &&
-      [
-        'all',
-        'attention',
-        'requested',
-        'quoted',
-        'payment',
-        'preparing',
-        'ready',
-        'closed',
-      ].includes(filter)
-    )
-      params.set('filter', filter);
+    const origin = orderReturnPath(value);
+    if (!origin) return null;
     return {
-      href: `/tai-khoan?${params}#web-orders`,
+      href: origin,
       label: 'Quay lại đơn đặt trước',
       kind: 'order',
     };
