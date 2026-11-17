@@ -32,8 +32,10 @@ export function TaskItem({
   staffOpen = false,
   onToggleStaff,
   onTransition,
+  focused = false,
 }: {
   task: Task;
+  focused?: boolean;
   mode: 'worker' | 'manager' | 'oversight';
   actorRole: ActiveTaskRole;
   actorId?: string;
@@ -67,6 +69,9 @@ export function TaskItem({
   const canWorkOnInventory = staffDelivery && task.status === 'IN_PROGRESS';
   const cardRef = useRef<HTMLElement>(null);
   const [nearViewport, setNearViewport] = useState(false);
+  useEffect(() => {
+    if (focused) cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [focused]);
   useEffect(() => {
     if (!canWorkOnInventory || !cardRef.current || typeof IntersectionObserver === 'undefined')
       return;
@@ -696,7 +701,7 @@ export function TaskItem({
   );
   const taskDetails = (
     <>
-      <div className="staff-task-destination-card">
+      <div className={`staff-task-destination-card${isTechnician ? 'technician-destination' : ''}`}>
         <p className="staff-destination-address">
           <MapPin size={15} aria-hidden="true" />
           <span className="staff-destination-text">
@@ -767,6 +772,17 @@ export function TaskItem({
             {nextLabel}
             <span className="sr-only"> · {task.kioskName}</span>
           </summary>
+          <p className="technician-next-step">
+            {task.status === 'ASSIGNED'
+              ? 'Bắt đầu xử lý để cập nhật tiến độ và gửi minh chứng.'
+              : task.status === 'IN_PROGRESS'
+                ? 'Kiểm tra tại tủ, lưu minh chứng rồi gửi báo cáo.'
+                : task.status === 'SUBMITTED'
+                  ? 'Đã gửi báo cáo. Chờ Manager kiểm tra kết quả.'
+                  : task.status === 'COMPLETED'
+                    ? 'Manager đã xác nhận hoàn thành công việc.'
+                    : 'Công việc đã được hủy.'}
+          </p>
           {taskContent}
         </details>
       ) : (
@@ -781,6 +797,7 @@ export function TaskItem({
         compactStaff ? 'staff-task-card staff-task-compact' : 'staff-task-card member-empty'
       }
       aria-labelledby={`task-${task.id}`}
+      data-focused={focused || undefined}
     >
       <div className="staff-task-heading">
         <div>
@@ -811,10 +828,14 @@ export function TaskItem({
                 : 'Chưa có thông tin trạng thái sự cố.'}
         </p>
       )}
-      {isManager && role === 'OPERATIONS_MANAGER' ? (
-        <details className="manager-task-details">
+      {(isManager && role === 'OPERATIONS_MANAGER') || (role === 'ADMIN' && readOnly) ? (
+        <details className="manager-task-details" open={focused || undefined}>
           <summary>
-            {task.status === 'SUBMITTED' ? 'Kiểm tra báo cáo' : 'Xem chi tiết công việc'}
+            {role === 'ADMIN'
+              ? 'Xem báo cáo & tiến độ'
+              : task.status === 'SUBMITTED'
+                ? 'Kiểm tra báo cáo'
+                : 'Xem chi tiết công việc'}
             <ChevronDown size={16} aria-hidden="true" />
           </summary>
           {taskDetails}

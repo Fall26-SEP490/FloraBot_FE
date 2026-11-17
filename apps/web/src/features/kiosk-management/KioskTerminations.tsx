@@ -11,6 +11,8 @@ import StaffTaskDetails from '../task-management/components/StaffTaskDetails';
 import type { StaffDirectoryMember, TaskDetail } from '../task-management/task-management.types';
 import type { KioskLocationChangeResponse, SellerKioskItem } from './kiosk-management.types';
 import '../finance/styles/commerce-subscriptions.css';
+import { terminationNextStep } from './termination-progress';
+import './styles/operations-usability.css';
 
 interface SlotLayoutRequestView {
   id: string;
@@ -340,7 +342,11 @@ function ManagerTerminationCard({
   item,
   technicians,
   onReviewed,
+  expanded,
+  onToggle,
 }: {
+  expanded: boolean;
+  onToggle: () => void;
   item: Termination;
   technicians: StaffDirectoryMember[];
   onReviewed: () => void;
@@ -453,6 +459,12 @@ function ManagerTerminationCard({
         ? 'active'
         : 'idle';
   const step3State = item.status === 'COMPLETED' ? 'done' : canComplete ? 'active' : 'idle';
+  const nextStep = terminationNextStep({
+    status: item.status,
+    removalTaskStatus: item.correlatedTaskId ? item.removalTaskStatus : null,
+    archived,
+    kioskStatus: kioskState.data?.kioskStatus,
+  });
 
   return (
     <article className="business-card termination-card">
@@ -473,320 +485,340 @@ function ManagerTerminationCard({
         </span>
       </div>
 
-      {item.status !== 'REJECTED' && item.status !== 'CANCELLED' && (
-        <ol className="termination-stepper" aria-label="Tiến trình chấm dứt thuê">
-          <li className="termination-step" data-state={step1State}>
-            <strong>Bước 1 · Duyệt yêu cầu</strong>
-            <span>{item.status === 'REQUESTED' ? 'Chờ xem xét' : 'Đã chấp thuận'}</span>
-          </li>
-          <li className="termination-step" data-state={step2State}>
-            <strong>Bước 2 · Tháo dỡ kiosk</strong>
-            <span>
-              {item.status === 'COMPLETED'
-                ? 'Đã hoàn tất'
-                : needsAssignment
-                  ? 'Chờ phân công kỹ thuật viên'
-                  : item.removalTaskStatus
-                    ? removalTaskLabel[item.removalTaskStatus] || item.removalTaskStatus
-                    : 'Chờ thực hiện'}
-            </span>
-          </li>
-          <li className="termination-step" data-state={step3State}>
-            <strong>Bước 3 · Xác nhận bàn giao</strong>
-            <span>
-              {item.status === 'COMPLETED'
-                ? 'Đã bàn giao'
-                : canComplete
-                  ? 'Chờ quản lý kiểm tra'
-                  : 'Chờ báo cáo tháo dỡ'}
-            </span>
-          </li>
-          <li
-            className="termination-step"
-            data-state={archived ? 'done' : item.status === 'COMPLETED' ? 'active' : 'idle'}
-          >
-            <strong>Bước 4 · Ngừng sử dụng &amp; lưu trữ</strong>
-            <span>
-              {archived
-                ? 'Đã lưu trữ, kết thúc luồng'
-                : item.status === 'COMPLETED'
-                  ? 'Kiểm tra điều kiện lưu trữ'
-                  : 'Chờ hoàn tất bàn giao'}
-            </span>
-          </li>
-        </ol>
-      )}
-
-      <div className="termination-info-box">
-        <p>
-          <strong>Lý do của shop:</strong> {item.reason}
-        </p>
-        {item.reviewReason && (
-          <p>
-            <strong>Kết quả xem xét:</strong> {item.reviewReason}
-          </p>
+      <div className="termination-next-action">
+        <div>
+          <span className="termination-owner">{nextStep.owner}</span>
+          <p>{nextStep.text}</p>
+        </div>
+        <Button
+          type="button"
+          variant={nextStep.attention && !expanded ? 'default' : 'outline'}
+          aria-expanded={expanded}
+          aria-controls={`termination-body-${item.id}`}
+          aria-label={`${expanded ? 'Thu gọn' : 'Mở'} hồ sơ ${item.kioskCode || item.kioskName}`}
+          onClick={onToggle}
+        >
+          {expanded ? 'Thu gọn' : nextStep.action}
+        </Button>
+      </div>
+      <div id={`termination-body-${item.id}`} hidden={!expanded}>
+        {item.status !== 'REJECTED' && item.status !== 'CANCELLED' && (
+          <ol className="termination-stepper" aria-label="Tiến trình chấm dứt thuê">
+            <li className="termination-step" data-state={step1State}>
+              <strong>Bước 1 · Duyệt yêu cầu</strong>
+              <span>{item.status === 'REQUESTED' ? 'Chờ xem xét' : 'Đã chấp thuận'}</span>
+            </li>
+            <li className="termination-step" data-state={step2State}>
+              <strong>Bước 2 · Tháo dỡ kiosk</strong>
+              <span>
+                {item.status === 'COMPLETED'
+                  ? 'Đã hoàn tất'
+                  : needsAssignment
+                    ? 'Chờ phân công kỹ thuật viên'
+                    : item.removalTaskStatus
+                      ? removalTaskLabel[item.removalTaskStatus] || item.removalTaskStatus
+                      : 'Chờ thực hiện'}
+              </span>
+            </li>
+            <li className="termination-step" data-state={step3State}>
+              <strong>Bước 3 · Xác nhận bàn giao</strong>
+              <span>
+                {item.status === 'COMPLETED'
+                  ? 'Đã bàn giao'
+                  : canComplete
+                    ? 'Chờ quản lý kiểm tra'
+                    : 'Chờ báo cáo tháo dỡ'}
+              </span>
+            </li>
+            <li
+              className="termination-step"
+              data-state={archived ? 'done' : item.status === 'COMPLETED' ? 'active' : 'idle'}
+            >
+              <strong>Bước 4 · Ngừng sử dụng &amp; lưu trữ</strong>
+              <span>
+                {archived
+                  ? 'Đã lưu trữ, kết thúc luồng'
+                  : item.status === 'COMPLETED'
+                    ? 'Kiểm tra điều kiện lưu trữ'
+                    : 'Chờ hoàn tất bàn giao'}
+              </span>
+            </li>
+          </ol>
         )}
-        {(item.lifecycleStatus || item.removalTaskStatus) && (
+
+        <div className="termination-info-box">
           <p>
-            <strong>Trạng thái chi tiết:</strong>{' '}
-            {archived
-              ? 'Tủ đã ngừng sử dụng, không còn trong kho khả dụng'
-              : lifecycleLabel[item.lifecycleStatus || ''] ||
-                statusLabel[item.status] ||
-                item.status}
+            <strong>Lý do của shop:</strong> {item.reason}
+          </p>
+          {item.reviewReason && (
+            <p>
+              <strong>Kết quả xem xét:</strong> {item.reviewReason}
+            </p>
+          )}
+          {(item.lifecycleStatus || item.removalTaskStatus) && (
+            <p>
+              <strong>Trạng thái chi tiết:</strong>{' '}
+              {archived
+                ? 'Tủ đã ngừng sử dụng, không còn trong kho khả dụng'
+                : lifecycleLabel[item.lifecycleStatus || ''] ||
+                  statusLabel[item.status] ||
+                  item.status}
+            </p>
+          )}
+        </div>
+
+        {item.status === 'REQUESTED' && (
+          <form
+            className="business-form termination-action-panel"
+            onSubmit={(event) => event.preventDefault()}
+          >
+            <h4>Xem xét yêu cầu chấm dứt</h4>
+            <label htmlFor={`term-review-${item.id}`}>Lý do xem xét (10–2.000 ký tự)</label>
+            <textarea
+              id={`term-review-${item.id}`}
+              minLength={10}
+              maxLength={2000}
+              required
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+            />
+            <div className="business-inline">
+              <Button
+                disabled={review.isPending || reason.trim().length < 10}
+                onClick={() => review.mutate('ACCEPT')}
+              >
+                Chấp thuận
+              </Button>
+              <Button
+                variant="outline"
+                disabled={review.isPending || reason.trim().length < 10}
+                onClick={() => review.mutate('REJECT')}
+              >
+                Từ chối
+              </Button>
+            </div>
+          </form>
+        )}
+        {needsAssignment && (
+          <form
+            className="business-form termination-action-panel"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (assigneeId && instructions.trim().length >= 10) {
+                assign.mutate();
+              }
+            }}
+          >
+            <h4>Phân công kỹ thuật viên tháo dỡ</h4>
+            <p>
+              Giao công việc tháo dỡ để kỹ thuật viên kiểm tra hiện trường, thu hồi thiết bị và gửi
+              báo cáo/ảnh minh chứng trước khi hoàn tất bàn giao.
+            </p>
+            <label htmlFor={`term-assignee-${item.id}`}>Kỹ thuật viên phụ trách</label>
+            <select
+              id={`term-assignee-${item.id}`}
+              required
+              value={assigneeId}
+              onChange={(event) => setAssigneeId(event.target.value)}
+              disabled={assign.isPending}
+            >
+              <option value="">Chọn kỹ thuật viên</option>
+              {technicians.map((tech) => (
+                <option key={tech.id} value={tech.id}>
+                  {tech.name}
+                </option>
+              ))}
+            </select>
+            <label htmlFor={`term-instructions-${item.id}`}>
+              Hướng dẫn tháo dỡ (10–2.000 ký tự)
+            </label>
+            <textarea
+              id={`term-instructions-${item.id}`}
+              minLength={10}
+              maxLength={2000}
+              required
+              rows={3}
+              placeholder="Nhập hướng dẫn kiểm tra, tháo dỡ và thu hồi kiosk tại điểm đặt…"
+              value={instructions}
+              onChange={(event) => setInstructions(event.target.value)}
+              disabled={assign.isPending}
+            />
+            <div>
+              <Button
+                type="submit"
+                disabled={assign.isPending || !assigneeId || instructions.trim().length < 10}
+              >
+                {assign.isPending ? 'Đang phân công…' : 'Phân công tháo dỡ'}
+              </Button>
+            </div>
+          </form>
+        )}
+        {item.status === 'ACCEPTED' && !needsAssignment && !canComplete && (
+          <div className="termination-waiting-box" role="status">
+            <strong>Đang chờ kỹ thuật viên tháo dỡ & gửi báo cáo</strong>
+            <p>
+              Sau khi kỹ thuật viên hoàn thành tháo dỡ và gửi báo cáo bên ứng dụng Kỹ thuật viên,
+              mục xác nhận bàn giao sẽ tự động mở tại đây.
+            </p>
+          </div>
+        )}
+        {item.correlatedTaskId && (
+          <div className="termination-task-box">
+            <StaffEvidence
+              key={`${item.correlatedTaskId}:${item.version}:${item.removalTaskStatus}`}
+              taskId={item.correlatedTaskId}
+              version={Number(item.version) || 1}
+              apiBase="/operations/staff-tasks"
+              role={managerRole}
+              mode="manager"
+              admin
+              active={false}
+            />
+            <StaffTaskDetails
+              key={`${item.correlatedTaskId}:${item.removalTaskStatus}`}
+              taskId={item.correlatedTaskId}
+              version={Number(item.version) || 1}
+              apiBase="/operations/staff-tasks"
+              role={managerRole}
+              admin
+            />
+          </div>
+        )}
+        {canComplete && (
+          <div className="business-form termination-action-panel">
+            <h4>Xác nhận hoàn tất bàn giao</h4>
+            <p>
+              Kỹ thuật viên đã gửi báo cáo tháo dỡ. Kiểm tra ảnh/báo cáo và tình trạng thực tế trước
+              khi xác nhận. Hệ thống vẫn kiểm tra hoa, ô khóa, đơn hàng và các công việc chưa kết
+              thúc.
+            </p>
+            <label htmlFor={`term-notes-${item.id}`}>Ghi chú bàn giao (tùy chọn)</label>
+            <textarea
+              id={`term-notes-${item.id}`}
+              value={notes}
+              disabled={complete.isPending}
+              onChange={(event) => setNotes(event.target.value)}
+            />
+            <details className="termination-optional-evidence">
+              <summary>Đính kèm thêm ảnh biên bản từ quản lý (không bắt buộc)</summary>
+              <div style={{ marginTop: '0.6rem' }}>
+                <EvidenceUpload
+                  id={`term-evidence-${item.id}`}
+                  endpoint={`/api/operations/kiosk-termination-requests/${item.id}/evidence/upload`}
+                  disabled={complete.isPending}
+                  onReference={setEvidenceReference}
+                />
+              </div>
+            </details>
+            <div>
+              <Button disabled={complete.isPending} onClick={() => complete.mutate()}>
+                {complete.isPending ? 'Đang xác nhận…' : 'Xác nhận đã bàn giao'}
+              </Button>
+            </div>
+          </div>
+        )}
+        {item.status === 'COMPLETED' && (
+          <div className="business-form termination-action-panel">
+            {item.completionNotes && <p>Ghi chú bàn giao: {item.completionNotes}</p>}
+            {archived ? (
+              <div role="status">
+                <h4>Đã ngừng sử dụng và lưu trữ tủ</h4>
+                <p>
+                  Luồng chấm dứt và lưu trữ đã hoàn tất. Tủ không còn trong kho khả dụng hoặc danh
+                  sách cấp phát. Lịch sử đơn hàng, thanh toán và vận hành được giữ lại.
+                </p>
+              </div>
+            ) : (
+              <>
+                <h4>Bước 4 · Ngừng sử dụng và lưu trữ tủ</h4>
+                <p>
+                  Bàn giao đã hoàn tất. Lưu trữ là bước cuối để ngừng sử dụng tủ; sau khi thành
+                  công, tủ không còn trong kho khả dụng hoặc danh sách cấp phát.
+                </p>
+                {awaitingKioskState && <p role="status">Đang kiểm tra trạng thái tủ…</p>}
+                {kioskState.data && (
+                  <p>
+                    Trạng thái kết nối: <strong>{kioskState.data.kioskStatus}</strong>.
+                  </p>
+                )}
+                {mustGoOffline && (
+                  <p>
+                    Tủ phải chuyển về OFFLINE trước khi lưu trữ. Sau khi ngắt kết nối thiết bị, cập
+                    nhật lại trạng thái.
+                  </p>
+                )}
+                {kioskState.isError && (
+                  <p role="alert">
+                    Chưa đọc được trạng thái tủ. Tải lại trạng thái để kiểm tra trước khi lưu trữ.
+                  </p>
+                )}
+                {item.correlatedTaskId && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={kioskState.isFetching || archive.isPending}
+                    onClick={() => void kioskState.refetch()}
+                  >
+                    Cập nhật trạng thái tủ
+                  </Button>
+                )}
+                {!confirmArchive ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={
+                      archive.isPending || awaitingKioskState || mustGoOffline || kioskState.isError
+                    }
+                    onClick={() => setConfirmArchive(true)}
+                  >
+                    Lưu trữ tủ {item.kioskCode || item.kioskName || ''}
+                  </Button>
+                ) : (
+                  <div>
+                    <p>
+                      <strong>
+                        Xác nhận ngừng sử dụng và lưu trữ tủ{' '}
+                        {item.kioskCode || item.kioskName || item.kioskId}?
+                      </strong>{' '}
+                      Tủ phải OFFLINE, không còn gán shop/hợp đồng đang hiệu lực, hoa, ô khóa, đơn
+                      hàng, thanh toán, sự cố hoặc công việc chưa kết thúc. Lịch sử được giữ lại. Tủ
+                      đã lưu trữ sẽ không xuất hiện trong kho khả dụng.
+                    </p>
+                    <div className="business-inline">
+                      <Button
+                        type="button"
+                        disabled={
+                          archive.isPending ||
+                          awaitingKioskState ||
+                          mustGoOffline ||
+                          kioskState.isError
+                        }
+                        onClick={() => archive.mutate()}
+                      >
+                        {archive.isPending ? 'Đang lưu trữ…' : 'Xác nhận lưu trữ tủ'}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={archive.isPending}
+                        onClick={() => setConfirmArchive(false)}
+                      >
+                        Quay lại
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+        {notice && <p role="status">{notice}</p>}
+        {(review.isError || assign.isError || complete.isError || archive.isError) && (
+          <p role="alert">
+            {textError(review.error || assign.error || complete.error || archive.error)}
           </p>
         )}
       </div>
-
-      {item.status === 'REQUESTED' && (
-        <form
-          className="business-form termination-action-panel"
-          onSubmit={(event) => event.preventDefault()}
-        >
-          <h4>Xem xét yêu cầu chấm dứt</h4>
-          <label htmlFor={`term-review-${item.id}`}>Lý do xem xét (10–2.000 ký tự)</label>
-          <textarea
-            id={`term-review-${item.id}`}
-            minLength={10}
-            maxLength={2000}
-            required
-            value={reason}
-            onChange={(event) => setReason(event.target.value)}
-          />
-          <div className="business-inline">
-            <Button
-              disabled={review.isPending || reason.trim().length < 10}
-              onClick={() => review.mutate('ACCEPT')}
-            >
-              Chấp thuận
-            </Button>
-            <Button
-              variant="outline"
-              disabled={review.isPending || reason.trim().length < 10}
-              onClick={() => review.mutate('REJECT')}
-            >
-              Từ chối
-            </Button>
-          </div>
-        </form>
-      )}
-      {needsAssignment && (
-        <form
-          className="business-form termination-action-panel"
-          onSubmit={(event) => {
-            event.preventDefault();
-            if (assigneeId && instructions.trim().length >= 10) {
-              assign.mutate();
-            }
-          }}
-        >
-          <h4>Phân công kỹ thuật viên tháo dỡ</h4>
-          <p>
-            Giao công việc tháo dỡ để kỹ thuật viên kiểm tra hiện trường, thu hồi thiết bị và gửi
-            báo cáo/ảnh minh chứng trước khi hoàn tất bàn giao.
-          </p>
-          <label htmlFor={`term-assignee-${item.id}`}>Kỹ thuật viên phụ trách</label>
-          <select
-            id={`term-assignee-${item.id}`}
-            required
-            value={assigneeId}
-            onChange={(event) => setAssigneeId(event.target.value)}
-            disabled={assign.isPending}
-          >
-            <option value="">Chọn kỹ thuật viên</option>
-            {technicians.map((tech) => (
-              <option key={tech.id} value={tech.id}>
-                {tech.name}
-              </option>
-            ))}
-          </select>
-          <label htmlFor={`term-instructions-${item.id}`}>Hướng dẫn tháo dỡ (10–2.000 ký tự)</label>
-          <textarea
-            id={`term-instructions-${item.id}`}
-            minLength={10}
-            maxLength={2000}
-            required
-            rows={3}
-            placeholder="Nhập hướng dẫn kiểm tra, tháo dỡ và thu hồi kiosk tại điểm đặt…"
-            value={instructions}
-            onChange={(event) => setInstructions(event.target.value)}
-            disabled={assign.isPending}
-          />
-          <div>
-            <Button
-              type="submit"
-              disabled={assign.isPending || !assigneeId || instructions.trim().length < 10}
-            >
-              {assign.isPending ? 'Đang phân công…' : 'Phân công tháo dỡ'}
-            </Button>
-          </div>
-        </form>
-      )}
-      {item.status === 'ACCEPTED' && !needsAssignment && !canComplete && (
-        <div className="termination-waiting-box" role="status">
-          <strong>Đang chờ kỹ thuật viên tháo dỡ & gửi báo cáo</strong>
-          <p>
-            Sau khi kỹ thuật viên hoàn thành tháo dỡ và gửi báo cáo bên ứng dụng Kỹ thuật viên, mục
-            xác nhận bàn giao sẽ tự động mở tại đây.
-          </p>
-        </div>
-      )}
-      {item.correlatedTaskId && (
-        <div className="termination-task-box">
-          <StaffEvidence
-            key={`${item.correlatedTaskId}:${item.version}:${item.removalTaskStatus}`}
-            taskId={item.correlatedTaskId}
-            version={Number(item.version) || 1}
-            apiBase="/operations/staff-tasks"
-            role={managerRole}
-            mode="manager"
-            admin
-            active={false}
-          />
-          <StaffTaskDetails
-            key={`${item.correlatedTaskId}:${item.removalTaskStatus}`}
-            taskId={item.correlatedTaskId}
-            version={Number(item.version) || 1}
-            apiBase="/operations/staff-tasks"
-            role={managerRole}
-            admin
-          />
-        </div>
-      )}
-      {canComplete && (
-        <div className="business-form termination-action-panel">
-          <h4>Xác nhận hoàn tất bàn giao</h4>
-          <p>
-            Kỹ thuật viên đã gửi báo cáo tháo dỡ. Kiểm tra ảnh/báo cáo và tình trạng thực tế trước
-            khi xác nhận. Hệ thống vẫn kiểm tra hoa, ô khóa, đơn hàng và các công việc chưa kết
-            thúc.
-          </p>
-          <label htmlFor={`term-notes-${item.id}`}>Ghi chú bàn giao (tùy chọn)</label>
-          <textarea
-            id={`term-notes-${item.id}`}
-            value={notes}
-            disabled={complete.isPending}
-            onChange={(event) => setNotes(event.target.value)}
-          />
-          <details className="termination-optional-evidence">
-            <summary>Đính kèm thêm ảnh biên bản từ quản lý (không bắt buộc)</summary>
-            <div style={{ marginTop: '0.6rem' }}>
-              <EvidenceUpload
-                id={`term-evidence-${item.id}`}
-                endpoint={`/api/operations/kiosk-termination-requests/${item.id}/evidence/upload`}
-                disabled={complete.isPending}
-                onReference={setEvidenceReference}
-              />
-            </div>
-          </details>
-          <div>
-            <Button disabled={complete.isPending} onClick={() => complete.mutate()}>
-              {complete.isPending ? 'Đang xác nhận…' : 'Xác nhận đã bàn giao'}
-            </Button>
-          </div>
-        </div>
-      )}
-      {item.status === 'COMPLETED' && (
-        <div className="business-form termination-action-panel">
-          {item.completionNotes && <p>Ghi chú bàn giao: {item.completionNotes}</p>}
-          {archived ? (
-            <div role="status">
-              <h4>Đã ngừng sử dụng và lưu trữ tủ</h4>
-              <p>
-                Luồng chấm dứt và lưu trữ đã hoàn tất. Tủ không còn trong kho khả dụng hoặc danh
-                sách cấp phát. Lịch sử đơn hàng, thanh toán và vận hành được giữ lại.
-              </p>
-            </div>
-          ) : (
-            <>
-              <h4>Bước 4 · Ngừng sử dụng và lưu trữ tủ</h4>
-              <p>
-                Bàn giao đã hoàn tất. Lưu trữ là bước cuối để ngừng sử dụng tủ; sau khi thành công,
-                tủ không còn trong kho khả dụng hoặc danh sách cấp phát.
-              </p>
-              {awaitingKioskState && <p role="status">Đang kiểm tra trạng thái tủ…</p>}
-              {kioskState.data && (
-                <p>
-                  Trạng thái kết nối: <strong>{kioskState.data.kioskStatus}</strong>.
-                </p>
-              )}
-              {mustGoOffline && (
-                <p>
-                  Tủ phải chuyển về OFFLINE trước khi lưu trữ. Sau khi ngắt kết nối thiết bị, cập
-                  nhật lại trạng thái.
-                </p>
-              )}
-              {kioskState.isError && (
-                <p role="alert">
-                  Chưa đọc được trạng thái tủ. Tải lại trạng thái để kiểm tra trước khi lưu trữ.
-                </p>
-              )}
-              {item.correlatedTaskId && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={kioskState.isFetching || archive.isPending}
-                  onClick={() => void kioskState.refetch()}
-                >
-                  Cập nhật trạng thái tủ
-                </Button>
-              )}
-              {!confirmArchive ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={
-                    archive.isPending || awaitingKioskState || mustGoOffline || kioskState.isError
-                  }
-                  onClick={() => setConfirmArchive(true)}
-                >
-                  Lưu trữ tủ {item.kioskCode || item.kioskName || ''}
-                </Button>
-              ) : (
-                <div>
-                  <p>
-                    <strong>
-                      Xác nhận ngừng sử dụng và lưu trữ tủ{' '}
-                      {item.kioskCode || item.kioskName || item.kioskId}?
-                    </strong>{' '}
-                    Tủ phải OFFLINE, không còn gán shop/hợp đồng đang hiệu lực, hoa, ô khóa, đơn
-                    hàng, thanh toán, sự cố hoặc công việc chưa kết thúc. Lịch sử được giữ lại. Tủ
-                    đã lưu trữ sẽ không xuất hiện trong kho khả dụng.
-                  </p>
-                  <div className="business-inline">
-                    <Button
-                      type="button"
-                      disabled={
-                        archive.isPending ||
-                        awaitingKioskState ||
-                        mustGoOffline ||
-                        kioskState.isError
-                      }
-                      onClick={() => archive.mutate()}
-                    >
-                      {archive.isPending ? 'Đang lưu trữ…' : 'Xác nhận lưu trữ tủ'}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={archive.isPending}
-                      onClick={() => setConfirmArchive(false)}
-                    >
-                      Quay lại
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      )}
-      {notice && <p role="status">{notice}</p>}
-      {(review.isError || assign.isError || complete.isError || archive.isError) && (
-        <p role="alert">
-          {textError(review.error || assign.error || complete.error || archive.error)}
-        </p>
-      )}
     </article>
   );
 }
@@ -974,6 +1006,8 @@ function ManagerLayoutRequestCard({ item }: { item: SlotLayoutRequestView }) {
 }
 
 export function OperationsTerminations() {
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [locationOpen, setLocationOpen] = useState(false);
@@ -1025,45 +1059,82 @@ export function OperationsTerminations() {
           Làm mới
         </Button>
       </div>
-      <label htmlFor="termination-filter">Trạng thái </label>
-      <select
-        id="termination-filter"
-        value={status}
-        onChange={(event) => {
-          setStatus(event.target.value);
-          setPage(1);
-        }}
-      >
-        <option value="">Tất cả</option>
-        <option value="REQUESTED">Chờ xem xét</option>
-        <option value="ACCEPTED">Chờ bàn giao</option>
-        <option value="REJECTED">Đã từ chối</option>
-        <option value="CANCELLED">Đã rút yêu cầu</option>
-        <option value="COMPLETED">Đã bàn giao</option>
-      </select>
+      <div className="termination-list-tools">
+        <div>
+          <label htmlFor="termination-search">Tìm hồ sơ trong trang</label>
+          <input
+            id="termination-search"
+            type="search"
+            value={search}
+            placeholder="Mã tủ, tên kiosk hoặc shop…"
+            onChange={(event) => setSearch(event.target.value)}
+          />
+        </div>
+        <div>
+          <label htmlFor="termination-filter">Trạng thái </label>
+          <select
+            id="termination-filter"
+            value={status}
+            onChange={(event) => {
+              setStatus(event.target.value);
+              setPage(1);
+              setExpandedId(null);
+              setSearch('');
+            }}
+          >
+            <option value="">Tất cả</option>
+            <option value="REQUESTED">Chờ xem xét</option>
+            <option value="ACCEPTED">Chờ bàn giao</option>
+            <option value="REJECTED">Đã từ chối</option>
+            <option value="CANCELLED">Đã rút yêu cầu</option>
+            <option value="COMPLETED">Đã bàn giao</option>
+          </select>
+        </div>
+      </div>
       {records.isPending ? (
         <p role="status">Đang tải hồ sơ…</p>
       ) : records.isError ? (
         <p role="alert">{textError(records.error)}</p>
       ) : records.data?.items.length ? (
-        <div className="business-card-list">
-          {records.data.items.map((item) => (
-            <ManagerTerminationCard
-              key={item.id}
-              item={item}
-              technicians={technicians.data ?? []}
-              onReviewed={() => {
-                setStatus('');
-                setPage(1);
-              }}
-            />
-          ))}
+        <div className="business-card-list termination-compact-list">
+          {search.trim() &&
+            !records.data.items.some((item) =>
+              [item.kioskCode, item.kioskName, item.shopName]
+                .filter(Boolean)
+                .join(' ')
+                .toLocaleLowerCase('vi')
+                .includes(search.trim().toLocaleLowerCase('vi')),
+            ) && <p>Không có hồ sơ phù hợp trong trang này.</p>}
+          {records.data.items
+            .filter((item) =>
+              [item.kioskCode, item.kioskName, item.shopName]
+                .filter(Boolean)
+                .join(' ')
+                .toLocaleLowerCase('vi')
+                .includes(search.trim().toLocaleLowerCase('vi')),
+            )
+            .map((item) => (
+              <ManagerTerminationCard
+                key={item.id}
+                item={item}
+                expanded={expandedId === item.id}
+                onToggle={() => setExpandedId(expandedId === item.id ? null : item.id)}
+                technicians={technicians.data ?? []}
+                onReviewed={() => {
+                  setStatus('');
+                  setPage(1);
+                }}
+              />
+            ))}
         </div>
       ) : (
         <p>Không có hồ sơ trong trạng thái này.</p>
       )}
       {records.data && (
-        <div className="business-pagination">
+        <div
+          className="business-pagination termination-pagination"
+          aria-label="Phân trang hồ sơ chấm dứt"
+        >
           <Button variant="outline" disabled={page <= 1} onClick={() => setPage(page - 1)}>
             Trước
           </Button>

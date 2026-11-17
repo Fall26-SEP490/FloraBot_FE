@@ -1,0 +1,291 @@
+/* One focused work order at a time, on desktop and mobile. */
+.workspace-portal-root.platform-workspace
+  .technician-workspace.technician-workspace
+  .technician-installations-view {
+  & .technician-workspace-layout {
+    display: block;
+    margin-top: 24px;
+  }
+  & .technician-list-pane,
+  & .technician-detail-pane {
+    scroll-margin-top: 100px;
+  }
+  & .technician-list-pane {
+    display: block;
+  }
+  & .technician-detail-pane {
+    display: block;
+    margin-top: 28px;
+    min-height: 480px;
+  }
+  &[data-detail-open='false'] .technician-detail-pane {
+    display: none;
+  }
+  & .technician-back {
+    display: inline-flex;
+    margin: 0 0 20px;
+  }
+  & .installation-queues {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  & .installation-queues button {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    min-height: 46px;
+    border: 1px solid #d7e3db;
+    border-radius: 12px;
+    background: #fff;
+    color: #355546;
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  & .installation-queues button[aria-pressed='true'] {
+    background: #194b38;
+    color: #fff;
+    border-color: #194b38;
+  }
+  & .installation-queues button span {
+    min-width: 24px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: #e8f0ea;
+    color: #234c38;
+    font-size: 12px;
+    text-align: center;
+  }
+  & .installation-queues button[aria-pressed='true'] span {
+    background: #ffffff24;
+    color: #fff;
+  }
+  & .technician-list-filters {
+    max-width: 560px;
+  }
+  & .technician-list-count {
+    margin: 18px 0;
+  }
+  & .tech-jobs-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    background: transparent;
+    border: 0;
+    overflow: visible;
+  }
+  & .tech-list-heading {
+    display: none;
+  }
+  & .tech-job-card,
+  & .tech-job-card:last-child {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    padding: 22px;
+    border: 1px solid #d7e3db;
+    border-radius: 16px;
+    background: #fff;
+    text-align: left;
+  }
+  & .tech-job-card:hover {
+    border-color: #5d8f74;
+    background: #f7faf7;
+  }
+  & .tech-job-card.is-selected {
+    background: #eaf3e9;
+    border-color: #56866a;
+    box-shadow: 0 0 0 1px #56866a;
+  }
+  & .tech-job-card:focus-visible,
+  & .installation-queues button:focus-visible {
+    outline: 2px solid #2a6d4e;
+    outline-offset: 4px;
+  }
+  & .tech-job-card .job-card-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 0;
+  }
+  & .job-shop-name {
+    font-size: 16px;
+  }
+  & .job-address-line {
+    margin: 0;
+    font-size: 13px;
+    color: #596e60;
+  }
+  & .job-address-line svg {
+    flex-shrink: 0;
+  }
+  & .job-address-line span {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  & .job-meta-row {
+    gap: 8px 14px;
+    font-size: 12px;
+  }
+  & .technician-job-action {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 14px;
+    margin-top: auto;
+    border-top: 1px solid #e5ece6;
+    font-size: 13px;
+  }
+  & .technician-job-action::after {
+    content: '→';
+    font-size: 18px;
+  }
+  & .tech-job-detail-card {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 28px;
+    border-radius: 18px;
+  }
+  & .tech-job-detail-card > * {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+  & .job-detail-top {
+    padding-bottom: 22px;
+  }
+  & .job-detail-top h2 {
+    font-size: 23px;
+    margin: 12px 0 8px;
+  }
+  & .installation-next-action {
+    padding: 20px 22px;
+    border: 1px solid #d6e7da;
+    border-radius: 14px;
+    background: #f0f7f1;
+  }
+  & .installation-eyebrow {
+    color: #4d715b;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  & .installation-next-action h3 {
+    margin: 8px 0;
+    font-size: 18px;
+  }
+  & .installation-next-action .technician-next-step {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  & .installation-progress {
+    margin: 0;
+  }
+  & .installation-appointment {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 20px;
+    padding: 18px 0;
+    border-block: 1px solid #e1e9e3;
+    font-size: 13px;
+  }
+  & .installation-appointment > span {
+    color: #64796c;
+  }
+  & .installation-appointment a {
+    margin-left: auto;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    text-underline-offset: 4px;
+  }
+  & .installation-contact-details {
+    border: 1px solid #dce6df;
+    padding: 0 18px;
+    border-radius: 12px;
+  }
+  & .installation-contact-details summary {
+    min-height: 54px;
+    padding: 16px 0;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  & .installation-contact-details > p {
+    padding-bottom: 18px;
+    font-size: 13px;
+  }
+  & .tech-contact-box {
+    margin: 0;
+    border: 0;
+    padding: 4px 0 18px;
+  }
+  & .tech-action-step {
+    padding: 22px;
+    border: 1px solid #dce6df;
+    border-radius: 14px;
+  }
+  & .tech-action-step > p {
+    margin: 12px 0 20px;
+  }
+  & .report-submit-block {
+    padding: 22px;
+    background: #f8faf8;
+    border: 1px solid #dce6df;
+    border-radius: 12px;
+    margin-top: 24px;
+  }
+  & .report-submit-block > button,
+  & .tech-action-step > button {
+    min-height: 48px;
+  }
+  & .button:disabled {
+    cursor: default;
+  }
+  & .button[data-busy='true']:disabled {
+    cursor: wait;
+  }
+  @media (max-width: 720px) {
+    & .tech-jobs-list {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    & .tech-job-detail-card {
+      padding: 18px;
+      gap: 20px;
+    }
+    & .installation-next-action,
+    & .tech-action-step,
+    & .report-submit-block {
+      padding: 18px;
+    }
+    & .installation-appointment {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+    & .installation-appointment a {
+      margin-left: 0;
+    }
+    & .installation-progress {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    & .installation-queues {
+      gap: 8px;
+    }
+    & .installation-queues button {
+      flex: 1 1 auto;
+      justify-content: center;
+    }
+  }
+}

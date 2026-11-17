@@ -77,6 +77,7 @@ function FilteredTaskList(props: StaffTasksProps) {
       : '',
   );
   const [reload, setReload] = useState(0);
+  const [focusedTaskId, setFocusedTaskId] = useState<string | null>(null);
   const [transitionResult, setTransitionResult] = useState<{
     id: string;
     kioskName: string;
@@ -184,7 +185,7 @@ function FilteredTaskList(props: StaffTasksProps) {
             </div>
             <div className="operations-metric operations-metric--success">
               <CheckCircle2 aria-hidden="true" />
-              <span>Chờ duyệt hoặc đã duyệt</span>
+              <span>Báo cáo đã gửi hoặc hoàn thành</span>
               <strong>
                 {
                   tasks.data.items.filter(
@@ -274,6 +275,13 @@ function FilteredTaskList(props: StaffTasksProps) {
         {canAssign && actorId && (
           <AdminTaskAssignment
             actorId={actorId}
+            linkedTasks={tasks.data?.items ?? []}
+            onOpenTask={(id) => {
+              setFocusedTaskId(id);
+              setManagerView('tasks');
+              setStatus('');
+              setPage(1);
+            }}
             apiBase={apiBase}
             role={role}
             allowedKinds={allowedKinds}
@@ -284,6 +292,29 @@ function FilteredTaskList(props: StaffTasksProps) {
           />
         )}
       </div>
+      {role === 'TECHNICIAN' && (
+        <nav className="technician-status-nav" aria-label="Chọn trạng thái công việc">
+          {[
+            ['', 'Tất cả'],
+            ['ASSIGNED', 'Cần bắt đầu'],
+            ['IN_PROGRESS', 'Đang làm'],
+            ['SUBMITTED', 'Chờ quản lý duyệt'],
+            ['COMPLETED', 'Đã hoàn thành'],
+          ].map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={status === value}
+              onClick={() => {
+                setStatus(value);
+                setPage(1);
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </nav>
+      )}
       <div
         id="manager-task-area"
         hidden={role === 'OPERATIONS_MANAGER' && managerView === 'incidents'}
@@ -302,7 +333,11 @@ function FilteredTaskList(props: StaffTasksProps) {
           </div>
         )}
         <div className="staff-task-toolbar">
-          <div hidden={role === 'OPERATIONS_MANAGER' && managerView === 'review'}>
+          <div
+            hidden={
+              role === 'TECHNICIAN' || (role === 'OPERATIONS_MANAGER' && managerView === 'review')
+            }
+          >
             <label
               htmlFor="task-status"
               className={
@@ -410,6 +445,7 @@ function FilteredTaskList(props: StaffTasksProps) {
                 <TaskItem
                   key={`${task.id}-${role === 'TECHNICIAN' ? task.status : task.version}-${reload}`}
                   task={task}
+                  focused={focusedTaskId === task.id}
                   mode={mode}
                   actorRole={role}
                   actorId={actorId}

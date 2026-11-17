@@ -1,0 +1,46 @@
+.staff-evidence-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+  padding: 0;
+  list-style: none;
+}
+.staff-evidence-grid li {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #dce6df;
+  border-radius: 10px;
+  background: #fff;
+}
+.staff-evidence-grid a {
+  display: block;
+  font-size: 12px;
+}
+.staff-evidence-preview {
+  display: block;
+  overflow: hidden;
+  border-radius: 7px;
+  background: #f0f4f0;
+  margin-bottom: 8px;
+}
+.staff-evidence-preview img {
+  display: block;
+  width: 100%;
+  height: 140px;
+  object-fit: contain;
+}
+.staff-evidence-grid time {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  color: #566f5f;
+}
+.staff-evidence-intro,
+.staff-evidence-instruction {
+  font-size: 13px;
+  line-height: 1.6;
+}
+.incident-oversight-note {
+  font-size: 13px;
+  color: #506b5b;
+}

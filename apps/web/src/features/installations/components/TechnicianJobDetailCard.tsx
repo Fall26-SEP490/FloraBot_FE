@@ -138,7 +138,7 @@ export function TechnicianJobDetailCard({
       )}
 
       {/* Rework alert if manager requested rework */}
-      {selectedJob.reworkReason && (
+      {selectedJob.reworkReason && selectedJob.status === 'INSTALLING' && (
         <div role="alert" className="kiosk-field-error-banner">
           <CircleAlert size={20} aria-hidden="true" />
           <div>
@@ -148,15 +148,29 @@ export function TechnicianJobDetailCard({
         </div>
       )}
 
-      <p className="technician-next-step">
-        {selectedJob.status === 'SCHEDULED'
-          ? 'Đến đúng địa điểm và bắt đầu khi sẵn sàng lắp đặt.'
-          : selectedJob.status === 'INSTALLING'
-            ? 'Tải ít nhất một ảnh, sau đó ghi kết quả và gửi báo cáo.'
-            : selectedJob.status === 'AWAITING_HANDOVER'
-              ? 'Đã gửi báo cáo. Chờ Quản lý vận hành kiểm tra và bàn giao.'
-              : 'Quản lý vận hành đã bàn giao kiosk cho shop.'}
-      </p>
+      <div className="installation-next-action" role="status">
+        <span className="installation-eyebrow">
+          {selectedJob.status === 'ACTIVE' ? 'Đã hoàn tất' : 'Bước tiếp theo'}
+        </span>
+        <h3>
+          {selectedJob.status === 'SCHEDULED'
+            ? 'Đến điểm hẹn và bắt đầu lắp đặt'
+            : selectedJob.status === 'INSTALLING'
+              ? 'Hoàn thiện ảnh và báo cáo'
+              : selectedJob.status === 'AWAITING_HANDOVER'
+                ? 'Đã nộp báo cáo thành công!'
+                : 'Đã bàn giao kiosk cho shop'}
+        </h3>
+        <p className="technician-next-step">
+          {selectedJob.status === 'SCHEDULED'
+            ? 'Đến đúng địa điểm và bắt đầu khi sẵn sàng lắp đặt.'
+            : selectedJob.status === 'INSTALLING'
+              ? 'Tải ít nhất một ảnh, sau đó ghi kết quả và gửi báo cáo.'
+              : selectedJob.status === 'AWAITING_HANDOVER'
+                ? 'Đã gửi báo cáo. Chờ Quản lý vận hành kiểm tra và bàn giao.'
+                : 'Quản lý vận hành đã bàn giao kiosk cho shop.'}
+        </p>
+      </div>
       {/* Contact Information & Stepper */}
       <ol className="installation-progress" aria-label="Tiến độ lắp đặt">
         {TECHNICIAN_PROGRESS_STEPS.map((label, index) => (
@@ -173,29 +187,44 @@ export function TechnicianJobDetailCard({
         ))}
       </ol>
 
-      <div className="tech-contact-box">
-        <div>
-          <strong>Điện thoại liên hệ:</strong>
-          <p>
-            <a href={`tel:${selectedJob.phone}`}>{selectedJob.phone}</a>
-          </p>
-        </div>
-        <div>
-          <strong>Email thông báo:</strong>
-          <p>{selectedJob.contactEmail}</p>
-        </div>
-        <div>
-          <strong>Địa chỉ lắp đặt:</strong>
-          <p>{selectedJob.installationAddress}</p>
-        </div>
-        <div>
-          <strong>Thời gian hẹn:</strong>
-          <p>
-            {formatDateVN(selectedJob.scheduledDate)} ({selectedJob.timeWindow})
-          </p>
-        </div>
+      <div className="installation-appointment">
+        <span>Lịch lắp đặt</span>
+        <strong>
+          {formatDateVN(selectedJob.scheduledDate)} · {selectedJob.timeWindow}
+        </strong>
+        <a href={`tel:${selectedJob.phone}`}>Gọi liên hệ: {selectedJob.phone}</a>
       </div>
-
+      <details className="installation-contact-details">
+        <summary>Thông tin liên hệ & địa điểm</summary>
+        <div className="tech-contact-box">
+          <div>
+            <strong>Điện thoại liên hệ:</strong>
+            <p>
+              <a href={`tel:${selectedJob.phone}`}>{selectedJob.phone}</a>
+            </p>
+          </div>
+          <div>
+            <strong>Email thông báo:</strong>
+            <p>{selectedJob.contactEmail}</p>
+          </div>
+          <div>
+            <strong>Địa chỉ lắp đặt:</strong>
+            <p>{selectedJob.installationAddress}</p>
+          </div>
+          <div>
+            <strong>Thời gian hẹn:</strong>
+            <p>
+              {formatDateVN(selectedJob.scheduledDate)} ({selectedJob.timeWindow})
+            </p>
+          </div>
+        </div>
+      </details>
+      {selectedJob.reworkReason && selectedJob.status !== 'INSTALLING' && (
+        <details className="installation-contact-details">
+          <summary>Góp ý ở lần kiểm tra trước</summary>
+          <p>{selectedJob.reworkReason}</p>
+        </details>
+      )}
       {/* STEP 1: START VISIT */}
       {['SCHEDULED', 'INSTALLING', 'AWAITING_HANDOVER'].includes(selectedJob.status) && (
         <Esp32ConfigurationPanel
@@ -303,29 +332,6 @@ export function TechnicianJobDetailCard({
             onRefetchEvidence={() => void evidenceQuery.refetch()}
           />
         </section>
-      )}
-      {/* STEP 3: AWAITING HANDOVER NOTICE */}
-      {selectedJob.status === 'AWAITING_HANDOVER' && (
-        <div className="status-notice notice-info">
-          <Check size={20} aria-hidden="true" />
-          <div>
-            <strong>Đã nộp báo cáo thành công!</strong>
-            <p>
-              Chờ Quản lý vận hành kiểm tra ảnh và báo cáo để bàn giao kiosk cho shop. Bạn không cần
-              gửi lại báo cáo.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {selectedJob.status === 'ACTIVE' && (
-        <div className="status-notice notice-success">
-          <Check size={20} aria-hidden="true" />
-          <div>
-            <strong>Đã bàn giao kiosk cho shop</strong>
-            <p>Hồ sơ đã được Quản lý nghiệm thu và bàn giao thành công cho Chủ shop.</p>
-          </div>
-        </div>
       )}
     </section>
   );

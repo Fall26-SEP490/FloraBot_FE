@@ -483,6 +483,7 @@ test('Manager assigns dismantling technician, confirms handover without mandator
   });
 
   await page.goto('/operations/terminations');
+  await page.getByRole('button', { name: 'Mở hồ sơ K-HCM-06', exact: true }).click();
   await expect(page.getByText('Chờ phân công kỹ thuật viên tháo dỡ').first()).toBeVisible();
   await expect(page.getByRole('button', { name: 'Xác nhận đã bàn giao' })).toHaveCount(0);
 
@@ -510,6 +511,7 @@ test('Manager assigns dismantling technician, confirms handover without mandator
   await expect(page.getByText(/Đã ngừng sử dụng và lưu trữ tủ K-HCM-06/)).toBeVisible();
   await expect(page.getByRole('button', { name: 'Lưu trữ tủ K-HCM-06' })).toHaveCount(0);
   await page.reload();
+  await page.getByRole('button', { name: 'Mở hồ sơ K-HCM-06', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Đã ngừng sử dụng và lưu trữ tủ' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Lưu trữ tủ K-HCM-06' })).toHaveCount(0);
   expect(archived).toBe(true);

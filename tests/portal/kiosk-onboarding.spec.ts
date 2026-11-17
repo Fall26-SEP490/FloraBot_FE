@@ -955,6 +955,7 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     });
 
     await page.goto('/technician/installations');
+    await page.locator('.tech-job-card').first().click();
 
     await expect(page.locator('#job-detail-title')).toHaveText('Tiệm Hoa Hồng Đỏ');
     await expect(page.locator('.tech-contact-box')).toContainText('88 Nguyễn Trãi');

@@ -3,6 +3,7 @@ export type ActiveTaskRole =
 
 export type Task = {
   id: string;
+  incidentId?: string | null;
   kind: string;
   status: string;
   version: number;
@@ -160,6 +161,8 @@ export type StaffReassignmentProps = {
 };
 
 export type AdminTaskAssignmentProps = {
+  linkedTasks?: Task[];
+  onOpenTask?: (taskId: string) => void;
   actorId?: string;
   adminId?: string;
   apiBase?: string;
