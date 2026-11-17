@@ -5,6 +5,7 @@ import { request } from '@/shared/lib/api';
 import { TASK_DETAIL_ACTIONS, TASK_DETAIL_STATES } from '../task-management.constants';
 import type { StaffTaskDetailsProps, TaskDetail } from '../task-management.types';
 import { formatTaskDate } from '../task-management.utils';
+import TechnicianIoTHealth from './TechnicianIoTHealth';
 
 export type { StaffTaskDetailsProps };
 
@@ -43,6 +44,7 @@ export default function StaffTaskDetails({
   return (
     <details className="staff-task-details" onToggle={(event) => setOpen(event.currentTarget.open)}>
       <summary>Thông tin tủ, sự cố và lịch sử công việc</summary>
+      {open && role === 'TECHNICIAN' && <TechnicianIoTHealth taskId={taskId} actorId={actorId} />}
       {details.isPending ? (
         <p role="status">Đang tải thông tin công việc…</p>
       ) : details.isError ? (

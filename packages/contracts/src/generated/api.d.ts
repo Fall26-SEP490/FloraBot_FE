@@ -6185,6 +6185,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/staff/tasks/{taskId}/iot-health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Latest hardware signals for the technician's assigned work */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    taskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TechnicianTaskTelemetry"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/staff/tasks/{taskId}/transition": {
         parameters: {
             query?: never;
@@ -18691,6 +18729,23 @@ export interface components {
             id: string;
             code: string;
             zone: null | string;
+        };
+        TechnicianSlotTelemetry: {
+            slotCode: string;
+            flowerDetected: null | boolean;
+            doorClosed: null | boolean;
+            lastCycle: null | string;
+            /** Format: date-time */
+            lastCycleAt: null | string;
+        };
+        TechnicianTaskTelemetry: {
+            kioskStatus: string;
+            /** Format: date-time */
+            lastHeartbeatAt: null | string;
+            /** Format: date-time */
+            observedAt: null | string;
+            isFresh: boolean;
+            slots: components["schemas"]["TechnicianSlotTelemetry"][];
         };
         StaffTaskDetail: {
             kioskStatus: string;

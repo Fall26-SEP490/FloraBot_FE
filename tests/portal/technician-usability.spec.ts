@@ -61,6 +61,10 @@ async function fixture(page: Page, mode: 'data' | 'empty' | 'error' | 'slow' = '
     }
     if (path === '/api/staff/kiosk-installations')
       return route.fulfill({ json: mode === 'empty' ? [] : jobs });
+    if (path === '/api/staff/tasks/task-a')
+      return route.fulfill({
+        json: { kioskStatus: 'ONLINE', lastHeartbeatAt: null, history: [], hasMore: false },
+      });
     if (path.endsWith('/evidence')) return route.fulfill({ json: [] });
     const job = jobs.find((item) => path === `/api/staff/kiosk-installations/${item.id}`);
     if (job) return route.fulfill({ json: job });
@@ -70,6 +74,50 @@ async function fixture(page: Page, mode: 'data' | 'empty' | 'error' | 'slow' = '
 }
 
 for (const width of [390, 1440]) {
+  test(`Technical can distinguish a door timeout from stale readings at ${width}`, async ({
+    page,
+  }, testInfo) => {
+    const { writes } = await fixture(page);
+    let isFresh = true;
+    const observedAt = new Date().toISOString();
+    await page.route('**/api/staff/tasks/task-a/iot-health', (route) =>
+      route.fulfill({
+        json: {
+          kioskStatus: 'ONLINE',
+          observedAt,
+          isFresh,
+          slots: [
+            {
+              slotCode: 'S01',
+              flowerDetected: false,
+              doorClosed: true,
+              lastCycle: 'OPEN_TIMEOUT',
+              lastCycleAt: observedAt,
+            },
+          ],
+        },
+      }),
+    );
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/technician');
+    await page.locator('.technician-task-body > summary').click();
+    await page.locator('.staff-task-details > summary').click();
+    const panel = page.getByRole('region', { name: 'Sức khỏe thiết bị IoT' });
+    await expect(panel.getByText('Không phát hiện vật')).toBeVisible();
+    await expect(panel.getByText('Báo cửa đóng')).toBeVisible();
+    await expect(panel.getByText(/hết thời gian chờ tín hiệu mở/)).toBeVisible();
+    expect(
+      (await new AxeBuilder({ page }).include('.staff-task-details').analyze()).violations,
+    ).toEqual([]);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+    await panel.screenshot({ path: testInfo.outputPath(`technician-iot-${width}.png`) });
+    isFresh = false;
+    await panel.getByRole('button', { name: 'Đọc lại tín hiệu' }).click();
+    await expect(panel.getByText(/Đang chờ dữ liệu mới/)).toBeVisible();
+    await expect(panel.getByText(/hết thời gian chờ tín hiệu mở/)).toHaveCount(0);
+    expect(writes).toEqual([]);
+  });
+
   test(`Technician work first, disclosure preserves draft at ${width}`, async ({
     page,
   }, testInfo) => {

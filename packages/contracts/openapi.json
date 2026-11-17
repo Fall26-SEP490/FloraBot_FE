@@ -5922,6 +5922,37 @@
         }
       }
     },
+    "/api/staff/tasks/{taskId}/iot-health": {
+      "get": {
+        "tags": [
+          "KioskOps"
+        ],
+        "summary": "Latest hardware signals for the technician's assigned work",
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TechnicianTaskTelemetry"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/staff/tasks/{taskId}/transition": {
       "post": {
         "tags": [
@@ -27075,6 +27106,86 @@
               "null",
               "string"
             ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "TechnicianSlotTelemetry": {
+        "required": [
+          "slotCode",
+          "flowerDetected",
+          "doorClosed",
+          "lastCycle",
+          "lastCycleAt"
+        ],
+        "type": "object",
+        "properties": {
+          "slotCode": {
+            "type": "string"
+          },
+          "flowerDetected": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "doorClosed": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "lastCycle": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lastCycleAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "TechnicianTaskTelemetry": {
+        "required": [
+          "kioskStatus",
+          "lastHeartbeatAt",
+          "observedAt",
+          "isFresh",
+          "slots"
+        ],
+        "type": "object",
+        "properties": {
+          "kioskStatus": {
+            "type": "string"
+          },
+          "lastHeartbeatAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "observedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "isFresh": {
+            "type": "boolean"
+          },
+          "slots": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TechnicianSlotTelemetry"
+            }
           }
         },
         "additionalProperties": false
