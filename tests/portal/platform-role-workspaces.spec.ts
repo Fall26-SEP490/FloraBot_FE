@@ -497,6 +497,7 @@ test('Technician installation detail and evidence errors block actions until ret
   state.failTechDetail = true;
   state.evidenceError = true;
   await page.goto('/technician/installations');
+  await page.locator('.tech-job-card').first().click();
   await expect(page.getByRole('button', { name: 'Tải lại chi tiết lắp đặt' })).toBeVisible();
   await expect(page.getByRole('button', { name: /Bắt đầu lắp đặt/ })).toHaveCount(0);
   state.failTechDetail = false;

@@ -31,8 +31,8 @@ function IncidentItem({ row }: { row: Incident }) {
         <AdminDisclosureSummary
           statusCode={row.status}
           title={formatIncidentLabel(row)}
-          meta={formatIncidentDate(row.createdAt)}
-          status={row.kind === 'DISPENSE_FAILED' ? 'Không giao được hoa' : 'Sự cố thiết bị'}
+          meta={`${formatIncidentDate(row.createdAt)} · ${row.kind === 'DISPENSE_FAILED' ? 'Không giao được hoa' : 'Sự cố thiết bị'}`}
+          status={row.status === 'OPEN' ? 'Đang xử lý' : 'Đã giải quyết'}
         />
         {open && (
           <div className="incident-detail">
@@ -148,9 +148,9 @@ export default function AdminIncidents() {
   return (
     <section className="admin-incidents" aria-labelledby="incidents-title">
       <h2 id="incidents-title">Theo dõi sự cố tủ hoa</h2>
-      <p>
-        Chế độ giám sát. Quản lý vận hành phụ trách tiếp nhận, phân công và duyệt kết quả xử lý sự
-        cố. Mỗi trang có tối đa 25 sự cố.
+      <p className="incident-oversight-note">
+        <strong>Chỉ giám sát</strong> · Manager phân công và nghiệm thu; kỹ thuật viên kiểm tra tại
+        tủ.
       </p>
       <AdminFilterBar
         actions={

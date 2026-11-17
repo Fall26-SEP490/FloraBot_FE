@@ -52,7 +52,7 @@ function TechnicianInstallationCard({
             ? 'Tiếp tục lắp đặt'
             : 'Xem báo cáo'}
       </span>
-      {job.reworkReason && (
+      {job.reworkReason && job.status === 'INSTALLING' && (
         <div className="job-rework-tag" role="alert">
           Cần làm lại: {job.reworkReason}
         </div>

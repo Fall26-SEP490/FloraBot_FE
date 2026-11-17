@@ -169,7 +169,7 @@ for (const width of [390, 1440]) {
     const model = await installationFixture(page);
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/technician/installations');
-    if (width === 390) await page.getByRole('button', { name: /Shop Hoa Kiểm Thử/ }).click();
+    await page.getByRole('button', { name: /Shop Hoa Kiểm Thử/ }).click();
     await expect(page.locator('#job-detail-title')).toHaveText('Shop Hoa Kiểm Thử');
     await expect(page.getByRole('button', { name: /Nghiệm thu Đạt/ })).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
@@ -216,6 +216,7 @@ test('Attachment retry reuses the uploaded ticket and ID and keeps the report dr
   const model = await installationFixture(page, 'INSTALLING');
   model.attachFailures = 1;
   await page.goto('/technician/installations');
+  await page.locator('.tech-job-card').first().click();
   const draft = page.getByLabel('Nội dung báo cáo chi tiết:');
   await draft.fill('Báo cáo đang soạn trước khi tải ảnh.');
   await page.locator('input[type=file]').setInputFiles(photo);
@@ -236,6 +237,7 @@ test('A lost attachment response is reconciled by GET without a duplicate upload
   const model = await installationFixture(page, 'INSTALLING');
   model.loseAttachResponse = true;
   await page.goto('/technician/installations');
+  await page.locator('.tech-job-card').first().click();
   await page.locator('input[type=file]').setInputFiles(photo);
   await expect(
     page.getByText('Đã tải lên và đính kèm ảnh test-installation.png thành công.'),
@@ -250,6 +252,7 @@ test('Report submission stays blocked while evidence cannot be read', async ({ p
   model.photos.push({ id: 'test-existing-evidence', createdAt: new Date().toISOString() });
   model.evidenceReadFailure = true;
   await page.goto('/technician/installations');
+  await page.locator('.tech-job-card').first().click();
   await page.getByLabel('Nội dung báo cáo chi tiết:').fill('Đã lắp đặt và kiểm tra thiết bị.');
   const submit = page.getByRole('button', { name: 'Nộp báo cáo hoàn thành', exact: true });
   await expect(page.getByText('Chưa đọc được minh chứng lắp đặt.')).toBeVisible();
@@ -267,6 +270,7 @@ test('403 on submit explains assigned Technician access and preserves the report
   model.photos.push({ id: 'test-existing-evidence', createdAt: new Date().toISOString() });
   model.denySubmit = true;
   await page.goto('/technician/installations');
+  await page.locator('.tech-job-card').first().click();
   const report = page.getByLabel('Nội dung báo cáo chi tiết:');
   await report.fill('Báo cáo chưa được gửi vì quyền phân công đã đổi.');
   await page.getByRole('button', { name: 'Nộp báo cáo hoàn thành', exact: true }).click();
@@ -285,6 +289,7 @@ for (const failure of ['list403', 'detail404']) {
     model.denyList = failure === 'list403';
     model.denyDetail = failure === 'detail404';
     await page.goto('/technician/installations');
+    if (failure === 'detail404') await page.locator('.tech-job-card').first().click();
     await expect(
       page.getByText(
         failure === 'list403'
@@ -339,6 +344,7 @@ test('Selecting evidence uploads automatically and blocks report submission unti
   const model = await installationFixture(page, 'INSTALLING');
   model.uploadDelayMs = 600;
   await page.goto('/technician/installations');
+  await page.locator('.tech-job-card').first().click();
   await page
     .getByLabel('Nội dung báo cáo chi tiết:')
     .fill('Đã hoàn thành lắp đặt và kiểm tra thiết bị.');
@@ -361,6 +367,7 @@ test('Invalid evidence does not upload and allows choosing a valid replacement',
 }) => {
   const model = await installationFixture(page, 'INSTALLING');
   await page.goto('/technician/installations');
+  await page.locator('.tech-job-card').first().click();
   const input = page.locator('input[type=file]');
   await input.setInputFiles({
     name: 'invalid.txt',

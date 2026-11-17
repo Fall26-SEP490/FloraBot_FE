@@ -139,7 +139,7 @@ for (const width of [390, 1440]) {
     await page
       .getByLabel('Nội dung báo cáo chi tiết:')
       .fill('Đã đến hiện trường, đang kiểm tra nguồn điện.');
-    if (width === 390) {
+    {
       await page.getByRole('button', { name: 'Danh sách lắp đặt', exact: true }).click();
       await expect(page.locator('.technician-list-pane')).toBeFocused();
       await page.getByRole('button', { name: /Shop Bình Thạnh/ }).click();

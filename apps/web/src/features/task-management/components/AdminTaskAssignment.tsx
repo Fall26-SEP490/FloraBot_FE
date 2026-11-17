@@ -11,6 +11,7 @@ import type {
   IncidentCandidate,
   TaskAssignmentPayload,
 } from '../task-management.types';
+import { TASK_STATUS_LABELS } from '../task-management.constants';
 import { restoreAssignmentPayload } from '../task-management.utils';
 
 export type { AdminTaskAssignmentProps };
@@ -28,6 +29,8 @@ export default function AdminTaskAssignment({
   incidentsEndpoint = '/admin/incidents',
   deliveryScopesEndpoint = '/admin/staff-delivery-scopes',
   sellerId,
+  linkedTasks = [],
+  onOpenTask,
 }: AdminTaskAssignmentProps) {
   const actorId = explicitActorId || adminId || 'actor';
   const effectiveRole = actorRole ?? role;
@@ -135,7 +138,19 @@ export default function AdminTaskAssignment({
       setBusy(false);
     }
   }
+  const assignedTask = (incidentId: string) =>
+    linkedTasks.find(
+      (task) =>
+        task.incidentId === incidentId &&
+        ['ASSIGNED', 'IN_PROGRESS', 'SUBMITTED'].includes(task.status),
+    );
   function submit(values: Fields) {
+    if (kind === 'INCIDENT' && assignedTask(values.target)) {
+      setError(
+        'Phiếu đã có công việc đang xử lý. Mở công việc đã giao để theo dõi hoặc đổi người phụ trách.',
+      );
+      return;
+    }
     const incident = incidents.data?.items.find((item) => item.id === values.target);
     const scope = scopes.data?.find((item) => `${item.sellerId}:${item.kioskId}` === values.target);
     if (kind === 'INCIDENT' ? !incident : !scope) {
@@ -287,7 +302,11 @@ export default function AdminTaskAssignment({
                   </option>
                   {kind === 'INCIDENT'
                     ? incidents.data?.items.map((item) => (
-                        <option key={item.id} value={item.id}>
+                        <option
+                          key={item.id}
+                          value={item.id}
+                          disabled={Boolean(assignedTask(item.id))}
+                        >
                           {item.location?.kioskName || 'Tủ hoa'} · {item.reason} ·{' '}
                           {item.id.slice(0, 8)}
                         </option>
@@ -489,20 +508,38 @@ export default function AdminTaskAssignment({
                     </div>
                     <div className="manager-incident-reason">
                       <p>{incident.reason}</p>
-                      <span className="manager-open-tag">Đang mở</span>
+                      <span
+                        className={
+                          assignedTask(incident.id) ? 'manager-assigned-tag' : 'manager-open-tag'
+                        }
+                      >
+                        {assignedTask(incident.id)
+                          ? `${TASK_STATUS_LABELS[assignedTask(incident.id)!.status]} · ${assignedTask(incident.id)!.assigneeName}`
+                          : 'Đang mở'}
+                      </span>
                     </div>
                     <Button
                       type="button"
                       variant="outline"
                       disabled={busy || Boolean(attempt)}
-                      aria-label={`Chọn sự cố ${incident.id} để phân công`}
+                      aria-label={
+                        assignedTask(incident.id)
+                          ? `Xem công việc của sự cố ${incident.id}`
+                          : `Chọn sự cố ${incident.id} để phân công`
+                      }
                       onClick={() => {
+                        const linked = assignedTask(incident.id);
+                        if (linked && onOpenTask) {
+                          onOpenTask(linked.id);
+                          return;
+                        }
                         setKind('INCIDENT');
                         form.setValue('target', incident.id, { shouldValidate: true });
                         setAssignmentOpen(true);
                       }}
                     >
-                      Phân công <ArrowRight size={15} aria-hidden="true" />
+                      {assignedTask(incident.id) ? 'Xem công việc' : 'Phân công'}{' '}
+                      <ArrowRight size={15} aria-hidden="true" />
                     </Button>
                   </li>
                 ))}

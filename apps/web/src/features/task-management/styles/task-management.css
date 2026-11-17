@@ -1572,3 +1572,52 @@
     flex-wrap: wrap;
   }
 }
+
+#staff-tasks .manager-assigned-tag {
+  display: inline-block;
+  color: #275c40;
+  background: #edf5ef;
+  padding: 4px 7px;
+  border-radius: 5px;
+  font-size: 11px;
+}
+#staff-tasks .staff-task-card[data-focused] {
+  border-color: #387651;
+  box-shadow: 0 0 0 2px #38765122;
+  scroll-margin-top: 100px;
+}
+#staff-tasks .technician-status-nav {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+#staff-tasks .technician-status-nav button {
+  padding: 10px 14px;
+  border: 1px solid #d5e2d8;
+  border-radius: 999px;
+  background: #fff;
+  color: #365a44;
+  cursor: pointer;
+  font-size: 13px;
+}
+#staff-tasks .technician-status-nav button[aria-pressed='true'] {
+  background: #204f39;
+  color: #fff;
+  border-color: #204f39;
+}
+#staff-tasks .technician-next-step {
+  background: #eef5ef;
+  border-left: 3px solid #56896a;
+  border-radius: 6px;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+#staff-tasks .technician-destination .staff-instructions-callout {
+  padding: 10px 12px;
+}
+#staff-tasks .technician-destination .staff-instructions-callout p {
+  margin: 6px 0 0;
+  font-size: 13px;
+}

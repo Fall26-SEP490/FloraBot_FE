@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import Image from 'next/image';
+import '../styles/staff-evidence.css';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import { ApiError, queryClient, request } from '@/shared/lib/api';
@@ -105,7 +107,7 @@ export default function StaffEvidence({
   return (
     <details className="staff-evidence" onToggle={(event) => setOpen(event.currentTarget.open)}>
       <summary>Ảnh minh chứng công việc</summary>
-      <p>Ảnh chỉ dành cho người phụ trách công việc và quản trị viên.</p>
+      <p className="staff-evidence-intro">Minh chứng để đối chiếu kết quả thực hiện tại tủ.</p>
       {evidence.isPending ? (
         <p role="status">Đang tải danh sách ảnh…</p>
       ) : evidence.isError ? (
@@ -120,10 +122,20 @@ export default function StaffEvidence({
           {evidence.data.items.length === 0 ? (
             <p>Chưa có ảnh minh chứng ở trang này.</p>
           ) : (
-            <ol>
+            <ol className="staff-evidence-grid">
               {evidence.data.items.map((item, index) => (
                 <li key={item.id}>
                   <a href={`/api${path}/${item.id}`} target="_blank" rel="noopener noreferrer">
+                    <span className="staff-evidence-preview">
+                      <Image
+                        src={`/api${path}/${item.id}`}
+                        alt={`Ảnh minh chứng ${(page - 1) * 25 + index + 1}`}
+                        width={240}
+                        height={160}
+                        unoptimized
+                        loading="lazy"
+                      />
+                    </span>
                     Xem ảnh {(page - 1) * 25 + index + 1} (mở tab mới)
                   </a>
                   {' · '}
@@ -166,6 +178,10 @@ export default function StaffEvidence({
           </>
         ) : active ? (
           <>
+            <p className="staff-evidence-instruction">
+              Chọn và tải ảnh lên, sau đó bấm <strong>Gắn ảnh vào công việc</strong> để lưu vào báo
+              cáo.
+            </p>
             <EvidenceUpload
               key={`${version}:${uploadKey}`}
               id={`task-evidence-${taskId}`}
@@ -173,6 +189,9 @@ export default function StaffEvidence({
               disabled={busy}
               onReference={setReference}
             />
+            {reference && (
+              <p role="status">Ảnh đã tải lên, chưa gắn vào công việc. Bấm nút bên dưới để lưu.</p>
+            )}
             <Button
               disabled={busy || !reference}
               onClick={() => void send({ id: crypto.randomUUID(), version, reference }, false)}

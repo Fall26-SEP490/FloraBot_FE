@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Button, CircleAlert, ClipboardList, RefreshCw } from '@florabot/ui';
@@ -15,6 +15,7 @@ import { TechnicianJobDetailCard } from './components/TechnicianJobDetailCard';
 import '../../shared/styles/kiosk-shared.css';
 import './styles/installation-ui.css';
 import './styles/technician-installations.css';
+import './styles/technician-installation-flow.css';
 
 interface TechnicianInstallationsProps {
   session: Session;
@@ -26,6 +27,7 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const detailRef = useRef<HTMLDivElement>(null);
+  const scrollPending = useRef(false);
   const listRef = useRef<HTMLDivElement>(null);
 
   // Query: Assigned installation jobs (scoped by signed-in technician)
@@ -35,6 +37,13 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
   });
 
   const jobs = jobsQuery.data || [];
+  const queues = [
+    { value: '', label: 'Tất cả' },
+    { value: 'SCHEDULED', label: 'Cần bắt đầu' },
+    { value: 'INSTALLING', label: 'Đang lắp đặt' },
+    { value: 'AWAITING_HANDOVER', label: 'Chờ nghiệm thu' },
+    { value: 'ACTIVE', label: 'Đã bàn giao' },
+  ];
   const normalize = (value: string) =>
     value
       .normalize('NFD')
@@ -70,6 +79,18 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
   });
 
   const selectedJob = jobDetailQuery.data ?? null;
+
+  useEffect(() => {
+    if (!detailOpen || jobDetailQuery.isPending || !scrollPending.current) return;
+    scrollPending.current = false;
+    detailRef.current?.focus({ preventScroll: true });
+    detailRef.current?.scrollIntoView({
+      block: 'start',
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        ? 'instant'
+        : 'smooth',
+    });
+  }, [detailOpen, effectiveJobId, jobDetailQuery.isPending]);
 
   const invalidate = () => {
     void queryClient.invalidateQueries({
@@ -143,6 +164,21 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
             tabIndex={-1}
             aria-label="Danh sách phiếu lắp đặt"
           >
+            <nav className="installation-queues" aria-label="Lọc công việc lắp đặt">
+              {queues.map((queue) => (
+                <button
+                  key={queue.value}
+                  type="button"
+                  aria-pressed={status === queue.value}
+                  onClick={() => setStatus(queue.value)}
+                >
+                  {queue.label}
+                  <span>
+                    {jobs.filter((job) => !queue.value || job.status === queue.value).length}
+                  </span>
+                </button>
+              ))}
+            </nav>
             <div className="technician-list-filters">
               <label htmlFor="installation-search">Tìm phiếu lắp đặt</label>
               <input
@@ -152,18 +188,6 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
                 placeholder="Tên shop, mã tủ, địa chỉ"
                 onChange={(event) => setSearch(event.target.value)}
               />
-              <label htmlFor="installation-status">Trạng thái</label>
-              <select
-                id="installation-status"
-                value={status}
-                onChange={(event) => setStatus(event.target.value)}
-              >
-                <option value="">Tất cả trạng thái</option>
-                <option value="SCHEDULED">Đã xếp lịch</option>
-                <option value="INSTALLING">Đang lắp đặt</option>
-                <option value="AWAITING_HANDOVER">Chờ bàn giao</option>
-                <option value="ACTIVE">Đã bàn giao</option>
-              </select>
             </div>
             <p className="technician-list-count" role="status">
               {matchingJobs.length} / {jobs.length} phiếu được giao
@@ -172,9 +196,14 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
               jobs={matchingJobs}
               selectedJobId={effectiveJobId}
               onSelectJobId={(id) => {
+                if (detailOpen && id === effectiveJobId) {
+                  detailRef.current?.focus({ preventScroll: true });
+                  detailRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+                  return;
+                }
+                scrollPending.current = true;
                 setSelectedJobId(id);
                 setDetailOpen(true);
-                requestAnimationFrame(() => detailRef.current?.focus());
               }}
             />
             {matchingJobs.length === 0 && (
@@ -203,7 +232,10 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
               className="technician-back"
               onClick={() => {
                 setDetailOpen(false);
-                requestAnimationFrame(() => listRef.current?.focus());
+                requestAnimationFrame(() => {
+                  listRef.current?.focus({ preventScroll: true });
+                  listRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+                });
               }}
             >
               <ArrowLeft size={16} aria-hidden="true" /> Danh sách lắp đặt
