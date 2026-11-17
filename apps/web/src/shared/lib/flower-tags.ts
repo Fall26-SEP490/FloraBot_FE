@@ -14,6 +14,61 @@ export const flowerTags = {
   other: 'Loại khác',
 };
 
+export type FlowerTypeCode = keyof typeof flowerTags;
+
+function normalizeFlowerLabel(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[đĐ]/g, 'd')
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, ' ');
+}
+
+/** Accept exact legacy type labels, never infer a type from product names or prose. */
+export function getFlowerTypeCode(tag: string): FlowerTypeCode | undefined {
+  const value = tag.trim();
+  if (value.includes(':')) {
+    const [group, code, extra] = value.toLowerCase().split(':');
+    return group === 'flower' && code && extra === undefined && Object.hasOwn(flowerTags, code)
+      ? (code as FlowerTypeCode)
+      : undefined;
+  }
+  const normalized = normalizeFlowerLabel(value);
+  for (const [code, label] of Object.entries(flowerTags)) {
+    // "other" is ambiguous without a group: it may refer to color or material.
+    if (code === 'other') continue;
+    const normalizedLabel = normalizeFlowerLabel(label);
+    if (
+      normalized === code ||
+      normalized === normalizedLabel ||
+      normalized === `hoa ${normalizedLabel}`
+    )
+      return code as FlowerTypeCode;
+  }
+  return undefined;
+}
+
+export function getFlowerTypeCodes(tags: readonly string[] | null | undefined): FlowerTypeCode[] {
+  return [...new Set((tags ?? []).map(getFlowerTypeCode).filter((code) => code !== undefined))];
+}
+
+/** Normalize only recognized flower types; retain color/material and custom tags. */
+export function normalizeFlowerTags(tags: readonly string[]): string[] {
+  return [
+    ...new Set(
+      tags
+        .map((tag) => {
+          const trimmed = tag.trim();
+          const code = getFlowerTypeCode(trimmed);
+          return code ? `flower:${code}` : trimmed;
+        })
+        .filter(Boolean),
+    ),
+  ];
+}
+
 export const flowerColors = {
   red: 'Đỏ',
   pink: 'Hồng',

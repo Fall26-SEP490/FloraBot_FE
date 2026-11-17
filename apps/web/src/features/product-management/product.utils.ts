@@ -1,11 +1,9 @@
 import { ApiError } from '@/shared/lib/api';
+import { normalizeFlowerTags } from '@/shared/lib/flower-tags';
 
 export function parseTags(input: string): string[] {
   if (!input || !input.trim()) return [];
-  return input
-    .split(',')
-    .map((t) => t.trim())
-    .filter(Boolean);
+  return normalizeFlowerTags(input.split(','));
 }
 
 export function errorText(error: unknown): string {

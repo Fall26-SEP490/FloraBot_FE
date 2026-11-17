@@ -4,7 +4,6 @@ import { flowerTags } from '@/shared/lib/flower-tags';
 export const catalogQueryKeys = [
   'search',
   'price',
-  'occasion',
   'flower',
   'shop',
   'kiosk',
@@ -38,7 +37,6 @@ export function readCatalogQuery(params: URLSearchParams) {
       ['default', 'price-asc', 'price-desc', 'name-asc', 'nearest'],
       'default',
     ),
-    occasionFilter: text('occasion') || 'all',
     flowerFilter: pick('flower', ['all', ...Object.keys(flowerTags)], 'all'),
     shopFilter: text('shop') || 'all',
     kioskFilter: text('kiosk') || 'all',
@@ -70,7 +68,6 @@ export function catalogReturnPath(value: string | null): string {
   for (const [key, val] of Object.entries({
     search: state.search,
     price: state.priceFilter,
-    occasion: state.occasionFilter,
     flower: state.flowerFilter,
     shop: state.shopFilter,
     kiosk: state.kioskFilter,

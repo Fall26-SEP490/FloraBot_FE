@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { flowerColors, flowerTags, tagIsKnown } from '@/shared/lib/flower-tags';
 
+export const REQUIRED_FLOWER_TAGS_MESSAGE = 'Chọn ít nhất một loại hoa và một màu.';
+
 const quantitySchema = z
   .number('Nhập tồn bó tại shop bằng số.')
   .int('Tồn bó tại shop phải là số nguyên.')
@@ -81,12 +83,6 @@ export const productCreateSchema = z
     productMetadataSchema,
     z.object({
       quantity: quantitySchema,
-      kioskId: z
-        .string()
-        .regex(
-          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
-          'Chọn kiosk thuộc quyền quản lý của shop.',
-        ),
     }),
   )
   .superRefine((data, ctx) => {
@@ -98,7 +94,7 @@ export const productCreateSchema = z
       ctx.addIssue({
         code: 'custom',
         path: ['tagsInput'],
-        message: 'Chọn ít nhất một loại hoa và một màu.',
+        message: REQUIRED_FLOWER_TAGS_MESSAGE,
       });
     }
   });

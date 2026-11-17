@@ -36,7 +36,7 @@ export const MOCK_CATALOG_ITEMS: CatalogItem[] = [
     photo: '/images/floral-pink-online.webp',
     bouquets: ['50000000-0000-0000-0000-000000000001'],
     occasion: 'Sinh nhật',
-    tags: ['Sinh nhật', 'Hoa hồng', 'Pastel'],
+    tags: ['flower:rose', 'Sinh nhật', 'Hoa hồng', 'Pastel'],
   },
   {
     productId: '30000000-0000-0000-0000-000000000002',
@@ -52,7 +52,7 @@ export const MOCK_CATALOG_ITEMS: CatalogItem[] = [
     photo: '/images/flowers-garden-480.webp',
     bouquets: ['50000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000003'],
     occasion: 'Tốt nghiệp',
-    tags: ['Tốt nghiệp', 'Hướng dương', 'Chúc mừng'],
+    tags: ['flower:sunflower', 'Tốt nghiệp', 'Hướng dương', 'Chúc mừng'],
   },
   {
     productId: '30000000-0000-0000-0000-000000000003',
@@ -68,7 +68,7 @@ export const MOCK_CATALOG_ITEMS: CatalogItem[] = [
     photo: '/images/flowers-pink.jpg',
     bouquets: [],
     occasion: 'Tình yêu',
-    tags: ['Tình yêu', 'Kỷ niệm', 'Hoa hồng'],
+    tags: ['flower:rose', 'Tình yêu', 'Kỷ niệm', 'Hoa hồng'],
   },
   {
     productId: '30000000-0000-0000-0000-000000000004',
@@ -100,7 +100,7 @@ export const MOCK_CATALOG_ITEMS: CatalogItem[] = [
     photo: '/images/floral-white-online.webp',
     bouquets: ['50000000-0000-0000-0000-000000000005'],
     occasion: 'Cảm ơn',
-    tags: ['Cảm ơn', 'Cúc Tana', 'Tối giản'],
+    tags: ['flower:chrysanthemum', 'Cảm ơn', 'Cúc Tana', 'Tối giản'],
     isDemoSample: true,
   },
   {
@@ -117,7 +117,7 @@ export const MOCK_CATALOG_ITEMS: CatalogItem[] = [
     photo: '/images/flowers-white.jpg',
     bouquets: [],
     occasion: 'Sinh nhật',
-    tags: ['Sinh nhật', 'Tulip', 'Hàn Quốc'],
+    tags: ['flower:tulip', 'Sinh nhật', 'Tulip', 'Hàn Quốc'],
     isDemoSample: true,
   },
   {
@@ -134,7 +134,7 @@ export const MOCK_CATALOG_ITEMS: CatalogItem[] = [
     photo: '/images/floral-pink-online.webp',
     bouquets: ['50000000-0000-0000-0000-000000000006'],
     occasion: 'Tình yêu',
-    tags: ['Tình yêu', 'Baby', 'Cầu vồng'],
+    tags: ['flower:babys-breath', 'Tình yêu', 'Baby', 'Cầu vồng'],
     isDemoSample: true,
   },
   {
@@ -151,7 +151,7 @@ export const MOCK_CATALOG_ITEMS: CatalogItem[] = [
     photo: '/images/flowers-pink.jpg',
     bouquets: ['50000000-0000-0000-0000-000000000007'],
     occasion: 'Kỷ niệm',
-    tags: ['Kỷ niệm', 'Hoa sáp', 'Bền đẹp'],
+    tags: ['flower:rose', 'Kỷ niệm', 'Hoa sáp', 'Bền đẹp'],
     isDemoSample: true,
   },
   {
@@ -168,7 +168,7 @@ export const MOCK_CATALOG_ITEMS: CatalogItem[] = [
     photo: '/images/flowers-spring.jpg',
     bouquets: [],
     occasion: 'Chúc mừng',
-    tags: ['Chúc mừng', 'Cẩm tú cầu', 'Đà Lạt'],
+    tags: ['flower:hydrangea', 'Chúc mừng', 'Cẩm tú cầu', 'Đà Lạt'],
     isDemoSample: true,
   },
   {
@@ -185,7 +185,7 @@ export const MOCK_CATALOG_ITEMS: CatalogItem[] = [
     photo: '/images/floral-white-online.webp',
     bouquets: ['50000000-0000-0000-0000-000000000008'],
     occasion: 'Sinh nhật',
-    tags: ['Sinh nhật', 'Cát tường', 'May mắn'],
+    tags: ['flower:lisianthus', 'Sinh nhật', 'Cát tường', 'May mắn'],
     isDemoSample: true,
   },
   {
@@ -202,7 +202,7 @@ export const MOCK_CATALOG_ITEMS: CatalogItem[] = [
     photo: '/images/flowers-white.jpg',
     bouquets: [],
     occasion: 'Khai trương',
-    tags: ['Khai trương', 'Lan hồ điệp', 'Cao cấp'],
+    tags: ['flower:orchid', 'Khai trương', 'Lan hồ điệp', 'Cao cấp'],
     isDemoSample: true,
   },
   {

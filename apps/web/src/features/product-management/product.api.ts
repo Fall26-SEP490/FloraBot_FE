@@ -4,14 +4,10 @@ import type {
   ProductItem,
   CreateProductInput,
   UpdateProductMetadataInput,
-  SellerKiosk,
   PhotoPage,
 } from './product.types';
 
 export const fetchProducts = () => request<ProductItem[]>('/me/products');
-
-export const fetchSellerKiosks = (sellerId: string) =>
-  request<SellerKiosk[]>(`/sellers/${sellerId}/kiosks`);
 
 export const updateProductPrice = (sellerId: string, productId: string, price: number) =>
   request(`/sellers/${sellerId}/flows/update_product_price`, {

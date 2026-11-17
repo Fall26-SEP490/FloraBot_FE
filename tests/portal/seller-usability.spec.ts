@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { setupSellerUsability, sampleRequest, kioskId, shopId } from '../fixtures/seller-usability';
+import { setupSellerUsability, sampleRequest, shopId } from '../fixtures/seller-usability';
 
 test('Seller preorder displays the uploaded product photo and falls back if it cannot load', async ({
   page,
@@ -226,7 +226,7 @@ for (const width of [390, 1440])
     const box = await modal.boundingBox();
     expect(box!.width).toBeLessThanOrEqual(width);
     expect(box!.height).toBeLessThanOrEqual(1000);
-    await expect(modal).toContainText('Chưa có bó hoa nào được nạp');
+    await expect(modal).toContainText('Thêm ảnh và bật bán sau khi tạo.');
     await modal.press('Escape');
     await expect(add).toBeFocused();
     await add.click();
@@ -234,19 +234,21 @@ for (const width of [390, 1440])
     await form.getByRole('button', { name: 'Tạo mẫu hoa', exact: true }).click();
     expect(model.writes).toEqual([]);
     await form.getByLabel('Tên mẫu hoa', { exact: true }).fill('Mẫu mới kiểm thử');
-    await form.getByLabel('Giá bán niêm yết (VNĐ)', { exact: true }).fill('280000');
+    await form.getByLabel('Giá bán (VNĐ)', { exact: true }).fill('280000');
     await form.getByLabel('Dài (cm)', { exact: true }).fill('25');
     await form.getByLabel('Rộng (cm)', { exact: true }).fill('15');
     await form.getByLabel('Cao (cm)', { exact: true }).fill('35');
-    await form.getByLabel('Loại hoa (bắt buộc)').selectOption('flower:rose');
-    await form.getByLabel('Màu chủ đạo (bắt buộc)').selectOption('color:pink');
+    await form.getByRole('button', { name: 'Tạo mẫu hoa', exact: true }).click();
+    await expect(form.getByRole('alert')).toHaveText('Chọn ít nhất một loại hoa và một màu.');
+    await expect(form.getByRole('button', { name: 'Hoa hồng', exact: true })).toBeFocused();
+    await form.getByRole('button', { name: 'Hoa hồng', exact: true }).click();
+    await form.getByRole('button', { name: 'Hồng', exact: true }).click();
     await form.getByRole('button', { name: 'Tạo mẫu hoa', exact: true }).click();
     await expect(modal).toBeHidden();
     expect(model.writes).toEqual([
       {
         path: '/me/products',
         body: {
-          kioskId,
           name: 'Mẫu mới kiểm thử',
           description: '',
           price: 280000,

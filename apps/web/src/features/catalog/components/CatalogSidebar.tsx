@@ -1,5 +1,5 @@
 import { RotateCcw, SlidersHorizontal, X } from '@florabot/ui';
-import { OCCASIONS, PRICE_TIERS } from '../catalog.constants';
+import { PRICE_TIERS } from '../catalog.constants';
 import type { CatalogFiltersController } from '../hooks/useCatalogFilters';
 import { CatalogFilterGroup, type FilterOption } from './CatalogFilterGroup';
 import { flowerTags } from '@/shared/lib/flower-tags';
@@ -21,12 +21,10 @@ export function CatalogSidebar({
     availabilityFilter,
     hasActiveFilters,
     kioskFilter,
-    occasionFilter,
     priceFilter,
     resetFilters,
     setAvailabilityFilter,
     setKioskFilter,
-    setOccasionFilter,
     setPriceFilter,
     setShopFilter,
     shopFilter,
@@ -35,34 +33,11 @@ export function CatalogSidebar({
       availableKiosks,
       availableShops,
       kioskCounts,
-      occasionCounts,
+      flowerCounts,
       priceCounts,
       shopCounts,
     },
   } = filters;
-
-  // Occasion filter options
-  const occasionOptions: FilterOption[] = [
-    {
-      id: 'all',
-      label: 'Tất cả dịp',
-      count: totalRawItems,
-      isSelected: occasionFilter === 'all',
-      isEmpty: false,
-      onSelect: () => setOccasionFilter('all'),
-    },
-    ...OCCASIONS.map((occ) => {
-      const count = occasionCounts[occ] || 0;
-      return {
-        id: occ,
-        label: occ,
-        count,
-        isSelected: occasionFilter === occ,
-        isEmpty: count === 0,
-        onSelect: () => setOccasionFilter(occasionFilter === occ ? 'all' : occ),
-      };
-    }).filter((opt) => opt.count > 0 || opt.isSelected),
-  ];
 
   // Price filter options
   const priceOptions: FilterOption[] = PRICE_TIERS.map((tier) => {
@@ -87,7 +62,7 @@ export function CatalogSidebar({
   const availabilityOptions: FilterOption[] = [
     {
       id: 'all',
-      label: 'Tất cả hình thức mua',
+      label: 'Tất cả hình thức',
       count: totalRawItems,
       isSelected: availabilityFilter === 'all',
       isEmpty: false,
@@ -103,7 +78,7 @@ export function CatalogSidebar({
     },
     {
       id: 'custom',
-      label: 'Đặt theo yêu cầu',
+      label: 'Đặt trước qua web',
       count: availabilityCounts.custom,
       isSelected: availabilityFilter === 'custom',
       isEmpty: availabilityCounts.custom === 0,
@@ -175,10 +150,9 @@ export function CatalogSidebar({
               type="button"
               className="catalog-sidebar-reset-btn"
               onClick={resetFilters}
-              title="Đặt lại bộ lọc"
               aria-label="Đặt lại bộ lọc"
             >
-              <X size={15} aria-hidden="true" />
+              Đặt lại
             </button>
           )}
           <button
@@ -194,7 +168,7 @@ export function CatalogSidebar({
       </div>
 
       <div className="catalog-sidebar-scroll-body">
-        <label>
+        <label className="catalog-filter-field">
           Loại hoa
           <select
             value={filters.flowerFilter}
@@ -202,8 +176,12 @@ export function CatalogSidebar({
           >
             <option value="all">Tất cả loại hoa</option>
             {Object.entries(flowerTags).map(([code, label]) => (
-              <option key={code} value={code}>
-                {label}
+              <option
+                key={code}
+                value={code}
+                disabled={!flowerCounts[code] && filters.flowerFilter !== code}
+              >
+                {label} ({flowerCounts[code] ?? 0})
               </option>
             ))}
           </select>
@@ -213,18 +191,10 @@ export function CatalogSidebar({
         {(availableKiosks.length > 1 || kioskFilter !== 'all') && (
           <CatalogFilterGroup title="Tủ nhận hoa" options={kioskOptions} />
         )}
-        {(occasionOptions.length > 1 || availableShops.length > 1 || shopFilter !== 'all') && (
-          <details
-            className="catalog-more-filters"
-            open={occasionFilter !== 'all' || shopFilter !== 'all' || undefined}
-          >
-            <summary>Dịp tặng & cửa hàng</summary>
-            {occasionOptions.length > 1 && (
-              <CatalogFilterGroup title="Dịp tặng" options={occasionOptions} />
-            )}
-            {(availableShops.length > 1 || shopFilter !== 'all') && (
-              <CatalogFilterGroup title="Cửa hàng" options={shopOptions} />
-            )}
+        {(availableShops.length > 1 || shopFilter !== 'all') && (
+          <details className="catalog-more-filters" open={shopFilter !== 'all' || undefined}>
+            <summary>Cửa hàng</summary>
+            <CatalogFilterGroup title="Cửa hàng" options={shopOptions} />
           </details>
         )}
       </div>
@@ -242,7 +212,7 @@ export function CatalogSidebar({
           onClick={onClose}
           aria-label="Áp dụng bộ lọc"
         >
-          Áp dụng
+          Xem {filters.displayedItems.length} mẫu hoa
         </button>
       </div>
     </aside>

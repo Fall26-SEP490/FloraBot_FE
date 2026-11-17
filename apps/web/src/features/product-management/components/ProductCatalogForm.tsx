@@ -1,35 +1,30 @@
 'use client';
 
 import { useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useController, useForm, type SubmitErrorHandler } from 'react-hook-form';
 import { FlowerTagFields } from './FlowerTagFields';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@florabot/ui';
+import { Button, ChevronDown } from '@florabot/ui';
+import { flowerColors, flowerTags, tagIsKnown } from '@/shared/lib/flower-tags';
 import { queryClient } from '@/shared/lib/api';
 import { postProduct, putProduct } from '../product.api';
 import {
   productMetadataSchema,
   productCreateSchema,
+  REQUIRED_FLOWER_TAGS_MESSAGE,
   type ProductFormValues,
   type ProductCreateFormValues,
 } from '../product.schemas';
-import type {
-  ProductItem,
-  CreateProductInput,
-  UpdateProductMetadataInput,
-  ProductKioskOption,
-} from '../product.types';
+import type { ProductItem, CreateProductInput, UpdateProductMetadataInput } from '../product.types';
 import { parseTags, errorText } from '../product.utils';
 
 export function ProductCreateForm({
   sellerId,
-  kiosks,
   canEdit,
   onSuccess,
   onCancel,
 }: {
   sellerId: string;
-  kiosks: ProductKioskOption[];
   canEdit: boolean;
   onSuccess?: (createdProductId?: string) => void;
   onCancel?: () => void;
@@ -42,8 +37,8 @@ export function ProductCreateForm({
     resolver: zodResolver(productCreateSchema),
     mode: 'onBlur',
     reValidateMode: 'onChange',
+    shouldFocusError: false,
     defaultValues: {
-      kioskId: kiosks.length === 1 ? kiosks[0].id : '',
       name: '',
       description: '',
       price: '' as unknown as number,
@@ -55,6 +50,45 @@ export function ProductCreateForm({
     },
   });
 
+  const { field: tags } = useController({ control: form.control, name: 'tagsInput' });
+  const { errors } = form.formState;
+  const parsedTags = parseTags(tags.value);
+  const missingGroups = [
+    ...(!parsedTags.some((tag) => tagIsKnown(tag, 'flower', flowerTags))
+      ? ['flower' as const]
+      : []),
+    ...(!parsedTags.some((tag) => tagIsKnown(tag, 'color', flowerColors))
+      ? ['color' as const]
+      : []),
+  ];
+  const classificationError = errors.tagsInput?.message === REQUIRED_FLOWER_TAGS_MESSAGE;
+  const tagsErrorId = errors.tagsInput ? 'create-product-tags-error' : undefined;
+  const tagProps = {
+    id: 'create-product-tags',
+    value: tags.value,
+    onChange: tags.onChange,
+    disabled: !canEdit || submitting,
+  };
+
+  const onInvalid: SubmitErrorHandler<ProductCreateFormValues> = (invalid) => {
+    const firstMain = (['name', 'price', 'quantity'] as const).find((field) => invalid[field]);
+    if (firstMain) return form.setFocus(firstMain);
+    if (invalid.tagsInput?.message === REQUIRED_FLOWER_TAGS_MESSAGE) {
+      document
+        .querySelector<HTMLButtonElement>(`#create-product-tags-${missingGroups[0]} button`)
+        ?.focus();
+      return;
+    }
+    const dimension = (['lengthCm', 'widthCm', 'heightCm'] as const).find(
+      (field) => invalid[field],
+    );
+    if (dimension) return form.setFocus(dimension);
+    const extras = document.querySelector<HTMLDetailsElement>('#create-product-extras');
+    if (extras) extras.open = true;
+    if (invalid.description) form.setFocus('description');
+    else document.getElementById('create-product-tags')?.focus();
+  };
+
   const onSubmit = async (values: ProductCreateFormValues) => {
     if (submitting) return;
     setSubmitting(true);
@@ -62,7 +96,6 @@ export function ProductCreateForm({
     setSuccessMessage(null);
     try {
       const payload: CreateProductInput = {
-        kioskId: values.kioskId,
         name: values.name.trim(),
         description: values.description ? values.description.trim() : '',
         price: values.price,
@@ -88,62 +121,31 @@ export function ProductCreateForm({
     <form
       className="product-catalog-form"
       noValidate
-      onSubmit={form.handleSubmit(onSubmit)}
+      onSubmit={form.handleSubmit(onSubmit, onInvalid)}
       aria-label="Thêm mẫu hoa mới"
     >
       <h3 className="sr-only">Thêm mẫu hoa mới</h3>
       <div className="product-form-badge-strip">
         <span className="product-badge-pill">Bản nháp</span>
-        <span className="product-badge-note">
-          Tạo mẫu trước, sau đó thêm ảnh và bật bán trong chi tiết. Chưa có bó hoa nào được nạp vào
-          tủ ở bước này.
-        </span>
+        <span className="product-badge-note">Thêm ảnh và bật bán sau khi tạo.</span>
       </div>
 
-      <div className="form-grid-2">
+      <div>
         <div className="form-field">
           <label htmlFor="create-product-name">Tên mẫu hoa</label>
           <input
             id="create-product-name"
             type="text"
             maxLength={120}
-            placeholder="Nhập tên mẫu hoa (tối đa 120 ký tự)"
+            placeholder="Ví dụ: Bó hồng pastel"
             disabled={!canEdit || submitting}
             {...form.register('name')}
             aria-invalid={!!form.formState.errors.name}
             aria-describedby={form.formState.errors.name ? 'create-product-name-error' : undefined}
           />
-          <p className="quiet field-subhint">Tên hiển thị trên website và hóa đơn nhận hoa.</p>
           {form.formState.errors.name && (
             <p className="error" id="create-product-name-error">
               {form.formState.errors.name.message}
-            </p>
-          )}
-        </div>
-
-        <div className="form-field">
-          <label htmlFor="create-product-kiosk">Kiosk của shop</label>
-          <select
-            id="create-product-kiosk"
-            disabled={!canEdit || submitting || kiosks.length === 0}
-            {...form.register('kioskId')}
-            aria-invalid={!!form.formState.errors.kioskId}
-            aria-describedby="create-product-kiosk-help create-product-kiosk-error"
-          >
-            <option value="">Chọn kiosk</option>
-            {kiosks.map((kiosk) => (
-              <option key={kiosk.id} value={kiosk.id}>
-                {kiosk.name} · {kiosk.code}
-              </option>
-            ))}
-          </select>
-          <p className="quiet field-subhint" id="create-product-kiosk-help">
-            Chọn tủ thuộc shop để tạo mẫu. Việc chọn ô và ghi nhận bó hoa được thực hiện riêng tại
-            “Hoa tại tủ” hoặc chi tiết đơn đặt trước.
-          </p>
-          {form.formState.errors.kioskId && (
-            <p className="error" id="create-product-kiosk-error">
-              {form.formState.errors.kioskId.message}
             </p>
           )}
         </div>
@@ -151,14 +153,14 @@ export function ProductCreateForm({
 
       <div className="form-grid-2">
         <div className="form-field">
-          <label htmlFor="create-product-price">Giá bán niêm yết (VNĐ)</label>
+          <label htmlFor="create-product-price">Giá bán (VNĐ)</label>
           <input
             id="create-product-price"
             type="number"
             min="1"
             step="1"
             inputMode="numeric"
-            placeholder="Nhập giá bán bằng số nguyên"
+            placeholder="Ví dụ: 250000"
             disabled={!canEdit || submitting}
             {...form.register('price', { valueAsNumber: true })}
             aria-invalid={!!form.formState.errors.price}
@@ -174,53 +176,51 @@ export function ProductCreateForm({
         </div>
 
         <div className="form-field">
-          <Controller
-            control={form.control}
-            name="tagsInput"
-            render={({ field }) => (
-              <FlowerTagFields
-                id="create-product-tags"
-                value={field.value}
-                onChange={field.onChange}
-                disabled={!canEdit || submitting}
-                required
-              />
-            )}
+          <label htmlFor="create-product-quantity">Tồn bó tại shop</label>
+          <input
+            id="create-product-quantity"
+            type="number"
+            min="0"
+            max="2147483647"
+            step="1"
+            inputMode="numeric"
+            disabled={!canEdit || submitting}
+            {...form.register('quantity', { valueAsNumber: true })}
+            aria-invalid={!!form.formState.errors.quantity}
+            aria-describedby="create-product-quantity-help create-product-quantity-error"
           />
-          {form.formState.errors.tagsInput && (
-            <p className="error" id="create-product-tags-error">
-              {form.formState.errors.tagsInput.message}
+          <p className="quiet field-subhint" id="create-product-quantity-help">
+            Số bó có sẵn tại shop.
+          </p>
+          {form.formState.errors.quantity && (
+            <p className="error" id="create-product-quantity-error">
+              {form.formState.errors.quantity.message}
             </p>
           )}
         </div>
       </div>
 
-      <div className="form-field">
-        <label htmlFor="create-product-quantity">Tồn bó tại shop</label>
-        <input
-          id="create-product-quantity"
-          type="number"
-          min="0"
-          max="2147483647"
-          step="1"
-          inputMode="numeric"
-          disabled={!canEdit || submitting}
-          {...form.register('quantity', { valueAsNumber: true })}
-          aria-invalid={!!form.formState.errors.quantity}
-          aria-describedby="create-product-quantity-help create-product-quantity-error"
+      <div className="product-classification">
+        {!classificationError && (
+          <p className="product-classification-hint">{REQUIRED_FLOWER_TAGS_MESSAGE}</p>
+        )}
+        <FlowerTagFields
+          {...tagProps}
+          section="choices"
+          required
+          missingGroups={classificationError ? missingGroups : []}
+          errorId={classificationError ? tagsErrorId : undefined}
         />
-        <p className="quiet field-subhint" id="create-product-quantity-help">
-          Số bó thực tế còn tại shop. Mỗi bó nạp thành công vào kiosk sẽ trừ 1.
-        </p>
-        {form.formState.errors.quantity && (
-          <p className="error" id="create-product-quantity-error">
-            {form.formState.errors.quantity.message}
+        {classificationError && (
+          <p className="error" id={tagsErrorId} role="alert">
+            {errors.tagsInput?.message}
           </p>
         )}
       </div>
 
       <fieldset className="dimensions-fieldset">
-        <legend>Kích thước đóng gói bao gồm bao bì (Dài × Rộng × Cao - cm)</legend>
+        <legend>Kích thước đóng gói</legend>
+        <p className="quiet field-subhint">Đo cả bao bì để chọn ô tủ phù hợp.</p>
         <div className="dimensions-grid">
           <div className="form-field">
             <label htmlFor="create-product-length">Dài (cm)</label>
@@ -293,26 +293,46 @@ export function ProductCreateForm({
         </div>
       </fieldset>
 
-      <div className="form-field">
-        <label htmlFor="create-product-description">Mô tả sản phẩm</label>
-        <textarea
-          id="create-product-description"
-          rows={2}
-          maxLength={2000}
-          placeholder="Mô tả phong cách, chất liệu bó hoa…"
-          disabled={!canEdit || submitting}
-          {...form.register('description')}
-          aria-invalid={!!form.formState.errors.description}
-          aria-describedby={
-            form.formState.errors.description ? 'create-product-desc-error' : undefined
-          }
-        />
-        {form.formState.errors.description && (
-          <p className="error" id="create-product-desc-error">
-            {form.formState.errors.description.message}
-          </p>
-        )}
-      </div>
+      <details id="create-product-extras" className="product-extra-details">
+        <summary>
+          <span>
+            Thông tin bổ sung <small>(tùy chọn)</small>
+          </span>
+          <ChevronDown size={16} aria-hidden="true" />
+        </summary>
+        <div className="product-extra-fields">
+          <div className="form-field">
+            <label htmlFor="create-product-description">Mô tả sản phẩm</label>
+            <textarea
+              id="create-product-description"
+              rows={2}
+              maxLength={2000}
+              placeholder="Mô tả phong cách, chất liệu bó hoa…"
+              disabled={!canEdit || submitting}
+              {...form.register('description')}
+              aria-invalid={!!form.formState.errors.description}
+              aria-describedby={
+                form.formState.errors.description ? 'create-product-desc-error' : undefined
+              }
+            />
+            {form.formState.errors.description && (
+              <p className="error" id="create-product-desc-error">
+                {form.formState.errors.description.message}
+              </p>
+            )}
+          </div>
+          <FlowerTagFields
+            {...tagProps}
+            section="extras"
+            errorId={classificationError ? undefined : tagsErrorId}
+          />
+          {errors.tagsInput && !classificationError && (
+            <p className="error" id={tagsErrorId} role="alert">
+              {errors.tagsInput.message}
+            </p>
+          )}
+        </div>
+      </details>
 
       {successMessage && (
         <p role="status" className="product-form-success">
@@ -331,7 +351,7 @@ export function ProductCreateForm({
             Hủy
           </Button>
         )}
-        <Button type="submit" disabled={!canEdit || submitting || kiosks.length === 0}>
+        <Button type="submit" disabled={!canEdit || submitting}>
           {submitting ? 'Đang tạo mẫu hoa…' : 'Tạo mẫu hoa'}
         </Button>
       </div>
@@ -365,7 +385,7 @@ export function ProductMetadataEditor({
       lengthCm: (product.lengthCm != null ? Number(product.lengthCm) : '') as unknown as number,
       widthCm: (product.widthCm != null ? Number(product.widthCm) : '') as unknown as number,
       heightCm: (product.heightCm != null ? Number(product.heightCm) : '') as unknown as number,
-      tagsInput: (product.tags || []).join(', '),
+      tagsInput: parseTags((product.tags ?? []).join(',')).join(', '),
       quantity: product.quantity == null ? undefined : Number(product.quantity),
     },
   });

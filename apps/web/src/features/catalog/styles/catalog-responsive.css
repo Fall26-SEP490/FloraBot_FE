@@ -140,8 +140,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     border: none;
     background: #f0f7f3;
@@ -176,7 +176,7 @@
 
   .catalog-sheet-reset-btn {
     flex: 1;
-    min-height: 42px;
+    min-height: 44px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -198,7 +198,7 @@
 
   .catalog-sheet-footer .catalog-mobile-apply-btn {
     flex: 2;
-    min-height: 42px;
+    min-height: 44px;
     margin-top: 0;
     display: inline-flex;
     align-items: center;

@@ -19,7 +19,6 @@ export type Product = ProductItem;
 
 export interface CreateProductInput {
   quantity: number;
-  kioskId: string;
   name: string;
   description: string;
   price: number;
@@ -40,14 +39,6 @@ export interface UpdateProductMetadataInput {
   heightCm: number;
 }
 
-export interface ProductKioskOption {
-  id: string;
-  code: string;
-  name: string;
-  status: string;
-}
-
-export type SellerKiosk = components['schemas']['SellerKioskDto'];
 export type PhotoItem = components['schemas']['ProductPhotoResponse'] & {
   isCover?: boolean;
   sortOrder?: number;

@@ -3,56 +3,39 @@
 import { useRef } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from '@florabot/ui';
+import { flowerTags } from '@/shared/lib/flower-tags';
 
-export interface OccasionItem {
+interface FlowerTypeItem {
   label: string;
   image: string;
   alt: string;
   href: string;
 }
 
-export const occasionCollections: OccasionItem[] = [
+const flowerCollections: FlowerTypeItem[] = [
   {
-    label: 'Sinh nhật',
-    image: '/images/occasions/pastelBouquet-480.webp',
-    alt: 'Bó hoa tươi pastel mừng sinh nhật',
-    href: '/dat-hoa?occasion=Sinh+nh%E1%BA%ADt',
-  },
-  {
-    label: 'Tình yêu',
+    label: flowerTags.rose,
     image: '/images/occasions/redRoses-480.webp',
-    alt: 'Bó hoa hồng đỏ tình yêu lãng mạn',
-    href: '/dat-hoa?occasion=T%C3%ACnh+y%C3%AAu',
+    alt: 'Bó hoa hồng đỏ',
+    href: '/dat-hoa?flower=rose',
   },
   {
-    label: 'Khai trương',
-    image: '/images/occasions/flowerShop-480.webp',
-    alt: 'Lẵng hoa tươi chúc mừng khai trương',
-    href: '/dat-hoa?occasion=Khai+tr%C6%B0%C6%A1ng',
-  },
-  {
-    label: 'Chúc mừng',
-    image: '/images/occasions/sunflowers-480.webp',
-    alt: 'Hoa hướng dương tươi rực rỡ chúc mừng',
-    href: '/dat-hoa?occasion=Ch%C3%BAc+m%E1%BB%ABng',
-  },
-  {
-    label: 'Kỷ niệm',
-    image: '/images/occasions/tulipVase-480.webp',
-    alt: 'Bình hoa tulip kỷ niệm ngày đặc biệt',
-    href: '/dat-hoa?occasion=K%E1%BB%B7+ni%E1%BB%87m',
-  },
-  {
-    label: 'Tốt nghiệp',
+    label: flowerTags.tulip,
     image: '/images/occasions/stripedTulips-480.webp',
-    alt: 'Bó hoa tươi chúc mừng tốt nghiệp',
-    href: '/dat-hoa?occasion=T%E1%BB%91t+nghi%E1%BB%87p',
+    alt: 'Bó hoa tulip',
+    href: '/dat-hoa?flower=tulip',
   },
   {
-    label: 'Cảm ơn',
-    image: '/images/occasions/cherryBlossom-480.webp',
-    alt: 'Bó hoa trang nhã tri ân và cảm ơn',
-    href: '/dat-hoa?occasion=C%E1%BA%A3m+%C6%A1n',
+    label: flowerTags.sunflower,
+    image: '/images/occasions/sunflowers-480.webp',
+    alt: 'Hoa hướng dương vàng',
+    href: '/dat-hoa?flower=sunflower',
+  },
+  {
+    label: flowerTags.lily,
+    image: '/images/occasions/pinkLilies-480.webp',
+    alt: 'Hoa ly hồng',
+    href: '/dat-hoa?flower=lily',
   },
   {
     label: 'Tất cả mẫu',
@@ -62,7 +45,7 @@ export const occasionCollections: OccasionItem[] = [
   },
 ];
 
-export default function OccasionsCarousel() {
+export default function FlowerTypesCarousel() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const handleScroll = (direction: 'left' | 'right') => {
@@ -70,15 +53,17 @@ export default function OccasionsCarousel() {
     const scrollAmount = 260;
     scrollRef.current.scrollBy({
       left: direction === 'left' ? -scrollAmount : scrollAmount,
-      behavior: 'smooth',
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        ? 'instant'
+        : 'smooth',
     });
   };
 
   return (
-    <section className="home-occasions" aria-labelledby="occasions-title">
+    <section className="home-occasions" aria-labelledby="flower-types-title">
       <div className="home-occasions-header">
-        <h2 id="occasions-title" className="home-occasions-title">
-          Chọn hoa theo dịp
+        <h2 id="flower-types-title" className="home-occasions-title">
+          Chọn theo loại hoa
         </h2>
       </div>
 
@@ -86,14 +71,14 @@ export default function OccasionsCarousel() {
         ref={scrollRef}
         className="home-occasions-carousel"
         role="region"
-        aria-label="Danh sách bộ sưu tập dịp tặng hoa"
+        aria-label="Danh sách loại hoa"
       >
-        {occasionCollections.map((item) => (
+        {flowerCollections.map((item) => (
           <Link
             key={item.label}
             href={item.href}
             className="occasion-item"
-            aria-label={`Mẫu hoa dịp ${item.label}`}
+            aria-label={item.href === '/dat-hoa' ? 'Xem tất cả mẫu hoa' : `Xem mẫu ${item.label}`}
           >
             <div className="occasion-avatar-wrap">
               <img
