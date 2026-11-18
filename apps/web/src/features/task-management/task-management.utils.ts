@@ -75,5 +75,5 @@ export function getAssignmentStorageKey(
 }
 
 export function formatTaskDate(value: string): string {
-  return new Date(value).toLocaleString('vi-VN');
+  return new Date(value).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
 }

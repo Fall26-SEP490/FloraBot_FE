@@ -1,7 +1,7 @@
 import { AdminDisclosureSummary } from '@/features/portal/components/AdminUi';
 import { useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button, RefreshCw, Search, SlidersHorizontal, Store, Users } from '@florabot/ui';
@@ -197,7 +197,12 @@ function KioskOperationsManagerPanel({ kiosks }: { kiosks: Kiosk[] }) {
                     : 'Chưa có quản lý phụ trách'}
                 </span>
                 {item.assignedAt && (
-                  <small>Phân công lúc {new Date(item.assignedAt).toLocaleString('vi-VN')}</small>
+                  <small>
+                    Phân công lúc{' '}
+                    {new Date(item.assignedAt).toLocaleString('vi-VN', {
+                      timeZone: 'Asia/Ho_Chi_Minh',
+                    })}
+                  </small>
                 )}
               </div>
               {kiosks.some((kiosk) => kiosk.id === item.kioskId) && (
@@ -293,6 +298,8 @@ function Assignment({
     onError: () => setPendingValues(null),
   });
 
+  const selectedSellerId = useWatch({ control: form.control, name: 'sellerId' });
+  const sameSeller = Boolean(kiosk.sellerId && selectedSellerId === kiosk.sellerId);
   const canAssign = kiosk.status !== 'DISABLED' && kiosk.status !== 'MAINTENANCE';
 
   return (
@@ -300,12 +307,14 @@ function Assignment({
       <form
         className="allocation-shop-form"
         noValidate
-        onSubmit={form.handleSubmit((values) => setPendingValues(values))}
+        onSubmit={form.handleSubmit((values) => {
+          if (!sameSeller && canAssign) setPendingValues(values);
+        })}
       >
         <label htmlFor={`kiosk-seller-${kiosk.id}`}>Shop quản lý toàn bộ kiosk</label>
         <select
           id={`kiosk-seller-${kiosk.id}`}
-          {...form.register('sellerId')}
+          {...form.register('sellerId', { onChange: () => assign.reset() })}
           disabled={assign.isPending || !canAssign}
           aria-invalid={!!form.formState.errors.sellerId}
           aria-describedby={`kiosk-error-${kiosk.id} kiosk-help-${kiosk.id}`}
@@ -323,24 +332,34 @@ function Assignment({
           </p>
         )}
         <p id={`kiosk-help-${kiosk.id}`} className="quiet">
-          Gán toàn bộ {kiosk.slotCount} ô. Khi chuyển shop, các ô phải trống, không bị giữ hay khóa.
+          Gán toàn bộ {kiosk.slotCount} ô. Shop nhận phải có gói thuê còn hiệu lực cho đúng kiosk
+          này. Gói của shop hiện tại không tự chuyển sang shop mới. Các ô phải trống, không bị giữ
+          hay khóa.
         </p>
         {!canAssign && (
           <p className="quiet">Kiosk đang bảo trì hoặc ngừng hoạt động nên chưa thể phân bổ.</p>
         )}
-        <Button type="submit" disabled={!sellers.length || assign.isPending || !canAssign}>
+        {sameSeller && (
+          <p className="quiet">Kiosk đang thuộc shop này. Chọn shop khác nếu cần chuyển.</p>
+        )}
+        <Button
+          type="submit"
+          disabled={!sellers.length || assign.isPending || !canAssign || sameSeller}
+        >
           {kiosk.sellerId ? 'Chuyển kiosk sang shop khác' : 'Gán kiosk cho shop'}
         </Button>
         {assign.isError && (
           <p className="error" role="alert">
-            {assign.error.message}
+            {assign.error.message === 'Gói thuê của kiosk này không còn hiệu lực'
+              ? `Chưa thể gán ${kiosk.code}: shop nhận ${sellers.find((seller) => seller.id === assign.variables?.sellerId)?.shopName || 'đã chọn'} chưa có gói thuê còn hiệu lực cho kiosk này. Gói thuê của shop đang sử dụng không áp dụng cho shop nhận.`
+              : assign.error.message}
           </p>
         )}
       </form>
       <ConfirmDialog
         open={pendingValues !== null}
         title={kiosk.sellerId ? 'Xác nhận chuyển kiosk' : 'Xác nhận gán kiosk'}
-        description={`Toàn bộ ${kiosk.slotCount} ô của ${kiosk.name} sẽ thuộc quyền quản lý của ${selectedSeller?.shopName || 'shop đã chọn'}. Hệ thống sẽ từ chối nếu kiosk còn hoa hoặc đang có giao dịch.`}
+        description={`Toàn bộ ${kiosk.slotCount} ô của ${kiosk.name} sẽ thuộc quyền quản lý của ${selectedSeller?.shopName || 'shop đã chọn'}. Shop nhận cần có gói thuê hiệu lực cho đúng kiosk này. Hệ thống sẽ từ chối nếu kiosk còn hoa hoặc đang có giao dịch.`}
         confirmLabel={kiosk.sellerId ? 'Chuyển kiosk' : 'Gán toàn bộ kiosk'}
         pending={assign.isPending}
         onCancel={() => {

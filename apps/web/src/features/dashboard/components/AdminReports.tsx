@@ -2,6 +2,7 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
+import type { components } from '../../../../../../packages/contracts/src/generated/api';
 import { AdminFilterBar } from '@/features/portal/components/AdminUi';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
@@ -13,6 +14,7 @@ import {
   sumLoadedRevenue,
 } from '../revenue-report.utils';
 import './admin-revenue-report.css';
+import AdminSellerReports from './AdminSellerReports';
 
 const reports = {
   v_admin_queue: {
@@ -73,22 +75,7 @@ function displayValue(value: unknown) {
   return typeof value === 'boolean' ? (value ? 'Có' : 'Không') : '—';
 }
 
-interface AuditLogEntry {
-  id: string;
-  actorType: string;
-  actorId: string | null;
-  action: string;
-  entityType: string;
-  entityId: string | null;
-  createdAt: string;
-  payloadRedacted: string;
-}
-
-interface AuditLogPage {
-  items: AuditLogEntry[];
-  page: number;
-  hasMore: boolean;
-}
+type AuditLogPage = components['schemas']['AuditPage'];
 
 function AdminAuditLogsSection({
   esp32Kiosk,
@@ -103,7 +90,6 @@ function AdminAuditLogsSection({
   const [entityIdFilter, setEntityIdFilter] = useState(esp32Kiosk ?? '');
   const [actorIdFilter, setActorIdFilter] = useState('');
   const [page, setPage] = useState(1);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const logs = useQuery({
     queryKey: [
@@ -124,12 +110,6 @@ function AdminAuditLogsSection({
       return request<AuditLogPage>(`/admin/audit-logs?${params.toString()}`);
     },
     enabled: open,
-  });
-
-  const detail = useQuery({
-    queryKey: ['admin-audit-log-detail', actorId, selectedId],
-    queryFn: () => request<AuditLogEntry>(`/admin/audit-logs/${selectedId}`),
-    enabled: open && Boolean(selectedId),
   });
 
   return (
@@ -215,48 +195,21 @@ function AdminAuditLogsSection({
             <>
               <ul className="admin-shop-list">
                 {logs.data.items.map((item) => (
-                  <li key={item.id} className="shop-profile">
+                  <li key={item.id} className="shop-profile admin-audit-entry">
                     <p>
                       <strong>{item.action}</strong> · {item.entityType}
                       {item.entityId ? ` (${item.entityId})` : ''}
                     </p>
                     <p className="quiet">
                       Tác nhân: {item.actorType} {item.actorId || ''} ·{' '}
-                      {new Date(item.createdAt).toLocaleString('vi-VN')}
+                      {new Date(item.createdAt).toLocaleString('vi-VN', {
+                        timeZone: 'Asia/Ho_Chi_Minh',
+                      })}
                     </p>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setSelectedId(selectedId === item.id ? null : item.id)}
-                    >
-                      {selectedId === item.id ? 'Ẩn chi tiết' : 'Xem chi tiết'}
-                    </Button>
-                    {selectedId === item.id && detail.isPending && (
-                      <p role="status">Đang tải chi tiết nhật ký…</p>
-                    )}
-                    {selectedId === item.id && detail.isError && (
-                      <div role="alert">
-                        <p>Chưa đọc được chi tiết nhật ký.</p>
-                        <Button
-                          variant="outline"
-                          disabled={detail.isFetching}
-                          onClick={() => void detail.refetch()}
-                        >
-                          {detail.isFetching ? 'Đang tải…' : 'Thử lại chi tiết nhật ký'}
-                        </Button>
-                      </div>
-                    )}
-                    {selectedId === item.id && detail.data && (
-                      <pre
-                        style={{
-                          marginTop: '0.5rem',
-                          padding: '0.5rem',
-                          overflowX: 'auto',
-                          fontSize: '0.8rem',
-                        }}
-                      >
-                        {detail.data.payloadRedacted}
-                      </pre>
+                    {item.payloadRedacted && (
+                      <p className="audit-redaction-note">
+                        Nội dung chi tiết được ẩn để bảo vệ dữ liệu.
+                      </p>
                     )}
                   </li>
                 ))}
@@ -289,7 +242,11 @@ function AdminAuditLogsSection({
 }
 
 export default function AdminReports({ session }: { session: Session }) {
-  const esp32Kiosk = useSearchParams().get('esp32Kiosk');
+  const searchParams = useSearchParams();
+  const esp32Kiosk = searchParams.get('esp32Kiosk');
+  const [reportArea, setReportArea] = useState<'shops' | 'system' | 'audit'>(
+    esp32Kiosk ? 'audit' : 'shops',
+  );
   const [report, setReport] = useState<ReportName>('v_admin_queue');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
@@ -303,7 +260,7 @@ export default function AdminReports({ session }: { session: Session }) {
       if (!Array.isArray(rows)) throw new Error('Không đọc được dữ liệu báo cáo.');
       return rows;
     },
-    enabled: session.role === 'ADMIN',
+    enabled: session.role === 'ADMIN' && reportArea === 'system',
   });
   if (session.role !== 'ADMIN') return null;
   const loadedRows = query.data ?? [];
@@ -329,240 +286,271 @@ export default function AdminReports({ session }: { session: Session }) {
         ] as const);
   const pageCount = Math.max(1, Math.ceil(rows.length / 20));
   return (
-    <section className="api-reports" aria-labelledby="api-reports-title">
-      <h2 id="api-reports-title">Tra cứu số liệu</h2>
-      <AdminFilterBar
-        label="Loại báo cáo"
-        actions={
-          <Button
-            variant="outline"
-            disabled={query.isFetching}
-            onClick={() => void query.refetch()}
+    <section className="api-reports" aria-label="Trung tâm báo cáo">
+      <nav className="admin-report-area-nav" aria-label="Chọn nhóm báo cáo">
+        {(
+          [
+            ['shops', 'Doanh số & thuê kiosk', 'Theo dõi từng shop'],
+            ['system', 'Số liệu hệ thống', 'Tổng hợp vận hành'],
+            ['audit', 'Nhật ký hệ thống', 'Tra cứu lịch sử thao tác'],
+          ] as const
+        ).map(([value, title, description]) => (
+          <button
+            key={value}
+            type="button"
+            aria-pressed={reportArea === value}
+            onClick={() => setReportArea(value)}
           >
-            {query.isFetching ? 'Đang cập nhật…' : 'Cập nhật báo cáo'}
-          </Button>
-        }
-      >
-        <div>
-          <label htmlFor="operations-report">Chọn báo cáo</label>
-          <select
-            id="operations-report"
-            value={report}
-            onChange={(event) => {
-              setReport(event.target.value as ReportName);
-              setPage(1);
-              setFrom('');
-              setTo('');
-              setKiosk('');
-            }}
-          >
-            {Object.entries(reports).map(([key, item]) => (
-              <option key={key} value={key}>
-                {item.title}
-              </option>
-            ))}
-          </select>
-        </div>
-      </AdminFilterBar>
-      <p>{config.description}</p>
-      {financial ? (
-        <>
-          <div className="admin-revenue-scope">
-            <strong>Phạm vi dữ liệu</strong>
-            <p>
-              Bộ lọc và số tổng bên dưới chỉ áp dụng trên dữ liệu đã tải, tối đa 100 dòng; chưa phải
-              tổng toàn hệ thống theo kỳ.
-            </p>
-            {loadedRows.length >= 100 && (
-              <p>Đã chạm giới hạn 100 dòng. Có thể còn dữ liệu chưa được tải.</p>
-            )}
-          </div>
-          <div
-            className="admin-revenue-filters"
-            role="group"
-            aria-label="Lọc dữ liệu báo cáo đã tải"
-          >
-            <div>
-              <label htmlFor="revenue-from">
-                {report === 'v_platform_revenue' ? 'Từ tháng' : 'Từ ngày'}
-              </label>
-              <input
-                id="revenue-from"
-                type={report === 'v_platform_revenue' ? 'month' : 'date'}
-                value={from}
-                max={to || undefined}
-                onInput={(event) => {
-                  setFrom(event.currentTarget.value);
-                  setPage(1);
-                }}
-                onChange={(event) => {
-                  setFrom(event.target.value);
-                  setPage(1);
-                }}
-              />
-            </div>
-            <div>
-              <label htmlFor="revenue-to">
-                {report === 'v_platform_revenue' ? 'Đến tháng' : 'Đến ngày'}
-              </label>
-              <input
-                id="revenue-to"
-                type={report === 'v_platform_revenue' ? 'month' : 'date'}
-                value={to}
-                min={from || undefined}
-                onInput={(event) => {
-                  setTo(event.currentTarget.value);
-                  setPage(1);
-                }}
-                onChange={(event) => {
-                  setTo(event.target.value);
-                  setPage(1);
-                }}
-              />
-            </div>
-            {report === 'v_revenue_daily' && (
-              <div>
-                <label htmlFor="revenue-kiosk">Kiosk trong dữ liệu đã tải</label>
-                <select
-                  id="revenue-kiosk"
-                  value={kiosk}
-                  onChange={(event) => {
-                    setKiosk(event.target.value);
-                    setPage(1);
-                  }}
-                >
-                  <option value="">Tất cả kiosk đã tải</option>
-                  {kiosks.map((code) => (
-                    <option key={code} value={code}>
-                      {code}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+            <strong>{title}</strong>
+            <span>{description}</span>
+          </button>
+        ))}
+      </nav>
+      <div hidden={reportArea !== 'shops'}>
+        <AdminSellerReports
+          actorId={session.id}
+          initialSellerId={searchParams.get('sellerId') ?? ''}
+        />
+      </div>
+      <div hidden={reportArea !== 'system'} className="admin-report-area-panel">
+        <h2 id="api-reports-title">Số liệu hệ thống</h2>
+        <AdminFilterBar
+          label="Loại báo cáo"
+          actions={
             <Button
               variant="outline"
-              onClick={() => {
+              disabled={query.isFetching}
+              onClick={() => void query.refetch()}
+            >
+              {query.isFetching ? 'Đang cập nhật…' : 'Cập nhật báo cáo'}
+            </Button>
+          }
+        >
+          <div>
+            <label htmlFor="operations-report">Chọn báo cáo</label>
+            <select
+              id="operations-report"
+              value={report}
+              onChange={(event) => {
+                setReport(event.target.value as ReportName);
+                setPage(1);
                 setFrom('');
                 setTo('');
                 setKiosk('');
-                setPage(1);
               }}
             >
-              Đặt lại bộ lọc
-            </Button>
+              {Object.entries(reports).map(([key, item]) => (
+                <option key={key} value={key}>
+                  {item.title}
+                </option>
+              ))}
+            </select>
           </div>
-          {filtered.invalidRange && (
-            <p role="alert" className="error">
-              Mốc bắt đầu phải trước hoặc bằng mốc kết thúc.
-            </p>
-          )}
-          {query.isSuccess && rows.length > 0 && !filtered.invalidRange && (
-            <section className="admin-revenue-summary" aria-label="Tổng hợp trong dữ liệu đã tải">
-              <div className="admin-revenue-summary-heading">
-                <h3>Tổng hợp dữ liệu đang xem</h3>
-                <span>
-                  {rows.length} / {loadedRows.length} dòng đã tải
-                </span>
+        </AdminFilterBar>
+        <p>{config.description}</p>
+        {financial ? (
+          <>
+            <div className="admin-revenue-scope">
+              <strong>Phạm vi dữ liệu</strong>
+              <p>
+                Bộ lọc và số tổng bên dưới chỉ áp dụng trên dữ liệu đã tải, tối đa 100 dòng; chưa
+                phải tổng toàn hệ thống theo kỳ.
+              </p>
+              {loadedRows.length >= 100 && (
+                <p>Đã chạm giới hạn 100 dòng. Có thể còn dữ liệu chưa được tải.</p>
+              )}
+            </div>
+            <div
+              className="admin-revenue-filters"
+              role="group"
+              aria-label="Lọc dữ liệu báo cáo đã tải"
+            >
+              <div>
+                <label htmlFor="revenue-from">
+                  {report === 'v_platform_revenue' ? 'Từ tháng' : 'Từ ngày'}
+                </label>
+                <input
+                  id="revenue-from"
+                  type={report === 'v_platform_revenue' ? 'month' : 'date'}
+                  value={from}
+                  max={to || undefined}
+                  onInput={(event) => {
+                    setFrom(event.currentTarget.value);
+                    setPage(1);
+                  }}
+                  onChange={(event) => {
+                    setFrom(event.target.value);
+                    setPage(1);
+                  }}
+                />
               </div>
-              <dl>
-                {metrics.map(([key, label, money]) => {
-                  const total = sumLoadedRevenue(rows, key);
-                  return (
-                    <div key={key}>
-                      <dt>{label}</dt>
-                      <dd>
-                        {total === null
-                          ? 'Chưa đủ dữ liệu hợp lệ'
-                          : `${total.toLocaleString('vi-VN')}${money ? ' đ' : ''}`}
-                      </dd>
-                    </div>
-                  );
-                })}
-              </dl>
-            </section>
-          )}
-        </>
-      ) : (
-        <p className="quiet">
-          Hiển thị tối đa 100 dòng. Một số hàng đợi có cả hồ sơ từ quy trình thuê kiosk cũ.
-        </p>
-      )}
-      {query.isPending ? (
-        <p role="status">Đang tải báo cáo…</p>
-      ) : query.isError ? (
-        <p role="alert">Chưa tải được báo cáo. Kiểm tra kết nối rồi chọn cập nhật.</p>
-      ) : filtered.invalidRange ? null : !rows.length ? (
-        <p role="status" className="reports-empty">
-          {financial && loadedRows.length > 0
-            ? 'Không có dòng phù hợp với bộ lọc trong dữ liệu đã tải.'
-            : 'Chưa có dữ liệu cho báo cáo này. Chọn báo cáo khác hoặc cập nhật để kiểm tra lại.'}
-        </p>
-      ) : (
-        <>
-          <div
-            className="reports-table-wrap"
-            // A horizontal scroll region needs a tab stop for keyboard scrolling.
-            // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
-            tabIndex={0}
-            role="region"
-            aria-label={`Bảng ${config.title}`}
-          >
-            <table>
-              <caption>
-                {config.title} · {rows.length} dòng dữ liệu
-              </caption>
-              <thead>
-                <tr>
-                  {config.columns.map(([key, label]) => (
-                    <th scope="col" key={key}>
-                      {label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {rows.slice((page - 1) * 20, page * 20).map((row, index) => (
-                  <tr key={`${page}-${index}`}>
+              <div>
+                <label htmlFor="revenue-to">
+                  {report === 'v_platform_revenue' ? 'Đến tháng' : 'Đến ngày'}
+                </label>
+                <input
+                  id="revenue-to"
+                  type={report === 'v_platform_revenue' ? 'month' : 'date'}
+                  value={to}
+                  min={from || undefined}
+                  onInput={(event) => {
+                    setTo(event.currentTarget.value);
+                    setPage(1);
+                  }}
+                  onChange={(event) => {
+                    setTo(event.target.value);
+                    setPage(1);
+                  }}
+                />
+              </div>
+              {report === 'v_revenue_daily' && (
+                <div>
+                  <label htmlFor="revenue-kiosk">Kiosk trong dữ liệu đã tải</label>
+                  <select
+                    id="revenue-kiosk"
+                    value={kiosk}
+                    onChange={(event) => {
+                      setKiosk(event.target.value);
+                      setPage(1);
+                    }}
+                  >
+                    <option value="">Tất cả kiosk đã tải</option>
+                    {kiosks.map((code) => (
+                      <option key={code} value={code}>
+                        {code}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setFrom('');
+                  setTo('');
+                  setKiosk('');
+                  setPage(1);
+                }}
+              >
+                Đặt lại bộ lọc
+              </Button>
+            </div>
+            {filtered.invalidRange && (
+              <p role="alert" className="error">
+                Mốc bắt đầu phải trước hoặc bằng mốc kết thúc.
+              </p>
+            )}
+            {query.isSuccess && rows.length > 0 && !filtered.invalidRange && (
+              <section className="admin-revenue-summary" aria-label="Tổng hợp trong dữ liệu đã tải">
+                <div className="admin-revenue-summary-heading">
+                  <h3>Tổng hợp dữ liệu đang xem</h3>
+                  <span>
+                    {rows.length} / {loadedRows.length} dòng đã tải
+                  </span>
+                </div>
+                <dl>
+                  {metrics.map(([key, label, money]) => {
+                    const total = sumLoadedRevenue(rows, key);
+                    return (
+                      <div key={key}>
+                        <dt>{label}</dt>
+                        <dd>
+                          {total === null
+                            ? 'Chưa đủ dữ liệu hợp lệ'
+                            : `${total.toLocaleString('vi-VN')}${money ? ' đ' : ''}`}
+                        </dd>
+                      </div>
+                    );
+                  })}
+                </dl>
+              </section>
+            )}
+          </>
+        ) : (
+          <p className="quiet">
+            Hiển thị tối đa 100 dòng. Một số hàng đợi có cả hồ sơ từ quy trình thuê kiosk cũ.
+          </p>
+        )}
+        {query.isPending ? (
+          <p role="status">Đang tải báo cáo…</p>
+        ) : query.isError ? (
+          <p role="alert">Chưa tải được báo cáo. Kiểm tra kết nối rồi chọn cập nhật.</p>
+        ) : filtered.invalidRange ? null : !rows.length ? (
+          <p role="status" className="reports-empty">
+            {financial && loadedRows.length > 0
+              ? 'Không có dòng phù hợp với bộ lọc trong dữ liệu đã tải.'
+              : 'Chưa có dữ liệu cho báo cáo này. Chọn báo cáo khác hoặc cập nhật để kiểm tra lại.'}
+          </p>
+        ) : (
+          <>
+            <div
+              className="reports-table-wrap"
+              // A horizontal scroll region needs a tab stop for keyboard scrolling.
+              // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+              tabIndex={0}
+              role="region"
+              aria-label={`Bảng ${config.title}`}
+            >
+              <table>
+                <caption>
+                  {config.title} · {rows.length} dòng dữ liệu
+                </caption>
+                <thead>
+                  <tr>
                     {config.columns.map(([key, label]) => (
-                      <td key={key} data-label={label}>
-                        {financial && ['gmv', 'giam_do_diem', 'doanh_thu_phi_goi'].includes(key)
-                          ? (revenueInteger(row[key])?.toLocaleString('vi-VN') ??
-                            'Dữ liệu không hợp lệ')
-                          : displayValue(row[key])}
-                      </td>
+                      <th scope="col" key={key}>
+                        {label}
+                      </th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <nav aria-label="Phân trang báo cáo" className="stock-actions">
-            <Button
-              variant="outline"
-              disabled={page === 1}
-              onClick={() => setPage((value) => value - 1)}
-            >
-              Trang trước
-            </Button>
-            <span>
-              Trang {page} / {pageCount}
-            </span>
-            <Button
-              variant="outline"
-              disabled={page >= pageCount}
-              onClick={() => setPage((value) => value + 1)}
-            >
-              Trang sau
-            </Button>
-          </nav>
-        </>
-      )}
-      <AdminAuditLogsSection
-        key={esp32Kiosk ?? 'all'}
-        esp32Kiosk={esp32Kiosk}
-        actorId={session.id}
-      />
+                </thead>
+                <tbody>
+                  {rows.slice((page - 1) * 20, page * 20).map((row, index) => (
+                    <tr key={`${page}-${index}`}>
+                      {config.columns.map(([key, label]) => (
+                        <td key={key} data-label={label}>
+                          {financial && ['gmv', 'giam_do_diem', 'doanh_thu_phi_goi'].includes(key)
+                            ? (revenueInteger(row[key])?.toLocaleString('vi-VN') ??
+                              'Dữ liệu không hợp lệ')
+                            : displayValue(row[key])}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <nav aria-label="Phân trang báo cáo" className="stock-actions">
+              <Button
+                variant="outline"
+                disabled={page === 1}
+                onClick={() => setPage((value) => value - 1)}
+              >
+                Trang trước
+              </Button>
+              <span>
+                Trang {page} / {pageCount}
+              </span>
+              <Button
+                variant="outline"
+                disabled={page >= pageCount}
+                onClick={() => setPage((value) => value + 1)}
+              >
+                Trang sau
+              </Button>
+            </nav>
+          </>
+        )}
+      </div>
+      <div hidden={reportArea !== 'audit'} className="admin-report-area-panel">
+        {reportArea === 'audit' && (
+          <AdminAuditLogsSection
+            key={esp32Kiosk ?? 'all'}
+            esp32Kiosk={esp32Kiosk}
+            actorId={session.id}
+          />
+        )}
+      </div>
     </section>
   );
 }

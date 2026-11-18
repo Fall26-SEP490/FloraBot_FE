@@ -28,15 +28,15 @@ export default function StatementEditor({
       <div className="statement-entry-list">
         {entries.map((entry, index) => (
           <fieldset key={entry.key} className="statement-entry" disabled={disabled}>
-            <legend>Giao dịch {index + 1}</legend>
+            <legend>Khoản thu thứ {index + 1}</legend>
             <div>
-              <label htmlFor={`statement-txn-${entry.key}`}>Mã giao dịch {index + 1}</label>
+              <label htmlFor={`statement-txn-${entry.key}`}>Mã tham chiếu trên sao kê</label>
               <input
                 id={`statement-txn-${entry.key}`}
                 autoComplete="off"
                 maxLength={200}
                 value={entry.txn}
-                placeholder="Mã trên sao kê"
+                placeholder="Nhập mã giao dịch từ PayOS"
                 aria-describedby="statement-rows-help reconciliation-error"
                 onChange={(event) =>
                   onChange(
@@ -48,9 +48,7 @@ export default function StatementEditor({
               />
             </div>
             <div>
-              <label htmlFor={`statement-amount-${entry.key}`}>
-                Số tiền giao dịch {index + 1} (đồng)
-              </label>
+              <label htmlFor={`statement-amount-${entry.key}`}>Số tiền (đồng)</label>
               <input
                 id={`statement-amount-${entry.key}`}
                 type="number"

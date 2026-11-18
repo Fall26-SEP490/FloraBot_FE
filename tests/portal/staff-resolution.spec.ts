@@ -128,3 +128,76 @@ for (const width of [390, 1440])
     await page.goto('/staff');
     await expect(page.getByText('Ghi nhận đã sửa sự cố')).toHaveCount(0);
   });
+
+test('Whole-kiosk incident reports call resolution instead of a generic task transition', async ({
+  page,
+}) => {
+  let submitted = false;
+  const writes: string[] = [];
+  await page.route('**/api/**', (route) => {
+    const req = route.request();
+    const path = new URL(req.url()).pathname;
+    if (path === '/api/auth/me')
+      return route.fulfill({ json: { id: 'tech', name: 'Kỹ thuật viên', role: 'TECHNICIAN' } });
+    if (path === '/api/staff/tasks')
+      return route.fulfill({
+        json: {
+          page: 1,
+          hasMore: false,
+          items: [
+            {
+              id: 'whole-kiosk',
+              kind: 'INCIDENT',
+              status: submitted ? 'SUBMITTED' : 'IN_PROGRESS',
+              version: submitted ? 2 : 1,
+              assigneeId: 'tech',
+              assigneeName: 'Kỹ thuật viên',
+              kioskName: 'Kiosk thử nghiệm',
+              address: 'Địa điểm thử nghiệm',
+              instructions: 'Kiểm tra kết nối toàn bộ kiosk',
+              report: null,
+            },
+          ],
+        },
+      });
+    if (path === '/api/staff/tasks/whole-kiosk')
+      return route.fulfill({
+        json: {
+          kioskStatus: 'ONLINE',
+          slotCode: null,
+          slotStatus: null,
+          history: [],
+          incident: {
+            kind: 'DEVICE_FAULT',
+            status: submitted ? 'RESOLVED_FIXED' : 'OPEN',
+            slotId: null,
+            reason: 'Mất kết nối',
+            createdAt: '2026-11-18T01:00:00Z',
+          },
+        },
+      });
+    if (req.method() !== 'GET') {
+      writes.push(path);
+      expect(path).toBe('/api/staff/tasks/whole-kiosk/resolve-incident');
+      const body = req.postDataJSON();
+      expect(body.version).toBe(1);
+      expect(body.report).toBe('Đã kiểm tra và khắc phục kết nối tại kiosk.');
+      expect(body.id).toMatch(/^[0-9a-f-]{36}$/i);
+      submitted = true;
+      return route.fulfill({ json: { id: body.id, version: 2 } });
+    }
+    return route.fulfill({ json: [] });
+  });
+  await page.goto('/technician');
+  await page.locator('.technician-task-body > summary').click();
+  await expect(page.getByRole('button', { name: 'Gửi báo cáo', exact: true })).toHaveCount(0);
+  const panel = page.locator('details.staff-resolution');
+  await panel.locator('summary').click();
+  await panel
+    .getByLabel('Kết quả sửa chữa và kiểm tra')
+    .fill('Đã kiểm tra và khắc phục kết nối tại kiosk.');
+  await panel.getByRole('checkbox').check();
+  await panel.getByRole('button', { name: 'Ghi nhận và gửi báo cáo', exact: true }).click();
+  await expect.poll(() => writes).toEqual(['/api/staff/tasks/whole-kiosk/resolve-incident']);
+  await expect(page.getByText('Chờ duyệt báo cáo', { exact: true }).last()).toBeVisible();
+});

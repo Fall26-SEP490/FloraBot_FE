@@ -287,6 +287,8 @@ test('Public complaint creates exactly one dispute and evidence record through t
   await expect(
     reconciliation.getByRole('heading', { name: 'Báo cáo ngày 2003-03-02' }),
   ).toBeVisible();
+  await reconciliation.getByRole('button', { name: /^Đối chiếu sao kê/ }).click();
+  await reconciliation.getByRole('button', { name: 'Dán dữ liệu JSON', exact: true }).click();
   await reconciliation
     .getByLabel('Nội dung sao kê JSON')
     .fill(JSON.stringify([{ txn, amount: 120000 }]));

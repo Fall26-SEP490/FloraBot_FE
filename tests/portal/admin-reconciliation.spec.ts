@@ -68,13 +68,19 @@ for (const width of [390, 1440])
     });
     await page.goto('/admin/reconciliation');
     const section = page.locator('.admin-reconciliation');
-    await section.getByRole('button', { name: 'Dán dữ liệu JSON', exact: true }).click();
+    await expect(
+      section.getByRole('button', { name: 'Kiểm tra sao kê', exact: true }),
+    ).toBeHidden();
+    await section.getByRole('button', { name: /^Báo cáo ngày/ }).click();
     await section.getByRole('button', { name: 'Xem báo cáo ngày' }).click();
     await expect(section.getByLabel('Ngày đối soát (giờ Việt Nam)')).toBeFocused();
     await section.getByLabel('Ngày đối soát (giờ Việt Nam)').fill('2026-10-07');
+    await section.getByRole('button', { name: /^Báo cáo ngày/ }).click();
     await section.getByRole('button', { name: 'Xem báo cáo ngày' }).click();
     await expect(section.getByText('3 lệnh', { exact: true })).toBeVisible();
     await expect(section.getByText('Sổ cái hiện tại', { exact: true })).toHaveCount(2);
+    await section.getByRole('button', { name: /^Đối chiếu sao kê/ }).click();
+    await section.getByRole('button', { name: 'Dán dữ liệu JSON', exact: true }).click();
     const input = section.getByLabel('Nội dung sao kê JSON');
     await input.fill('invalid');
     await section.getByRole('button', { name: 'Kiểm tra sao kê', exact: true }).click();
@@ -132,6 +138,7 @@ test('Empty statements, amount bounds and failed requests never retry automatica
   });
   await page.goto('/admin/reconciliation');
   const section = page.locator('.admin-reconciliation');
+  await section.getByRole('button', { name: /^Đối chiếu sao kê/ }).click();
   await section.getByRole('button', { name: 'Dán dữ liệu JSON', exact: true }).click();
   await section.getByLabel('Ngày đối soát (giờ Việt Nam)').fill('2026-10-07');
   for (const amount of [0, -1, 1.5, 9007199254740992]) {
@@ -161,9 +168,11 @@ test('Cleared or hidden reports cannot reappear from a late response', async ({ 
   });
   await page.goto('/admin/reconciliation');
   const section = page.locator('.admin-reconciliation');
+  await section.getByRole('button', { name: /^Đối chiếu sao kê/ }).click();
   await section.getByRole('button', { name: 'Dán dữ liệu JSON', exact: true }).click();
   await section.getByLabel('Ngày đối soát (giờ Việt Nam)').fill('2026-10-07');
   await section.getByLabel('Nội dung sao kê JSON').fill('[{"txn":"private","amount":100}]');
+  await section.getByRole('button', { name: /^Báo cáo ngày/ }).click();
   await section.getByRole('button', { name: 'Xem báo cáo ngày' }).click();
   await expect.poll(() => started).toBe(true);
   await page.evaluate(() => {
@@ -207,6 +216,7 @@ test('Differences paginate and a fresh empty result is not confused with an erro
   );
   await page.goto('/admin/reconciliation');
   const section = page.locator('.admin-reconciliation');
+  await section.getByRole('button', { name: /^Đối chiếu sao kê/ }).click();
   await section.getByRole('button', { name: 'Dán dữ liệu JSON', exact: true }).click();
   await section.getByLabel('Ngày đối soát (giờ Việt Nam)').fill('2026-10-07');
   await section.getByLabel('Nội dung sao kê JSON').fill('[]');

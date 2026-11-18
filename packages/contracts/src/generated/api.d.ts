@@ -4,675 +4,6 @@
  */
 
 export interface paths {
-    "/api/me/complaints": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    state?: string;
-                    page?: number | string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["QualityComplaintPage"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/quality-complaints": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    state?: string;
-                    page?: number | string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["QualityComplaintPage"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/me/complaints/{complaintId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    evidencePage?: number | string;
-                };
-                header?: never;
-                path: {
-                    complaintId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["QualityComplaintDetail"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/quality-complaints/{complaintId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    evidencePage?: number | string;
-                };
-                header?: never;
-                path: {
-                    complaintId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["QualityComplaintDetail"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/staff/tasks/{taskId}/quality": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    evidencePage?: number | string;
-                };
-                header?: never;
-                path: {
-                    taskId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["QualityComplaintDetail"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/receipts/complaints/lookup": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: {
-                    evidencePage?: number | string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["ReceiptLookupRequest"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["QualityComplaintDetail"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/me/complaints/{complaintId}/accept": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    complaintId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["QualityVersion"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["QualityVersion"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/me/complaints/{complaintId}/assignment": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    complaintId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["AssignQualityTask"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["QualityVersion"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/me/complaints/{complaintId}/replacement-plan": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    complaintId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["QualityReplacementPlan"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["QualityVersion"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/me/complaints/{complaintId}/review": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    complaintId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["ReviewQualityComplaint"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["QualityVersion"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/me/complaints/{complaintId}/replacement/cancel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    complaintId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["CancelQualityReplacement"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["QualityVersion"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/kiosks/{kioskId}/quality-replacements/open": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    kioskId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["QualityPickupRequest"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["QualityPickupResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/kiosks/{kioskId}/quality-replacements/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    kioskId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["QualityPickupRequest"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["QualityComplaintDetail"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/me/complaints/{complaintId}/evidence/{attachmentId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    complaintId: string;
-                    attachmentId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/quality-complaints/{complaintId}/evidence/{attachmentId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    complaintId: string;
-                    attachmentId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/staff/quality-complaints/{complaintId}/evidence/{attachmentId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    complaintId: string;
-                    attachmentId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/receipts/complaints/{complaintId}/evidence/{attachmentId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    complaintId: string;
-                    attachmentId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["ReceiptLookupRequest"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/health": {
         parameters: {
             query?: never;
@@ -3487,7 +2818,7 @@ export interface paths {
             };
         };
         put?: never;
-        /** @description Tạo yêu cầu preorder CUSTOM. Accessories chỉ ghi nhận mong muốn của khách, chưa giữ tồn; giá và tồn được xác nhận trong báo giá. Phụ kiện được giao cùng bó hoa trong một ô kiosk. */
+        /** @description Tạo yêu cầu preorder CUSTOM với phụ kiện tùy chọn từ kho SHOP của Seller mẫu hoa. Accessories chỉ ghi nhận mong muốn, chưa giữ tồn; BE nhân đơn giá với số lượng trong báo giá và trừ tồn khi khách accept. Phụ kiện được giao cùng bó hoa trong một ô kiosk, không chọn kiosk hoặc ô riêng cho phụ kiện. */
         post: {
             parameters: {
                 query?: never;
@@ -5646,7 +4977,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number | string;
+                    kioskId?: string;
+                };
                 header?: never;
                 path: {
                     sellerId: string;
@@ -5685,6 +5019,8 @@ export interface paths {
             parameters: {
                 query?: {
                     status?: string;
+                    page?: number | string;
+                    search?: string;
                 };
                 header?: never;
                 path?: never;
@@ -6854,118 +6190,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/staff/kiosk-health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Kiosks assigned to the technician for installation or repair */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["TechnicianKioskHealthSummary"][];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/staff/kiosk-health/{kioskId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Latest hardware signals from all compartments of an assigned kiosk */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    kioskId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["TechnicianTaskTelemetry"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/staff/tasks/{taskId}/iot-health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Latest hardware signals for the technician's assigned work */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    taskId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["TechnicianTaskTelemetry"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/staff/tasks/{taskId}/transition": {
         parameters: {
             query?: never;
@@ -7791,6 +7015,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/staff/tasks/{taskId}/iot-health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Latest hardware signals for the technician's assigned work */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    taskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TechnicianTaskTelemetry"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/staff/tasks/{taskId}/evidence/upload": {
         parameters: {
             query?: never;
@@ -8352,6 +7614,675 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/me/complaints": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    state?: string;
+                    page?: number | string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["QualityComplaintPage"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/quality-complaints": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    state?: string;
+                    page?: number | string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["QualityComplaintPage"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/complaints/{complaintId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    evidencePage?: number | string;
+                };
+                header?: never;
+                path: {
+                    complaintId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["QualityComplaintDetail"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/quality-complaints/{complaintId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    evidencePage?: number | string;
+                };
+                header?: never;
+                path: {
+                    complaintId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["QualityComplaintDetail"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/tasks/{taskId}/quality": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    evidencePage?: number | string;
+                };
+                header?: never;
+                path: {
+                    taskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["QualityComplaintDetail"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/receipts/complaints/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: {
+                    evidencePage?: number | string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ReceiptLookupRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["QualityComplaintDetail"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/complaints/{complaintId}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    complaintId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["QualityVersion"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["QualityVersion"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/complaints/{complaintId}/assignment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    complaintId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AssignQualityTask"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["QualityVersion"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/complaints/{complaintId}/replacement-plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    complaintId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["QualityReplacementPlan"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["QualityVersion"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/complaints/{complaintId}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    complaintId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ReviewQualityComplaint"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["QualityVersion"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/complaints/{complaintId}/replacement/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    complaintId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CancelQualityReplacement"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["QualityVersion"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/kiosks/{kioskId}/quality-replacements/open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kioskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["QualityPickupRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["QualityPickupResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/kiosks/{kioskId}/quality-replacements/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kioskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["QualityPickupRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["QualityComplaintDetail"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/complaints/{complaintId}/evidence/{attachmentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    complaintId: string;
+                    attachmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/quality-complaints/{complaintId}/evidence/{attachmentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    complaintId: string;
+                    attachmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/quality-complaints/{complaintId}/evidence/{attachmentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    complaintId: string;
+                    attachmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/receipts/complaints/{complaintId}/evidence/{attachmentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    complaintId: string;
+                    attachmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ReceiptLookupRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/withdrawals": {
         parameters: {
             query?: never;
@@ -8764,7 +8695,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Shared preorder accessory catalog for this seller. Only active shop accessories with available stock are returned. */
+        /** @description Optional accessories for a Seller's flower preorder. Shared SHOP stock and unit prices do not depend on the selected pickup kiosk. Stock is reserved only on quote acceptance. */
         get: {
             parameters: {
                 query?: never;
@@ -8802,7 +8733,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Compatibility lookup: resolves the kiosk seller and returns its shared shop accessories. */
+        /** @description Compatibility lookup: resolves the kiosk's Seller and returns that Seller's shared SHOP accessories. New preorder clients should load /api/member/sellers/{sellerId}/catalog/accessories directly. */
         get: {
             parameters: {
                 query?: never;
@@ -8877,10 +8808,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** @description Use scope=SHOP for Seller's shared preorder accessory inventory. KIOSK and ALL retain access to existing physical kiosk inventory; omitted scope returns ALL for compatibility. */
         get: {
             parameters: {
                 query?: {
-                    scope?: "SHOP" | "KIOSK" | "ALL";
+                    scope?: string;
                 };
                 header?: never;
                 path: {
@@ -8902,6 +8834,7 @@ export interface paths {
             };
         };
         put?: never;
+        /** @description Create a shared SHOP accessory using Name and Price; no kiosk selection is required. Stock starts at zero and is increased via restock_accessory. Optional KioskId is for legacy physical kiosk inventory. */
         post: {
             parameters: {
                 query?: never;
@@ -8917,17 +8850,12 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Created */
-                201: {
+                /** @description OK */
+                200: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "application/json": {
-                            /** Format: uuid */
-                            id: string;
-                        };
-                    };
+                    content?: never;
                 };
             };
         };
@@ -9152,6 +9080,51 @@ export interface paths {
                     content: {
                         "application/json": components["schemas"]["SellerKioskDto"][];
                     };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/operations/sellers/{sellerId}/kiosks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Danh sách kiosk của shop thuộc phạm vi quản lý */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sellerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SellerKioskDto"][];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
                 };
             };
         };
@@ -14253,6 +14226,8 @@ export interface paths {
                     to?: string;
                     page?: number | string;
                     pageSize?: number | string;
+                    kioskId?: string;
+                    kind?: string;
                 };
                 header?: never;
                 path: {
@@ -14370,6 +14345,7 @@ export interface paths {
                     from?: string;
                     to?: string;
                     kioskId?: string;
+                    month?: string;
                 };
                 header?: never;
                 path: {
@@ -15749,6 +15725,52 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/shop/flower-chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["FlowerChatInput"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FlowerChatResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sellers/{sellerId}/ai/seasonal-sales": {
         parameters: {
             query?: never;
@@ -16831,156 +16853,327 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/shop/products/{productId}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    page?: number | string;
+                };
+                header?: never;
+                path: {
+                    productId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FlowerReviewPage"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    productId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["FlowerReviewInput"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FlowerReviewCreated"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/shop/products/{productId}/review-eligibility": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    productId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FlowerReviewEligibility"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/shop/products/{productId}/reviews/{reviewId}/photo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    productId: string;
+                    reviewId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/sellers/{sellerId}/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    kioskId?: string;
+                    from?: string;
+                    to?: string;
+                    status?: string;
+                    page?: number | string;
+                };
+                header?: never;
+                path: {
+                    sellerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminSellerOrderPage"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/sellers/{sellerId}/orders/{orderId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sellerId: string;
+                    orderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminSellerOrderDetail"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/kiosk-health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kiosks assigned to the technician for installation or repair */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TechnicianKioskHealthSummary"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/kiosk-health/{kioskId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Latest hardware signals from all compartments of an assigned kiosk */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kioskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TechnicianTaskTelemetry"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        QualityComplaintPage: {
-            /** Format: int32 */
-            page: number | string;
-            hasMore: boolean;
-            items: components["schemas"]["QualityComplaintDetail"][];
-        };
-        QualityComplaintDetail: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            orderId: string;
-            orderCode: string;
-            /** Format: uuid */
-            kioskId: string;
-            status: string;
-            handlingState: string;
-            /** Format: int32 */
-            version: number | string;
-            reason: string;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            acceptedAt: null | string;
-            outcome: null | string;
-            resolution: null | string;
-            /** Format: date-time */
-            resolvedAt: null | string;
-            items: components["schemas"]["QualityOrderItem"][];
-            task: null | components["schemas"]["QualityTaskInfo"];
-            replacement: null | components["schemas"]["QualityReplacementInfo"];
-            evidence: components["schemas"]["QualityEvidencePage"];
-        };
-        QualityOrderItem: {
-            /** Format: uuid */
-            orderItemId: string;
-            /** Format: uuid */
-            bouquetId: null | string;
-            /** Format: uuid */
-            productId: null | string;
-            /** Format: uuid */
-            slotId: null | string;
-            slotCode: null | string;
-            name: string;
-        };
-        QualityTaskInfo: {
-            /** Format: uuid */
-            id: string;
-            /** Format: int32 */
-            version: number | string;
-            status: string;
-            /** Format: uuid */
-            assigneeId: string;
-            /** Format: uuid */
-            orderItemId: string;
-            instructions: string;
-            report: null | string;
-        };
-        QualityReplacementInfo: {
-            /** Format: uuid */
-            taskId: string;
-            state: string;
-            /** Format: uuid */
-            productId: string;
-            /** Format: uuid */
-            bouquetId: null | string;
-            /** Format: uuid */
-            slotId: string;
-            slotCode: string;
-            /** Format: date-time */
-            expiresAt: null | string;
-            /** Format: date-time */
-            collectedAt: null | string;
-            /** Format: uuid */
-            commandId: null | string;
-            commandStatus: null | string;
-        };
-        QualityEvidencePage: {
-            /** Format: int32 */
-            page: number | string;
-            hasMore: boolean;
-            items: components["schemas"]["QualityPhoto"][];
-        };
-        QualityPhoto: {
-            /** Format: uuid */
-            id: string;
-            /** Format: date-time */
-            createdAt: string;
-            source: string;
-            /** Format: uuid */
-            taskId: null | string;
-            url: string;
-        };
-        QualityVersion: {
-            /** Format: int32 */
-            version: number | string;
-        };
-        AssignQualityTask: {
-            /** Format: int32 */
-            version: number | string;
-            /** Format: uuid */
-            taskId: string;
-            /** Format: uuid */
-            assigneeId: string;
-            /** Format: uuid */
-            orderItemId: string;
-            instructions: string;
-        };
-        QualityReplacementPlan: {
-            /** Format: int32 */
-            version: number | string;
-            /** Format: int32 */
-            taskVersion: number | string;
-            /** Format: uuid */
-            productId: string;
-            /** Format: uuid */
-            slotId: string;
-        };
-        ReviewQualityComplaint: {
-            /** Format: int32 */
-            version: number | string;
-            /** Format: int32 */
-            taskVersion: number | string;
-            outcome: string;
-            resolution: string;
-        };
-        CancelQualityReplacement: {
-            /** Format: int32 */
-            version: number | string;
-            reason: string;
-        };
-        QualityPickupRequest: {
-            /** Format: uuid */
-            complaintId: string;
-            /** Format: uuid */
-            orderId: string;
-            trackingToken: string;
-            /** Format: uuid */
-            attemptId: string;
-        };
-        QualityPickupResponse: {
-            /** Format: uuid */
-            complaintId: string;
-            /** Format: uuid */
-            commandId: string;
-            commandStatus: string;
-        };
         AcceptedMaintenanceAccess: {
             /** @default ACCEPTED */
             status: string;
@@ -17149,6 +17342,8 @@ export interface components {
             slotId: null | string;
             location: null | components["schemas"]["IncidentLocation"];
             slot: null | components["schemas"]["IncidentSlot"];
+            task?: null | components["schemas"]["IncidentLinkedTask"];
+            progress?: null | string;
         };
         AdminKioskRefundSummary: {
             /** Format: uuid */
@@ -17231,6 +17426,72 @@ export interface components {
             paidBy: null | string;
             /** Format: date-time */
             paidAt: null | string;
+        };
+        AdminSellerOrderDetail: {
+            /** Format: uuid */
+            id: string;
+            orderCode: string;
+            status: string;
+            /** Format: int64 */
+            totalAmount: number | string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            completedAt: null | string;
+            /** Format: uuid */
+            kioskId: string;
+            kioskCode: string;
+            kioskName: string;
+            mode: string;
+            items: components["schemas"]["AdminSellerOrderLine"][];
+            payments: components["schemas"]["AdminSellerOrderPayment"][];
+        };
+        AdminSellerOrderLine: {
+            name: string;
+            /** Format: int32 */
+            quantity: number | string;
+            /** Format: int64 */
+            unitPrice: number | string;
+            /** Format: int64 */
+            lineTotal: number | string;
+            status: string;
+        };
+        AdminSellerOrderPage: {
+            items: components["schemas"]["AdminSellerOrderRow"][];
+            /** Format: int32 */
+            page: number | string;
+            hasMore: boolean;
+        };
+        AdminSellerOrderPayment: {
+            /** Format: uuid */
+            id: string;
+            kind: string;
+            status: string;
+            /** Format: int64 */
+            amount: number | string;
+            /** Format: date-time */
+            paidAt: null | string;
+            /** Format: date-time */
+            createdAt: string;
+            gateway: string;
+            gatewayTxnId: null | string;
+        };
+        AdminSellerOrderRow: {
+            /** Format: uuid */
+            id: string;
+            orderCode: string;
+            status: string;
+            /** Format: int64 */
+            totalAmount: number | string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            completedAt: null | string;
+            /** Format: uuid */
+            kioskId: string;
+            kioskCode: string;
+            kioskName: string;
+            mode: string;
         };
         AdminSellerResponse: {
             /** Format: uuid */
@@ -17360,6 +17621,17 @@ export interface components {
             /** Format: uuid */
             p_seller: string;
         };
+        AssignQualityTask: {
+            /** Format: int32 */
+            version: number | string;
+            /** Format: uuid */
+            taskId: string;
+            /** Format: uuid */
+            assigneeId: string;
+            /** Format: uuid */
+            orderItemId: string;
+            instructions: string;
+        };
         AssignStaffPreorderInput: {
             /** Format: uuid */
             id: string;
@@ -17426,6 +17698,11 @@ export interface components {
         };
         CancelKioskApplicationRequest: {
             reason: null | string;
+        };
+        CancelQualityReplacement: {
+            /** Format: int32 */
+            version: number | string;
+            reason: string;
         };
         ChangeAccessoryStatus: {
             status: string;
@@ -17562,11 +17839,11 @@ export interface components {
             p_gateway?: null | string;
         };
         CreateSellerAccessory: {
-            /** Format: uuid */
-            kioskId?: string | null;
             name: string;
             /** Format: int64 */
             price: number | string;
+            /** Format: uuid */
+            kioskId?: null | string;
         };
         CreateSellerDeliveryTask: {
             /** Format: uuid */
@@ -17803,6 +18080,49 @@ export interface components {
             /** Format: date-time */
             expiresAt: string;
         };
+        FlowerChatInput: {
+            question: string;
+            mode?: null | string;
+            /** Format: int64 */
+            budget?: null | number | string;
+            /** Format: uuid */
+            kioskId?: null | string;
+            /** Format: double */
+            latitude?: null | number | string;
+            /** Format: double */
+            longitude?: null | number | string;
+        };
+        FlowerChatResponse: {
+            intent: string;
+            message: string;
+            suggestions: components["schemas"]["FlowerChatSuggestion"][];
+        };
+        FlowerChatSuggestion: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            productId: string;
+            /** Format: uuid */
+            kioskId: string;
+            name: string;
+            /** Format: int64 */
+            price: number | string;
+            mode: string;
+            reason: string;
+            photo: null | string;
+            /** Format: double */
+            productRating: null | number | string;
+            /** Format: int64 */
+            productReviews: number | string;
+            /** Format: double */
+            shopRating: null | number | string;
+            /** Format: int64 */
+            shopReviews: number | string;
+            shopName: null | string;
+            kioskName: null | string;
+            /** Format: double */
+            distanceKm: null | number | string;
+        };
         FlowerPresenceResponse: {
             /** Format: uuid */
             kioskId: string;
@@ -17813,6 +18133,41 @@ export interface components {
             isFresh: boolean;
             slots: components["schemas"]["FlowerSlotPresence"][];
         };
+        FlowerReview: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int16 */
+            stars: number | string;
+            comment: null | string;
+            photoUrl: null | string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        FlowerReviewCreated: {
+            /** Format: uuid */
+            id: string;
+        };
+        FlowerReviewEligibility: {
+            eligible: boolean;
+        };
+        FlowerReviewInput: {
+            /** Format: int32 */
+            stars: number | string;
+            comment: null | string;
+            photoBase64: null | string;
+        };
+        FlowerReviewPage: {
+            /** Format: double */
+            productAverage: null | number | string;
+            /** Format: int64 */
+            productCount: number | string;
+            /** Format: double */
+            shopAverage: null | number | string;
+            /** Format: int64 */
+            shopCount: number | string;
+            items: components["schemas"]["FlowerReview"][];
+            hasMore: boolean;
+        };
         FlowerSlotPresence: {
             /** Format: uuid */
             slotId: string;
@@ -17820,6 +18175,7 @@ export interface components {
             /** Format: int32 */
             relayChannel: number | string;
             hasFlowers: null | boolean;
+            latestUnlock?: null | components["schemas"]["SlotUnlockObservation"];
         };
         FlowResult: {
             result: null | components["schemas"]["JsonElement"];
@@ -17895,6 +18251,14 @@ export interface components {
         IncidentEvidenceResponse: {
             items: components["schemas"]["IncidentPhoto"][];
             hasMore: boolean;
+        };
+        IncidentLinkedTask: {
+            /** Format: uuid */
+            id: string;
+            status: string;
+            /** Format: uuid */
+            assigneeId: string;
+            assigneeName: string;
         };
         IncidentLocation: {
             /** Format: uuid */
@@ -18010,6 +18374,7 @@ export interface components {
             slotCode: string;
             shopName: string;
             imageUrl?: null | string;
+            tags?: null | string[];
         };
         KioskCheckoutRequest: {
             p_bouquets: string[];
@@ -18635,6 +19000,128 @@ export interface components {
             longitude: null | number | string;
             locationComplete: boolean;
         };
+        QualityComplaintDetail: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            orderId: string;
+            orderCode: string;
+            /** Format: uuid */
+            kioskId: string;
+            status: string;
+            handlingState: string;
+            /** Format: int32 */
+            version: number | string;
+            reason: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            acceptedAt: null | string;
+            outcome: null | string;
+            resolution: null | string;
+            /** Format: date-time */
+            resolvedAt: null | string;
+            items: components["schemas"]["QualityOrderItem"][];
+            task: null | components["schemas"]["QualityTaskInfo"];
+            replacement: null | components["schemas"]["QualityReplacementInfo"];
+            evidence: components["schemas"]["QualityEvidencePage"];
+        };
+        QualityComplaintPage: {
+            /** Format: int32 */
+            page: number | string;
+            hasMore: boolean;
+            items: components["schemas"]["QualityComplaintDetail"][];
+        };
+        QualityEvidencePage: {
+            /** Format: int32 */
+            page: number | string;
+            hasMore: boolean;
+            items: components["schemas"]["QualityPhoto"][];
+        };
+        QualityOrderItem: {
+            /** Format: uuid */
+            orderItemId: string;
+            /** Format: uuid */
+            bouquetId: null | string;
+            /** Format: uuid */
+            productId: null | string;
+            /** Format: uuid */
+            slotId: null | string;
+            slotCode: null | string;
+            name: string;
+        };
+        QualityPhoto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            createdAt: string;
+            source: string;
+            /** Format: uuid */
+            taskId: null | string;
+            url: string;
+        };
+        QualityPickupRequest: {
+            /** Format: uuid */
+            complaintId: string;
+            /** Format: uuid */
+            orderId: string;
+            trackingToken: string;
+            /** Format: uuid */
+            attemptId: string;
+        };
+        QualityPickupResponse: {
+            /** Format: uuid */
+            complaintId: string;
+            /** Format: uuid */
+            commandId: string;
+            commandStatus: string;
+        };
+        QualityReplacementInfo: {
+            /** Format: uuid */
+            taskId: string;
+            state: string;
+            /** Format: uuid */
+            productId: string;
+            /** Format: uuid */
+            bouquetId: null | string;
+            /** Format: uuid */
+            slotId: string;
+            slotCode: string;
+            /** Format: date-time */
+            expiresAt: null | string;
+            /** Format: date-time */
+            collectedAt: null | string;
+            /** Format: uuid */
+            commandId: null | string;
+            commandStatus: null | string;
+        };
+        QualityReplacementPlan: {
+            /** Format: int32 */
+            version: number | string;
+            /** Format: int32 */
+            taskVersion: number | string;
+            /** Format: uuid */
+            productId: string;
+            /** Format: uuid */
+            slotId: string;
+        };
+        QualityTaskInfo: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            version: number | string;
+            status: string;
+            /** Format: uuid */
+            assigneeId: string;
+            /** Format: uuid */
+            orderItemId: string;
+            instructions: string;
+            report: null | string;
+        };
+        QualityVersion: {
+            /** Format: int32 */
+            version: number | string;
+        };
         QuotedPreorderAccessory: {
             /** Format: uuid */
             accessoryId: string;
@@ -18860,6 +19347,14 @@ export interface components {
             action: string;
             reason: string;
         };
+        ReviewQualityComplaint: {
+            /** Format: int32 */
+            version: number | string;
+            /** Format: int32 */
+            taskVersion: number | string;
+            outcome: string;
+            resolution: string;
+        };
         ReviewSlotLayout: {
             preorderSlotIds: null | string[];
             note: null | string;
@@ -18948,13 +19443,12 @@ export interface components {
             stockQuantity: number | string;
             status: string;
             /** Format: uuid */
-            kioskId: string | null;
-            kioskCode: string | null;
-            kioskName: string | null;
-            kioskAddress: string | null;
-            kioskStatus: string | null;
-            /** @enum {string} */
-            scope: "SHOP" | "KIOSK";
+            kioskId: null | string;
+            kioskCode: null | string;
+            kioskName: null | string;
+            kioskAddress: null | string;
+            kioskStatus: null | string;
+            scope?: null | string;
         };
         SellerAccountResponse: {
             /** Format: uuid */
@@ -19457,6 +19951,15 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        SlotUnlockObservation: {
+            status: string;
+            /** Format: date-time */
+            issuedAt: string;
+            /** Format: date-time */
+            doorOpenedAt: null | string;
+            /** Format: date-time */
+            doorClosedAt: null | string;
+        };
         StaffDeliveryScope: {
             /** Format: uuid */
             sellerId: string;
@@ -19619,30 +20122,6 @@ export interface components {
             code: string;
             zone: null | string;
         };
-        TechnicianKioskHealthSummary: {
-            /** Format: uuid */
-            id: string;
-            code: string;
-            name: string;
-            status: string;
-        };
-        TechnicianSlotTelemetry: {
-            slotCode: string;
-            flowerDetected: null | boolean;
-            doorClosed: null | boolean;
-            lastCycle: null | string;
-            /** Format: date-time */
-            lastCycleAt: null | string;
-        };
-        TechnicianTaskTelemetry: {
-            kioskStatus: string;
-            /** Format: date-time */
-            lastHeartbeatAt: null | string;
-            /** Format: date-time */
-            observedAt: null | string;
-            isFresh: boolean;
-            slots: components["schemas"]["TechnicianSlotTelemetry"][];
-        };
         StaffTaskDetail: {
             kioskStatus: string;
             /** Format: date-time */
@@ -19657,6 +20136,12 @@ export interface components {
             /** Format: int32 */
             version?: null | number | string;
             status?: null | string;
+            slotObservation?: null | components["schemas"]["FlowerSlotPresence"];
+            /** Format: date-time */
+            slotObservedAt?: null | string;
+            /** Format: uuid */
+            kioskId?: null | string;
+            kioskSlots?: null | components["schemas"]["FlowerSlotPresence"][];
         };
         StaffTaskHistoryItem: {
             id: string;
@@ -19705,6 +20190,9 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             updatedAt: string;
+            workType?: null | string;
+            /** Format: uuid */
+            complaintId?: null | string;
         };
         StockBouquetRequest: {
             /** Format: uuid */
@@ -19726,6 +20214,13 @@ export interface components {
         SubscriptionOverviewResponse: {
             package: null | components["schemas"]["SellerPackageResponse"];
             subscriptions: components["schemas"]["SubscriptionResponse"][];
+            /**
+             * Format: int32
+             * @default 1
+             */
+            page: number | string;
+            /** @default false */
+            hasMore: boolean;
         };
         SubscriptionResponse: {
             /** Format: uuid */
@@ -19740,6 +20235,11 @@ export interface components {
             status: string;
             /** Format: uuid */
             kioskId: null | string;
+            kioskCode?: null | string;
+            kioskName?: null | string;
+            /** Format: date-time */
+            expiresAt?: null | string;
+            reminderStatus?: null | string;
         };
         TechnicalRepairApproval: {
             /** Format: date-time */
@@ -19793,6 +20293,30 @@ export interface components {
             timeWindow: null | string;
             status: string;
             reworkReason: null | string;
+        };
+        TechnicianKioskHealthSummary: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            status: string;
+        };
+        TechnicianSlotTelemetry: {
+            slotCode: string;
+            flowerDetected: null | boolean;
+            doorClosed: null | boolean;
+            lastCycle: null | string;
+            /** Format: date-time */
+            lastCycleAt: null | string;
+        };
+        TechnicianTaskTelemetry: {
+            kioskStatus: string;
+            /** Format: date-time */
+            lastHeartbeatAt: null | string;
+            /** Format: date-time */
+            observedAt: null | string;
+            isFresh: boolean;
+            slots: components["schemas"]["TechnicianSlotTelemetry"][];
         };
         TransitionStaffTask: {
             /** Format: int32 */
@@ -19969,6 +20493,7 @@ export interface components {
             photo: null | string;
             bouquets: string[];
             preorderAvailable: boolean;
+            tags?: null | string[];
         };
         WebCatalogPage: {
             items: components["schemas"]["WebCatalogItem"][];

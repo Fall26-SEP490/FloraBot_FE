@@ -283,6 +283,7 @@ test('04 Admin — real refund detail and daily report without payouts', async (
       });
     }
     await show(page, '/admin/reports', steps, info);
+    await page.getByRole('button', { name: /^Số liệu hệ thống/ }).click();
     for (const report of ['v_admin_queue', 'v_revenue_daily', 'v_platform_revenue']) {
       await page.getByLabel('Chọn báo cáo', { exact: true }).selectOption(report);
       const result = await page.request.get(`/api/admin/reports/${report}`);

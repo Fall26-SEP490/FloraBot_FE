@@ -1,0 +1,340 @@
+/* Admin workspace: clear page relationships and one report area at a time. */
+.workspace-portal-root.platform-workspace[data-platform-role='admin'] {
+  & .admin-content {
+    padding: 28px 34px 48px;
+  }
+  & .dashboard-page-heading {
+    margin-bottom: 22px;
+    padding-bottom: 0;
+  }
+  & .dashboard-page-heading h1 {
+    font-size: clamp(25px, 2.3vw, 34px);
+    line-height: 1.25;
+    letter-spacing: -0.025em;
+  }
+  & .dashboard-page-heading p {
+    margin-top: 10px;
+    max-width: 75ch;
+    line-height: 1.7;
+    color: #607367;
+  }
+  & .admin-content > section.api-reports {
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+  & .admin-report-area-nav {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  & .admin-report-area-nav button {
+    display: grid;
+    text-align: left;
+    gap: 7px;
+    min-height: 88px;
+    padding: 18px 20px;
+    border: 1px solid #dce5dd;
+    border-radius: 13px;
+    background: #fff;
+    color: #244b39;
+    cursor: pointer;
+  }
+  & .admin-report-area-nav button strong {
+    font-size: 14px;
+  }
+  & .admin-report-area-nav button span {
+    font-size: 12px;
+    color: #65776b;
+  }
+  & .admin-report-area-nav button[aria-pressed='true'] {
+    border-color: #497b5c;
+    background: #eaf4ea;
+    box-shadow: inset 0 3px 0 #326749;
+  }
+  & .admin-report-area-panel {
+    padding: 26px;
+    border: 1px solid #dce5dd;
+    border-radius: 16px;
+    background: #fff;
+  }
+  & .api-reports [hidden] {
+    display: none !important;
+  }
+  & .admin-seller-reports {
+    margin-bottom: 0;
+  }
+  & .admin-shop-list {
+    gap: 18px;
+  }
+  & .admin-shop-list .incident-detail {
+    padding: 24px;
+    line-height: 1.75;
+  }
+  & .admin-disclosure-main strong {
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  & .admin-disclosure-meta {
+    margin-top: 7px;
+    line-height: 1.6;
+  }
+  & .admin-filterbar {
+    gap: 18px;
+  }
+  & .reports-table-wrap {
+    margin: 20px 0;
+    border: 1px solid #e0e8e0;
+    border-radius: 12px;
+  }
+  & .reports-table-wrap th {
+    color: #506959;
+    font-size: 12px;
+    background: #f2f6f1;
+  }
+  & .reports-table-wrap :is(th, td) {
+    padding: 16px;
+    line-height: 1.6;
+    vertical-align: top;
+  }
+  & .reports-table-wrap tbody tr:hover {
+    background: #f7faf6;
+  }
+  @media (max-width: 1000px) {
+    & .admin-content {
+      padding: 24px;
+    }
+  }
+  @media (max-width: 640px) {
+    & .admin-content {
+      padding: 20px 14px 36px;
+    }
+    & .admin-report-area-nav {
+      grid-template-columns: 1fr;
+      gap: 9px;
+    }
+    & .admin-report-area-nav button {
+      min-height: 68px;
+      padding: 14px 18px;
+    }
+    & .admin-report-area-panel {
+      padding: 18px;
+    }
+  }
+}
+.admin-order-report-modal {
+  width: min(940px, calc(100vw - 32px));
+  max-width: 940px;
+}
+.admin-order-report-modal .reports-table-wrap {
+  overflow-x: auto;
+}
+.admin-order-report-modal table {
+  width: 100%;
+  table-layout: auto;
+  border-collapse: collapse;
+}
+.admin-order-report-modal th:first-child,
+.admin-order-report-modal td:first-child {
+  min-width: 180px;
+  white-space: normal;
+}
+.admin-order-report-modal :is(th, td) {
+  padding: 14px;
+  text-align: left;
+  border-bottom: 1px solid #e1e9e1;
+}
+
+/* Use main.admin-content to outrank the older Admin surface rules. */
+.workspace-portal-root.platform-workspace[data-platform-role='admin'] main.admin-content {
+  & .admin-reconciliation .reconciliation-view-picker {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin: 26px 0;
+  }
+  & .reconciliation-view-picker button {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 20px;
+    border: 1px solid #dce5dd;
+    border-radius: 12px;
+    background: #fff;
+    color: #244b39;
+    text-align: left;
+    cursor: pointer;
+  }
+  & .reconciliation-view-picker button[aria-pressed='true'] {
+    border-color: #326749;
+    background: #edf5ed;
+    box-shadow: inset 4px 0 0 #326749;
+  }
+  & .reconciliation-view-picker span {
+    font-size: 13px;
+    color: #607367;
+    line-height: 1.6;
+  }
+  & .admin-reconciliation [hidden] {
+    display: none !important;
+  }
+  & .admin-reconciliation .admin-filterbar {
+    margin: 0 0 24px;
+    gap: 20px;
+    padding: 20px;
+  }
+  & .admin-reconciliation .admin-filter-fields {
+    flex: 0 1 280px;
+  }
+  & .admin-reconciliation .admin-filter-actions {
+    margin-left: auto;
+  }
+  & .admin-reconciliation .admin-statement-form {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+  & .reconciliation-start {
+    padding: 32px 24px;
+    border: 1px dashed #cbd9ce;
+    border-radius: 12px;
+    text-align: center;
+    background: #fafcf9;
+  }
+  & .reconciliation-start p {
+    margin: 10px 0 0;
+    color: #607367;
+  }
+  & .admin-reconciliation .error:empty {
+    display: none;
+  }
+  @media (max-width: 700px) {
+    & .admin-reconciliation .reconciliation-view-picker {
+      grid-template-columns: 1fr;
+    }
+    & .admin-reconciliation .admin-filter-fields {
+      flex: 1 1 100%;
+    }
+    & .admin-reconciliation .admin-filter-actions {
+      margin-left: 0;
+    }
+  }
+}
+
+/* Legacy summary span rules add pill padding and margins to every text span.
+   Reset the text containers explicitly so titles and metadata share one edge. */
+.workspace-portal-root.platform-workspace[data-platform-role='admin'] main.admin-content {
+  & .admin-shop-list .admin-disclosure-summary {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(100px, 150px) 120px;
+    align-items: center;
+    gap: 20px;
+    padding: 22px 24px;
+    text-align: left;
+  }
+  & .admin-shop-list .admin-disclosure-main,
+  & .admin-shop-list .admin-disclosure-meta,
+  & .admin-shop-list .admin-disclosure-meta > span,
+  & .admin-shop-list .admin-disclosure-toggle,
+  & .admin-shop-list .admin-disclosure-toggle > span {
+    margin-left: 0;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    min-width: 0;
+  }
+  & .admin-shop-list .admin-disclosure-main {
+    display: block;
+  }
+  & .admin-shop-list .admin-disclosure-main > strong {
+    display: block;
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.65;
+    font-weight: 600;
+  }
+  & .admin-shop-list .admin-disclosure-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    margin-top: 7px;
+    gap: 4px 0;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.65;
+  }
+  & .admin-shop-list .admin-disclosure-meta > span {
+    font-size: inherit;
+    font-weight: inherit;
+    flex-shrink: 1;
+    overflow-wrap: anywhere;
+  }
+  & .admin-shop-list .admin-disclosure-status {
+    justify-self: start;
+    margin-left: 0;
+    font-weight: 600;
+  }
+  & .admin-shop-list .admin-disclosure-toggle {
+    display: inline-flex;
+    justify-self: end;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+  & .admin-shop-list .admin-disclosure-toggle > span {
+    font-size: inherit;
+    font-weight: inherit;
+  }
+  & .admin-incidents .admin-disclosure-meta {
+    display: grid;
+    gap: 3px;
+  }
+  & .admin-incident-created {
+    font-variant-numeric: tabular-nums;
+    color: #53695c;
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: 400;
+  }
+  & .admin-incidents .admin-incident-kind {
+    display: block;
+    color: #6b786f;
+  }
+  @media (max-width: 700px) {
+    & .admin-shop-list .admin-disclosure-summary {
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      padding: 18px;
+    }
+    & .admin-shop-list .admin-disclosure-main {
+      grid-column: 1 / -1;
+    }
+    & .admin-shop-list .admin-disclosure-status {
+      grid-column: 1;
+    }
+    & .admin-shop-list .admin-disclosure-toggle {
+      grid-column: 2;
+    }
+  }
+}
+
+.workspace-portal-root.platform-workspace[data-platform-role='admin'] main.admin-content {
+  & .admin-shop-list > .admin-audit-entry {
+    padding: 20px 22px;
+    border-radius: 12px;
+    overflow-wrap: anywhere;
+  }
+  & .admin-audit-entry > p {
+    margin: 0;
+    line-height: 1.7;
+  }
+  & .admin-audit-entry > p + p {
+    margin-top: 8px;
+  }
+  & .admin-audit-entry .audit-redaction-note {
+    font-size: 12px;
+    color: #68786d;
+  }
+}

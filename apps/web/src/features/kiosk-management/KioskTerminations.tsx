@@ -518,7 +518,8 @@ function ManagerTerminationCard({
             </h3>
           </div>
           <p className="termination-meta-time">
-            Yêu cầu lúc {new Date(item.requestedAt).toLocaleString('vi-VN')}
+            Yêu cầu lúc{' '}
+            {new Date(item.requestedAt).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}
           </p>
         </div>
         <span className="termination-status-pill" data-status={item.status}>

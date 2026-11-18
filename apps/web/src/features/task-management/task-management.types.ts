@@ -1,3 +1,5 @@
+import type { components } from '../../../../../packages/contracts/src/generated/api';
+
 export type ActiveTaskRole =
   'ADMIN' | 'OPERATIONS_MANAGER' | 'TECHNICIAN' | 'SELLER' | 'SELLER_STAFF';
 
@@ -34,7 +36,10 @@ export type TaskHistoryItem = {
   createdAt: string;
 };
 
-export type TaskDetail = {
+export type TaskDetail = Pick<
+  components['schemas']['StaffTaskDetail'],
+  'slotObservation' | 'slotObservedAt' | 'kioskSlots'
+> & {
   kioskStatus: string;
   lastHeartbeatAt: string | null;
   incident: {
@@ -94,6 +99,8 @@ export type DeliveryScope = {
 };
 
 export type IncidentCandidate = {
+  task?: { id: string; status: string; assigneeId: string; assigneeName: string } | null;
+  progress?: string | null;
   id: string;
   kioskId: string;
   reason: string;

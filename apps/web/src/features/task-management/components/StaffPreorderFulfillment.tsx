@@ -147,7 +147,7 @@ export default function StaffPreorderFulfillment({
             {options.data.preorders.map((order) => (
               <option key={order.requestId} value={order.requestId}>
                 {order.orderCode} · {order.productName} ·{' '}
-                {new Date(order.pickupAt).toLocaleString('vi-VN')}
+                {new Date(order.pickupAt).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}
               </option>
             ))}
           </select>

@@ -8,7 +8,12 @@ import type {
   AdminIncidentPage,
   AdminIncidentResponse,
 } from './incidents.types';
-import { formatIncidentDate, formatIncidentLabel, safeUrl } from './incidents.utils';
+import {
+  formatIncidentDate,
+  formatIncidentLabel,
+  safeUrl,
+  incidentProgressLabel,
+} from './incidents.utils';
 
 type Incident = AdminIncidentResponse;
 type Detail = AdminIncidentDetail;
@@ -32,8 +37,33 @@ function IncidentItem({ row, hidden = false }: { row: Incident; hidden?: boolean
         <AdminDisclosureSummary
           statusCode={incident.status}
           title={formatIncidentLabel(row)}
-          meta={`${formatIncidentDate(row.createdAt)} · ${row.kind === 'DISPENSE_FAILED' ? 'Không giao được hoa' : 'Sự cố thiết bị'}`}
-          status={incident.status === 'OPEN' ? 'Chưa đóng' : 'Đã giải quyết'}
+          meta={
+            <>
+              <time
+                className="admin-incident-created"
+                dateTime={row.createdAt}
+                title={formatIncidentDate(row.createdAt)}
+              >
+                {new Date(row.createdAt).toLocaleDateString('vi-VN', {
+                  timeZone: 'Asia/Ho_Chi_Minh',
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                })}
+                {' · '}
+                {new Date(row.createdAt).toLocaleTimeString('vi-VN', {
+                  timeZone: 'Asia/Ho_Chi_Minh',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  hour12: false,
+                })}
+              </time>
+              <span className="admin-incident-kind">
+                {row.kind === 'DISPENSE_FAILED' ? 'Không giao được hoa' : 'Sự cố thiết bị'}
+              </span>
+            </>
+          }
+          status={incidentProgressLabel(incident)}
         />
         {open && (
           <div className="incident-detail">
@@ -53,6 +83,14 @@ function IncidentItem({ row, hidden = false }: { row: Incident; hidden?: boolean
                 <p>{detail.data.incident.location?.address}</p>
                 <p className="incident-text">{detail.data.incident.reason}</p>
                 <p className="quiet">Mã sự cố: {row.id}</p>
+                {detail.data.incident.task && (
+                  <p>
+                    Người phụ trách: <strong>{detail.data.incident.task.assigneeName}</strong> ·{' '}
+                    {incidentProgressLabel(detail.data.incident)}
+                    <br />
+                    Mã công việc: {detail.data.incident.task.id}
+                  </p>
+                )}
                 <h3>Ảnh minh chứng</h3>
                 {detail.data.evidence.items.length > 0 && (
                   <p className="quiet">

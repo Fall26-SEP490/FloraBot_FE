@@ -124,6 +124,8 @@ for (const [path, label, loaded] of [
     model.fail.add(path);
     const route = path.includes('/reports/') ? '/admin/reports' : path;
     await page.goto(route);
+    if (path.includes('/reports/'))
+      await page.getByRole('button', { name: /^Số liệu hệ thống/ }).click();
     await expect(page.locator('#main').getByRole('alert')).toContainText(/Chưa|gián đoạn/);
     await expect(page.locator(loaded)).toHaveCount(0);
     model.fail.delete(path);
@@ -145,15 +147,28 @@ for (const width of [390, 1440])
     const model = await setupAdminSurfaces(page);
     await page.setViewportSize({ width, height: 960 });
     await page.goto('/admin/reconciliation');
+    await page.getByRole('button', { name: /^Đối chiếu sao kê/ }).click();
     await page.getByLabel('Ngày đối soát (giờ Việt Nam)').fill('2026-10-31');
     await page.getByRole('button', { name: 'Kiểm tra sao kê', exact: true }).click();
     await expect(page.locator('#reconciliation-error')).not.toBeEmpty();
     expect(model.writes).toEqual([]);
-    await page.getByLabel('Mã giao dịch 1', { exact: true }).fill('TEST-ROW');
-    await page.getByLabel('Số tiền giao dịch 1 (đồng)', { exact: true }).fill('100000');
+    await page
+      .getByRole('group', { name: 'Khoản thu thứ 1', exact: true })
+      .getByLabel('Mã tham chiếu trên sao kê', { exact: true })
+      .fill('TEST-ROW');
+    await page
+      .getByRole('group', { name: 'Khoản thu thứ 1', exact: true })
+      .getByLabel('Số tiền (đồng)', { exact: true })
+      .fill('100000');
     await page.getByRole('button', { name: 'Thêm giao dịch', exact: true }).click();
-    await page.getByLabel('Mã giao dịch 2', { exact: true }).fill('TEST-ROW');
-    await page.getByLabel('Số tiền giao dịch 2 (đồng)', { exact: true }).fill('50000');
+    await page
+      .getByRole('group', { name: 'Khoản thu thứ 2', exact: true })
+      .getByLabel('Mã tham chiếu trên sao kê', { exact: true })
+      .fill('TEST-ROW');
+    await page
+      .getByRole('group', { name: 'Khoản thu thứ 2', exact: true })
+      .getByLabel('Số tiền (đồng)', { exact: true })
+      .fill('50000');
     await page.getByRole('button', { name: 'Kiểm tra sao kê', exact: true }).click();
     await expect(
       page.getByRole('heading', { name: 'Kiểm tra trước khi đối soát', exact: true }),
@@ -161,7 +176,11 @@ for (const width of [390, 1440])
     await expect(page.getByText(/1 mã giao dịch · Tổng 150.000/)).toBeVisible();
     expect(model.writes).toEqual([]);
     await page.getByRole('button', { name: 'Sửa sao kê', exact: true }).click();
-    await expect(page.getByLabel('Mã giao dịch 1', { exact: true })).toBeFocused();
+    await expect(
+      page
+        .getByRole('group', { name: 'Khoản thu thứ 1', exact: true })
+        .getByLabel('Mã tham chiếu trên sao kê', { exact: true }),
+    ).toBeFocused();
     await page.getByRole('button', { name: 'Kiểm tra sao kê', exact: true }).click();
     await page.getByRole('button', { name: 'Đối soát sao kê đã kiểm tra', exact: true }).click();
     await expect(page.getByRole('status')).toHaveText(
@@ -173,7 +192,11 @@ for (const width of [390, 1440])
         body: { p_date: '2026-10-31', p_statement: [{ txn: 'TEST-ROW', amount: 150000 }] },
       },
     ]);
-    await expect(page.getByLabel('Mã giao dịch 1', { exact: true })).toHaveValue('');
+    await expect(
+      page
+        .getByRole('group', { name: 'Khoản thu thứ 1', exact: true })
+        .getByLabel('Mã tham chiếu trên sao kê', { exact: true }),
+    ).toHaveValue('');
     expect(
       await page.evaluate(() => JSON.stringify({ ...localStorage, ...sessionStorage })),
     ).not.toContain('TEST-ROW');
@@ -184,9 +207,16 @@ test('Admin row drafts clear when hidden and rejecting unsafe money never calls 
 }) => {
   const model = await setupAdminSurfaces(page);
   await page.goto('/admin/reconciliation');
+  await page.getByRole('button', { name: /^Đối chiếu sao kê/ }).click();
   await page.getByLabel('Ngày đối soát (giờ Việt Nam)').fill('2026-10-31');
-  await page.getByLabel('Mã giao dịch 1', { exact: true }).fill('PRIVATE-DRAFT');
-  await page.getByLabel('Số tiền giao dịch 1 (đồng)', { exact: true }).fill('9007199254740992');
+  await page
+    .getByRole('group', { name: 'Khoản thu thứ 1', exact: true })
+    .getByLabel('Mã tham chiếu trên sao kê', { exact: true })
+    .fill('PRIVATE-DRAFT');
+  await page
+    .getByRole('group', { name: 'Khoản thu thứ 1', exact: true })
+    .getByLabel('Số tiền (đồng)', { exact: true })
+    .fill('9007199254740992');
   await page.getByRole('button', { name: 'Kiểm tra sao kê', exact: true }).click();
   await expect(page.locator('#reconciliation-error')).not.toBeEmpty();
   expect(model.writes).toEqual([]);
@@ -194,8 +224,16 @@ test('Admin row drafts clear when hidden and rejecting unsafe money never calls 
     Object.defineProperty(document, 'hidden', { configurable: true, value: true });
     document.dispatchEvent(new Event('visibilitychange'));
   });
-  await expect(page.getByLabel('Mã giao dịch 1', { exact: true })).toHaveValue('');
-  await expect(page.getByLabel('Số tiền giao dịch 1 (đồng)', { exact: true })).toHaveValue('');
+  await expect(
+    page
+      .getByRole('group', { name: 'Khoản thu thứ 1', exact: true })
+      .getByLabel('Mã tham chiếu trên sao kê', { exact: true }),
+  ).toHaveValue('');
+  await expect(
+    page
+      .getByRole('group', { name: 'Khoản thu thứ 1', exact: true })
+      .getByLabel('Số tiền (đồng)', { exact: true }),
+  ).toHaveValue('');
 });
 
 test('Admin manager form stays inside mobile viewport and Escape returns focus', async ({

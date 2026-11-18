@@ -11,6 +11,8 @@ import type {
   IncidentCandidate,
   TaskAssignmentPayload,
 } from '../task-management.types';
+import StaffTaskDetails from './StaffTaskDetails';
+import StaffEvidence from './StaffEvidence';
 import { TASK_STATUS_LABELS } from '../task-management.constants';
 import { restoreAssignmentPayload } from '../task-management.utils';
 
@@ -33,6 +35,7 @@ export default function AdminTaskAssignment({
   onOpenTask,
 }: AdminTaskAssignmentProps) {
   const actorId = explicitActorId || adminId || 'actor';
+  const [linkedIncident, setLinkedIncident] = useState<IncidentCandidate | null>(null);
   const effectiveRole = actorRole ?? role;
   const scopeKey = sellerId ? `seller:${sellerId}` : apiBase;
   const key = `florabot-task-assignment:${effectiveRole ?? 'none'}:${actorId}:${scopeKey}`;
@@ -146,6 +149,9 @@ export default function AdminTaskAssignment({
     }
   }
   const assignedTask = (incidentId: string) =>
+    incidents.data?.items.find(
+      (item) => item.id === incidentId && item.task?.status !== 'CANCELLED',
+    )?.task ??
     linkedTasks.find(
       (task) =>
         task.incidentId === incidentId &&
@@ -542,8 +548,10 @@ export default function AdminTaskAssignment({
                       }
                       onClick={() => {
                         const linked = assignedTask(incident.id);
-                        if (linked && onOpenTask) {
-                          onOpenTask(linked.id);
+                        if (linked) {
+                          if (linkedTasks.some((task) => task.id === linked.id) && onOpenTask)
+                            onOpenTask(linked.id);
+                          else setLinkedIncident(incident);
                           return;
                         }
                         setKind('INCIDENT');
@@ -603,6 +611,40 @@ export default function AdminTaskAssignment({
           )}
           {notice && <p role="status">{notice}</p>}
         </section>
+      )}
+      {linkedIncident?.task && (
+        <Modal
+          open
+          title="Công việc đã được phân công"
+          description={`${linkedIncident.location?.kioskName || 'Kiosk'} · ${linkedIncident.task.assigneeName}`}
+          onClose={() => setLinkedIncident(null)}
+        >
+          <p>
+            {TASK_STATUS_LABELS[linkedIncident.task.status] || linkedIncident.task.status} ·{' '}
+            {linkedIncident.reason}
+          </p>
+          <p>
+            Phiếu đã có người phụ trách. Xem tiến độ tại Công việc đã giao; báo cáo nộp xong nằm ở
+            Chờ duyệt báo cáo.
+          </p>
+          <StaffTaskDetails
+            taskId={linkedIncident.task.id}
+            version={0}
+            apiBase={apiBase}
+            actorId={actorId}
+            role={effectiveRole}
+          />
+          <StaffEvidence
+            taskId={linkedIncident.task.id}
+            version={0}
+            apiBase={apiBase}
+            actorId={actorId}
+            role={effectiveRole}
+            mode="oversight"
+            active={false}
+            taskStatus={linkedIncident.task.status}
+          />
+        </Modal>
       )}
       {effectiveRole === 'OPERATIONS_MANAGER' ? (
         <Modal

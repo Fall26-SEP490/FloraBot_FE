@@ -41,3 +41,17 @@ export function restoreIncidentResolutionAttempt(
     return null;
   }
 }
+
+export function incidentProgressLabel(
+  row: Pick<AdminIncidentResponse, 'status' | 'progress' | 'task'>,
+): string {
+  if (row.status === 'RESOLVED_FIXED') return 'Đã giải quyết';
+  const progress =
+    row.progress ?? (row.task?.status === 'SUBMITTED' ? 'AWAITING_REVIEW' : row.task?.status);
+  if (progress === 'COMPLETED') return 'Việc đã xong · Phiếu chưa đóng';
+  if (progress === 'AWAITING_REVIEW') return 'Chờ nghiệm thu';
+  if (progress === 'ASSIGNED' || row.task?.status === 'ASSIGNED') return 'Đã phân công';
+  if (progress === 'IN_PROGRESS') return 'Đang xử lý';
+  if (progress === 'UNASSIGNED') return 'Chưa phân công';
+  return 'Chưa đóng';
+}

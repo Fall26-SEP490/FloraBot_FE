@@ -65,6 +65,7 @@ function parseStatement(raw: string): Statement {
 
 export default function AdminReconciliation() {
   const [date, setDate] = useState('');
+  const [view, setView] = useState<'daily' | 'statement'>('daily');
   const [raw, setRaw] = useState('');
   const [inputMode, setInputMode] = useState<'rows' | 'json'>('rows');
   const [entries, setEntries] = useState<StatementEntry[]>([{ key: 0, txn: '', amount: '' }]);
@@ -191,13 +192,43 @@ export default function AdminReconciliation() {
         So sánh sổ cái nội bộ và các khoản thu PAYOS với sao kê bạn cung cấp. Báo cáo chỉ chỉ ra
         chênh lệch, không tạo khoản thu hay chuyển tiền.
       </p>
+      <div className="reconciliation-view-picker" role="group" aria-label="Chọn loại đối soát">
+        <button
+          type="button"
+          aria-pressed={view === 'daily'}
+          disabled={busy}
+          onClick={() => {
+            setView('daily');
+            setError('');
+            setNotice('');
+          }}
+        >
+          <strong>Báo cáo ngày</strong>
+          <span>Xem số liệu sổ cái và chênh lệch trong ngày</span>
+        </button>
+        <button
+          type="button"
+          aria-pressed={view === 'statement'}
+          disabled={busy}
+          onClick={() => {
+            setView('statement');
+            setError('');
+            setNotice('');
+          }}
+        >
+          <strong>Đối chiếu sao kê</strong>
+          <span>Nhập giao dịch PAYOS để so sánh với hệ thống</span>
+        </button>
+      </div>
       <AdminFilterBar
         label="Ngày và thao tác đối soát"
         actions={
           <>
-            <Button disabled={busy} onClick={() => void run('daily')}>
-              Xem báo cáo ngày
-            </Button>
+            {view === 'daily' && (
+              <Button disabled={busy} onClick={() => void run('daily')}>
+                Xem báo cáo ngày
+              </Button>
+            )}
             <Button variant="outline" onClick={clear}>
               Xóa dữ liệu trên màn hình
             </Button>
@@ -226,11 +257,17 @@ export default function AdminReconciliation() {
           />
         </div>
       </AdminFilterBar>
-      <p role="status">{busy ? 'Đang đối chiếu dữ liệu…' : notice}</p>
+      {(busy || notice) && <p role="status">{busy ? 'Đang đối chiếu dữ liệu…' : notice}</p>}
       <p id="reconciliation-error" role="alert" className="error">
         {error}
       </p>
-      {daily && (
+      {view === 'daily' && !daily && !busy && (
+        <div className="reconciliation-start">
+          <strong>Xem báo cáo theo ngày</strong>
+          <p>Chọn ngày đối soát rồi bấm “Xem báo cáo ngày” để tải số liệu.</p>
+        </div>
+      )}
+      {view === 'daily' && daily && (
         <div className="reconciliation-report">
           <h3>Báo cáo ngày {date}</h3>
           <p className="quiet">
@@ -280,6 +317,7 @@ export default function AdminReconciliation() {
         </div>
       )}
       <form
+        hidden={view !== 'statement'}
         className="admin-statement-form"
         noValidate
         onSubmit={(event) => {
@@ -311,8 +349,8 @@ export default function AdminReconciliation() {
       >
         <h3>Đối soát sao kê PAYOS</h3>
         <p className="quiet">
-          Dữ liệu nhập chỉ giữ trong tab hiện tại và được xóa khi bạn rời tab hoặc chọn xóa trên màn
-          hình.
+          Chọn ngày → nhập giao dịch → kiểm tra sao kê → xem chênh lệch. Nội dung nhập được giữ khi
+          chuyển mục trong trang; bấm “Xóa dữ liệu trên màn hình” để xóa.
         </p>
         {!review && (
           <>
@@ -428,7 +466,7 @@ export default function AdminReconciliation() {
           </div>
         )}
       </form>
-      {gateway && (
+      {view === 'statement' && gateway && (
         <div className="reconciliation-report">
           <h3>Kết quả sao kê ngày {date}</h3>
           <p>
