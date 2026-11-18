@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
-import { ApiError, sessionQuery } from '@/shared/lib/api';
+import { ApiError, isTransientSessionError, sessionQuery } from '@/shared/lib/api';
 import { accountPath } from '@/features/portal/config/roleRoutes';
 
 export function PortalGuard({
@@ -16,7 +16,13 @@ export function PortalGuard({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const session = useQuery(sessionQuery);
+  const session = useQuery({
+    ...sessionQuery,
+    refetchInterval: (query) => {
+      if (!query.state.error) return 60_000;
+      return isTransientSessionError(query.state.error) ? 10_000 : false;
+    },
+  });
   const allowed =
     session.data &&
     (session.data.role === requiredRole ||
@@ -27,12 +33,12 @@ export function PortalGuard({
     requiredRole === 'OPERATIONS_MANAGER' ||
     requiredRole === 'TECHNICIAN';
   const target =
-    session.data && !allowed
-      ? accountPath(session.data.role)
-      : session.error instanceof ApiError && session.error.status === 401
-        ? isPlatformRole
-          ? '/admin/login'
-          : '/dang-nhap'
+    session.error instanceof ApiError && session.error.status === 401
+      ? isPlatformRole
+        ? '/admin/login'
+        : '/dang-nhap'
+      : session.data && !allowed
+        ? accountPath(session.data.role)
         : null;
   useEffect(() => {
     if (!target) return;
@@ -46,7 +52,7 @@ export function PortalGuard({
         <p role="status">Đang kiểm tra phiên làm việc…</p>
       </main>
     );
-  if (session.isError)
+  if (session.isError && (!allowed || !isTransientSessionError(session.error)))
     return (
       <main id="main" className="workspace">
         <h1>Chưa kết nối được FloraBot</h1>
@@ -65,5 +71,17 @@ export function PortalGuard({
         )}
       </main>
     );
-  return allowed ? <>{children}</> : null;
+  return allowed ? (
+    <>
+      {session.isError && (
+        <p role="status" className="workspace">
+          Kết nối đang gián đoạn. Đang tự kiểm tra lại phiên làm việc.{' '}
+          <Button disabled={session.isFetching} onClick={() => void session.refetch()}>
+            Thử lại
+          </Button>
+        </p>
+      )}
+      {children}
+    </>
+  ) : null;
 }

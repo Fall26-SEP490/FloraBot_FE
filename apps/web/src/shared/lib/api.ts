@@ -25,6 +25,13 @@ export class ApiError extends Error {
     super(message);
   }
 }
+export function isTransientSessionError(error: unknown): boolean {
+  if (error instanceof ApiError) return error.status === 408 || error.status >= 500;
+  return (
+    error instanceof TypeError ||
+    (error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError'))
+  );
+}
 export const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: false, staleTime: 30_000 } },
 });
@@ -67,7 +74,16 @@ export async function request<T>(
       credentials: 'include',
       signal: AbortSignal.timeout(15_000),
     })
-      .then((result) => result.ok)
+      .then((result) => {
+        if (result.status === 401) return false;
+        if (!result.ok)
+          throw new ApiError(
+            result.status,
+            'Chưa làm mới được phiên làm việc. Vui lòng thử lại.',
+            'refresh_unavailable',
+          );
+        return true;
+      })
       .finally(() => {
         refresh = undefined;
       });
@@ -165,6 +181,8 @@ export const sessionQuery = {
   queryKey: ['session'],
   queryFn: () => request<Session>('/auth/me'),
   staleTime: 30_000,
+  retry: (failureCount: number, error: Error) => failureCount < 2 && isTransientSessionError(error),
+  retryDelay: (attempt: number) => Math.min(1000 * 2 ** attempt, 5000),
   retryOnMount: false,
   refetchOnWindowFocus: (query: { state: { error: Error | null } }) =>
     !(query.state.error instanceof ApiError && query.state.error.status === 401),

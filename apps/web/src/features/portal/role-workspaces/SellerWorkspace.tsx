@@ -6,7 +6,13 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@florabot/ui';
-import { ApiError, logoutSession, sessionQuery, type Session } from '@/shared/lib/api';
+import {
+  isTransientSessionError,
+  ApiError,
+  logoutSession,
+  sessionQuery,
+  type Session,
+} from '@/shared/lib/api';
 import { accountPath } from '@/features/portal/config/roleRoutes';
 import {
   sellerShopProfileQuery,
@@ -139,7 +145,7 @@ function PortalUpdates() {
 
 export default function SellerWorkspace({ section = 'overview' }: { section?: string }) {
   const { t } = useTranslation();
-  const session = useQuery({ ...sessionQuery, refetchInterval: 60_000 });
+  const session = useQuery(sessionQuery);
   const shop = useQuery(sellerShopProfileQuery(session.data));
   const logout = useMutation({
     mutationFn: logoutSession,
@@ -153,7 +159,7 @@ export default function SellerWorkspace({ section = 'overview' }: { section?: st
         <p role="status">{t('loading')}</p>
       </main>
     );
-  if (session.isError)
+  if (!session.data || (session.isError && !isTransientSessionError(session.error)))
     return (
       <main id="main">
         <h1>Không tải được phiên làm việc</h1>

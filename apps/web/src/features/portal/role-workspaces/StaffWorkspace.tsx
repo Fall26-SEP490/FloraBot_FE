@@ -5,7 +5,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { Button } from '@florabot/ui';
-import { logoutSession, sessionQuery } from '@/shared/lib/api';
+import { isTransientSessionError, logoutSession, sessionQuery } from '@/shared/lib/api';
 import { accountPath } from '@/features/portal/config/roleRoutes';
 import WorkspaceNavigation, { WorkspaceHeader } from '../components/WorkspaceNavigation';
 import '../workspace-styles.css';
@@ -26,7 +26,7 @@ const StaffTasks = dynamic(() => import('../../task-management/TaskManagement'),
 });
 
 export default function StaffWorkspace({ section = 'tasks' }: { section?: string }) {
-  const session = useQuery({ ...sessionQuery, refetchInterval: 60_000 });
+  const session = useQuery(sessionQuery);
   const logout = useMutation({
     mutationFn: logoutSession,
     onSuccess: async () => {
@@ -39,7 +39,7 @@ export default function StaffWorkspace({ section = 'tasks' }: { section?: string
         <p role="status">Đang tải tài khoản nhân viên shop…</p>
       </main>
     );
-  if (session.isError)
+  if (!session.data || (session.isError && !isTransientSessionError(session.error)))
     return (
       <main id="main" className="workspace">
         <h1>Không tải được phiên làm việc</h1>

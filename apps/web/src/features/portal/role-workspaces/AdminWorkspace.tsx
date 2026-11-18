@@ -6,7 +6,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useTranslation } from 'react-i18next';
 import { ArrowRight, Button } from '@florabot/ui';
-import { ApiError, logoutSession, sessionQuery } from '@/shared/lib/api';
+import { isTransientSessionError, ApiError, logoutSession, sessionQuery } from '@/shared/lib/api';
 import { accountPath } from '@/features/portal/config/roleRoutes';
 import WorkspaceNavigation, { WorkspaceHeader } from '../components/WorkspaceNavigation';
 import { workspaceSections } from '@/features/portal/config/workspaceSections';
@@ -101,7 +101,7 @@ function PortalUpdates() {
 
 export default function AdminWorkspace({ section = 'overview' }: { section?: string }) {
   const { t } = useTranslation();
-  const session = useQuery({ ...sessionQuery, refetchInterval: 60_000 });
+  const session = useQuery(sessionQuery);
   const logout = useMutation({
     mutationFn: logoutSession,
     onSuccess: async () => {
@@ -114,7 +114,7 @@ export default function AdminWorkspace({ section = 'overview' }: { section?: str
         <p role="status">{t('loading')}</p>
       </main>
     );
-  if (session.isError)
+  if (!session.data || (session.isError && !isTransientSessionError(session.error)))
     return (
       <main id="main">
         <h1>Không tải được phiên làm việc</h1>

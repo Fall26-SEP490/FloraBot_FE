@@ -6,7 +6,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@florabot/ui';
-import { logoutSession, sessionQuery } from '@/shared/lib/api';
+import { isTransientSessionError, logoutSession, sessionQuery } from '@/shared/lib/api';
 import { accountPath } from '@/features/portal/config/roleRoutes';
 import WorkspaceNavigation, { WorkspaceHeader } from '../components/WorkspaceNavigation';
 import '../workspace-styles.css';
@@ -58,7 +58,7 @@ const OperationsMaintenanceRecovery = dynamic(
 
 export default function OperationsWorkspace({ section = 'overview' }: { section?: string }) {
   const params = useSearchParams();
-  const session = useQuery({ ...sessionQuery, refetchInterval: 60_000 });
+  const session = useQuery(sessionQuery);
   const logout = useMutation({
     mutationFn: logoutSession,
     onSuccess: async () => {
@@ -71,7 +71,7 @@ export default function OperationsWorkspace({ section = 'overview' }: { section?
         <p role="status">Đang tải tài khoản quản lý vận hành…</p>
       </main>
     );
-  if (session.isError)
+  if (!session.data || (session.isError && !isTransientSessionError(session.error)))
     return (
       <main id="main" className="workspace">
         <h1>Không tải được phiên làm việc</h1>
