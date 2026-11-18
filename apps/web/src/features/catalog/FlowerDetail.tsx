@@ -253,16 +253,6 @@ export default function FlowerDetail({
                 </Button>
               </div>
 
-              <a
-                className="flower-detail-inline-hotline"
-                href={
-                  process.env.NEXT_PUBLIC_SUPPORT_PHONE
-                    ? `tel:${process.env.NEXT_PUBLIC_SUPPORT_PHONE}`
-                    : '/lien-he'
-                }
-              >
-                {process.env.NEXT_PUBLIC_SUPPORT_PHONE ? 'Gọi hotline hỗ trợ' : 'Liên hệ hỗ trợ'}
-              </a>
               {isWalkIn(item) && (
                 <section className="flower-detail-location" aria-labelledby="flower-location-title">
                   <h2 id="flower-location-title">Nơi mua hoa</h2>

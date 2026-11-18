@@ -1,108 +1,935 @@
-.flower-advisor-launch {
-  position: fixed;
-  inset-inline-end: 1.25rem;
-  inset-block-end: 1.25rem;
-  z-index: 20;
-  padding: 0.7rem 1rem;
-  border: 0;
-  border-radius: 2rem;
-  background: #21553c;
-  color: #fff;
-  font: inherit;
-  cursor: pointer;
+.flower-advisor-root {
+  --advisor-accent: var(--color-workspace-accent, #174b35);
+  --advisor-ink: var(--color-workspace-ink, #183e2b);
+  --advisor-muted: var(--color-workspace-muted, #476451);
+  --advisor-line: var(--color-workspace-line, #c9d9c8);
+  --advisor-divider: var(--color-workspace-divider, #dce6d7);
+  --advisor-surface: var(--color-workspace-surface, #ffffff);
+  --advisor-soft: var(--color-workspace-canvas, #f3f7f0);
+  --advisor-bubble: color-mix(in srgb, var(--advisor-ink) 6%, var(--advisor-surface));
+  color: var(--advisor-ink);
+  font-family: var(--font-body, 'Be Vietnam Pro', sans-serif);
 }
 
-.flower-advisor {
-  position: fixed;
-  inset: auto 1rem 1rem auto;
-  margin: 0;
-  width: min(26rem, calc(100vw - 2rem));
-  max-height: min(36rem, calc(100dvh - 2rem));
+.flower-advisor-launch {
+  bottom: var(--site-support-bottom, max(20px, env(safe-area-inset-bottom)));
+}
+
+.flower-advisor .flower-advisor-form > button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--advisor-accent) 88%, black);
+}
+
+.flower-advisor-root > .management-modal-backdrop {
+  top: var(--advisor-viewport-top, 0px);
+  bottom: auto;
+  height: var(--advisor-viewport-height, 100dvh);
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 16px;
+  overflow: hidden;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Animate the dimmer independently so panel opacity is not multiplied. */
+.flower-advisor-root > .management-modal-backdrop::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: rgb(10 30 18 / 34%);
+  animation: flower-advisor-fade-in 150ms ease-out both;
+}
+
+.flower-advisor-root[data-state='closing'] > .management-modal-backdrop::before {
+  animation: flower-advisor-fade-out 100ms ease-in both;
+}
+
+.flower-advisor-root[data-state='closing'] .flower-advisor {
+  pointer-events: none;
+  animation: flower-advisor-exit 100ms ease-in both;
+}
+
+div.management-modal.flower-advisor {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 400px);
+  height: min(740px, calc(var(--advisor-viewport-height, 100dvh) - 32px));
+  max-height: none;
   padding: 0;
   overflow: hidden;
-  border: 1px solid #c7d6c9;
-  border-radius: 1rem;
-  background: #fff;
-  color: #193428;
-  box-shadow: 0 1rem 3rem #152e2526;
+  border-color: var(--advisor-divider);
+  border-radius: 16px;
+  background: var(--advisor-surface);
+  color: var(--advisor-ink);
+  font: 400 14px/1.6 var(--font-body, 'Be Vietnam Pro', sans-serif);
+  transform-origin: bottom right;
+  animation: flower-advisor-enter 150ms ease-out both;
 }
 
-.flower-advisor[open] {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+.flower-advisor .management-modal-header {
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  padding: 6px 12px 6px 16px;
+  border-bottom: 0;
+  background: var(--advisor-accent);
+  color: var(--advisor-surface);
 }
 
-.flower-advisor::backdrop {
-  background: #101e1950;
-}
-
-.flower-advisor header,
-.flower-advisor form {
+.flower-advisor .management-modal-header h2 {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  background: #edf4ef;
+  gap: 8px;
+  color: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: normal;
+}
+
+.flower-advisor .management-modal-close,
+.flower-advisor .flower-advisor-expand {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--advisor-surface);
+}
+
+.flower-advisor .management-modal-header button:hover:not(:disabled) {
+  background: rgb(255 255 255 / 14%);
+  color: var(--advisor-surface);
+}
+
+.flower-advisor .management-modal-header button,
+.flower-advisor .flower-advisor-form > button,
+.flower-advisor .flower-advisor-prompts button,
+.flower-advisor .flower-advisor-tool-row button,
+.flower-advisor .flower-advisor-picker-heading button,
+.flower-advisor .flower-advisor-picker-row {
+  transition:
+    background-color 150ms ease-out,
+    border-color 150ms ease-out,
+    color 150ms ease-out;
+}
+
+.flower-advisor .flower-advisor-form > button svg {
+  transition: transform 150ms ease-out;
+}
+
+.flower-advisor .flower-advisor-form > button:hover:not(:disabled) svg {
+  transform: translate(1px, -1px);
+}
+
+.flower-advisor .management-modal-header button:focus-visible {
+  outline-color: var(--advisor-surface);
+  outline-offset: -3px;
+}
+
+div.management-modal.flower-advisor--expanded {
+  width: min(100%, 760px);
+  height: calc(var(--advisor-viewport-height, 100dvh) - 32px);
 }
 
 .flower-advisor button,
-.flower-advisor input {
-  min-height: 2.5rem;
-  padding: 0.35rem 0.65rem;
-  border: 1px solid #b2c8b9;
-  border-radius: 0.55rem;
-  background: #fff;
-  color: inherit;
+.flower-advisor select,
+.flower-advisor-product-link {
   font: inherit;
 }
 
-.flower-advisor button:enabled {
+.flower-advisor button {
   cursor: pointer;
 }
+
 .flower-advisor button:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
+  cursor: not-allowed;
 }
-.flower-advisor input {
-  flex: 1;
-  min-width: 0;
-}
+
 .flower-advisor-messages {
-  overflow: auto;
-  padding: 0.75rem 1rem;
+  --advisor-scrollbar-thumb: transparent;
+  flex: 1;
+  min-height: 0;
+  padding: 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
-.flower-advisor-messages p {
-  margin: 0.5rem 0;
+
+.flower-advisor-messages:hover,
+.flower-advisor-messages:focus-within {
+  --advisor-scrollbar-thumb: var(--advisor-line);
+}
+
+.flower-advisor-messages::-webkit-scrollbar {
+  width: 4px;
+}
+.flower-advisor-messages::-webkit-scrollbar-thumb {
+  background: var(--advisor-scrollbar-thumb);
+  border-radius: 999px;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  .flower-advisor-messages {
+    scrollbar-width: thin;
+    scrollbar-color: var(--advisor-scrollbar-thumb) transparent;
+  }
+}
+.flower-advisor-messages:focus {
+  outline: none;
+}
+
+.flower-advisor p {
+  margin: 0;
+  white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
-.flower-advisor-prompts {
+
+.flower-advisor .flower-advisor-location-button,
+.flower-advisor-prompts button,
+.flower-advisor .flower-advisor-retry {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: fit-content;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--advisor-line);
+  border-radius: 8px;
+  background: var(--advisor-surface);
+  color: var(--advisor-ink);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+}
+
+.flower-advisor button:hover:not(:disabled),
+.flower-advisor-product-link:hover {
+  background: var(--advisor-soft);
+}
+
+.flower-advisor button:focus-visible,
+.flower-advisor a:focus-visible {
+  outline: 2px solid var(--advisor-accent);
+  outline-offset: 2px;
+}
+
+.flower-advisor-muted,
+.flower-advisor .flower-advisor-location-note,
+.flower-advisor-context-note,
+.flower-advisor-ratings {
+  color: var(--advisor-muted);
+  font-size: 12px;
+}
+
+.flower-advisor .flower-advisor-text-button {
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--advisor-accent);
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.flower-advisor-welcome {
   display: grid;
-  gap: 0.4rem;
+  justify-items: center;
+  gap: 16px;
+  padding: 12px 0 4px;
 }
+
+.flower-advisor-welcome > p {
+  max-width: 30ch;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.7;
+}
+
+.flower-advisor-answer > p {
+  font-size: 14px;
+}
+
+.flower-advisor-prompts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+}
+
 .flower-advisor-prompts button {
-  text-align: start;
+  justify-content: flex-start;
+  width: fit-content;
+  min-height: 38px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  color: var(--advisor-accent);
+  font-weight: 400;
+  font-size: 13px;
 }
-.flower-advisor-question {
-  background: #edf4ef;
-  padding: 0.6rem;
-  border-radius: 0.55rem;
+
+.flower-advisor--conversation .flower-advisor-welcome {
+  gap: 12px;
+  padding-top: 8px;
 }
-.flower-advisor article {
-  border: 1px solid #d1dfd4;
-  border-radius: 0.55rem;
-  padding: 0.6rem;
-  margin: 0.4rem 0;
+
+.flower-advisor--conversation .flower-advisor-welcome > p {
+  font-size: 14px;
+  font-weight: 400;
 }
-.flower-advisor article span {
-  display: block;
+
+.flower-advisor--conversation .flower-advisor-prompts {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.flower-advisor--conversation .flower-advisor-prompts button {
+  width: fit-content;
+  padding-inline: 12px;
+  font-size: 13px;
+}
+
+.flower-advisor-exchange {
+  display: grid;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.flower-advisor-exchange:last-child .flower-advisor-question,
+.flower-advisor-exchange:last-child .flower-advisor-answer {
+  animation: flower-advisor-message-in 180ms ease-out both;
+}
+
+.flower-advisor-messages {
+  animation: flower-advisor-fade-in 150ms ease-out both;
+}
+
+.flower-advisor .flower-advisor-question {
+  justify-self: end;
+  max-width: 85%;
+  padding: 12px 16px;
+  border-radius: 20px 20px 4px 20px;
+  background: var(--advisor-accent);
+  color: var(--advisor-surface);
+  font-size: 14px;
+}
+
+.flower-advisor-bot-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.flower-advisor-avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 32px;
+  color: var(--advisor-accent);
+}
+
+.flower-advisor-answer {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  max-width: calc(100% - 32px);
+  padding: 12px 14px;
+  border-radius: 4px 20px 20px 20px;
+  background: var(--advisor-bubble);
+}
+
+.flower-advisor-error {
+  color: var(--color-error, #a52222);
+}
+
+.flower-advisor-pending {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--advisor-muted);
+}
+
+.flower-advisor-typing {
+  display: inline-flex;
+  gap: 3px;
+  flex: none;
+}
+
+.flower-advisor-typing > span {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: flower-advisor-pulse 1s ease-in-out infinite alternate;
+}
+
+.flower-advisor-typing > span:nth-child(2) {
+  animation-delay: 160ms;
+}
+
+.flower-advisor-typing > span:nth-child(3) {
+  animation-delay: 320ms;
+}
+
+.flower-advisor .flower-advisor-pending {
+  font-size: 12px;
+}
+
+.flower-advisor-suggestion {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--advisor-divider);
+  border-radius: 12px;
+  background: var(--advisor-surface);
 }
 
 .flower-advisor-photo {
   display: block;
+  width: 88px;
+  height: 88px;
+  border-radius: 8px;
+  object-fit: contain;
+  background: var(--advisor-soft);
+}
+
+.flower-advisor-photo--empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--advisor-muted);
+  font-size: 10px;
+}
+
+.flower-advisor-product {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.flower-advisor-product-summary {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+}
+
+.flower-advisor-product-main {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: 4px;
+}
+
+.flower-advisor-product-mode {
+  width: fit-content;
+  color: var(--advisor-muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.flower-advisor-product h3 {
+  margin: 0;
+  color: var(--advisor-ink);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font: 500 14px/1.5 var(--font-body, 'Be Vietnam Pro', sans-serif);
+  overflow-wrap: anywhere;
+}
+
+.flower-advisor-price-row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 2px 6px;
+  margin-top: 2px;
+}
+
+.flower-advisor-price-row > span {
+  color: var(--advisor-muted);
+  font-size: 10px;
+}
+
+.flower-advisor-price {
+  font-size: 16px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.flower-advisor .flower-advisor-product-reason {
+  color: var(--advisor-ink);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.flower-advisor-product-location {
+  display: grid;
+  gap: 4px;
+}
+
+.flower-advisor-ratings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  color: var(--advisor-muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.flower-advisor-product-location > span {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  color: var(--advisor-muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.flower-advisor-product-location svg {
+  flex: none;
+  margin-top: 3px;
+}
+
+.flower-advisor-product-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 12px;
+  box-sizing: border-box;
+  border: 1px solid var(--advisor-accent);
+  border-radius: 8px;
+  background: var(--advisor-accent);
+  color: var(--advisor-surface);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 150ms ease-out;
+}
+
+.flower-advisor-product-link:hover {
+  background: color-mix(in srgb, var(--advisor-accent) 88%, black);
+}
+
+.flower-advisor-compose {
+  flex: none;
+  padding: 8px 12px;
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+  border: 0;
+  background: var(--advisor-surface);
+}
+
+.flower-advisor-form {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 3px;
+  border: 1px solid var(--advisor-line);
+  border-radius: 26px;
+  overflow: hidden;
+  background: var(--advisor-surface);
+}
+
+.flower-advisor-form:focus-within {
+  border-color: var(--advisor-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--advisor-accent) 12%, transparent);
+}
+
+.flower-advisor-form textarea {
+  box-sizing: border-box;
+  flex: 1;
+  min-width: 0;
+  min-height: 36px;
+  max-height: 96px;
+  resize: none;
+  padding: 6px 8px;
+  border: 0;
+  outline: none;
+  background: transparent;
+  border-radius: 20px;
+  color: var(--advisor-ink);
+  font: 400 16px/22px var(--font-body, 'Be Vietnam Pro', sans-serif);
+}
+
+.flower-advisor-form textarea::placeholder {
+  color: var(--advisor-muted);
+}
+
+/* The shared input focus rule is !important; this composer uses one ring on
+   its enclosing form rather than a second rectangle around the textarea. */
+.flower-advisor .flower-advisor-form textarea:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.flower-advisor-form > button {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--advisor-accent);
+  color: var(--advisor-surface);
+}
+
+.flower-advisor-form > button:disabled {
+  opacity: 0.3;
+}
+
+.flower-advisor .flower-advisor-compose-hint {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+  color: var(--advisor-muted);
+  font-size: 12px;
+}
+
+.flower-advisor-privacy {
+  display: block;
+  width: fit-content;
+  margin: 4px auto 0;
+  padding-block: 4px;
+  color: var(--advisor-accent);
+  font-size: 12px;
+  text-underline-offset: 3px;
+}
+
+@keyframes flower-advisor-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes flower-advisor-exit {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+}
+
+@keyframes flower-advisor-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes flower-advisor-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes flower-advisor-message-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes flower-advisor-picker-in {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes flower-advisor-mobile-enter {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes flower-advisor-mobile-exit {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+@keyframes flower-advisor-pulse {
+  from {
+    opacity: 0.4;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 600px) {
+  .flower-advisor-root > .management-modal-backdrop {
+    padding: 0;
+  }
+
+  div.management-modal.flower-advisor {
+    width: 100%;
+    height: var(--advisor-viewport-height, 100dvh);
+    border: 0;
+    border-radius: 0;
+    animation-name: flower-advisor-mobile-enter;
+  }
+
+  .flower-advisor-root[data-state='closing'] .flower-advisor {
+    animation-name: flower-advisor-mobile-exit;
+  }
+
+  .flower-advisor .flower-advisor-expand {
+    display: none;
+  }
+}
+
+.flower-advisor-tools {
+  margin-top: 12px;
+}
+.flower-advisor-tool-row {
+  display: flex;
+  gap: 8px;
+}
+.flower-advisor .flower-advisor-tool-row button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  min-height: 40px;
+  padding: 6px 10px;
+  border: 1px solid var(--advisor-line);
+  border-radius: 12px;
+  background: var(--advisor-surface);
+  color: var(--advisor-muted);
+  font-size: 13px;
+  font-weight: 400;
+}
+.flower-advisor-tool-row .flower-advisor-location-button {
+  flex: none;
+}
+.flower-advisor .flower-advisor-tool-row button[aria-pressed='true'] {
+  background: var(--advisor-soft);
+  color: var(--advisor-accent);
+}
+.flower-advisor-tool-row .flower-advisor-kiosk-trigger {
+  flex: 1;
+}
+.flower-advisor-tool-row svg {
+  flex: none;
+}
+.flower-advisor-kiosk-trigger > span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+.flower-advisor-tools .flower-advisor-location-note {
+  margin-top: 6px;
+}
+.flower-advisor-picker {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding: 12px 16px 16px;
+  animation: flower-advisor-picker-in 150ms ease-out both;
+}
+.flower-advisor-picker-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.flower-advisor-picker-heading h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.flower-advisor-picker-heading button {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--advisor-ink);
+}
+.flower-advisor-picker-search {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: 8px;
+  padding-inline: 12px;
+  border: 1px solid var(--advisor-line);
+  border-radius: 12px;
+}
+.flower-advisor-picker-search > svg {
+  flex: none;
+  color: var(--advisor-muted);
+}
+.flower-advisor-picker-search input {
+  box-sizing: border-box;
   width: 100%;
-  max-height: 9rem;
-  aspect-ratio: 3 / 2;
-  object-fit: cover;
-  border-radius: 0.5rem;
-  margin-bottom: 0.5rem;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 0;
+  border: 0;
+  background: var(--advisor-surface);
+  color: var(--advisor-ink);
+  font: 400 16px/1.5 var(--font-body, 'Be Vietnam Pro', sans-serif);
+}
+.flower-advisor .flower-advisor-picker-search input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+.flower-advisor-picker-search:focus-within {
+  border-color: var(--advisor-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--advisor-accent) 12%, transparent);
+}
+.flower-advisor-picker-results {
+  --advisor-scrollbar-thumb: transparent;
+  min-height: 0;
+  flex: 1;
+  margin-top: 12px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.flower-advisor-picker-results:hover,
+.flower-advisor-picker-results:focus-within {
+  --advisor-scrollbar-thumb: var(--advisor-line);
+}
+.flower-advisor-picker-results::-webkit-scrollbar {
+  width: 4px;
+}
+.flower-advisor-picker-results::-webkit-scrollbar-thumb {
+  background: var(--advisor-scrollbar-thumb);
+  border-radius: 999px;
+}
+@supports not selector(::-webkit-scrollbar) {
+  .flower-advisor-picker-results {
+    scrollbar-width: thin;
+    scrollbar-color: var(--advisor-scrollbar-thumb) transparent;
+  }
+}
+.flower-advisor-picker-results ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.flower-advisor .flower-advisor-picker-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  min-height: 56px;
+  padding: 12px 8px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--advisor-surface);
+  color: var(--advisor-ink);
+  text-align: left;
+}
+.flower-advisor-picker-row > svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--advisor-muted);
+}
+.flower-advisor-picker-row > span {
+  display: grid;
+  flex: 1;
+  gap: 4px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.flower-advisor-picker-row strong {
+  font-size: 14px;
+  font-weight: 500;
+}
+.flower-advisor-picker-row > span > span {
+  color: var(--advisor-muted);
+  font-size: 12px;
+}
+.flower-advisor .flower-advisor-picker-row[aria-pressed='true'] {
+  background: var(--advisor-soft);
+}
+.flower-advisor-picker-empty {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flower-advisor-root *,
+  .flower-advisor-root *::before,
+  .flower-advisor-root *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .flower-advisor-launch:hover,
+  .flower-advisor-launch:active,
+  .flower-advisor .flower-advisor-form > button:hover:not(:disabled) svg {
+    transform: none;
+  }
 }

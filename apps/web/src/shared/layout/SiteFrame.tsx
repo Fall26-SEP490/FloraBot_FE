@@ -4,7 +4,8 @@ import { memo, useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { QueryClientProvider, useQuery } from '@tanstack/react-query';
-import { Flower2, LogIn, Menu, Phone, X } from '@florabot/ui';
+import { Flower2, LogIn, Menu, X } from '@florabot/ui';
+import { SiteSupport } from './SiteSupport';
 import { workspaceBase } from '@/features/portal/config/workspaceSections';
 import { getRoleLabel } from '@/features/portal/config/roleRoutes';
 import {
@@ -354,24 +355,7 @@ function Frame({ children }: { children: ReactNode }) {
         ) : (
           <SiteFooter />
         ))}
-      {!workspace && !authSurface && (
-        <aside aria-label="Hỗ trợ khách hàng">
-          <a
-            className="site-hotline-button"
-            href={
-              process.env.NEXT_PUBLIC_SUPPORT_PHONE
-                ? `tel:${process.env.NEXT_PUBLIC_SUPPORT_PHONE}`
-                : '/lien-he'
-            }
-            aria-label={
-              process.env.NEXT_PUBLIC_SUPPORT_PHONE ? 'Gọi hotline hỗ trợ' : 'Liên hệ hỗ trợ'
-            }
-            title={process.env.NEXT_PUBLIC_SUPPORT_PHONE ? 'Gọi hotline hỗ trợ' : 'Liên hệ hỗ trợ'}
-          >
-            <Phone size={24} aria-hidden="true" />
-          </a>
-        </aside>
-      )}
+      <SiteSupport />
     </div>
   );
 }

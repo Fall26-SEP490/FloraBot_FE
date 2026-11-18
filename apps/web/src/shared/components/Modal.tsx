@@ -13,6 +13,8 @@ export function Modal({
   open,
   title,
   description,
+  titleIcon,
+  headerActions,
   onClose,
   children,
   closeDisabled = false,
@@ -22,6 +24,8 @@ export function Modal({
   open: boolean;
   title: string;
   description?: string;
+  titleIcon?: ReactNode;
+  headerActions?: ReactNode;
   onClose: () => void;
   children: ReactNode;
   closeDisabled?: boolean;
@@ -99,11 +103,15 @@ export function Modal({
         aria-describedby={description ? descriptionId : undefined}
         tabIndex={-1}
       >
-        <header className="management-modal-header">
+        <header className="management-modal-header" role="presentation">
           <div className="management-modal-heading-text">
-            <h2 id={titleId}>{title}</h2>
+            <h2 id={titleId}>
+              {titleIcon}
+              {title}
+            </h2>
             {description && <p id={descriptionId}>{description}</p>}
           </div>
+          {headerActions}
           <button
             type="button"
             className="management-modal-close"

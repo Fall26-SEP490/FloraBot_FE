@@ -32,41 +32,107 @@
   outline-offset: 3px;
 }
 
-.site-hotline-button {
+.site-support {
+  --site-support-size: 44px;
+  --site-support-gap: 12px;
+  --site-support-bottom: max(40px, env(safe-area-inset-bottom));
+}
+.site-support-control {
   position: fixed;
   right: max(20px, env(safe-area-inset-right));
-  bottom: max(20px, env(safe-area-inset-bottom));
   z-index: 100;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--site-support-size, 50px);
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-workspace-accent, #174b35);
+  font: 500 13px/1.4 var(--font-body, 'Be Vietnam Pro', sans-serif);
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 150ms ease-out;
+}
+.site-hotline-button {
+  bottom: calc(
+    var(--site-support-bottom, max(20px, env(safe-area-inset-bottom))) +
+      var(--site-support-size, 50px) + var(--site-support-gap, 12px)
+  );
+}
+.site-support-icon {
+  box-sizing: border-box;
   display: grid;
   place-items: center;
-  width: 54px;
-  height: 54px;
+  flex: none;
+  width: var(--site-support-size, 50px);
+  height: var(--site-support-size, 50px);
   border: 2px solid #fff;
   border-radius: 50%;
-  background: #1e5037;
+  background: var(--color-workspace-accent, #174b35);
   color: #fff;
-  box-shadow: 0 4px 16px #173e2c30;
+  box-shadow: 0 3px 12px rgb(24 62 43 / 15%);
+  transition:
+    background-color 150ms ease-out,
+    box-shadow 150ms ease-out;
 }
-.site-hotline-button:hover {
+.site-support-label {
+  padding: 8px 12px;
+  border: 1px solid var(--color-workspace-divider, #dce6d7);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--color-workspace-accent, #174b35);
+  box-shadow: 0 2px 8px rgb(24 62 43 / 6%);
+  white-space: nowrap;
+}
+.site-support-label--phone {
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.site-support-control:hover .site-support-icon {
   background: #143e29;
 }
-.flower-detail-inline-hotline {
-  display: none;
+@media (hover: hover) {
+  .site-support-control:hover {
+    transform: translateY(-2px);
+  }
+  .site-support-control:hover .site-support-icon {
+    box-shadow: 0 5px 16px rgb(24 62 43 / 20%);
+  }
+}
+.site-support-control:active {
+  transform: scale(0.97);
 }
 @media (max-width: 767px) {
-  body:has(.flower-detail-page, .receipt-page) .site-hotline-button {
+  .site-support-label {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  .site-support-label--phone {
     display: none;
   }
-  .flower-detail-inline-hotline {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    text-decoration: underline;
+  body:has(.flower-detail-page) .site-support {
+    --site-support-bottom: calc(max(20px, env(safe-area-inset-bottom)) + 96px);
+  }
+  body:has(.staff-chat-section) .site-support {
+    --site-support-bottom: calc(max(20px, env(safe-area-inset-bottom)) + 160px);
   }
 }
-.site-hotline-button:focus-visible {
-  outline: 3px solid #1e5037;
+.site-support-control:focus-visible {
+  outline: 3px solid var(--color-workspace-accent, #174b35);
   outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-support-control,
+  .site-support-icon {
+    transition: none;
+  }
+  .site-support-control:hover,
+  .site-support-control:active {
+    transform: none;
+  }
 }
 
 /* Disable native Edge password reveal and clear buttons site-wide */
