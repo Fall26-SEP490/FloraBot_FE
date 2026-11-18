@@ -80,6 +80,7 @@ export {
   QrCode,
   KeyRound,
   Sparkles,
+  Star,
   Clock,
   CalendarDays,
   CheckCircle2,

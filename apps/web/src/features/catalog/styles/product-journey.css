@@ -1,556 +1,409 @@
-/* ==========================================================================
-   FLORABOT LUXURY PRODUCT DETAIL PAGE (REFINED BOUTIQUE STYLE)
-   ========================================================================== */
-
+.site-frame-customer .site-content:has(.flower-detail-page) {
+  background-color: var(--color-workspace-canvas, #f3f7f0);
+  background-image:
+    linear-gradient(rgb(255 255 255 / 94%), rgb(255 255 255 / 94%)),
+    url('/images/generated/florabot-pattern.webp');
+  background-position: center top;
+  background-size:
+    auto,
+    460px auto;
+  background-repeat: no-repeat, repeat;
+}
 .flower-detail-page {
   box-sizing: border-box;
-  max-width: var(--customer-page-width, 1080px);
-  margin: 1rem auto 3.5rem;
-  padding-inline: var(--customer-page-gutter, 1.5rem);
+  max-width: var(--customer-page-width, 1160px);
   min-height: 0;
+  margin: 24px auto 64px;
+  padding-inline: var(--customer-page-gutter, 24px);
   background: transparent;
+  color: var(--color-workspace-ink, #183e2b);
 }
-
-/* 1. Breadcrumbs */
 .flower-detail-breadcrumb {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-  font-size: 0.82rem;
-  color: #738a7a;
-  margin-bottom: 0.85rem;
+  gap: 12px;
+  min-width: 0;
+  margin-bottom: 20px;
+  color: var(--color-workspace-muted, #476451);
+  font-size: 13px;
 }
-.flower-detail-breadcrumb a.breadcrumb-link {
-  color: #587060;
-  text-decoration: none;
-  transition: color 0.15s ease;
-}
-.flower-detail-breadcrumb a.breadcrumb-link:hover {
-  color: #183e2b;
-  text-decoration: underline;
-}
-.flower-detail-breadcrumb .breadcrumb-separator {
-  color: #cbd5cb;
-  font-size: 0.72rem;
-}
-.flower-detail-breadcrumb .breadcrumb-current {
-  color: #183e2b;
-  font-weight: 600;
-  text-transform: capitalize;
-}
-
 .flower-detail-back {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  min-height: 32px;
-  margin-bottom: 1.25rem;
-  padding: 0;
-  color: #4b6b55;
-  font-size: 0.84rem;
-  font-weight: 600;
+  gap: 6px;
+  flex: none;
+  min-height: 44px;
+  color: inherit;
   text-decoration: none;
-  background: transparent;
-  border: none;
-  transition: all 0.15s ease;
 }
 .flower-detail-back:hover {
-  color: #183e2b;
   text-decoration: underline;
-  transform: translateX(-2px);
 }
-
+.flower-detail-breadcrumb .breadcrumb-current {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.flower-detail-breadcrumb .breadcrumb-separator {
+  color: var(--color-workspace-line, #c9d9c8);
+}
 .flower-detail-feedback {
-  padding: 2.5rem;
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  padding: 48px 24px;
+  border: 1px solid var(--color-workspace-divider, #dce6d7);
+  border-radius: 16px;
+  background: var(--color-workspace-surface, #fff);
   text-align: center;
-  background: #fbf9f6;
-  border: 1px solid #ebe6df;
-  border-radius: 12px;
-  color: #4b6b55;
 }
-.flower-detail-feedback.flower-detail-error {
-  border-color: #f0cfcb;
-  background: #fdf5f4;
-  color: #a82e2e;
+.flower-detail-feedback p {
+  margin: 0;
 }
-
-/* 2. Main Article Layout */
+.flower-detail-error {
+  color: var(--color-status-danger-ink, #842323);
+}
 .flower-detail {
-  background: transparent;
-  padding: 0;
+  padding: clamp(20px, 3vw, 36px);
+  border: 1px solid var(--color-workspace-divider, #dce6d7);
+  border-radius: 16px;
+  background: var(--color-workspace-surface, #fff);
 }
-
 .flower-detail-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.15fr);
-  gap: clamp(1.75rem, 4vw, 3.25rem);
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
   align-items: start;
+  gap: clamp(24px, 4vw, 48px);
 }
-
-/* 3. Hero Flower Media */
 .flower-detail-gallery {
-  display: flex;
-  flex-direction: column;
-  position: sticky;
-  top: 90px;
+  min-width: 0;
+  width: 100%;
+  max-width: 400px;
 }
-
 .flower-detail-media {
   position: relative;
+  display: grid;
+  aspect-ratio: 1;
+  width: 100%;
   margin: 0;
   overflow: hidden;
-  border-radius: 14px;
-  background: #f4f6f2;
-  border: 1px solid #e2eae1;
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 8px 24px -10px rgba(24, 62, 43, 0.08);
+  border-radius: 12px;
+  background: var(--color-workspace-surface-muted, #fafcfa);
 }
-
 .flower-detail-media img.flower-detail-main-img {
   display: block;
   width: 100%;
   height: 100%;
+  min-height: 0;
   object-fit: cover;
-  transition: transform 0.35s ease;
 }
-
-.flower-detail-media:hover img.flower-detail-main-img {
-  transform: scale(1.02);
+.flower-detail-zoom {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-workspace-divider, #dce6d7);
+  border-radius: 999px;
+  background: var(--color-workspace-surface, #fff);
+  color: var(--color-workspace-ink, #183e2b);
+  font: 500 12px/1.5 var(--font-body);
+  cursor: pointer;
 }
-
 .flower-detail-media figcaption {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 0.65rem 0.85rem;
-  color: #45654a;
-  background: rgba(247, 250, 245, 0.94);
-  font-size: 0.78rem;
-  border-top: 1px solid #e0e8dc;
+  inset: auto 0 0;
+  padding: 12px;
+  background: rgb(255 255 255 / 94%);
+  color: var(--color-workspace-muted, #476451);
+  font-size: 12px;
+  line-height: 1.6;
   text-align: center;
-  line-height: 1.4;
-  backdrop-filter: blur(4px);
 }
-
-/* 4. Buy Box / Product Information (Chữ gọn gàng theo mẫu) */
+.flower-detail-lightbox > img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: calc(100dvh - 180px);
+  margin-inline: auto;
+  object-fit: contain;
+}
 .flower-detail-content {
   min-width: 0;
-  display: flex;
-  flex-direction: column;
 }
-
 .flower-detail-header-meta {
+  margin-bottom: 12px;
+}
+.flower-detail-badge {
+  display: inline-flex;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--color-workspace-canvas, #f3f7f0);
+  color: var(--color-workspace-accent, #174b35);
+  font-size: 12px;
+  font-weight: 500;
+}
+.flower-detail-title {
+  margin: 0 0 12px;
+  color: var(--color-workspace-ink, #183e2b);
+  font: 600 clamp(24px, 2.4vw, 32px)/1.35 var(--font-body);
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+.flower-detail-rating {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.45rem;
-  margin-bottom: 0.35rem;
+  gap: 6px;
+  width: fit-content;
+  min-height: 32px;
+  margin-bottom: 12px;
+  color: var(--color-workspace-muted, #476451);
+  font-size: 13px;
+  text-decoration: none;
 }
-
-.flower-detail-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.2rem 0.55rem;
-  border-radius: 4px;
-  background: #edf4ee;
-  color: #183e2b;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  border: 1px solid #d0e0d3;
+.flower-detail-rating:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
-
-.flower-detail-badge-occasion {
-  background: #fbf5e8;
-  color: #8c6314;
-  border-color: #f1ddb3;
-}
-
-/* Tiêu đề hoa: Kích thước thanh thoát, gọn gàng đúng mẫu, chuẩn tiếng Việt không lỗi dấu */
-.flower-detail-title {
-  margin: 0.15rem 0 0.35rem;
-  color: #1a1a1a;
-  font-family:
-    'Be Vietnam Pro',
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
-  font-size: clamp(1.35rem, 2vw, 1.6rem);
-  font-weight: 600;
-  line-height: 1.3;
-  letter-spacing: -0.015em;
-  text-transform: capitalize;
-  overflow-wrap: anywhere;
-}
-
 .flower-detail-shop {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  margin: 0 0 0.75rem;
-  color: #556e5c;
-  font-size: 0.85rem;
-}
-
-.flower-detail-shop svg {
-  flex-shrink: 0;
-  color: #183e2b;
-}
-
-/* Khối giá */
-.flower-detail-pricing {
-  display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.65rem;
-  margin: 0 0 0.95rem;
+  gap: 6px 8px;
+  margin-bottom: 24px;
+  color: var(--color-workspace-muted, #476451);
+  font-size: 13px;
 }
-
-.flower-detail-price {
-  font-size: 1.55rem;
-  font-weight: 700;
-  color: #183e2b;
-  letter-spacing: -0.02em;
-  font-family:
-    'Be Vietnam Pro',
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
+.flower-detail-shop > svg {
+  flex: none;
 }
-
-.flower-detail-price-sub {
-  font-size: 0.84rem;
-  color: #64816c;
+.flower-detail-shop > strong {
   font-weight: 500;
-}
-
-/* Dải 3 cam kết nhỏ gọn (3 cột tinh tế như mẫu ảnh) */
-.flower-detail-perks {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.5rem;
-  padding: 0.85rem 0.95rem;
-  background: #faf8f5;
-  border: 1px solid #ece6dc;
-  border-radius: 8px;
-  margin-bottom: 1.15rem;
-}
-
-.perk-col {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 0.3rem;
-}
-
-.perk-icon-wrap {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: #ffffff;
-  border: 1px solid #e5dfd4;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #183e2b;
-  flex-shrink: 0;
-}
-
-.perk-text strong {
-  display: block;
-  font-size: 0.76rem;
-  font-weight: 700;
-  color: #183e2b;
-  line-height: 1.3;
-}
-
-.perk-text span {
-  display: block;
-  font-size: 0.7rem;
-  color: #667d6c;
-  margin-top: 1px;
-  line-height: 1.25;
-}
-
-.flower-detail-note {
-  margin: 0 0 1.15rem;
-  font-size: 0.84rem;
-  color: #55725f;
-  line-height: 1.45;
-}
-
-/* 5. Action CTAs (Chiều cao 44px thanh thoát) */
-.flower-detail-actions {
-  display: flex;
-  flex-direction: row-reverse;
-  align-items: stretch;
-  gap: 0.75rem;
-  margin-bottom: 1.35rem;
-}
-
-.flower-detail-chat-btn.button,
-.flower-detail-chat-btn {
-  flex: 1 1 0;
-  min-height: 44px;
-  height: 44px;
-  border: 1.5px solid #d2ded5;
-  color: #1e3b28;
-  background: #ffffff;
-  border-radius: 6px;
-  font-size: 0.88rem;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.flower-detail-chat-btn:hover:not(:disabled) {
-  background: #f2f7f3;
-  border-color: #183e2b;
-}
-
-.flower-detail-cta-btn.button,
-.flower-detail-cta-btn {
-  flex: 1.4 1 0;
-  min-height: 44px;
-  height: 44px;
-  background: #183e2b !important;
-  color: #ffffff !important;
-  border-radius: 6px;
-  font-size: 0.88rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  border: none;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  transition: all 0.2s ease;
-  box-shadow: 0 3px 10px rgba(24, 62, 43, 0.2);
-}
-
-.flower-detail-cta-btn:hover {
-  background: #0f2b1d !important;
-  transform: translateY(-1px);
-  box-shadow: 0 5px 14px rgba(24, 62, 43, 0.28);
-}
-
-/* 6. Location Section */
-.flower-detail-location {
-  margin: 0 0 1.15rem;
-  padding: 0.9rem 1.05rem;
-  background: #f7faf7;
-  border-radius: 8px;
-  border: 1px solid #e1ebe2;
-}
-
-.flower-detail-location h2 {
-  margin: 0 0 0.55rem;
-  color: #183e2b;
-  font-size: 0.8rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-family:
-    'Be Vietnam Pro',
-    -apple-system,
-    sans-serif;
-}
-
-.flower-detail-location-body {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.flower-detail-info-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-}
-
-.flower-detail-info-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  background: #183e2b;
-  color: #ffffff;
-  flex: 0 0 32px;
-}
-
-.flower-detail-info-content strong {
-  display: block;
-  color: #183e2b;
-  font-size: 0.88rem;
-  font-weight: 700;
-}
-
-.flower-detail-info-content p {
-  margin: 0.15rem 0 0;
-  color: #55705e;
-  font-size: 0.82rem;
-  line-height: 1.4;
-}
-
-/* 7. Description Section */
-.flower-detail-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  list-style: none;
-  padding: 0;
-  margin: 1rem 0;
-}
-
-.flower-detail-tags li {
-  border: 1px solid #c9dacf;
-  border-radius: 999px;
-  background: #edf5ee;
-  color: #234734;
-  padding: 0.25rem 0.7rem;
-  font-size: 0.875rem;
   overflow-wrap: anywhere;
 }
-
+.flower-detail-shop-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  color: var(--color-workspace-muted, #476451);
+  font-size: 12px;
+  text-decoration: none;
+}
+.flower-detail-pricing {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.flower-detail-price {
+  color: var(--color-workspace-ink, #183e2b);
+  font: 600 clamp(26px, 2.5vw, 32px)/1.4 var(--font-body);
+  overflow-wrap: anywhere;
+}
+.flower-detail-price-sub {
+  font-size: 13px;
+  color: var(--color-workspace-muted, #476451);
+}
+.flower-detail-note {
+  margin: 0 0 24px;
+  color: var(--color-workspace-muted, #476451);
+  font-size: 14px;
+  line-height: 1.7;
+}
+.flower-detail-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 10px;
+  margin: 24px 0 16px;
+}
+.flower-detail-actions .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 52px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font: 600 14px/1.5 var(--font-body);
+  text-align: center;
+  text-decoration: none;
+  transition: background-color 150ms ease-out;
+}
+.flower-detail-actions .flower-detail-cta-btn {
+  border: 1px solid var(--color-workspace-accent, #174b35);
+  background: var(--color-workspace-accent, #174b35);
+  color: #fff;
+}
+.flower-detail-actions .flower-detail-cta-btn:hover:not(:disabled) {
+  background: #143e29;
+}
+.flower-detail-actions .flower-detail-chat-btn {
+  border: 1px solid var(--color-workspace-line, #c9d9c8);
+  background: #fff;
+  color: var(--color-workspace-accent, #174b35);
+}
+.flower-detail-actions .flower-detail-chat-btn:hover:not(:disabled) {
+  background: var(--color-workspace-canvas, #f3f7f0);
+}
+.flower-detail-actions .button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.flower-detail-actions svg {
+  flex: none;
+}
+.flower-detail-help,
+.flower-detail-demo-note {
+  margin: 16px 0 0;
+  color: var(--color-workspace-muted, #476451);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.flower-detail-help a {
+  color: inherit;
+  text-underline-offset: 4px;
+}
+.flower-detail-location {
+  margin-top: 24px;
+  padding: 16px;
+  border-radius: 10px;
+  background: var(--color-workspace-canvas, #f3f7f0);
+}
+.flower-detail-location h2 {
+  margin: 0 0 12px;
+  font: 600 14px/1.5 var(--font-body);
+}
+.flower-detail-info-row {
+  display: flex;
+  align-items: start;
+  gap: 10px;
+}
+.flower-detail-info-icon {
+  flex: none;
+  color: var(--color-workspace-accent, #174b35);
+}
+.flower-detail-info-content {
+  min-width: 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.flower-detail-info-content p {
+  margin: 6px 0 0;
+  color: var(--color-workspace-muted, #476451);
+  line-height: 1.6;
+}
 .flower-detail-description {
-  margin: 0 0 1.15rem;
-  padding: 0.95rem 1.05rem;
-  background: #faf8f5;
-  border: 1px solid #ede8e1;
-  border-radius: 8px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: 24px;
+  margin-top: 36px;
+  padding-top: 28px;
+  border-top: 1px solid var(--color-workspace-divider, #dce6d7);
 }
-
 .flower-detail-description h2 {
-  margin: 0 0 0.5rem;
-  color: #183e2b;
-  font-size: 0.8rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-family:
-    'Be Vietnam Pro',
-    -apple-system,
-    sans-serif;
+  margin: 0;
+  font: 600 18px/1.5 var(--font-body);
 }
-
 .flower-detail-product-copy {
   margin: 0;
   white-space: pre-line;
   overflow-wrap: anywhere;
-  color: #41594a;
-  font-size: 0.86rem;
-  line-height: 1.6;
+  font-size: 14px;
+  line-height: 1.8;
 }
-
-/* 8. Help Links & Demo Notes */
-.flower-detail-help {
-  margin: 0.35rem 0 0;
-  font-size: 0.82rem;
-  color: #5d7866;
-  line-height: 1.55;
+.flower-detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 24px;
+  padding: 0;
+  list-style: none;
 }
-
-.flower-detail-help a {
-  color: #183e2b;
-  font-weight: 600;
-  text-underline-offset: 3px;
+.flower-detail-tags li {
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: var(--color-workspace-canvas, #f3f7f0);
+  color: var(--color-workspace-muted, #476451);
+  font-size: 12px;
+  overflow-wrap: anywhere;
 }
-
-.flower-detail-demo-note {
-  font-size: 0.78rem;
-  color: #708a76;
-  margin-top: 0.35rem;
-  font-style: italic;
-}
-
-/* 9. Responsive Breakpoints */
-@media (max-width: 992px) {
+@media (max-width: 800px) {
   .flower-detail-layout {
-    grid-template-columns: 1fr;
-    gap: 1.75rem;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
   }
   .flower-detail-gallery {
-    position: static;
+    width: 100%;
+    max-width: 400px;
+    justify-self: center;
   }
-  .flower-detail-media {
-    aspect-ratio: 1 / 1;
-    max-width: 480px;
-    margin-inline: auto;
+  .flower-detail-description {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
   }
 }
-
 @media (max-width: 600px) {
   .flower-detail-page {
-    margin-top: 0.35rem;
-    margin-bottom: 2rem;
+    margin-top: 12px;
+    margin-bottom: 0;
+    padding-bottom: 128px;
+  }
+  .flower-detail-breadcrumb {
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .flower-detail-breadcrumb .breadcrumb-current,
+  .flower-detail-breadcrumb .breadcrumb-separator {
+    display: none;
+  }
+  .flower-detail {
+    padding: 16px;
+    border-radius: 12px;
   }
   .flower-detail-media {
-    max-width: 290px;
-    aspect-ratio: 4 / 3.3;
-    margin-inline: auto;
-    border-radius: 10px;
+    max-height: 340px;
+  }
+  .flower-detail-header-meta {
+    margin-bottom: 8px;
   }
   .flower-detail-title {
-    font-size: 1.3rem;
+    font-size: 24px;
   }
-  .flower-detail-price {
-    font-size: 1.35rem;
+  .flower-detail-shop {
+    margin-bottom: 16px;
+  }
+  .flower-detail-note {
+    margin-bottom: 16px;
   }
   .flower-detail-actions {
-    flex-direction: column-reverse; /* Nút Báo giá sẽ ở trên, nút Chat ở dưới */
-    gap: 0.5rem;
-    margin-bottom: 1rem;
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 60;
+    margin: 0;
+    padding: 12px max(16px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom))
+      max(16px, env(safe-area-inset-left));
+    border-top: 1px solid var(--color-workspace-divider, #dce6d7);
+    background: #fff;
   }
-  .flower-detail-cta-btn.button,
-  .flower-detail-cta-btn,
-  .flower-detail-chat-btn.button,
-  .flower-detail-chat-btn {
-    width: 100%;
-    flex: none;
-    min-height: 42px;
-    height: 42px;
+  .flower-detail-actions .button {
+    font-size: 13px;
   }
-  .flower-detail-perks {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    padding: 0.65rem 0.5rem;
-    gap: 0.25rem;
-    margin-bottom: 0.85rem;
+  .flower-detail-description {
+    margin-top: 24px;
+    padding-top: 24px;
   }
-  .perk-col {
-    gap: 0.15rem;
-  }
-  .perk-icon-wrap {
-    width: 26px;
-    height: 26px;
-  }
-  .perk-icon-wrap svg {
-    width: 13px;
-    height: 13px;
-  }
-  .perk-text strong {
-    font-size: 0.68rem;
-  }
-  .perk-text span {
-    font-size: 0.6rem;
+}
+@media (prefers-reduced-motion: reduce) {
+  .flower-detail-actions .button {
+    transition: none;
   }
 }

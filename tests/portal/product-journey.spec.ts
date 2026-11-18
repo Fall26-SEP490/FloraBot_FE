@@ -102,6 +102,10 @@ for (const width of [390, 1440]) {
     await expect(page.locator('.flower-detail-shop')).toContainText(flower.shopName);
     await expect(page.locator('.flower-detail-pricing')).toContainText('250.000');
     await expect(page.locator('.flower-detail-note')).toContainText('trước khi bạn thanh toán');
+    await expect(page.locator('.flower-detail-main-img')).toHaveCSS('object-fit', 'cover');
+    expect(
+      await page.locator('.site-content').evaluate((el) => getComputedStyle(el).backgroundImage),
+    ).toContain('florabot-pattern.webp');
     await expect(
       page.getByRole('button', { name: 'Yêu cầu báo giá', exact: true }),
     ).toBeInViewport();
@@ -160,6 +164,23 @@ for (const width of [390, 1440]) {
     expect(state.writes).toEqual([]);
   });
 }
+
+test('Product photo zoom preserves the page and returns focus before opening a quotation', async ({
+  page,
+}) => {
+  const state = await fixture(page);
+  await page.goto(`/dat-hoa/${productId}/${kioskId}`);
+  const zoom = page.getByRole('button', { name: 'Phóng to ảnh mẫu hoa' });
+  await zoom.click();
+  const preview = page.getByRole('dialog', { name: 'Ảnh mẫu hoa', exact: true });
+  await expect(preview.getByRole('img')).toHaveAttribute('src', flower.photo);
+  await page.keyboard.press('Escape');
+  await expect(preview).toHaveCount(0);
+  await expect(zoom).toBeFocused();
+  await page.getByRole('button', { name: 'Yêu cầu báo giá', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Yêu cầu báo giá', exact: true })).toBeVisible();
+  expect(state.writes).toEqual([]);
+});
 test('Product quotation focuses invalid fields and sends only the selected kiosk after correction', async ({
   page,
 }) => {
@@ -203,8 +224,9 @@ test('Product quotation focuses invalid fields and sends only the selected kiosk
   expect(state.writes).toHaveLength(1);
   expect(state.writes[0]).toMatchObject({ kioskId: otherKioskId, productId, kind: 'CUSTOM' });
   expect(Object.keys(state.writes[0]).sort()).toEqual(
-    ['id', 'kind', 'productId', 'kioskId', 'pickupAt', 'instructions'].sort(),
+    ['id', 'kind', 'productId', 'kioskId', 'pickupAt', 'instructions', 'accessories'].sort(),
   );
+  expect(state.writes[0].accessories).toEqual([]);
 });
 test('Product quotation rejects a date beyond 30 days without creating an order', async ({
   page,

@@ -200,9 +200,8 @@
 }
 
 .catalog-sidebar .catalog-filter-option.is-active {
-  background: var(--color-workspace-control-hover);
   color: var(--color-workspace-accent);
-  font-weight: 500;
+  font-weight: 700;
 }
 
 .catalog-sidebar .catalog-filter-option input[type='radio'] {
@@ -239,7 +238,6 @@
   min-width: 22px;
   padding: 1px 5px;
   border-radius: 5px;
-  background: var(--color-workspace-canvas);
   text-align: center;
   margin-left: auto;
   font-size: 0.76rem;

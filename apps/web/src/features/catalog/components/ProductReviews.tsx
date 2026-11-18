@@ -1,29 +1,21 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
+import { ImageIcon, Star, X } from '@florabot/ui';
 import { request } from '@/shared/lib/api';
+import { productReviewsQuery } from '../product-reviews.api';
+import { RatingStars } from './RatingStars';
 import '../styles/product-reviews.css';
 
-type Review = {
-  id: string;
-  stars: number;
-  comment: string | null;
-  photoUrl: string | null;
-  createdAt: string;
-};
-
-type ReviewPage = {
-  productAverage: number | null;
-  productCount: number;
-  shopAverage: number | null;
-  shopCount: number;
-  items: Review[];
-  hasMore: boolean;
-};
-
 const scores = [1, 2, 3, 4, 5];
-const average = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 2 });
+const scoreLabels = [
+  'Rất không hài lòng',
+  'Không hài lòng',
+  'Bình thường',
+  'Hài lòng',
+  'Rất hài lòng',
+];
 const date = new Intl.DateTimeFormat('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
 const imageTypes = ['image/jpeg', 'image/png', 'image/webp'];
 const imageExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
@@ -48,22 +40,38 @@ export function ProductReviews({
   const path = `/shop/products/${encodeURIComponent(productId)}`;
   const [page, setPage] = useState(1);
   const [stars, setStars] = useState(0);
+  const [hoveredStars, setHoveredStars] = useState<number | null>(null);
   const [comment, setComment] = useState('');
   const [photo, setPhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState('');
   const [photoError, setPhotoError] = useState('');
+  const photoInput = useRef<HTMLInputElement>(null);
+  const photoId = useId();
+  const photoLabelId = useId();
+  const photoHintId = useId();
+  const photoErrorId = useId();
   const [sent, setSent] = useState(false);
-  const publicKey = ['flower-reviews', productId];
   const eligibilityKey = ['flower-review-eligibility', productId, customerId];
 
-  const reviews = useQuery({
-    queryKey: [...publicKey, page],
-    queryFn: async () => {
-      const result = await request<ReviewPage>(`${path}/reviews?page=${page}`);
-      if (!Array.isArray(result?.items)) throw new Error('Dữ liệu đánh giá không hợp lệ.');
-      return result;
+  useEffect(
+    () => () => {
+      if (photoPreview) URL.revokeObjectURL(photoPreview);
     },
-    retry: false,
-  });
+    [photoPreview],
+  );
+
+  function changePhoto(file: File | null) {
+    const supported =
+      file &&
+      (imageTypes.includes(file.type) ||
+        imageExtensions.some((extension) => file.name.toLowerCase().endsWith(extension)));
+    const invalid = file && (!supported || file.size < 1 || file.size > 2 * 1024 * 1024);
+    setPhoto(file);
+    setPhotoError(invalid ? 'Chọn một ảnh JPEG, PNG hoặc WebP tối đa 2 MB.' : '');
+    setPhotoPreview(file && !invalid ? URL.createObjectURL(file) : '');
+  }
+
+  const reviews = useQuery(productReviewsQuery(productId, page));
   const permission = useQuery({
     queryKey: eligibilityKey,
     queryFn: () => request<{ eligible: boolean }>(`${path}/review-eligibility`),
@@ -96,7 +104,9 @@ export function ProductReviews({
 
   return (
     <section className="flower-reviews" aria-labelledby="flower-reviews-title">
-      <h2 id="flower-reviews-title">Đánh giá sản phẩm</h2>
+      <h2 id="flower-reviews-title" tabIndex={-1}>
+        Đánh giá sản phẩm
+      </h2>
       {reviews.isPending && <p>Đang tải đánh giá…</p>}
       {reviews.isError && (
         <p>
@@ -108,35 +118,37 @@ export function ProductReviews({
       )}
       {reviews.data && (
         <>
-          <dl className="flower-review-summary">
-            <div>
-              <dt>Mẫu hoa</dt>
-              <dd>
-                {reviews.data.productAverage == null
-                  ? 'Chưa có đánh giá'
-                  : `${average.format(reviews.data.productAverage)}/5 sao · ${reviews.data.productCount} lượt`}
-              </dd>
-            </div>
-            <div>
-              <dt>Điểm shop</dt>
-              <dd>
-                {reviews.data.shopAverage == null
-                  ? 'Chưa có đánh giá'
-                  : `${average.format(reviews.data.shopAverage)}/5 sao · ${reviews.data.shopCount} lượt`}
-              </dd>
-            </div>
-          </dl>
+          {(reviews.data.productAverage != null || reviews.data.shopAverage != null) && (
+            <dl className="flower-review-summary">
+              {reviews.data.productAverage != null && (
+                <div>
+                  <dt>Mẫu hoa</dt>
+                  <dd>
+                    <RatingStars value={reviews.data.productAverage} />
+                    <span>{reviews.data.productCount} đánh giá</span>
+                  </dd>
+                </div>
+              )}
+              {reviews.data.shopAverage != null && (
+                <div>
+                  <dt>Điểm shop</dt>
+                  <dd>
+                    <RatingStars value={reviews.data.shopAverage} />
+                    <span>{reviews.data.shopCount} đánh giá</span>
+                  </dd>
+                </div>
+              )}
+            </dl>
+          )}
           {reviews.data.items.length > 0 && (
             <ol className="flower-review-list">
               {reviews.data.items.map((item) => (
                 <li key={item.id}>
+                  <strong className="flower-review-author">
+                    {item.reviewerName?.trim() || 'Khách hàng'}
+                  </strong>
                   <div className="flower-review-meta">
-                    <span role="img" aria-label={`${item.stars} trên 5 sao`}>
-                      <span aria-hidden="true">
-                        {'★'.repeat(item.stars)}
-                        {'☆'.repeat(5 - item.stars)}
-                      </span>
-                    </span>
+                    <RatingStars value={item.stars} />
                     <time dateTime={item.createdAt}>{date.format(new Date(item.createdAt))}</time>
                   </div>
                   {item.comment && <p>{item.comment}</p>}
@@ -154,6 +166,9 @@ export function ProductReviews({
                 </li>
               ))}
             </ol>
+          )}
+          {reviews.data.items.length === 0 && (
+            <p className="flower-review-empty">Chưa có đánh giá cho mẫu hoa này.</p>
           )}
           {(page > 1 || reviews.data.hasMore) && (
             <div className="flower-review-pagination">
@@ -192,19 +207,35 @@ export function ProductReviews({
         <form className="flower-review-form" onSubmit={handleSubmit}>
           <fieldset disabled={submit.isPending}>
             <legend>Đánh giá của bạn</legend>
-            <div className="flower-review-scores">
-              {scores.map((score) => (
-                <label key={score}>
-                  <input
-                    type="radio"
-                    name="flower-rating"
-                    value={score}
-                    checked={stars === score}
-                    onChange={() => setStars(score)}
-                  />
-                  <span>{score} sao</span>
-                </label>
-              ))}
+            <div className="flower-review-score-row">
+              <div
+                className="flower-review-scores"
+                role="radiogroup"
+                aria-label="Chọn số sao đánh giá"
+              >
+                {scores.map((score) => (
+                  <label
+                    key={score}
+                    className={score <= (hoveredStars ?? stars) ? 'is-filled' : undefined}
+                    title={`${score} sao`}
+                  >
+                    <input
+                      type="radio"
+                      name="flower-rating"
+                      value={score}
+                      aria-label={`${score} sao`}
+                      onMouseEnter={() => setHoveredStars(score)}
+                      onMouseLeave={() => setHoveredStars(null)}
+                      checked={stars === score}
+                      onChange={() => setStars(score)}
+                    />
+                    <Star size={22} strokeWidth={1.6} aria-hidden="true" />
+                  </label>
+                ))}
+              </div>
+              <p className="flower-review-score-caption" aria-live="polite" aria-atomic="true">
+                {stars ? scoreLabels[stars - 1] : 'Chọn số sao để gửi đánh giá.'}
+              </p>
             </div>
             <label>
               Bình luận{' '}
@@ -215,31 +246,58 @@ export function ProductReviews({
                 rows={3}
               />
             </label>
-            <label>
-              Ảnh hoa đã nhận{' '}
-              <input
-                type="file"
-                accept={[...imageTypes, ...imageExtensions].join(',')}
-                onChange={(event) => {
-                  const file = event.target.files?.[0] ?? null;
-                  const supported =
-                    file &&
-                    (imageTypes.includes(file.type) ||
-                      imageExtensions.some((extension) =>
-                        file.name.toLowerCase().endsWith(extension),
-                      ));
-                  setPhoto(file);
-                  setPhotoError(
-                    file && (!supported || file.size < 1 || file.size > 2 * 1024 * 1024)
-                      ? 'Chọn một ảnh JPEG, PNG hoặc WebP tối đa 2 MB.'
-                      : '',
-                  );
-                }}
-              />
-            </label>
+            <div className="flower-review-photo">
+              <span id={photoLabelId}>
+                Ảnh hoa đã nhận <span className="flower-review-optional">(không bắt buộc)</span>
+              </span>
+              <div className="flower-review-photo-controls">
+                <label className="flower-review-photo-picker" htmlFor={photoId}>
+                  <ImageIcon size={16} aria-hidden="true" />
+                  <span>{photo ? 'Đổi ảnh' : 'Thêm ảnh'}</span>
+                  <input
+                    id={photoId}
+                    ref={photoInput}
+                    type="file"
+                    aria-labelledby={photoLabelId}
+                    aria-describedby={`${photoHintId}${photoError ? ` ${photoErrorId}` : ''}`}
+                    aria-invalid={Boolean(photoError)}
+                    accept={[...imageTypes, ...imageExtensions].join(',')}
+                    onChange={(event) => changePhoto(event.target.files?.[0] ?? null)}
+                  />
+                </label>
+                {photo && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      changePhoto(null);
+                      if (photoInput.current) {
+                        photoInput.current.value = '';
+                        photoInput.current.focus();
+                      }
+                    }}
+                    aria-label="Bỏ ảnh đã chọn"
+                  >
+                    <X size={16} aria-hidden="true" /> Bỏ ảnh
+                  </button>
+                )}
+              </div>
+              {photo && (
+                <div className="flower-review-photo-preview">
+                  {photoPreview && (
+                    <img src={photoPreview} alt="Ảnh đã chọn để đánh giá" width={80} height={80} />
+                  )}
+                  <span>{photo.name}</span>
+                </div>
+              )}
+              <small id={photoHintId}>JPG, PNG, WebP · tối đa 2 MB</small>
+            </div>
             <small>Bình luận và ảnh sẽ hiển thị công khai.</small>
           </fieldset>
-          {photoError && <p role="alert">{photoError}</p>}
+          {photoError && (
+            <p id={photoErrorId} role="alert">
+              {photoError}
+            </p>
+          )}
           {submit.isError && (
             <p role="alert">
               {submit.error instanceof Error ? submit.error.message : 'Chưa gửi được đánh giá.'}

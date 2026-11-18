@@ -18142,6 +18142,7 @@ export interface components {
             photoUrl: null | string;
             /** Format: date-time */
             createdAt: string;
+            reviewerName: string;
         };
         FlowerReviewCreated: {
             /** Format: uuid */
