@@ -21654,7 +21654,8 @@
           "stars",
           "comment",
           "photoUrl",
-          "createdAt"
+          "createdAt",
+          "reviewerName"
         ],
         "type": "object",
         "properties": {
@@ -21685,6 +21686,9 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "reviewerName": {
+            "type": "string"
           }
         },
         "additionalProperties": false

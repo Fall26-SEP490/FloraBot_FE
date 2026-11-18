@@ -1,5 +1,24 @@
 # FloraBot design system
 
+## Product detail — November 18
+
+Use the existing botanical pattern under a pale overlay and white content surfaces.
+Desktop pairs a product photograph filling its frame with name, product rating,
+shop rating, reference price and quote/chat actions. Description and customer
+reviews follow below. Mobile stacks the content and keeps the two main actions
+in a bottom bar with safe-area spacing. The photograph opens in the shared modal.
+The public catalog supplies one photograph; do not invent gallery angles.
+Product and shop scores share the existing reviews query and update after a
+review is submitted. Empty scores remain labelled as unrated. Review eligibility,
+preorder quotation and walk-in kiosk navigation retain their existing API rules.
+Tags sit beside the product information; omit the description section when empty.
+Use bright yellow SVG stars (22px in the picker, 16px for scores), with 44px picker
+targets and a textual score label. Show a single unrated message instead of empty
+score summaries. Review photos use a Vietnamese upload control, optional preview
+and removal; preserve the existing 2 MB image limit and submission payload.
+The zoom modal shows the complete photograph without cropping. Display backend
+averages as stars with review counts, without a visible numeric score or "/5".
+
 ## Slot rental surfaces — November 5
 
 Operate mode. Rental now starts with two labelled numeric fields: Walk-in and

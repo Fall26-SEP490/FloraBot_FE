@@ -21,8 +21,13 @@ import {
 import { FlowerRequestPanel } from './components/FlowerRequestPanel';
 import { ChatNoticeDialog } from './components/ChatNoticeDialog';
 import { ProductReviews } from './components/ProductReviews';
+import { ProductGallery } from './components/ProductGallery';
+import { RatingStars } from './components/RatingStars';
+import { productReviewsQuery } from './product-reviews.api';
 import { useCustomerChat } from './hooks/useCustomerChat';
 import './styles/catalog.css';
+
+const rating = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 2 });
 
 async function findItem(
   productId: string,
@@ -71,7 +76,6 @@ export default function FlowerDetail({
       typeof window !== 'undefined' &&
       new URLSearchParams(window.location.search).get('order') === '1',
   );
-  const [failedPhoto, setFailedPhoto] = useState<string | null>(null);
 
   const [demo] = useState(
     () =>
@@ -88,6 +92,8 @@ export default function FlowerDetail({
         : findItem(productId, kioskId, zone),
   });
   const item = query.data;
+  const showReviews = Boolean(item && isPreorder(item) && !item.isDemoSample);
+  const reviews = useQuery({ ...productReviewsQuery(productId), enabled: showReviews });
   const tags = [
     ...new Set(
       [...(item?.tags ?? []), item?.occasion ?? '']
@@ -118,16 +124,10 @@ export default function FlowerDetail({
 
   return (
     <main id="main" className="flower-shop-page flower-detail-page">
-      {/* Breadcrumb điều hướng */}
       <nav className="flower-detail-breadcrumb" aria-label="Đường dẫn trang">
-        <Link href="/" className="breadcrumb-link">
-          Trang chủ
-        </Link>
-        <span className="breadcrumb-separator" aria-hidden="true">
-          /
-        </span>
-        <Link href="/dat-hoa" className="breadcrumb-link">
-          Sản phẩm hoa
+        <Link className="flower-detail-back" href={backHref}>
+          <ArrowLeft size={16} aria-hidden="true" />
+          <span>Quay lại danh mục</span>
         </Link>
         {item && (
           <>
@@ -140,11 +140,6 @@ export default function FlowerDetail({
           </>
         )}
       </nav>
-
-      <Link className="flower-detail-back" href={backHref}>
-        <ArrowLeft size={15} aria-hidden="true" />
-        <span>Quay lại danh mục</span>
-      </Link>
 
       {query.isPending && (
         <div className="flower-detail-feedback" role="status">
@@ -166,48 +161,59 @@ export default function FlowerDetail({
       {item && (
         <article className="flower-detail">
           <div className="flower-detail-layout">
-            {/* Cột trái: Ảnh sản phẩm lớn phong cách boutique */}
-            <div className="flower-detail-gallery">
-              <figure className="flower-detail-media">
-                <img
-                  src={
-                    item.photo && failedPhoto !== item.photo
-                      ? item.photo
-                      : '/images/floral-white-online.webp'
-                  }
-                  alt={item.photo && failedPhoto !== item.photo ? item.name : 'Ảnh minh họa hoa'}
-                  onError={() => {
-                    if (item.photo) setFailedPhoto(item.photo);
-                  }}
-                  className="flower-detail-main-img"
-                />
-                {(!item.photo || failedPhoto === item.photo) && (
-                  <figcaption>Ảnh minh họa · Shop chưa có ảnh sản phẩm hiển thị</figcaption>
-                )}
-              </figure>
-            </div>
+            <ProductGallery
+              key={item.productId + ':' + item.photo}
+              photo={item.photo}
+              name={item.name}
+            />
 
-            {/* Cột phải: Thông tin sản phẩm tinh tế, thanh thoát theo mẫu */}
             <div className="flower-detail-content">
               <div className="flower-detail-header-meta">
                 <span className="flower-detail-badge">{purchaseLabel(item)}</span>
-                {item.occasion && (
-                  <span className="flower-detail-badge flower-detail-badge-occasion">
-                    {item.occasion}
-                  </span>
+              </div>
+
+              <h1 className="flower-detail-title">{item.name}</h1>
+
+              {showReviews && (
+                <a className="flower-detail-rating" href="#flower-reviews-title">
+                  {reviews.data?.productAverage != null ? (
+                    <>
+                      <RatingStars value={reviews.data.productAverage} />
+                      <span>· {reviews.data.productCount} đánh giá</span>
+                    </>
+                  ) : reviews.isPending ? (
+                    'Đang tải đánh giá…'
+                  ) : reviews.isError ? (
+                    'Xem đánh giá'
+                  ) : (
+                    'Chưa có đánh giá'
+                  )}
+                </a>
+              )}
+
+              <div className="flower-detail-shop">
+                <Store size={16} aria-hidden="true" />
+                <strong>{item.shopName || 'Shop chưa cập nhật tên'}</strong>
+                {showReviews && reviews.data?.shopAverage != null && (
+                  <a
+                    className="flower-detail-shop-rating"
+                    href="#flower-reviews-title"
+                    aria-label={`Điểm shop: ${rating.format(reviews.data.shopAverage)} trên 5 sao, ${reviews.data.shopCount} lượt`}
+                  >
+                    <RatingStars value={reviews.data.shopAverage} />
+                    <span>({reviews.data.shopCount})</span>
+                  </a>
                 )}
               </div>
 
-              {/* Tiêu đề hoa thanh thoát, gọn gàng */}
-              <h1 className="flower-detail-title">{item.name}</h1>
+              {tags.length > 0 && (
+                <ul className="flower-detail-tags" aria-label="Đặc điểm mẫu hoa">
+                  {tags.map((tag) => (
+                    <li key={tag}>{tag}</li>
+                  ))}
+                </ul>
+              )}
 
-              <div className="flower-detail-shop">
-                <Store size={14} aria-hidden="true" />
-                <span>Tiệm hoa: </span>
-                <strong>{item.shopName || 'Shop chưa cập nhật tên'}</strong>
-              </div>
-
-              {/* Khối giá thanh mảnh, rõ ràng */}
               <div className="flower-detail-pricing">
                 <span className="flower-detail-price">{formatPrice(item.price)} đ</span>
                 <span className="flower-detail-price-sub">
@@ -223,7 +229,6 @@ export default function FlowerDetail({
                 </p>
               )}
 
-              {/* Hàng nút hành động cân đối, gọn gàng */}
               <div className="flower-detail-actions">
                 {isPreorder(item) ? (
                   <Button
@@ -270,27 +275,8 @@ export default function FlowerDetail({
                 </section>
               )}
 
-              {tags.length > 0 && (
-                <ul className="flower-detail-tags" aria-label="Đặc điểm mẫu hoa">
-                  {tags.map((tag) => (
-                    <li key={tag}>{tag}</li>
-                  ))}
-                </ul>
-              )}
-
-              {item.description?.trim() ? (
-                <section
-                  className="flower-detail-description"
-                  aria-labelledby="flower-description-title"
-                >
-                  <h2 id="flower-description-title">Mô tả sản phẩm</h2>
-                  <p className="flower-detail-product-copy">{item.description.trim()}</p>
-                </section>
-              ) : null}
-
               {canOrderOnWeb(item) && (
                 <p className="flower-detail-help">
-                  Hoa đặt trước được shop chuẩn bị theo yêu cầu.{' '}
                   <Link href="/huong-dan-dat-hoa">Xem cách đặt và nhận hoa</Link>
                 </p>
               )}
@@ -300,10 +286,19 @@ export default function FlowerDetail({
               )}
             </div>
           </div>
+          {item.description?.trim() && (
+            <section
+              className="flower-detail-description"
+              aria-labelledby="flower-description-title"
+            >
+              <h2 id="flower-description-title">Mô tả sản phẩm</h2>
+              <p className="flower-detail-product-copy">{item.description.trim()}</p>
+            </section>
+          )}
         </article>
       )}
 
-      {item && isPreorder(item) && !item.isDemoSample && (
+      {item && showReviews && (
         <ProductReviews
           key={item.productId + ':' + (session.data?.id ?? '')}
           productId={item.productId}

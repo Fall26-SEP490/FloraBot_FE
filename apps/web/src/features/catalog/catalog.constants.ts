@@ -4,7 +4,7 @@ export const PRICE_TIERS: { id: PriceFilter; label: string }[] = [
   { id: 'all', label: 'Tất cả mức giá' },
   { id: 'under300', label: 'Dưới 300.000 đ' },
   { id: '300to600', label: '300.000 đ – 600.000 đ' },
-  { id: '600to1000', label: 'Trên 600.000 đ đến 1.000.000 đ' },
+  { id: '600to1000', label: '600.000 đ - 1.000.000 đ' },
   { id: 'over1000', label: 'Trên 1.000.000 đ' },
 ];
 

@@ -11,6 +11,8 @@ for (const zone of ['WALK_IN', 'PREORDER']) {
   }) => {
     let posted = false;
     let refreshed = false;
+    let reviewReads = 0;
+    let rejectNextReview = true;
     const path = `/api/shop/products/${productId}`;
     await page.route('**/api/**', async (route) => {
       const url = new URL(route.request().url());
@@ -33,7 +35,7 @@ for (const zone of ['WALK_IN', 'PREORDER']) {
                 sellerId: 'shop',
                 shopName: 'Shop test',
                 name: 'Bó hồng lụa',
-                description: 'Bó hồng lụa màu hồng.',
+                description: zone === 'WALK_IN' ? '' : 'Bó hồng lụa màu hồng.',
                 price: 250000,
                 kioskName: 'Kiosk test',
                 address: 'TP. HCM',
@@ -59,10 +61,15 @@ for (const zone of ['WALK_IN', 'PREORDER']) {
           comment: 'Màu đẹp.',
           photoBase64: image,
         });
+        if (rejectNextReview) {
+          rejectNextReview = false;
+          return route.fulfill({ status: 400, json: { message: 'Chưa lưu được đánh giá.' } });
+        }
         posted = true;
         return route.fulfill({ status: 201, json: { id: 'new' } });
       }
       if (url.pathname === path + '/reviews') {
+        reviewReads++;
         return route.fulfill({
           json: {
             productAverage: posted ? 5 : null,
@@ -73,6 +80,7 @@ for (const zone of ['WALK_IN', 'PREORDER']) {
               ? [
                   {
                     id: 'new',
+                    reviewerName: 'Nguyễn Minh Anh',
                     stars: 5,
                     comment: 'Màu đẹp.',
                     photoUrl: path + '/reviews/new/photo',
@@ -95,26 +103,89 @@ for (const zone of ['WALK_IN', 'PREORDER']) {
     const tags = page.getByRole('list', { name: 'Đặc điểm mẫu hoa' });
     await expect(tags).toContainText('Hoa hồng');
     await expect(tags).toContainText('Sinh nhật');
-    await expect(page.getByText('Bó hồng lụa màu hồng.')).toBeVisible();
     const section = page.getByRole('region', { name: 'Đánh giá sản phẩm' });
+    const thankYou = page.getByRole('dialog', { name: 'Cảm ơn bạn đã đánh giá!' });
+    await expect(thankYou).toHaveCount(0);
     if (zone === 'WALK_IN') {
+      await expect(page.getByRole('heading', { name: 'Mô tả sản phẩm' })).toHaveCount(0);
       await expect(section).toHaveCount(0);
+      expect(reviewReads).toBe(0);
       return;
     }
+    await expect(page.getByText('Bó hồng lụa màu hồng.')).toBeVisible();
+    await expect(section.getByText('Chưa có đánh giá cho mẫu hoa này.')).toHaveCount(1);
+    await expect(section.getByText('Chưa có đánh giá', { exact: true })).toHaveCount(0);
+    await expect.poll(() => reviewReads).toBe(1);
+    await expect(page.locator('.flower-detail-rating')).toHaveText('Chưa có đánh giá');
+    await expect(page.locator('.flower-detail-shop-rating')).toHaveAccessibleName(
+      'Điểm shop: 3 trên 5 sao, 1 lượt',
+    );
     const button = section.getByRole('button', { name: 'Gửi đánh giá' });
     await expect(button).toBeDisabled();
+    await expect(section.getByText('Chọn số sao để gửi đánh giá.')).toBeVisible();
+    const scorePicker = section.getByRole('radiogroup', { name: 'Chọn số sao đánh giá' });
+    await scorePicker.getByRole('radio', { name: '3 sao' }).check();
+    await scorePicker.getByRole('radio', { name: '3 sao' }).press('Tab');
+    await page.mouse.move(0, 0);
+    await expect(scorePicker.locator('label.is-filled')).toHaveCount(3);
+    await scorePicker.getByRole('radio', { name: '3 sao' }).focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(scorePicker.getByRole('radio', { name: '4 sao' })).toBeChecked();
+    await expect(scorePicker.locator('label.is-filled')).toHaveCount(4);
+    await expect(section.getByText('Hài lòng', { exact: true })).toBeVisible();
     await section.getByRole('radio', { name: '5 sao' }).check();
     await section.getByLabel('Bình luận').fill('Màu đẹp.');
+    const photoInput = section.getByLabel('Ảnh hoa đã nhận');
+    await photoInput.setInputFiles({
+      name: 'khong-phai-anh.txt',
+      mimeType: 'text/plain',
+      buffer: Buffer.from('text'),
+    });
+    await expect(section.getByRole('alert')).toContainText('tối đa 2 MB');
+    await expect(button).toBeDisabled();
+    await section.getByRole('button', { name: 'Bỏ ảnh đã chọn' }).click();
+    await expect(section.getByRole('alert')).toHaveCount(0);
+    await expect(photoInput).toHaveValue('');
+    await expect(photoInput).toBeFocused();
+    await photoInput.setInputFiles({
+      name: 'xem-truoc.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from(image, 'base64'),
+    });
+    await expect(section.getByRole('img', { name: 'Ảnh đã chọn để đánh giá' })).toBeVisible();
+    await section.getByRole('button', { name: 'Bỏ ảnh đã chọn' }).click();
+    await expect(section.getByRole('img', { name: 'Ảnh đã chọn để đánh giá' })).toHaveCount(0);
+    await expect(photoInput).toHaveValue('');
     await section.getByLabel('Ảnh hoa đã nhận').setInputFiles({
       name: 'hoa.png',
       mimeType: 'application/octet-stream',
       buffer: Buffer.from(image, 'base64'),
     });
     await button.click();
+    await expect(section.getByRole('alert')).toBeVisible();
+    await expect(thankYou).toHaveCount(0);
+    await expect(button).toBeEnabled();
+    await button.click();
     await expect(section.getByRole('status')).toContainText('Đã gửi đánh giá');
-    await expect(section.getByText('4/5 sao · 2 lượt')).toBeVisible();
+    await expect(thankYou).toHaveCount(0);
+    await expect(section.getByText('2 đánh giá', { exact: true })).toBeVisible();
+    await expect(
+      section.locator('.flower-review-summary').getByRole('img', { name: '4 trên 5 sao' }),
+    ).toBeVisible();
     await expect(section.getByText('Màu đẹp.')).toBeVisible();
-    await expect(section.getByRole('img', { name: '5 trên 5 sao' })).toBeVisible();
+    await expect(section.locator('.flower-review-author')).toHaveText('Nguyễn Minh Anh');
+    await expect(
+      section.locator('.flower-review-list').getByRole('img', { name: '5 trên 5 sao' }),
+    ).toBeVisible();
+    await expect(
+      page.locator('.flower-detail-rating').getByRole('img', { name: '5 trên 5 sao' }),
+    ).toBeVisible();
+    await expect(section).not.toContainText('/5');
+    await expect(page.locator('.flower-detail-content')).not.toContainText('/5');
+    await expect(page.locator('.flower-detail-rating')).toContainText('1 đánh giá');
+    await page.locator('.flower-detail-rating').click();
+    await expect(page).toHaveURL(/#flower-reviews-title$/);
+    await expect(page.getByRole('heading', { name: 'Đánh giá sản phẩm' })).toBeInViewport();
     await expect(section.getByRole('img', { name: 'Ảnh hoa khách nhận' })).toBeVisible();
     await expect(button).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
