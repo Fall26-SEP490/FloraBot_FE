@@ -81,6 +81,49 @@ export default function StaffTaskDetails({
               </div>
             )}
           </dl>
+          {details.data.slotObservation && (
+            <section aria-label="Ghi nhận cửa và hoa của ô">
+              <h4>Ghi nhận cửa và hoa · {details.data.slotObservation.slotCode}</h4>
+              <p>
+                Thời điểm bản đo:{' '}
+                {details.data.slotObservedAt
+                  ? formatTaskDate(details.data.slotObservedAt)
+                  : 'Chưa có thời điểm ghi nhận'}
+              </p>
+              <dl className="account-details">
+                <div>
+                  <dt>Cảm biến hoa</dt>
+                  <dd>
+                    {details.data.slotObservation.hasFlowers == null
+                      ? 'Chưa xác định'
+                      : details.data.slotObservation.hasFlowers
+                        ? 'Phát hiện vật trong ô'
+                        : 'Không phát hiện vật trong ô'}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Cửa đã mở lúc</dt>
+                  <dd>
+                    {details.data.slotObservation.latestUnlock?.doorOpenedAt
+                      ? formatTaskDate(details.data.slotObservation.latestUnlock.doorOpenedAt)
+                      : 'Chưa có ghi nhận mở cửa'}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Cửa đã đóng lúc</dt>
+                  <dd>
+                    {details.data.slotObservation.latestUnlock?.doorClosedAt
+                      ? formatTaskDate(details.data.slotObservation.latestUnlock.doorClosedAt)
+                      : 'Chưa có ghi nhận đóng cửa'}
+                  </dd>
+                </div>
+              </dl>
+              <p className="quiet">
+                Đây là bản ghi được trả về. Việc nghiệm thu vẫn cần đối chiếu thời điểm, thực tế tại
+                tủ và điều kiện hệ thống.
+              </p>
+            </section>
+          )}
           {details.data.incident && (
             <section aria-label="Nội dung sự cố">
               <h4>

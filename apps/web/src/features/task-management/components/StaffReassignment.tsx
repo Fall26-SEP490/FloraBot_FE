@@ -71,6 +71,9 @@ export default function StaffReassignment({
       sessionStorage.removeItem(key);
       await queryClient.invalidateQueries({ queryKey: ['staff-tasks'] });
       await queryClient.invalidateQueries({ queryKey: ['staff-detail', taskId] });
+      await queryClient.invalidateQueries({ queryKey: ['assignment-incidents'] });
+      await queryClient.invalidateQueries({ queryKey: ['admin-incidents'] });
+      await queryClient.invalidateQueries({ queryKey: ['admin-incident'] });
     } catch (cause) {
       if (cause instanceof ApiError && [400, 403, 404, 409].includes(cause.status)) {
         sessionStorage.removeItem(key);

@@ -148,6 +148,7 @@ export function TaskItem({
       task.version,
     ),
     enabled: (needsRepairContext && taskOpen) || showIncidentOutcome,
+    refetchInterval: needsRepairContext && taskOpen ? 15_000 : false,
   });
   const slotRepair =
     needsRepairContext &&
@@ -248,7 +249,10 @@ export function TaskItem({
         : isWorker
           ? task.status === 'ASSIGNED'
             ? ['IN_PROGRESS']
-            : task.status === 'IN_PROGRESS' && !waitingForInventory && !waitingForQuality
+            : task.status === 'IN_PROGRESS' &&
+                !(isTechnician && task.kind === 'INCIDENT') &&
+                !waitingForInventory &&
+                !waitingForQuality
               ? ['SUBMITTED']
               : []
           : [];
@@ -298,6 +302,8 @@ export function TaskItem({
         queryClient.invalidateQueries({ queryKey: ['staff-tasks'] }),
         queryClient.invalidateQueries({ queryKey: ['staff-inventory-maintenance', task.id] }),
         queryClient.invalidateQueries({ queryKey: ['assignment-incidents'] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-incidents'] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-incident'] }),
         queryClient.invalidateQueries({ queryKey: ['staff-detail', task.id] }),
       ]);
     } catch (cause) {
@@ -639,7 +645,7 @@ export function TaskItem({
         </div>
       )}
       {choices.length > 0 &&
-        (!needsRepairContext || (repairDetails.isSuccess && !slotRepair)) &&
+        !needsRepairContext &&
         (compactStaff && canWorkOnInventory ? (
           <details className="staff-report-disclosure">
             <summary>

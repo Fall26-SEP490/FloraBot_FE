@@ -42,8 +42,13 @@ export default function StaffIncidentResolution({
       sessionStorage.removeItem(key);
       setAttempt(null);
       form.reset();
-      await queryClient.invalidateQueries({ queryKey: ['staff-detail', taskId] });
-      await queryClient.invalidateQueries({ queryKey: ['staff-tasks'] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['staff-detail', taskId] }),
+        queryClient.invalidateQueries({ queryKey: ['staff-tasks'] }),
+        queryClient.invalidateQueries({ queryKey: ['assignment-incidents'] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-incidents'] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-incident'] }),
+      ]);
     } catch (cause) {
       if (cause instanceof ApiError && [400, 403, 404, 409].includes(cause.status)) {
         sessionStorage.removeItem(key);
@@ -86,7 +91,7 @@ export default function StaffIncidentResolution({
       <p>
         {slotRepair
           ? 'Sau khi xác nhận mã tại kiosk, kiểm tra ô rồi đóng cửa. Gửi báo cáo khi tủ đã ghi nhận cửa đóng và tình trạng hoa. Quản lý vận hành sẽ duyệt và đóng sự cố.'
-          : 'Chỉ xác nhận sau khi kiểm tra tại tủ. Thao tác ghi nhận kết quả xử lý và gửi báo cáo cho Quản lý vận hành.'}
+          : 'Chỉ xác nhận sau khi kiểm tra tại tủ. Gửi kết quả để ghi nhận sự cố đã được xử lý và chuyển báo cáo cho Quản lý vận hành nghiệm thu công việc.'}
       </p>
       <p>
         Nếu có khoản hoàn tiền, shop thực hiện và quản trị viên đối chiếu theo luồng hoàn tiền

@@ -67,7 +67,9 @@ export default function TechnicianRepairAccess({
         <p role="status">
           Mã xác nhận <strong>{access.code}</strong> · Hết hạn lúc{' '}
           <time dateTime={access.expiresAt}>
-            {new Date(access.expiresAt).toLocaleTimeString('vi-VN')}
+            {new Date(access.expiresAt).toLocaleTimeString('vi-VN', {
+              timeZone: 'Asia/Ho_Chi_Minh',
+            })}
           </time>
         </p>
       ) : (

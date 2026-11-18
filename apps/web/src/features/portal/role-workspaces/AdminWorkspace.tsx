@@ -17,6 +17,7 @@ import '../../account-management/styles/platform-workspace.css';
 import '../../account-management/styles/platform-refresh.css';
 import '../styles/admin-workspace.css';
 import '../styles/admin-surfaces.css';
+import '../styles/admin-usability-refresh.css';
 
 const DashboardOverview = dynamic(() => import('../../dashboard/DashboardOverview'), {
   loading: () => <p role="status">Đang tải tổng quan hệ thống…</p>,

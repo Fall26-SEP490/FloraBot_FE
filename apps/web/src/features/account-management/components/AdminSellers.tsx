@@ -139,6 +139,11 @@ export default function AdminSellers() {
                     <dd>{leaseExpiry(seller.packageExpiresAt)}</dd>
                   </div>
                 </dl>
+                <p>
+                  <Link href={`/admin/reports?sellerId=${encodeURIComponent(seller.id)}`}>
+                    Xem doanh số và lịch sử thuê của shop
+                  </Link>
+                </p>
                 {seller.status === 'PENDING' && (
                   <p className="quiet">
                     Shop đang chờ xử lý hồ sơ thuê kiosk. Theo dõi tiến độ tại{' '}

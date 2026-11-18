@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 for (const width of [390, 1440]) {
-  test(`Technician task report validation and uncertain response recovery ${width}`, async ({
+  test(`Technician dismantling report validation and uncertain response recovery ${width}`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 });
@@ -22,7 +22,7 @@ for (const width of [390, 1440]) {
           items: [
             {
               id: 'task-1',
-              kind: 'INCIDENT',
+              kind: 'KIOSK_REMOVAL',
               status,
               version,
               assigneeName: 'Kỹ thuật viên Hoa',
@@ -155,7 +155,7 @@ test('Technician keeps an incident report draft when a Manager changes the instr
 }) => {
   const task = {
     id: 'task-1',
-    kind: 'INCIDENT',
+    kind: 'KIOSK_REMOVAL',
     status: 'IN_PROGRESS',
     version: 1,
     kioskName: 'Tủ FPT',
