@@ -161,7 +161,21 @@ for (const width of [390, 1440]) {
     expect(
       (await page.getByRole('button', { name: 'Chọn ảnh đính kèm' }).boundingBox())!.height,
     ).toBeGreaterThanOrEqual(44);
-    await expect(page.locator('.site-hotline-button')).toBeHidden();
+    await expect(page.locator('.site-hotline-button')).toBeVisible();
+    if (width < 768) {
+      const hotline = await page.locator('.site-hotline-button').boundingBox();
+      const controls = page.locator('.chat-composer button, .chat-composer textarea');
+      for (const control of await controls.all()) {
+        if (!(await control.isVisible())) continue;
+        const box = (await control.boundingBox())!;
+        const overlaps =
+          hotline!.x < box.x + box.width &&
+          hotline!.x + hotline!.width > box.x &&
+          hotline!.y < box.y + box.height &&
+          hotline!.y + hotline!.height > box.y;
+        expect(overlaps).toBe(false);
+      }
+    }
     await expect(page.getByRole('button', { name: 'Gửi', exact: true })).toBeEnabled();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,

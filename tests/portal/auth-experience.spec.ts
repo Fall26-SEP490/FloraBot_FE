@@ -4,6 +4,9 @@ import AxeBuilder from '@axe-core/playwright';
 // These checks exercise enabled form validation; provider-disabled states have
 // separate coverage in auth-real-provider.spec.ts.
 test.beforeEach(async ({ page }) => {
+  for (const path of ['me', 'refresh']) {
+    await page.route(`**/api/auth/${path}`, (route) => route.fulfill({ status: 401, json: {} }));
+  }
   await page.route('**/api/auth/config', (route) =>
     route.fulfill({
       json: { googleClientId: null, googleEnabled: false, registrationEmailEnabled: true },
@@ -29,7 +32,7 @@ for (const width of [320, 390, 1440]) {
       if (path === '/dang-nhap') {
         if (width === 320) {
           await expect(page.getByRole('link', { name: 'Về trang chủ', exact: true })).toBeVisible();
-          await expect(page.locator('.site-hotline-button')).toHaveCount(0);
+          await expect(page.locator('.site-hotline-button')).toBeVisible();
         }
         await page.screenshot({ path: `artifacts/auth-final-login-${width}.png`, fullPage: true });
       }

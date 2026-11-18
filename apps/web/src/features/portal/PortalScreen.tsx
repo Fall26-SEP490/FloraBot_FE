@@ -135,7 +135,7 @@ export function PortalScreenRouter({
       );
     case 'profile':
       return (
-        <div className="workspace-portal-root">
+        <div className="workspace-portal-root profile-account-root">
           <CustomerWorkspace screen="profile" />
         </div>
       );
