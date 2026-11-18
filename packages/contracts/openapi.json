@@ -10,673 +10,6 @@
     }
   ],
   "paths": {
-    "/api/me/complaints": {
-      "get": {
-        "tags": [
-          "Ordering"
-        ],
-        "parameters": [
-          {
-            "name": "state",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": [
-                "integer",
-                "string"
-              ],
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/QualityComplaintPage"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/admin/quality-complaints": {
-      "get": {
-        "tags": [
-          "Ordering"
-        ],
-        "parameters": [
-          {
-            "name": "state",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": [
-                "integer",
-                "string"
-              ],
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/QualityComplaintPage"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/me/complaints/{complaintId}": {
-      "get": {
-        "tags": [
-          "Ordering"
-        ],
-        "parameters": [
-          {
-            "name": "complaintId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "evidencePage",
-            "in": "query",
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": [
-                "integer",
-                "string"
-              ],
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/QualityComplaintDetail"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/admin/quality-complaints/{complaintId}": {
-      "get": {
-        "tags": [
-          "Ordering"
-        ],
-        "parameters": [
-          {
-            "name": "complaintId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "evidencePage",
-            "in": "query",
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": [
-                "integer",
-                "string"
-              ],
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/QualityComplaintDetail"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/staff/tasks/{taskId}/quality": {
-      "get": {
-        "tags": [
-          "Ordering"
-        ],
-        "parameters": [
-          {
-            "name": "taskId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "evidencePage",
-            "in": "query",
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": [
-                "integer",
-                "string"
-              ],
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/QualityComplaintDetail"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/receipts/complaints/lookup": {
-      "post": {
-        "tags": [
-          "Ordering"
-        ],
-        "parameters": [
-          {
-            "name": "evidencePage",
-            "in": "query",
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": [
-                "integer",
-                "string"
-              ],
-              "format": "int32"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ReceiptLookupRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/QualityComplaintDetail"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/me/complaints/{complaintId}/accept": {
-      "post": {
-        "tags": [
-          "Ordering"
-        ],
-        "parameters": [
-          {
-            "name": "complaintId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/QualityVersion"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/QualityVersion"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/me/complaints/{complaintId}/assignment": {
-      "post": {
-        "tags": [
-          "Ordering"
-        ],
-        "parameters": [
-          {
-            "name": "complaintId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AssignQualityTask"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/QualityVersion"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/me/complaints/{complaintId}/replacement-plan": {
-      "post": {
-        "tags": [
-          "Ordering"
-        ],
-        "parameters": [
-          {
-            "name": "complaintId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/QualityReplacementPlan"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/QualityVersion"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/me/complaints/{complaintId}/review": {
-      "post": {
-        "tags": [
-          "Ordering"
-        ],
-        "parameters": [
-          {
-            "name": "complaintId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ReviewQualityComplaint"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/QualityVersion"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/me/complaints/{complaintId}/replacement/cancel": {
-      "post": {
-        "tags": [
-          "Ordering"
-        ],
-        "parameters": [
-          {
-            "name": "complaintId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CancelQualityReplacement"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/QualityVersion"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/kiosks/{kioskId}/quality-replacements/open": {
-      "post": {
-        "tags": [
-          "Ordering"
-        ],
-        "parameters": [
-          {
-            "name": "kioskId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/QualityPickupRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/QualityPickupResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/kiosks/{kioskId}/quality-replacements/status": {
-      "post": {
-        "tags": [
-          "Ordering"
-        ],
-        "parameters": [
-          {
-            "name": "kioskId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/QualityPickupRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/QualityComplaintDetail"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/me/complaints/{complaintId}/evidence/{attachmentId}": {
-      "get": {
-        "tags": [
-          "Ordering"
-        ],
-        "parameters": [
-          {
-            "name": "complaintId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "attachmentId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/admin/quality-complaints/{complaintId}/evidence/{attachmentId}": {
-      "get": {
-        "tags": [
-          "Ordering"
-        ],
-        "parameters": [
-          {
-            "name": "complaintId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "attachmentId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/staff/quality-complaints/{complaintId}/evidence/{attachmentId}": {
-      "get": {
-        "tags": [
-          "Ordering"
-        ],
-        "parameters": [
-          {
-            "name": "complaintId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "attachmentId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/receipts/complaints/{complaintId}/evidence/{attachmentId}": {
-      "post": {
-        "tags": [
-          "Ordering"
-        ],
-        "parameters": [
-          {
-            "name": "complaintId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "attachmentId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ReceiptLookupRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/health": {
       "get": {
         "tags": [
@@ -3404,7 +2737,7 @@
         "tags": [
           "FloraBot.Api"
         ],
-        "description": "Tạo yêu cầu preorder CUSTOM. Accessories chỉ ghi nhận mong muốn của khách, chưa giữ tồn; giá và tồn được xác nhận trong báo giá. Phụ kiện được giao cùng bó hoa trong một ô kiosk.",
+        "description": "Tạo yêu cầu preorder CUSTOM với phụ kiện tùy chọn từ kho SHOP của Seller mẫu hoa. Accessories chỉ ghi nhận mong muốn, chưa giữ tồn; BE nhân đơn giá với số lượng trong báo giá và trừ tồn khi khách accept. Phụ kiện được giao cùng bó hoa trong một ô kiosk, không chọn kiosk hoặc ô riêng cho phụ kiện.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -5588,6 +4921,26 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "kioskId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
@@ -5612,6 +4965,25 @@
         "parameters": [
           {
             "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "search",
             "in": "query",
             "schema": {
               "type": "string"
@@ -6589,91 +5961,6 @@
         }
       }
     },
-    "/api/staff/kiosk-health": {
-      "get": {
-        "tags": [
-          "KioskOps"
-        ],
-        "summary": "Kiosks assigned to the technician for installation or repair",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TechnicianKioskHealthSummary"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/staff/kiosk-health/{kioskId}": {
-      "get": {
-        "tags": [
-          "KioskOps"
-        ],
-        "summary": "Latest hardware signals from all compartments of an assigned kiosk",
-        "parameters": [
-          {
-            "name": "kioskId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TechnicianTaskTelemetry"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/staff/tasks/{taskId}/iot-health": {
-      "get": {
-        "tags": [
-          "KioskOps"
-        ],
-        "summary": "Latest hardware signals for the technician's assigned work",
-        "parameters": [
-          {
-            "name": "taskId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TechnicianTaskTelemetry"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/staff/tasks/{taskId}/transition": {
       "post": {
         "tags": [
@@ -7582,6 +6869,37 @@
         }
       }
     },
+    "/api/staff/tasks/{taskId}/iot-health": {
+      "get": {
+        "tags": [
+          "KioskOps"
+        ],
+        "summary": "Latest hardware signals for the technician's assigned work",
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TechnicianTaskTelemetry"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/staff/tasks/{taskId}/evidence/upload": {
       "post": {
         "tags": [
@@ -8199,6 +7517,673 @@
         }
       }
     },
+    "/api/me/complaints": {
+      "get": {
+        "tags": [
+          "Ordering"
+        ],
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QualityComplaintPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/quality-complaints": {
+      "get": {
+        "tags": [
+          "Ordering"
+        ],
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QualityComplaintPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me/complaints/{complaintId}": {
+      "get": {
+        "tags": [
+          "Ordering"
+        ],
+        "parameters": [
+          {
+            "name": "complaintId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "evidencePage",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QualityComplaintDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/quality-complaints/{complaintId}": {
+      "get": {
+        "tags": [
+          "Ordering"
+        ],
+        "parameters": [
+          {
+            "name": "complaintId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "evidencePage",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QualityComplaintDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/tasks/{taskId}/quality": {
+      "get": {
+        "tags": [
+          "Ordering"
+        ],
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "evidencePage",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QualityComplaintDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/receipts/complaints/lookup": {
+      "post": {
+        "tags": [
+          "Ordering"
+        ],
+        "parameters": [
+          {
+            "name": "evidencePage",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReceiptLookupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QualityComplaintDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me/complaints/{complaintId}/accept": {
+      "post": {
+        "tags": [
+          "Ordering"
+        ],
+        "parameters": [
+          {
+            "name": "complaintId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QualityVersion"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QualityVersion"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me/complaints/{complaintId}/assignment": {
+      "post": {
+        "tags": [
+          "Ordering"
+        ],
+        "parameters": [
+          {
+            "name": "complaintId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignQualityTask"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QualityVersion"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me/complaints/{complaintId}/replacement-plan": {
+      "post": {
+        "tags": [
+          "Ordering"
+        ],
+        "parameters": [
+          {
+            "name": "complaintId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QualityReplacementPlan"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QualityVersion"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me/complaints/{complaintId}/review": {
+      "post": {
+        "tags": [
+          "Ordering"
+        ],
+        "parameters": [
+          {
+            "name": "complaintId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewQualityComplaint"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QualityVersion"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me/complaints/{complaintId}/replacement/cancel": {
+      "post": {
+        "tags": [
+          "Ordering"
+        ],
+        "parameters": [
+          {
+            "name": "complaintId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelQualityReplacement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QualityVersion"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/kiosks/{kioskId}/quality-replacements/open": {
+      "post": {
+        "tags": [
+          "Ordering"
+        ],
+        "parameters": [
+          {
+            "name": "kioskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QualityPickupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QualityPickupResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/kiosks/{kioskId}/quality-replacements/status": {
+      "post": {
+        "tags": [
+          "Ordering"
+        ],
+        "parameters": [
+          {
+            "name": "kioskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QualityPickupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QualityComplaintDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me/complaints/{complaintId}/evidence/{attachmentId}": {
+      "get": {
+        "tags": [
+          "Ordering"
+        ],
+        "parameters": [
+          {
+            "name": "complaintId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "attachmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/quality-complaints/{complaintId}/evidence/{attachmentId}": {
+      "get": {
+        "tags": [
+          "Ordering"
+        ],
+        "parameters": [
+          {
+            "name": "complaintId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "attachmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/staff/quality-complaints/{complaintId}/evidence/{attachmentId}": {
+      "get": {
+        "tags": [
+          "Ordering"
+        ],
+        "parameters": [
+          {
+            "name": "complaintId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "attachmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/receipts/complaints/{complaintId}/evidence/{attachmentId}": {
+      "post": {
+        "tags": [
+          "Ordering"
+        ],
+        "parameters": [
+          {
+            "name": "complaintId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "attachmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReceiptLookupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/admin/withdrawals": {
       "get": {
         "tags": [
@@ -8584,7 +8569,7 @@
         "tags": [
           "Preorders"
         ],
-        "description": "Shared preorder accessory catalog for this seller. Only active shop accessories with available stock are returned.",
+        "description": "Optional accessories for a Seller's flower preorder. Shared SHOP stock and unit prices do not depend on the selected pickup kiosk. Stock is reserved only on quote acceptance.",
         "parameters": [
           {
             "name": "sellerId",
@@ -8618,7 +8603,7 @@
         "tags": [
           "Preorders"
         ],
-        "description": "Compatibility lookup: resolves the kiosk seller and returns its shared shop accessories.",
+        "description": "Compatibility lookup: resolves the kiosk's Seller and returns that Seller's shared SHOP accessories. New preorder clients should load /api/member/sellers/{sellerId}/catalog/accessories directly.",
         "parameters": [
           {
             "name": "kioskId",
@@ -8685,6 +8670,7 @@
         "tags": [
           "KioskOps"
         ],
+        "description": "Use scope=SHOP for Seller's shared preorder accessory inventory. KIOSK and ALL retain access to existing physical kiosk inventory; omitted scope returns ALL for compatibility.",
         "parameters": [
           {
             "name": "sellerId",
@@ -8699,12 +8685,7 @@
             "name": "scope",
             "in": "query",
             "schema": {
-              "type": "string",
-              "enum": [
-                "SHOP",
-                "KIOSK",
-                "ALL"
-              ]
+              "type": "string"
             }
           }
         ],
@@ -8728,6 +8709,7 @@
         "tags": [
           "KioskOps"
         ],
+        "description": "Create a shared SHOP accessory using Name and Price; no kiosk selection is required. Stock starts at zero and is increased via restock_accessory. Optional KioskId is for legacy physical kiosk inventory.",
         "parameters": [
           {
             "name": "sellerId",
@@ -8750,24 +8732,8 @@
           "required": true
         },
         "responses": {
-          "201": {
-            "description": "Created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "id"
-                  ],
-                  "properties": {
-                    "id": {
-                      "type": "string",
-                      "format": "uuid"
-                    }
-                  }
-                }
-              }
-            }
+          "200": {
+            "description": "OK"
           }
         }
       }
@@ -9029,6 +8995,43 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/operations/sellers/{sellerId}/kiosks": {
+      "get": {
+        "tags": [
+          "KioskOps"
+        ],
+        "summary": "Danh sách kiosk của shop thuộc phạm vi quản lý",
+        "parameters": [
+          {
+            "name": "sellerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SellerKioskDto"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
           }
         }
       }
@@ -14038,6 +14041,21 @@
               ],
               "format": "int32"
             }
+          },
+          {
+            "name": "kioskId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -14169,6 +14187,13 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -15655,6 +15680,38 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/shop/flower-chat": {
+      "post": {
+        "tags": [
+          "Ai"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FlowerChatInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlowerChatResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
           }
         }
       }
@@ -17411,574 +17468,341 @@
           }
         }
       }
+    },
+    "/api/shop/products/{productId}/reviews": {
+      "get": {
+        "tags": [
+          "Flower reviews"
+        ],
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlowerReviewPage"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Flower reviews"
+        ],
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FlowerReviewInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlowerReviewCreated"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/shop/products/{productId}/review-eligibility": {
+      "get": {
+        "tags": [
+          "Flower reviews"
+        ],
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlowerReviewEligibility"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/shop/products/{productId}/reviews/{reviewId}/photo": {
+      "get": {
+        "tags": [
+          "Flower reviews"
+        ],
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "reviewId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/sellers/{sellerId}/orders": {
+      "get": {
+        "tags": [
+          "Admin reports"
+        ],
+        "parameters": [
+          {
+            "name": "sellerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "kioskId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSellerOrderPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/sellers/{sellerId}/orders/{orderId}": {
+      "get": {
+        "tags": [
+          "Admin reports"
+        ],
+        "parameters": [
+          {
+            "name": "sellerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSellerOrderDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/staff/kiosk-health": {
+      "get": {
+        "tags": [
+          "KioskOps"
+        ],
+        "summary": "Kiosks assigned to the technician for installation or repair",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TechnicianKioskHealthSummary"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/kiosk-health/{kioskId}": {
+      "get": {
+        "tags": [
+          "KioskOps"
+        ],
+        "summary": "Latest hardware signals from all compartments of an assigned kiosk",
+        "parameters": [
+          {
+            "name": "kioskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TechnicianTaskTelemetry"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
-      "QualityComplaintPage": {
-        "required": [
-          "page",
-          "hasMore",
-          "items"
-        ],
-        "type": "object",
-        "properties": {
-          "page": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "hasMore": {
-            "type": "boolean"
-          },
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/QualityComplaintDetail"
-            }
-          }
-        },
-        "additionalProperties": false
-      },
-      "QualityComplaintDetail": {
-        "required": [
-          "id",
-          "orderId",
-          "orderCode",
-          "kioskId",
-          "status",
-          "handlingState",
-          "version",
-          "reason",
-          "createdAt",
-          "acceptedAt",
-          "outcome",
-          "resolution",
-          "resolvedAt",
-          "items",
-          "task",
-          "replacement",
-          "evidence"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "orderId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "orderCode": {
-            "type": "string"
-          },
-          "kioskId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "status": {
-            "type": "string"
-          },
-          "handlingState": {
-            "type": "string"
-          },
-          "version": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "reason": {
-            "type": "string"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "acceptedAt": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "date-time"
-          },
-          "outcome": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "resolution": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "resolvedAt": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "date-time"
-          },
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/QualityOrderItem"
-            }
-          },
-          "task": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/QualityTaskInfo"
-              }
-            ]
-          },
-          "replacement": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/QualityReplacementInfo"
-              }
-            ]
-          },
-          "evidence": {
-            "$ref": "#/components/schemas/QualityEvidencePage"
-          }
-        },
-        "additionalProperties": false
-      },
-      "QualityOrderItem": {
-        "required": [
-          "orderItemId",
-          "bouquetId",
-          "productId",
-          "slotId",
-          "slotCode",
-          "name"
-        ],
-        "type": "object",
-        "properties": {
-          "orderItemId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "bouquetId": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "uuid"
-          },
-          "productId": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "uuid"
-          },
-          "slotId": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "uuid"
-          },
-          "slotCode": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "name": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "QualityTaskInfo": {
-        "required": [
-          "id",
-          "version",
-          "status",
-          "assigneeId",
-          "orderItemId",
-          "instructions",
-          "report"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "version": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "status": {
-            "type": "string"
-          },
-          "assigneeId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "orderItemId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "instructions": {
-            "type": "string"
-          },
-          "report": {
-            "type": [
-              "null",
-              "string"
-            ]
-          }
-        },
-        "additionalProperties": false
-      },
-      "QualityReplacementInfo": {
-        "required": [
-          "taskId",
-          "state",
-          "productId",
-          "bouquetId",
-          "slotId",
-          "slotCode",
-          "expiresAt",
-          "collectedAt",
-          "commandId",
-          "commandStatus"
-        ],
-        "type": "object",
-        "properties": {
-          "taskId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "state": {
-            "type": "string"
-          },
-          "productId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "bouquetId": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "uuid"
-          },
-          "slotId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "slotCode": {
-            "type": "string"
-          },
-          "expiresAt": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "date-time"
-          },
-          "collectedAt": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "date-time"
-          },
-          "commandId": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "uuid"
-          },
-          "commandStatus": {
-            "type": [
-              "null",
-              "string"
-            ]
-          }
-        },
-        "additionalProperties": false
-      },
-      "QualityEvidencePage": {
-        "required": [
-          "page",
-          "hasMore",
-          "items"
-        ],
-        "type": "object",
-        "properties": {
-          "page": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "hasMore": {
-            "type": "boolean"
-          },
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/QualityPhoto"
-            }
-          }
-        },
-        "additionalProperties": false
-      },
-      "QualityPhoto": {
-        "required": [
-          "id",
-          "createdAt",
-          "source",
-          "taskId",
-          "url"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "source": {
-            "type": "string"
-          },
-          "taskId": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "uuid"
-          },
-          "url": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "QualityVersion": {
-        "required": [
-          "version"
-        ],
-        "type": "object",
-        "properties": {
-          "version": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          }
-        },
-        "additionalProperties": false
-      },
-      "AssignQualityTask": {
-        "required": [
-          "version",
-          "taskId",
-          "assigneeId",
-          "orderItemId",
-          "instructions"
-        ],
-        "type": "object",
-        "properties": {
-          "version": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "taskId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "assigneeId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "orderItemId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "instructions": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "QualityReplacementPlan": {
-        "required": [
-          "version",
-          "taskVersion",
-          "productId",
-          "slotId"
-        ],
-        "type": "object",
-        "properties": {
-          "version": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "taskVersion": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "productId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "slotId": {
-            "type": "string",
-            "format": "uuid"
-          }
-        },
-        "additionalProperties": false
-      },
-      "ReviewQualityComplaint": {
-        "required": [
-          "version",
-          "taskVersion",
-          "outcome",
-          "resolution"
-        ],
-        "type": "object",
-        "properties": {
-          "version": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "taskVersion": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "outcome": {
-            "type": "string"
-          },
-          "resolution": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "CancelQualityReplacement": {
-        "required": [
-          "version",
-          "reason"
-        ],
-        "type": "object",
-        "properties": {
-          "version": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "reason": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "QualityPickupRequest": {
-        "required": [
-          "complaintId",
-          "orderId",
-          "trackingToken",
-          "attemptId"
-        ],
-        "type": "object",
-        "properties": {
-          "complaintId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "orderId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "trackingToken": {
-            "type": "string"
-          },
-          "attemptId": {
-            "type": "string",
-            "format": "uuid"
-          }
-        },
-        "additionalProperties": false
-      },
-      "QualityPickupResponse": {
-        "required": [
-          "complaintId",
-          "commandId",
-          "commandStatus"
-        ],
-        "type": "object",
-        "properties": {
-          "complaintId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "commandId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "commandStatus": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
       "AcceptedMaintenanceAccess": {
         "type": "object",
         "properties": {
@@ -18667,6 +18491,22 @@
                 "$ref": "#/components/schemas/IncidentSlot"
               }
             ]
+          },
+          "task": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/IncidentLinkedTask"
+              }
+            ]
+          },
+          "progress": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         },
         "additionalProperties": false
@@ -18995,6 +18835,265 @@
               "string"
             ],
             "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AdminSellerOrderDetail": {
+        "required": [
+          "id",
+          "orderCode",
+          "status",
+          "totalAmount",
+          "createdAt",
+          "completedAt",
+          "kioskId",
+          "kioskCode",
+          "kioskName",
+          "mode",
+          "items",
+          "payments"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orderCode": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "totalAmount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "kioskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kioskCode": {
+            "type": "string"
+          },
+          "kioskName": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminSellerOrderLine"
+            }
+          },
+          "payments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminSellerOrderPayment"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "AdminSellerOrderLine": {
+        "required": [
+          "name",
+          "quantity",
+          "unitPrice",
+          "lineTotal",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "unitPrice": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "lineTotal": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AdminSellerOrderPage": {
+        "required": [
+          "items",
+          "page",
+          "hasMore"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminSellerOrderRow"
+            }
+          },
+          "page": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "hasMore": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AdminSellerOrderPayment": {
+        "required": [
+          "id",
+          "kind",
+          "status",
+          "amount",
+          "paidAt",
+          "createdAt",
+          "gateway",
+          "gatewayTxnId"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "amount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "paidAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "gateway": {
+            "type": "string"
+          },
+          "gatewayTxnId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "AdminSellerOrderRow": {
+        "required": [
+          "id",
+          "orderCode",
+          "status",
+          "totalAmount",
+          "createdAt",
+          "completedAt",
+          "kioskId",
+          "kioskCode",
+          "kioskName",
+          "mode"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orderCode": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "totalAmount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "kioskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kioskCode": {
+            "type": "string"
+          },
+          "kioskName": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -19501,6 +19600,42 @@
         },
         "additionalProperties": false
       },
+      "AssignQualityTask": {
+        "required": [
+          "version",
+          "taskId",
+          "assigneeId",
+          "orderItemId",
+          "instructions"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "taskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assigneeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orderItemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "instructions": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "AssignStaffPreorderInput": {
         "required": [
           "id",
@@ -19749,6 +19884,27 @@
               "null",
               "string"
             ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "CancelQualityReplacement": {
+        "required": [
+          "version",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "reason": {
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -20315,13 +20471,6 @@
         ],
         "type": "object",
         "properties": {
-          "kioskId": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uuid"
-          },
           "name": {
             "type": "string"
           },
@@ -20332,6 +20481,13 @@
               "string"
             ],
             "format": "int64"
+          },
+          "kioskId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         },
         "additionalProperties": false
@@ -21264,6 +21420,194 @@
         },
         "additionalProperties": false
       },
+      "FlowerChatInput": {
+        "required": [
+          "question"
+        ],
+        "type": "object",
+        "properties": {
+          "question": {
+            "type": "string"
+          },
+          "mode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "budget": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "kioskId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "latitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "longitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "FlowerChatResponse": {
+        "required": [
+          "intent",
+          "message",
+          "suggestions"
+        ],
+        "type": "object",
+        "properties": {
+          "intent": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "suggestions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FlowerChatSuggestion"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "FlowerChatSuggestion": {
+        "required": [
+          "id",
+          "productId",
+          "kioskId",
+          "name",
+          "price",
+          "mode",
+          "reason",
+          "photo",
+          "productRating",
+          "productReviews",
+          "shopRating",
+          "shopReviews",
+          "shopName",
+          "kioskName",
+          "distanceKm"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kioskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "price": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "mode": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "photo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "productRating": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "productReviews": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "shopRating": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "shopReviews": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "shopName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "kioskName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "distanceKm": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
       "FlowerPresenceResponse": {
         "required": [
           "kioskId",
@@ -21304,6 +21648,160 @@
         },
         "additionalProperties": false
       },
+      "FlowerReview": {
+        "required": [
+          "id",
+          "stars",
+          "comment",
+          "photoUrl",
+          "createdAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "stars": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int16"
+          },
+          "comment": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "photoUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "FlowerReviewCreated": {
+        "required": [
+          "id"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "FlowerReviewEligibility": {
+        "required": [
+          "eligible"
+        ],
+        "type": "object",
+        "properties": {
+          "eligible": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "FlowerReviewInput": {
+        "required": [
+          "stars",
+          "comment",
+          "photoBase64"
+        ],
+        "type": "object",
+        "properties": {
+          "stars": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "comment": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "photoBase64": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "FlowerReviewPage": {
+        "required": [
+          "productAverage",
+          "productCount",
+          "shopAverage",
+          "shopCount",
+          "items",
+          "hasMore"
+        ],
+        "type": "object",
+        "properties": {
+          "productAverage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "productCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "shopAverage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "shopCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FlowerReview"
+            }
+          },
+          "hasMore": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
       "FlowerSlotPresence": {
         "required": [
           "slotId",
@@ -21332,6 +21830,16 @@
             "type": [
               "null",
               "boolean"
+            ]
+          },
+          "latestUnlock": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SlotUnlockObservation"
+              }
             ]
           }
         },
@@ -21659,6 +22167,32 @@
           },
           "hasMore": {
             "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "IncidentLinkedTask": {
+        "required": [
+          "id",
+          "status",
+          "assigneeId",
+          "assigneeName"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string"
+          },
+          "assigneeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assigneeName": {
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -22130,6 +22664,15 @@
               "null",
               "string"
             ]
+          },
+          "tags": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
           }
         },
         "additionalProperties": false
@@ -24541,6 +25084,479 @@
         },
         "additionalProperties": false
       },
+      "QualityComplaintDetail": {
+        "required": [
+          "id",
+          "orderId",
+          "orderCode",
+          "kioskId",
+          "status",
+          "handlingState",
+          "version",
+          "reason",
+          "createdAt",
+          "acceptedAt",
+          "outcome",
+          "resolution",
+          "resolvedAt",
+          "items",
+          "task",
+          "replacement",
+          "evidence"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orderCode": {
+            "type": "string"
+          },
+          "kioskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string"
+          },
+          "handlingState": {
+            "type": "string"
+          },
+          "version": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "acceptedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "outcome": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "resolution": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "resolvedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QualityOrderItem"
+            }
+          },
+          "task": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/QualityTaskInfo"
+              }
+            ]
+          },
+          "replacement": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/QualityReplacementInfo"
+              }
+            ]
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/QualityEvidencePage"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QualityComplaintPage": {
+        "required": [
+          "page",
+          "hasMore",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "page": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "hasMore": {
+            "type": "boolean"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QualityComplaintDetail"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "QualityEvidencePage": {
+        "required": [
+          "page",
+          "hasMore",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "page": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "hasMore": {
+            "type": "boolean"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QualityPhoto"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "QualityOrderItem": {
+        "required": [
+          "orderItemId",
+          "bouquetId",
+          "productId",
+          "slotId",
+          "slotCode",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "orderItemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bouquetId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "productId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "slotId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "slotCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QualityPhoto": {
+        "required": [
+          "id",
+          "createdAt",
+          "source",
+          "taskId",
+          "url"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "source": {
+            "type": "string"
+          },
+          "taskId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QualityPickupRequest": {
+        "required": [
+          "complaintId",
+          "orderId",
+          "trackingToken",
+          "attemptId"
+        ],
+        "type": "object",
+        "properties": {
+          "complaintId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "trackingToken": {
+            "type": "string"
+          },
+          "attemptId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QualityPickupResponse": {
+        "required": [
+          "complaintId",
+          "commandId",
+          "commandStatus"
+        ],
+        "type": "object",
+        "properties": {
+          "complaintId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "commandId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "commandStatus": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QualityReplacementInfo": {
+        "required": [
+          "taskId",
+          "state",
+          "productId",
+          "bouquetId",
+          "slotId",
+          "slotCode",
+          "expiresAt",
+          "collectedAt",
+          "commandId",
+          "commandStatus"
+        ],
+        "type": "object",
+        "properties": {
+          "taskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "state": {
+            "type": "string"
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bouquetId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "slotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slotCode": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "collectedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "commandId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "commandStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "QualityReplacementPlan": {
+        "required": [
+          "version",
+          "taskVersion",
+          "productId",
+          "slotId"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "taskVersion": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slotId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QualityTaskInfo": {
+        "required": [
+          "id",
+          "version",
+          "status",
+          "assigneeId",
+          "orderItemId",
+          "instructions",
+          "report"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "status": {
+            "type": "string"
+          },
+          "assigneeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orderItemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "instructions": {
+            "type": "string"
+          },
+          "report": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "QualityVersion": {
+        "required": [
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
       "QuotedPreorderAccessory": {
         "required": [
           "accessoryId",
@@ -25413,6 +26429,40 @@
         },
         "additionalProperties": false
       },
+      "ReviewQualityComplaint": {
+        "required": [
+          "version",
+          "taskVersion",
+          "outcome",
+          "resolution"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "taskVersion": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "outcome": {
+            "type": "string"
+          },
+          "resolution": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "ReviewSlotLayout": {
         "required": [
           "preorderSlotIds",
@@ -25730,8 +26780,7 @@
           "kioskCode",
           "kioskName",
           "kioskAddress",
-          "kioskStatus",
-          "scope"
+          "kioskStatus"
         ],
         "type": "object",
         "properties": {
@@ -25763,40 +26812,39 @@
           },
           "kioskId": {
             "type": [
-              "string",
-              "null"
+              "null",
+              "string"
             ],
             "format": "uuid"
           },
           "kioskCode": {
             "type": [
-              "string",
-              "null"
+              "null",
+              "string"
             ]
           },
           "kioskName": {
             "type": [
-              "string",
-              "null"
+              "null",
+              "string"
             ]
           },
           "kioskAddress": {
             "type": [
-              "string",
-              "null"
+              "null",
+              "string"
             ]
           },
           "kioskStatus": {
             "type": [
-              "string",
-              "null"
+              "null",
+              "string"
             ]
           },
           "scope": {
-            "type": "string",
-            "enum": [
-              "SHOP",
-              "KIOSK"
+            "type": [
+              "null",
+              "string"
             ]
           }
         },
@@ -27805,6 +28853,39 @@
         },
         "additionalProperties": false
       },
+      "SlotUnlockObservation": {
+        "required": [
+          "status",
+          "issuedAt",
+          "doorOpenedAt",
+          "doorClosedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "issuedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "doorOpenedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "doorClosedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
       "StaffDeliveryScope": {
         "required": [
           "sellerId",
@@ -28397,111 +29478,6 @@
         },
         "additionalProperties": false
       },
-      "TechnicianKioskHealthSummary": {
-        "required": [
-          "id",
-          "code",
-          "name",
-          "status"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "code": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "status": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "TechnicianSlotTelemetry": {
-        "required": [
-          "slotCode",
-          "flowerDetected",
-          "doorClosed",
-          "lastCycle",
-          "lastCycleAt"
-        ],
-        "type": "object",
-        "properties": {
-          "slotCode": {
-            "type": "string"
-          },
-          "flowerDetected": {
-            "type": [
-              "null",
-              "boolean"
-            ]
-          },
-          "doorClosed": {
-            "type": [
-              "null",
-              "boolean"
-            ]
-          },
-          "lastCycle": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "lastCycleAt": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "date-time"
-          }
-        },
-        "additionalProperties": false
-      },
-      "TechnicianTaskTelemetry": {
-        "required": [
-          "kioskStatus",
-          "lastHeartbeatAt",
-          "observedAt",
-          "isFresh",
-          "slots"
-        ],
-        "type": "object",
-        "properties": {
-          "kioskStatus": {
-            "type": "string"
-          },
-          "lastHeartbeatAt": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "date-time"
-          },
-          "observedAt": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "date-time"
-          },
-          "isFresh": {
-            "type": "boolean"
-          },
-          "slots": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/TechnicianSlotTelemetry"
-            }
-          }
-        },
-        "additionalProperties": false
-      },
       "StaffTaskDetail": {
         "required": [
           "kioskStatus",
@@ -28578,6 +29554,39 @@
               "null",
               "string"
             ]
+          },
+          "slotObservation": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FlowerSlotPresence"
+              }
+            ]
+          },
+          "slotObservedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "kioskId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "kioskSlots": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/FlowerSlotPresence"
+            }
           }
         },
         "additionalProperties": false
@@ -28770,6 +29779,19 @@
           "updatedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "workType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "complaintId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         },
         "additionalProperties": false
@@ -28855,6 +29877,19 @@
             "items": {
               "$ref": "#/components/schemas/SubscriptionResponse"
             }
+          },
+          "page": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 1
+          },
+          "hasMore": {
+            "type": "boolean",
+            "default": false
           }
         },
         "additionalProperties": false
@@ -28903,6 +29938,31 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "kioskCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "kioskName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "reminderStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         },
         "additionalProperties": false
@@ -29131,6 +30191,111 @@
               "null",
               "string"
             ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "TechnicianKioskHealthSummary": {
+        "required": [
+          "id",
+          "code",
+          "name",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "TechnicianSlotTelemetry": {
+        "required": [
+          "slotCode",
+          "flowerDetected",
+          "doorClosed",
+          "lastCycle",
+          "lastCycleAt"
+        ],
+        "type": "object",
+        "properties": {
+          "slotCode": {
+            "type": "string"
+          },
+          "flowerDetected": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "doorClosed": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "lastCycle": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lastCycleAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "TechnicianTaskTelemetry": {
+        "required": [
+          "kioskStatus",
+          "lastHeartbeatAt",
+          "observedAt",
+          "isFresh",
+          "slots"
+        ],
+        "type": "object",
+        "properties": {
+          "kioskStatus": {
+            "type": "string"
+          },
+          "lastHeartbeatAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "observedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "isFresh": {
+            "type": "boolean"
+          },
+          "slots": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TechnicianSlotTelemetry"
+            }
           }
         },
         "additionalProperties": false
@@ -29933,6 +31098,15 @@
           },
           "preorderAvailable": {
             "type": "boolean"
+          },
+          "tags": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
           }
         },
         "additionalProperties": false
@@ -30465,6 +31639,12 @@
     },
     {
       "name": "MobileAuth"
+    },
+    {
+      "name": "Flower reviews"
+    },
+    {
+      "name": "Admin reports"
     }
   ]
 }
