@@ -1,14 +1,17 @@
 # Flower advisor FE handoff
 
-The advisor and hotline are mounted once in the root `SiteFrame`, on every page
-for guests and signed-in roles, including authentication and workspace pages.
+The advisor and hotline are mounted once in the root `SiteFrame` for guests and
+all signed-in roles, including `ADMIN`. Customers always see both labels, including on mobile. Other roles in
+their workspace see icons only; hover or keyboard focus slides out the label
+without reserving an invisible hit area over workspace content. Touch users can
+activate each icon directly. Public pages keep their expanded presentation.
 The shared session query selects seller prompts for `SELLER`; everyone else uses
 the customer prompts. Chat survives client-side navigation and resets when the
 account identity or role changes. Mobile chat/product pages raise both floating
 buttons above the bottom composer or action bar.
-The support dock stacks two 50px green circular icons, hotline above advisor with
-a 12px gap. Desktop labels sit to the left on white pills; mobile hides the phone
-number and keeps the compact advisor label. The default hotline is `0355 357 665`
+The support dock stacks two 44px green circular icons, hotline above advisor with
+a 12px gap. Desktop labels sit to the left on white pills; guest mobile pages hide
+the phone number and keep the compact advisor label. The default hotline is `0355 357 665`
 (`tel:0355357665`); `NEXT_PUBLIC_SUPPORT_PHONE` can override it.
 It calls `POST /api/shop/flower-chat` using the shared request helper, including
 cookies and the existing single-flight session refresh. No backend changes.

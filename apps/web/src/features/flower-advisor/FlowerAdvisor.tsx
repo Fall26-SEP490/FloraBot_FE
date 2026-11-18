@@ -280,6 +280,7 @@ export function FlowerAdvisor({ audience = 'customer' }: { audience?: 'customer'
       <button
         type="button"
         className="flower-advisor-launch site-support-control"
+        aria-label="Tư vấn FloraBot"
         aria-haspopup="dialog"
         aria-expanded={opened}
         onClick={() => setOpened(true)}

@@ -124,9 +124,53 @@
   outline: 3px solid var(--color-workspace-accent, #174b35);
   outline-offset: 3px;
 }
+
+/* Workspace labels float outside the icon's hit area, so hidden text never
+   blocks the controls underneath. Keyboard focus reveals the same label. */
+.site-support--compact .site-support-label {
+  position: absolute;
+  top: 50%;
+  right: calc(var(--site-support-size, 50px) + 8px);
+  display: block;
+  visibility: hidden;
+  opacity: 0;
+  transform: translate(8px, -50%);
+  pointer-events: none;
+  transition:
+    opacity 150ms ease-out,
+    transform 180ms ease-out,
+    visibility 0s linear 180ms;
+}
+.site-support--compact .site-support-control::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  right: 100%;
+  width: 8px;
+}
+.site-support--compact .site-support-control:focus-visible .site-support-label {
+  visibility: visible;
+  opacity: 1;
+  transform: translate(0, -50%);
+  pointer-events: auto;
+  transition-delay: 0s;
+}
+@media (hover: hover) {
+  .site-support--compact .site-support-control:hover .site-support-label {
+    visibility: visible;
+    opacity: 1;
+    transform: translate(0, -50%);
+    pointer-events: auto;
+    transition-delay: 0s;
+  }
+}
+.site-support[data-customer='true'] .site-support-label--phone {
+  display: block;
+}
 @media (prefers-reduced-motion: reduce) {
   .site-support-control,
-  .site-support-icon {
+  .site-support-icon,
+  .site-support--compact .site-support-label {
     transition: none;
   }
   .site-support-control:hover,

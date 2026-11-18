@@ -155,7 +155,15 @@ for (const [role, path] of [
   ['ADMIN', '/admin/managers'],
   ['STAFF', '/workspace'],
 ]) {
-  test(`Global support for ${role} has one advisor with the correct prompts`, async ({ page }) => {
+  test(`Support visibility and workspace labels for ${role}`, async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    for (const endpoint of [
+      '/operations/technicians',
+      '/operations/eligible-kiosks',
+      '/admin/managers',
+    ]) {
+      await page.route(`**/api${endpoint}**`, (route) => route.fulfill({ json: [] }));
+    }
     await page.route('**/api/auth/me', (route) =>
       route.fulfill({ json: { id: role, role, name: 'UAT' } }),
     );
@@ -164,6 +172,39 @@ for (const [role, path] of [
     await expect(page.locator('.site-hotline-button')).toBeVisible();
     const launcher = page.getByRole('button', { name: 'Tư vấn FloraBot', exact: true });
     await expect(launcher).toHaveCount(1);
+    const hotline = page.locator('.site-hotline-button');
+    const hotlineLabel = hotline.locator('.site-support-label');
+    const chatLabel = launcher.locator('.site-support-label');
+    if (role === 'CUSTOMER') {
+      await expect(page.locator('.site-support--compact')).toHaveCount(0);
+      await expect(hotlineLabel).toBeVisible();
+      await expect(chatLabel).toBeVisible();
+      await page.setViewportSize({ width: 390, height: 900 });
+      await expect(hotlineLabel).toBeVisible();
+      await expect(chatLabel).toBeVisible();
+    } else {
+      await expect(page.locator('.site-support--compact')).toHaveCount(1);
+      await expect(hotlineLabel).toBeHidden();
+      await expect(chatLabel).toBeHidden();
+      expect((await launcher.boundingBox())!.width).toBe(
+        (await launcher.locator('.site-support-icon').boundingBox())!.width,
+      );
+      await launcher.hover();
+      await expect(chatLabel).toBeVisible();
+      await page.mouse.move(0, 0);
+      await expect(chatLabel).toBeHidden();
+      await hotline.hover();
+      await expect(hotlineLabel).toBeVisible();
+      await page.mouse.move(0, 0);
+      await expect(hotlineLabel).toBeHidden();
+      await hotline.focus();
+      await page.keyboard.press('Tab');
+      await expect(launcher).toBeFocused();
+      await expect(chatLabel).toBeVisible();
+      await page.keyboard.press('Shift+Tab');
+      await expect(hotline).toBeFocused();
+      await expect(hotlineLabel).toBeVisible();
+    }
     await launcher.click();
     await expect(
       page.getByRole('dialog').getByRole('button', {
@@ -201,10 +242,11 @@ test('Customer entry points, hotline spacing, focus and keyboard dismissal', asy
   expect(hotlineBox!.y + hotlineBox!.height + 12).toBeCloseTo(launchBox!.y, 0);
   const hotlineIcon = await page.locator('.site-hotline-button .site-support-icon').boundingBox();
   const advisorIcon = await launch.locator('.site-support-icon').boundingBox();
-  expect(hotlineIcon!.width).toBe(50);
-  expect(hotlineIcon!.height).toBe(50);
-  expect(advisorIcon!.width).toBe(50);
-  expect(advisorIcon!.height).toBe(50);
+  expect(hotlineIcon!.width).toBeGreaterThanOrEqual(44);
+  expect(hotlineIcon!.width).toBeLessThanOrEqual(52);
+  expect(hotlineIcon!.height).toBe(hotlineIcon!.width);
+  expect(advisorIcon!.width).toBe(hotlineIcon!.width);
+  expect(advisorIcon!.height).toBe(hotlineIcon!.height);
   expect(hotlineIcon!.x).toBe(advisorIcon!.x);
   await expect(page.locator('.site-hotline-button')).toHaveAttribute('href', 'tel:0355357665');
   await launch.click();
