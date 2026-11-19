@@ -5296,6 +5296,87 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/revenue/{kind}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    from?: string;
+                    to?: string;
+                    sellerId?: string;
+                    kioskId?: string;
+                    page?: number | string;
+                    pageSize?: number | string;
+                };
+                header?: never;
+                path: {
+                    kind: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminRevenuePage"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/sellers/{sellerId}/report-kiosks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sellerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["HistoricalReportKiosk"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/reports/v_admin_queue": {
         parameters: {
             query?: never;
@@ -7486,6 +7567,80 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/tasks/{taskId}/repair-readiness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    taskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RepairReadiness"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/operations/staff-tasks/{taskId}/repair-readiness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    taskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RepairReadiness"];
+                    };
                 };
             };
         };
@@ -17427,6 +17582,16 @@ export interface components {
             /** Format: date-time */
             paidAt: null | string;
         };
+        AdminRevenuePage: {
+            items: unknown[];
+            totals: components["schemas"]["JsonElement"];
+            /** Format: int64 */
+            totalCount: number | string;
+            /** Format: int32 */
+            page: number | string;
+            /** Format: int32 */
+            pageSize: number | string;
+        };
         AdminSellerOrderDetail: {
             /** Format: uuid */
             id: string;
@@ -18242,6 +18407,12 @@ export interface components {
         };
         GoogleAuthRequest: {
             idToken: string;
+        };
+        HistoricalReportKiosk: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
         };
         HolidayInfo: {
             code: string;
@@ -19275,6 +19446,14 @@ export interface components {
         ReorderProductPhotosRequest: {
             photoIds: string[];
         };
+        RepairReadiness: {
+            code: null | string;
+            detail: null | string;
+            /** Format: uuid */
+            blockingSessionId: null | string;
+            blockingSessionStage: null | string;
+            pendingCommandIds: string[];
+        };
         ReportDeviceFaultRequest: {
             /** Format: uuid */
             p_kiosk: string;
@@ -20241,6 +20420,7 @@ export interface components {
             /** Format: date-time */
             expiresAt?: null | string;
             reminderStatus?: null | string;
+            terminationReason?: null | string;
         };
         TechnicalRepairApproval: {
             /** Format: date-time */

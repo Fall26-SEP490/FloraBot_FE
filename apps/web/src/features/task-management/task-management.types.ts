@@ -38,7 +38,7 @@ export type TaskHistoryItem = {
 
 export type TaskDetail = Pick<
   components['schemas']['StaffTaskDetail'],
-  'slotObservation' | 'slotObservedAt' | 'kioskSlots'
+  'slotObservation' | 'slotObservedAt' | 'kioskSlots' | 'status'
 > & {
   kioskStatus: string;
   lastHeartbeatAt: string | null;

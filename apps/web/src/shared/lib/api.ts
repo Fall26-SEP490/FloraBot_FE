@@ -92,6 +92,7 @@ export async function request<T>(
   if (!response.ok) {
     const problem = (await response.json().catch(() => ({}))) as {
       detail?: string;
+      code?: string;
       title?: string;
       error?: string;
       message?: string;
@@ -131,7 +132,7 @@ export async function request<T>(
             : response.status === 429
               ? 'Bạn thao tác hơi nhanh. Hãy thử lại sau một phút.'
               : 'Chưa xử lý được yêu cầu. Bạn thử lại nhé.'),
-      problem.detail,
+      problem.code || problem.detail,
     );
   }
   return response.status === 204 ? (undefined as T) : (response.json() as Promise<T>);
