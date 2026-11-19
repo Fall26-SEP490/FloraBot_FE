@@ -47,12 +47,12 @@ for (const width of [390, 1440]) {
     const flower = panel.getByRole('combobox', { name: 'Loại hoa' });
     await expect(flower).toHaveValue('rose');
     await expect(panel.getByRole('combobox', { name: 'Dịp tặng' })).toHaveCount(0);
-    await expect(flower.locator('option[value="rose"]')).toHaveText('Hoa hồng (2)');
-    await expect(flower.locator('option[value="lily"]')).toHaveJSProperty('disabled', true);
+    await expect(flower.locator('option[value="rose"]')).toHaveText('Hoa hồng: còn 2 mẫu');
+    await expect(flower.locator('option[value="lily"]')).toHaveCount(0);
     const price = panel.getByRole('radio', { name: /^Dưới 300.000/ });
     await price.click();
     await expect(price).toBeChecked();
-    await expect(panel.getByRole('radio', { name: /^Mua trực tiếp tại tủ/ })).toBeDisabled();
+    await expect(panel.getByRole('radio', { name: /^Mua trực tiếp tại tủ/ })).toHaveCount(0);
     const axe = await new AxeBuilder({ page }).include('#catalog-filters').analyze();
     expect(axe.violations).toEqual([]);
     expect(await panel.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);

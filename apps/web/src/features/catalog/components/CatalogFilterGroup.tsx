@@ -20,26 +20,30 @@ export function CatalogFilterGroup({ title, options }: CatalogFilterGroupProps) 
     <fieldset className="catalog-filter-group">
       <legend className="catalog-filter-title">{title}</legend>
       <ul className="catalog-filter-list">
-        {options.map((option) => (
-          <li key={option.id}>
-            <label
-              className={`catalog-filter-option ${option.isSelected ? 'is-active' : ''} ${
-                option.isEmpty ? 'is-empty' : ''
-              }`}
-            >
-              <input
-                type="radio"
-                name={groupId}
-                value={option.id}
-                checked={option.isSelected}
-                disabled={option.isEmpty && !option.isSelected}
-                onChange={option.onSelect}
-              />
-              <span className="catalog-option-text">{option.label}</span>
-              <span className="catalog-option-count">{option.count}</span>
-            </label>
-          </li>
-        ))}
+        {options
+          .filter((option) => option.id === 'all' || option.count > 0)
+          .map((option) => (
+            <li key={option.id}>
+              <label
+                className={`catalog-filter-option ${option.isSelected ? 'is-active' : ''} ${
+                  option.isEmpty ? 'is-empty' : ''
+                }`}
+              >
+                <input
+                  type="radio"
+                  name={groupId}
+                  value={option.id}
+                  checked={option.isSelected}
+                  disabled={option.isEmpty && !option.isSelected}
+                  onChange={option.onSelect}
+                />
+                <span className="catalog-option-text">{option.label}</span>
+                <span className="catalog-option-count">
+                  {option.count > 0 ? option.count : null}
+                </span>
+              </label>
+            </li>
+          ))}
       </ul>
     </fieldset>
   );
