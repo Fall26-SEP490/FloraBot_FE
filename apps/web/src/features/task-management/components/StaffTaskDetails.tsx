@@ -6,6 +6,7 @@ import { TASK_DETAIL_ACTIONS, TASK_DETAIL_STATES } from '../task-management.cons
 import type { StaffTaskDetailsProps, TaskDetail } from '../task-management.types';
 import { formatTaskDate } from '../task-management.utils';
 import TechnicianIoTHealth from './TechnicianIoTHealth';
+import RepairReadinessPanel from './RepairReadinessPanel';
 
 export type { StaffTaskDetailsProps };
 
@@ -47,6 +48,17 @@ export default function StaffTaskDetails({
       {open && role === 'TECHNICIAN' && (
         <TechnicianIoTHealth path={`/staff/tasks/${taskId}/iot-health`} actorId={actorId} />
       )}
+      {open &&
+        details.data?.slotCode &&
+        ['IN_PROGRESS', 'SUBMITTED'].includes(details.data.status ?? '') &&
+        (role === 'TECHNICIAN' || role === 'OPERATIONS_MANAGER') && (
+          <RepairReadinessPanel
+            taskId={taskId}
+            apiBase={apiBase}
+            actorId={actorId}
+            version={version}
+          />
+        )}
       {details.isPending ? (
         <p role="status">Đang tải thông tin công việc…</p>
       ) : details.isError ? (

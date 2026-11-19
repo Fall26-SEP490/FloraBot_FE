@@ -14,7 +14,7 @@ import './admin-seller-reports.css';
 import AdminSellerOrders from './AdminSellerOrders';
 
 type Seller = components['schemas']['AdminSellerResponse'];
-type Kiosk = components['schemas']['AdminKioskResponse'];
+type Kiosk = { id: string; code: string; name: string };
 type Sales = components['schemas']['SellerSalesReportResponse'];
 type Payments = components['schemas']['SellerPaymentsListResponse'];
 type Leases = components['schemas']['SubscriptionOverviewResponse'];
@@ -56,10 +56,10 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
   const [page, setPage] = useState(1);
   const [leasePage, setLeasePage] = useState(1);
   const kiosks = useQuery({
-    queryKey: ['admin-seller-report-kiosks', actorId],
-    queryFn: () => request<Kiosk[]>('/admin/kiosks'),
+    queryKey: ['admin-seller-report-kiosks', actorId, seller.id],
+    queryFn: () => request<Kiosk[]>(`/admin/sellers/${seller.id}/report-kiosks`),
   });
-  const currentKiosks = kiosks.data?.filter((kiosk) => kiosk.sellerId === seller.id) ?? [];
+  const currentKiosks = kiosks.data ?? [];
   const params = new URLSearchParams(
     filter
       ? { from: filter.from, to: filter.to, ...(filter.kioskId ? { kioskId: filter.kioskId } : {}) }
@@ -468,7 +468,10 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
                               )}
                           </td>
                           <td>{money(item.price)}</td>
-                          <td>{states[item.status] || item.status}</td>
+                          <td>
+                            {states[item.status] || item.status}
+                            {item.terminationReason && <p>{item.terminationReason}</p>}
+                          </td>
                           <td>
                             {item.reminderStatus
                               ? (

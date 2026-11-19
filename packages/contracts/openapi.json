@@ -5202,6 +5202,124 @@
         }
       }
     },
+    "/api/admin/revenue/{kind}": {
+      "get": {
+        "tags": [
+          "AdminRevenueReports"
+        ],
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "sellerId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "kioskId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminRevenuePage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/sellers/{sellerId}/report-kiosks": {
+      "get": {
+        "tags": [
+          "FloraBot.Api"
+        ],
+        "parameters": [
+          {
+            "name": "sellerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HistoricalReportKiosk"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/reports/v_admin_queue": {
       "get": {
         "tags": [
@@ -7395,6 +7513,66 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/staff/tasks/{taskId}/repair-readiness": {
+      "get": {
+        "tags": [
+          "TechnicalRepairReadiness"
+        ],
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairReadiness"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/operations/staff-tasks/{taskId}/repair-readiness": {
+      "get": {
+        "tags": [
+          "TechnicalRepairReadiness"
+        ],
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairReadiness"
+                }
+              }
+            }
           }
         }
       }
@@ -18839,6 +19017,49 @@
         },
         "additionalProperties": false
       },
+      "AdminRevenuePage": {
+        "required": [
+          "items",
+          "totals",
+          "totalCount",
+          "page",
+          "pageSize"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/JsonElement"
+          },
+          "totalCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "page": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "pageSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
       "AdminSellerOrderDetail": {
         "required": [
           "id",
@@ -22130,6 +22351,27 @@
         "type": "object",
         "properties": {
           "idToken": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "HistoricalReportKiosk": {
+        "required": [
+          "id",
+          "code",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
             "type": "string"
           }
         },
@@ -26154,6 +26396,51 @@
         },
         "additionalProperties": false
       },
+      "RepairReadiness": {
+        "required": [
+          "code",
+          "detail",
+          "blockingSessionId",
+          "blockingSessionStage",
+          "pendingCommandIds"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "blockingSessionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "blockingSessionStage": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "pendingCommandIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
       "ReportDeviceFaultRequest": {
         "required": [
           "p_kiosk",
@@ -29967,6 +30254,12 @@
               "null",
               "string"
             ]
+          },
+          "terminationReason": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         },
         "additionalProperties": false
@@ -31600,6 +31893,9 @@
       "name": "KioskOps"
     },
     {
+      "name": "AdminRevenueReports"
+    },
+    {
       "name": "Incidents"
     },
     {
@@ -31616,6 +31912,9 @@
     },
     {
       "name": "StaffEvidence"
+    },
+    {
+      "name": "TechnicalRepairReadiness"
     },
     {
       "name": "CustomerHistory"
