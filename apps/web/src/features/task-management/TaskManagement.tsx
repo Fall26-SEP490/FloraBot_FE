@@ -144,7 +144,7 @@ function FilteredTaskList(props: StaffTasksProps) {
       : role === 'SELLER'
         ? 'Phân công giao hoa cho nhân viên shop và theo dõi tiến độ nạp hoa tại tủ.'
         : role === 'ADMIN'
-          ? 'Theo dõi công việc toàn hệ thống ở chế độ chỉ đọc. Quản lý vận hành và chủ shop phụ trách cập nhật hướng dẫn, phân công và duyệt báo cáo.'
+          ? 'Tiến độ và báo cáo công việc toàn hệ thống.'
           : role === 'TECHNICIAN'
             ? 'Bắt đầu công việc, ghi nhận kết quả và gửi báo cáo để Quản lý vận hành duyệt.'
             : 'Bắt đầu công việc, nạp hoa vào ô tủ và gửi báo cáo để chủ shop theo dõi.';
@@ -223,11 +223,11 @@ function FilteredTaskList(props: StaffTasksProps) {
         <nav className="manager-desk-navigation" aria-label="Khu vực xử lý sự cố">
           {(
             [
-              ['incidents', 'Sự cố', 'Tiếp nhận & phân công', ClipboardList],
-              ['tasks', 'Công việc đã giao', 'Theo dõi kỹ thuật viên', RefreshCw],
-              ['review', 'Chờ duyệt báo cáo', 'Kiểm tra & nghiệm thu', CheckCircle2],
+              ['incidents', 'Sự cố', ClipboardList],
+              ['tasks', 'Đã phân công', RefreshCw],
+              ['review', 'Chờ nghiệm thu', CheckCircle2],
             ] as const
-          ).map(([view, title, caption, Icon]) => (
+          ).map(([view, title, Icon]) => (
             <button
               key={view}
               type="button"
@@ -244,7 +244,6 @@ function FilteredTaskList(props: StaffTasksProps) {
               </span>
               <span>
                 <strong>{title}</strong>
-                <small>{caption}</small>
               </span>
             </button>
           ))}
@@ -342,11 +341,6 @@ function FilteredTaskList(props: StaffTasksProps) {
               <span className="operations-eyebrow">THEO DÕI & NGHIỆM THU</span>
               <h2>{managerView === 'review' ? 'Báo cáo chờ duyệt' : 'Công việc đã giao'}</h2>
             </div>
-            {tasks.isSuccess && (
-              <span className="operations-result-count">
-                {tasks.data.items.length} kết quả · Trang {page}
-              </span>
-            )}
           </div>
         )}
         {isPlatform && (

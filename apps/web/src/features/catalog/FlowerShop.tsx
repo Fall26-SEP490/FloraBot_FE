@@ -39,13 +39,11 @@ export default function FlowerShop() {
   const { handleOpenChat, openingChatId, chatNotice, setChatNotice } = useCustomerChat(setSelected);
 
   const catalog = useQuery({
-    queryKey: ['web-catalog', 'available-preorders'],
+    queryKey: ['web-catalog', 'all-products'],
     enabled: !demoEnabled,
     refetchInterval: 60_000,
     queryFn: () =>
-      loadCatalog((page) =>
-        request<CatalogResponse>(`/shop/catalog?page=${page}&search=&availablePreorderOnly=true`),
-      ),
+      loadCatalog((page) => request<CatalogResponse>(`/shop/catalog?page=${page}&search=`)),
   });
 
   // Prefer backend data. Demo data is opt-in via ?demo=1 and never creates real writes.
@@ -102,7 +100,7 @@ export default function FlowerShop() {
       return 'Bấm “Xếp hoa gần tôi” và cho phép vị trí để sắp xếp theo khoảng cách.';
     }
     if (origin && directory.isSuccess && filters.sortBy === 'nearest' && distances.size > 0) {
-      return 'Ưu tiên hoa tại các kiosk gần bạn còn chỗ PREORDER.';
+      return 'Ưu tiên các mẫu hoa tại kiosk gần bạn.';
     }
     if (origin && directory.isSuccess && distances.size === 0) {
       return 'Chưa có tọa độ kiosk để tính khoảng cách. Bạn vẫn có thể chọn hoa.';

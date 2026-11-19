@@ -309,15 +309,15 @@ export function TechnicianJobDetailCard({
                 rows={3}
                 value={reportText}
                 onChange={(e) => setReportText(e.target.value)}
-                placeholder="Mô tả công việc: đã kết nối nguồn điện ổn định, cảm biến cửa hoạt động tốt, khóa cơ hoạt động trơn tru..."
+                placeholder="Nhập kết quả lắp đặt và kiểm tra…"
               />
               <p id={`${reportInputId}-hint`} className="kiosk-help-text">
-                Viết ít nhất 10 ký tự. Cần đính kèm thành công ít nhất 1 ảnh trước khi gửi.
+                Tối thiểu 10 ký tự và 1 ảnh.
               </p>
               {reportText && (
                 <p className="kiosk-help-text" role="status">
                   {draftSaved
-                    ? 'Bản nháp đã lưu trong tab này theo tài khoản và phiếu lắp đặt. Chưa gửi lên hệ thống.'
+                    ? 'Đã lưu nháp, chưa gửi.'
                     : 'Trình duyệt không lưu được bản nháp. Hãy sao chép nội dung trước khi đổi phiếu hoặc tải lại trang.'}
                 </p>
               )}

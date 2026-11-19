@@ -69,10 +69,6 @@ const AdminComplaints = dynamic(() => import('../../complaints/AdminComplaints')
   loading: () => <p role="status">Đang tải khiếu nại…</p>,
 });
 
-const AdminRefunds = dynamic(() => import('../../finance/components/refunds/AdminRefunds'), {
-  loading: () => <p role="status">Đang tải hoàn tiền…</p>,
-});
-
 const AdminKioskRefunds = dynamic(
   () => import('../../finance/components/refunds/AdminKioskRefunds'),
   {
@@ -146,19 +142,7 @@ export default function AdminWorkspace({ section = 'overview' }: { section?: str
         <WorkspaceNavigation key={section} workspaceRole="ADMIN" section={section} />
         <main id="main" className="workspace dashboard-content admin-content">
           <PortalUpdates />
-          <nav className="admin-breadcrumb" aria-label="Vị trí hiện tại">
-            {section === 'overview' ? (
-              <span>Quản trị hệ thống</span>
-            ) : (
-              <>
-                <Link href="/admin">Tổng quan</Link>
-                <span aria-hidden="true">/</span>
-                <span aria-current="page">
-                  {workspaceSections.ADMIN.find(([key]) => key === section)?.[1]}
-                </span>
-              </>
-            )}
-          </nav>
+
           <div className="dashboard-page-heading">
             <div>
               <h1>
@@ -181,24 +165,7 @@ export default function AdminWorkspace({ section = 'overview' }: { section?: str
               </Link>
             )}
           </div>
-          {section === 'overview' && (
-            <>
-              <DashboardOverview session={session.data} />
-              <details className="workspace-profile">
-                <summary>Thông tin tài khoản và quyền truy cập</summary>
-                <dl className="account-details">
-                  <div>
-                    <dt>Tài khoản</dt>
-                    <dd>{session.data.name}</dd>
-                  </div>
-                  <div>
-                    <dt>Vai trò</dt>
-                    <dd>Quản trị viên</dd>
-                  </div>
-                </dl>
-              </details>
-            </>
-          )}
+          {section === 'overview' && <DashboardOverview session={session.data} />}
           {section === 'approvals' && <AdminApprovalCenter actorId={session.data.id} />}
           {section === 'orders' && <WebRequests mode="admin" />}
           {section === 'managers' && (
@@ -230,7 +197,6 @@ export default function AdminWorkspace({ section = 'overview' }: { section?: str
           {section === 'slots' && <AdminSlots actorId={session.data.id} />}
           {section === 'incidents' && <AdminIncidents />}
           {section === 'complaints' && <AdminComplaints />}
-          {section === 'refunds' && <AdminRefunds />}
           {section === 'payment-channels' && <AdminPaymentChannels />}
           {section === 'kiosk-refunds' && (
             <AdminKioskRefunds

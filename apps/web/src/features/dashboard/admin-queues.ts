@@ -1,14 +1,5 @@
 export const adminQueues = [
   {
-    key: 'refunds',
-    title: 'Hoàn tiền đơn hoa',
-    endpoint: '/admin/refunds?status=PENDING&page=1',
-    description:
-      'Duyệt yêu cầu và đối chiếu chứng từ shop hoàn tiền. Giao dịch cũ có người chi riêng.',
-    action: 'Xử lý hoàn tiền đơn hoa',
-    group: 'review',
-  },
-  {
     key: 'kiosk-refunds',
     title: 'Hoàn tiền thuê kiosk',
     endpoint: '/admin/kiosk-applications/refunds',

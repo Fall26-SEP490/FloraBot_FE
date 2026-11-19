@@ -1,0 +1,488 @@
+/* Keep report rows aligned at every viewport; narrow screens scroll horizontally. */
+.admin-report-sheet {
+  margin-block: 20px;
+  max-width: 100%;
+  max-height: 620px;
+  overflow: auto;
+  border: 1px solid #cfddd3;
+  border-radius: 12px;
+  background: #fff;
+  scrollbar-width: thin;
+}
+.admin-report-sheet:focus-visible {
+  outline: 3px solid #397856;
+  outline-offset: 3px;
+}
+.admin-report-sheet table {
+  display: table;
+  width: 100%;
+  min-width: 1100px;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.admin-report-sheet caption {
+  padding: 14px 16px;
+  text-align: left;
+  font-weight: 600;
+  background: #f6f9f6;
+  color: #365344;
+}
+.admin-report-sheet thead {
+  display: table-header-group;
+}
+.admin-report-sheet tbody {
+  display: table-row-group;
+}
+.admin-report-sheet tr {
+  display: table-row;
+}
+.admin-report-sheet :is(th, td) {
+  display: table-cell;
+  min-width: 120px;
+  padding: 13px 16px;
+  border: 0;
+  border-right: 1px solid #e3eae4;
+  border-bottom: 1px solid #e3eae4;
+  text-align: left;
+  vertical-align: middle;
+  overflow-wrap: normal;
+}
+.admin-report-sheet th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  white-space: nowrap;
+  background: #eaf2ec;
+  color: #234735;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 1px #cfddd3;
+}
+.admin-report-sheet :is(th, td):last-child {
+  border-right: 0;
+}
+.admin-report-sheet tbody tr:last-child td {
+  border-bottom: 0;
+}
+.admin-report-sheet tbody tr:nth-child(even) {
+  background: #f8faf8;
+}
+.admin-report-sheet tbody tr:hover {
+  background: #edf5ec;
+}
+.admin-report-sheet .sheet-number {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.admin-report-sheet .sheet-date {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  color: #526359;
+}
+.admin-report-sheet .sheet-code {
+  white-space: nowrap;
+  font-size: 12px;
+  color: #254a36;
+}
+.admin-report-sheet .sheet-id {
+  display: block;
+  min-width: 170px;
+  max-width: 230px;
+  overflow-wrap: anywhere;
+  font-size: 11px;
+  color: #64736a;
+}
+.admin-report-sheet .sheet-action {
+  display: block;
+  max-width: 240px;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+.admin-report-sheet .sheet-muted {
+  color: #64736a;
+  font-size: 12px;
+  min-width: 130px;
+}
+.admin-report-sheet .sheet-status {
+  display: inline-flex;
+  white-space: nowrap;
+  padding: 4px 9px;
+  border-radius: 6px;
+  background: #edf0ee;
+  color: #526359;
+  font-size: 12px;
+  font-weight: 600;
+}
+.admin-report-sheet
+  .sheet-status:is([data-state='COMPLETED'], [data-state='SUCCEEDED'], [data-state='PAID']) {
+  background: #e5f3e9;
+  color: #25623c;
+}
+.admin-report-sheet .sheet-status:is([data-state='DISPENSE_FAILED'], [data-state='FAILED']) {
+  background: #fceceb;
+  color: #9d3b35;
+}
+.admin-report-sheet
+  .sheet-status:is(
+    [data-state='AWAITING_PAYMENT'],
+    [data-state='PENDING'],
+    [data-state='DISPENSING']
+  ) {
+  background: #fff3d9;
+  color: #815e20;
+}
+.admin-report-sheet button {
+  white-space: nowrap;
+}
+
+.admin-report-sheet :is(th, td):first-child {
+  min-width: 160px;
+}
+.admin-report-sheet :is(th, td):nth-child(3) {
+  min-width: 180px;
+}
+
+/* The detail dialog has only four columns; do not inherit the wide list grid. */
+.management-modal.admin-order-report-modal {
+  width: min(820px, calc(100vw - 32px));
+  max-width: 820px;
+}
+.admin-order-report-modal .admin-report-sheet {
+  margin-block: 16px;
+  max-height: none;
+}
+.admin-order-report-modal .admin-report-sheet table {
+  min-width: 0;
+  width: 100%;
+  table-layout: auto;
+}
+.admin-order-report-modal .admin-report-sheet :is(th, td),
+.admin-order-report-modal .admin-report-sheet :is(th, td):first-child,
+.admin-order-report-modal .admin-report-sheet :is(th, td):nth-child(3) {
+  min-width: 0;
+  padding: 10px 12px;
+  font-size: 12px;
+}
+.admin-order-report-modal .admin-report-sheet td:first-child {
+  overflow-wrap: anywhere;
+}
+.admin-order-report-modal .admin-report-sheet th {
+  white-space: normal;
+}
+.admin-order-report-modal .sheet-date {
+  white-space: normal;
+  min-width: 105px;
+}
+.admin-order-report-modal .order-detail-summary {
+  padding: 14px 16px;
+  border: 1px solid #dce7de;
+  border-radius: 10px;
+  background: #f5f9f5;
+}
+.admin-order-report-modal .order-detail-summary > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.admin-order-report-modal .order-detail-summary p {
+  margin: 10px 0 4px;
+  font-size: 13px;
+}
+.admin-order-report-modal .order-detail-summary time {
+  color: #627367;
+  font-size: 12px;
+}
+.admin-order-report-modal .order-detail-total {
+  color: #234d35;
+  font-size: 21px;
+}
+.admin-order-report-modal .order-detail-empty {
+  text-align: center;
+  color: #64736a;
+  padding: 20px 12px;
+}
+@media (max-width: 520px) {
+  .admin-order-report-modal .admin-report-sheet :is(th, td) {
+    padding: 9px 7px;
+    font-size: 11px;
+  }
+  .admin-order-report-modal .admin-report-sheet table {
+    min-width: 360px;
+  }
+}
+
+/* Keep the order action reachable even when a narrow viewport needs scrolling. */
+.admin-report-sheet.admin-order-list {
+  scrollbar-gutter: stable;
+}
+.admin-report-sheet.admin-order-list table {
+  min-width: 900px;
+  table-layout: fixed;
+}
+.admin-report-sheet.admin-order-list :is(th, td),
+.admin-report-sheet.admin-order-list :is(th, td):first-child,
+.admin-report-sheet.admin-order-list :is(th, td):nth-child(3) {
+  min-width: 0;
+  padding: 12px;
+  overflow-wrap: anywhere;
+}
+.admin-report-sheet.admin-order-list :is(th, td):nth-child(1) {
+  width: 16%;
+}
+.admin-report-sheet.admin-order-list :is(th, td):nth-child(2) {
+  width: 12%;
+}
+.admin-report-sheet.admin-order-list :is(th, td):nth-child(3) {
+  width: 22%;
+}
+.admin-report-sheet.admin-order-list :is(th, td):nth-child(4) {
+  width: 11%;
+}
+.admin-report-sheet.admin-order-list :is(th, td):nth-child(5) {
+  width: 12%;
+}
+.admin-report-sheet.admin-order-list :is(th, td):nth-child(6) {
+  width: 15%;
+}
+.admin-report-sheet.admin-order-list :is(th, td):last-child {
+  position: sticky;
+  right: 0;
+  width: 112px;
+  min-width: 112px;
+  background: #fff;
+  box-shadow: -1px 0 #cfddd3;
+  text-align: center;
+  z-index: 2;
+}
+.admin-report-sheet.admin-order-list th:last-child {
+  z-index: 4;
+  background: #eaf2ec;
+}
+.admin-report-sheet.admin-order-list tbody tr:nth-child(even) td:last-child {
+  background: #f8faf8;
+}
+.admin-report-sheet.admin-order-list tbody tr:hover td:last-child {
+  background: #edf5ec;
+}
+.admin-report-sheet.admin-order-list .sheet-date time span,
+.admin-report-sheet.admin-order-list .sheet-date time small {
+  display: block;
+}
+.admin-report-sheet.admin-order-list .sheet-date time small {
+  margin-top: 3px;
+  color: #768178;
+  font-size: 11px;
+}
+.admin-report-sheet.admin-order-list button {
+  min-width: 82px;
+  padding: 9px 10px;
+}
+
+/* Audit IDs wrap inside their cells instead of forcing a desktop-wide sheet. */
+.admin-report-sheet.admin-audit-sheet {
+  scrollbar-gutter: stable;
+}
+.admin-report-sheet.admin-audit-sheet table {
+  table-layout: fixed;
+  min-width: 0;
+}
+.admin-report-sheet.admin-audit-sheet :is(th, td),
+.admin-report-sheet.admin-audit-sheet :is(th, td):first-child,
+.admin-report-sheet.admin-audit-sheet :is(th, td):nth-child(3) {
+  min-width: 0;
+  padding: 12px 10px;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+.admin-report-sheet.admin-audit-sheet :is(th, td):nth-child(1) {
+  width: 13%;
+}
+.admin-report-sheet.admin-audit-sheet :is(th, td):nth-child(2) {
+  width: 21%;
+}
+.admin-report-sheet.admin-audit-sheet :is(th, td):nth-child(3) {
+  width: 13%;
+}
+.admin-report-sheet.admin-audit-sheet :is(th, td):nth-child(4) {
+  width: 20%;
+}
+.admin-report-sheet.admin-audit-sheet :is(th, td):nth-child(5) {
+  width: 20%;
+}
+.admin-report-sheet.admin-audit-sheet :is(th, td):nth-child(6) {
+  width: 13%;
+}
+.admin-report-sheet.admin-audit-sheet :is(.sheet-id, .sheet-action, .sheet-muted, .sheet-date) {
+  min-width: 0;
+  max-width: none;
+  white-space: normal;
+}
+.admin-report-sheet.admin-audit-sheet .sheet-id {
+  margin-top: 3px;
+  font-size: 11px;
+}
+.admin-report-sheet.admin-audit-sheet .sheet-date time span,
+.admin-report-sheet.admin-audit-sheet .sheet-date time small {
+  display: block;
+}
+.admin-report-sheet.admin-audit-sheet .sheet-date time small {
+  color: #768178;
+  margin-top: 3px;
+  font-size: 11px;
+}
+
+/* Audit records expose five useful columns; redacted payload is not repeated. */
+.admin-report-sheet.admin-audit-sheet :is(th, td):nth-child(1) {
+  width: 14%;
+}
+.admin-report-sheet.admin-audit-sheet :is(th, td):nth-child(2) {
+  width: 24%;
+}
+.admin-report-sheet.admin-audit-sheet :is(th, td):nth-child(3) {
+  width: 14%;
+}
+.admin-report-sheet.admin-audit-sheet :is(th, td):nth-child(4) {
+  width: 24%;
+}
+.admin-report-sheet.admin-audit-sheet :is(th, td):nth-child(5) {
+  width: 24%;
+}
+
+.admin-report-sheet.admin-audit-sheet th {
+  white-space: normal;
+}
+.admin-report-sheet.admin-audit-sheet {
+  overflow-x: hidden;
+}
+
+.admin-audit-search .audit-search-controls {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.admin-audit-search .audit-search-controls > div {
+  display: block;
+  flex: 1 1 230px;
+}
+.admin-audit-search .audit-search-controls > div:nth-last-of-type(1) {
+  flex-grow: 2;
+}
+.audit-search-controls label {
+  display: block;
+  margin-bottom: 8px;
+}
+.audit-search-controls :is(input, select) {
+  width: 100%;
+}
+.admin-report-sheet.admin-system-sheet table {
+  min-width: 0;
+  table-layout: auto;
+}
+.admin-report-sheet.admin-system-sheet :is(th, td),
+.admin-report-sheet.admin-system-sheet :is(th, td):first-child,
+.admin-report-sheet.admin-system-sheet :is(th, td):nth-child(3) {
+  min-width: 0;
+  padding: 12px 14px;
+  overflow-wrap: anywhere;
+}
+.admin-report-sheet.admin-system-sheet th {
+  white-space: normal;
+}
+@media (max-width: 640px) {
+  .admin-report-sheet.admin-system-sheet table {
+    min-width: 600px;
+  }
+  .audit-search-controls > button {
+    flex: 1;
+  }
+}
+
+/* Lease history fits its panel and uses the page's single vertical scrollbar. */
+.admin-report-sheet.admin-lease-sheet {
+  max-height: none;
+  overflow: visible;
+}
+.admin-report-sheet.admin-lease-sheet table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+}
+.admin-report-sheet.admin-lease-sheet :is(th, td),
+.admin-report-sheet.admin-lease-sheet :is(th, td):first-child,
+.admin-report-sheet.admin-lease-sheet :is(th, td):nth-child(3) {
+  min-width: 0;
+  padding: 12px 8px;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  white-space: normal;
+}
+.admin-report-sheet.admin-lease-sheet th {
+  position: static;
+  white-space: normal;
+}
+.admin-lease-sheet :is(th, td):nth-child(1) {
+  width: 26%;
+}
+.admin-lease-sheet :is(th, td):nth-child(2),
+.admin-lease-sheet :is(th, td):nth-child(3) {
+  width: 12%;
+}
+.admin-lease-sheet :is(th, td):nth-child(4) {
+  width: 16%;
+}
+.admin-lease-sheet :is(th, td):nth-child(5),
+.admin-lease-sheet :is(th, td):nth-child(6) {
+  width: 17%;
+}
+.admin-lease-sheet .lease-secondary {
+  display: block;
+  margin-top: 5px;
+  color: #64736a;
+  font-size: 11px;
+}
+.admin-lease-sheet .sheet-date time span,
+.admin-lease-sheet .sheet-date time small {
+  display: block;
+}
+.admin-lease-sheet .sheet-date time small {
+  margin-top: 3px;
+  font-size: 11px;
+  color: #64736a;
+}
+.admin-lease-sheet .admin-lease-due {
+  white-space: normal;
+  font-size: 11px;
+}
+.admin-lease-sheet .sheet-status {
+  white-space: normal;
+  padding: 4px 6px;
+  font-size: 11px;
+}
+.admin-lease-sheet .sheet-status[data-state='ACTIVE'] {
+  background: #e5f3e9;
+  color: #25623c;
+}
+.admin-lease-sheet .sheet-status:is([data-state='PAST_DUE'], [data-state='PENDING_PAYMENT']) {
+  background: #fff3d9;
+  color: #815e20;
+}
+.admin-lease-sheet .lease-package-name {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+@media (max-width: 800px) {
+  .admin-report-sheet.admin-lease-sheet :is(th, td),
+  .admin-report-sheet.admin-lease-sheet :is(th, td):first-child,
+  .admin-report-sheet.admin-lease-sheet :is(th, td):nth-child(3) {
+    padding: 10px 6px;
+    font-size: 11px;
+  }
+}

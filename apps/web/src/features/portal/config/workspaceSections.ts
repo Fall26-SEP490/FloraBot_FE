@@ -30,7 +30,6 @@ export const workspaceSections = {
       'Theo dõi từng kiosk, gán shop và phân công người phụ trách vận hành.',
     ],
     ['complaints', 'Phản ánh', 'Xem bằng chứng và xử lý phản ánh của khách.'],
-    ['refunds', 'Hoàn tiền', 'Duyệt khoản hoàn và đối chiếu chứng từ chuyển khoản của shop.'],
     [
       'kiosk-refunds',
       'Hoàn tiền thuê kiosk',

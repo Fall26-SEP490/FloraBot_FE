@@ -175,15 +175,22 @@ export function CatalogSidebar({
             onChange={(event) => filters.setFlowerFilter(event.target.value)}
           >
             <option value="all">Tất cả loại hoa</option>
-            {Object.entries(flowerTags).map(([code, label]) => (
-              <option
-                key={code}
-                value={code}
-                disabled={!flowerCounts[code] && filters.flowerFilter !== code}
-              >
-                {label} ({flowerCounts[code] ?? 0})
+            {filters.flowerFilter !== 'all' && !flowerCounts[filters.flowerFilter] && (
+              <option value={filters.flowerFilter} hidden>
+                {flowerTags[filters.flowerFilter as keyof typeof flowerTags]}
               </option>
-            ))}
+            )}
+            {Object.entries(flowerTags)
+              .filter(([code]) => (flowerCounts[code] ?? 0) > 0)
+              .map(([code, label]) => (
+                <option
+                  key={code}
+                  value={code}
+                  disabled={!flowerCounts[code] && filters.flowerFilter !== code}
+                >
+                  {label}: còn {flowerCounts[code] ?? 0} mẫu
+                </option>
+              ))}
           </select>
         </label>
         <CatalogFilterGroup title="Hình thức nhận hoa" options={availabilityOptions} />

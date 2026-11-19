@@ -62,7 +62,7 @@ for (const denied of [false, true]) {
         });
       }
       if (url.pathname === '/api/shop/catalog') {
-        expect(url.searchParams.get('availablePreorderOnly')).toBe('true');
+        expect(url.searchParams.has('availablePreorderOnly')).toBe(false);
         const current = Number(url.searchParams.get('page'));
         pages.push(current);
         return route.fulfill({

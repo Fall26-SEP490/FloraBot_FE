@@ -118,28 +118,6 @@ export function ProductReviews({
       )}
       {reviews.data && (
         <>
-          {(reviews.data.productAverage != null || reviews.data.shopAverage != null) && (
-            <dl className="flower-review-summary">
-              {reviews.data.productAverage != null && (
-                <div>
-                  <dt>Mẫu hoa</dt>
-                  <dd>
-                    <RatingStars value={reviews.data.productAverage} />
-                    <span>{reviews.data.productCount} đánh giá</span>
-                  </dd>
-                </div>
-              )}
-              {reviews.data.shopAverage != null && (
-                <div>
-                  <dt>Điểm shop</dt>
-                  <dd>
-                    <RatingStars value={reviews.data.shopAverage} />
-                    <span>{reviews.data.shopCount} đánh giá</span>
-                  </dd>
-                </div>
-              )}
-            </dl>
-          )}
           {reviews.data.items.length > 0 && (
             <ol className="flower-review-list">
               {reviews.data.items.map((item) => (

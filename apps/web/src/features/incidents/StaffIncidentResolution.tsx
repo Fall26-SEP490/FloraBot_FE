@@ -93,10 +93,6 @@ export default function StaffIncidentResolution({
           ? 'Sau khi xác nhận mã tại kiosk, kiểm tra ô rồi đóng cửa. Gửi báo cáo khi tủ đã ghi nhận cửa đóng và tình trạng hoa. Quản lý vận hành sẽ duyệt và đóng sự cố.'
           : 'Chỉ xác nhận sau khi kiểm tra tại tủ. Gửi kết quả để ghi nhận sự cố đã được xử lý và chuyển báo cáo cho Quản lý vận hành nghiệm thu công việc.'}
       </p>
-      <p>
-        Nếu có khoản hoàn tiền, shop thực hiện và quản trị viên đối chiếu theo luồng hoàn tiền
-        riêng. Thao tác này không mở cửa tủ hay chi tiền.
-      </p>
       {attempt ? (
         <>
           <p>

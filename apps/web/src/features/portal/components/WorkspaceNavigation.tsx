@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import '../styles/role-compact.css';
 import AdminNavigation from './AdminNavigation';
 import SellerNavigation from './SellerNavigation';
 import ManagerNavigation from './ManagerNavigation';
@@ -106,6 +107,10 @@ export default function WorkspaceNavigation({
     sellerChats.data?.items?.reduce((sum, item) => sum + (Number(item.unreadCount) || 0), 0) || 0;
 
   const [expanded, setExpanded] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [focusWithin, setFocusWithin] = useState(false);
+  const collapsed = !hovered && !focusWithin && !expanded;
+  const compactRole = ['ADMIN', 'OPERATIONS_MANAGER', 'TECHNICIAN'].includes(role);
   const toggle = useRef<HTMLButtonElement>(null);
   const base = workspaceBase(role);
   const platformName =
@@ -136,7 +141,26 @@ export default function WorkspaceNavigation({
     }
   };
   return (
-    <aside className="workspace-sidebar">
+    <aside
+      onPointerEnter={(event) => {
+        if (event.pointerType === 'mouse') setHovered(true);
+      }}
+      onPointerLeave={() => setHovered(false)}
+      onPointerDownCapture={() => setFocusWithin(false)}
+      onFocusCapture={(event) => {
+        setFocusWithin(event.target.matches(':focus-visible'));
+      }}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setFocusWithin(false);
+      }}
+      className={
+        compactRole
+          ? collapsed
+            ? 'workspace-sidebar role-sidebar-collapsed'
+            : 'workspace-sidebar role-sidebar-expanded'
+          : 'workspace-sidebar'
+      }
+    >
       <div className="platform-nav-heading">
         <span>
           <WorkspaceIcon size={20} aria-hidden="true" />
@@ -155,7 +179,9 @@ export default function WorkspaceNavigation({
         onClick={() => setExpanded(!expanded)}
       >
         {expanded ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
-        {expanded ? 'Đóng danh mục quản lý' : 'Mở danh mục quản lý'}
+        <span className={compactRole ? 'sr-only' : undefined}>
+          {expanded ? 'Đóng danh mục quản lý' : 'Mở danh mục quản lý'}
+        </span>
       </button>
       <nav
         id="workspace-navigation"
@@ -163,7 +189,13 @@ export default function WorkspaceNavigation({
         aria-label="Điều hướng quản lý"
       >
         {role === 'ADMIN' ? (
-          <AdminNavigation section={section} closeMenu={closeMenu} onEscape={handleEscape} />
+          <AdminNavigation
+            section={section}
+            closeMenu={closeMenu}
+            onEscape={handleEscape}
+            compact={collapsed}
+            openGroups={compactRole}
+          />
         ) : role === 'SELLER' ? (
           <SellerNavigation
             section={section}
@@ -177,6 +209,8 @@ export default function WorkspaceNavigation({
               onKeyDown={handleEscape}
               onClick={closeMenu}
               href="/technician"
+              aria-label="Công việc kỹ thuật"
+              title="Công việc kỹ thuật"
               aria-current={section === 'tasks' ? 'page' : undefined}
             >
               <ClipboardList size={19} aria-hidden="true" />
@@ -186,6 +220,8 @@ export default function WorkspaceNavigation({
               onKeyDown={handleEscape}
               onClick={closeMenu}
               href="/technician/installations"
+              aria-label="Lắp đặt kiosk"
+              title="Lắp đặt kiosk"
               aria-current={section === 'installations' ? 'page' : undefined}
             >
               <Boxes size={19} aria-hidden="true" />
@@ -195,6 +231,8 @@ export default function WorkspaceNavigation({
               onKeyDown={handleEscape}
               onClick={closeMenu}
               href="/technician/kiosk-health"
+              aria-label="Sức khỏe kiosk"
+              title="Sức khỏe kiosk"
               aria-current={section === 'kiosk-health' ? 'page' : undefined}
             >
               <ShieldCheck size={19} aria-hidden="true" />
@@ -223,7 +261,12 @@ export default function WorkspaceNavigation({
             </Link>
           </>
         ) : role === 'OPERATIONS_MANAGER' ? (
-          <ManagerNavigation section={section} closeMenu={closeMenu} onEscape={handleEscape} />
+          <ManagerNavigation
+            section={section}
+            closeMenu={closeMenu}
+            onEscape={handleEscape}
+            compact={collapsed}
+          />
         ) : (
           <Link
             onKeyDown={handleEscape}

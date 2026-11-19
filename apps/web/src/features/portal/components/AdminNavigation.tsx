@@ -20,7 +20,6 @@ const groups = [
     items: [
       ['approvals', ClipboardList],
       ['complaints', CircleAlert],
-      ['refunds', Banknote],
       ['kiosk-refunds', Banknote],
     ],
   },
@@ -64,13 +63,17 @@ export default function AdminNavigation({
   section,
   closeMenu,
   onEscape,
+  compact = false,
+  openGroups = false,
 }: {
+  compact?: boolean;
+  openGroups?: boolean;
   section: string;
   closeMenu: () => void;
   onEscape: (event: React.KeyboardEvent) => void;
 }) {
   const [search, setSearch] = useState('');
-  const needle = normalize(search);
+  const needle = compact ? '' : normalize(search);
   const filtered = groups
     .map((group) => ({
       ...group,
@@ -84,6 +87,8 @@ export default function AdminNavigation({
     <>
       <Link
         href="/admin"
+        aria-label="Tổng quan"
+        title="Tổng quan"
         aria-current={section === 'overview' ? 'page' : undefined}
         onClick={closeMenu}
         onKeyDown={onEscape}
@@ -114,7 +119,9 @@ export default function AdminNavigation({
         <details
           className="workspace-nav-group admin-nav-function-group"
           key={`${group.title}:${Boolean(needle)}`}
-          open={Boolean(needle) || group.items.some(([key]) => key === section)}
+          open={
+            openGroups || compact || Boolean(needle) || group.items.some(([key]) => key === section)
+          }
         >
           <summary onKeyDown={onEscape}>{group.title}</summary>
           {group.items.map(([key, Icon]) => {
@@ -123,6 +130,8 @@ export default function AdminNavigation({
               <Link
                 key={key}
                 href={`/admin/${key}`}
+                aria-label={item[1]}
+                title={item[1]}
                 aria-current={section === key ? 'page' : undefined}
                 onClick={closeMenu}
                 onKeyDown={onEscape}
