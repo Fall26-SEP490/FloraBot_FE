@@ -259,18 +259,6 @@ export default function OperationsOverview({ session }: { session: Session }) {
           </section>
         </aside>
       </div>
-      <details className="manager-help" id="operations-guide">
-        <summary>Hướng dẫn tiếp nhận và bàn giao kiosk</summary>
-        <ol>
-          <li>Xác nhận liên hệ và điều kiện lắp đặt với chủ shop.</li>
-          <li>Chọn kỹ thuật viên, tủ phù hợp gói thuê và lịch lắp đặt.</li>
-          <li>Kiểm tra báo cáo, ảnh nghiệm thu rồi xác nhận bàn giao.</li>
-        </ol>
-        <p>
-          Việc xử lý sự cố được theo dõi riêng tại{' '}
-          <Link href="/operations/tasks">Công việc kỹ thuật</Link>.
-        </p>
-      </details>
     </div>
   );
 }

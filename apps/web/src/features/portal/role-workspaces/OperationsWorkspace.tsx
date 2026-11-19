@@ -197,15 +197,6 @@ export default function OperationsWorkspace({ section = 'overview' }: { section?
                 canAssign
                 canReassign
               />
-              <details className="manager-help" id="operations-guide">
-                <summary>Hướng dẫn điều phối công việc kỹ thuật</summary>
-                <ol>
-                  <li>Chọn sự cố cần xử lý và kỹ thuật viên phụ trách.</li>
-                  <li>Theo dõi tiến độ, báo cáo và ảnh hiện trường trong công việc.</li>
-                  <li>Kiểm tra kết quả trước khi duyệt hoàn thành hoặc yêu cầu làm lại.</li>
-                </ol>
-                <p>Công việc sự cố được giới hạn theo cụm tủ phụ trách.</p>
-              </details>
             </>
           )}
           {logout.isError && <p role="alert">Chưa đăng xuất được. Bạn thử lại nhé.</p>}

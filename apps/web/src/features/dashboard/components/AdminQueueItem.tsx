@@ -42,15 +42,6 @@ export default function AdminQueueItem({
               Thử lại {queue.title.toLocaleLowerCase('vi')}
             </Button>
           </div>
-        ) : compact ? (
-          <p className="admin-queue-state">
-            {query.data.count === 0
-              ? 'Chưa có yêu cầu trong lần tải này.'
-              : queue.group === 'monitor'
-                ? 'Mở danh sách để theo dõi.'
-                : 'Yêu cầu đang chờ kiểm tra.'}
-            {query.isFetching && <span role="status"> Đang cập nhật…</span>}
-          </p>
         ) : null}
       </div>
       {query.isSuccess && (

@@ -35,7 +35,9 @@ export default function ManagerNavigation({
   section,
   closeMenu,
   onEscape,
+  compact = false,
 }: {
+  compact?: boolean;
   section: string;
   closeMenu: () => void;
   onEscape: (event: KeyboardEvent<HTMLElement>) => void;
@@ -44,12 +46,16 @@ export default function ManagerNavigation({
   const searchInput = useRef<HTMLInputElement>(null);
   const visible = groups.map((group) => ({
     ...group,
-    items: group.items.filter((item) => normalize(item.title).includes(normalize(search.trim()))),
+    items: group.items.filter((item) =>
+      normalize(item.title).includes(normalize(compact ? '' : search.trim())),
+    ),
   }));
   return (
     <>
       <Link
         href="/operations"
+        aria-label="Tổng quan vận hành"
+        title="Tổng quan vận hành"
         onClick={closeMenu}
         onKeyDown={onEscape}
         aria-current={section === 'overview' ? 'page' : undefined}
@@ -91,6 +97,8 @@ export default function ManagerNavigation({
                 <Link
                   key={key}
                   href={`/operations/${key}`}
+                  aria-label={title}
+                  title={title}
                   onClick={closeMenu}
                   onKeyDown={onEscape}
                   aria-current={section === key ? 'page' : undefined}

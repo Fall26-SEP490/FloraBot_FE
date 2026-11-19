@@ -216,7 +216,7 @@ export default function AdminTaskAssignment({
               nạp hoa được nhân viên ghi nhận khi thực hiện công việc.
             </p>
           )}
-          {effectiveRole !== 'SELLER' && (
+          {effectiveRole !== 'SELLER' && allowedKinds.length > 1 && (
             <div>
               <label htmlFor="assignment-kind">Loại công việc</label>
               <select

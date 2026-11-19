@@ -88,11 +88,6 @@ export default function AdminRevenueReport({
         ] as const);
   return (
     <section aria-label="Báo cáo toàn kỳ">
-      <p>
-        {kind === 'flowers'
-          ? 'Thu và hoàn thành công theo ngày ghi nhận tiền, giờ Việt Nam.'
-          : 'Phí thuê ghi nhận trong sổ cái nền tảng theo ngày, giờ Việt Nam.'}
-      </p>
       <form
         className="admin-revenue-filters"
         onSubmit={(event) => {
@@ -259,7 +254,7 @@ export default function AdminRevenueReport({
               )}
             </dl>
           </section>
-          <div className="reports-table-wrap">
+          <div className="admin-report-sheet admin-system-sheet">
             <table>
               <caption>{query.data.totalCount} dòng trong kỳ đã lọc</caption>
               <thead>
@@ -291,7 +286,9 @@ export default function AdminRevenueReport({
                       </>
                     )}
                     {fields.map(([key]) => (
-                      <td key={key}>{money(row[key])}</td>
+                      <td key={key} className="sheet-number">
+                        {money(row[key])}
+                      </td>
                     ))}
                   </tr>
                 ))}

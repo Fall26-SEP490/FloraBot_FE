@@ -55,7 +55,7 @@ test('Operations Manager assigns INCIDENT and recovers the same request after re
 
   // Verify wrong-kind action absent: DELIVERY is not allowed for Operations Manager
   await expect(page.locator('#assignment-kind option[value="DELIVERY"]')).toHaveCount(0);
-  await expect(page.getByLabel('Loại công việc')).toHaveValue('INCIDENT');
+  await expect(page.getByLabel('Loại công việc')).toHaveCount(0);
 
   // Required-field errors must not draw empty red boxes before validation.
   await expect(
@@ -289,7 +289,7 @@ test('Manager sees a repair verification conflict and can retry after reloading'
   });
 
   await page.goto('/operations/tasks');
-  await page.getByRole('button', { name: /Chờ duyệt báo cáo/ }).click();
+  await page.getByRole('button', { name: /Chờ nghiệm thu/ }).click();
   const card = page.locator('article').filter({ hasText: 'Đã kiểm tra cửa và cảm biến.' });
   await card.locator('.manager-task-details > summary').click();
   await expect(card.getByText(/hệ thống sẽ kiểm tra lại tín hiệu cửa/)).toBeVisible();

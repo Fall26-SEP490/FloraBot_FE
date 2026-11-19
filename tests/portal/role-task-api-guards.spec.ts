@@ -101,7 +101,7 @@ for (const width of [390, 1440])
       if (req.isNavigationRequest()) documents++;
     });
     await page.goto('/operations/tasks');
-    await page.getByRole('button', { name: /Công việc đã giao/ }).click();
+    await page.getByRole('button', { name: /Đã phân công/ }).click();
     await openManagerTaskAdjustments(page);
     await page.getByText('Sửa hướng dẫn công việc', { exact: true }).click();
     await page
@@ -124,7 +124,7 @@ test('Manager must reload a stale task before retrying a 409 instruction update'
 }) => {
   const model = await setup(page, 'OPERATIONS_MANAGER', true);
   await page.goto('/operations/tasks');
-  await page.getByRole('button', { name: /Công việc đã giao/ }).click();
+  await page.getByRole('button', { name: /Đã phân công/ }).click();
   await openManagerTaskAdjustments(page);
   await page.getByText('Sửa hướng dẫn công việc', { exact: true }).click();
   const editor = page.getByLabel('Hướng dẫn công việc (10–2.000 ký tự)');

@@ -137,7 +137,6 @@ function PersonnelSummary({ actorId }: { actorId: string }) {
       <div className="admin-section-heading">
         <div>
           <h2 id="admin-team-title">Đội ngũ Quản lý vận hành</h2>
-          <p>Phụ trách điều phối kỹ thuật viên và triển khai các điểm kiosk.</p>
         </div>
         <Link href="/admin/managers" className="admin-text-link">
           <Users size={17} aria-hidden="true" />
@@ -223,7 +222,6 @@ export default function AdminOverview({ session }: { session: Session }) {
           <div className="admin-section-heading">
             <div>
               <h2 id="admin-work-title">Cần bạn xử lý</h2>
-              <p>Phản ánh và các yêu cầu tài chính đang chờ kiểm tra.</p>
             </div>
           </div>
           <div className="admin-queue-list">

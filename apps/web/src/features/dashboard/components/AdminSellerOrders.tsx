@@ -1,4 +1,6 @@
+/* eslint-disable jsx-a11y/no-noninteractive-tabindex -- Scrollable report regions need keyboard focus for horizontal scrolling. */
 import { useState } from 'react';
+import './report-sheet.css';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import type { components } from '../../../../../../packages/contracts/src/generated/api';
@@ -65,15 +67,19 @@ function OrderDetail({
         </div>
       ) : (
         <>
-          <p>
-            {detail.data.kioskCode} · {detail.data.kioskName}
-          </p>
-          <p>
-            {labels[detail.data.status] || detail.data.status} · Giá trị đơn{' '}
-            {money(detail.data.totalAmount)}
-          </p>
-          <p>Ngày tạo: {date(detail.data.createdAt)}</p>
-          <div className="reports-table-wrap">
+          <div className="order-detail-summary">
+            <div>
+              <span className="sheet-status" data-state={detail.data.status}>
+                {labels[detail.data.status] || detail.data.status}
+              </span>
+              <strong className="order-detail-total">{money(detail.data.totalAmount)}</strong>
+            </div>
+            <p>
+              {detail.data.kioskCode} · {detail.data.kioskName}
+            </p>
+            <time dateTime={detail.data.createdAt}>{date(detail.data.createdAt)}</time>
+          </div>
+          <div className="admin-report-sheet" role="region" aria-label="Bảng đơn hàng" tabIndex={0}>
             <table>
               <caption>Hàng trong đơn</caption>
               <thead>
@@ -85,33 +91,59 @@ function OrderDetail({
                 </tr>
               </thead>
               <tbody>
+                {!detail.data.items.length && (
+                  <tr>
+                    <td colSpan={4} className="order-detail-empty">
+                      Chưa có chi tiết sản phẩm từ hệ thống.
+                    </td>
+                  </tr>
+                )}
                 {detail.data.items.map((item, index) => (
                   <tr key={index}>
                     <td>{item.name}</td>
-                    <td>{item.quantity}</td>
-                    <td>{money(item.unitPrice)}</td>
-                    <td>{money(item.lineTotal)}</td>
+                    <td className="sheet-number">{item.quantity}</td>
+                    <td className="sheet-number">{money(item.unitPrice)}</td>
+                    <td className="sheet-number">{money(item.lineTotal)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <h3>Khoản thu / hoàn phân bổ cho đơn</h3>
-          <p className="quiet">
-            Tiền thanh toán có thể được phân bổ cho nhiều đơn. Không cộng toàn bộ lượt thanh toán
-            vào từng đơn.
-          </p>
           {!detail.data.payments.length ? (
             <p>Chưa có giao dịch liên kết.</p>
           ) : (
-            <ul>
-              {detail.data.payments.map((item) => (
-                <li key={`${item.id}:${item.kind}`}>
-                  {labels[item.kind] || item.kind} · {money(item.amount)} ·{' '}
-                  {labels[item.status] || item.status} · {date(item.paidAt || item.createdAt)}
-                </li>
-              ))}
-            </ul>
+            <div
+              className="admin-report-sheet"
+              role="region"
+              aria-label="Bảng khoản thu và hoàn"
+              tabIndex={0}
+            >
+              <table>
+                <caption>Khoản thu / hoàn của đơn</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Loại</th>
+                    <th scope="col">Số tiền</th>
+                    <th scope="col">Trạng thái</th>
+                    <th scope="col">Thời gian</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {detail.data.payments.map((item) => (
+                    <tr key={`${item.id}:${item.kind}`}>
+                      <td>{labels[item.kind] || item.kind}</td>
+                      <td className="sheet-number">{money(item.amount)}</td>
+                      <td>
+                        <span className="sheet-status" data-state={item.status}>
+                          {labels[item.status] || item.status}
+                        </span>
+                      </td>
+                      <td className="sheet-date">{date(item.paidAt || item.createdAt)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
           <p className="quiet">Hồ sơ đối chiếu đơn hàng, không thay thế hóa đơn thuế.</p>
         </>
@@ -163,6 +195,7 @@ export default function AdminSellerOrders({
           'AWAITING_PAYMENT',
           'PAID',
           'DISPENSING',
+          'DISPENSE_FAILED',
           'COMPLETED',
           'CANCELLED',
           'EXPIRED',
@@ -173,7 +206,6 @@ export default function AdminSellerOrders({
           </option>
         ))}
       </select>
-      <p className="quiet">Danh sách lọc theo ngày tạo đơn, tách biệt kỳ ghi nhận thu tiền.</p>
       {orders.isPending ? (
         <p role="status">Đang tải đơn của shop…</p>
       ) : orders.isError ? (
@@ -188,12 +220,17 @@ export default function AdminSellerOrders({
           {!orders.data.items.length ? (
             <p>Không có đơn khớp bộ lọc.</p>
           ) : (
-            <div className="reports-table-wrap">
+            <div
+              className="admin-report-sheet admin-order-list"
+              role="region"
+              aria-label="Bảng đơn hàng"
+              tabIndex={0}
+            >
               <table>
-                <caption>Đơn mua / hủy · Trang {page}</caption>
                 <thead>
                   <tr>
-                    <th>Đơn / ngày tạo</th>
+                    <th scope="col">Mã đơn</th>
+                    <th scope="col">Ngày tạo</th>
                     <th>Kiosk</th>
                     <th>Loại đơn</th>
                     <th>Giá trị</th>
@@ -205,16 +242,34 @@ export default function AdminSellerOrders({
                   {orders.data.items.map((item) => (
                     <tr key={item.id}>
                       <td>
-                        {item.orderCode}
-                        <br />
-                        {date(item.createdAt)}
+                        <strong className="sheet-code">{item.orderCode}</strong>
+                      </td>
+                      <td className="sheet-date">
+                        <time dateTime={item.createdAt}>
+                          <span>
+                            {new Date(item.createdAt).toLocaleDateString('vi-VN', {
+                              timeZone: 'Asia/Ho_Chi_Minh',
+                            })}
+                          </span>
+                          <small>
+                            {new Date(item.createdAt).toLocaleTimeString('vi-VN', {
+                              timeZone: 'Asia/Ho_Chi_Minh',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </small>
+                        </time>
                       </td>
                       <td>
                         {item.kioskCode} · {item.kioskName}
                       </td>
                       <td>{item.mode === 'PREORDER' ? 'Đặt trước' : 'Mua tại tủ'}</td>
-                      <td>{money(item.totalAmount)}</td>
-                      <td>{labels[item.status] || item.status}</td>
+                      <td className="sheet-number">{money(item.totalAmount)}</td>
+                      <td>
+                        <span className="sheet-status" data-state={item.status}>
+                          {labels[item.status] || item.status}
+                        </span>
+                      </td>
                       <td>
                         <Button
                           variant="outline"

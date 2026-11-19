@@ -390,15 +390,6 @@ export function TaskItem({
                     ? 'Duyệt báo cáo sự cố'
                     : 'Cập nhật tiến độ & Báo cáo'}
             </h4>
-            <p>
-              {canCancelOpenTask
-                ? 'Nhập lý do hủy để nhân viên biết.'
-                : isTechnician
-                  ? task.kind === 'KIOSK_REMOVAL'
-                    ? 'Chọn bước tiếp theo và nhập báo cáo tháo dỡ (hoặc đính kèm ảnh minh chứng) để quản lý xác nhận bàn giao.'
-                    : 'Chọn bước tiếp theo và nhập nội dung để quản lý theo dõi xử lý sự cố.'
-                  : 'Chọn bước tiếp theo và nhập nội dung cập nhật.'}
-            </p>
           </div>
           <div className="staff-form-group">
             <label htmlFor={`action-${task.id}`}>
@@ -729,15 +720,6 @@ export function TaskItem({
             version={task.version}
             active={task.status === 'IN_PROGRESS'}
             slotRepair={slotRepair}
-            blockedReason={
-              slotRepair &&
-              repairDetails.data?.slotStatus &&
-              repairDetails.data.slotStatus !== 'FAULT'
-                ? repairDetails.data.slotStatus === 'LOCKED'
-                  ? `Ô ${repairDetails.data.slotCode || ''} đang khóa và chưa đủ điều kiện cấp quyền mở sửa. Nhờ Quản lý vận hành kiểm tra phiên thao tác và lệnh mở trước khi tiếp tục. Bạn có thể bổ sung ảnh hiện trường; không cần tạo phiếu trùng hoặc chờ thêm chỉ để gửi báo cáo.`
-                  : `Ô ${repairDetails.data.slotCode || ''} hiện ở trạng thái ${repairDetails.data.slotStatus === 'RENTED_EMPTY' ? 'ô trống' : repairDetails.data.slotStatus}. Phiếu sự cố vẫn đang xử lý nên công việc chưa đủ điều kiện nộp báo cáo hoàn tất theo luồng sửa ô. Nhờ Quản lý vận hành xác minh kết quả khôi phục và phối hợp bộ phận hỗ trợ để khép phiếu phù hợp. Trạng thái ô không tự chứng minh sự cố đã được sửa.`
-                : undefined
-            }
             onRefresh={refreshTask}
             apiBase={apiBase}
           />
@@ -758,17 +740,10 @@ export function TaskItem({
         ) : (
           <p role="status">Đã tải công việc mới nhất. Kiểm tra hướng dẫn trước khi gửi lại.</p>
         ))}
-      {reviewingIncident && (
-        <p>
-          Đối chiếu báo cáo và bằng chứng của kỹ thuật viên trước khi duyệt. Với sự cố gắn ô tủ, hệ
-          thống sẽ kiểm tra lại tín hiệu cửa và cảm biến trước khi đóng sự cố.
-        </p>
-      )}
+      {reviewingIncident && <p>Kiểm tra ảnh, báo cáo và tín hiệu tại tủ trước khi duyệt.</p>}
       {reviewingRemoval && (
         <p>
-          Kỹ thuật viên đã gửi báo cáo tháo dỡ. Để xác nhận hoàn tất bàn giao và giải phóng hợp đồng
-          thuê, hãy thực hiện tại <a href="/operations/terminations">Hồ sơ chấm dứt thuê kiosk</a>{' '}
-          (hoặc chọn Yêu cầu kiểm tra lại ở trên nếu cần làm lại).
+          Chờ xác nhận bàn giao tại <a href="/operations/terminations">Chấm dứt thuê kiosk</a>.
         </p>
       )}
     </>

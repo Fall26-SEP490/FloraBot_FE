@@ -1,5 +1,7 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+/* eslint-disable jsx-a11y/no-noninteractive-tabindex -- The scrollable lease table supports keyboard navigation. */
+
+import { useDeferredValue, useId, useState, type FocusEvent } from 'react';
+import { useIsFetching, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import type { components } from '../../../../../../packages/contracts/src/generated/api';
 import { request } from '@/shared/lib/api';
@@ -11,6 +13,7 @@ import {
   type ReportPeriod,
 } from '../seller-report.utils';
 import './admin-seller-reports.css';
+import './report-sheet.css';
 import AdminSellerOrders from './AdminSellerOrders';
 
 type Seller = components['schemas']['AdminSellerResponse'];
@@ -42,7 +45,33 @@ const states: Record<string, string> = {
   FAILED: 'Thất bại',
 };
 
+function LeaseDate({ value }: { value: string }) {
+  const valueDate = new Date(value);
+  return (
+    <time
+      dateTime={value}
+      title={valueDate.toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}
+    >
+      <span>
+        {valueDate.toLocaleDateString('vi-VN', {
+          timeZone: 'Asia/Ho_Chi_Minh',
+          day: '2-digit',
+          month: '2-digit',
+        })}
+      </span>
+      <small>
+        {valueDate.toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric' })}
+      </small>
+    </time>
+  );
+}
+
 function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) {
+  const queryClient = useQueryClient();
+  const ordersFetching =
+    useIsFetching({
+      queryKey: ['admin-seller-orders', actorId, seller.id],
+    }) > 0;
   const today = vietnamToday();
   const [tab, setTab] = useState<'sales' | 'payments' | 'orders' | 'leases'>('sales');
   const [mode, setMode] = useState<'month' | 'range'>('month');
@@ -103,7 +132,9 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
       ? sales.isFetching
       : tab === 'payments'
         ? payments.isFetching
-        : leases.isFetching;
+        : tab === 'orders'
+          ? ordersFetching
+          : leases.isFetching;
   return (
     <section className="admin-seller-report-detail" aria-label={`Báo cáo ${seller.shopName}`}>
       <h3>{seller.shopName}</h3>
@@ -138,6 +169,19 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
             }
             setError('');
             setPage(1);
+            if (
+              filter?.from === period.from &&
+              filter.to === period.to &&
+              (tab === 'payments' || filter.kioskId === kioskId)
+            ) {
+              const key =
+                tab === 'sales'
+                  ? 'admin-seller-sales'
+                  : tab === 'orders'
+                    ? 'admin-seller-orders'
+                    : 'admin-seller-payments';
+              void queryClient.invalidateQueries({ queryKey: [key, actorId, seller.id] });
+            }
             setFilter({
               ...period,
               kioskId,
@@ -158,7 +202,13 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
           </div>
           {mode === 'month' ? (
             <div>
-              <label htmlFor="seller-report-month">Tháng báo cáo</label>
+              <label htmlFor="seller-report-month">
+                {tab === 'orders'
+                  ? 'Tháng tạo đơn'
+                  : tab === 'payments'
+                    ? 'Tháng tạo giao dịch'
+                    : 'Tháng thu / hoàn'}
+              </label>
               <input
                 id="seller-report-month"
                 type="month"
@@ -221,7 +271,7 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
           {error}
         </p>
       )}
-      {kiosks.isError && (
+      {(tab === 'sales' || tab === 'orders') && kiosks.isError && (
         <p role="alert">
           Chưa đọc được tên kiosk.{' '}
           <Button variant="outline" onClick={() => void kiosks.refetch()}>
@@ -232,13 +282,10 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
       {tab !== 'leases' && filter && (
         <p className="quiet">
           Kỳ đang xem: {filter.label} · Giờ Việt Nam
-          {tab === 'sales'
+          {tab === 'sales' || tab === 'orders'
             ? ` · ${appliedKiosk?.code || (filter.kioskId ? filter.kioskId : 'Tất cả kiosk')}`
             : ''}
         </p>
-      )}
-      {tab !== 'leases' && !filter && (
-        <p role="status">Chọn tháng hoặc khoảng ngày rồi bấm Xem báo cáo.</p>
       )}
       {tab === 'sales' && filter && (
         <>
@@ -275,10 +322,6 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
                   <dd>{sales.data.paidOrders.toLocaleString('vi-VN')}</dd>
                 </div>
               </dl>
-              <p className="quiet">
-                Số thu sau hoàn không phải lợi nhuận. Tiền bán hoa thuộc shop, tách biệt phí thuê
-                kiosk.
-              </p>
               <div className="reports-table-wrap">
                 <table>
                   <caption>Doanh số theo kiosk trong kỳ đã chọn</caption>
@@ -286,7 +329,7 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
                     <tr>
                       <th>Kiosk</th>
                       <th>Đã thu trước hoàn</th>
-                      <th>Số đơn theo báo cáo</th>
+                      <th>Đơn đã thanh toán</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -335,10 +378,6 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
               </option>
             ))}
           </select>
-          <p className="quiet">
-            Giao dịch được lọc theo ngày tạo. Trạng thái thanh toán khác trạng thái mua/hủy của đơn
-            hàng.
-          </p>
           {payments.isPending ? (
             <p role="status">Đang tải giao dịch…</p>
           ) : payments.isError ? (
@@ -407,10 +446,13 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
       )}
       {tab === 'leases' && (
         <>
-          <p>
-            Lịch sử từng kỳ thuê gắn với kiosk. Ngày kết thúc là mốc hết hiệu lực; không dùng hạn
-            tổng của shop để thay hạn của từng tủ.
-          </p>
+          <Button
+            variant="outline"
+            disabled={leases.isFetching}
+            onClick={() => void leases.refetch()}
+          >
+            {leases.isFetching ? 'Đang tải…' : 'Cập nhật kỳ thuê'}
+          </Button>
           {leases.isPending ? (
             <p role="status">Đang tải lịch sử thuê…</p>
           ) : leases.isError ? (
@@ -426,17 +468,23 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
             </div>
           ) : (
             <>
-              <p className="quiet">Trang lịch sử thuê {leasePage}</p>
-              <div className="reports-table-wrap">
+              <div
+                className="admin-report-sheet admin-lease-sheet"
+                role="region"
+                aria-label={`Lịch sử thuê kiosk của ${seller.shopName}`}
+                tabIndex={0}
+              >
                 <table>
-                  <caption>Lịch sử thuê kiosk của {seller.shopName}</caption>
                   <thead>
                     <tr>
-                      <th>Gói / Kiosk</th>
-                      <th>Thời hạn</th>
-                      <th>Phí kỳ thuê</th>
-                      <th>Trạng thái</th>
-                      <th>Cảnh báo trước hạn</th>
+                      <th scope="col">Kiosk / Gói thuê</th>
+                      <th scope="col">Bắt đầu</th>
+                      <th scope="col">Hết hạn</th>
+                      <th scope="col" className="sheet-number">
+                        Phí kỳ thuê
+                      </th>
+                      <th scope="col">Trạng thái</th>
+                      <th scope="col">Nhắc hạn</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -446,16 +494,22 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
                       return (
                         <tr key={item.id}>
                           <td>
-                            {item.packageName}
-                            <br />
-                            {item.kioskCode
-                              ? `${item.kioskCode} · ${item.kioskName || ''}`
-                              : kiosk
-                                ? `${kiosk.code} · ${kiosk.name}`
-                                : item.kioskId || 'Chưa có kiosk'}
+                            <strong>{item.kioskCode || kiosk?.code || 'Chưa có kiosk'}</strong>
+                            <span className="lease-secondary">
+                              {item.kioskName || kiosk?.name || item.kioskId || '—'}
+                            </span>
+                            <span
+                              className="lease-secondary lease-package-name"
+                              title={item.packageName}
+                            >
+                              {item.packageName}
+                            </span>
                           </td>
-                          <td>
-                            {date(item.periodFrom)} – {date(item.expiresAt || item.periodTo)}
+                          <td className="sheet-date">
+                            <LeaseDate value={item.periodFrom} />
+                          </td>
+                          <td className="sheet-date">
+                            <LeaseDate value={item.expiresAt || item.periodTo} />
                             {item.status === 'ACTIVE' &&
                               remaining !== null &&
                               remaining >= 0 &&
@@ -467,10 +521,14 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
                                 </strong>
                               )}
                           </td>
-                          <td>{money(item.price)}</td>
+                          <td className="sheet-number">{money(item.price)}</td>
                           <td>
-                            {states[item.status] || item.status}
-                            {item.terminationReason && <p>{item.terminationReason}</p>}
+                            <span className="sheet-status" data-state={item.status}>
+                              {states[item.status] || item.status}
+                            </span>
+                            {item.terminationReason && (
+                              <span className="lease-secondary">{item.terminationReason}</span>
+                            )}
                           </td>
                           <td>
                             {item.reminderStatus
@@ -482,7 +540,7 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
                                     SUBSCRIPTION_REMINDER_SKIPPED: 'Đã bỏ qua',
                                   } as Record<string, string>
                                 )[item.reminderStatus] || item.reminderStatus
-                              : 'Chưa có ghi nhận gửi'}
+                              : 'Chưa ghi nhận'}
                           </td>
                         </tr>
                       );
@@ -496,7 +554,7 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
                   disabled={leasePage === 1 || leases.isFetching}
                   onClick={() => setLeasePage((value) => value - 1)}
                 >
-                  Kỳ thuê trang trước
+                  Trang trước
                 </Button>
                 <span>Trang {leasePage}</span>
                 <Button
@@ -504,16 +562,12 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
                   disabled={!leases.data.hasMore || leases.isFetching}
                   onClick={() => setLeasePage((value) => value + 1)}
                 >
-                  Kỳ thuê trang sau
+                  Trang sau
                 </Button>
               </nav>
               {!leases.data.subscriptions.length && (
                 <p>Shop chưa có kỳ thuê kiosk được ghi nhận.</p>
               )}
-              <p className="quiet">
-                Nhãn sắp hết hạn giúp theo dõi tại đây; không đồng nghĩa thông báo đã được gửi cho
-                shop.
-              </p>
             </>
           )}
         </>
@@ -531,7 +585,11 @@ export default function AdminSellerReports({
 }) {
   const [sellerId, setSellerId] = useState(initialSellerId);
   const [searchDraft, setSearchDraft] = useState('');
-  const [sellerSearch, setSellerSearch] = useState('');
+  const sellerSearch = useDeferredValue(searchDraft.trim());
+  const [selectedSeller, setSelectedSeller] = useState<Seller | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [activeOption, setActiveOption] = useState(-1);
+  const pickerId = useId();
   const sellers = useQuery({
     queryKey: ['admin-report-sellers', actorId, sellerSearch],
     queryFn: () =>
@@ -539,47 +597,100 @@ export default function AdminSellerReports({
         `/admin/sellers${sellerSearch ? `?search=${encodeURIComponent(sellerSearch)}` : ''}`,
       ),
   });
-  const selected = sellers.data?.find((seller) => seller.id === sellerId);
+  const selected = selectedSeller ?? sellers.data?.find((seller) => seller.id === sellerId);
+  const handlePickerBlur = (event: FocusEvent<HTMLElement>) => {
+    if (!event.currentTarget.closest('.admin-shop-picker')?.contains(event.relatedTarget))
+      setPickerOpen(false);
+  };
+  const chooseSeller = (seller: Seller) => {
+    setSellerId(seller.id);
+    setSelectedSeller(seller);
+    setSearchDraft(seller.shopName);
+    setPickerOpen(false);
+    setActiveOption(-1);
+  };
   return (
     <section className="admin-seller-reports" aria-labelledby="admin-seller-reports-title">
       <h2 id="admin-seller-reports-title">Doanh số & kỳ thuê theo shop</h2>
-      <p>Chọn một shop để xem doanh số, giao dịch và lịch sử thuê kiosk.</p>
-      <form
-        className="admin-revenue-filters"
-        onSubmit={(e) => {
-          e.preventDefault();
-          setSellerSearch(searchDraft.trim());
-          setSellerId('');
-        }}
-      >
-        <div>
-          <label htmlFor="admin-report-shop-search">Tìm shop trên hệ thống</label>
-          <input
-            id="admin-report-shop-search"
-            type="search"
-            maxLength={100}
-            value={searchDraft}
-            onChange={(e) => setSearchDraft(e.target.value)}
-          />
-        </div>
-        <Button type="submit" variant="outline" disabled={sellers.isFetching}>
-          Tìm shop
-        </Button>
-      </form>
-      <label htmlFor="admin-report-seller">Shop cần xem</label>
-      <select
-        id="admin-report-seller"
-        value={sellerId}
-        onChange={(e) => setSellerId(e.target.value)}
-        disabled={sellers.isPending || sellers.isError}
-      >
-        <option value="">Chọn shop</option>
-        {sellers.data?.map((seller) => (
-          <option key={seller.id} value={seller.id}>
-            {seller.shopName}
-          </option>
-        ))}
-      </select>
+      <div className="admin-shop-picker" role="group" aria-label="Chọn shop báo cáo">
+        <label htmlFor="admin-report-shop-search">Shop cần xem</label>
+        <input
+          id="admin-report-shop-search"
+          type="search"
+          role="combobox"
+          aria-autocomplete="list"
+          aria-expanded={pickerOpen}
+          aria-controls={pickerId}
+          aria-activedescendant={
+            pickerOpen && activeOption >= 0 ? `${pickerId}-${activeOption}` : undefined
+          }
+          placeholder="Tìm hoặc chọn shop…"
+          maxLength={100}
+          value={searchDraft || (sellerId && selected ? selected.shopName : '')}
+          onFocus={() => setPickerOpen(true)}
+          onBlur={handlePickerBlur}
+          onChange={(event) => {
+            setSearchDraft(event.target.value);
+            setSellerId('');
+            setSelectedSeller(null);
+            setPickerOpen(true);
+            setActiveOption(-1);
+          }}
+          onKeyDown={(event) => {
+            const count = sellers.data?.length ?? 0;
+            if (event.key === 'Escape') {
+              setPickerOpen(false);
+              setActiveOption(-1);
+            }
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+              event.preventDefault();
+              setPickerOpen(true);
+              if (count)
+                setActiveOption((index) =>
+                  event.key === 'ArrowDown'
+                    ? Math.min(count - 1, index + 1)
+                    : Math.max(0, index - 1),
+                );
+            }
+            if (
+              event.key === 'Enter' &&
+              pickerOpen &&
+              activeOption >= 0 &&
+              sellers.data?.[activeOption]
+            ) {
+              event.preventDefault();
+              chooseSeller(sellers.data[activeOption]);
+            }
+          }}
+        />
+        {pickerOpen && (
+          <div
+            id={pickerId}
+            role="listbox"
+            aria-label="Shop phù hợp"
+            className="admin-shop-picker-results"
+          >
+            {sellers.data?.map((seller, index) => (
+              <div key={seller.id} role="presentation">
+                <button
+                  type="button"
+                  role="option"
+                  id={`${pickerId}-${index}`}
+                  aria-selected={index === activeOption}
+                  onClick={() => chooseSeller(seller)}
+                  onBlur={handlePickerBlur}
+                >
+                  <strong>{seller.shopName}</strong>
+                  {seller.phone && <span>{seller.phone}</span>}
+                </button>
+              </div>
+            ))}
+            {!sellers.isFetching && sellers.isSuccess && !sellers.data.length && (
+              <div role="presentation">Không tìm thấy shop.</div>
+            )}
+          </div>
+        )}
+      </div>
       {sellers.isPending && <p role="status">Đang tải danh sách shop…</p>}
       {sellers.isError && (
         <div role="alert">

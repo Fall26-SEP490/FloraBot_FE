@@ -1,0 +1,112 @@
+/* Shared compact workspace layout. Other roles keep their existing navigation. */
+.workspace-portal-root.platform-workspace[data-platform-role]:is(
+    [data-platform-role='admin'],
+    [data-platform-role='operations'],
+    [data-platform-role='technician']
+  ) {
+  & .dashboard-page-heading {
+    margin-bottom: 22px;
+  }
+  & .dashboard-page-heading p {
+    display: none;
+  }
+  & .platform-nav-heading {
+    display: none;
+  }
+  & .workspace-sidebar nav a {
+    min-height: 44px;
+  }
+  & .manager-desk-navigation small {
+    display: none;
+  }
+  & .manager-desk-navigation button {
+    min-height: 66px;
+  }
+  & .admin-shop-list {
+    gap: 14px;
+  }
+  & .admin-filterbar {
+    margin-block: 20px;
+  }
+  & .staff-task-header {
+    gap: 18px;
+  }
+  & .staff-latest-report {
+    margin-block: 18px;
+  }
+  & .staff-task-details,
+  & .staff-evidence {
+    margin-block: 16px;
+  }
+  & .staff-transition-header > p {
+    display: none;
+  }
+  & .staff-task-toolbar {
+    gap: 16px;
+  }
+  & .incident-oversight-note {
+    margin: 8px 0 0;
+  }
+  @media (min-width: 901px) {
+    & .workspace-sidebar {
+      display: flex;
+      flex-direction: column;
+    }
+    & .workspace-sidebar nav {
+      min-height: 0;
+      overflow-y: auto;
+    }
+    & .dashboard-shell {
+      grid-template-columns: 78px minmax(0, 1fr);
+    }
+    & .workspace-sidebar {
+      width: 78px;
+      box-sizing: border-box;
+      z-index: 30;
+    }
+    & .role-sidebar-expanded {
+      width: 258px;
+      box-shadow: 8px 0 24px #173e3324;
+    }
+    & .role-sidebar-collapsed {
+      padding-inline: 10px;
+    }
+    & .role-sidebar-collapsed .admin-nav-search,
+    & .role-sidebar-collapsed .manager-nav-search,
+    & .role-sidebar-collapsed .manager-clear-search,
+    & .role-sidebar-collapsed .workspace-nav-group > summary,
+    & .role-sidebar-collapsed .workspace-nav-group > p {
+      display: none;
+    }
+    & .role-sidebar-collapsed .workspace-nav-group {
+      border: 0;
+      padding: 0;
+      margin-block: 10px;
+    }
+    & .role-sidebar-collapsed nav a {
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      padding: 12px;
+      font-size: 0;
+      min-height: 44px;
+    }
+    & .role-sidebar-collapsed nav a span {
+      display: none;
+    }
+    & .workspace-menu-toggle {
+      display: none;
+    }
+    @media (hover: none) {
+      & .workspace-menu-toggle {
+        display: inline-flex;
+        justify-content: center;
+      }
+    }
+    & .role-sidebar-collapsed nav a svg {
+      width: 20px;
+      height: 20px;
+      flex: none;
+    }
+  }
+}

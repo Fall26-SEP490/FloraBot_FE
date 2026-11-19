@@ -57,7 +57,7 @@ for (const width of [390, 1440])
       return route.abort();
     });
     await page.goto('/operations/tasks');
-    await page.getByRole('button', { name: /Công việc đã giao/ }).click();
+    await page.getByRole('button', { name: /Đã phân công/ }).click();
     await page.locator('.manager-task-details > summary').click();
     await page.locator('.manager-task-adjustments > summary').click();
     let panel = page.locator('.staff-reassignment');

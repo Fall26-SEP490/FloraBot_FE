@@ -155,10 +155,7 @@ function IncidentItem({ row, hidden = false }: { row: Incident; hidden?: boolean
                   </nav>
                 )}
                 {detail.data.incident.status === 'OPEN' ? (
-                  <p className="quiet">
-                    Phiếu chưa đóng. Quản lý vận hành phụ trách tiếp nhận, phân công và nghiệm thu.
-                    Theo dõi công việc được giao tại mục Giám sát công việc.
-                  </p>
+                  <p className="quiet">Phiếu đang được Quản lý vận hành xử lý.</p>
                 ) : (
                   <>
                     <h3>Đã xử lý</h3>
@@ -202,8 +199,7 @@ export default function AdminIncidents() {
     <section className="admin-incidents" aria-labelledby="incidents-title">
       <h2 id="incidents-title">Theo dõi sự cố tủ hoa</h2>
       <p className="incident-oversight-note">
-        <strong>Chỉ giám sát</strong> · Manager phân công và nghiệm thu; kỹ thuật viên kiểm tra tại
-        tủ.
+        <strong>Giám sát tiến độ</strong>
       </p>
       <AdminFilterBar
         actions={
