@@ -34,11 +34,27 @@ export default function KioskShopSupport({ kioskId }: { kioskId: string }) {
   return (
     <main id="main" style={{ maxWidth: 680, margin: '0 auto', padding: '3rem 1.5rem' }}>
       <Flower2 size={42} aria-hidden="true" />
-      <h1 style={{ marginBlock: '1rem' }}>Hỗ trợ từ cửa hàng hoa</h1>
-      <p>
-        Hoa hư, hoa không đúng hoặc cần hỗ trợ đơn? Nhắn trực tiếp cho cửa hàng phụ trách tủ này.
-        Bạn có thể gửi ảnh trong cuộc trò chuyện.
-      </p>
+      <h1 style={{ marginBlock: '1rem' }}>Hỗ trợ đơn hàng &amp; hoa</h1>
+      <section aria-labelledby="support-uncollected" style={{ marginBlock: '1.5rem' }}>
+        <h2 id="support-uncollected">Đã thanh toán nhưng chưa nhận hoa</h2>
+        <p>
+          Tra cứu biên nhận để xem trạng thái đơn. Nếu cửa chưa mở, tại kiosk chọn “Mua hoa tại chỗ”
+          rồi “Đã thanh toán nhưng chưa nhận hoa?” để kiểm tra quyền mở lại.
+        </p>
+        <Link className="button button-outline" href="/receipt">
+          Kiểm tra đơn theo biên nhận
+        </Link>
+      </section>
+      <section aria-labelledby="support-quality" style={{ marginBlock: '1.5rem' }}>
+        <h2 id="support-quality">Hoa hư, sai mẫu hoặc thiếu phụ kiện</h2>
+        <p>
+          Mở biên nhận của đơn đã nhận, chọn “Phản ánh về hoa” và mô tả vấn đề để shop xử lý. Khách
+          giữ biên nhận có thể gửi phản ánh mà không cần tài khoản.
+        </p>
+        <Link className="button button-outline" href="/receipt">
+          Mở biên nhận để phản ánh
+        </Link>
+      </section>
       {kiosk.isPending && <p role="status">Đang xác định cửa hàng…</p>}
       {kiosk.isError && (
         <p role="alert">Chưa tải được thông tin tủ. Vui lòng quét lại QR hoặc thử lại sau.</p>
@@ -57,6 +73,11 @@ export default function KioskShopSupport({ kioskId }: { kioskId: string }) {
             {kiosk.data.name} · {kiosk.data.code}
           </p>
           <p>{kiosk.data.address}</p>
+          <h3>Hỏi cửa hàng</h3>
+          <p>
+            Nhắn tin để trao đổi với shop. Yêu cầu đổi hoa hoặc hoàn tiền cần gắn với biên nhận của
+            đơn.
+          </p>
           {session.isPending ? (
             <p role="status">Đang kiểm tra đăng nhập…</p>
           ) : !session.data ? (
