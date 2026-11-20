@@ -1,0 +1,169 @@
+.workspace-portal-root.platform-workspace[data-platform-role='operations']
+  main
+  .operations-directory-page {
+  padding: 22px;
+  border: 1px solid #d8e4dc;
+  border-radius: 12px;
+  background: white;
+}
+.operations-directory-page .platform-directory-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.operations-directory-page .platform-directory-heading h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+.operations-directory-page .platform-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(150px, 1fr) auto;
+  align-items: end;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid #dbe5dd;
+  border-radius: 10px;
+  background: #f5f8f5;
+}
+.operations-directory-page .platform-tools label {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 12px;
+}
+.operations-directory-page .platform-filter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.operations-directory-page .workspace-table {
+  margin-block: 20px;
+}
+.operations-directory-table th:first-child {
+  width: 34%;
+}
+.operations-directory-table th:last-child {
+  width: 26%;
+}
+.operations-directory-table td .platform-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.operations-directory-table td .platform-actions > * {
+  min-width: 0;
+}
+.operations-directory-table button {
+  min-height: 36px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+.operations-directory-table .platform-identity-avatar {
+  width: 32px;
+  height: 32px;
+}
+.operations-directory-table .platform-identity {
+  gap: 10px;
+}
+.operations-directory-table .platform-actions [role='combobox'] {
+  font-size: 12px;
+  min-height: 36px;
+}
+@media (max-width: 700px) {
+  .operations-directory-page .platform-tools {
+    grid-template-columns: 1fr;
+  }
+  .operations-directory-page .workspace-table {
+    overflow-x: auto;
+  }
+  .operations-directory-table {
+    min-width: 620px;
+  }
+}
+
+.workspace-portal-root.platform-workspace[data-platform-role='operations']
+  main
+  .operations-directory-page
+  .operations-directory-table
+  .platform-actions {
+  flex-wrap: nowrap;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='operations']
+  main
+  .operations-directory-page
+  .operations-directory-table
+  .platform-actions
+  [data-custom-select] {
+  width: 36px;
+  min-width: 36px;
+  max-width: 36px;
+  flex: 0 0 36px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='operations']
+  main
+  .operations-directory-page
+  .operations-directory-table
+  .platform-actions
+  button {
+  min-height: 36px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.workspace-portal-root.platform-workspace[data-platform-role='operations']
+  main
+  .operations-customers-page
+  .operations-directory-table
+  .platform-actions
+  > button {
+  width: 46px;
+  min-width: 46px;
+  flex: 0 0 46px;
+  white-space: nowrap;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='operations']
+  main
+  .operations-customers-page
+  .operations-directory-table
+  .platform-actions
+  [role='combobox'] {
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  min-height: 36px;
+  max-height: 36px;
+  padding: 6px;
+  box-sizing: border-box;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='operations']
+  main
+  .operations-customers-page
+  .operations-directory-table
+  th:first-child {
+  width: 40%;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='operations']
+  main
+  .operations-customers-page
+  .operations-directory-table
+  th:nth-child(2) {
+  width: 16%;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='operations']
+  main
+  .operations-customers-page
+  .operations-directory-table
+  th:last-child {
+  width: 120px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='operations']
+  main
+  .operations-customers-page
+  .platform-identity-secondary {
+  font-size: 11px;
+}

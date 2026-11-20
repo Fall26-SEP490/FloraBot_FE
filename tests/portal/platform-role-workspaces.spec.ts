@@ -228,7 +228,11 @@ for (const [role, url, label] of [
   test(`${label}: remote detail and profile editing`, async ({ page }) => {
     const { writes } = await setup(page, role);
     await page.goto(url);
-    await page.getByRole('button', { name: /^Chi tiết/ }).click();
+    if (role === 'OPERATIONS_MANAGER') {
+      await chooseOption(page.getByRole('combobox', { name: /^Quản lý / }), 'VIEW');
+    } else {
+      await page.getByRole('button', { name: /^(Chi tiết|Xem) / }).click();
+    }
     const dialog = page.getByRole('dialog');
     await expect(dialog.getByText('12 Nguyễn Huệ', { exact: true })).toBeVisible();
     await dialog.getByRole('button', { name: 'Chỉnh sửa thông tin' }).click();
@@ -259,7 +263,7 @@ for (const [role, url, label] of [
 test('Profile address validation matches BE limits before sending PUT', async ({ page }) => {
   const { writes } = await setup(page);
   await page.goto('/operations/technicians');
-  await page.getByRole('button', { name: /^Chi tiết/ }).click();
+  await chooseOption(page.getByRole('combobox', { name: /^Quản lý / }), 'VIEW');
   const dialog = page.getByRole('dialog');
   await dialog.getByRole('button', { name: 'Chỉnh sửa thông tin' }).click();
   const address = dialog.getByLabel('Địa chỉ', { exact: true });
@@ -292,13 +296,22 @@ test('Customer server paging, filters, create, profile and status', async ({ pag
   await create.getByRole('button', { name: 'Tạo khách hàng', exact: true }).click();
   await expect(create).toHaveCount(0);
   expect(writes.find((write) => write.method === 'POST')?.body.email).toBe('new@example.test');
-  await page.getByRole('button', { name: /^Chi tiết/ }).click();
+  await chooseOption(page.getByRole('combobox', { name: /^Quản lý / }), 'VIEW');
   await page.getByRole('dialog').getByRole('button', { name: 'Chỉnh sửa thông tin' }).click();
   await page.getByRole('dialog').getByLabel('Họ và tên', { exact: true }).fill('Khách đã sửa');
   await page.getByRole('dialog').getByRole('button', { name: 'Lưu thay đổi' }).click();
   await expect(page.getByRole('dialog').getByRole('status')).toContainText('Đã lưu');
   await page.keyboard.press('Escape');
-  await page.getByRole('button', { name: /^Khóa / }).click();
+  await page.getByRole('combobox', { name: /^Quản lý / }).click();
+  const statusOptions = page.getByRole('listbox');
+  await expect(statusOptions).toBeVisible();
+  const statusBounds = await statusOptions.boundingBox();
+  expect(statusBounds && statusBounds.width >= 160).toBe(true);
+  const viewportWidth = page.viewportSize()!.width;
+  expect(
+    statusBounds && statusBounds.x >= 0 && statusBounds.x + statusBounds.width <= viewportWidth,
+  ).toBe(true);
+  await statusOptions.getByRole('option', { name: 'Khóa tài khoản', exact: true }).click();
   expect(writes.filter((write) => write.method === 'PATCH')).toHaveLength(0);
   await page.getByRole('dialog').getByRole('button', { name: 'Xác nhận trạng thái' }).click();
   await expect.poll(() => writes.filter((write) => write.method === 'PATCH').length).toBe(1);
@@ -308,18 +321,26 @@ test('Customer server paging, filters, create, profile and status', async ({ pag
 test('Seller shop, owner, status review and history use scoped APIs', async ({ page }) => {
   const { writes, calls } = await setup(page);
   await page.goto('/operations/sellers');
-  await page.getByRole('button', { name: /^Chi tiết shop/ }).click();
+  await page.getByRole('button', { name: /^Xem / }).click();
   const dialog = page.getByRole('dialog');
   await dialog.getByRole('button', { name: 'Sửa thông tin shop' }).click();
   await dialog.getByLabel('Tên shop', { exact: true }).fill('Shop được sửa');
   await dialog.getByRole('button', { name: 'Lưu thay đổi' }).click();
   await expect(dialog.getByRole('status')).toContainText('Đã lưu thông tin shop');
+  await dialog
+    .locator('summary')
+    .filter({ hasText: /^Chủ shop$/ })
+    .click();
   await dialog.getByRole('button', { name: /^Sửa chủ shop/ }).click();
   await dialog.getByLabel('Họ và tên', { exact: true }).fill('Chủ shop mới');
   await dialog.getByRole('button', { name: 'Lưu thay đổi' }).click();
   await expect(dialog.getByRole('status')).toContainText('Đã lưu thông tin chủ shop');
-  await dialog.getByLabel('Lý do thay đổi trạng thái').fill('Đã xác minh vi phạm đóng gói');
-  await dialog.getByRole('button', { name: 'Kiểm tra thay đổi trạng thái' }).click();
+  await dialog
+    .locator('summary')
+    .filter({ hasText: /^Tạm ngừng shop$/ })
+    .click();
+  await dialog.getByLabel('Lý do', { exact: true }).fill('Đã xác minh vi phạm đóng gói');
+  await dialog.getByRole('button', { name: 'Tiếp tục' }).click();
   expect(writes.filter((write) => write.method === 'PATCH')).toHaveLength(0);
   await dialog.getByRole('button', { name: 'Xác nhận thay đổi shop' }).click();
   await expect(dialog.getByRole('status')).toContainText('Đã cập nhật trạng thái');
@@ -336,14 +357,22 @@ test('Seller history failure is retryable and restore conflict stays visible', a
   state.conflict = true;
   shop.status = 'SUSPENDED';
   await page.goto('/operations/sellers');
-  await page.getByRole('button', { name: /^Chi tiết shop/ }).click();
+  await page.getByRole('button', { name: /^Xem / }).click();
   const dialog = page.getByRole('dialog');
+  await dialog
+    .locator('summary')
+    .filter({ hasText: /^Lịch sử trạng thái$/ })
+    .click();
   await expect(dialog.getByRole('alert')).toContainText('Lỗi lịch sử');
   state.failHistory = false;
   await dialog.getByRole('button', { name: 'Thử lại' }).click();
   await expect(dialog.getByText('Lý do kiểm tra', { exact: true })).toBeVisible();
-  await dialog.getByLabel('Lý do thay đổi trạng thái').fill('Đã khắc phục vấn đề');
-  await dialog.getByRole('button', { name: 'Kiểm tra thay đổi trạng thái' }).click();
+  await dialog
+    .locator('summary')
+    .filter({ hasText: /^Khôi phục hoạt động$/ })
+    .click();
+  await dialog.getByLabel('Lý do', { exact: true }).fill('Đã khắc phục vấn đề');
+  await dialog.getByRole('button', { name: 'Tiếp tục' }).click();
   await dialog.getByRole('button', { name: 'Xác nhận thay đổi shop' }).click();
   await expect(dialog.getByRole('alert')).toContainText('Gói thuê hiện tại không còn hợp lệ');
 });

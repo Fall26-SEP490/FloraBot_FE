@@ -80,11 +80,11 @@ for (const width of [390, 1440]) {
     await expect(section.getByLabel('Lọc phân bổ')).toHaveCount(0);
     await section.getByRole('button', { name: 'Bộ lọc', exact: true }).click();
     await expect(section.getByLabel('Lọc phân bổ')).toHaveValue('ALL');
-    await section.getByLabel('Tìm mã kiosk, tên kiosk hoặc shop').fill('không tìm thấy');
+    await section.getByLabel('Tìm kiosk hoặc shop').fill('không tìm thấy');
     await expect(section.getByText('Không có kiosk phù hợp với bộ lọc hiện tại.')).toBeVisible();
-    await section.getByLabel('Tìm mã kiosk, tên kiosk hoặc shop').fill('FPT-01');
+    await section.getByLabel('Tìm kiosk hoặc shop').fill('FPT-01');
     await chooseOption(section.getByLabel('Lọc phân bổ'), 'UNASSIGNED');
-    await section.locator('summary.admin-disclosure-summary').click();
+    await section.getByRole('button', { name: 'Xem phân bổ FPT-01', exact: true }).click();
 
     await section.getByRole('button', { name: 'Gán kiosk cho shop' }).click();
     await expect(section.getByLabel('Shop quản lý toàn bộ kiosk')).toBeFocused();
@@ -114,9 +114,9 @@ for (const width of [390, 1440]) {
     await expect(
       section.getByRole('status').filter({ hasText: 'Đã gán toàn bộ kiosk Đại học FPT' }),
     ).toBeFocused();
-    await expect(section.locator('li')).toHaveCount(0);
+    await expect(section.locator('.allocation-shop-table tbody tr')).toHaveCount(0);
     await chooseOption(section.getByLabel('Lọc phân bổ'), 'ASSIGNED');
-    await section.locator('summary.admin-disclosure-summary').click();
+    await section.getByRole('button', { name: 'Xem phân bổ FPT-01', exact: true }).click();
     await expect(section.getByText('Tiệm Hoa Ban Mai', { exact: true })).toBeVisible();
     await expect(
       section.getByRole('button', { name: 'Chuyển kiosk sang shop khác' }),
@@ -170,18 +170,21 @@ test('Admin explicitly assigns and removes a kiosk manager', async ({ page }) =>
 
   await page.goto('/admin/slots');
   await page.getByRole('button', { name: 'Phân công quản lý', exact: true }).click();
-  await expect(page.getByText('Chưa có quản lý phụ trách')).toBeVisible();
+  await expect(page.getByText('Chưa phân công', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Chọn quản lý cho K-DIAN' }).click();
-  await expect(page.getByLabel('Chọn kiosk', { exact: true })).toHaveValue(kiosk.id);
-  await expect(page.getByLabel('Quản lý vận hành phụ trách', { exact: true })).toBeFocused();
-  const save = page.getByRole('button', { name: 'Lưu phân công vận hành' });
+  await expect(page.getByRole('dialog', { name: 'Phân công quản lý', exact: true })).toContainText(
+    kiosk.code,
+  );
+  const save = page.getByRole('button', { name: 'Lưu phân công' });
   const managerSelect = page.getByLabel('Quản lý vận hành phụ trách', { exact: true });
   await expect(save).toBeDisabled();
   await chooseOption(managerSelect, manager.id);
   await save.click();
-  await expect(page.getByText('Phụ trách: An Điều Phối', { exact: false })).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'An Điều Phối', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Chọn quản lý cho K-DIAN' }).click();
+  await expect(save).toBeDisabled();
   await chooseOption(managerSelect, { label: 'Gỡ phân công hiện tại' });
   await save.click();
-  await expect(page.getByText('Chưa có quản lý phụ trách')).toBeVisible();
+  await expect(page.getByText('Chưa phân công', { exact: true })).toBeVisible();
   expect(changes).toEqual([manager.id, null]);
 });

@@ -14,12 +14,13 @@ import { Check, ChevronDown } from '@florabot/ui';
 import styles from './custom-select.module.css';
 
 type Option = { value: string; label: string; disabled?: boolean };
-function popupPosition(rect: DOMRect): CSSProperties {
+function popupPosition(rect: DOMRect, minimumWidth = 0): CSSProperties {
+  const width = Math.min(Math.max(rect.width, minimumWidth), innerWidth - 16);
   const below = innerHeight - rect.bottom;
   const above = below < 200 && rect.top > below;
   return {
-    left: Math.max(8, Math.min(rect.left, innerWidth - rect.width - 8)),
-    width: Math.min(rect.width, innerWidth - 16),
+    left: Math.max(8, Math.min(rect.left, innerWidth - width - 8)),
+    width,
     top: above ? undefined : rect.bottom + 6,
     bottom: above ? innerHeight - rect.top + 6 : undefined,
     maxHeight: Math.min(280, Math.max(80, (above ? rect.top : below) - 16)),
@@ -32,6 +33,7 @@ export function CustomSelect({
   options,
   onValueChange,
   disabled = false,
+  popupMinWidth = 0,
   buttonProps,
 }: {
   id: string;
@@ -40,6 +42,7 @@ export function CustomSelect({
   options: Option[];
   onValueChange: (value: string) => void;
   disabled?: boolean;
+  popupMinWidth?: number;
   buttonProps?: Omit<
     ComponentPropsWithRef<'button'>,
     'id' | 'type' | 'role' | 'value' | 'onChange' | 'children'
@@ -55,7 +58,7 @@ export function CustomSelect({
   const open = !!position && !disabled;
   function expand() {
     const rect = trigger.current!.getBoundingClientRect();
-    setPosition(popupPosition(rect));
+    setPosition(popupPosition(rect, popupMinWidth));
     setActive(
       Math.max(
         0,
@@ -79,7 +82,7 @@ export function CustomSelect({
     };
     const closeOnMove = (event: Event) => {
       if (!popup.current?.contains(event.target as Node) && trigger.current)
-        setPosition(popupPosition(trigger.current.getBoundingClientRect()));
+        setPosition(popupPosition(trigger.current.getBoundingClientRect(), popupMinWidth));
     };
     document.addEventListener('pointerdown', closeOutside);
     window.addEventListener('resize', closeOnMove);
@@ -89,7 +92,7 @@ export function CustomSelect({
       window.removeEventListener('resize', closeOnMove);
       window.removeEventListener('scroll', closeOnMove, true);
     };
-  }, [open]);
+  }, [open, popupMinWidth]);
   useEffect(() => {
     if (!open) return;
     const list = popup.current;

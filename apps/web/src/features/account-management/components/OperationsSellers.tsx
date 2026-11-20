@@ -1,12 +1,13 @@
 'use client';
 
+import '../styles/operations-detail-polish.css';
 import WorkspaceTable from '@/features/portal/components/WorkspaceTable';
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import { queryClient, request, type Session } from '@/shared/lib/api';
-import { DataTable } from '../../../shared/components/DataTable';
+import DataTable from './DirectoryTable';
 import { Modal } from '../../../shared/components/Modal';
 import type { components } from '../../../../../../packages/contracts/src/generated/api';
 import type {
@@ -28,6 +29,12 @@ import {
   useDirectory,
   type ProfileInput,
 } from './management';
+
+function shopPackageName(value: string | null | undefined) {
+  return value && /^Kiosk pricing [0-9a-f-]{36}$/i.test(value)
+    ? 'Giá thuê theo kiosk'
+    : value || 'Chưa có gói';
+}
 
 const shopStatuses = ['PENDING', 'APPROVED', 'ACTIVE', 'PAST_DUE', 'SUSPENDED', 'CLOSED'];
 
@@ -127,7 +134,14 @@ function SellerDetail({ id, actorId, close }: { id: string; actorId: string; clo
     }
   }
   return (
-    <Modal open title="Chi tiết shop hoa" onClose={close} closeDisabled={busy}>
+    <Modal
+      open
+      title="Chi tiết shop hoa"
+      onClose={close}
+      closeDisabled={busy}
+      size="md"
+      className="operations-shop-dialog"
+    >
       <div className="platform-management platform-shop-detail">
         {notice && <p role="status">{notice}</p>}
         <div className="platform-shop-layout">
@@ -140,11 +154,7 @@ function SellerDetail({ id, actorId, close }: { id: string; actorId: string; clo
               {detail.data && (
                 <>
                   <div className="platform-profile-hero">
-                    <DirectoryIdentity
-                      name={detail.data.shopName}
-                      secondary="Thông tin cửa hàng"
-                      kind="shop"
-                    />
+                    <DirectoryIdentity name={detail.data.shopName} secondary="" kind="shop" />
                     <Status value={detail.data.status} />
                   </div>
                   <dl className="management-details">
@@ -162,7 +172,7 @@ function SellerDetail({ id, actorId, close }: { id: string; actorId: string; clo
                     </div>
                     <div>
                       <dt>Gói hiện tại</dt>
-                      <dd>{detail.data.packageName || 'Chưa có gói'}</dd>
+                      <dd>{shopPackageName(detail.data.packageName)}</dd>
                     </div>
                     <div>
                       <dt>Hạn gói</dt>
@@ -191,138 +201,148 @@ function SellerDetail({ id, actorId, close }: { id: string; actorId: string; clo
                     />
                   )}
                   {['ACTIVE', 'SUSPENDED'].includes(detail.data.status) && (
-                    <section className="platform-card" aria-label="Khóa hoặc mở shop">
-                      <h3>
+                    <details className="operations-shop-status">
+                      <summary>
                         {detail.data.status === 'ACTIVE' ? 'Tạm ngừng shop' : 'Khôi phục hoạt động'}
-                      </h3>
-                      <p>
-                        {detail.data.status === 'ACTIVE'
-                          ? 'Shop tạm ngừng sẽ bị chặn tạo và sửa sản phẩm. Dữ liệu và kiosk đang gán vẫn được giữ.'
-                          : 'Hệ thống chỉ cho khôi phục khi gói thuê hiện tại vẫn hợp lệ.'}
-                      </p>
-                      <label htmlFor="shop-status-reason">Lý do thay đổi trạng thái</label>
-                      <textarea
-                        id="shop-status-reason"
-                        value={reason}
-                        minLength={5}
-                        maxLength={1000}
-                        disabled={busy || review}
-                        onChange={(event) => setReason(event.target.value)}
-                      />
-                      {review ? (
-                        <div className="platform-card">
-                          <p>
-                            Xác nhận {detail.data.status === 'ACTIVE' ? 'tạm ngừng' : 'khôi phục'}{' '}
-                            shop {detail.data.shopName} với lý do: {reason.trim()}
-                          </p>
-                          <div className="platform-actions">
-                            <Button disabled={busy} onClick={() => void changeStatus()}>
-                              {busy ? 'Đang cập nhật…' : 'Xác nhận thay đổi shop'}
-                            </Button>
-                            <Button
-                              variant="outline"
-                              disabled={busy}
-                              onClick={() => setReview(false)}
-                            >
-                              Quay lại
-                            </Button>
+                      </summary>
+                      <section aria-label="Khóa hoặc mở shop">
+                        <label htmlFor="shop-status-reason">Lý do</label>
+                        <textarea
+                          id="shop-status-reason"
+                          placeholder="Nhập lý do (tối thiểu 5 ký tự)"
+                          value={reason}
+                          minLength={5}
+                          maxLength={1000}
+                          disabled={busy || review}
+                          onChange={(event) => setReason(event.target.value)}
+                        />
+                        {review ? (
+                          <div className="platform-card">
+                            <p>
+                              Xác nhận {detail.data.status === 'ACTIVE' ? 'tạm ngừng' : 'khôi phục'}{' '}
+                              shop {detail.data.shopName} với lý do: {reason.trim()}
+                            </p>
+                            <div className="platform-actions">
+                              <Button disabled={busy} onClick={() => void changeStatus()}>
+                                {busy ? 'Đang cập nhật…' : 'Xác nhận thay đổi shop'}
+                              </Button>
+                              <Button
+                                variant="outline"
+                                disabled={busy}
+                                onClick={() => setReview(false)}
+                              >
+                                Quay lại
+                              </Button>
+                            </div>
                           </div>
-                        </div>
-                      ) : (
-                        <Button
-                          disabled={busy || reason.trim().length < 5}
-                          onClick={() => {
-                            setReview(true);
-                            setError('');
-                          }}
-                        >
-                          Kiểm tra thay đổi trạng thái
-                        </Button>
-                      )}
-                      {error && (
-                        <p role="alert" className="error">
-                          {error}
-                        </p>
-                      )}
-                    </section>
+                        ) : (
+                          <Button
+                            disabled={busy || reason.trim().length < 5}
+                            onClick={() => {
+                              setReview(true);
+                              setError('');
+                            }}
+                          >
+                            Tiếp tục
+                          </Button>
+                        )}
+                        {error && (
+                          <p role="alert" className="error">
+                            {error}
+                          </p>
+                        )}
+                      </section>
+                    </details>
                   )}
                 </>
               )}
             </LoadState>
           </section>
           <div className="platform-shop-side">
-            <section className="platform-card" aria-labelledby="seller-owner-title">
-              <h3 id="seller-owner-title">Tài khoản chủ shop</h3>
-              <LoadState
-                pending={owners.isPending}
-                error={owners.error}
-                retry={() => void owners.refetch()}
-              >
-                {!owners.data?.length && <p>Chưa có tài khoản chủ shop.</p>}
-                {owners.data?.map((item) => (
-                  <div key={item.id} className="platform-card">
-                    <DirectoryIdentity name={item.fullName} secondary={item.email} />
-                    <Status value={item.status} />
-                    <p>{item.phone || 'Chưa có điện thoại'}</p>
-                    <p>{item.address || 'Chưa có địa chỉ'}</p>
-                    <Button variant="outline" disabled={busy} onClick={() => setOwner(item)}>
-                      Sửa chủ shop<span className="sr-only"> {item.fullName}</span>
-                    </Button>
-                  </div>
-                ))}
-                {owner && (
-                  <BasicProfileForm
-                    key={owner.id}
-                    initial={owner}
-                    busy={busy}
-                    save={saveOwner}
-                    cancel={() => setOwner(null)}
-                  />
-                )}
-              </LoadState>
-            </section>
-            <section aria-labelledby="seller-history-title">
-              <h3 id="seller-history-title">Lịch sử trạng thái shop</h3>
-              <LoadState
-                pending={history.isPending}
-                error={history.error}
-                retry={() => void history.refetch()}
-              >
-                {!history.data?.items.length && <p>Chưa có thay đổi trạng thái trong lịch sử.</p>}
-                {!!history.data?.items.length && (
-                  <WorkspaceTable label="Lịch sử trạng thái shop">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th scope="col">Thời gian</th>
-                          <th scope="col">Trạng thái</th>
-                          <th scope="col">Lý do</th>
-                          <th scope="col">Người thực hiện</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {history.data.items.map((item) => (
-                          <tr key={item.id}>
-                            <td>{dateText(item.createdAt)}</td>
-                            <td>
-                              {item.fromStatus || '—'} → {item.toStatus || '—'}
-                            </td>
-                            <td>{item.reason || '—'}</td>
-                            <td>{item.actorId || '—'}</td>
+            <details className="operations-shop-disclosure">
+              <summary>Chủ shop</summary>
+              <section aria-labelledby="seller-owner-title">
+                <h3 id="seller-owner-title" className="sr-only">
+                  Tài khoản chủ shop
+                </h3>
+                <LoadState
+                  pending={owners.isPending}
+                  error={owners.error}
+                  retry={() => void owners.refetch()}
+                >
+                  {!owners.data?.length && <p>Chưa có tài khoản chủ shop.</p>}
+                  {owners.data?.map((item) => (
+                    <div key={item.id} className="platform-card">
+                      <DirectoryIdentity name={item.fullName} secondary={item.email} />
+                      <Status value={item.status} />
+                      {item.phone && <p>{item.phone}</p>}
+                      {item.address && <p>{item.address}</p>}
+                      <Button variant="outline" disabled={busy} onClick={() => setOwner(item)}>
+                        Sửa chủ shop<span className="sr-only"> {item.fullName}</span>
+                      </Button>
+                    </div>
+                  ))}
+                  {owner && (
+                    <BasicProfileForm
+                      key={owner.id}
+                      initial={owner}
+                      busy={busy}
+                      save={saveOwner}
+                      cancel={() => setOwner(null)}
+                    />
+                  )}
+                </LoadState>
+              </section>
+            </details>
+            <details className="operations-shop-disclosure">
+              <summary>Lịch sử trạng thái</summary>
+              <section aria-labelledby="seller-history-title">
+                <h3 id="seller-history-title" className="sr-only">
+                  Lịch sử trạng thái shop
+                </h3>
+                <LoadState
+                  pending={history.isPending}
+                  error={history.error}
+                  retry={() => void history.refetch()}
+                >
+                  {!history.data?.items.length && <p>Chưa có thay đổi trạng thái trong lịch sử.</p>}
+                  {!!history.data?.items.length && (
+                    <WorkspaceTable label="Lịch sử trạng thái shop">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th scope="col">Thời gian</th>
+                            <th scope="col">Trạng thái</th>
+                            <th scope="col">Lý do</th>
+                            <th scope="col">Người thực hiện</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </WorkspaceTable>
-                )}
-                <PageControls
-                  page={historyPage}
-                  hasMore={history.data?.hasMore ?? false}
-                  busy={history.isFetching}
-                  onPage={setHistoryPage}
-                />
-              </LoadState>
-            </section>
+                        </thead>
+                        <tbody>
+                          {history.data.items.map((item) => (
+                            <tr key={item.id}>
+                              <td>{dateText(item.createdAt)}</td>
+                              <td>
+                                {item.fromStatus || '—'} → {item.toStatus || '—'}
+                              </td>
+                              <td>{item.reason || '—'}</td>
+                              <td>{item.actorId || '—'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </WorkspaceTable>
+                  )}
+                  {(historyPage > 1 || history.data?.hasMore) && (
+                    <PageControls
+                      page={historyPage}
+                      hasMore={history.data?.hasMore ?? false}
+                      busy={history.isFetching}
+                      onPage={setHistoryPage}
+                    />
+                  )}
+                </LoadState>
+              </section>
+            </details>
           </div>
         </div>
       </div>
@@ -331,16 +351,18 @@ function SellerDetail({ id, actorId, close }: { id: string; actorId: string; clo
 }
 
 export default function OperationsSellers({ session }: { session: Session }) {
-  const d = useDirectory<Seller>(session, '/operations/sellers', 'OPERATIONS_MANAGER');
   const [selected, setSelected] = useState<string | null>(null);
+  const d = useDirectory<Seller>(session, '/operations/sellers', 'OPERATIONS_MANAGER', !selected);
   if (session.role !== 'OPERATIONS_MANAGER')
     return <p role="alert">Khu vực này dành cho Quản lý vận hành.</p>;
   return (
-    <section className="platform-management" aria-labelledby="operations-sellers-title">
+    <section
+      className="platform-management operations-directory-page operations-shops-page"
+      aria-labelledby="operations-sellers-title"
+    >
       <DirectoryHeading
         id="operations-sellers-title"
         title="Danh sách shop hoa"
-        description="Theo dõi gói thuê, thông tin chủ shop và lịch sử hoạt động."
         count={d.query.data?.items.length}
       />
       <DirectoryTools directory={d} statuses={shopStatuses} />
@@ -366,14 +388,14 @@ export default function OperationsSellers({ session }: { session: Session }) {
             {
               key: 'package',
               header: 'Gói thuê',
-              render: (row) => row.packageName || 'Chưa có gói',
+              render: (row) => shopPackageName(row.packageName),
             },
             {
               key: 'actions',
               header: 'Thao tác',
               render: (row) => (
                 <Button variant="outline" onClick={() => setSelected(row.id)}>
-                  Chi tiết shop<span className="sr-only"> {row.shopName}</span>
+                  Xem<span className="sr-only"> {row.shopName}</span>
                 </Button>
               ),
             },

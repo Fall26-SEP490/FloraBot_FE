@@ -1,5 +1,6 @@
 'use client';
 
+import '../styles/operations-detail-polish.css';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
@@ -52,7 +53,14 @@ export default function AccountProfileDialog({
     }
   }
   return (
-    <Modal open title={title} onClose={close} closeDisabled={busy}>
+    <Modal
+      open
+      title={title}
+      onClose={close}
+      closeDisabled={busy}
+      size="md"
+      className="operations-profile-dialog"
+    >
       <div className="platform-management">
         {notice && <p role="status">{notice}</p>}
         <LoadState
