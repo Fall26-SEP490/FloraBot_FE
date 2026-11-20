@@ -1,5 +1,6 @@
 'use client';
 
+import IconActionButton from '@/shared/components/IconActionButton';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
@@ -113,9 +114,13 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
           <h1>Lắp đặt kiosk</h1>
           <p>Xem lịch được giao, tải ảnh và gửi báo cáo lắp đặt.</p>
         </div>
-        <Button variant="outline" disabled={jobsQuery.isFetching} onClick={invalidate}>
-          <RefreshCw size={16} aria-hidden="true" /> Làm mới công việc lắp đặt
-        </Button>
+        <IconActionButton
+          variant="outline"
+          disabled={jobsQuery.isFetching}
+          onClick={invalidate}
+          action="reload"
+          label="Làm mới công việc lắp đặt"
+        />
       </div>
 
       {jobsQuery.isLoading && (
@@ -134,9 +139,12 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
               'Không thể tải danh sách công việc. Vui lòng thử lại.',
             )}
           </span>
-          <Button variant="outline" onClick={() => void jobsQuery.refetch()}>
-            Tải lại công việc
-          </Button>
+          <IconActionButton
+            variant="outline"
+            onClick={() => void jobsQuery.refetch()}
+            action="reload"
+            label="Tải lại công việc"
+          />
         </div>
       )}
 
@@ -253,9 +261,12 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
                     'Chưa đọc được chi tiết. Hãy tải lại trước khi thao tác.',
                   )}
                 </p>
-                <Button variant="outline" onClick={() => void jobDetailQuery.refetch()}>
-                  Tải lại chi tiết lắp đặt
-                </Button>
+                <IconActionButton
+                  variant="outline"
+                  onClick={() => void jobDetailQuery.refetch()}
+                  action="reload"
+                  label="Tải lại chi tiết lắp đặt"
+                />
               </div>
             )}
 

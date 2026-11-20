@@ -1,5 +1,6 @@
 'use client';
 
+import IconActionButton from '@/shared/components/IconActionButton';
 import { useId, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button, CircleAlert, Check, RefreshCw, Banknote, Plus, Eye, EyeOff } from '@florabot/ui';
@@ -439,19 +440,14 @@ export default function AdminKioskRefunds({ session }: AdminKioskRefundsProps) {
         <span>
           Yêu cầu trong danh sách: <strong>{refundsQuery.isSuccess ? refunds.length : '—'}</strong>
         </span>
-        <Button
+        <IconActionButton
           variant="outline"
           className="refresh-btn"
           onClick={() => void refundsQuery.refetch()}
           disabled={refundsQuery.isFetching}
-        >
-          <RefreshCw
-            className={refundsQuery.isFetching ? 'spin' : ''}
-            size={16}
-            aria-hidden="true"
-          />
-          Làm mới
-        </Button>
+          action="reload"
+          label="Làm mới"
+        />
       </div>
 
       {refundsQuery.isLoading && (

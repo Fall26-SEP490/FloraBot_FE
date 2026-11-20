@@ -259,7 +259,7 @@
   color: #203e2d;
 }
 .accessoryModal > .editor.editor {
-  padding: 0;
+  padding: 20px;
 }
 .editor.editor :global(.product-editor-grid) {
   grid-template-columns: minmax(0, 1fr);
@@ -354,6 +354,14 @@
   .toolbar {
     flex-wrap: wrap;
   }
+  .toolbar > button:not([data-icon-action]) {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+  .toolbar .stateField {
+    min-width: 180px;
+  }
   .searchField {
     flex-basis: 100%;
   }
@@ -423,5 +431,54 @@
   }
   .editor :global(.accessory-restock-row) > label {
     flex-basis: 100%;
+  }
+}
+
+/* The accessory editor uses one modal surface with separated form sections. */
+:global(
+    .workspace-portal-root.platform-workspace[data-platform-role='seller']
+      .seller-workspace
+      main.seller-content
+  )
+  .accessoryModal
+  .editor.editor {
+  padding: 20px;
+  & :global(.accessory-restock-box) {
+    padding: 20px 0 0;
+    margin: 20px 0 0;
+    border: 0;
+    border-top: 1px solid #e1e8df;
+    border-radius: 0;
+    background: transparent;
+  }
+  & :global(.accessory-meta-pills) {
+    flex-wrap: wrap;
+    gap: 8px 12px;
+  }
+  & :global(.accessory-restock-row) {
+    gap: 12px;
+    align-items: flex-end;
+  }
+  & :global(.accessory-restock-row) > input,
+  & :global(.accessory-restock-row) > button {
+    box-sizing: border-box;
+    min-height: 44px;
+    height: 44px;
+    margin: 0;
+  }
+  & :global(.accessory-restock-row) > button {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  & :global(.stock-actions) {
+    margin-top: 12px;
+  }
+  @media (max-width: 600px) {
+    padding: 16px;
+    & :global(.accessory-restock-row) > input,
+    & :global(.accessory-restock-row) > button {
+      flex-basis: 100%;
+      width: 100%;
+    }
   }
 }

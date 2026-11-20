@@ -1,3 +1,4 @@
+import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
 import { AdminFilterBar, AdminDisclosureSummary } from '@/features/portal/components/AdminUi';
 import { useLayoutEffect, useRef, useState } from 'react';
@@ -278,7 +279,7 @@ function Complaint({
             <p role="alert" className="error">
               {error}
             </p>
-            <Button
+            <IconActionButton
               type="button"
               variant="outline"
               disabled={saving || detail.isFetching}
@@ -290,9 +291,9 @@ function Complaint({
                   setReview(null);
                 }
               }}
-            >
-              Tải lại hồ sơ
-            </Button>
+              action="reload"
+              label="Tải lại hồ sơ"
+            />
           </div>
         )}
       </details>

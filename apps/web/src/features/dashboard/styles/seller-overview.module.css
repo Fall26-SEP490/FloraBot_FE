@@ -1,4 +1,5 @@
 .overview {
+  container: seller-overview / inline-size;
   --line: #d4e1d1;
   --muted: #4b6355;
   --green: #245b3e;
@@ -7,7 +8,8 @@
 
 .layout {
   display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: 'revenue' 'orders' 'shop';
   gap: 18px;
   align-items: start;
 }
@@ -21,14 +23,17 @@
   overflow: hidden;
 }
 .ordersCard {
-  grid-column: span 8;
+  grid-area: orders;
   display: flex;
   flex-direction: column;
-  align-self: stretch;
+  align-self: start;
 }
 .teamCard {
-  grid-column: span 4;
-  align-self: stretch;
+  grid-area: shop;
+  align-self: start;
+}
+.teamCard > h2 {
+  grid-column: 1 / -1;
 }
 
 .heading {
@@ -300,22 +305,34 @@
   outline-offset: 3px;
 }
 
-@media (max-width: 1100px) {
-  .ordersCard {
-    grid-column: span 7;
+/* Revenue spans the canvas; orders and shop information share the next row when they fit. */
+@container seller-overview (min-width: 700px) {
+  .teamCard {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 24px;
+  }
+  .teamCard .resourceRow {
+    border-top: 1px solid var(--line);
+  }
+}
+@container seller-overview (min-width: 1180px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    grid-template-areas: 'revenue revenue' 'orders shop';
   }
   .teamCard {
-    grid-column: span 5;
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@container seller-overview (min-width: 1560px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 420px;
   }
 }
 @media (max-width: 800px) {
   .layout {
-    grid-template-columns: minmax(0, 1fr);
     gap: 14px;
-  }
-  .ordersCard,
-  .teamCard {
-    grid-column: 1;
   }
 }
 @media (max-width: 480px) {

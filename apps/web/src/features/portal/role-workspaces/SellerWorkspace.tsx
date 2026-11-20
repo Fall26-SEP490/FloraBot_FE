@@ -196,7 +196,8 @@ export default function SellerWorkspace({ section = 'overview' }: { section?: st
             section !== 'orders' &&
             section !== 'products' &&
             section !== 'accessories' &&
-            section !== 'complaints' && (
+            section !== 'complaints' &&
+            section !== 'kiosks' && (
               <nav className="seller-breadcrumb" aria-label="Vị trí hiện tại">
                 <Link href="/seller">Tổng quan cửa hàng</Link>
               </nav>
@@ -210,6 +211,7 @@ export default function SellerWorkspace({ section = 'overview' }: { section?: st
                 section !== 'products' &&
                 section !== 'accessories' &&
                 section !== 'complaints' &&
+                section !== 'kiosks' &&
                 currentSection?.[2] && <p>{currentSection[2]}</p>}
             </div>
           </div>

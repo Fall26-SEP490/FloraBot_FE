@@ -1,10 +1,11 @@
 'use client';
 
+import IconActionButton from '@/shared/components/IconActionButton';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import detailStyles from '../styles/product-detail.module.css';
 import { useQuery } from '@tanstack/react-query';
-import { Button, Eye, Flower2, ImageIcon, Plus, RefreshCw } from '@florabot/ui';
+import { Button, Eye, Flower2, ImageIcon, Plus } from '@florabot/ui';
 import { ApiError, queryClient } from '@/shared/lib/api';
 import { Modal } from '@/shared/components/Modal';
 import { fetchProductPhotos, reorderProductPhotos, deleteProductPhoto } from '../product.api';
@@ -326,20 +327,15 @@ export default function ProductPhotos({
               </Button>
             </>
           )}
-          <Button
+          <IconActionButton
             type="button"
             variant="outline"
             disabled={photos.isFetching || pending}
             onClick={() => void photos.refetch()}
             title="Làm mới danh sách ảnh"
-          >
-            <RefreshCw
-              size={13}
-              aria-hidden="true"
-              className={photos.isFetching ? 'is-spinning' : ''}
-            />
-            <span>Làm mới</span>
-          </Button>
+            action="reload"
+            label="Làm mới danh sách ảnh"
+          />
         </div>
       </div>
 

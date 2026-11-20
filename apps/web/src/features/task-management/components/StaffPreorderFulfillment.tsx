@@ -1,3 +1,4 @@
+import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -122,9 +123,12 @@ export default function StaffPreorderFulfillment({
       ) : options.isError ? (
         <p role="alert">
           Chưa tải được đơn và ô phù hợp.{' '}
-          <Button type="button" onClick={() => void options.refetch()}>
-            Tải lại
-          </Button>
+          <IconActionButton
+            type="button"
+            onClick={() => void options.refetch()}
+            action="reload"
+            label="Tải lại"
+          />
         </p>
       ) : options.data.preorders.length === 0 ? (
         <p>Chưa có đơn đã thanh toán đến giờ nạp tại tủ này.</p>
@@ -216,16 +220,16 @@ export default function StaffPreorderFulfillment({
       {error && <p role="alert">{error}</p>}
       {uncertain && (
         <div className="staff-stock-result">
-          <Button
+          <IconActionButton
             type="button"
             variant="outline"
             onClick={() => {
               setUncertain(false);
               void options.refetch();
             }}
-          >
-            Tải lại để kiểm tra
-          </Button>
+            action="reload"
+            label="Tải lại để kiểm tra"
+          />
         </div>
       )}
       {notice && <p role="status">{notice}</p>}

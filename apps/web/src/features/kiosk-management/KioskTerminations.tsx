@@ -1,5 +1,6 @@
 'use client';
 
+import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -1011,13 +1012,13 @@ function ManagerLayoutRequestCard({ item }: { item: SlotLayoutRequestView }) {
               ) : slotDirectory.isError ? (
                 <>
                   <p role="alert">Chưa tải được danh sách ô của kiosk.</p>
-                  <Button
+                  <IconActionButton
                     type="button"
                     variant="outline"
                     onClick={() => void slotDirectory.refetch()}
-                  >
-                    Tải lại danh sách ô
-                  </Button>
+                    action="reload"
+                    label="Tải lại danh sách ô"
+                  />
                 </>
               ) : slots.length ? (
                 <div className="business-inline">
@@ -1133,9 +1134,12 @@ export function OperationsTerminations() {
           <h2>Hồ sơ chấm dứt thuê kiosk</h2>
           <p>Quản lý yêu cầu chấm dứt thuê, bàn giao và lưu trữ kiosk.</p>
         </div>
-        <Button variant="outline" onClick={() => void records.refetch()}>
-          Làm mới
-        </Button>
+        <IconActionButton
+          variant="outline"
+          onClick={() => void records.refetch()}
+          action="reload"
+          label="Làm mới"
+        />
       </div>
       <div className="termination-list-tools">
         <div>

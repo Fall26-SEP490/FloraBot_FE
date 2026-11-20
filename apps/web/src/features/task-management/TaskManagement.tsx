@@ -1,3 +1,4 @@
+import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
 import { useRef, useState } from 'react';
 import Link from 'next/link';
@@ -419,7 +420,7 @@ function FilteredTaskList(props: StaffTasksProps) {
               Đã hoàn thành
             </Button>
           )}
-          <Button
+          <IconActionButton
             variant="outline"
             aria-label="Tải lại công việc"
             disabled={tasks.isFetching}
@@ -427,10 +428,9 @@ function FilteredTaskList(props: StaffTasksProps) {
               const result = await tasks.refetch();
               if (!result.isError) setReload((value) => value + 1);
             }}
-          >
-            <RefreshCw size={15} aria-hidden="true" className={tasks.isFetching ? 'spin' : ''} />
-            {role === 'TECHNICIAN' ? 'Làm mới' : 'Tải lại công việc'}
-          </Button>
+            action="reload"
+            label="Làm mới"
+          />
         </div>
         {tasks.isPending ? (
           <p role="status">Đang tải công việc…</p>

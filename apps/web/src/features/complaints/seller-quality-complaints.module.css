@@ -21,6 +21,7 @@
 }
 .filters label {
   display: grid;
+  margin-block: 0;
   gap: 7px;
   min-width: 0;
   font-size: 12px;
@@ -28,10 +29,13 @@
   color: #52665b;
 }
 .searchField {
-  flex: 1;
+  flex: 1 1 320px;
+  max-width: 560px;
 }
 .stateField {
   width: 240px;
+  margin-left: auto;
+  flex-shrink: 0;
 }
 .searchInput {
   position: relative;
@@ -47,6 +51,8 @@
   width: 100%;
   min-width: 0;
   min-height: 44px;
+  height: 44px;
+  box-sizing: border-box;
   padding: 10px 12px 10px 38px;
   border: 1px solid #cfd9d0;
   border-radius: 6px;
@@ -63,7 +69,7 @@
 .columns,
 .record {
   display: grid;
-  grid-template-columns: 160px minmax(170px, 2fr) minmax(130px, 1.3fr) 150px 190px 36px;
+  grid-template-columns: 190px minmax(200px, 1.4fr) minmax(180px, 1fr) 170px 160px 44px;
   align-items: center;
   gap: 0;
 }
@@ -111,7 +117,7 @@
 }
 .orderCode {
   font-weight: 600;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
 }
 .reason {
   display: -webkit-box;
@@ -129,6 +135,7 @@
 .created {
   color: #52665b;
   font-size: 12px;
+  white-space: nowrap;
 }
 .openIcon {
   display: flex;
@@ -465,7 +472,7 @@
 @media (max-width: 1100px) {
   .columns,
   .record {
-    grid-template-columns: 130px minmax(120px, 2fr) minmax(110px, 1fr) 135px 160px 32px;
+    grid-template-columns: 180px minmax(120px, 2fr) minmax(110px, 1fr) 150px 160px 32px;
   }
 }
 @media (max-width: 800px) {
@@ -483,6 +490,8 @@
   .orderCode {
     grid-column: 1;
     grid-row: 1;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
   .state {
     grid-column: 2;

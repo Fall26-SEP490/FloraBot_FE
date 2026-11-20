@@ -443,3 +443,16 @@
     padding-inline: 16px;
   }
 }
+
+:global(
+    .workspace-portal-root.platform-workspace[data-platform-role='seller']
+      .seller-workspace
+      main.seller-content
+  )
+  .metadataModal.metadataModal
+  :global(.form-actions) {
+  margin: 0;
+  padding: 14px 0 18px;
+  border: 0;
+  box-shadow: none;
+}

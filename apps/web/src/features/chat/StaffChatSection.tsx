@@ -1,5 +1,6 @@
 'use client';
 
+import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
 import './chat.css';
 import Link from 'next/link';
@@ -7,7 +8,7 @@ import Link from 'next/link';
 import { useCallback, useRef, useState, useSyncExternalStore } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Button, MessageSquare, RefreshCw } from '@florabot/ui';
+import { Button, MessageSquare } from '@florabot/ui';
 import { queryClient, request, type Session } from '@/shared/lib/api';
 import type { AccountDirectoryItem } from '@/features/account-management/account-management.types';
 import type { ChatMessageReceivedEvent, ChatMessagesReadEvent, SellerStaffChatItem } from './types';
@@ -114,10 +115,13 @@ export function StaffChatSection({ session }: { session: Session }) {
           </h2>
           <p>Nhắn tin, gửi ảnh và theo dõi phản hồi trong cùng một cuộc trò chuyện.</p>
         </div>
-        <Button variant="outline" disabled={chats.isFetching} onClick={refreshMessages}>
-          <RefreshCw size={16} aria-hidden="true" />
-          Làm mới hội thoại
-        </Button>
+        <IconActionButton
+          variant="outline"
+          disabled={chats.isFetching}
+          onClick={refreshMessages}
+          action="reload"
+          label="Làm mới hội thoại"
+        />
       </div>
       <div className={`chat-layout staff-chat-layout mode-${mode}`}>
         <div className="chat-layout-sidebar">
@@ -148,9 +152,12 @@ export function StaffChatSection({ session }: { session: Session }) {
                 {directory.isError && (
                   <div role="alert">
                     <p>{formatChatError(directory.error)}</p>
-                    <Button variant="outline" onClick={() => void directory.refetch()}>
-                      Tải lại nhân viên
-                    </Button>
+                    <IconActionButton
+                      variant="outline"
+                      onClick={() => void directory.refetch()}
+                      action="reload"
+                      label="Tải lại nhân viên"
+                    />
                   </div>
                 )}
                 {directory.isSuccess && activeStaff.length === 0 && (

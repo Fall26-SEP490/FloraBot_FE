@@ -1,5 +1,6 @@
 'use client';
 
+import IconActionButton from '@/shared/components/IconActionButton';
 import { useId, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, ArrowRight, Button, Search } from '@florabot/ui';
@@ -153,17 +154,23 @@ export default function SellerQualityComplaints({
             </Select>
           </label>
           {(state || search) && (
-            <Button
+            <IconActionButton
               variant="outline"
               onClick={() => {
                 setSearch('');
                 setState('');
                 setPage(1);
               }}
-            >
-              Xóa bộ lọc
-            </Button>
+              action="clear"
+              label="Xóa bộ lọc"
+            />
           )}
+          <IconActionButton
+            action="reload"
+            label="Tải lại phản ánh"
+            disabled={queue.isFetching}
+            onClick={() => void queue.refetch()}
+          />
         </div>
         {needle && (page > 1 || queue.data?.hasMore) && (
           <p className={styles.scopeHint}>

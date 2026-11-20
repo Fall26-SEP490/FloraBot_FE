@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { setupSellerUsability, sampleRequest, shopId } from '../fixtures/seller-usability';
 
-for (const width of [1440, 768, 390]) {
+for (const width of [2560, 1920, 1440, 1366, 1024, 768, 390, 375]) {
   test(`seller overview keeps orders and receipts readable at ${width}px`, async ({
     page,
   }, testInfo) => {
@@ -56,6 +56,24 @@ for (const width of [1440, 768, 390]) {
       true,
     );
     expect(await amount.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+    const revenueBox = (await payments.boundingBox())!;
+    const ordersBox = (await orders.boundingBox())!;
+    const shopBox = (await page.getByRole('region', { name: 'Cửa hàng của tôi' }).boundingBox())!;
+    if (width >= 1366) {
+      expect(revenueBox.y + revenueBox.height).toBeLessThan(ordersBox.y);
+      expect(Math.abs(ordersBox.y - shopBox.y)).toBeLessThan(2);
+      expect(ordersBox.x + ordersBox.width).toBeLessThan(shopBox.x);
+      expect(Math.abs(ordersBox.x - revenueBox.x)).toBeLessThan(2);
+      expect(Math.abs(revenueBox.x + revenueBox.width - shopBox.x - shopBox.width)).toBeLessThan(2);
+    } else {
+      expect(revenueBox.y + revenueBox.height).toBeLessThan(ordersBox.y);
+      expect(ordersBox.y + ordersBox.height).toBeLessThan(shopBox.y);
+    }
+    if (width >= 1366) {
+      expect(await sheet.evaluate((el) => el.scrollWidth <= el.parentElement!.clientWidth)).toBe(
+        true,
+      );
+    }
     expect(model.writes).toEqual([]);
     await page.screenshot({
       path: testInfo.outputPath(`seller-overview-${width}.png`),

@@ -782,9 +782,8 @@
 }
 .orderSheet {
   margin-top: 16px;
-  --sheet-columns: minmax(130px, 1fr) minmax(170px, 1.5fr) minmax(120px, 1fr) 155px 120px 170px
-    170px;
-  container-type: inline-size;
+  --sheet-columns: 140px minmax(180px, 1fr) 120px 155px 110px 170px 165px;
+  container: seller-order-sheet / inline-size;
   overflow-x: auto;
   min-width: 0;
   border: 1px solid var(--order-line);
@@ -993,12 +992,14 @@
   overflow: hidden;
 }
 .sellerOrders .sheetPanel .filters {
+  container: seller-order-filters / inline-size;
   border: 0;
   border-radius: 0;
   padding: 0;
 }
 .sellerOrders .sheetPanel .searchBar {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   margin-top: 0;
   border-top: 0;
   align-items: flex-end;
@@ -1021,8 +1022,8 @@
   min-height: 44px;
 }
 .sellerOrders .sheetPanel .searchField {
-  flex: 1;
-  min-width: 200px;
+  grid-column: 1 / -1;
+  min-width: 0;
 }
 .statusField {
   display: grid;
@@ -1048,7 +1049,61 @@
 }
 .sellerOrders .sheetPanel .dateField {
   display: grid;
-  width: 210px;
+}
+.sellerOrders .sheetPanel :is(.statusField, .dateField) {
+  width: auto;
+  min-width: 0;
+}
+.sellerOrders .sheetPanel .searchBar > button {
+  grid-column: 1 / -1;
+  justify-self: end;
+}
+.filterActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  align-items: end;
+  grid-column: 1 / -1;
+}
+@container seller-order-filters (min-width: 760px) {
+  .sellerOrders .sheetPanel .searchBar {
+    grid-template-columns: minmax(200px, 1fr) 220px 210px auto;
+  }
+  .sellerOrders .sheetPanel .searchField {
+    grid-column: auto;
+    max-width: 560px;
+    width: 100%;
+  }
+  .sellerOrders .sheetPanel .statusField {
+    grid-column: 2;
+  }
+  .sellerOrders .sheetPanel .dateField {
+    grid-column: 3;
+  }
+  .sellerOrders .sheetPanel .filterActions {
+    grid-column: 4;
+  }
+}
+@container seller-order-sheet (min-width: 1280px) {
+  .sheetColumns,
+  .sellerOrders .orderSheet .orderSummary {
+    --sheet-columns: 160px minmax(220px, 1fr) 180px 170px 120px 180px 170px;
+  }
+}
+/* Retain one legible control height despite the shared workspace's input rules. */
+:global(
+    .workspace-portal-root.platform-workspace[data-platform-role='seller']
+      .seller-workspace
+      main.seller-content
+  )
+  .sellerOrders
+  .sheetPanel
+  .searchBar
+  :is(input[type='search'], button[aria-haspopup]) {
+  box-sizing: border-box;
+  height: 44px;
+  min-height: 44px;
+  padding-block: 9px;
 }
 .sellerOrders .sheetPanel .orderSheet {
   margin: 0;
@@ -1129,6 +1184,51 @@
   }
   .sellerOrders .sheetPanel :global(.order-pagination) {
     padding-inline: 12px;
+  }
+}
+/* Keep the same order fields as a compact record when seven columns cannot fit. */
+@container seller-order-filters (max-width: 420px) {
+  .sellerOrders.sellerOrders .sheetPanel .searchBar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@container seller-order-sheet (max-width: 1039px) {
+  .sheetColumns {
+    display: none;
+  }
+  .sellerOrders.sellerOrders .orderSheet .orderList {
+    min-width: 0;
+  }
+  .sellerOrders .orderSheet .orderSummary {
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: 'code status' 'product product' 'kiosk price' 'schedule action';
+    padding: 8px 0;
+  }
+  .sellerOrders .orderSheet .orderSummary > span {
+    padding-block: 6px;
+  }
+  .sheetCode {
+    grid-area: code;
+  }
+  .sheetProduct {
+    grid-area: product;
+  }
+  .sheetKiosk {
+    grid-area: kiosk;
+  }
+  .sheetSchedule {
+    grid-area: schedule;
+  }
+  .sheetPrice {
+    grid-area: price;
+  }
+  .sheetStatus {
+    grid-area: status;
+    justify-content: flex-end;
+  }
+  .sheetAction {
+    grid-area: action;
   }
 }
 /* Order detail drawer uses the shared modal focus and Escape behavior. */

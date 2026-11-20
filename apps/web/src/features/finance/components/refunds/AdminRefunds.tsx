@@ -1,3 +1,4 @@
+import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
 import { AdminFilterBar } from '@/features/portal/components/AdminUi';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
@@ -573,7 +574,7 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
           {error}
         </p>
       )}
-      <Button
+      <IconActionButton
         variant="outline"
         disabled={saving || query.isFetching}
         onClick={async () => {
@@ -591,9 +592,9 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
             form.reset();
           }
         }}
-      >
-        Tải lại khoản hoàn
-      </Button>
+        action="reload"
+        label="Tải lại khoản hoàn"
+      />
     </div>
   );
 }

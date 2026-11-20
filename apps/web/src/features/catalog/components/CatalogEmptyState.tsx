@@ -1,4 +1,5 @@
-import { Button, Flower2, RotateCcw } from '@florabot/ui';
+import IconActionButton from '@/shared/components/IconActionButton';
+import { Flower2 } from '@florabot/ui';
 
 interface CatalogEmptyStateProps {
   isPending: boolean;
@@ -37,7 +38,7 @@ export function CatalogEmptyState({
         <p className="catalog-empty-desc">
           Hệ thống tạm thời chưa kết nối được máy chủ danh mục. Bạn thử tải lại nhé.
         </p>
-        <Button onClick={onRefetch}>Tải lại mẫu hoa</Button>
+        <IconActionButton onClick={onRefetch} action="reload" label="Tải lại mẫu hoa" />
       </div>
     );
   }
@@ -63,10 +64,12 @@ export function CatalogEmptyState({
         </p>
         {hasActiveFilters && (
           <div className="catalog-empty-actions">
-            <Button className="catalog-empty-reset-btn" onClick={onResetFilters}>
-              <RotateCcw size={15} aria-hidden="true" />
-              <span>Xóa bộ lọc để xem tất cả</span>
-            </Button>
+            <IconActionButton
+              className="catalog-empty-reset-btn"
+              onClick={onResetFilters}
+              action="clear"
+              label="Xóa bộ lọc"
+            />
           </div>
         )}
       </div>

@@ -1,3 +1,4 @@
+import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
 import { AdminFilterBar, AdminDisclosureSummary } from '@/features/portal/components/AdminUi';
 import { useState } from 'react';
@@ -56,16 +57,16 @@ export default function AdminSellers() {
               Cập nhật danh sách
             </Button>
             {(search || status) && (
-              <Button
+              <IconActionButton
                 variant="outline"
                 onClick={() => {
                   setSearch('');
                   setStatus('');
                   setPage(1);
                 }}
-              >
-                Xóa bộ lọc
-              </Button>
+                action="clear"
+                label="Xóa bộ lọc"
+              />
             )}
           </>
         }
@@ -111,7 +112,11 @@ export default function AdminSellers() {
           <p role="alert" className="error">
             {sellers.error.message}
           </p>
-          <Button onClick={() => void sellers.refetch()}>Tải lại hồ sơ</Button>
+          <IconActionButton
+            onClick={() => void sellers.refetch()}
+            action="reload"
+            label="Tải lại hồ sơ"
+          />
         </div>
       )}
       {visible?.length === 0 && <p>Không có hồ sơ phù hợp với bộ lọc hiện tại.</p>}

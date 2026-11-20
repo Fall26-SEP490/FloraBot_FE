@@ -1,3 +1,4 @@
+import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -106,7 +107,11 @@ export default function StaffReassignment({
       ) : staff.isError ? (
         <>
           <p role="alert">Chưa tải được nhân viên đang hoạt động.</p>
-          <Button onClick={() => void staff.refetch()}>Tải lại nhân viên</Button>
+          <IconActionButton
+            onClick={() => void staff.refetch()}
+            action="reload"
+            label="Tải lại nhân viên"
+          />
         </>
       ) : available.length === 0 ? (
         <p>Chưa có nhân viên khác đang hoạt động để nhận bàn giao.</p>

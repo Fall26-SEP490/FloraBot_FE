@@ -2031,3 +2031,16 @@ div.management-modal .product-edit-section {
     gap: 6px;
   }
 }
+
+/* Keep creation actions inside the same inset as the form fields. */
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .seller-workspace
+  main.seller-content
+  .management-modal.product-create-modal
+  .product-catalog-form
+  .form-actions {
+  margin: 4px 0 0;
+  padding: 14px 0 18px;
+  border: 0;
+  box-shadow: none;
+}

@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { setupSellerUsability, sampleRequest, shopId } from '../fixtures/seller-usability';
 
-for (const width of [1440, 390]) {
+for (const width of [2560, 1920, 1440, 1366, 1024, 768, 390, 375]) {
   test(`seller preorder sheet stays compact and preserves the quote form at ${width}px`, async ({
     page,
   }, testInfo) => {
@@ -45,11 +45,23 @@ for (const width of [1440, 390]) {
     ).toHaveCount(0);
     await expect(page.getByText(/Đã tìm trên .* yêu cầu của shop/)).toHaveCount(0);
     const row = page.locator('#preorder-sheet-0');
-    if (width === 1440)
+    if (width >= 1366)
       expect((await row.locator(':scope > summary').boundingBox())!.height).toBeLessThan(110);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
+    const search = page.getByRole('searchbox', { name: 'Tìm đơn của shop' });
+    const searchBox = (await search.boundingBox())!;
+    const statusBox = (await status.boundingBox())!;
+    if (width >= 1366) {
+      expect(Math.abs(searchBox.y - statusBox.y)).toBeLessThan(2);
+      expect(
+        await row.evaluate((el) => el.scrollWidth <= el.closest('#web-orders')!.clientWidth),
+      ).toBe(true);
+    } else if (width <= 768) {
+      expect(searchBox.y + searchBox.height).toBeLessThan(statusBox.y);
+    }
+    if (width >= 1440) expect(searchBox.width).toBeLessThanOrEqual(560);
     await page.screenshot({
       path: testInfo.outputPath(`seller-orders-${width}.png`),
       fullPage: true,
@@ -69,6 +81,7 @@ for (const width of [1440, 390]) {
     expect(drawerBox.y).toBe(0);
     expect(await drawer.evaluate((el) => getComputedStyle(el).borderRadius)).toBe('0px');
     if (width === 390) expect(Math.abs(drawerBox.width - width)).toBeLessThan(1);
+    if (width >= 1366) expect(drawerBox.width).toBeLessThanOrEqual(680);
     await page.screenshot({ path: testInfo.outputPath(`seller-drawer-open-${width}.png`) });
     await drawer.getByRole('button', { name: 'Báo giá hoặc từ chối' }).click();
     const price = drawer.getByLabel('Giá bó hoa (đồng)', { exact: true });

@@ -1,3 +1,4 @@
+import IconActionButton from '@/shared/components/IconActionButton';
 import { useEffect, useState } from 'react';
 import { CustomSelect } from '@/shared/components/CustomSelect';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -254,9 +255,13 @@ export default function SlotMaintenance({
       {session.isError && (
         <div role="alert" className="error">
           <p>Chưa tải được tiến độ thao tác: {session.error.message}</p>
-          <Button type="button" variant="outline" onClick={() => void session.refetch()}>
-            Tải lại phiên
-          </Button>
+          <IconActionButton
+            type="button"
+            variant="outline"
+            onClick={() => void session.refetch()}
+            action="reload"
+            label="Tải lại phiên"
+          />
         </div>
       )}
       {activeSession.isError && !savedSessionId && (

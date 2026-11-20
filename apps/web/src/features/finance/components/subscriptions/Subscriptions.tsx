@@ -1,4 +1,5 @@
 'use client';
+import IconActionButton from '@/shared/components/IconActionButton';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -390,7 +391,11 @@ export default function Subscriptions({ session }: { session: Session }) {
           {subscriptionsQuery.isError && (
             <div role="alert">
               <p>Chưa tải được kỳ thuê hiện tại. Tải lại để tiếp tục gia hạn.</p>
-              <Button onClick={() => void subscriptionsQuery.refetch()}>Tải lại kỳ thuê</Button>
+              <IconActionButton
+                onClick={() => void subscriptionsQuery.refetch()}
+                action="reload"
+                label="Tải lại kỳ thuê"
+              />
             </div>
           )}
           {subscriptionsQuery.isPending && (
@@ -471,9 +476,12 @@ export default function Subscriptions({ session }: { session: Session }) {
       {application.isError && (
         <div role="alert" className="subscription-alert-box">
           <p>Chưa tải được hồ sơ đăng ký thuê kiosk.</p>
-          <Button variant="outline" onClick={() => void application.refetch()}>
-            Tải lại hồ sơ
-          </Button>
+          <IconActionButton
+            variant="outline"
+            onClick={() => void application.refetch()}
+            action="reload"
+            label="Tải lại hồ sơ"
+          />
         </div>
       )}
 

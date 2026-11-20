@@ -142,7 +142,9 @@
 .workspace-portal-root.platform-workspace .dashboard-content {
   min-width: 0;
   width: 100%;
-  max-width: 1560px;
+  /* Use the space released by compact navigation, with balanced gutters on ultrawide screens. */
+  max-width: 2080px;
+  margin-inline: auto;
   padding: 32px clamp(24px, 3.1vw, 48px) 56px;
 }
 .workspace-portal-root.platform-workspace .dashboard-page-heading {

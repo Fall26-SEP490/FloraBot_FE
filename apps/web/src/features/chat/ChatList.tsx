@@ -1,5 +1,6 @@
+import IconActionButton from '@/shared/components/IconActionButton';
 import { useState } from 'react';
-import { Button, ImageIcon, RefreshCw, Search, X } from '@florabot/ui';
+import { Button, ImageIcon, Search, X } from '@florabot/ui';
 import type { CustomerSellerChatItem } from './types';
 import { formatChatError } from './api';
 
@@ -84,10 +85,13 @@ export function ChatList({
     return (
       <div className="chat-list-error" role="alert">
         <p>{formatChatError(error)}</p>
-        <Button variant="outline" type="button" onClick={onRetry}>
-          <RefreshCw size={14} aria-hidden="true" />
-          Tải lại danh sách
-        </Button>
+        <IconActionButton
+          variant="outline"
+          type="button"
+          onClick={onRetry}
+          action="reload"
+          label="Tải lại danh sách"
+        />
       </div>
     );
   }
@@ -180,15 +184,15 @@ export function ChatList({
                 ? 'Trang này không có hội thoại chưa đọc.'
                 : 'Trang này chưa có hội thoại. Chọn trang trước để xem lại.'}
           </p>
-          <Button
+          <IconActionButton
             variant="outline"
             onClick={() => {
               setSearchQuery('');
               setFilterTab('all');
             }}
-          >
-            Xóa bộ lọc hội thoại
-          </Button>
+            action="clear"
+            label="Xóa bộ lọc hội thoại"
+          />
         </div>
       ) : (
         <ul className="chat-list" aria-label="Danh sách cuộc trò chuyện">

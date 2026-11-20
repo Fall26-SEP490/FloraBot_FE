@@ -1,5 +1,6 @@
 'use client';
 
+import IconActionButton from '@/shared/components/IconActionButton';
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
@@ -70,13 +71,13 @@ function PricingForm({ pricing, onSaved }: { pricing: KioskSlotPricing; onSaved:
       </div>
       {message && <p role={save.isError ? 'alert' : 'status'}>{message}</p>}
       {save.isError && (
-        <Button
+        <IconActionButton
           type="button"
           variant="outline"
           onClick={() => void queryClient.invalidateQueries({ queryKey: kioskPricingKey })}
-        >
-          Tải lại bảng giá
-        </Button>
+          action="reload"
+          label="Tải lại bảng giá"
+        />
       )}
       <Button
         type="submit"
@@ -106,7 +107,11 @@ export default function ManagerKioskPricing() {
       {query.isError && (
         <div role="alert">
           <p>Chưa tải được bảng giá.</p>
-          <Button onClick={() => void query.refetch()}>Tải lại bảng giá</Button>
+          <IconActionButton
+            onClick={() => void query.refetch()}
+            action="reload"
+            label="Tải lại bảng giá"
+          />
         </div>
       )}
       {saved && <p role="status">Đã lưu bảng giá. Giá đã chốt trên hồ sơ cũ được giữ nguyên.</p>}

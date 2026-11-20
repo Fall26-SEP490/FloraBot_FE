@@ -1,0 +1,37 @@
+.control.control {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  align-self: end;
+  flex: 0 0 38px !important;
+  width: 38px !important;
+  min-width: 38px !important;
+  max-width: 38px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  padding: 0 !important;
+  margin: 0 0 3px !important;
+  box-sizing: border-box;
+  border: 1.5px solid #cdd3de !important;
+  border-radius: 9px !important;
+  background: #fff !important;
+  color: #364152 !important;
+  box-shadow: 0 1px 2px rgb(16 24 40 / 8%) !important;
+}
+.control.control[data-icon-action='clear'] {
+  color: #c5221f !important;
+  border-color: #ff9995 !important;
+  background: #fff;
+}
+.control.control[data-icon-action='clear']:hover {
+  background: #fff1ef !important;
+}
+.control.control svg {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+.control.control:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}

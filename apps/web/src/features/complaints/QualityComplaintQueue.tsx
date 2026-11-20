@@ -1,5 +1,6 @@
 'use client';
 
+import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -258,9 +259,13 @@ function SellerActions({
               </label>
               {staff.isPending && <p role="status">Đang tải nhân viên…</p>}
               {staff.isError && (
-                <Button type="button" variant="outline" onClick={() => void staff.refetch()}>
-                  Tải lại danh sách nhân viên
-                </Button>
+                <IconActionButton
+                  type="button"
+                  variant="outline"
+                  onClick={() => void staff.refetch()}
+                  action="reload"
+                  label="Tải lại danh sách nhân viên"
+                />
               )}
               {staff.isSuccess && !staff.data.length && <p>Chưa có nhân viên để giao việc.</p>}
             </>
@@ -297,16 +302,16 @@ function SellerActions({
                 <p role="status">Đang kiểm tra mẫu hoa và ô tủ…</p>
               )}
               {(products.isError || slots.isError) && (
-                <Button
+                <IconActionButton
                   type="button"
                   variant="outline"
                   onClick={() => {
                     void products.refetch();
                     void slots.refetch();
                   }}
-                >
-                  Tải lại mẫu hoa và ô tủ
-                </Button>
+                  action="reload"
+                  label="Tải lại mẫu hoa và ô tủ"
+                />
               )}
               {products.isSuccess && slots.isSuccess && !fieldsReady && (
                 <p>Chưa có mẫu còn tồn hoặc ô trống có cảm biến sẵn sàng tại kiosk gốc.</p>
@@ -370,7 +375,7 @@ function SellerActions({
       {message && <p role={blocked ? 'alert' : 'status'}>{message}</p>}
       {blocked && (
         <div>
-          <Button
+          <IconActionButton
             type="button"
             variant="outline"
             disabled={busy}
@@ -386,9 +391,9 @@ function SellerActions({
                 setBusy(false);
               }
             }}
-          >
-            Tải lại hồ sơ
-          </Button>
+            action="reload"
+            label="Tải lại hồ sơ"
+          />
         </div>
       )}
     </div>
@@ -503,14 +508,14 @@ function QualityComplaintList({
             ))}
           </Select>
         </label>
-        <Button
+        <IconActionButton
           type="button"
           variant="outline"
           disabled={queue.isFetching}
           onClick={() => void queue.refetch()}
-        >
-          Làm mới hồ sơ
-        </Button>
+          action="reload"
+          label="Làm mới hồ sơ"
+        />
       </div>
       {queue.isPending ? (
         <p role="status">Đang tải phản ánh…</p>

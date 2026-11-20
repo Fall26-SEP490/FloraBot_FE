@@ -1,3 +1,4 @@
+import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
 import { AdminFilterBar, AdminDisclosureSummary } from '@/features/portal/components/AdminUi';
 import { useState } from 'react';
@@ -75,9 +76,12 @@ function IncidentItem({ row, hidden = false }: { row: Incident; hidden?: boolean
                 <p role="alert" className="error">
                   Chưa tải được chi tiết sự cố.
                 </p>
-                <Button variant="outline" onClick={() => void detail.refetch()}>
-                  Tải lại chi tiết
-                </Button>
+                <IconActionButton
+                  variant="outline"
+                  onClick={() => void detail.refetch()}
+                  action="reload"
+                  label="Tải lại chi tiết"
+                />
               </>
             ) : (
               <>

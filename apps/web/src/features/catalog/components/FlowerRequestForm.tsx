@@ -1,5 +1,6 @@
 'use client';
 
+import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
 import { catalogReturnPath } from '../catalog.navigation';
 import VietnamDateInput from '@/shared/components/VietnamDateInput';
@@ -572,13 +573,13 @@ export function FlowerRequestForm({
                     <p role="status">
                       Chưa tải được phụ kiện. Bạn có thể thử lại hoặc chỉ đặt hoa.
                     </p>
-                    <Button
+                    <IconActionButton
                       type="button"
                       variant="outline"
                       onClick={() => void accessories.refetch()}
-                    >
-                      Tải lại phụ kiện
-                    </Button>
+                      action="reload"
+                      label="Tải lại phụ kiện"
+                    />
                   </>
                 ) : accessories.data?.length ? (
                   <>
@@ -713,9 +714,13 @@ export function FlowerRequestForm({
               <p role="alert">Tất cả tủ nhận hiện không khả dụng. Thử tải lại sau.</p>
             )}
             {(kioskListError || noKiosksAvailable) && (
-              <Button type="button" variant="outline" onClick={refreshKiosks}>
-                Tải lại tủ nhận
-              </Button>
+              <IconActionButton
+                type="button"
+                variant="outline"
+                onClick={refreshKiosks}
+                action="reload"
+                label="Tải lại tủ nhận"
+              />
             )}
             {(selectedKiosk?.address || eligibleKiosks.length > 1) && (
               <div className="flower-request-kiosk-tools">

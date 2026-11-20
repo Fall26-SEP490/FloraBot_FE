@@ -1,5 +1,6 @@
 'use client';
 
+import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -15,7 +16,6 @@ import {
   EyeOff,
   Lock,
   Plus,
-  RefreshCw,
   Search,
   Users,
 } from '@florabot/ui';
@@ -610,16 +610,15 @@ export default function AccountManagement({
             <p>{description}</p>
           </div>
           <div className="management-heading-actions">
-            <Button
+            <IconActionButton
               type="button"
               variant="outline"
               onClick={() => void refetch()}
               disabled={isFetching}
               aria-label="Tải lại danh sách"
-            >
-              <RefreshCw size={14} aria-hidden="true" className={isFetching ? 'spin' : ''} />
-              {isFetching ? 'Đang tải…' : 'Làm mới'}
-            </Button>
+              action="reload"
+              label="Làm mới"
+            />
             <Button
               ref={createButtonRef}
               type="button"

@@ -2,35 +2,116 @@
 
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Button } from '@florabot/ui';
+import IconActionButton from '@/shared/components/IconActionButton';
 import { request } from '@/shared/lib/api';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
 import './styles/flower-presence.css';
 
 type Presence = components['schemas']['FlowerPresenceResponse'];
 
-export function FlowerPresencePanel({ kioskId }: { kioskId: string }) {
+export function FlowerPresencePanel({
+  kioskId,
+  alwaysOpen = false,
+}: {
+  kioskId: string;
+  alwaysOpen?: boolean;
+}) {
   const [open, setOpen] = useState(false);
+  const active = alwaysOpen || open;
   const [now, setNow] = useState(0);
   const query = useQuery({
     queryKey: ['flower-presence', kioskId],
     queryFn: () => request<Presence>(`/kiosks/${encodeURIComponent(kioskId)}/flower-presence`),
-    enabled: open,
-    refetchInterval: open ? 5000 : false,
+    enabled: active,
+    refetchInterval: active ? 5000 : false,
     retry: 1,
   });
   useEffect(() => {
-    if (!open) return;
+    if (!active) return;
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
-  }, [open]);
+  }, [active]);
   const observed = query.data?.observedAt ? Date.parse(query.data.observedAt) : 0;
   const fresh =
     query.data?.isFresh === true &&
     !query.isError &&
     query.fetchStatus !== 'paused' &&
     observed > 0 &&
+    now > 0 &&
     now - observed <= 45000;
+
+  const content = (
+    <div className="flower-presence-body">
+      <div className="flower-presence-toolbar">
+        <p className="quiet">
+          Tự cập nhật mỗi 5 giây ·{' '}
+          {query.data?.observedAt
+            ? `Lần đo gần nhất: ${new Date(query.data.observedAt).toLocaleString('vi-VN')}`
+            : 'Chưa có lần đo'}
+        </p>
+        <IconActionButton
+          action="reload"
+          label="Đọc lại cảm biến"
+          disabled={query.isFetching}
+          onClick={() => void query.refetch()}
+        />
+      </div>
+      <p className="flower-presence-warning">
+        Tín hiệu cảm biến không xác nhận khách đã lấy hàng. “Không có hoa” có thể do chưa cắm cảm
+        biến; cần kiểm tra dây và độ nhạy.
+      </p>
+      {query.isPending && <p role="status">Đang đọc trạng thái cảm biến…</p>}
+      {query.isError ? (
+        <p role="alert">Chưa tải được dữ liệu cảm biến. Thử tải lại.</p>
+      ) : (
+        query.data && (
+          <>
+            {fresh && (
+              <p className="flower-presence-status" role="status">
+                Đang nhận dữ liệu cảm biến.
+              </p>
+            )}
+            {query.data.slots?.length ? (
+              <dl className="flower-presence-list">
+                {query.data.slots.map((slot) => {
+                  const value = fresh ? slot.hasFlowers : null;
+                  return (
+                    <div key={slot.slotId}>
+                      <dt>Ô {slot.slotCode}</dt>
+                      <dd
+                        data-state={
+                          value === true ? 'present' : value === false ? 'absent' : 'unknown'
+                        }
+                      >
+                        {value === true
+                          ? 'Có hoa'
+                          : value === false
+                            ? 'Không có hoa'
+                            : 'Chưa xác định'}
+                      </dd>
+                    </div>
+                  );
+                })}
+              </dl>
+            ) : (
+              <p className="quiet">Chưa có dữ liệu cảm biến cho các ô tủ.</p>
+            )}
+          </>
+        )
+      )}
+    </div>
+  );
+
+  if (alwaysOpen)
+    return (
+      <section
+        className="flower-presence flower-presence-expanded"
+        aria-label="Cảm biến hoa trong tủ"
+      >
+        <h3>Cảm biến hoa trong tủ</h3>
+        {content}
+      </section>
+    );
 
   return (
     <details
@@ -41,67 +122,7 @@ export function FlowerPresencePanel({ kioskId }: { kioskId: string }) {
       }}
     >
       <summary>Cảm biến hoa trong tủ</summary>
-      {open && (
-        <div className="flower-presence-body">
-          <p className="quiet">
-            Đọc cảm biến mỗi ô, tự cập nhật 5 giây/lần. Tín hiệu này chưa xác nhận khách đã lấy
-            hàng.
-          </p>
-          <p className="quiet">
-            “Không có hoa” cũng có thể do chưa cắm cảm biến. Cần kiểm tra dây và chỉnh độ nhạy khi
-            lắp đặt.
-          </p>
-          {query.isPending && <p role="status">Đang đọc trạng thái cảm biến…</p>}
-          {query.isError ? (
-            <p role="alert">Chưa tải được dữ liệu cảm biến. Thử tải lại.</p>
-          ) : (
-            query.data && (
-              <>
-                <p>
-                  {fresh
-                    ? 'Đang nhận dữ liệu cảm biến.'
-                    : 'Chưa có dữ liệu mới — chưa xác định được hoa trong tủ.'}
-                </p>
-                <dl className="flower-presence-list">
-                  {query.data.slots?.map((slot) => {
-                    const value = fresh ? slot.hasFlowers : null;
-                    const label =
-                      value === true
-                        ? 'Có hoa'
-                        : value === false
-                          ? 'Không có hoa'
-                          : 'Chưa xác định';
-                    return (
-                      <div key={slot.slotId}>
-                        <dt>Ô {slot.slotCode}</dt>
-                        <dd
-                          data-state={
-                            value === true ? 'present' : value === false ? 'absent' : 'unknown'
-                          }
-                        >
-                          {label}
-                        </dd>
-                      </div>
-                    );
-                  })}
-                </dl>
-                {query.data.observedAt && (
-                  <p className="quiet">
-                    Lần đo gần nhất: {new Date(query.data.observedAt).toLocaleString('vi-VN')}
-                  </p>
-                )}
-              </>
-            )
-          )}
-          <Button
-            variant="outline"
-            disabled={query.isFetching}
-            onClick={() => void query.refetch()}
-          >
-            Đọc lại cảm biến
-          </Button>
-        </div>
-      )}
+      {open && content}
     </details>
   );
 }

@@ -1,5 +1,5 @@
 .revenue {
-  grid-column: 1 / -1;
+  grid-area: revenue;
   min-width: 0;
   padding: 18px 20px;
   border: 1px solid #d4e1d1;
@@ -57,11 +57,16 @@
   font-weight: 600;
 }
 .period {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: auto 106px;
   align-items: center;
   gap: 10px;
   font-size: 0.78rem;
+}
+@media (min-width: 601px) {
+  .period:has(label[for='revenue-month']) {
+    grid-template-columns: auto 106px auto 106px;
+  }
 }
 .revenue .period > label {
   display: inline-flex;

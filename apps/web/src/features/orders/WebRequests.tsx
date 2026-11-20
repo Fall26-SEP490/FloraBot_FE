@@ -1,5 +1,6 @@
 'use client';
 
+import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -12,7 +13,6 @@ import {
   ClipboardList,
   ChevronDown,
   Search,
-  RefreshCw,
   ArrowLeft,
   ArrowRight,
   Flower2,
@@ -1226,14 +1226,14 @@ function OrderActions({
                     </p>
                   ) : null}
                   {(slots.isError || (!slots.isPending && fulfillSlots.length === 0)) && (
-                    <Button
+                    <IconActionButton
                       type="button"
                       variant="outline"
                       disabled={slots.isFetching}
                       onClick={() => void slots.refetch()}
-                    >
-                      Tải lại danh sách ô
-                    </Button>
+                      action="reload"
+                      label="Tải lại danh sách ô"
+                    />
                   )}
                 </div>
                 <label htmlFor={`order-qr-${row.id}`}>Mã định danh bó hoa</label>
@@ -2044,15 +2044,14 @@ export default function WebRequests({
                 ))}
               </Select>
             </label>
-            <Button
+            <IconActionButton
               type="button"
               variant="outline"
               disabled={query.isFetching}
               onClick={() => void query.refetch()}
-            >
-              <RefreshCw size={16} aria-hidden="true" />
-              {query.isFetching ? 'Đang cập nhật…' : 'Làm mới'}
-            </Button>
+              action="reload"
+              label="Làm mới"
+            />
           </div>
           {query.isSuccess && (
             <div className="admin-preorder-results">
@@ -2118,19 +2117,28 @@ export default function WebRequests({
                     }}
                   />
                 </label>
-                {(search || pickupDay || filter !== 'all') && (
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setSearch('');
-                      setPickupDay('');
-                      setFilter('all');
-                      setResultPage(1);
-                    }}
-                  >
-                    Xóa bộ lọc
-                  </Button>
-                )}
+                <div className={styles.filterActions}>
+                  {(search || pickupDay || filter !== 'all') && (
+                    <IconActionButton
+                      variant="outline"
+                      onClick={() => {
+                        setSearch('');
+                        setPickupDay('');
+                        setFilter('all');
+                        setResultPage(1);
+                      }}
+                      action="clear"
+                      label="Xóa bộ lọc"
+                    />
+                  )}
+
+                  <IconActionButton
+                    action="reload"
+                    label="Tải lại đơn đặt trước"
+                    disabled={query.isFetching}
+                    onClick={() => void query.refetch()}
+                  />
+                </div>
               </div>
             </div>
           </>
@@ -2139,20 +2147,23 @@ export default function WebRequests({
           <p role="alert">Chưa tải được đơn đặt trước; giao dịch mua hoa vẫn hiển thị bên dưới.</p>
         )}
         {mode === 'member' && query.isError && (
-          <Button
+          <IconActionButton
             variant="outline"
             disabled={query.isFetching}
             onClick={() => void query.refetch()}
-          >
-            Tải lại đơn đặt trước
-          </Button>
+            action="reload"
+            label="Tải lại đơn đặt trước"
+          />
         )}
         {mode === 'member' && history.isError && (
           <div role="alert" className={customerStyles.historyNotice}>
             Chưa tải được giao dịch mua hoa. Bạn vẫn có thể xử lý đơn đặt trước.
-            <Button variant="outline" onClick={() => void history.refetch()}>
-              Tải lại giao dịch
-            </Button>
+            <IconActionButton
+              variant="outline"
+              onClick={() => void history.refetch()}
+              action="reload"
+              label="Tải lại giao dịch"
+            />
           </div>
         )}
         {query.isPending && (mode !== 'member' || history.isPending) ? (
@@ -2211,16 +2222,16 @@ export default function WebRequests({
                 {mode === 'member' &&
                   (filter !== 'all' || Boolean(searchNeedle)) &&
                   loadedItems.length > 0 && (
-                    <Button
+                    <IconActionButton
                       type="button"
                       variant="outline"
                       onClick={() => {
                         setFilter('all');
                         setSearch('');
                       }}
-                    >
-                      Xóa bộ lọc
-                    </Button>
+                      action="clear"
+                      label="Xóa bộ lọc"
+                    />
                   )}
                 {mode === 'member' &&
                   !history.isPending &&

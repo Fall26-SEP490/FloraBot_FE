@@ -1,3 +1,4 @@
+import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
 import { useState } from 'react';
 import Link from 'next/link';
@@ -243,14 +244,14 @@ export default function AdminTaskAssignment({
           ) : staff.isError || targetQuery.isError ? (
             <>
               <p role="alert">Chưa tải được dữ liệu phân công.</p>
-              <Button
+              <IconActionButton
                 onClick={() => {
                   void staff.refetch();
                   void targetQuery.refetch();
                 }}
-              >
-                Tải lại thông tin phân công
-              </Button>
+                action="reload"
+                label="Tải lại thông tin phân công"
+              />
             </>
           ) : !Array.isArray(staff.data) || staff.data.length === 0 ? (
             <div role="status">

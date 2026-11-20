@@ -1,7 +1,8 @@
 'use client';
+import IconActionButton from '@/shared/components/IconActionButton';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { Button } from '@florabot/ui';
+
 import { kioskPricingQuery, pricingReady, rentalMoney } from '../kiosk-pricing/kiosk-pricing';
 
 export function LandingPricing() {
@@ -13,7 +14,11 @@ export function LandingPricing() {
       {query.isError && (
         <div role="alert">
           <p>Chưa tải được bảng giá thuê ô.</p>
-          <Button onClick={() => void query.refetch()}>Tải lại bảng giá</Button>
+          <IconActionButton
+            onClick={() => void query.refetch()}
+            action="reload"
+            label="Tải lại bảng giá"
+          />
         </div>
       )}
       {query.isSuccess && !pricingReady(query.data) && (

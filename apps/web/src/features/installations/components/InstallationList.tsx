@@ -1,3 +1,4 @@
+import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
 import { rentalAllocation } from '../../kiosk-pricing/ApplicationRentalSummary';
 import { Button, Boxes, CircleAlert, ClipboardList, Eye, RefreshCw } from '@florabot/ui';
@@ -140,10 +141,14 @@ export function InstallationList({
           </Select>
         </div>
 
-        <Button variant="outline" className="refresh-btn" onClick={onRefresh} disabled={isFetching}>
-          <RefreshCw className={isFetching ? 'spin' : ''} size={16} aria-hidden="true" />
-          Làm mới
-        </Button>
+        <IconActionButton
+          variant="outline"
+          className="refresh-btn"
+          onClick={onRefresh}
+          disabled={isFetching}
+          action="reload"
+          label="Làm mới"
+        />
       </div>
 
       {isLoading && (

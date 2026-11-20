@@ -1,9 +1,10 @@
 'use client';
 
+import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
 import { useCallback, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Boxes, Button, RefreshCw, Search } from '@florabot/ui';
+import { Boxes, Button, Search } from '@florabot/ui';
 import { queryClient, request, type Session } from '@/shared/lib/api';
 import { Modal } from '../../../shared/components/Modal';
 import type { EligibleKioskResponse } from '../installations.types';
@@ -119,18 +120,13 @@ export function AvailableKiosksModal({ open, onClose, session }: AvailableKiosks
               ))}
             </Select>
           </div>
-          <Button
+          <IconActionButton
             variant="outline"
             onClick={() => void kiosksQuery.refetch()}
             disabled={kiosksQuery.isFetching}
-          >
-            <RefreshCw
-              size={16}
-              className={kiosksQuery.isFetching ? 'spin' : ''}
-              aria-hidden="true"
-            />
-            Làm mới
-          </Button>
+            action="reload"
+            label="Làm mới"
+          />
         </div>
         {kiosksQuery.isPending ? (
           <p role="status" className="installation-loading">
@@ -159,15 +155,15 @@ export function AvailableKiosksModal({ open, onClose, session }: AvailableKiosks
             {allKiosks.length === 0 ? (
               <p>Mở hồ sơ đã xác nhận để tạo tủ theo đúng phân bổ đã đăng ký.</p>
             ) : (
-              <Button
+              <IconActionButton
                 variant="outline"
                 onClick={() => {
                   setSearchTerm('');
                   setSlotFilter('ALL');
                 }}
-              >
-                Xóa bộ lọc
-              </Button>
+                action="clear"
+                label="Xóa bộ lọc"
+              />
             )}
           </div>
         ) : (

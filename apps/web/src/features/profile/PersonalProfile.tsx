@@ -1,5 +1,6 @@
 'use client';
 
+import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
 import './styles/profile.css';
 
@@ -611,7 +612,11 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
               : 'Chưa tải được hồ sơ cá nhân. Vui lòng kiểm tra kết nối.'}
           </p>
           <div className="profile-actions">
-            <Button onClick={() => void profile.refetch()}>Tải lại hồ sơ</Button>
+            <IconActionButton
+              onClick={() => void profile.refetch()}
+              action="reload"
+              label="Tải lại hồ sơ"
+            />
             <Link href={workspaceBase(session.data.role)} className="button button-outline">
               Về khu vực của bạn
             </Link>

@@ -1,5 +1,6 @@
 'use client';
 
+import IconActionButton from '@/shared/components/IconActionButton';
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
@@ -123,13 +124,13 @@ function RefundCard({ id, sellerId }: { id: string; sellerId: string }) {
       {detail.isError && (
         <div role="alert">
           Chưa tải được trạng thái mới. Bản nháp vẫn được giữ.
-          <Button
+          <IconActionButton
             variant="outline"
             onClick={() => void detail.refetch()}
             disabled={detail.isFetching}
-          >
-            Tải lại khoản hoàn
-          </Button>
+            action="reload"
+            label="Tải lại khoản hoàn"
+          />
         </div>
       )}
       <h3>
@@ -317,9 +318,12 @@ export default function SellerRefunds({ session }: { session: Session }) {
           <h2>Hoàn tiền trực tiếp</h2>
           <p>Khoản hoàn đã duyệt cần được shop chuyển khoản và gửi chứng từ để đối chiếu.</p>
         </div>
-        <Button variant="outline" onClick={() => void refunds.refetch()}>
-          Làm mới
-        </Button>
+        <IconActionButton
+          variant="outline"
+          onClick={() => void refunds.refetch()}
+          action="reload"
+          label="Làm mới"
+        />
       </div>
       {refunds.isError && <p role="alert">{refunds.error.message}</p>}
       {refunds.isPending ? (

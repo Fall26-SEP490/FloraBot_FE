@@ -1,5 +1,6 @@
+import IconActionButton from '@/shared/components/IconActionButton';
 import { useQuery } from '@tanstack/react-query';
-import { Button } from '@florabot/ui';
+
 import { request } from '@/shared/lib/api';
 import type { IncidentEvidenceResponse } from '../finance.types';
 
@@ -19,9 +20,12 @@ export default function FinancialProofs({
     return (
       <div>
         <p role="alert">Chưa tải được chứng từ.</p>
-        <Button variant="outline" onClick={() => void query.refetch()}>
-          Tải lại chứng từ
-        </Button>
+        <IconActionButton
+          variant="outline"
+          onClick={() => void query.refetch()}
+          action="reload"
+          label="Tải lại chứng từ"
+        />
       </div>
     );
   if (!query.data.items.length) return <p>Chưa có ảnh chứng từ trong hồ sơ.</p>;

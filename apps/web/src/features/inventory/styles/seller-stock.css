@@ -903,7 +903,10 @@ div.management-modal.stock-slot-modal .management-modal-close {
   padding: 16px 20px;
 
   & .stock-toolbar-top {
-    display: block;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 44px;
+    align-items: end;
+    gap: 12px;
   }
   & .stock-kiosk-controls {
     display: grid;
@@ -1451,4 +1454,56 @@ div.management-modal.stock-slot-modal .management-modal-close {
   color: #74582b;
   font-size: 12px;
   line-height: 1.5;
+}
+
+.seller-workspace .seller-stock.stock-page .stock-main-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+.seller-workspace .seller-stock.stock-page .stock-layout-inline {
+  padding: 20px;
+  border: 1px solid #d4e1d1;
+  border-radius: 12px;
+  background: #fff;
+}
+.seller-workspace .seller-stock.stock-page .stock-layout-inline h2 {
+  margin: 0;
+  font-size: 18px;
+}
+.seller-workspace .seller-stock.stock-page .stock-layout-inline > p {
+  margin: 6px 0 16px;
+}
+.seller-workspace .seller-stock.stock-page .stock-layout-inline .stock-layout-form {
+  margin: 0;
+  padding: 0;
+}
+@media (min-width: 1400px) {
+  .seller-workspace
+    .seller-stock.stock-page
+    .stock-main-layout:not(:has(.stock-workbench[hidden])) {
+    grid-template-columns: minmax(0, 1fr) 420px;
+  }
+}
+
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .seller-workspace
+  main.seller-content
+  .seller-stock.stock-page
+  .stock-table-filters {
+  & :is(input, select, button[aria-haspopup]),
+  & > button {
+    box-sizing: border-box;
+    height: 44px;
+    min-height: 44px;
+    margin: 0;
+    padding-block: 9px;
+  }
+  & > button {
+    align-self: end;
+    padding-inline: 20px;
+    border-radius: 8px;
+    white-space: nowrap;
+  }
 }

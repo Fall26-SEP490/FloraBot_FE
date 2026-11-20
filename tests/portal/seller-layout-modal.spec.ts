@@ -43,22 +43,8 @@ for (const width of [1440, 390]) {
       return route.fulfill({ json: [] });
     });
     await page.goto('/seller/stock');
-    await page.getByRole('button', { name: 'Yêu cầu đổi ô tủ', exact: true }).click();
-    const modal = page.getByRole('dialog', { name: 'Đổi ô tủ', exact: true });
-    const close = modal.locator('.management-modal-close');
-    await expect(close).toBeVisible();
-    for (const hovered of [false, true]) {
-      if (hovered) await close.hover();
-      const surface = await close.evaluate((el) => {
-        const style = getComputedStyle(el);
-        return {
-          border: style.borderTopWidth,
-          background: style.backgroundColor,
-          shadow: style.boxShadow,
-        };
-      });
-      expect(surface).toEqual({ border: '0px', background: 'rgba(0, 0, 0, 0)', shadow: 'none' });
-    }
+    const modal = page.getByRole('region', { name: 'Đổi ô tủ', exact: true });
+    await expect(modal).toBeVisible();
     const walk = modal.getByRole('combobox', { name: 'Ô tại chỗ', exact: true });
     const preorder = modal.getByRole('combobox', { name: 'Ô đặt trước', exact: true });
     const submit = modal.getByRole('button', { name: 'Gửi yêu cầu', exact: true });
@@ -85,7 +71,6 @@ for (const width of [1440, 390]) {
     expect(writes).toEqual([
       { walkInSlots: 1, preorderSlots: 3, reason: 'Tăng ô đặt trước dịp lễ' },
     ]);
-    await modal.getByRole('button', { name: 'Hủy', exact: true }).click();
-    await expect(modal).not.toBeVisible();
+    await expect(modal).toBeVisible();
   });
 }

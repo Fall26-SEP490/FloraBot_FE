@@ -1,3 +1,4 @@
+import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -129,7 +130,11 @@ export default function StaffStock({
       ) : options.isError ? (
         <>
           <p role="alert">Chưa tải được thông tin nạp hoa.</p>
-          <Button onClick={() => void options.refetch()}>Tải lại thông tin nạp hoa</Button>
+          <IconActionButton
+            onClick={() => void options.refetch()}
+            action="reload"
+            label="Tải lại thông tin nạp hoa"
+          />
         </>
       ) : active && options.data.products.length > 0 && walkInSlots.length > 0 ? (
         <form

@@ -1,7 +1,8 @@
 /* eslint-disable jsx-a11y/no-noninteractive-tabindex */
+import IconActionButton from '@/shared/components/IconActionButton';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Button, RefreshCw, User } from '@florabot/ui';
+import { ArrowLeft, Button, User } from '@florabot/ui';
 import { customerChatTransport, formatChatError } from './api';
 import type {
   ChatMessageReceivedEvent,
@@ -333,10 +334,13 @@ export function ConversationView({
         ) : initialQuery.isError ? (
           <div className="chat-conversation-error" role="alert">
             <p>{formatChatError(initialQuery.error)}</p>
-            <Button variant="outline" type="button" onClick={() => void initialQuery.refetch()}>
-              <RefreshCw size={14} aria-hidden="true" />
-              Tải lại tin nhắn
-            </Button>
+            <IconActionButton
+              variant="outline"
+              type="button"
+              onClick={() => void initialQuery.refetch()}
+              action="reload"
+              label="Tải lại tin nhắn"
+            />
           </div>
         ) : (
           <>

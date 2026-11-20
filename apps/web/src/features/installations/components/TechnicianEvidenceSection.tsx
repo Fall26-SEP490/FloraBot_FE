@@ -1,3 +1,4 @@
+import IconActionButton from '@/shared/components/IconActionButton';
 import { useState, type RefObject } from 'react';
 import { Button, CircleAlert, ClipboardList, RefreshCw } from '@florabot/ui';
 import type { StaffEvidenceItem } from '../installations.types';
@@ -164,9 +165,12 @@ export function TechnicianEvidenceGallery({
       ) : evidenceError ? (
         <div role="alert">
           <p>Chưa đọc được minh chứng lắp đặt.</p>
-          <Button variant="outline" onClick={onRefetchEvidence}>
-            Tải lại minh chứng
-          </Button>
+          <IconActionButton
+            variant="outline"
+            onClick={onRefetchEvidence}
+            action="reload"
+            label="Tải lại minh chứng"
+          />
         </div>
       ) : evidenceItems.length === 0 ? (
         <p className="empty-sub-text">

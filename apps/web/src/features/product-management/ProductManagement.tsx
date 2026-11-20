@@ -1,5 +1,6 @@
 'use client';
 
+import IconActionButton from '@/shared/components/IconActionButton';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, Button, Plus, Search } from '@florabot/ui';
@@ -117,6 +118,12 @@ export default function ProductManagement({ session }: { session: Session }) {
               Thêm mẫu hoa
             </Button>
           )}
+          <IconActionButton
+            action="reload"
+            label="Tải lại mẫu hoa"
+            disabled={query.isFetching}
+            onClick={() => void query.refetch()}
+          />
         </div>
         <div className={`${styles.columns} ${styles.productGrid}`} aria-hidden="true">
           <span>Mẫu hoa</span>
@@ -134,9 +141,12 @@ export default function ProductManagement({ session }: { session: Session }) {
         {query.isError && (
           <div className={`${styles.empty} product-error-box`} role="alert">
             <p>{errorText(query.error)}</p>
-            <Button variant="outline" onClick={() => void query.refetch()}>
-              Tải lại sản phẩm
-            </Button>
+            <IconActionButton
+              variant="outline"
+              onClick={() => void query.refetch()}
+              action="reload"
+              label="Tải lại sản phẩm"
+            />
           </div>
         )}
         {!query.isPending && !query.isError && !filtered.length && (

@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, Button, Plus, Search } from '@florabot/ui';
 import Select from '@/shared/components/Select';
+import IconActionButton from '@/shared/components/IconActionButton';
 import { Modal } from '@/shared/components/Modal';
 import styles from '../product-management/styles/seller-catalog.module.css';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
@@ -439,6 +440,12 @@ export default function SellerAccessories({ session }: { session: Session }) {
             <Plus size={17} aria-hidden="true" />
             Thêm phụ kiện
           </Button>
+          <IconActionButton
+            action="reload"
+            label="Tải lại phụ kiện"
+            disabled={inventory.isFetching}
+            onClick={() => void inventory.refetch()}
+          />
         </div>
         <div className={`${styles.columns} ${styles.accessoryGrid}`} aria-hidden="true">
           <span>Phụ kiện</span>

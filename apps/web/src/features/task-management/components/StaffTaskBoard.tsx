@@ -1,6 +1,7 @@
+import IconActionButton from '@/shared/components/IconActionButton';
 import { useState } from 'react';
 import { useQueries } from '@tanstack/react-query';
-import { ArrowLeft, ArrowRight, Button, RefreshCw } from '@florabot/ui';
+import { ArrowLeft, ArrowRight, Button } from '@florabot/ui';
 import { queryClient, request } from '@/shared/lib/api';
 import type { TaskPage } from '../task-management.types';
 import { TaskItem } from './TaskItem';
@@ -134,7 +135,7 @@ export default function StaffTaskBoard({
         Danh sách công việc
       </h2>
       <div className="staff-task-toolbar">
-        <Button
+        <IconActionButton
           variant="outline"
           disabled={fetching}
           onClick={async () => {
@@ -149,10 +150,9 @@ export default function StaffTaskBoard({
               ].map((key) => queryClient.invalidateQueries({ queryKey: [key] })),
             );
           }}
-        >
-          <RefreshCw size={15} aria-hidden="true" className={fetching ? 'spin' : ''} />
-          Tải lại công việc
-        </Button>
+          action="reload"
+          label="Tải lại công việc"
+        />
       </div>
       {loading && <p role="status">Đang tải công việc…</p>}
       {failed && (

@@ -1,3 +1,4 @@
+import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
 import { AdminFilterBar, AdminDisclosureSummary } from '@/features/portal/components/AdminUi';
 import { useEffect, useRef, useState } from 'react';
@@ -137,9 +138,12 @@ function WithdrawalDetails({ id, onNotice }: { id: string; onNotice: (message: s
         <p role="alert" className="error">
           Chưa tải được yêu cầu rút tiền.
         </p>
-        <Button variant="outline" onClick={() => void query.refetch()}>
-          Tải lại yêu cầu
-        </Button>
+        <IconActionButton
+          variant="outline"
+          onClick={() => void query.refetch()}
+          action="reload"
+          label="Tải lại yêu cầu"
+        />
       </>
     );
   const detail = query.data;

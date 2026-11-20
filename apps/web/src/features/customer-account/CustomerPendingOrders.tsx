@@ -1,6 +1,7 @@
+import IconActionButton from '@/shared/components/IconActionButton';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Button } from '@florabot/ui';
+import { ArrowRight } from '@florabot/ui';
 import { request, sessionQuery } from '@/shared/lib/api';
 import type { OrderPage, WebOrder } from '../orders/orders.types';
 import {
@@ -46,9 +47,12 @@ export default function CustomerPendingOrders() {
       ) : orders.isError ? (
         <div role="alert" className="account-pending-error">
           <p>Chưa tải được đơn đặt trước. Bạn vẫn có thể xem các mục khác.</p>
-          <Button variant="outline" onClick={() => void orders.refetch()}>
-            Tải lại đơn
-          </Button>
+          <IconActionButton
+            variant="outline"
+            onClick={() => void orders.refetch()}
+            action="reload"
+            label="Tải lại đơn"
+          />
         </div>
       ) : items.length ? (
         <>

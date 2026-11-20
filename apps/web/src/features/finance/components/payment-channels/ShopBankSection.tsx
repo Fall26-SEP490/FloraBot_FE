@@ -1,5 +1,6 @@
 'use client';
 
+import IconActionButton from '@/shared/components/IconActionButton';
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
@@ -212,9 +213,13 @@ export function ShopBankSection({
               ? bankQuery.error.message
               : 'Chưa tải được thông tin ngân hàng shop.'}
           </p>
-          <Button type="button" variant="outline" onClick={() => void bankQuery.refetch()}>
-            Tải lại
-          </Button>
+          <IconActionButton
+            type="button"
+            variant="outline"
+            onClick={() => void bankQuery.refetch()}
+            action="reload"
+            label="Tải lại"
+          />
         </div>
       )}
 
@@ -227,9 +232,13 @@ export function ShopBankSection({
       {actionError && (
         <div role="alert" className="shop-bank-alert-box is-error">
           <p>{actionError}</p>
-          <Button type="button" variant="outline" onClick={() => void bankQuery.refetch()}>
-            Tải lại thông tin ngân hàng
-          </Button>
+          <IconActionButton
+            type="button"
+            variant="outline"
+            onClick={() => void bankQuery.refetch()}
+            action="reload"
+            label="Tải lại thông tin ngân hàng"
+          />
         </div>
       )}
 
