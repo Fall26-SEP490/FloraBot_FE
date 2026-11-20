@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import { writeFile } from 'node:fs/promises';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 
@@ -285,7 +286,7 @@ test('04 Admin — real refund detail and daily report without payouts', async (
     await show(page, '/admin/reports', steps, info);
     await page.getByRole('button', { name: /^Số liệu hệ thống/ }).click();
     for (const report of ['v_admin_queue', 'v_revenue_daily', 'v_platform_revenue']) {
-      await page.getByLabel('Chọn báo cáo', { exact: true }).selectOption(report);
+      await chooseOption(page.getByLabel('Chọn báo cáo', { exact: true }), report);
       const result = await page.request.get(`/api/admin/reports/${report}`);
       expect(result.status()).toBe(200);
       expect(Array.isArray(await result.json())).toBe(true);

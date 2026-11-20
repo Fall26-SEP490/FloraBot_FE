@@ -1,3 +1,5 @@
+import IconActionButton from '@/shared/components/IconActionButton';
+import Select from '@/shared/components/Select';
 import { AdminFilterBar } from '@/features/portal/components/AdminUi';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -505,7 +507,7 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
                           </p>
                           {action === 'pay' && (
                             <p className="incident-text">
-                              Ảnh chứng từ đã lưu riêng tư và gắn với khoản hoàn này.
+                              Ảnh chứng từ đã lưu và gắn với khoản hoàn này.
                             </p>
                           )}
                         </>
@@ -572,7 +574,7 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
           {error}
         </p>
       )}
-      <Button
+      <IconActionButton
         variant="outline"
         disabled={saving || query.isFetching}
         onClick={async () => {
@@ -590,9 +592,9 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
             form.reset();
           }
         }}
-      >
-        Tải lại khoản hoàn
-      </Button>
+        action="reload"
+        label="Tải lại khoản hoàn"
+      />
     </div>
   );
 }
@@ -669,7 +671,7 @@ export default function AdminRefunds() {
       >
         <div>
           <label htmlFor="refund-status">Trạng thái khoản hoàn</label>
-          <select
+          <Select
             id="refund-status"
             value={status}
             onChange={(event) => {
@@ -682,7 +684,7 @@ export default function AdminRefunds() {
                 {label}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
       </AdminFilterBar>
       <p role="status" tabIndex={-1} ref={noticeRef}>

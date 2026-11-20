@@ -1,6 +1,8 @@
 import WorkspaceTable from '@/features/portal/components/WorkspaceTable';
 import { Modal } from '@/shared/components/Modal';
 import { useCallback, useRef, useState } from 'react';
+import IconActionButton from '@/shared/components/IconActionButton';
+import Select from '@/shared/components/Select';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -103,6 +105,10 @@ function FilteredTaskList(props: StaffTasksProps) {
   );
   const scopeKey = sellerId ? `seller:${sellerId}` : apiBase;
   const tasks = useQuery({
+    meta: {
+      portalManagedRefresh: isPlatform,
+      portalRefreshPaused: isPlatform && (!!selectedAdminTask || openTaskIds.size > 0),
+    },
     queryKey: ['staff-tasks', role ?? 'none', actorId ?? 'none', scopeKey, page, status],
     queryFn: () => request<TaskPage>(`${apiBase}?page=${page}${status ? `&status=${status}` : ''}`),
     enabled: isValidRole,
@@ -298,6 +304,7 @@ function FilteredTaskList(props: StaffTasksProps) {
           <button
             type="button"
             aria-label="Đóng thông báo kết quả công việc"
+            className="icon-close-control"
             onClick={() => setTransitionResult(null)}
           >
             ×
@@ -410,7 +417,7 @@ function FilteredTaskList(props: StaffTasksProps) {
             >
               Lọc trạng thái
             </label>
-            <select
+            <Select
               id="task-status"
               value={status}
               onChange={(event) => {
@@ -424,7 +431,7 @@ function FilteredTaskList(props: StaffTasksProps) {
                   {text}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
           {role === 'OPERATIONS_MANAGER' && managerView === 'tasks' && (
             <Button
@@ -439,7 +446,7 @@ function FilteredTaskList(props: StaffTasksProps) {
             </Button>
           )}
           {(role === 'SELLER' || role === 'SELLER_STAFF' || tasks.isError) && (
-            <Button
+            <IconActionButton
               variant="outline"
               aria-label="Tải lại công việc"
               disabled={tasks.isFetching}
@@ -447,10 +454,9 @@ function FilteredTaskList(props: StaffTasksProps) {
                 const result = await tasks.refetch();
                 if (!result.isError) setReload((value) => value + 1);
               }}
-            >
-              <RefreshCw size={15} aria-hidden="true" className={tasks.isFetching ? 'spin' : ''} />
-              {role === 'TECHNICIAN' ? 'Làm mới' : 'Tải lại công việc'}
-            </Button>
+              action="reload"
+              label="Làm mới"
+            />
           )}
         </div>
         {tasks.isPending ? (

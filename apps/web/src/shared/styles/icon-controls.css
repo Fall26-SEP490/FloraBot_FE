@@ -1,0 +1,13 @@
+/* X controls keep their hit area and keyboard focus, without a button surface.
+   Important overrides legacy component themes, including their hover/active rules. */
+:is(button, a):is(
+  :has(svg.lucide-x),
+  .management-modal-close,
+  .kiosk-modal-close,
+  .chat-image-modal-close,
+  .icon-close-control
+) {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}

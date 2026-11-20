@@ -1,4 +1,6 @@
 import { liveListOptions } from '@/shared/lib/live-list';
+import IconActionButton from '@/shared/components/IconActionButton';
+import Select from '@/shared/components/Select';
 import { AdminFilterBar, AdminDisclosureSummary } from '@/features/portal/components/AdminUi';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -275,7 +277,7 @@ function Complaint({
             <p role="alert" className="error">
               {error}
             </p>
-            <Button
+            <IconActionButton
               type="button"
               variant="outline"
               disabled={saving || detail.isFetching}
@@ -287,9 +289,9 @@ function Complaint({
                   setReview(null);
                 }
               }}
-            >
-              Tải lại hồ sơ
-            </Button>
+              action="reload"
+              label="Tải lại hồ sơ"
+            />
           </div>
         )}
       </details>
@@ -363,7 +365,7 @@ export default function AdminComplaints() {
           >
             <div>
               <label htmlFor="complaint-status">Trạng thái phản ánh</label>
-              <select
+              <Select
                 id="complaint-status"
                 value={status}
                 onChange={(event) => {
@@ -376,7 +378,7 @@ export default function AdminComplaints() {
                 <option value="RESOLVED_REJECT">Đã từ chối hoàn</option>
                 <option value="RESOLVED_FIXED">Đã xử lý chất lượng</option>
                 <option value="CANCELLED">Đã hủy</option>
-              </select>
+              </Select>
             </div>
           </AdminFilterBar>
           {queue.isPending ? (

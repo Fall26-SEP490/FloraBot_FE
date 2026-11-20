@@ -888,7 +888,7 @@ export default function MemberAuth({ mode }: { mode: Mode }) {
                   type="checkbox"
                   required
                   {...form.register('consent', {
-                    required: 'Vui lòng đọc và xác nhận chính sách riêng tư.',
+                    required: 'Vui lòng đọc và xác nhận chính sách bảo mật.',
                   })}
                   aria-invalid={!!errors.consent}
                   aria-describedby={errors.consent ? 'member-consent-error' : undefined}
@@ -896,7 +896,7 @@ export default function MemberAuth({ mode }: { mode: Mode }) {
                 <span>
                   Tôi đã đọc{' '}
                   <a href="/chinh-sach-rieng-tu" target="_blank" rel="noreferrer">
-                    chính sách riêng tư (mở tab mới)
+                    chính sách bảo mật (mở tab mới)
                   </a>
                   .
                 </span>

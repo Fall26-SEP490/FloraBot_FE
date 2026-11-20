@@ -1,4 +1,6 @@
 @import './modal.css';
+@import './icon-controls.css';
+@import './search-controls.css';
 
 .auth-frame-header {
   display: flex;
@@ -1410,4 +1412,90 @@ html {
   to {
     opacity: 1;
   }
+}
+
+.fault-report .fault-review,
+.fault-report .fault-result {
+  display: grid;
+  gap: 12px;
+}
+.fault-report .fault-review h4,
+.fault-report .fault-result h4 {
+  margin: 0;
+  font-size: 16px;
+  color: #183e2b;
+}
+.fault-report .fault-review-summary {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid #dfe7e0;
+  border-radius: 8px;
+  background: #fafcfb;
+}
+.fault-report .fault-review-summary > div {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 12px;
+}
+.fault-report .fault-review-summary dt {
+  color: #637368;
+  font-size: 12px;
+}
+.fault-report .fault-review-summary dd {
+  margin: 0;
+  font-size: 13px;
+  color: #25352b;
+  overflow-wrap: anywhere;
+}
+.fault-report .fault-description {
+  white-space: pre-wrap;
+}
+.fault-report .fault-review .fault-review-note {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #fff8eb;
+  color: #74582b;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.fault-report .fault-result {
+  padding: 14px;
+  border: 1px solid #cfe1d1;
+  border-radius: 8px;
+  background: #f3f8f4;
+}
+.fault-report .fault-result-label {
+  width: fit-content;
+  color: #245d40;
+  font-size: 12px;
+  font-weight: 600;
+}
+.fault-report .fault-result p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #52685d;
+}
+.fault-report .fault-result button {
+  justify-self: end;
+  width: auto;
+  min-height: 44px;
+  padding: 8px 16px;
+}
+.fault-report .fault-actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+.fault-report .fault-actions button {
+  flex: 0 0 auto;
+  width: auto;
+  min-height: 44px;
+  padding: 8px 14px;
 }

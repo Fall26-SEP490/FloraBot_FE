@@ -198,7 +198,7 @@ export default function ReceiptComplaint({
                   error={form.formState.errors.photo?.message}
                   anonymous
                   receiptToken={trackingToken}
-                  helpText="PNG, JPEG hoặc WebP, tối đa 5 MB. Ảnh minh chứng được lưu riêng tư."
+                  helpText="PNG, JPEG hoặc WebP, tối đa 5 MB. Ảnh minh chứng được lưu."
                 />
               )}
             />
@@ -209,7 +209,7 @@ export default function ReceiptComplaint({
                 Kiểm tra phản ánh trước khi gửi
               </h4>
               <p className="complaint-content">{form.getValues('reason')}</p>
-              <p className="complaint-content">Ảnh minh chứng đã lưu riêng tư.</p>
+              <p className="complaint-content">Ảnh minh chứng đã lưu.</p>
               <p>
                 Sau khi gửi thành công, bạn không thể gửi phản ánh thứ hai cho đơn này. Gửi phản ánh
                 chưa đồng nghĩa với được hoàn tiền.

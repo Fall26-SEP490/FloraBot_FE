@@ -1,0 +1,185 @@
+.field {
+  display: block;
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+.field .trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid #cfd9d0;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #203e2d;
+  cursor: pointer;
+}
+.trigger > span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.trigger > svg {
+  flex-shrink: 0;
+  color: #52685d;
+}
+.trigger:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.field .validationInput {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  opacity: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  pointer-events: none;
+}
+.popup {
+  position: fixed;
+  z-index: 14000;
+  width: 312px;
+  max-width: calc(100vw - 16px);
+  max-height: calc(100dvh - 16px);
+  overflow-y: auto;
+  box-sizing: border-box;
+  border: 1px solid #d4e1d1;
+  border-radius: 10px;
+  padding: 12px;
+  background: #fff;
+  color: #203e2d;
+  font: 13px/1.5 var(--font-body, 'Be Vietnam Pro', sans-serif);
+  box-shadow: 0 6px 24px #16362621;
+}
+:global(body):has(.popup) :global([role='listbox']) {
+  z-index: 15000;
+}
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.popup button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.heading > button,
+.navigation > button {
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  width: 28px;
+  height: 32px;
+  padding: 0;
+}
+.navigation {
+  display: grid;
+  grid-template-columns: 24px 1fr 1.2fr 24px;
+  gap: 6px;
+  align-items: end;
+  margin-bottom: 10px;
+}
+.navigation label {
+  display: block;
+  color: #52685d;
+  font-size: 11px;
+}
+.navigation > div > button {
+  min-height: 36px;
+  height: 36px;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 3px;
+}
+.calendar small {
+  text-align: center;
+  padding: 4px 0;
+  color: #52685d;
+}
+.calendar button,
+.months button {
+  min-height: 34px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  padding: 4px;
+}
+.calendar button:hover,
+.months button:hover {
+  background: #edf4e8;
+}
+.calendar button[data-selected='true'],
+.months button[data-selected='true'] {
+  background: #245b3e;
+  color: #fff;
+}
+.popup button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.months {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.time {
+  display: grid;
+  grid-template-columns: auto 1fr auto 1fr;
+  gap: 8px;
+  align-items: center;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #e1e8de;
+}
+.time > button {
+  min-height: 36px;
+  height: 36px;
+  padding: 6px 8px;
+}
+.footer {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #e1e8de;
+}
+.footer > button {
+  padding: 6px 10px;
+  min-height: 34px;
+  border: 0;
+  background: transparent;
+  border-radius: 5px;
+}
+.footer .done {
+  background: #245b3e;
+  color: #fff;
+}
+.popup button:focus-visible,
+.trigger:focus-visible {
+  outline: 2px solid #245b3e;
+  outline-offset: 2px;
+}

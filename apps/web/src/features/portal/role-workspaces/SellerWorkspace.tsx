@@ -20,17 +20,15 @@ import {
 } from '@/features/profile/seller-shop-profile.api';
 import WorkspaceNavigation, { WorkspaceHeader } from '../components/WorkspaceNavigation';
 import { findSellerNavHub } from '../components/SellerNavigation';
-import SellerGuide from '../components/SellerGuide';
 import { workspaceSections } from '@/features/portal/config/workspaceSections';
 import { startPortalUpdates } from '@/shared/lib/realtime';
 import '../workspace-styles.css';
+import catalogStyles from '../../product-management/styles/seller-catalog.module.css';
 import '../../dashboard/styles/dashboard-overview.css';
 import '../styles/seller.css';
 import '../../account-management/styles/platform-workspace.css';
 import '../../account-management/styles/platform-refresh.css';
 import '../styles/workspace-role-parity.css';
-import '../../dashboard/styles/seller-overview.module.css';
-import '../../orders/seller-orders.module.css';
 import '../styles/seller-usability.css';
 import '../styles/seller-flows.css';
 import '../styles/seller-detail-flows.css';
@@ -193,21 +191,35 @@ export default function SellerWorkspace({ section = 'overview' }: { section?: st
         <WorkspaceNavigation key={section} workspaceRole="SELLER" section={section} />
         <main id="main" className="workspace dashboard-content seller-content">
           <PortalUpdates />
-          <nav className="seller-breadcrumb" aria-label="Vị trí hiện tại">
-            {section === 'overview' ? (
-              <span>Vận hành cửa hàng</span>
-            ) : (
-              <Link href="/seller">Tổng quan cửa hàng</Link>
+          {section !== 'stock' &&
+            section !== 'overview' &&
+            section !== 'orders' &&
+            section !== 'products' &&
+            section !== 'accessories' &&
+            section !== 'complaints' &&
+            section !== 'kiosks' && (
+              <nav className="seller-breadcrumb" aria-label="Vị trí hiện tại">
+                <Link href="/seller">Tổng quan cửa hàng</Link>
+              </nav>
             )}
-          </nav>
           <div className="dashboard-page-heading">
             <div>
               <h1>{section === 'overview' ? 'Tổng quan cửa hàng' : currentSection?.[1]}</h1>
-              {section !== 'overview' && currentSection?.[2] && <p>{currentSection[2]}</p>}
+              {section !== 'overview' &&
+                section !== 'stock' &&
+                section !== 'orders' &&
+                section !== 'products' &&
+                section !== 'accessories' &&
+                section !== 'complaints' &&
+                section !== 'kiosks' &&
+                currentSection?.[2] && <p>{currentSection[2]}</p>}
             </div>
           </div>
           {activeHub?.tabs && (
-            <nav className="seller-stage-tabs" aria-label={`Phân mục ${activeHub.label}`}>
+            <nav
+              className={`seller-stage-tabs ${section === 'products' || section === 'accessories' ? catalogStyles.tabs : ''}`}
+              aria-label={`Phân mục ${activeHub.label}`}
+            >
               {activeHub.tabs.map(([tabKey, tabLabel]) => (
                 <Link
                   key={tabKey}
@@ -271,7 +283,6 @@ export default function SellerWorkspace({ section = 'overview' }: { section?: st
               sellerId={session.data.sellerId}
             />
           )}
-          <SellerGuide key={section} section={section} />
           {logout.isError && (
             <p role="alert" className="error">
               Chưa đăng xuất được. Bạn thử lại nhé.

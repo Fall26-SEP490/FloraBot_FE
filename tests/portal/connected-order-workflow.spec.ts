@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import { fillPickup } from '../fixtures/quotation';
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
@@ -214,7 +215,7 @@ test('Preorder picker hides full kiosks and sorts available ones by customer loc
   await page.getByRole('button', { name: 'Thêm Nơ trang trí' }).click();
   await expect(picker).toHaveValue('');
   await expect(page.locator('.flower-request-reference-price')).toContainText('370.000 đ');
-  await picker.selectOption(kioskId);
+  await chooseOption(picker, kioskId);
   await page.getByRole('button', { name: 'Tăng số lượng Nơ trang trí' }).click();
   const quantity = page.getByRole('status', { name: 'Số lượng Nơ trang trí', exact: true });
   await expect(quantity).toHaveText('2');
@@ -224,7 +225,7 @@ test('Preorder picker hides full kiosks and sorts available ones by customer loc
   await expect(picker).toHaveValue(near);
   await expect(page.getByText('Đã chọn tủ gần nhất', { exact: true })).toBeVisible();
   await expect(quantity).toHaveText('1');
-  await picker.selectOption(kioskId);
+  await chooseOption(picker, kioskId);
   await expect(quantity).toHaveText('1');
 });
 
@@ -295,9 +296,9 @@ test('Seller assigns a paid preorder and exact slot to shop staff before the bou
   await page.goto('/seller/orders');
   await page.locator('details[id^="preorder-"] > summary').click();
   await page.getByRole('button', { name: 'Nạp hoa cho đơn này' }).click();
-  await page.getByLabel('Ô trống tại tủ nhận').selectOption(slotId);
+  await chooseOption(page.getByLabel('Ô trống tại tủ nhận'), slotId);
   await page.getByText('Giao nhân viên nạp vào ô này', { exact: true }).click();
-  await page.getByLabel('Nhân viên của shop').selectOption('staff-1');
+  await chooseOption(page.getByLabel('Nhân viên của shop'), 'staff-1');
   await page.getByRole('button', { name: 'Xác nhận giao nhân viên', exact: true }).click();
   await expect(page.getByText('Đã giao nhân viên nạp đúng đơn và ô đã chọn.')).toBeVisible();
   expect(assigned).toBe(true);
@@ -461,7 +462,7 @@ test('Customer request with accessories → seller quote → customer payment �
   await page.getByRole('button', { name: 'Gửi báo giá', exact: true }).click();
   await expect(page.getByText('Đã có báo giá', { exact: true })).toBeVisible();
   await expect(
-    page.getByText('Đã gửi báo giá · Chờ khách xác nhận', { exact: true }),
+    page.getByText('Chỉ chuẩn bị hoa sau khi khách thanh toán.', { exact: true }),
   ).toBeVisible();
   await expect(
     page.getByRole('region', { name: 'Chi tiết báo giá' }).getByText('400.000 đ', { exact: true }),
@@ -506,7 +507,7 @@ test('Customer request with accessories → seller quote → customer payment �
     page.getByLabel('Ô trống tại tủ nhận').locator('option[value="slot-sensor-not-ready"]'),
   ).toBeDisabled();
   await expect(page.getByText(/Ô có cảm biến chưa sẵn sàng cần Admin/)).toBeVisible();
-  await page.getByLabel('Ô trống tại tủ nhận').selectOption(slotId);
+  await chooseOption(page.getByLabel('Ô trống tại tủ nhận'), slotId);
   await page.getByLabel('Mã định danh bó hoa').fill('TEST-BOUQUET-01');
   await page.getByRole('button', { name: 'Tiếp tục kiểm tra' }).click();
   await expect(page.locator('.fulfill-review')).toContainText('P01');

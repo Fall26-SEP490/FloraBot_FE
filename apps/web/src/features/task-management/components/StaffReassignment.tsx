@@ -1,3 +1,5 @@
+import IconActionButton from '@/shared/components/IconActionButton';
+import Select from '@/shared/components/Select';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -105,14 +107,18 @@ export default function StaffReassignment({
       ) : staff.isError ? (
         <>
           <p role="alert">Chưa tải được nhân viên đang hoạt động.</p>
-          <Button onClick={() => void staff.refetch()}>Tải lại nhân viên</Button>
+          <IconActionButton
+            onClick={() => void staff.refetch()}
+            action="reload"
+            label="Tải lại nhân viên"
+          />
         </>
       ) : available.length === 0 ? (
         <p>Chưa có nhân viên khác đang hoạt động để nhận bàn giao.</p>
       ) : (
         <form noValidate onSubmit={form.handleSubmit(submit)}>
           <label htmlFor={`reassign-staff-${taskId}`}>Người nhận bàn giao</label>
-          <select
+          <Select
             id={`reassign-staff-${taskId}`}
             disabled={busy || uncertain}
             {...form.register('assigneeId', { required: 'Chọn người nhận bàn giao.' })}
@@ -127,7 +133,7 @@ export default function StaffReassignment({
                 {person.name}
               </option>
             ))}
-          </select>
+          </Select>
           {form.formState.errors.assigneeId?.message && (
             <p className="error" id={`reassign-staff-error-${taskId}`}>
               {form.formState.errors.assigneeId.message}

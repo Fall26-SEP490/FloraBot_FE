@@ -1,3 +1,5 @@
+import IconActionButton from '@/shared/components/IconActionButton';
+import Select from '@/shared/components/Select';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -128,7 +130,11 @@ export default function StaffStock({
       ) : options.isError ? (
         <>
           <p role="alert">Chưa tải được thông tin nạp hoa.</p>
-          <Button onClick={() => void options.refetch()}>Tải lại thông tin nạp hoa</Button>
+          <IconActionButton
+            onClick={() => void options.refetch()}
+            action="reload"
+            label="Tải lại thông tin nạp hoa"
+          />
         </>
       ) : active && options.data.products.length > 0 && walkInSlots.length > 0 ? (
         <form
@@ -148,7 +154,7 @@ export default function StaffStock({
         >
           <p>Ghi nhận sau khi đã đặt bó hoa đúng ô. Thao tác này không gửi lệnh mở cửa.</p>
           <label htmlFor={`stock-product-${taskId}`}>Mẫu hoa cần nạp</label>
-          <select
+          <Select
             id={`stock-product-${taskId}`}
             {...form.register('productId', { required: 'Chọn mẫu hoa.' })}
             aria-invalid={!!form.formState.errors.productId}
@@ -160,12 +166,12 @@ export default function StaffStock({
                 {item.name}
               </option>
             ))}
-          </select>
+          </Select>
           <p id={`stock-product-error-${taskId}`} className="error">
             {form.formState.errors.productId?.message}
           </p>
           <label htmlFor={`stock-slot-${taskId}`}>Ô Walk-in trống</label>
-          <select
+          <Select
             id={`stock-slot-${taskId}`}
             {...form.register('slotId', { required: 'Chọn ô tủ.' })}
             aria-invalid={!!form.formState.errors.slotId}
@@ -177,7 +183,7 @@ export default function StaffStock({
                 {item.code}
               </option>
             ))}
-          </select>
+          </Select>
           <p id={`stock-slot-error-${taskId}`} className="error">
             {form.formState.errors.slotId?.message}
           </p>

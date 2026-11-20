@@ -1,6 +1,7 @@
 'use client';
 import { liveListOptions } from '@/shared/lib/live-list';
 
+import IconActionButton from '@/shared/components/IconActionButton';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
@@ -133,9 +134,12 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
               'Không thể tải danh sách công việc. Vui lòng thử lại.',
             )}
           </span>
-          <Button variant="outline" onClick={() => void jobsQuery.refetch()}>
-            Tải lại công việc
-          </Button>
+          <IconActionButton
+            variant="outline"
+            onClick={() => void jobsQuery.refetch()}
+            action="reload"
+            label="Tải lại công việc"
+          />
         </div>
       )}
 
@@ -248,9 +252,12 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
                     'Chưa đọc được chi tiết. Hãy tải lại trước khi thao tác.',
                   )}
                 </p>
-                <Button variant="outline" onClick={() => void jobDetailQuery.refetch()}>
-                  Tải lại chi tiết lắp đặt
-                </Button>
+                <IconActionButton
+                  variant="outline"
+                  onClick={() => void jobDetailQuery.refetch()}
+                  action="reload"
+                  label="Tải lại chi tiết lắp đặt"
+                />
               </div>
             )}
 

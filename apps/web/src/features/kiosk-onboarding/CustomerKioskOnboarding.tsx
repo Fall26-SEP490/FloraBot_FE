@@ -1,5 +1,6 @@
 'use client';
 
+import IconActionButton from '@/shared/components/IconActionButton';
 import Link from 'next/link';
 import PayosCheckout from '@/shared/components/PayosCheckout';
 import { useQuery } from '@tanstack/react-query';
@@ -333,7 +334,11 @@ function CustomerKioskContent({
                 {pricingQuery.isError && (
                   <div role="alert">
                     <p>Chưa tải được bảng giá.</p>
-                    <Button onClick={() => void pricingQuery.refetch()}>Tải lại bảng giá</Button>
+                    <IconActionButton
+                      onClick={() => void pricingQuery.refetch()}
+                      action="reload"
+                      label="Tải lại bảng giá"
+                    />
                   </div>
                 )}
                 {pricingQuery.isSuccess && !pricingReady(pricing) && (

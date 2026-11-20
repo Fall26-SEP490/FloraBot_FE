@@ -1,4 +1,6 @@
+import IconActionButton from '@/shared/components/IconActionButton';
 import { useEffect, useState } from 'react';
+import { CustomSelect } from '@/shared/components/CustomSelect';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import { ApiError, queryClient, request } from '@/shared/lib/api';
@@ -216,12 +218,19 @@ export default function SlotMaintenance({
     !activeSession.isError;
   const busy = start.isPending || advance.isPending || open.isPending;
   const maintenanceError = start.error || advance.error || open.error;
+  if (
+    !hasStoredSession &&
+    !eligibleBouquet &&
+    slot.sensorReady &&
+    !activeSession.isPending &&
+    !activeSession.isError
+  )
+    return null;
 
   return (
-    <section className="stock-maintenance" aria-label={`Bảo trì ô ${slot.slotCode}`}>
+    <section className="stock-maintenance" aria-label={`Thao tác ô ${slot.slotCode}`}>
       <div className="stock-maintenance-heading">
-        <h4>Bảo trì ô {slot.slotCode}</h4>
-        <span className="stock-maintenance-chip">Có giám sát cảm biến</span>
+        <h4>{hasStoredSession ? 'Tiến độ thực hiện' : 'Thu hồi hoặc thay hoa'}</h4>
       </div>
       {open.isSuccess && open.variables === 'RETRY' && (
         <p role="status">Đã gửi yêu cầu thử lại. Chờ tủ phản hồi.</p>
@@ -245,18 +254,22 @@ export default function SlotMaintenance({
       )}
       {session.isError && (
         <div role="alert" className="error">
-          <p>Không tải được phiên bảo trì đã lưu: {session.error.message}</p>
-          <Button type="button" variant="outline" onClick={() => void session.refetch()}>
-            Tải lại phiên
-          </Button>
+          <p>Chưa tải được tiến độ thao tác: {session.error.message}</p>
+          <IconActionButton
+            type="button"
+            variant="outline"
+            onClick={() => void session.refetch()}
+            action="reload"
+            label="Tải lại phiên"
+          />
         </div>
       )}
       {activeSession.isError && !savedSessionId && (
         <p role="alert" className="error">
-          Chưa kiểm tra được phiên bảo trì đang mở. Tải lại trang trước khi thao tác.
+          Chưa kiểm tra được thao tác đang diễn ra. Tải lại trang trước khi tiếp tục.
         </p>
       )}
-      {hasStoredSession && session.isPending && <p role="status">Đang tải phiên bảo trì…</p>}
+      {hasStoredSession && session.isPending && <p role="status">Đang tải tiến độ…</p>}
       {current && (
         <div className="stock-maintenance-progress" role="status">
           <strong>
@@ -288,7 +301,11 @@ export default function SlotMaintenance({
           </p>
           {active && (
             <p className="quiet">
-              Phiên hết hạn: {new Date(current.expiresAt).toLocaleString('vi-VN')}
+              Phiên hết hạn:{' '}
+              {new Date(current.expiresAt).toLocaleString('vi-VN', {
+                timeZone: 'Asia/Ho_Chi_Minh',
+                hour12: false,
+              })}
             </p>
           )}
         </div>
@@ -375,29 +392,27 @@ export default function SlotMaintenance({
         <div className="stock-maintenance-start">
           <p>Chỉ gửi yêu cầu mở ô khi bạn đang ở tủ.</p>
           <label htmlFor={`maintenance-action-${slot.id}`}>Thao tác</label>
-          <select
+          <CustomSelect
             id={`maintenance-action-${slot.id}`}
             value={action}
-            onChange={(event) => setAction(event.target.value as MaintenanceAction)}
-          >
-            <option value="REMOVE">Thu hồi hoa</option>
-            {canStock && <option value="REPLACE">Thay hoa</option>}
-          </select>
+            onValueChange={(value) => setAction(value as MaintenanceAction)}
+            options={[
+              { value: 'REMOVE', label: 'Thu hồi hoa' },
+              ...(canStock ? [{ value: 'REPLACE', label: 'Thay hoa' }] : []),
+            ]}
+          />
           {action === 'REPLACE' && (
             <>
               <label htmlFor={`maintenance-product-${slot.id}`}>Mẫu hoa mới</label>
-              <select
+              <CustomSelect
                 id={`maintenance-product-${slot.id}`}
                 value={productId}
-                onChange={(event) => setProductId(event.target.value)}
-              >
-                <option value="">Chọn mẫu hoa</option>
-                {products.map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.name}
-                  </option>
-                ))}
-              </select>
+                onValueChange={setProductId}
+                options={[
+                  { value: '', label: 'Chọn mẫu hoa' },
+                  ...products.map((product) => ({ value: product.id, label: product.name })),
+                ]}
+              />
             </>
           )}
           <label htmlFor={`maintenance-reason-${slot.id}`}>Lý do thao tác</label>

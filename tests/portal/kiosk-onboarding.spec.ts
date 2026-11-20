@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import { expect, test } from '@playwright/test';
 import { chooseVietnamBank } from '../fixtures/vietnam-bank';
 import AxeBuilder from '@axe-core/playwright';
@@ -567,8 +568,8 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     ).toHaveCount(1);
 
     // Step 2: Schedule Tech and Kiosk
-    await page.getByLabel('Kỹ thuật viên phụ trách').selectOption('tech-01');
-    await page.getByLabel('Tủ kiosk cấp phát').selectOption('kiosk-01');
+    await chooseOption(page.getByLabel('Kỹ thuật viên phụ trách'), 'tech-01');
+    await chooseOption(page.getByLabel('Tủ kiosk cấp phát'), 'kiosk-01');
     await page.getByLabel('Ngày dự kiến lắp đặt').fill('2026-10-18');
     await page.getByRole('button', { name: /Lưu lịch & Phân công/ }).click();
     await expect(page.getByText('Đã phân công KTV và lên lịch')).toBeVisible();

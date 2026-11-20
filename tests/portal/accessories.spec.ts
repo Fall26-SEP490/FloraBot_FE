@@ -2,6 +2,10 @@ import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 test.beforeEach(async ({ page }) => {
+  await page.route('**/hub/**', (route) => route.abort());
+  await page.route('**/api/**', (route) =>
+    route.fulfill({ json: { items: [], page: 1, hasMore: false } }),
+  );
   await page.route('**/api/auth/me', (route) =>
     route.fulfill({
       json: {
@@ -59,8 +63,8 @@ for (const width of [390, 1440]) {
       return writes === 1 ? route.fulfill({ json: { result: null } }) : route.abort();
     });
     await page.goto('/seller/accessories');
-    const section = page.locator('.seller-accessories');
-    await expect(section.getByRole('heading', { level: 2 })).toBeVisible();
+    const section = page.getByRole('dialog', { name: 'Thiệp hoa', exact: true });
+    await page.getByRole('button', { name: 'Xem phụ kiện Thiệp hoa', exact: true }).click();
     await expect(section.getByText('Phụ kiện đang tắt bán', { exact: true })).toBeVisible();
     await expect(section.getByRole('combobox')).toHaveCount(0);
     await section.getByRole('button', { name: 'Kiểm tra số lượng' }).click();
@@ -78,7 +82,7 @@ for (const width of [390, 1440]) {
     expect(
       (
         await new AxeBuilder({ page })
-          .include('.seller-accessories')
+          .include('[role="dialog"]')
           .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
           .analyze()
       ).violations,
@@ -95,7 +99,10 @@ for (const width of [390, 1440]) {
     await section.getByRole('button', { name: 'Xác nhận bổ sung' }).click();
     await expect(section.getByRole('alert')).toContainText('Không gửi lại cùng số lượng');
     await expect(section.getByRole('button', { name: 'Kiểm tra số lượng' })).toBeDisabled();
-    await section.getByRole('button', { name: 'Làm mới tồn phụ kiện' }).click();
+    await page.keyboard.press('Escape');
+    await expect(section).toBeHidden();
+    await page.getByRole('button', { name: 'Xem phụ kiện Thiệp hoa', exact: true }).click();
+    await expect(section.getByRole('button', { name: 'Kiểm tra số lượng' })).toBeDisabled();
     await expect(section.getByText('Tồn hiện tại:', { exact: false })).toContainText('14');
     expect(writes).toBe(2);
   });
@@ -107,12 +114,10 @@ test('Accessory inventory handles empty state and retry after failure', async ({
     ++reads === 1 ? route.fulfill({ status: 503, json: {} }) : route.fulfill({ json: [] }),
   );
   await page.goto('/seller/accessories');
-  const section = page.locator('.seller-accessories');
+  const section = page.getByRole('region', { name: 'Kho phụ kiện', exact: true });
   await expect(section.getByRole('alert')).toContainText('Chưa tải được tồn mới nhất');
-  await section.getByRole('button', { name: 'Làm mới tồn phụ kiện' }).click();
-  await expect(
-    section.getByText('Kho shop chưa có phụ kiện. Thêm phụ kiện để bắt đầu.'),
-  ).toBeVisible();
+  await section.getByRole('button', { name: 'Thử lại' }).click();
+  await expect(section.getByText('Chưa có phụ kiện')).toBeVisible();
 });
 
 test('Seller automatically sees a created accessory after reloading', async ({ page }) => {
@@ -140,19 +145,24 @@ test('Seller automatically sees a created accessory after reloading', async ({ p
   });
 
   await page.goto('/seller/accessories');
-  const section = page.locator('.seller-accessories');
+  const section = page.getByRole('region', { name: 'Kho phụ kiện', exact: true });
+  await expect(section.getByText('Chưa có phụ kiện')).toBeVisible();
+  await section.getByRole('button', { name: 'Thêm phụ kiện', exact: true }).click();
+  const create = page.getByRole('dialog', { name: 'Thêm phụ kiện', exact: true });
+  await expect(create.getByRole('combobox')).toHaveCount(0);
+  await create.getByLabel('Tên phụ kiện', { exact: true }).fill(item.name);
+  await create.getByLabel('Giá bán (VND)').fill(String(item.price));
+  await create.getByRole('button', { name: 'Tạo phụ kiện' }).click();
   await expect(
-    section.getByText('Kho shop chưa có phụ kiện. Thêm phụ kiện để bắt đầu.'),
+    section.getByRole('button', { name: `Xem phụ kiện ${item.name}`, exact: true }),
   ).toBeVisible();
-  await section.getByText('Thêm phụ kiện mới', { exact: true }).click();
-  await expect(section.getByRole('combobox')).toHaveCount(0);
-  await section.getByLabel('Tên phụ kiện', { exact: true }).fill(item.name);
-  await section.getByLabel('Giá bán (VND)').fill(String(item.price));
-  await section.getByRole('button', { name: 'Tạo phụ kiện' }).click();
-  await expect(section.getByRole('heading', { name: item.name })).toBeVisible();
 
   await page.reload();
-  await expect(section.getByRole('heading', { name: item.name })).toBeVisible();
-  await expect(section.getByText('Tồn hiện tại:')).toContainText('0');
+  await expect(
+    section.getByRole('button', { name: `Xem phụ kiện ${item.name}`, exact: true }),
+  ).toBeVisible();
+  await expect(
+    section.getByRole('button', { name: `Xem phụ kiện ${item.name}`, exact: true }),
+  ).toContainText('0');
   expect(writes).toBe(1);
 });

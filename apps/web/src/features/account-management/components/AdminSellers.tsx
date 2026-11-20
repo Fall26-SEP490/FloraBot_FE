@@ -1,10 +1,11 @@
+import IconActionButton from '@/shared/components/IconActionButton';
 import { liveListOptions } from '@/shared/lib/live-list';
 import WorkspaceTable from '@/features/portal/components/WorkspaceTable';
 import { AdminFilterBar } from '@/features/portal/components/AdminUi';
+import Select from '@/shared/components/Select';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@florabot/ui';
 import Link from 'next/link';
 import type { components } from '../../../../../../packages/contracts/src/generated/api';
 import { request } from '@/shared/lib/api';
@@ -45,16 +46,16 @@ export default function AdminSellers() {
         actions={
           <>
             {(search || status) && (
-              <Button
+              <IconActionButton
                 variant="outline"
                 onClick={() => {
                   setSearch('');
                   setStatus('');
                   setPage(1);
                 }}
-              >
-                Xóa bộ lọc
-              </Button>
+                action="clear"
+                label="Xóa bộ lọc"
+              />
             )}
           </>
         }
@@ -74,7 +75,7 @@ export default function AdminSellers() {
         </div>
         <div>
           <label htmlFor="shop-status">Lọc trạng thái shop</label>
-          <select
+          <Select
             id="shop-status"
             value={status}
             onChange={(event) => {
@@ -88,7 +89,7 @@ export default function AdminSellers() {
                 {t(`status.${value}`)}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
       </AdminFilterBar>
       {sellers.isPending && <p role="status">Đang tải hồ sơ shop…</p>}
@@ -97,7 +98,11 @@ export default function AdminSellers() {
           <p role="alert" className="error">
             {sellers.error.message}
           </p>
-          <Button onClick={() => void sellers.refetch()}>Tải lại hồ sơ</Button>
+          <IconActionButton
+            onClick={() => void sellers.refetch()}
+            action="reload"
+            label="Tải lại hồ sơ"
+          />
         </div>
       )}
       {visible?.length === 0 && <p>Không có hồ sơ phù hợp với bộ lọc hiện tại.</p>}

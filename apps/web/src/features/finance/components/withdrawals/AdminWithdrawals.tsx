@@ -1,3 +1,5 @@
+import IconActionButton from '@/shared/components/IconActionButton';
+import Select from '@/shared/components/Select';
 import { AdminFilterBar, AdminDisclosureSummary } from '@/features/portal/components/AdminUi';
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -136,9 +138,12 @@ function WithdrawalDetails({ id, onNotice }: { id: string; onNotice: (message: s
         <p role="alert" className="error">
           Chưa tải được yêu cầu rút tiền.
         </p>
-        <Button variant="outline" onClick={() => void query.refetch()}>
-          Tải lại yêu cầu
-        </Button>
+        <IconActionButton
+          variant="outline"
+          onClick={() => void query.refetch()}
+          action="reload"
+          label="Tải lại yêu cầu"
+        />
       </>
     );
   const detail = query.data;
@@ -373,7 +378,7 @@ function WithdrawalDetails({ id, onNotice }: { id: string; onNotice: (message: s
                     ? 'Xác nhận duyệt và chuyển yêu cầu sang chờ chi.'
                     : action === 'reject'
                       ? `Từ chối: ${form.getValues('value')}`
-                      : `Ghi nhận đã chi ${money(item.amount)}. Ảnh chứng từ đã lưu riêng tư và gắn với yêu cầu này.`}
+                      : `Ghi nhận đã chi ${money(item.amount)}. Ảnh chứng từ đã lưu và gắn với yêu cầu này.`}
                 </p>
               )}
               <div className="stock-actions">
@@ -478,7 +483,7 @@ export default function AdminWithdrawals() {
       >
         <div>
           <label htmlFor="withdrawal-status">Trạng thái yêu cầu rút tiền</label>
-          <select
+          <Select
             id="withdrawal-status"
             value={status}
             onChange={(event) => {
@@ -491,7 +496,7 @@ export default function AdminWithdrawals() {
                 {name}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
       </AdminFilterBar>
       <p role="status" ref={noticeRef} tabIndex={-1}>

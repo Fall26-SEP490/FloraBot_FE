@@ -1,0 +1,129 @@
+.list {
+  display: grid;
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  min-width: 0;
+}
+.card {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  padding: 13px 14px;
+  border: 1px solid #e6eee8;
+  border-radius: 16px;
+  background: #fff;
+  color: #183e2b;
+}
+.heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+.name {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #174b35;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.name svg {
+  flex-shrink: 0;
+}
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid #efdfbd;
+  flex-shrink: 0;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: #f3f1ed;
+  color: #765c38;
+  font-size: 11px;
+  line-height: 1.5;
+  font-weight: 600;
+}
+.status::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: currentColor;
+}
+.status[data-state='OFFLINE'],
+.status[data-state='DISABLED'] {
+  color: #bd2428;
+  background: #fff3f3;
+  border-color: #ffc7c9;
+}
+.status[data-online='true'] {
+  border-color: #cce5d2;
+  background: #edf5e8;
+  color: #245b3e;
+}
+.card .address {
+  display: flex;
+  gap: 7px;
+  align-items: flex-start;
+  margin: 0;
+  color: #52665b;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.address svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+}
+.actions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 36px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #285f43;
+  text-decoration: none;
+}
+.actions .shop {
+  order: 2;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 600;
+}
+.actions .directions {
+  flex: 1;
+  min-height: 40px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: #183e2b;
+  color: #fff;
+  font-weight: 600;
+}
+.actions .directions:hover {
+  background: #245b3e;
+  text-decoration: none;
+}
+.actions a:hover,
+.name:hover {
+  text-decoration: underline;
+}
+.card a:focus-visible {
+  outline: 2px solid #285f43;
+  outline-offset: 3px;
+}

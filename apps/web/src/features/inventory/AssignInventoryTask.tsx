@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { CustomSelect } from '@/shared/components/CustomSelect';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import { ApiError, queryClient, request } from '@/shared/lib/api';
@@ -21,13 +22,16 @@ export default function AssignInventoryTask({
   kioskId,
   slot,
   products,
+  visible,
+  onBusy,
 }: {
   sellerId: string;
   kioskId: string;
   slot: SellerSlot;
   products: { id: string; name: string }[];
+  visible: boolean;
+  onBusy: (busy: boolean) => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
   const [assigneeId, setAssigneeId] = useState('');
   const [action, setAction] = useState<MaintenanceAction>(slot.bouquetId ? 'REMOVE' : 'LOAD');
   const [productId, setProductId] = useState('');
@@ -36,7 +40,7 @@ export default function AssignInventoryTask({
   const staff = useQuery({
     queryKey: ['preorder-assignment-staff', sellerId],
     queryFn: () => request<{ id: string; name: string }[]>(`/sellers/${sellerId}/staff`),
-    enabled: expanded,
+    enabled: visible,
   });
   const assign = useMutation({
     mutationFn: (payload: Assignment) => request('/me/inventory-tasks', payload),
@@ -51,6 +55,10 @@ export default function AssignInventoryTask({
     },
   });
   const locked = !!pending || assign.isSuccess;
+  useEffect(() => {
+    onBusy(assign.isPending);
+    return () => onBusy(false);
+  }, [assign.isPending, onBusy]);
   const prefix = `inventory-assign-${slot.id}`;
   function assignTask() {
     if (assign.isPending) return;
@@ -68,69 +76,76 @@ export default function AssignInventoryTask({
     assign.mutate(payload);
   }
   return (
-    <details
-      className="stock-maintenance"
-      onToggle={(event) => setExpanded(event.currentTarget.open)}
-    >
-      <summary>Giao nhân viên thao tác ô {slot.slotCode}</summary>
+    <section className="stock-assignment" aria-label="Giao nhân viên">
+      <p className="stock-operation-note">
+        Nhân viên sẽ đến tủ để thực hiện. Giao việc không mở cửa tủ ngay.
+      </p>
       <div className="stock-maintenance-start">
-        <label htmlFor={`${prefix}-staff`}>Nhân viên</label>
-        <select
-          id={`${prefix}-staff`}
-          value={assigneeId}
-          disabled={locked || !staff.data}
-          onChange={(event) => setAssigneeId(event.target.value)}
-        >
-          <option value="">Chọn nhân viên</option>
-          {staff.data?.map((member) => (
-            <option key={member.id} value={member.id}>
-              {member.name}
-            </option>
-          ))}
-        </select>
-        <label htmlFor={`${prefix}-action`}>Thao tác</label>
-        <select
-          id={`${prefix}-action`}
-          value={action}
-          disabled={locked}
-          onChange={(event) => setAction(event.target.value as MaintenanceAction)}
-        >
-          {slot.bouquetId ? (
-            <>
-              <option value="REMOVE">Thu hồi hoa</option>
-              <option value="REPLACE">Thay hoa</option>
-            </>
-          ) : (
-            <option value="LOAD">Nạp hoa</option>
-          )}
-        </select>
+        <div className="stock-assignment-field">
+          <label htmlFor={`${prefix}-staff`}>Nhân viên</label>
+          <CustomSelect
+            id={`${prefix}-staff`}
+            value={assigneeId}
+            disabled={locked || !staff.data}
+            onValueChange={setAssigneeId}
+            options={[
+              { value: '', label: 'Chọn nhân viên' },
+              ...(staff.data ?? []).map((member) => ({ value: member.id, label: member.name })),
+            ]}
+          />
+        </div>
+        <div className="stock-assignment-field">
+          <label htmlFor={`${prefix}-action`}>Thao tác</label>
+          <CustomSelect
+            id={`${prefix}-action`}
+            value={action}
+            disabled={locked}
+            onValueChange={(value) => setAction(value as MaintenanceAction)}
+            options={
+              slot.bouquetId
+                ? [
+                    { value: 'REMOVE', label: 'Thu hồi hoa' },
+                    { value: 'REPLACE', label: 'Thay hoa' },
+                  ]
+                : [{ value: 'LOAD', label: 'Nạp hoa' }]
+            }
+          />
+        </div>
         {action !== 'REMOVE' && (
           <>
             <label htmlFor={`${prefix}-product`}>Mẫu hoa</label>
-            <select
+            <CustomSelect
               id={`${prefix}-product`}
               value={productId}
               disabled={locked}
-              onChange={(event) => setProductId(event.target.value)}
-            >
-              <option value="">Chọn mẫu hoa</option>
-              {products.map((product) => (
-                <option key={product.id} value={product.id}>
-                  {product.name}
-                </option>
-              ))}
-            </select>
+              onValueChange={setProductId}
+              options={[
+                { value: '', label: 'Chọn mẫu hoa' },
+                ...products.map((product) => ({ value: product.id, label: product.name })),
+              ]}
+            />
           </>
         )}
-        <label htmlFor={`${prefix}-instructions`}>Hướng dẫn (ít nhất 10 ký tự)</label>
+        <label htmlFor={`${prefix}-instructions`}>Hướng dẫn nhân viên</label>
         <textarea
           id={`${prefix}-instructions`}
           maxLength={500}
+          placeholder="Ghi rõ việc cần làm tại ô này (từ 10 ký tự)"
           value={instructions}
           disabled={locked}
           onChange={(event) => setInstructions(event.target.value)}
         />
-        {staff.isError && <p role="alert">Chưa tải được danh sách nhân viên.</p>}
+        {staff.isError && (
+          <p role="alert">
+            Chưa tải được danh sách nhân viên.{' '}
+            <button type="button" onClick={() => void staff.refetch()}>
+              Thử lại
+            </button>
+          </p>
+        )}
+        {staff.isSuccess && !staff.data.length && (
+          <p role="status">Shop chưa có nhân viên để giao việc.</p>
+        )}
         {assign.error && <p role="alert">{assign.error.message}</p>}
         {assign.isSuccess ? (
           <p role="status">Đã giao công việc cho nhân viên.</p>
@@ -145,10 +160,10 @@ export default function AssignInventoryTask({
             }
             onClick={assignTask}
           >
-            {assign.isPending ? 'Đang giao…' : 'Xác nhận giao nhân viên'}
+            {assign.isPending ? 'Đang giao…' : 'Giao việc'}
           </Button>
         )}
       </div>
-    </details>
+    </section>
   );
 }

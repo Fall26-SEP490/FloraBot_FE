@@ -1,6 +1,8 @@
 'use client';
 import { liveListOptions } from '@/shared/lib/live-list';
 
+import IconActionButton from '@/shared/components/IconActionButton';
+import Select from '@/shared/components/Select';
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button, MapPin } from '@florabot/ui';
@@ -664,7 +666,7 @@ function ManagerTerminationCard({
             <h4>Phân công kỹ thuật viên tháo dỡ</h4>
 
             <label htmlFor={`term-assignee-${item.id}`}>Kỹ thuật viên phụ trách</label>
-            <select
+            <Select
               id={`term-assignee-${item.id}`}
               required
               value={assigneeId}
@@ -677,7 +679,7 @@ function ManagerTerminationCard({
                   {tech.name}
                 </option>
               ))}
-            </select>
+            </Select>
             <label htmlFor={`term-instructions-${item.id}`}>
               Hướng dẫn tháo dỡ (10–2.000 ký tự)
             </label>
@@ -995,13 +997,13 @@ function ManagerLayoutRequestCard({ item }: { item: SlotLayoutRequestView }) {
               ) : slotDirectory.isError ? (
                 <>
                   <p role="alert">Chưa tải được danh sách ô của kiosk.</p>
-                  <Button
+                  <IconActionButton
                     type="button"
                     variant="outline"
                     onClick={() => void slotDirectory.refetch()}
-                  >
-                    Tải lại danh sách ô
-                  </Button>
+                    action="reload"
+                    label="Tải lại danh sách ô"
+                  />
                 </>
               ) : slots.length ? (
                 <div className="business-inline">
@@ -1117,9 +1119,12 @@ export function OperationsTerminations() {
           <h2>Hồ sơ chấm dứt thuê kiosk</h2>
         </div>
         {records.isError && (
-          <Button variant="outline" onClick={() => void records.refetch()}>
-            Làm mới
-          </Button>
+          <IconActionButton
+            variant="outline"
+            onClick={() => void records.refetch()}
+            action="reload"
+            label="Làm mới"
+          />
         )}
       </div>
       <div className="termination-list-tools">
@@ -1135,7 +1140,7 @@ export function OperationsTerminations() {
         </div>
         <div>
           <label htmlFor="termination-filter">Trạng thái </label>
-          <select
+          <Select
             id="termination-filter"
             value={status}
             onChange={(event) => {
@@ -1151,7 +1156,7 @@ export function OperationsTerminations() {
             <option value="REJECTED">Đã từ chối</option>
             <option value="CANCELLED">Đã rút yêu cầu</option>
             <option value="COMPLETED">Đã bàn giao</option>
-          </select>
+          </Select>
         </div>
       </div>
       {records.isPending ? (

@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
@@ -120,7 +121,7 @@ test('Technician opens the kiosk health tab and reads all four slots', async ({
   await page.setViewportSize({ width: 390, height: 900 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
   await panel.screenshot({ path: testInfo.outputPath('kiosk-health-390.png') });
-  await page.getByLabel('Kiosk được giao').selectOption('kiosk10');
+  await chooseOption(page.getByLabel('Kiosk được giao'), 'kiosk10');
   await expect(panel.getByText('Mất kết nối', { exact: false })).toBeVisible();
   await expect(panel.getByText('Phát hiện vật', { exact: true })).toHaveCount(0);
 });

@@ -36,26 +36,34 @@ export function Modal({
   const descriptionId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
   const closeOnEscape = useEffectEvent(() => onClose());
+  const isCloseDisabled = useEffectEvent(() => closeDisabled);
 
   useEffect(() => {
     if (!open) return;
     const previousFocus =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const panel = panelRef.current;
-    const first =
-      panel?.querySelector<HTMLElement>('[data-autofocus]') ??
-      panel?.querySelector<HTMLElement>(focusableSelector);
-    first?.focus();
+    const visibleFields = () =>
+      Array.from(panel?.querySelectorAll<HTMLElement>(focusableSelector) ?? []).filter(
+        (element) =>
+          element.tabIndex >= 0 &&
+          element.getClientRects().length > 0 &&
+          !element.closest('[aria-hidden="true"]'),
+      );
+    const first = panel?.querySelector<HTMLElement>('[data-autofocus]') ?? visibleFields()[0];
+    first?.focus({ preventScroll: true });
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !closeDisabled) {
+      const panels = document.querySelectorAll('.management-modal');
+      if (panels[panels.length - 1] !== panel) return;
+      if (event.key === 'Escape' && !isCloseDisabled()) {
         event.preventDefault();
         event.stopPropagation();
         closeOnEscape();
         return;
       }
       if (event.key !== 'Tab' || !panel) return;
-      const focusable = Array.from(panel.querySelectorAll<HTMLElement>(focusableSelector));
+      const focusable = visibleFields();
       if (focusable.length === 0) {
         event.preventDefault();
         panel.focus();
@@ -79,9 +87,9 @@ export function Modal({
       if (remainingModals <= 1) {
         document.body.classList.remove('modal-open');
       }
-      previousFocus?.focus();
+      previousFocus?.focus({ preventScroll: true });
     };
-  }, [closeDisabled, open]);
+  }, [open]);
 
   if (!open) return null;
   return (

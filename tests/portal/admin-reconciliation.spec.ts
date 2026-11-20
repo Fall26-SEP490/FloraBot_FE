@@ -1,3 +1,4 @@
+import { chooseVietnamDate } from '../fixtures/vietnam-date';
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
@@ -74,7 +75,7 @@ for (const width of [390, 1440])
     await section.getByRole('button', { name: /^Báo cáo ngày/ }).click();
     await section.getByRole('button', { name: 'Xem báo cáo ngày' }).click();
     await expect(section.getByLabel('Ngày đối soát (giờ Việt Nam)')).toBeFocused();
-    await section.getByLabel('Ngày đối soát (giờ Việt Nam)').fill('2026-10-07');
+    await chooseVietnamDate(section, 'Ngày đối soát (giờ Việt Nam)', '2026-10-07');
     await section.getByRole('button', { name: /^Báo cáo ngày/ }).click();
     await section.getByRole('button', { name: 'Xem báo cáo ngày' }).click();
     await expect(section.getByText('3 lệnh', { exact: true })).toBeVisible();
@@ -121,7 +122,7 @@ for (const width of [390, 1440])
       true,
     );
     await section.screenshot({ path: `.impeccable/review/admin-reconciliation-${width}.png` });
-    await section.getByLabel('Ngày đối soát (giờ Việt Nam)').fill('2026-10-08');
+    await chooseVietnamDate(section, 'Ngày đối soát (giờ Việt Nam)', '2026-10-08');
     await expect(section.getByText('Mã giao dịch: fixture-1')).toHaveCount(0);
     await expect(section.getByRole('heading', { name: 'Báo cáo ngày 2026-10-07' })).toHaveCount(0);
   });
@@ -140,7 +141,7 @@ test('Empty statements, amount bounds and failed requests never retry automatica
   const section = page.locator('.admin-reconciliation');
   await section.getByRole('button', { name: /^Đối chiếu sao kê/ }).click();
   await section.getByRole('button', { name: 'Dán dữ liệu JSON', exact: true }).click();
-  await section.getByLabel('Ngày đối soát (giờ Việt Nam)').fill('2026-10-07');
+  await chooseVietnamDate(section, 'Ngày đối soát (giờ Việt Nam)', '2026-10-07');
   for (const amount of [0, -1, 1.5, 9007199254740992]) {
     await section.getByLabel('Nội dung sao kê JSON').fill(JSON.stringify([{ txn: 'x', amount }]));
     await section.getByRole('button', { name: 'Kiểm tra sao kê', exact: true }).click();
@@ -170,7 +171,7 @@ test('Cleared or hidden reports cannot reappear from a late response', async ({ 
   const section = page.locator('.admin-reconciliation');
   await section.getByRole('button', { name: /^Đối chiếu sao kê/ }).click();
   await section.getByRole('button', { name: 'Dán dữ liệu JSON', exact: true }).click();
-  await section.getByLabel('Ngày đối soát (giờ Việt Nam)').fill('2026-10-07');
+  await chooseVietnamDate(section, 'Ngày đối soát (giờ Việt Nam)', '2026-10-07');
   await section.getByLabel('Nội dung sao kê JSON').fill('[{"txn":"private","amount":100}]');
   await section.getByRole('button', { name: /^Báo cáo ngày/ }).click();
   await section.getByRole('button', { name: 'Xem báo cáo ngày' }).click();
@@ -218,7 +219,7 @@ test('Differences paginate and a fresh empty result is not confused with an erro
   const section = page.locator('.admin-reconciliation');
   await section.getByRole('button', { name: /^Đối chiếu sao kê/ }).click();
   await section.getByRole('button', { name: 'Dán dữ liệu JSON', exact: true }).click();
-  await section.getByLabel('Ngày đối soát (giờ Việt Nam)').fill('2026-10-07');
+  await chooseVietnamDate(section, 'Ngày đối soát (giờ Việt Nam)', '2026-10-07');
   await section.getByLabel('Nội dung sao kê JSON').fill('[]');
   await section.getByRole('button', { name: 'Kiểm tra sao kê', exact: true }).click();
   await section.getByRole('button', { name: 'Đối soát sao kê đã kiểm tra' }).click();
@@ -236,5 +237,5 @@ test('Differences paginate and a fresh empty result is not confused with an erro
   await expect(section.getByRole('status')).toHaveText(
     'Không tìm thấy chênh lệch với sao kê đã cung cấp.',
   );
-  await expect(section.getByRole('alert')).toBeEmpty();
+  await expect(section.locator('[role="alert"]')).toBeEmpty();
 });

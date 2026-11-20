@@ -1328,16 +1328,22 @@ div.management-modal.product-form-modal > .management-modal-header {
 }
 
 .workspace-portal-root.platform-workspace
+  div.management-modal.product-form-modal.product-create-modal,
+div.management-modal.product-form-modal.product-create-modal {
+  padding-bottom: 0;
+}
+
+.workspace-portal-root.platform-workspace
   div.management-modal.product-form-modal
   > .management-modal-header
   h2,
 div.management-modal.product-form-modal > .management-modal-header h2 {
   font-family: var(--font-body);
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 700;
-  line-height: 1.35;
-  letter-spacing: -0.01em;
-  color: #244533;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  color: #163324;
   margin: 0;
 }
 
@@ -1470,28 +1476,122 @@ div.management-modal .product-edit-section {
   gap: 6px;
 }
 
+.product-tag-choice,
 .management-modal.product-form-modal .product-tag-choice {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   min-height: 36px;
-  padding: 5px 10px;
-  border: 1px solid var(--color-workspace-line);
-  border-radius: var(--radius-workspace-control);
-  background: var(--color-workspace-surface);
-  color: var(--color-workspace-ink);
+  padding: 5px 12px;
+  border: 1px solid var(--color-workspace-line, #d4ded6);
+  border-radius: var(--radius-workspace-control, 8px);
+  background: var(--color-workspace-surface, #ffffff);
+  color: var(--color-workspace-ink, #183e2b);
   font: 500 13px/1.4 var(--font-body);
   cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
 
+.product-tag-choice:hover:not(:disabled),
 .management-modal.product-form-modal .product-tag-choice:hover:not(:disabled) {
-  background: var(--color-workspace-control-hover);
+  background: var(--color-workspace-control-hover, #f1f6f1);
+  border-color: #9ab3a0;
 }
 
+.product-tag-choice[aria-pressed='true'],
 .management-modal.product-form-modal .product-tag-choice[aria-pressed='true'] {
-  border-color: var(--color-workspace-accent);
-  background: var(--color-workspace-control-hover);
-  color: var(--color-workspace-accent);
+  border-color: var(--color-workspace-accent, #174b35);
+  background: #e7f2ea;
+  color: var(--color-workspace-accent, #174b35);
+  font-weight: 600;
+}
+
+.product-tag-check {
+  flex-shrink: 0;
+}
+
+.product-color-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  border: 1px solid rgba(24, 62, 43, 0.16);
+}
+
+.product-color-swatch[data-color='red'] {
+  background: #dc2626;
+}
+
+.product-color-swatch[data-color='pink'] {
+  background: #ec4899;
+}
+
+.product-color-swatch[data-color='white'] {
+  background: #ffffff;
+  border-color: #b7c6bc;
+}
+
+.product-color-swatch[data-color='yellow'] {
+  background: #eab308;
+}
+
+.product-color-swatch[data-color='orange'] {
+  background: #f97316;
+}
+
+.product-color-swatch[data-color='purple'] {
+  background: #9333ea;
+}
+
+.product-color-swatch[data-color='blue'] {
+  background: #2563eb;
+}
+
+.product-color-swatch[data-color='multicolor'] {
+  background: conic-gradient(
+    #ef4444 0deg 90deg,
+    #f59e0b 90deg 180deg,
+    #22c55e 180deg 270deg,
+    #3b82f6 270deg 360deg
+  );
+}
+
+.product-price-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.workspace-portal-root.platform-workspace:is(
+    [data-platform-role='seller'],
+    [data-platform-role='staff']
+  )
+  .dashboard-content
+  :is(.product-catalog-form, .product-metadata-editor)
+  .form-field
+  .product-price-input
+  input,
+.workspace-portal-root.platform-workspace
+  :is(.product-catalog-form, .product-metadata-editor)
+  .form-field
+  .product-price-input
+  input,
+:is(.product-catalog-form, .product-metadata-editor) .form-field .product-price-input input {
+  padding-right: 34px;
+  font-variant-numeric: tabular-nums;
+}
+
+.product-price-unit {
+  position: absolute;
+  right: 12px;
+  color: #52665b;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  pointer-events: none;
 }
 
 .product-tag-choice:disabled {
@@ -1710,16 +1810,29 @@ div.management-modal .product-edit-section {
   border-top: 1px solid #e1e8e2;
 }
 
+.workspace-portal-root .product-create-modal .product-catalog-form .form-actions,
+.product-create-modal .product-catalog-form .form-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  margin: 4px -22px 0;
+  padding: 14px 22px 18px;
+  background: #ffffff;
+  border-top: 1px solid #e1e8e2;
+  border-radius: 0 0 12px 12px;
+  box-shadow: 0 -4px 12px rgba(18, 42, 28, 0.05);
+}
+
 .workspace-portal-root.platform-workspace
   :is(.product-catalog-form, .product-metadata-editor)
   .form-actions
   .button,
 :is(.product-catalog-form, .product-metadata-editor) .form-actions .button {
-  min-height: 36px;
-  height: 36px;
-  padding: 6px 14px;
-  border-radius: 6px;
-  font-size: 12px;
+  min-height: 40px;
+  height: 40px;
+  padding: 6px 16px;
+  border-radius: 8px;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -1917,4 +2030,17 @@ div.management-modal .product-edit-section {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 6px;
   }
+}
+
+/* Keep creation actions inside the same inset as the form fields. */
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .seller-workspace
+  main.seller-content
+  .management-modal.product-create-modal
+  .product-catalog-form
+  .form-actions {
+  margin: 4px 0 0;
+  padding: 14px 0 18px;
+  border: 0;
+  box-shadow: none;
 }

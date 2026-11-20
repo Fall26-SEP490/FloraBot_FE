@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
@@ -67,7 +68,7 @@ for (const width of [390, 1440]) {
     await expect(page.locator('.flower-card')).toHaveCount(2);
     if (width === 390) await page.getByRole('button', { name: 'Bộ lọc', exact: true }).click();
     await expect(flower).toHaveValue('rose');
-    await flower.selectOption('tulip');
+    await chooseOption(flower, 'tulip');
     await expect(page).toHaveURL(/flower=tulip/);
     await expect(page.getByRole('heading', { name: 'Tulip hồng', exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Hoa hồng đỏ', exact: true })).toHaveCount(0);

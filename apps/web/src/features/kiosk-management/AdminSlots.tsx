@@ -1,10 +1,12 @@
+import IconActionButton from '@/shared/components/IconActionButton';
+import Select from '@/shared/components/Select';
 import { AdminDisclosureSummary } from '@/features/portal/components/AdminUi';
 import { useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button, RefreshCw, Search, SlidersHorizontal, Store, Users } from '@florabot/ui';
+import { Button, Search, SlidersHorizontal, Store, Users } from '@florabot/ui';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
 import { queryClient, request } from '@/shared/lib/api';
 import { liveListOptions } from '@/shared/lib/live-list';
@@ -111,7 +113,7 @@ function KioskOperationsManagerPanel({ kiosks }: { kiosks: Kiosk[] }) {
       >
         <div>
           <label htmlFor="ops-manager-kiosk">Chọn kiosk</label>
-          <select
+          <Select
             id="ops-manager-kiosk"
             value={selectedKioskId}
             disabled={assignManager.isPending}
@@ -123,11 +125,11 @@ function KioskOperationsManagerPanel({ kiosks }: { kiosks: Kiosk[] }) {
                 {k.name} · {k.code}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
         <div>
           <label htmlFor="ops-manager-account">Quản lý vận hành phụ trách</label>
-          <select
+          <Select
             id="ops-manager-account"
             ref={managerSelect}
             value={selectedManagerId}
@@ -149,7 +151,7 @@ function KioskOperationsManagerPanel({ kiosks }: { kiosks: Kiosk[] }) {
                   {m.fullName} · {m.email}
                 </option>
               ))}
-          </select>
+          </Select>
         </div>
         <Button
           type="submit"
@@ -161,9 +163,13 @@ function KioskOperationsManagerPanel({ kiosks }: { kiosks: Kiosk[] }) {
       {managers.isError && (
         <div role="alert">
           <p>Chưa tải được danh sách quản lý.</p>
-          <Button type="button" variant="outline" onClick={() => void managers.refetch()}>
-            Tải lại danh sách quản lý
-          </Button>
+          <IconActionButton
+            type="button"
+            variant="outline"
+            onClick={() => void managers.refetch()}
+            action="reload"
+            label="Tải lại danh sách quản lý"
+          />
         </div>
       )}
       {(error || notice) && (
@@ -177,9 +183,13 @@ function KioskOperationsManagerPanel({ kiosks }: { kiosks: Kiosk[] }) {
       {assignments.isError && (
         <div role="alert">
           <p>Chưa tải được danh sách phân công.</p>
-          <Button type="button" variant="outline" onClick={() => void assignments.refetch()}>
-            Tải lại danh sách phân công
-          </Button>
+          <IconActionButton
+            type="button"
+            variant="outline"
+            onClick={() => void assignments.refetch()}
+            action="reload"
+            label="Tải lại danh sách phân công"
+          />
         </div>
       )}
       {assignments.data?.items.length === 0 && <p>Chưa có kiosk ở trang này.</p>}
@@ -315,7 +325,7 @@ function Assignment({
         })}
       >
         <label htmlFor={`kiosk-seller-${kiosk.id}`}>Shop quản lý toàn bộ kiosk</label>
-        <select
+        <Select
           id={`kiosk-seller-${kiosk.id}`}
           {...form.register('sellerId', { onChange: () => assign.reset() })}
           disabled={assign.isPending || !canAssign}
@@ -328,7 +338,7 @@ function Assignment({
               {seller.shopName} · {seller.phone}
             </option>
           ))}
-        </select>
+        </Select>
         {form.formState.errors.sellerId && (
           <p id={`kiosk-error-${kiosk.id}`} className="error">
             {form.formState.errors.sellerId.message}
@@ -427,15 +437,14 @@ export default function AdminSlots({ actorId }: { actorId: string }) {
           </button>
         </div>
         {(kiosks.isError || sellers.isError) && (
-          <Button
+          <IconActionButton
             type="button"
             variant="outline"
             onClick={refresh}
             disabled={kiosks.isFetching || (view === 'shop' && sellers.isFetching)}
-          >
-            <RefreshCw size={16} aria-hidden="true" />
-            Làm mới danh sách kiosk
-          </Button>
+            action="reload"
+            label="Làm mới danh sách kiosk"
+          />
         )}
       </div>
 
@@ -493,7 +502,7 @@ export default function AdminSlots({ actorId }: { actorId: string }) {
               </div>
               <div>
                 <label htmlFor="kiosk-ownership">Lọc phân bổ</label>
-                <select
+                <Select
                   id="kiosk-ownership"
                   value={ownership}
                   onChange={(event) => setOwnership(event.target.value)}
@@ -501,11 +510,11 @@ export default function AdminSlots({ actorId }: { actorId: string }) {
                   <option value="UNASSIGNED">Chưa gán shop</option>
                   <option value="ASSIGNED">Đã gán shop</option>
                   <option value="ALL">Tất cả kiosk</option>
-                </select>
+                </Select>
               </div>
               <div>
                 <label htmlFor="kiosk-status">Lọc trạng thái kiosk</label>
-                <select
+                <Select
                   id="kiosk-status"
                   value={status}
                   onChange={(event) => setStatus(event.target.value)}
@@ -516,7 +525,7 @@ export default function AdminSlots({ actorId }: { actorId: string }) {
                       {name}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
             </div>
           )}

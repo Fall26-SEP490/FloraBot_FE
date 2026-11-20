@@ -1,3 +1,5 @@
+import IconActionButton from '@/shared/components/IconActionButton';
+import Select from '@/shared/components/Select';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
@@ -121,9 +123,12 @@ export default function StaffPreorderFulfillment({
       ) : options.isError ? (
         <p role="alert">
           Chưa tải được đơn và ô phù hợp.{' '}
-          <Button type="button" onClick={() => void options.refetch()}>
-            Tải lại
-          </Button>
+          <IconActionButton
+            type="button"
+            onClick={() => void options.refetch()}
+            action="reload"
+            label="Tải lại"
+          />
         </p>
       ) : options.data.preorders.length === 0 ? (
         <p>Chưa có đơn đã thanh toán đến giờ nạp tại tủ này.</p>
@@ -133,7 +138,7 @@ export default function StaffPreorderFulfillment({
         <form onSubmit={(event) => void submit(event)}>
           <p>Chọn đơn đến giờ nạp, rồi chọn ô và nhập mã trên tem bó hoa.</p>
           <label htmlFor={`preorder-${taskId}`}>Đơn đặt trước</label>
-          <select
+          <Select
             id={`preorder-${taskId}`}
             value={requestId}
             onChange={(event) => {
@@ -150,14 +155,14 @@ export default function StaffPreorderFulfillment({
                 {new Date(order.pickupAt).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}
               </option>
             ))}
-          </select>
+          </Select>
           <PreorderPackingList
             items={
               options.data.preorders.find((order) => order.requestId === requestId)?.accessories
             }
           />
           <label htmlFor={`preorder-slot-${taskId}`}>Ô PREORDER trống</label>
-          <select
+          <Select
             id={`preorder-slot-${taskId}`}
             value={slotId}
             onChange={(event) => {
@@ -173,7 +178,7 @@ export default function StaffPreorderFulfillment({
                 {slot.slotCode}
               </option>
             ))}
-          </select>
+          </Select>
           <label htmlFor={`preorder-qr-${taskId}`}>Mã định danh bó hoa</label>
           <input
             id={`preorder-qr-${taskId}`}
@@ -215,16 +220,16 @@ export default function StaffPreorderFulfillment({
       {error && <p role="alert">{error}</p>}
       {uncertain && (
         <div className="staff-stock-result">
-          <Button
+          <IconActionButton
             type="button"
             variant="outline"
             onClick={() => {
               setUncertain(false);
               void options.refetch();
             }}
-          >
-            Tải lại để kiểm tra
-          </Button>
+            action="reload"
+            label="Tải lại để kiểm tra"
+          />
         </div>
       )}
       {notice && <p role="status">{notice}</p>}

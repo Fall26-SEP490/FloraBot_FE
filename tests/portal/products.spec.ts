@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
@@ -101,7 +102,7 @@ test('Product search, validation, price and status commands, accessible editor',
   await page.getByRole('button', { name: 'Lưu giá', exact: true }).click();
   await expect(page.getByText('Đã lưu giá bán.')).toBeVisible();
   await expect(page.locator('.product-price')).toContainText('420.000');
-  await page.getByLabel('Trạng thái sản phẩm', { exact: true }).selectOption('INACTIVE');
+  await chooseOption(page.getByLabel('Trạng thái sản phẩm', { exact: true }), 'INACTIVE');
   await page.getByRole('button', { name: 'Lưu trạng thái' }).click();
   await expect(page.locator('.product-status')).toHaveText('Ngừng bán');
   expect(
@@ -253,7 +254,7 @@ test('Create draft: validation, retry and 201 creation', async ({ page }) => {
 
   // Verify list updated with new item
   await expect(page.getByText('Bó cẩm tú cầu giả', { exact: true })).toBeVisible();
-  await expect(createdCard.locator('.product-status')).toHaveText('Bản nháp');
+  await expect(createdCard.locator('.product-status')).toHaveText('Bản mẫu');
 
   // A newly created product is expanded automatically so its result is immediately reviewable.
   await expect(createdCard).toHaveAttribute('open', '');

@@ -1,3 +1,5 @@
+import IconActionButton from '@/shared/components/IconActionButton';
+import Select from '@/shared/components/Select';
 import { rentalAllocation } from '../../kiosk-pricing/ApplicationRentalSummary';
 import { Button, Boxes, CircleAlert, ClipboardList, Eye, RefreshCw } from '@florabot/ui';
 import type { KioskApplicationPage, KioskApplicationResponse } from '../installations.types';
@@ -108,7 +110,7 @@ export function InstallationList({
       <div className="queue-filter-bar installation-filter-bar">
         <div className="filter-group">
           <label htmlFor="status-filter-select">Trạng thái</label>
-          <select
+          <Select
             id="status-filter-select"
             value={statusFilter}
             onChange={(e) => onStatusFilterChange(e.target.value)}
@@ -126,19 +128,18 @@ export function InstallationList({
             <option value="CANCELLED">Đã hủy</option>
             <option value="REJECTED">Đã từ chối</option>
             <option value="REFUNDED">Đã hoàn tiền</option>
-          </select>
+          </Select>
         </div>
 
         {isError && (
-          <Button
+          <IconActionButton
             variant="outline"
             className="refresh-btn"
             onClick={onRefresh}
             disabled={isFetching}
-          >
-            <RefreshCw className={isFetching ? 'spin' : ''} size={16} aria-hidden="true" />
-            Làm mới
-          </Button>
+            action="reload"
+            label="Làm mới"
+          />
         )}
       </div>
 

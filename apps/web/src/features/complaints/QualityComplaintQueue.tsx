@@ -1,10 +1,12 @@
 'use client';
 import { liveListOptions } from '@/shared/lib/live-list';
 
-import { useRef, useState, type FormEvent, type ReactNode } from 'react';
+import IconActionButton from '@/shared/components/IconActionButton';
+import Select from '@/shared/components/Select';
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
-import { ApiError, queryClient, request } from '@/shared/lib/api';
+import { ApiError, request } from '@/shared/lib/api';
 import { fetchProducts } from '../product-management/product.api';
 import QualityComplaintDetails from './QualityComplaintDetails';
 import {
@@ -14,6 +16,7 @@ import {
   type QualitySchema,
 } from './quality-complaints.api';
 import styles from './quality-complaints.module.css';
+import SellerQualityComplaints from './SellerQualityComplaints';
 
 const reviewOptions = {
   RETURN: 'Trả việc để bổ sung',
@@ -29,14 +32,19 @@ function SellerActions({
   sellerId,
   reload,
   stale,
+  onBusy,
 }: {
   detail: QualityComplaint;
   sellerId: string;
   reload: () => Promise<unknown>;
   stale: boolean;
+  onBusy?: (busy: boolean) => void;
 }) {
   const [action, setAction] = useState<Action | null>(null);
   const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    onBusy?.(busy);
+  }, [busy, onBusy]);
   const [message, setMessage] = useState('');
   const [blocked, setBlocked] = useState(false);
   const sending = useRef(false);
@@ -188,7 +196,7 @@ function SellerActions({
   }
 
   return (
-    <div className={styles.flow}>
+    <div className={`${styles.flow} ${styles.sellerActions}`}>
       {detail.status === 'OPEN' && detail.acceptedAt && !task && !detail.items.length && (
         <p role="alert">
           Hồ sơ chưa có dòng bó hoa gốc để giao việc. Cần đối chiếu đơn trước khi xử lý.
@@ -221,7 +229,7 @@ function SellerActions({
             <>
               <label>
                 Nhân viên
-                <select name="assigneeId" required defaultValue="">
+                <Select name="assigneeId" required defaultValue="">
                   <option value="" disabled>
                     Chọn nhân viên
                   </option>
@@ -230,11 +238,11 @@ function SellerActions({
                       {item.name}
                     </option>
                   ))}
-                </select>
+                </Select>
               </label>
               <label>
                 Bó hoa trong đơn
-                <select
+                <Select
                   name="orderItemId"
                   required
                   defaultValue={detail.items.length === 1 ? detail.items[0].orderItemId : ''}
@@ -248,13 +256,17 @@ function SellerActions({
                       {item.slotCode && ` · Ô ${item.slotCode}`}
                     </option>
                   ))}
-                </select>
+                </Select>
               </label>
               {staff.isPending && <p role="status">Đang tải nhân viên…</p>}
               {staff.isError && (
-                <Button type="button" variant="outline" onClick={() => void staff.refetch()}>
-                  Tải lại danh sách nhân viên
-                </Button>
+                <IconActionButton
+                  type="button"
+                  variant="outline"
+                  onClick={() => void staff.refetch()}
+                  action="reload"
+                  label="Tải lại danh sách nhân viên"
+                />
               )}
               {staff.isSuccess && !staff.data.length && <p>Chưa có nhân viên để giao việc.</p>}
             </>
@@ -263,7 +275,7 @@ function SellerActions({
             <>
               <label>
                 Mẫu hoa còn tồn
-                <select required name="productId" defaultValue="">
+                <Select required name="productId" defaultValue="">
                   <option value="" disabled>
                     Chọn mẫu hoa
                   </option>
@@ -272,11 +284,11 @@ function SellerActions({
                       {item.name} · Còn {item.quantity}
                     </option>
                   ))}
-                </select>
+                </Select>
               </label>
               <label>
                 Ô trống tại kiosk gốc
-                <select required name="slotId" defaultValue="">
+                <Select required name="slotId" defaultValue="">
                   <option value="" disabled>
                     Chọn ô bán sẵn
                   </option>
@@ -285,22 +297,22 @@ function SellerActions({
                       {item.slotCode}
                     </option>
                   ))}
-                </select>
+                </Select>
               </label>
               {(products.isPending || slots.isPending) && (
                 <p role="status">Đang kiểm tra mẫu hoa và ô tủ…</p>
               )}
               {(products.isError || slots.isError) && (
-                <Button
+                <IconActionButton
                   type="button"
                   variant="outline"
                   onClick={() => {
                     void products.refetch();
                     void slots.refetch();
                   }}
-                >
-                  Tải lại mẫu hoa và ô tủ
-                </Button>
+                  action="reload"
+                  label="Tải lại mẫu hoa và ô tủ"
+                />
               )}
               {products.isSuccess && slots.isSuccess && !fieldsReady && (
                 <p>Chưa có mẫu còn tồn hoặc ô trống có cảm biến sẵn sàng tại kiosk gốc.</p>
@@ -310,7 +322,7 @@ function SellerActions({
           {activeAction === 'review' && (
             <label>
               Kết quả xử lý
-              <select required name="outcome" defaultValue="">
+              <Select required name="outcome" defaultValue="">
                 <option value="" disabled>
                   Chọn kết quả
                 </option>
@@ -327,7 +339,7 @@ function SellerActions({
                     {label}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
           )}
           {activeAction === 'replacement/cancel' && (
@@ -364,7 +376,7 @@ function SellerActions({
       {message && <p role={blocked ? 'alert' : 'status'}>{message}</p>}
       {blocked && (
         <div>
-          <Button
+          <IconActionButton
             type="button"
             variant="outline"
             disabled={busy}
@@ -380,9 +392,9 @@ function SellerActions({
                 setBusy(false);
               }
             }}
-          >
-            Tải lại hồ sơ
-          </Button>
+            action="reload"
+            label="Tải lại hồ sơ"
+          />
         </div>
       )}
     </div>
@@ -392,27 +404,19 @@ function SellerActions({
 function QualityRow({
   row,
   root,
-  sellerId,
   onAdminDetail,
 }: {
   row: QualityComplaint;
   root: string;
-  sellerId?: string;
   onAdminDetail?: (row: QualityComplaint) => ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   const [evidencePage, setEvidencePage] = useState(1);
-  const scope = sellerId ? 'seller' : 'admin';
   const detail = useQuery({
-    queryKey: ['quality-complaint', root, sellerId, row.id, evidencePage],
+    queryKey: ['quality-complaint', root, undefined, row.id, evidencePage],
     enabled: open,
     queryFn: () => request<QualityComplaint>(`${root}/${row.id}?evidencePage=${evidencePage}`),
   });
-  async function reload() {
-    const fresh = await detail.refetch({ throwOnError: true });
-    await queryClient.invalidateQueries({ queryKey: ['quality-queue', root] });
-    if (!fresh.data) throw new Error('Missing complaint');
-  }
   const data = detail.data;
   return (
     <details className={styles.row} onToggle={(event) => setOpen(event.currentTarget.open)}>
@@ -448,17 +452,8 @@ function QualityRow({
                   Cập nhật hồ sơ
                 </Button>
               </div>
-              <QualityComplaintDetails detail={data} scope={scope} onPage={setEvidencePage} />
-              {sellerId && (
-                <SellerActions
-                  detail={data}
-                  sellerId={sellerId}
-                  reload={reload}
-                  stale={detail.isError || detail.isFetching}
-                />
-              )}
-              {!sellerId &&
-                !detail.isError &&
+              <QualityComplaintDetails detail={data} scope="admin" onPage={setEvidencePage} />
+              {!detail.isError &&
                 data.status === 'OPEN' &&
                 data.handlingState === 'REFUND_REVIEW' &&
                 onAdminDetail?.(data)}
@@ -470,19 +465,17 @@ function QualityRow({
   );
 }
 
-export default function QualityComplaintQueue({
-  sellerId,
+function QualityComplaintList({
   onAdminDetail,
 }: {
-  sellerId?: string;
   onAdminDetail?: (row: QualityComplaint) => ReactNode;
 }) {
-  const root = sellerId ? '/me/complaints' : '/admin/quality-complaints';
+  const root = '/admin/quality-complaints';
   const [page, setPage] = useState(1);
-  const [state, setState] = useState(sellerId ? '' : 'REFUND_REVIEW');
+  const [state, setState] = useState('REFUND_REVIEW');
   const queue = useQuery({
-    ...(sellerId ? {} : liveListOptions()),
-    queryKey: ['quality-queue', root, sellerId, state, page],
+    ...liveListOptions(),
+    queryKey: ['quality-queue', root, undefined, state, page],
     queryFn: () =>
       request<QualitySchema['QualityComplaintPage']>(
         `${root}?${new URLSearchParams({ page: String(page), ...(state && { state }) })}`,
@@ -493,7 +486,7 @@ export default function QualityComplaintQueue({
       <div className={styles.actions}>
         <label>
           Trạng thái
-          <select
+          <Select
             value={state}
             onChange={(event) => {
               setState(event.target.value);
@@ -515,17 +508,17 @@ export default function QualityComplaintQueue({
                 {qualityLabels[key]}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
-        {(Boolean(sellerId) || queue.isError) && (
-          <Button
+        {queue.isError && (
+          <IconActionButton
             type="button"
             variant="outline"
             disabled={queue.isFetching}
             onClick={() => void queue.refetch()}
-          >
-            Làm mới hồ sơ
-          </Button>
+            action="reload"
+            label="Làm mới hồ sơ"
+          />
         )}
       </div>
       {queue.isPending ? (
@@ -536,13 +529,7 @@ export default function QualityComplaintQueue({
         <>
           {!queue.data.items.length && <p>Chưa có phản ánh ở trạng thái này.</p>}
           {queue.data.items.map((row) => (
-            <QualityRow
-              key={row.id}
-              row={row}
-              root={root}
-              sellerId={sellerId}
-              onAdminDetail={onAdminDetail}
-            />
+            <QualityRow key={row.id} row={row} root={root} onAdminDetail={onAdminDetail} />
           ))}
           {(page > 1 || queue.data.hasMore) && (
             <div className={styles.actions}>
@@ -568,5 +555,30 @@ export default function QualityComplaintQueue({
         </>
       )}
     </section>
+  );
+}
+
+export default function QualityComplaintQueue({
+  sellerId,
+  onAdminDetail,
+}: {
+  sellerId?: string;
+  onAdminDetail?: (row: QualityComplaint) => ReactNode;
+}) {
+  return sellerId ? (
+    <SellerQualityComplaints
+      sellerId={sellerId}
+      renderActions={(detail, reload, stale, onBusy) => (
+        <SellerActions
+          detail={detail}
+          sellerId={sellerId}
+          reload={reload}
+          stale={stale}
+          onBusy={onBusy}
+        />
+      )}
+    />
+  ) : (
+    <QualityComplaintList onAdminDetail={onAdminDetail} />
   );
 }

@@ -63,6 +63,62 @@
 .form textarea {
   min-height: 6rem;
 }
+.sellerActions {
+  margin-top: 16px;
+}
+.sellerActions > .actions {
+  gap: 8px;
+}
+.sellerActions .actions button {
+  margin: 0;
+  font-size: 13px;
+}
+.sellerActions .actions a {
+  color: #245b3e;
+  font-size: 13px;
+  text-underline-offset: 3px;
+}
+.sellerActions .form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 16px;
+  border: 1px solid #dce5dc;
+  border-radius: 8px;
+  background: #f8faf6;
+  gap: 14px;
+}
+.sellerActions .form > :is(strong, p, .actions),
+.sellerActions .form > label:has(textarea),
+.sellerActions .form > label:only-of-type {
+  grid-column: 1 / -1;
+}
+.sellerActions .form label {
+  color: #52665b;
+  font-size: 12px;
+  font-weight: 500;
+}
+.sellerActions .form textarea {
+  width: 100%;
+  min-height: 96px;
+  padding: 10px 12px;
+  resize: vertical;
+  border: 1px solid #cfd9d0;
+  border-radius: 6px;
+  background: #fff;
+  color: #203e2d;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+.sellerActions .form > .actions {
+  justify-content: flex-end;
+}
+@media (max-width: 600px) {
+  .sellerActions .form {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 14px;
+  }
+}
 .text {
   white-space: pre-wrap;
   overflow-wrap: anywhere;

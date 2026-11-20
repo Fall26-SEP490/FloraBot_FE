@@ -3,6 +3,7 @@ import { liveListOptions } from '@/shared/lib/live-list';
 
 /* eslint-disable jsx-a11y/no-noninteractive-tabindex -- Scrollable report regions need keyboard focus for horizontal scrolling. */
 
+import Select from '@/shared/components/Select';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import type { components } from '../../../../../../packages/contracts/src/generated/api';
@@ -203,7 +204,7 @@ function AdminAuditLogsSection({
           {!esp32Kiosk && (
             <div>
               <label htmlFor="audit-entity-filter">Đối tượng</label>
-              <select
+              <Select
                 id="audit-entity-filter"
                 value={entityFilter}
                 onChange={(event) => {
@@ -217,7 +218,7 @@ function AdminAuditLogsSection({
                     {label}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
           )}
           <div>
@@ -435,7 +436,7 @@ export default function AdminReports({ session }: { session: Session }) {
           >
             <div>
               <label htmlFor="operations-report">Chọn báo cáo</label>
-              <select
+              <Select
                 id="operations-report"
                 value={report}
                 onChange={(event) => {
@@ -449,7 +450,7 @@ export default function AdminReports({ session }: { session: Session }) {
                     {item.title}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
           </AdminFilterBar>
           {financial ? (

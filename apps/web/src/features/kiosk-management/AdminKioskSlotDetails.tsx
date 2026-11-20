@@ -1,3 +1,4 @@
+import IconActionButton from '@/shared/components/IconActionButton';
 import { useCallback, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
@@ -62,9 +63,12 @@ export function AdminKioskSlotDetails({
             {slots.isError ? (
               <div role="alert">
                 <p>Chưa tải được các ô của kiosk.</p>
-                <Button variant="outline" onClick={() => void slots.refetch()}>
-                  Tải lại các ô tủ
-                </Button>
+                <IconActionButton
+                  variant="outline"
+                  onClick={() => void slots.refetch()}
+                  action="reload"
+                  label="Tải lại các ô tủ"
+                />
               </div>
             ) : slots.isSuccess && items.length === 0 ? (
               <p>API chưa trả về ô nào cho kiosk này.</p>

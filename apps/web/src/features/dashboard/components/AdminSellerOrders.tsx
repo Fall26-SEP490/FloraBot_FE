@@ -1,5 +1,6 @@
 import { liveListOptions } from '@/shared/lib/live-list';
 /* eslint-disable jsx-a11y/no-noninteractive-tabindex -- Scrollable report regions need keyboard focus for horizontal scrolling. */
+import Select from '@/shared/components/Select';
 import { useState } from 'react';
 import './report-sheet.css';
 import { useQuery } from '@tanstack/react-query';
@@ -184,7 +185,7 @@ export default function AdminSellerOrders({
   return (
     <section aria-label="Đơn mua và hủy của shop">
       <label htmlFor="admin-seller-order-status">Trạng thái đơn hàng</label>
-      <select
+      <Select
         id="admin-seller-order-status"
         value={status}
         onChange={(e) => {
@@ -207,7 +208,7 @@ export default function AdminSellerOrders({
             {labels[value]}
           </option>
         ))}
-      </select>
+      </Select>
       {orders.isPending ? (
         <p role="status">Đang tải đơn của shop…</p>
       ) : orders.isError ? (

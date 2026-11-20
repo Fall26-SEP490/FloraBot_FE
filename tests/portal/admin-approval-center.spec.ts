@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
@@ -166,7 +167,7 @@ for (const width of [390, 1440]) {
         .getByRole('button', { name: 'Chờ xác nhận', exact: true })
         .evaluate((button) => button.getBoundingClientRect().height),
     ).toBeGreaterThanOrEqual(44);
-    await page.getByLabel('Lọc theo trạng thái:', { exact: true }).selectOption('PAID_REVIEW');
+    await chooseOption(page.getByLabel('Lọc theo trạng thái:', { exact: true }), 'PAID_REVIEW');
     await page.getByRole('button', { name: 'Chi tiết', exact: true }).click();
     await expect(
       page.getByRole('heading', { name: 'Chi tiết: Shop đăng ký kiosk mới', exact: true }),

@@ -1,10 +1,11 @@
 'use client';
 
+import IconActionButton from '@/shared/components/IconActionButton';
+import Select from '@/shared/components/Select';
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Button, MapPin, RefreshCw, CircleAlert, Check } from '@florabot/ui';
+import { Button, MapPin, CircleAlert, Check } from '@florabot/ui';
 import { ApiError, queryClient, request, type Session } from '@/shared/lib/api';
-import KioskPickerMap from '../kiosk-location/components/KioskPickerMap';
 import { getGoongPlaceDetail, searchGoongPlaces } from '../kiosk-location/kiosk-location.api';
 import type { GoongPrediction } from '../kiosk-location/kiosk-location.types';
 import { TablePagination } from '../../shared/components/DataTable';
@@ -20,13 +21,18 @@ import {
   isValidLongitude,
   getKioskStatusLabel,
   isKioskActive,
-  buildGoogleMapsSearchUrl,
 } from '../kiosk-location/kiosk-location.utils';
 import './styles/kiosk-management.css';
 import { FlowerPresencePanel } from './FlowerPresencePanel';
 
 interface SellerKiosksProps {
   session: Session;
+}
+
+function getSellerKioskStatusLabel(status: string) {
+  if (status === 'ONLINE') return 'Trực tuyến';
+  if (status === 'MAINTENANCE') return 'Sự cố';
+  return getKioskStatusLabel(status);
 }
 
 function KioskCard({
@@ -63,7 +69,7 @@ function KioskCard({
   const [geoStatus, setGeoStatus] = useState('');
   const [geoBusy, setGeoBusy] = useState(false);
   const [locationSource, setLocationSource] = useState<
-    'saved' | 'suggestion' | 'map' | 'current' | 'unset'
+    'saved' | 'suggestion' | 'current' | 'unset'
   >(kiosk.latitude != null && kiosk.longitude != null ? 'saved' : 'unset');
   const [predictions, setPredictions] = useState<GoongPrediction[]>([]);
   const [searchActive, setSearchActive] = useState(false);
@@ -77,10 +83,6 @@ function KioskCard({
   const parsedLat = parseCoordinate(latInput);
   const parsedLon = parseCoordinate(lonInput);
   const coordsValid = isValidLatitude(parsedLat) && isValidLongitude(parsedLon);
-  const editingLocation = canEdit && editorOpen;
-  const mapLatitude = editingLocation ? parsedLat : parseCoordinate(kiosk.latitude);
-  const mapLongitude = editingLocation ? parsedLon : parseCoordinate(kiosk.longitude);
-  const hasMapPin = isValidLatitude(mapLatitude) && isValidLongitude(mapLongitude);
   const hasGoongSearch = Boolean(process.env.NEXT_PUBLIC_GOONG_API_KEY?.trim());
   const suggestionListId = `kiosk-address-suggestions-${kiosk.id}`;
 
@@ -130,9 +132,7 @@ function KioskCard({
     const lat = detail?.geometry?.location?.lat;
     const lon = detail?.geometry?.location?.lng;
     if (!isValidLatitude(lat) || !isValidLongitude(lon)) {
-      setFormError(
-        'Không lấy được vị trí của địa chỉ này. Hãy chọn gợi ý khác hoặc ghim trên bản đồ.',
-      );
+      setFormError('Không lấy được vị trí của địa chỉ này. Hãy chọn gợi ý khác hoặc nhập tọa độ.');
       return;
     }
     setAddress(detail?.formatted_address || prediction.description);
@@ -191,19 +191,6 @@ function KioskCard({
     setLocationSource(kiosk.latitude != null && kiosk.longitude != null ? 'saved' : 'unset');
   };
 
-  const handleMapPin = (lat: number, lon: number) => {
-    if (!canEdit) return;
-    selectionRef.current += 1;
-    setLatInput(lat.toFixed(6));
-    setLonInput(lon.toFixed(6));
-    setLocationSource('map');
-    setSearchActive(false);
-    setPredictions([]);
-    setDetailLoading(false);
-    setFormError('');
-    setSuccessNotice('');
-  };
-
   const handleUseCurrentLocation = () => {
     if (!canEdit) return;
     if (typeof window === 'undefined' || !navigator.geolocation) {
@@ -233,13 +220,13 @@ function KioskCard({
         setGeoBusy(false);
         if (err.code === 1) {
           setGeoStatus(
-            'Bạn đã từ chối cấp quyền truy cập vị trí. Hãy chọn địa chỉ hoặc ghim trên bản đồ.',
+            'Bạn đã từ chối cấp quyền truy cập vị trí. Hãy chọn địa chỉ gợi ý hoặc nhập tọa độ.',
           );
         } else if (err.code === 3) {
-          setGeoStatus('Quá thời gian lấy vị trí. Vui lòng thử lại hoặc chọn trên bản đồ.');
+          setGeoStatus('Quá thời gian lấy vị trí. Vui lòng thử lại hoặc nhập tọa độ.');
         } else {
           setGeoStatus(
-            'Không thể xác định vị trí hiện tại. Hãy chọn địa chỉ hoặc ghim trên bản đồ.',
+            'Không thể xác định vị trí hiện tại. Hãy chọn địa chỉ gợi ý hoặc nhập tọa độ.',
           );
         }
       },
@@ -260,16 +247,16 @@ function KioskCard({
       return;
     }
 
-    // A selected place or map pin must provide both coordinates.
+    // A saved location requires both coordinates.
     if (!latInput.trim() || !lonInput.trim()) {
-      setFormError('Chọn địa chỉ gợi ý hoặc ghim vị trí trên bản đồ trước khi lưu.');
+      setFormError('Chọn địa chỉ gợi ý hoặc nhập tọa độ trước khi lưu.');
       return;
     }
 
     const lat = parseCoordinate(latInput);
     const lon = parseCoordinate(lonInput);
     if (!isValidLatitude(lat) || !isValidLongitude(lon)) {
-      setFormError('Ghim vị trí chưa hợp lệ. Hãy chọn lại vị trí trên bản đồ.');
+      setFormError('Tọa độ chưa hợp lệ. Vĩ độ từ -90 đến 90, kinh độ từ -180 đến 180.');
       return;
     }
 
@@ -291,23 +278,9 @@ function KioskCard({
           <header className="kiosk-card-header">
             <div className="kiosk-card-identity">
               <div className="kiosk-badge-row">
-                <span className="kiosk-code">{kiosk.code}</span>
-                <span
-                  className={`kiosk-status-badge ${
-                    isKioskActive(kiosk.status)
-                      ? 'badge-active'
-                      : kiosk.status === 'MAINTENANCE'
-                        ? 'badge-maintenance'
-                        : 'badge-offline'
-                  }`}
-                >
-                  {getKioskStatusLabel(kiosk.status)}
-                </span>
-                <span
-                  className={`kiosk-location-badge ${kiosk.locationComplete ? 'badge-complete' : 'badge-incomplete'}`}
-                >
-                  {kiosk.locationComplete ? 'Đã có vị trí' : 'Thiếu vị trí'}
-                </span>
+                {!kiosk.locationComplete && (
+                  <span className="kiosk-location-badge badge-incomplete">Thiếu vị trí</span>
+                )}
               </div>
               <h2 id={`kiosk-title-${kiosk.id}`} className="kiosk-name">
                 {kiosk.name}
@@ -324,7 +297,7 @@ function KioskCard({
                     <span>Chưa cập nhật địa chỉ cụ thể</span>
                   </p>
                 )}
-                {kiosk.region && (
+                {!kiosk.address?.trim() && kiosk.region && (
                   <span className="kiosk-region-badge">Khu vực: {kiosk.region}</span>
                 )}
               </div>
@@ -337,7 +310,7 @@ function KioskCard({
               <span>
                 {!isSellerRole
                   ? 'Tài khoản Nhân viên shop chỉ có quyền xem thông tin, không thể chỉnh sửa vị trí kiosk.'
-                  : 'Tủ kiosk này dùng chung hoặc chưa được gán toàn quyền cho shop. Vị trí do hệ thống quản lý, bạn không thể chỉnh sửa.'}
+                  : 'Vị trí do hệ thống quản lý. Shop chỉ có quyền xem.'}
               </span>
             </div>
           )}
@@ -362,7 +335,7 @@ function KioskCard({
               open={editorOpen}
               onToggle={(event) => setEditorOpen(event.currentTarget.open)}
             >
-              <summary>Chỉnh địa chỉ và ghim bản đồ</summary>
+              <summary>Chỉnh sửa vị trí kiosk</summary>
               {editorOpen && (
                 <form className="kiosk-form" onSubmit={handleSubmit} noValidate>
                   <div className="kiosk-form-fields">
@@ -451,14 +424,14 @@ function KioskCard({
                             </div>
                           ) : (
                             <p role="status">
-                              Không tìm thấy địa chỉ. Bạn có thể chọn vị trí trên bản đồ.
+                              Không tìm thấy địa chỉ. Hãy thử địa chỉ khác hoặc nhập tọa độ.
                             </p>
                           )}
                         </div>
                       )}
                       {canEdit && !hasGoongSearch && (
                         <p className="kiosk-address-hint">
-                          Gợi ý địa chỉ chưa khả dụng. Hãy nhập địa chỉ và chọn ghim trên bản đồ.
+                          Gợi ý địa chỉ chưa khả dụng. Hãy nhập địa chỉ và tọa độ bên dưới.
                         </p>
                       )}
                       {detailLoading && (
@@ -486,12 +459,48 @@ function KioskCard({
                       </div>
                     )}
 
+                    <div className="kiosk-coordinate-fields">
+                      <div className="kiosk-field">
+                        <label htmlFor={`kiosk-latitude-${kiosk.id}`}>Vĩ độ</label>
+                        <input
+                          id={`kiosk-latitude-${kiosk.id}`}
+                          className="kiosk-input"
+                          type="number"
+                          step="any"
+                          min={-90}
+                          max={90}
+                          value={latInput}
+                          disabled={saveMutation.isPending || detailLoading}
+                          onChange={(event) => {
+                            setLatInput(event.target.value);
+                            setLocationSource('unset');
+                          }}
+                        />
+                      </div>
+                      <div className="kiosk-field">
+                        <label htmlFor={`kiosk-longitude-${kiosk.id}`}>Kinh độ</label>
+                        <input
+                          id={`kiosk-longitude-${kiosk.id}`}
+                          className="kiosk-input"
+                          type="number"
+                          step="any"
+                          min={-180}
+                          max={180}
+                          value={lonInput}
+                          disabled={saveMutation.isPending || detailLoading}
+                          onChange={(event) => {
+                            setLonInput(event.target.value);
+                            setLocationSource('unset');
+                          }}
+                        />
+                      </div>
+                    </div>
                     <p className="kiosk-location-selection" role="status">
                       {coordsValid
                         ? locationSource === 'saved'
-                          ? 'Đang hiển thị ghim đã lưu. Chọn gợi ý hoặc bấm bản đồ để cập nhật.'
-                          : 'Đã chọn vị trí ghim. Kiểm tra trên bản đồ trước khi lưu.'
-                        : 'Chọn địa chỉ gợi ý hoặc bấm vào bản đồ để đặt ghim.'}
+                          ? 'Đang sử dụng tọa độ đã lưu.'
+                          : 'Đã có tọa độ hợp lệ. Kiểm tra địa chỉ trước khi lưu.'
+                        : 'Chọn địa chỉ gợi ý, dùng vị trí hiện tại hoặc nhập tọa độ.'}
                     </p>
 
                     {canEdit && (
@@ -549,33 +558,9 @@ function KioskCard({
             </details>
           )}
         </div>
-        <div className="kiosk-map-column">
-          <div className="kiosk-map-heading">
-            <span>{hasMapPin ? 'Vị trí trên bản đồ' : 'Chưa có ghim vị trí'}</span>
-            {hasMapPin && (
-              <a
-                href={buildGoogleMapsSearchUrl(mapLatitude, mapLongitude)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="kiosk-external-link"
-                aria-label={`Mở vị trí ${kiosk.name} trên Google Maps (tab mới)`}
-              >
-                Google Maps ↗
-              </a>
-            )}
-          </div>
-          <KioskPickerMap
-            latitude={mapLatitude}
-            longitude={mapLongitude}
-            onLocationSelect={handleMapPin}
-            interactive={editingLocation && !saveMutation.isPending && !detailLoading}
-            scrollZoom={false}
-            ariaLabel={`Bản đồ vị trí của ${kiosk.name}`}
-          />
-        </div>
       </div>
 
-      {isSellerRole && <FlowerPresencePanel kioskId={kiosk.id} />}
+      {isSellerRole && <FlowerPresencePanel kioskId={kiosk.id} alwaysOpen />}
 
       {isSellerRole && (
         <details
@@ -604,7 +589,10 @@ function KioskCard({
                       </p>
                       <p className="quiet">
                         Lý do: {req.reason} · Gửi lúc:{' '}
-                        {new Date(req.createdAt).toLocaleString('vi-VN')}
+                        {new Date(req.createdAt).toLocaleString('vi-VN', {
+                          timeZone: 'Asia/Ho_Chi_Minh',
+                          hour12: false,
+                        })}
                       </p>
                       {req.reviewNote && <p>Phản hồi vận hành: {req.reviewNote}</p>}
                     </li>
@@ -623,8 +611,9 @@ export default function SellerKiosks({ session }: SellerKiosksProps) {
   const sellerId = session.sellerId;
   const isSellerRole = session.role === 'SELLER';
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'INCOMPLETE' | 'ACTIVE'>('ALL');
+  const [statusFilter, setStatusFilter] = useState('ALL');
   const [page, setPage] = useState(1);
+  const [selectedKioskId, setSelectedKioskId] = useState<string | null>(null);
   const PAGE_SIZE = 8;
 
   const kiosksQuery = useQuery({
@@ -652,16 +641,7 @@ export default function SellerKiosks({ session }: SellerKiosksProps) {
   );
 
   const filteredKiosks = kiosks.filter((k) => {
-    if (
-      statusFilter === 'INCOMPLETE' &&
-      k.locationComplete &&
-      k.address &&
-      k.latitude !== null &&
-      k.longitude !== null
-    ) {
-      return false;
-    }
-    if (statusFilter === 'ACTIVE' && !isKioskActive(k.status)) {
+    if (statusFilter !== 'ALL' && k.status !== statusFilter) {
       return false;
     }
     if (!searchQuery.trim()) return true;
@@ -676,6 +656,7 @@ export default function SellerKiosks({ session }: SellerKiosksProps) {
 
   const safePage = clampPage(page, filteredKiosks.length, PAGE_SIZE);
   const pageItems = paginate(filteredKiosks, safePage, PAGE_SIZE);
+  const selectedKiosk = pageItems.find((kiosk) => kiosk.id === selectedKioskId) ?? pageItems[0];
 
   return (
     <section className="seller-kiosks-page" aria-labelledby="kiosks-title">
@@ -688,8 +669,8 @@ export default function SellerKiosks({ session }: SellerKiosksProps) {
           <CircleAlert size={18} aria-hidden="true" />
           <span>
             Bạn đang đăng nhập với vai trò <strong>Nhân viên shop</strong>. Bạn có thể xem vị trí
-            kiosk nhưng chỉ <strong>Chủ shop (SELLER)</strong> mới có quyền cập nhật địa chỉ và ghim
-            bản đồ.
+            kiosk nhưng chỉ <strong>Chủ shop (SELLER)</strong> mới có quyền cập nhật địa chỉ và tọa
+            độ.
           </span>
         </div>
       )}
@@ -702,8 +683,8 @@ export default function SellerKiosks({ session }: SellerKiosksProps) {
               <h3>Yêu cầu cập nhật vị trí kiosk</h3>
               <p>
                 Hiện có <strong>{incompleteKiosks.length}</strong> kiosk chưa hoàn tất thông tin vị
-                trí (thiếu địa chỉ hoặc ghim bản đồ). Vui lòng cập nhật ngay để khách hàng có thể
-                định vị và nhận hoa.
+                trí (thiếu địa chỉ hoặc tọa độ). Vui lòng cập nhật ngay để khách hàng có thể định vị
+                và nhận hoa.
               </p>
             </div>
           </div>
@@ -728,52 +709,46 @@ export default function SellerKiosks({ session }: SellerKiosksProps) {
           </div>
           <div className="kiosk-filter-group">
             <label htmlFor="seller-kiosk-status-filter">Trạng thái kiosk</label>
-            <select
+            <Select
               id="seller-kiosk-status-filter"
               value={statusFilter}
               onChange={(e) => {
-                setStatusFilter(e.target.value as 'ALL' | 'INCOMPLETE' | 'ACTIVE');
+                setStatusFilter(e.target.value);
                 setPage(1);
               }}
               className="kiosk-select-filter"
               aria-label="Lọc theo trạng thái kiosk"
             >
-              <option value="ALL">Tất cả kiosk ({kiosks.length})</option>
-              {incompleteKiosks.length > 0 && (
-                <option value="INCOMPLETE">Cần bổ sung vị trí ({incompleteKiosks.length})</option>
-              )}
-              <option value="ACTIVE">Đang hoạt động</option>
-            </select>
-            <Button
+              <option value="ALL">Tất cả trạng thái</option>
+              <option value="ONLINE">Trực tuyến</option>
+              <option value="OFFLINE">Ngoại tuyến</option>
+              <option value="MAINTENANCE">Sự cố</option>
+            </Select>
+            <IconActionButton
               variant="outline"
               onClick={() => void kiosksQuery.refetch()}
               disabled={kiosksQuery.isFetching}
               className="kiosk-reload-btn"
-            >
-              <RefreshCw
-                size={16}
-                aria-hidden="true"
-                className={kiosksQuery.isFetching ? 'spin' : ''}
+              action="reload"
+              label="Tải lại danh sách kiosk"
+            />
+            {(searchQuery || statusFilter !== 'ALL') && kiosks.length > 0 && (
+              <IconActionButton
+                variant="outline"
+                className="kiosk-clear-filters"
+                onClick={() => {
+                  setSearchQuery('');
+                  setStatusFilter('ALL');
+                  setPage(1);
+                }}
+                action="clear"
+                label="Xóa bộ lọc kiosk"
               />
-              <span>{kiosksQuery.isFetching ? 'Đang tải lại…' : 'Tải lại danh sách'}</span>
-            </Button>
+            )}
           </div>
         </div>
       )}
 
-      {(searchQuery || statusFilter !== 'ALL') && kiosks.length > 0 && (
-        <Button
-          variant="outline"
-          className="kiosk-clear-filters"
-          onClick={() => {
-            setSearchQuery('');
-            setStatusFilter('ALL');
-            setPage(1);
-          }}
-        >
-          Xóa bộ lọc kiosk
-        </Button>
-      )}
       {kiosksQuery.isPending && (
         <div className="kiosk-loading-state" role="status">
           <p>Đang tải danh sách kiosk của shop…</p>
@@ -806,15 +781,14 @@ export default function SellerKiosks({ session }: SellerKiosksProps) {
             Shop của bạn hiện chưa được phân bổ tủ kiosk nào. Vui lòng kiểm tra hồ sơ thuê kiosk
             hoặc liên hệ quản trị viên hệ thống để được hỗ trợ phân bổ tủ.
           </p>
-          <Button
+          <IconActionButton
             variant="outline"
             className="kiosk-reload-btn"
             onClick={() => void kiosksQuery.refetch()}
             disabled={kiosksQuery.isFetching}
-          >
-            <RefreshCw size={16} aria-hidden="true" />
-            Tải lại danh sách
-          </Button>
+            action="reload"
+            label="Tải lại danh sách"
+          />
         </div>
       )}
 
@@ -824,28 +798,51 @@ export default function SellerKiosks({ session }: SellerKiosksProps) {
         pageItems.length === 0 && (
           <div className="kiosk-empty-state" role="status">
             <p>Không tìm thấy kiosk nào khớp với bộ lọc tìm kiếm.</p>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setSearchQuery('');
-                setStatusFilter('ALL');
-              }}
-            >
-              Xóa bộ lọc
-            </Button>
           </div>
         )}
 
       {pageItems.length > 0 && (
-        <div className="kiosks-list">
-          {pageItems.map((kiosk) => (
+        <div className="kiosk-workbench">
+          <nav className="kiosk-selection" aria-label="Chọn kiosk">
+            <h3>
+              Danh sách kiosk <span>({filteredKiosks.length})</span>
+            </h3>
+            <div className="kiosk-selection-items">
+              {pageItems.map((kiosk) => (
+                <button
+                  key={kiosk.id}
+                  type="button"
+                  className="kiosk-selection-item"
+                  aria-pressed={selectedKiosk.id === kiosk.id}
+                  onClick={() => setSelectedKioskId(kiosk.id)}
+                >
+                  <span className="kiosk-selection-top">
+                    <strong>{kiosk.name}</strong>
+                    <span
+                      className={`kiosk-status-badge ${isKioskActive(kiosk.status) ? 'badge-active' : kiosk.status === 'MAINTENANCE' ? 'badge-maintenance' : 'badge-offline'}`}
+                    >
+                      {getSellerKioskStatusLabel(kiosk.status)}
+                    </span>
+                  </span>
+                  <span className="kiosk-selection-code">Mã: {kiosk.code}</span>
+                  {!kiosk.address?.trim() && kiosk.region && (
+                    <span className="kiosk-selection-address">{kiosk.region}</span>
+                  )}
+                  {!kiosk.locationComplete && (
+                    <span className="kiosk-selection-incomplete">Cần bổ sung vị trí</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </nav>
+          <div className="kiosks-list">
             <KioskCard
-              key={kiosk.id}
-              kiosk={kiosk}
+              key={selectedKiosk.id}
+              kiosk={selectedKiosk}
               sellerId={sellerId}
               isSellerRole={isSellerRole}
             />
-          ))}
+          </div>
         </div>
       )}
 

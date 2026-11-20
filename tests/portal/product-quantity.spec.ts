@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import { expect, test, type Page } from '@playwright/test';
 
 const sellerId = '20000000-0000-0000-0000-000000000001';
@@ -39,10 +40,9 @@ for (const width of [390, 1440]) {
       await form.getByLabel(dimension, { exact: true }).fill('30');
     }
     await form.locator('button[type="submit"]').click();
-    const card = page.locator(`#product-created-${productId}`);
-    await expect(card).toHaveAttribute('open', '');
-    await expect(card).toBeFocused();
-    await expect(card.locator('summary')).toBeInViewport();
+    const panel = page.getByRole('dialog', { name: 'Hoa mới', exact: true });
+    await expect(panel).toBeVisible();
+    await expect(panel.getByRole('button', { name: 'Đóng hộp thoại', exact: true })).toBeFocused();
   });
 }
 
@@ -175,7 +175,7 @@ test('Metadata edits preserve concurrent stock deductions and explicit zero rese
   await expect.poll(() => state.writes.length).toBe(1);
   expect(state.writes[0]).not.toHaveProperty('quantity');
   expect(state.quantity).toBe(4);
-  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.getByRole('dialog', { name: 'Chỉnh sửa Hoa test', exact: true })).toBeHidden();
   await page.getByRole('button', { name: 'Chỉnh sửa thông tin', exact: true }).click();
   form = page.getByRole('form', { name: 'Chỉnh sửa thông tin Hoa test' });
   await expect(form.getByLabel('Tồn bó tại shop', { exact: true })).toHaveValue('4');
@@ -207,8 +207,8 @@ test('Stock conflict reloads quantity and prevents another attempt with depleted
 }) => {
   const state = await fixture(page);
   await page.goto('/seller/stock');
-  await page.locator('#stock-slot').selectOption(slotId);
-  await page.locator('#stock-product').selectOption(productId);
+  await chooseOption(page.locator('#stock-slot'), slotId);
+  await chooseOption(page.locator('#stock-product'), productId);
   await page.getByRole('button', { name: 'Nạp hoa vào ô', exact: true }).click();
   await expect(page.locator('#stock-fill [role="alert"]')).toContainText('Không đủ tồn tại shop.');
   await expect(page.locator(`#stock-product option[value="${productId}"]`)).toContainText('0 bó');

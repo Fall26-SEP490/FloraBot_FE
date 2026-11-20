@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 const productId = '30000000-0000-0000-0000-000000000001';
@@ -169,7 +170,7 @@ for (const width of [390, 1440]) {
     await page.screenshot({ path: test.info().outputPath(`detail-${width}.png`), fullPage: true });
     await back.click();
     await expect(page.locator('.stock-actions')).toContainText('Trang 2');
-    await page.getByRole('combobox', { name: 'Sắp xếp sản phẩm' }).selectOption('price-desc');
+    await chooseOption(page.getByRole('combobox', { name: 'Sắp xếp sản phẩm' }), 'price-desc');
     await expect(page).toHaveURL(/sort=price-desc/);
     await expect(page.locator('.stock-actions')).toContainText('Trang 1');
     await page.goBack();
@@ -206,7 +207,7 @@ for (const width of [390, 1440]) {
     await expect(
       page.locator('.customer-order-list > li > details > summary').nth(1),
     ).toContainText('Xem hướng dẫn nhận');
-    await page.getByRole('combobox', { name: 'Lọc yêu cầu trong trang' }).selectOption('ready');
+    await chooseOption(page.getByRole('combobox', { name: 'Lọc yêu cầu trong trang' }), 'ready');
     await expect(page.locator('.customer-order-list > li')).toHaveCount(1);
     await page.screenshot({ path: test.info().outputPath(`orders-${width}.png`), fullPage: true });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(

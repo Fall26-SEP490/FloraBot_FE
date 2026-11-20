@@ -1,3 +1,4 @@
+import IconActionButton from '@/shared/components/IconActionButton';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@florabot/ui';
@@ -159,14 +160,14 @@ export default function StaffIncidentResolution({
         <div>
           <p role="alert">{error}</p>
           {onRefresh && (
-            <Button
+            <IconActionButton
               type="button"
               variant="outline"
               disabled={busy}
               onClick={() => void onRefresh()}
-            >
-              Tải lại trạng thái trước khi gửi lại
-            </Button>
+              action="reload"
+              label="Tải lại trạng thái trước khi gửi lại"
+            />
           )}
         </div>
       )}

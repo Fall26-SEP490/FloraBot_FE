@@ -1,4 +1,5 @@
 'use client';
+import IconActionButton from '@/shared/components/IconActionButton';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -181,8 +182,13 @@ function KioskRenewalCard({
           >
             {currentSub.status === 'PAST_DUE' ? 'Kỳ thuê đã hết hạn: ' : 'Hạn kỳ hiện tại: '}
             <strong>
-              {new Date(currentSub.periodFrom).toLocaleDateString('vi-VN')} –{' '}
-              {new Date(currentSub.periodTo).toLocaleDateString('vi-VN')}
+              {new Date(currentSub.periodFrom).toLocaleDateString('vi-VN', {
+                timeZone: 'Asia/Ho_Chi_Minh',
+              })}{' '}
+              –{' '}
+              {new Date(currentSub.periodTo).toLocaleDateString('vi-VN', {
+                timeZone: 'Asia/Ho_Chi_Minh',
+              })}
             </strong>{' '}
             ({rentalMoney(currentSub.price)})
           </p>
@@ -206,8 +212,13 @@ function KioskRenewalCard({
               <span>
                 Kỳ mới:{' '}
                 <strong>
-                  {new Date(renewal.periodFrom).toLocaleDateString('vi-VN')} –{' '}
-                  {new Date(renewal.periodTo).toLocaleDateString('vi-VN')}
+                  {new Date(renewal.periodFrom).toLocaleDateString('vi-VN', {
+                    timeZone: 'Asia/Ho_Chi_Minh',
+                  })}{' '}
+                  –{' '}
+                  {new Date(renewal.periodTo).toLocaleDateString('vi-VN', {
+                    timeZone: 'Asia/Ho_Chi_Minh',
+                  })}
                 </strong>
               </span>
               <strong className="subscription-renewal-amount">{rentalMoney(renewal.price)}</strong>
@@ -380,7 +391,11 @@ export default function Subscriptions({ session }: { session: Session }) {
           {subscriptionsQuery.isError && (
             <div role="alert">
               <p>Chưa tải được kỳ thuê hiện tại. Tải lại để tiếp tục gia hạn.</p>
-              <Button onClick={() => void subscriptionsQuery.refetch()}>Tải lại kỳ thuê</Button>
+              <IconActionButton
+                onClick={() => void subscriptionsQuery.refetch()}
+                action="reload"
+                label="Tải lại kỳ thuê"
+              />
             </div>
           )}
           {subscriptionsQuery.isPending && (
@@ -435,8 +450,13 @@ export default function Subscriptions({ session }: { session: Session }) {
                         </strong>
                       </td>
                       <td>
-                        {new Date(sub.periodFrom).toLocaleDateString('vi-VN')} –{' '}
-                        {new Date(sub.periodTo).toLocaleDateString('vi-VN')}
+                        {new Date(sub.periodFrom).toLocaleDateString('vi-VN', {
+                          timeZone: 'Asia/Ho_Chi_Minh',
+                        })}{' '}
+                        –{' '}
+                        {new Date(sub.periodTo).toLocaleDateString('vi-VN', {
+                          timeZone: 'Asia/Ho_Chi_Minh',
+                        })}
                       </td>
                       <td>{rentalMoney(sub.price)}</td>
                       <td>
@@ -456,9 +476,12 @@ export default function Subscriptions({ session }: { session: Session }) {
       {application.isError && (
         <div role="alert" className="subscription-alert-box">
           <p>Chưa tải được hồ sơ đăng ký thuê kiosk.</p>
-          <Button variant="outline" onClick={() => void application.refetch()}>
-            Tải lại hồ sơ
-          </Button>
+          <IconActionButton
+            variant="outline"
+            onClick={() => void application.refetch()}
+            action="reload"
+            label="Tải lại hồ sơ"
+          />
         </div>
       )}
 

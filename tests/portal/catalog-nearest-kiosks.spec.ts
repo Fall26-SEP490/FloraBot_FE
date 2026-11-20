@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import { expect, test } from '@playwright/test';
 
 const farKiosk = '40000000-0000-0000-0000-000000000001';
@@ -84,7 +85,7 @@ for (const denied of [false, true]) {
     if (denied) {
       await expect(page.getByText(/Chưa lấy được vị trí hoặc tọa độ kiosk/)).toBeVisible();
       await expect(cards.first()).toContainText('Hoa 00');
-      await page.getByLabel('Sắp xếp sản phẩm').selectOption('price-desc');
+      await chooseOption(page.getByLabel('Sắp xếp sản phẩm'), 'price-desc');
       await expect(cards.first()).toContainText('Hoa 14');
     } else {
       await expect(page.getByLabel('Sắp xếp sản phẩm')).toHaveValue('nearest');

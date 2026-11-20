@@ -1,3 +1,4 @@
+import IconActionButton from '@/shared/components/IconActionButton';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
@@ -254,14 +255,14 @@ export default function GoogleAccountLink({ email }: GoogleAccountLinkProps) {
       ) : configQuery.isError ? (
         <div role="alert" className={styles.errorMessage}>
           <p>Chưa tải được cấu hình hệ thống.</p>
-          <Button
+          <IconActionButton
             type="button"
             variant="outline"
             className={styles.retryButton}
             onClick={() => void configQuery.refetch()}
-          >
-            Tải lại
-          </Button>
+            action="reload"
+            label="Tải lại"
+          />
         </div>
       ) : !isEnabled ? (
         <p className={styles.infoNote}>

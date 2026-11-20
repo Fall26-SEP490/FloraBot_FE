@@ -1,3 +1,4 @@
+import IconActionButton from '@/shared/components/IconActionButton';
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
@@ -97,9 +98,13 @@ export function AdminSlotSensors({
           <p role="alert" className="error">
             Chưa đọc được cấu hình cảm biến.
           </p>
-          <Button type="button" variant="outline" onClick={() => void configuration.refetch()}>
-            Tải lại cấu hình
-          </Button>
+          <IconActionButton
+            type="button"
+            variant="outline"
+            onClick={() => void configuration.refetch()}
+            action="reload"
+            label="Tải lại cấu hình"
+          />
         </>
       )}
       {configuration.isSuccess && (

@@ -1,6 +1,8 @@
+import IconActionButton from '@/shared/components/IconActionButton';
+import Select from '@/shared/components/Select';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Button } from '@florabot/ui';
+
 import { request } from '@/shared/lib/api';
 import type { components } from '../../../../../../packages/contracts/src/generated/api';
 import TechnicianIoTHealth from './TechnicianIoTHealth';
@@ -27,14 +29,17 @@ export default function TechnicianKioskHealth({ actorId }: { actorId: string }) 
       ) : kiosks.isError ? (
         <>
           <p role="alert">Chưa tải được danh sách kiosk.</p>
-          <Button variant="outline" onClick={() => void kiosks.refetch()}>
-            Tải lại
-          </Button>
+          <IconActionButton
+            variant="outline"
+            onClick={() => void kiosks.refetch()}
+            action="reload"
+            label="Tải lại"
+          />
         </>
       ) : kiosk ? (
         <>
           <label htmlFor="technician-health-kiosk">Kiosk được giao</label>
-          <select
+          <Select
             id="technician-health-kiosk"
             value={kiosk.id}
             onChange={(event) => setSelected(event.target.value)}
@@ -44,7 +49,7 @@ export default function TechnicianKioskHealth({ actorId }: { actorId: string }) 
                 {item.code} · {item.name}
               </option>
             ))}
-          </select>
+          </Select>
           <TechnicianIoTHealth
             key={kiosk.id}
             path={`/staff/kiosk-health/${kiosk.id}`}

@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
@@ -135,9 +136,9 @@ test('Rescheduling preserves the reserved kiosk and validates the time window be
   await expect(page.locator('.operations-detail-progress li[aria-current="step"]')).toContainText(
     'Xếp lịch lắp đặt',
   );
-  await expect(page.getByLabel('Tủ kiosk cấp phát')).toHaveValue('kiosk-1');
-  await expect(page.getByLabel('Kỹ thuật viên phụ trách')).toHaveValue('tech-1');
-  await expect(page.getByLabel('Ngày dự kiến lắp đặt')).toHaveValue('2026-11-10');
+  await expect(page.getByLabel('Tủ kiosk cấp phát')).toContainText('K-HCM-01');
+  await expect(page.getByLabel('Kỹ thuật viên phụ trách')).toContainText('Minh Kỹ Thuật');
+  await expect(page.getByLabel('Ngày dự kiến lắp đặt')).toContainText('10/11/2026');
   const time = page.getByLabel('Khung giờ');
   await expect(time).toHaveValue('10:00 - 12:00');
   await time.fill('12:00 - 09:00');
@@ -274,7 +275,7 @@ for (const width of [390, 1440]) {
     const dialog = page.getByRole('dialog', { name: 'Kho thiết bị Kiosk khả dụng' });
     await expect(dialog.getByText('2 tủ khả dụng', { exact: true })).toBeVisible();
     await expect(dialog.getByText('OFFLINE', { exact: true })).toBeVisible();
-    await dialog.getByLabel('Quy mô ô', { exact: true }).selectOption('8');
+    await chooseOption(dialog.getByLabel('Quy mô ô', { exact: true }), '8');
     await expect(dialog.getByText('K-PRO-01', { exact: true })).toBeVisible();
     await expect(dialog.getByText('K-TRIAL-01', { exact: true })).toHaveCount(0);
     await dialog.getByLabel('Tìm thiết bị').fill('không có thiết bị này');
@@ -487,9 +488,10 @@ test('Manager assigns dismantling technician, confirms handover without mandator
   await expect(page.getByText('Chờ phân công kỹ thuật viên tháo dỡ').first()).toBeVisible();
   await expect(page.getByRole('button', { name: 'Xác nhận đã bàn giao' })).toHaveCount(0);
 
-  await page
-    .getByLabel('Kỹ thuật viên phụ trách')
-    .selectOption('01a1b43b-3170-7bd5-b10f-e8fb79680984');
+  await chooseOption(
+    page.getByLabel('Kỹ thuật viên phụ trách'),
+    '01a1b43b-3170-7bd5-b10f-e8fb79680984',
+  );
   await page
     .getByLabel('Hướng dẫn tháo dỡ (10–2.000 ký tự)')
     .fill('Kiểm tra hiện trường, tháo dỡ và thu hồi K-HCM-06.');

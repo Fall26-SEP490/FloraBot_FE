@@ -1,4 +1,6 @@
 import { liveListOptions } from '@/shared/lib/live-list';
+import IconActionButton from '@/shared/components/IconActionButton';
+import Select from '@/shared/components/Select';
 import { useCallback, useState, type FormEvent } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
@@ -113,9 +115,13 @@ function RecoveryForm({
         ) : candidate.isError ? (
           <div role="alert">
             <p>Chưa xác minh được phiên bảo trì: {candidate.error.message}</p>
-            <Button type="button" variant="outline" onClick={() => void candidate.refetch()}>
-              Tải lại thông tin phiên
-            </Button>
+            <IconActionButton
+              type="button"
+              variant="outline"
+              onClick={() => void candidate.refetch()}
+              action="reload"
+              label="Tải lại thông tin phiên"
+            />
           </div>
         ) : !matchesSession ? (
           <p role="alert">
@@ -167,7 +173,7 @@ function RecoveryForm({
           </label>
           <label>
             Tình trạng thực tế trong ô
-            <select
+            <Select
               value={contents}
               onChange={(event) => setContents(event.target.value)}
               required
@@ -176,7 +182,7 @@ function RecoveryForm({
               <option value="">Chọn tình trạng hoa</option>
               {row.bouquetId && <option value="ORIGINAL_BOUQUET">Bó hoa cũ vẫn còn trong ô</option>}
               <option value="EMPTY">Ô đã trống</option>
-            </select>
+            </Select>
           </label>
           <label>
             Ghi chú kiểm tra
@@ -236,13 +242,13 @@ export default function OperationsMaintenanceRecovery({ managerId }: { managerId
       <div className="business-heading">
         <h2 id="maintenance-recovery-title">Phiên cần xác minh</h2>
         {recoveries.isError && (
-          <Button
+          <IconActionButton
             variant="outline"
             disabled={recoveries.isFetching}
             onClick={() => void recoveries.refetch()}
-          >
-            Làm mới
-          </Button>
+            action="reload"
+            label="Làm mới"
+          />
         )}
       </div>
 

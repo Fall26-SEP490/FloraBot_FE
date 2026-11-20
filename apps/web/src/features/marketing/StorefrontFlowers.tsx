@@ -1,9 +1,10 @@
 'use client';
 
+import IconActionButton from '@/shared/components/IconActionButton';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { Button } from '@florabot/ui';
+
 import { loadCatalog } from '@/features/catalog/catalog.data';
 import {
   catalogCardKey,
@@ -60,9 +61,12 @@ export default function StorefrontFlowers() {
           <div className="storefront-feedback" role="alert">
             <h3>Chưa tải được mẫu hoa</h3>
             <p>Bạn vẫn có thể tìm kiosk hoặc thử tải lại danh sách.</p>
-            <Button variant="outline" onClick={() => void catalog.refetch()}>
-              Tải lại mẫu hoa trên trang chủ
-            </Button>
+            <IconActionButton
+              variant="outline"
+              onClick={() => void catalog.refetch()}
+              action="reload"
+              label="Tải lại mẫu hoa trên trang chủ"
+            />
           </div>
         )}
         {catalog.isSuccess && items.length === 0 && (

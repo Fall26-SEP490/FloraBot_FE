@@ -1,10 +1,13 @@
 'use client';
 
+import IconActionButton from '@/shared/components/IconActionButton';
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import type { components } from '../../../../../../../packages/contracts/src/generated/api';
 import EvidenceUpload from '@/shared/components/EvidenceUpload';
+import VietnamDateInput from '@/shared/components/VietnamDateInput';
+import { vietnamDateTimeToUtc } from '@/shared/lib/vietnam-date';
 import { queryClient, request, type Session } from '@/shared/lib/api';
 import '../../styles/commerce-subscriptions.css';
 
@@ -93,7 +96,7 @@ function RefundCard({ id, sellerId }: { id: string; sellerId: string }) {
           bankHolder: bank.holder,
           accountNumber: bank.account,
           providerReference: providerReference.trim(),
-          transferredAt: new Date(transferredAt).toISOString(),
+          transferredAt: vietnamDateTimeToUtc(transferredAt),
           evidenceTicket,
         },
         true,
@@ -121,13 +124,13 @@ function RefundCard({ id, sellerId }: { id: string; sellerId: string }) {
       {detail.isError && (
         <div role="alert">
           Chưa tải được trạng thái mới. Bản nháp vẫn được giữ.
-          <Button
+          <IconActionButton
             variant="outline"
             onClick={() => void detail.refetch()}
             disabled={detail.isFetching}
-          >
-            Tải lại khoản hoàn
-          </Button>
+            action="reload"
+            label="Tải lại khoản hoàn"
+          />
         </div>
       )}
       <h3>
@@ -241,11 +244,13 @@ function RefundCard({ id, sellerId }: { id: string; sellerId: string }) {
               onChange={(event) => setProviderReference(event.target.value)}
             />
             <label htmlFor={`refund-time-${id}`}>Thời điểm chuyển khoản</label>
-            <input
+            <VietnamDateInput
               id={`refund-time-${id}`}
-              type="datetime-local"
+              kind="datetime-local"
+              label="Thời điểm chuyển khoản"
+              required
               value={transferredAt}
-              onChange={(event) => setTransferredAt(event.target.value)}
+              onValueChange={setTransferredAt}
             />
             <EvidenceUpload
               id={`refund-proof-${id}`}
@@ -313,9 +318,12 @@ export default function SellerRefunds({ session }: { session: Session }) {
           <h2>Hoàn tiền trực tiếp</h2>
           <p>Khoản hoàn đã duyệt cần được shop chuyển khoản và gửi chứng từ để đối chiếu.</p>
         </div>
-        <Button variant="outline" onClick={() => void refunds.refetch()}>
-          Làm mới
-        </Button>
+        <IconActionButton
+          variant="outline"
+          onClick={() => void refunds.refetch()}
+          action="reload"
+          label="Làm mới"
+        />
       </div>
       {refunds.isError && <p role="alert">{refunds.error.message}</p>}
       {refunds.isPending ? (

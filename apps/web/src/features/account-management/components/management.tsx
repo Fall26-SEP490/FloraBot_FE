@@ -1,9 +1,11 @@
 'use client';
 import { liveListOptions } from '@/shared/lib/live-list';
 
+import IconActionButton from '@/shared/components/IconActionButton';
+import Select from '@/shared/components/Select';
 import { useId, useState, type FormEvent, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Button, Search, RefreshCw, X, Users } from '@florabot/ui';
+import { Button, Search, Users } from '@florabot/ui';
 import { request, type Session } from '@/shared/lib/api';
 import type { Profile, ProfileInput } from '../account-management.types';
 import { accountStatuses, roleLabels, statusLabels } from '../account-management.constants';
@@ -164,7 +166,7 @@ export function DirectoryTools<T>({
       </div>
       <div>
         <label htmlFor={`${id}-status`}>Trạng thái</label>
-        <select
+        <Select
           id={`${id}-status`}
           value={d.status}
           onChange={(event) => {
@@ -178,12 +180,12 @@ export function DirectoryTools<T>({
               {statusLabels[value]}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
       {roles && (
         <div>
           <label htmlFor={`${id}-role`}>Vai trò</label>
-          <select
+          <Select
             id={`${id}-role`}
             value={d.role}
             onChange={(event) => {
@@ -197,23 +199,23 @@ export function DirectoryTools<T>({
                 {label}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
       )}
       <div className="platform-filter-actions">
         <Button type="submit">Tìm kiếm</Button>
         {(showRefresh || d.query.isError) && (
-          <Button
+          <IconActionButton
             type="button"
             variant="outline"
             disabled={d.query.isFetching}
             onClick={() => void d.query.refetch()}
-          >
-            <RefreshCw size={16} aria-hidden="true" /> Tải lại
-          </Button>
+            action="reload"
+            label="Tải lại"
+          />
         )}
         {(d.search || d.draft || d.status || d.role) && (
-          <Button
+          <IconActionButton
             type="button"
             variant="outline"
             onClick={() => {
@@ -223,10 +225,9 @@ export function DirectoryTools<T>({
               d.setRole('');
               d.setPage(1);
             }}
-          >
-            <X size={15} aria-hidden="true" />
-            Xóa bộ lọc
-          </Button>
+            action="clear"
+            label="Xóa bộ lọc"
+          />
         )}
       </div>
     </form>

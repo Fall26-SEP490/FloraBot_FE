@@ -1,5 +1,6 @@
+import Select from '@/shared/components/Select';
 import { flowerColors, flowerMaterials, flowerTags, tagIsKnown } from '@/shared/lib/flower-tags';
-import { Check, Plus } from '@florabot/ui';
+import { Check } from '@florabot/ui';
 
 const groups = [
   { key: 'flower', label: 'Loại hoa', options: flowerTags },
@@ -64,7 +65,7 @@ export function FlowerTagFields({
                 {Object.entries(group.options).map(([code, label]) => {
                   const tag = `${group.key}:${code}`;
                   const selected = tags.includes(tag);
-                  const Icon = selected ? Check : Plus;
+                  const isColor = group.key === 'color';
                   return (
                     <button
                       key={tag}
@@ -80,8 +81,20 @@ export function FlowerTagFields({
                         )
                       }
                     >
-                      <Icon size={14} aria-hidden="true" />
-                      {label}
+                      {isColor && (
+                        <span
+                          className="product-color-swatch"
+                          data-color={code}
+                          aria-hidden="true"
+                        />
+                      )}
+                      {!isColor && selected && (
+                        <Check size={14} className="product-tag-check" aria-hidden="true" />
+                      )}
+                      <span>{label}</span>
+                      {isColor && selected && (
+                        <Check size={14} className="product-tag-check" aria-hidden="true" />
+                      )}
                     </button>
                   );
                 })}
@@ -93,7 +106,7 @@ export function FlowerTagFields({
         <>
           <div className="form-field">
             <label htmlFor={`${id}-material`}>Chất liệu</label>
-            <select
+            <Select
               id={`${id}-material`}
               disabled={disabled}
               value={tags.find((tag) => tagIsKnown(tag, 'material', flowerMaterials)) ?? ''}
@@ -109,7 +122,7 @@ export function FlowerTagFields({
                   {label}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
           <div className="form-field">
             <label htmlFor={id}>Từ khóa tìm kiếm</label>

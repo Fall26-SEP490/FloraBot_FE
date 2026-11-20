@@ -1,5 +1,6 @@
 'use client';
 
+import IconActionButton from '@/shared/components/IconActionButton';
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
@@ -18,7 +19,8 @@ const currency = (value: number | string | null | undefined) => {
   const num = Number(value);
   return `${(Number.isFinite(num) ? num : 0).toLocaleString('vi-VN')} đ`;
 };
-const dateTime = (value: string | null) => (value ? new Date(value).toLocaleString('vi-VN') : '—');
+const dateTime = (value: string | null) =>
+  value ? new Date(value).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) : '—';
 const errorText = (error: unknown) =>
   error instanceof Error ? error.message : 'Chưa xử lý được yêu cầu.';
 const channelLabels: Record<string, string> = {
@@ -107,16 +109,16 @@ export default function SellerCommerce({ session }: { session: Session }) {
               thay thế ngân hàng shop dùng nhận hoàn phí thuê.
             </p>
           </div>
-          <Button
+          <IconActionButton
             variant="outline"
             onClick={() => {
               void channel.refetch();
               void report.refetch();
               void payments.refetch();
             }}
-          >
-            Làm mới
-          </Button>
+            action="reload"
+            label="Làm mới"
+          />
         </div>
         {channel.isPending ? (
           <p role="status">Đang kiểm tra kênh thanh toán…</p>

@@ -1,5 +1,6 @@
 'use client';
 
+import IconActionButton from '@/shared/components/IconActionButton';
 import Link from 'next/link';
 import { useEffect, useId, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -237,14 +238,14 @@ function Esp32ConfigurationBody({ scope: role, resourceId, actorId }: PanelProps
       {actionError && <p role="alert">{actionError.message}</p>}
       {notice && <p role="status">{notice}</p>}
       <div className="esp32-actions">
-        <Button
+        <IconActionButton
           type="button"
           variant="outline"
           disabled={config.isFetching || !!busy}
           onClick={() => void reload()}
-        >
-          Tải lại thông số
-        </Button>
+          action="reload"
+          label="Tải lại thông số"
+        />
         {!config.isError && canRetry && (
           <Button
             type="button"

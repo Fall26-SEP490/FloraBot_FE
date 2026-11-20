@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
@@ -83,7 +84,7 @@ test('mobile filters expose selection, apply, and close with Escape', async ({ p
   await expect(panel).toBeHidden();
   await toggle.click();
   const flower = panel.getByRole('combobox', { name: 'Loại hoa' });
-  await flower.selectOption('rose');
+  await chooseOption(flower, 'rose');
   await expect(flower).toHaveValue('rose');
   await expect(panel.getByRole('button', { name: 'Áp dụng bộ lọc' })).toHaveText('Xem 3 mẫu hoa');
   await panel.getByRole('button', { name: 'Áp dụng bộ lọc' }).click();

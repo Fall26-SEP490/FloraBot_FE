@@ -1,11 +1,14 @@
 'use client';
 
+import IconActionButton from '@/shared/components/IconActionButton';
+import Select from '@/shared/components/Select';
 import './styles/profile.css';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
+import VietnamDateInput from '@/shared/components/VietnamDateInput';
 import { Button, CircleAlert, Check, Eye, EyeOff, ArrowRight, RotateCcw } from '@florabot/ui';
 import {
   ApiError,
@@ -333,6 +336,8 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
     },
   });
 
+  const dateOfBirth = useWatch({ control: basicForm.control, name: 'dateOfBirth' });
+
   // Preserve unsaved draft: only populate from profile data when form is untouched / pristine
   useEffect(() => {
     if (profile.data && !basicForm.formState.isDirty) {
@@ -607,7 +612,11 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
               : 'Chưa tải được hồ sơ cá nhân. Vui lòng kiểm tra kết nối.'}
           </p>
           <div className="profile-actions">
-            <Button onClick={() => void profile.refetch()}>Tải lại hồ sơ</Button>
+            <IconActionButton
+              onClick={() => void profile.refetch()}
+              action="reload"
+              label="Tải lại hồ sơ"
+            />
             <Link href={workspaceBase(session.data.role)} className="button button-outline">
               Về khu vực của bạn
             </Link>
@@ -669,7 +678,7 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
     }
     if (!validBirthDate(values.dateOfBirth)) {
       setBasicError('Ngày sinh không hợp lệ hoặc sau ngày hiện tại theo giờ Việt Nam.');
-      basicForm.setFocus('dateOfBirth');
+      document.getElementById('profile-date-of-birth')?.focus();
       setBasicSaving(false);
       return;
     }
@@ -1173,7 +1182,7 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
                 <div className="profile-form-columns profile-field-wide">
                   <div className="profile-form-group">
                     <label htmlFor="profile-gender">Giới tính</label>
-                    <select
+                    <Select
                       id="profile-gender"
                       disabled={profileSaving}
                       {...basicForm.register('gender')}
@@ -1183,20 +1192,25 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
                       <option value="FEMALE">Nữ</option>
                       <option value="OTHER">Khác</option>
                       <option value="UNDISCLOSED">Không muốn chia sẻ</option>
-                    </select>
+                    </Select>
                   </div>
                   <div className="profile-form-group">
                     <label htmlFor="profile-date-of-birth">Ngày sinh</label>
-                    <input
+                    <VietnamDateInput
                       id="profile-date-of-birth"
-                      type="date"
-                      autoComplete="bday"
+                      label="Ngày sinh"
                       min="0001-01-01"
                       max={vietnamToday()}
                       disabled={profileSaving}
-                      {...basicForm.register('dateOfBirth')}
-                      aria-invalid={!!basicError && basicError.includes('Ngày sinh')}
-                      aria-describedby="profile-birth-hint"
+                      value={dateOfBirth || ''}
+                      onValueChange={(value) =>
+                        basicForm.setValue('dateOfBirth', value, {
+                          shouldDirty: true,
+                          shouldTouch: true,
+                        })
+                      }
+                      invalid={!!basicError && basicError.includes('Ngày sinh')}
+                      describedBy="profile-birth-hint"
                     />
                     <p id="profile-birth-hint" className="profile-form-hint">
                       Không bắt buộc. Có thể để trống.

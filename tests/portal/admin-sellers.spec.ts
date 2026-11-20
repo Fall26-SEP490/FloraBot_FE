@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
@@ -83,11 +84,11 @@ for (const width of [390, 1440]) {
     await page.getByLabel('Tìm tên shop hoặc số điện thoại').fill('không tìm thấy');
     await expect(page.getByText('Không có hồ sơ phù hợp với bộ lọc hiện tại.')).toBeVisible();
     await page.getByLabel('Tìm tên shop hoặc số điện thoại').fill('');
-    await page.getByLabel('Lọc trạng thái shop').selectOption('ACTIVE');
+    await chooseOption(page.getByLabel('Lọc trạng thái shop'), 'ACTIVE');
     const shopTable = page.getByRole('region', { name: 'Danh sách shop hoa', exact: true });
     await expect(shopTable.locator('tbody tr')).toHaveCount(1);
     await expect(shopTable).toContainText('7/11/2027');
-    await page.getByLabel('Lọc trạng thái shop').selectOption('PENDING');
+    await chooseOption(page.getByLabel('Lọc trạng thái shop'), 'PENDING');
     await expect(shopTable.getByRole('cell', { name: '—', exact: true })).toBeVisible();
     await expect(shopTable.getByRole('link', { name: 'Hồ sơ thuê', exact: true })).toHaveAttribute(
       'href',

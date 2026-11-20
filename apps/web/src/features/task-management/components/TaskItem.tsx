@@ -1,3 +1,5 @@
+import IconActionButton from '@/shared/components/IconActionButton';
+import Select from '@/shared/components/Select';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
@@ -421,7 +423,7 @@ export function TaskItem({
             <label htmlFor={`action-${task.id}`}>
               {reviewingIncident ? 'Kết quả xét duyệt' : 'Bước tiếp theo'}
             </label>
-            <select
+            <Select
               id={`action-${task.id}`}
               {...form.register('status', { required: true })}
               disabled={busy || uncertain}
@@ -435,7 +437,7 @@ export function TaskItem({
                       : TASK_STATUS_LABELS[choice]}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
         </>
       )}
@@ -591,9 +593,12 @@ export function TaskItem({
           ) : quality.isError ? (
             <>
               <p role="alert">Chưa tải được phản ánh của công việc.</p>
-              <Button variant="outline" onClick={() => void quality.refetch()}>
-                Tải lại phản ánh
-              </Button>
+              <IconActionButton
+                variant="outline"
+                onClick={() => void quality.refetch()}
+                action="reload"
+                label="Tải lại phản ánh"
+              />
             </>
           ) : (
             <QualityComplaintDetails
@@ -626,9 +631,13 @@ export function TaskItem({
             <p role="alert">
               Chưa tải được thao tác được giao
               {inventory.error instanceof ApiError ? ` (HTTP ${inventory.error.status})` : ''}.{' '}
-              <Button type="button" variant="outline" onClick={() => void inventory.refetch()}>
-                Tải lại
-              </Button>
+              <IconActionButton
+                type="button"
+                variant="outline"
+                onClick={() => void inventory.refetch()}
+                action="reload"
+                label="Tải lại"
+              />
             </p>
           )}
           {!qualityTask && inventory.data === null && (
@@ -734,9 +743,13 @@ export function TaskItem({
       {needsRepairContext && taskOpen && repairDetails.isError && (
         <div>
           <p role="alert">Chưa kiểm tra được ô tủ. Tải lại trước khi gửi báo cáo.</p>
-          <Button type="button" variant="outline" onClick={() => void repairDetails.refetch()}>
-            Tải lại thông tin ô tủ
-          </Button>
+          <IconActionButton
+            type="button"
+            variant="outline"
+            onClick={() => void repairDetails.refetch()}
+            action="reload"
+            label="Tải lại thông tin ô tủ"
+          />
         </div>
       )}
       {slotRepair && taskOpen && repairDetails.data.slotStatus === 'FAULT' && (

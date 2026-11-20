@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import { fillPickup } from '../fixtures/quotation';
 import { expect, test, type Page } from '@playwright/test';
 import { randomBytes, randomInt, randomUUID } from 'node:crypto';
@@ -292,8 +293,8 @@ test.describe('FloraBot Role Workflows Integration', () => {
     await expect(page.locator('#assignment-kind option[value="DELIVERY"]')).toHaveCount(0);
     await expect(page.getByLabel('Loại công việc')).toHaveValue('INCIDENT');
 
-    await page.getByLabel('Nhân viên phụ trách').selectOption(fixture.technicianId);
-    await page.getByLabel('Sự cố cần kiểm tra').selectOption(fixture.incidentId);
+    await chooseOption(page.getByLabel('Nhân viên phụ trách'), fixture.technicianId);
+    await chooseOption(page.getByLabel('Sự cố cần kiểm tra'), fixture.incidentId);
     await page
       .getByLabel('Hướng dẫn công việc')
       .fill('Kiểm tra chốt khóa ô B01 tại tủ vận hành và báo cáo tình trạng.');
@@ -365,7 +366,7 @@ test.describe('FloraBot Role Workflows Integration', () => {
     await expect(techIncidentCard.locator('.staff-task-label')).toHaveText('Chờ bắt đầu');
 
     // Transition 1 -> 2: ASSIGNED -> IN_PROGRESS
-    await techIncidentCard.getByLabel('Bước tiếp theo').selectOption('IN_PROGRESS');
+    await chooseOption(techIncidentCard.getByLabel('Bước tiếp theo'), 'IN_PROGRESS');
     await techIncidentCard
       .getByLabel('Nội dung cập nhật')
       .fill('Bắt đầu kiểm tra ổ khóa ô B01 tại tủ theo phân công.');
@@ -380,7 +381,7 @@ test.describe('FloraBot Role Workflows Integration', () => {
     await expect(techIncidentCard.locator('.staff-task-label')).toHaveText('Đang thực hiện');
 
     // Transition 2 -> 3: IN_PROGRESS -> SUBMITTED
-    await techIncidentCard.getByLabel('Bước tiếp theo').selectOption('SUBMITTED');
+    await chooseOption(techIncidentCard.getByLabel('Bước tiếp theo'), 'SUBMITTED');
     await techIncidentCard
       .getByLabel('Nội dung cập nhật')
       .fill('Đã vệ sinh chốt khóa ô B01 và kiểm tra hoạt động đóng mở thành công.');
@@ -422,7 +423,7 @@ test.describe('FloraBot Role Workflows Integration', () => {
     await expect(managerReviewCard.locator('.staff-task-label')).toHaveText('Chờ duyệt báo cáo');
 
     // Transition 3 -> 4: SUBMITTED -> COMPLETED
-    await managerReviewCard.getByLabel('Bước tiếp theo').selectOption('COMPLETED');
+    await chooseOption(managerReviewCard.getByLabel('Bước tiếp theo'), 'COMPLETED');
     await managerReviewCard
       .getByLabel('Nội dung cập nhật')
       .fill('Quản lý vận hành nghiệm thu chốt khóa hoạt động tốt và đóng công việc.');
@@ -459,10 +460,11 @@ test.describe('FloraBot Role Workflows Integration', () => {
     await expect(page.locator('#assignment-kind option[value="INCIDENT"]')).toHaveCount(0);
     await expect(page.getByLabel('Loại công việc')).toHaveValue('DELIVERY');
 
-    await page.getByLabel('Nhân viên phụ trách').selectOption(fixture.sellerStaffId);
-    await page
-      .getByLabel('Shop và tủ giao hoa')
-      .selectOption(`${fixture.sellerId}:${fixture.kioskId}`);
+    await chooseOption(page.getByLabel('Nhân viên phụ trách'), fixture.sellerStaffId);
+    await chooseOption(
+      page.getByLabel('Shop và tủ giao hoa'),
+      `${fixture.sellerId}:${fixture.kioskId}`,
+    );
     await page
       .getByLabel('Hướng dẫn công việc')
       .fill('Giao 3 bó hoa lụa vàng đồng vào ô tủ B01 theo đơn.');
@@ -564,7 +566,7 @@ test.describe('FloraBot Role Workflows Integration', () => {
     await expect(ownerReviewCard.locator('.staff-task-label')).toHaveText('Chờ duyệt báo cáo');
 
     // Transition 3 -> 4: SUBMITTED -> COMPLETED
-    await ownerReviewCard.getByLabel('Bước tiếp theo').selectOption('COMPLETED');
+    await chooseOption(ownerReviewCard.getByLabel('Bước tiếp theo'), 'COMPLETED');
     await ownerReviewCard
       .getByLabel('Nội dung cập nhật')
       .fill('Chủ shop nghiệm thu báo cáo công việc giao hoa thử nghiệm.');
