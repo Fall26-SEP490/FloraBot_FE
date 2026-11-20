@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { Flower2, LogIn, Menu, X } from '@florabot/ui';
 import { SiteSupport } from './SiteSupport';
+import FormFeedback from '@/shared/components/FormFeedback';
 import { workspaceBase } from '@/features/portal/config/workspaceSections';
 import { getRoleLabel } from '@/features/portal/config/roleRoutes';
 import {
@@ -291,7 +292,7 @@ const SiteFooter = memo(function SiteFooter() {
               Liên hệ & hỗ trợ
             </Link>
             <Link href="/chinh-sach-rieng-tu" prefetch={false}>
-              Chính sách riêng tư
+              Chính sách bảo mật
             </Link>
           </nav>
         </div>
@@ -350,7 +351,7 @@ function Frame({ children }: { children: ReactNode }) {
         (authSurface ? (
           <footer className="auth-frame-footer">
             <Link href="/lien-he">Cần hỗ trợ?</Link>
-            <Link href="/chinh-sach-rieng-tu">Chính sách riêng tư</Link>
+            <Link href="/chinh-sach-rieng-tu">Chính sách bảo mật</Link>
           </footer>
         ) : (
           <SiteFooter />
@@ -363,6 +364,7 @@ function Frame({ children }: { children: ReactNode }) {
 export default function SiteFrame({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
+      <FormFeedback />
       <Frame>{children}</Frame>
     </QueryClientProvider>
   );

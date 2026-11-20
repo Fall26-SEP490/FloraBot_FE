@@ -52,5 +52,5 @@ export const PAGE_SIZE = 8;
 export const statusNames: Record<string, string> = {
   ACTIVE: 'Đang bán',
   INACTIVE: 'Ngừng bán',
-  DRAFT: 'Bản nháp',
+  DRAFT: 'Bản mẫu',
 };

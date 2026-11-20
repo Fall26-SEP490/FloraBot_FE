@@ -1,3 +1,4 @@
+import Select from '@/shared/components/Select';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
@@ -61,7 +62,7 @@ export default function AssignPreorderStock({
     <details onToggle={(event) => setExpanded(event.currentTarget.open)}>
       <summary>Giao nhân viên nạp vào ô này</summary>
       <label htmlFor={`preorder-assignee-${orderId}`}>Nhân viên của shop</label>
-      <select
+      <Select
         id={`preorder-assignee-${orderId}`}
         value={assigneeId}
         onChange={(event) => setAssigneeId(event.target.value)}
@@ -73,7 +74,7 @@ export default function AssignPreorderStock({
             {member.name}
           </option>
         ))}
-      </select>
+      </Select>
       <label htmlFor={`preorder-instructions-${orderId}`}>Hướng dẫn nạp hoa</label>
       <textarea
         id={`preorder-instructions-${orderId}`}

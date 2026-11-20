@@ -1,12 +1,14 @@
 'use client';
 
+import Select from '@/shared/components/Select';
 import { catalogReturnPath } from '../catalog.navigation';
+import VietnamDateInput from '@/shared/components/VietnamDateInput';
+import { vietnamDate } from '@/shared/lib/vietnam-date';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import {
   Button,
-  CalendarDays,
   Check,
   CheckCircle2,
   Clock,
@@ -270,7 +272,7 @@ export function FlowerRequestForm({
   const [pickupTime, setPickupTime] = useState('');
   const pickupISO = isoDay(pickupDay);
   const pickup = pickupISO && pickupTime ? `${pickupISO}T${pickupTime}` : '';
-  const pickupDateForEstimate = pickup ? new Date(pickup) : null;
+  const pickupDateForEstimate = pickup ? new Date(`${pickup}:00+07:00`) : null;
   const availability = useQuery({
     queryKey: ['preorder-availability', kioskId, pickup],
     enabled: Boolean(
@@ -278,7 +280,7 @@ export function FlowerRequestForm({
     ),
     queryFn: () =>
       request<AvailabilityResponse>(
-        `/kiosks/${kioskId}/preorder-availability?pickupAt=${encodeURIComponent(new Date(pickup).toISOString())}`,
+        `/kiosks/${kioskId}/preorder-availability?pickupAt=${encodeURIComponent(new Date(`${pickup}:00+07:00`).toISOString())}`,
       ),
     staleTime: 15_000,
   });
@@ -294,9 +296,9 @@ export function FlowerRequestForm({
   const [error, setError] = useState('');
   const [pickupError, setPickupError] = useState('');
   const [briefError, setBriefError] = useState('');
-  const pickupRef = useRef<HTMLInputElement>(null);
-  const [calendarNow, setCalendarNow] = useState(Date.now);
-  const timeRef = useRef<HTMLInputElement>(null);
+  const pickupRef = useRef<HTMLButtonElement>(null);
+  const [calendarNow] = useState(Date.now);
+  const timeRef = useRef<HTMLSelectElement>(null);
   const briefRef = useRef<HTMLTextAreaElement>(null);
   const [done, setDone] = useState(false);
   const [submittedId, setSubmittedId] = useState<string | null>(null);
@@ -340,7 +342,7 @@ export function FlowerRequestForm({
         setError('Kiểm tra lại phụ kiện đã chọn hoặc bỏ phụ kiện để tiếp tục.');
         return;
       }
-      const pickupDate = new Date(pickup);
+      const pickupDate = new Date(`${pickup}:00+07:00`);
       if (!isValidPickupTime(pickupDate)) {
         setPickupError('Chọn thời gian nhận trong tương lai, tối đa 30 ngày tới.');
         if (pickupDay && !pickupTime) timeRef.current?.focus();
@@ -686,7 +688,7 @@ export function FlowerRequestForm({
             )}
           <div className="flower-request-field">
             <label htmlFor={`kiosk-${item.productId}`}>Tủ nhận hoa</label>
-            <select
+            <Select
               id={`kiosk-${item.productId}`}
               value={selectedKiosk?.kioskId ?? ''}
               disabled={kioskListLoading || kioskListError || noKiosksAvailable}
@@ -702,7 +704,7 @@ export function FlowerRequestForm({
                   {origin && distanceLabel(entry) ? ` · ${distanceLabel(entry)}` : ''}
                 </option>
               ))}
-            </select>
+            </Select>
             {kioskListLoading && <p role="status">Đang kiểm tra tủ nhận khả dụng…</p>}
             {kioskListError && (
               <p role="alert">Chưa tải được danh sách tủ nhận. Vui lòng thử lại.</p>
@@ -783,71 +785,30 @@ export function FlowerRequestForm({
             <div className="flower-request-date-fields">
               <div>
                 <label htmlFor={`pickup-${item.productId}`}>Ngày nhận hoa</label>
-                <div className="flower-request-calendar-field">
-                  <input
-                    id={`pickup-${item.productId}`}
-                    ref={pickupRef}
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="dd/mm/yyyy"
-                    maxLength={10}
-                    required
-                    value={pickupDay}
-                    onChange={(event) => {
-                      const digits = event.target.value.replace(/\D/g, '').slice(0, 8);
-                      setPickupDay(
-                        [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4, 8)]
-                          .filter(Boolean)
-                          .join('/'),
-                      );
-                      setPickupError('');
-                    }}
-                    aria-invalid={Boolean(pickupError)}
-                    aria-describedby={
-                      pickupError
-                        ? `pickup-error-${item.productId}`
-                        : `pickup-hint-${item.productId}`
-                    }
-                  />
-                  <div className="flower-request-calendar-trigger">
-                    <CalendarDays size={18} aria-hidden="true" />
-                    <input
-                      type="date"
-                      aria-label="Chọn ngày trên lịch"
-                      min={new Date(calendarNow - new Date(calendarNow).getTimezoneOffset() * 60000)
-                        .toISOString()
-                        .slice(0, 10)}
-                      max={new Date(
-                        calendarNow +
-                          30 * 86400000 -
-                          new Date(calendarNow).getTimezoneOffset() * 60000,
-                      )
-                        .toISOString()
-                        .slice(0, 10)}
-                      value={pickupISO}
-                      onFocus={() => setCalendarNow(Date.now())}
-                      onClick={(event) => {
-                        try {
-                          event.currentTarget.showPicker?.();
-                        } catch {
-                          /* Native input remains available. */
-                        }
-                      }}
-                      onChange={(event) => {
-                        setPickupDay(event.target.value.split('-').reverse().join('/'));
-                        setPickupError('');
-                      }}
-                    />
-                  </div>
-                </div>
+                <VietnamDateInput
+                  id={`pickup-${item.productId}`}
+                  triggerRef={pickupRef}
+                  label="Ngày nhận hoa"
+                  required
+                  value={pickupISO}
+                  min={vietnamDate(new Date(calendarNow))}
+                  max={vietnamDate(new Date(calendarNow + 30 * 86400000))}
+                  onValueChange={(value) => {
+                    setPickupDay(value.split('-').reverse().join('/'));
+                    setPickupError('');
+                  }}
+                  invalid={Boolean(pickupError)}
+                  describedBy={
+                    pickupError ? `pickup-error-${item.productId}` : `pickup-hint-${item.productId}`
+                  }
+                />
               </div>
               <div>
                 <label htmlFor={`pickup-time-${item.productId}`}>Giờ nhận hoa</label>
-                <input
+                <Select
                   id={`pickup-time-${item.productId}`}
                   ref={timeRef}
-                  type="time"
-                  lang="vi-VN"
+                  aria-label="Giờ nhận hoa"
                   required
                   value={pickupTime}
                   onChange={(event) => {
@@ -858,7 +819,19 @@ export function FlowerRequestForm({
                   aria-describedby={
                     pickupError ? `pickup-error-${item.productId}` : `pickup-hint-${item.productId}`
                   }
-                />
+                >
+                  <option value="" disabled hidden>
+                    Chọn giờ
+                  </option>
+                  {Array.from({ length: 48 }, (_, index) => {
+                    const time = `${String(Math.floor(index / 2)).padStart(2, '0')}:${index % 2 ? '30' : '00'}`;
+                    return (
+                      <option key={time} value={time}>
+                        {time}
+                      </option>
+                    );
+                  })}
+                </Select>
               </div>
             </div>
             {!pickupError && (

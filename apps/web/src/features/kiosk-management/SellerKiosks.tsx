@@ -1,5 +1,6 @@
 'use client';
 
+import Select from '@/shared/components/Select';
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button, MapPin, RefreshCw, CircleAlert, Check } from '@florabot/ui';
@@ -604,7 +605,10 @@ function KioskCard({
                       </p>
                       <p className="quiet">
                         Lý do: {req.reason} · Gửi lúc:{' '}
-                        {new Date(req.createdAt).toLocaleString('vi-VN')}
+                        {new Date(req.createdAt).toLocaleString('vi-VN', {
+                          timeZone: 'Asia/Ho_Chi_Minh',
+                          hour12: false,
+                        })}
                       </p>
                       {req.reviewNote && <p>Phản hồi vận hành: {req.reviewNote}</p>}
                     </li>
@@ -728,7 +732,7 @@ export default function SellerKiosks({ session }: SellerKiosksProps) {
           </div>
           <div className="kiosk-filter-group">
             <label htmlFor="seller-kiosk-status-filter">Trạng thái kiosk</label>
-            <select
+            <Select
               id="seller-kiosk-status-filter"
               value={statusFilter}
               onChange={(e) => {
@@ -743,7 +747,7 @@ export default function SellerKiosks({ session }: SellerKiosksProps) {
                 <option value="INCOMPLETE">Cần bổ sung vị trí ({incompleteKiosks.length})</option>
               )}
               <option value="ACTIVE">Đang hoạt động</option>
-            </select>
+            </Select>
             <Button
               variant="outline"
               onClick={() => void kiosksQuery.refetch()}

@@ -1,0 +1,89 @@
+.preview {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  margin: 8px 0;
+  padding: 6px;
+  border: 1px solid #dfe7e0;
+  border-radius: 6px;
+  background: #fff;
+  color: #245d40;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.preview img {
+  display: block;
+  width: 72px;
+  height: 72px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+.meta {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+  padding-right: 6px;
+  text-align: left;
+}
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #52685d;
+  font-size: 12px;
+  font-weight: 400;
+}
+.hint {
+  font-weight: 600;
+}
+.dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  box-sizing: border-box;
+  width: min(900px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  padding: 12px;
+  border: 1px solid #dfe7e0;
+  border-radius: 10px;
+  background: #fff;
+  color: #183e2b;
+}
+.dialog::backdrop {
+  background: #132a25b3;
+}
+.dialog header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+.dialog > img {
+  display: block;
+  width: 100%;
+  max-height: calc(100dvh - 112px);
+  object-fit: contain;
+}
+.close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.preview:focus-visible,
+.close:focus-visible {
+  outline: 2px solid #214d37;
+  outline-offset: 2px;
+}

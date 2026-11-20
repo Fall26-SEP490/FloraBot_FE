@@ -55,6 +55,70 @@ async function open(page: Page, url = '/') {
   return dialog;
 }
 
+for (const width of [1440, 390]) {
+  test(`Nearby kiosk answer renders public location cards at ${width}`, async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(90_000);
+    await page.setViewportSize({ width, height: 960 });
+    await page.route('**/api/kiosks', (route) =>
+      route.fulfill({
+        json: [
+          {
+            id: 'kiosk-a',
+            code: 'K-HCM-07',
+            name: 'Kiosk HCM 07',
+            address: 'FPT Software Hòa Lạc, Hà Nội',
+            status: 'ONLINE',
+            latitude: 21.01,
+            longitude: 105.52,
+          },
+          {
+            id: 'kiosk-b',
+            code: 'K-HCM-08',
+            name: 'Kiosk HCM 08',
+            address: 'FPT University, Hòa Lạc',
+            status: 'OFFLINE',
+            latitude: null,
+            longitude: null,
+          },
+        ],
+      }),
+    );
+    await page.route('**/api/shop/flower-chat', (route) =>
+      route.fulfill({
+        json: {
+          intent: 'FLOWERS',
+          message: 'Bạn có thể đến Kiosk HCM 07 hoặc Kiosk HCM 08 để nhận hoa.',
+          suggestions: [],
+        },
+      }),
+    );
+    const dialog = await open(page);
+    await dialog
+      .getByRole('textbox', { name: 'Câu hỏi cho FloraBot' })
+      .fill('Kiosk nào gần khu Hòa Lạc?');
+    await dialog.getByRole('button', { name: 'Gửi câu hỏi', exact: true }).click();
+    const list = dialog.getByRole('list', { name: 'Kiosk được FloraBot gợi ý' });
+    await expect(list.getByRole('listitem')).toHaveCount(2);
+    await expect(list).toContainText('FPT Software Hòa Lạc, Hà Nội');
+    await expect(list.getByRole('link', { name: 'Kiosk HCM 07', exact: true })).toHaveAttribute(
+      'href',
+      '/tim-kiosk?kiosk=kiosk-a',
+    );
+    await expect(list.getByRole('link', { name: /Chỉ đường đến Kiosk HCM 07/ })).toHaveAttribute(
+      'href',
+      /destination=21.01%2C105.52/,
+    );
+    await expect(list.getByRole('link', { name: /Chỉ đường đến Kiosk HCM 08/ })).toHaveCount(0);
+    await expect(list).toContainText('Ngoại tuyến');
+    expect(await dialog.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(
+      true,
+    );
+    await page.screenshot({ path: testInfo.outputPath(`chat-kiosk-cards-${width}.png`) });
+  });
+}
+
 async function selectKiosk(dialog: Locator, name: string) {
   await dialog.getByRole('button', { name: 'Chọn kiosk mua tại tủ', exact: true }).click();
   await dialog.getByRole('button', { name, exact: true }).click();

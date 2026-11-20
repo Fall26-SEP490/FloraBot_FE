@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import { expect, test } from '@playwright/test';
 
 test('Seller can assign a monitored Walk-in slot and approve a separate repair', async ({
@@ -77,11 +78,11 @@ test('Seller can assign a monitored Walk-in slot and approve a separate repair',
   await expect(page.getByText(/Đã duyệt đến/)).toBeVisible();
   await page.getByRole('button', { name: 'Xem chi tiết ô A01' }).click();
   const modal = page.getByRole('dialog', { name: 'Chi tiết ô A01' });
-  await modal.getByText('Giao nhân viên thao tác ô A01').click();
-  await modal.getByLabel('Nhân viên', { exact: true }).selectOption('staff-1');
-  await modal.getByLabel('Mẫu hoa', { exact: true }).selectOption('product-1');
+  await modal.getByRole('tab', { name: 'Giao nhân viên', exact: true }).click();
+  await chooseOption(modal.getByLabel('Nhân viên', { exact: true }), 'staff-1');
+  await chooseOption(modal.getByLabel('Mẫu hoa', { exact: true }), 'product-1');
   await modal.getByLabel(/Hướng dẫn/).fill('Nạp hoa đúng ô A01.');
-  await modal.getByRole('button', { name: 'Xác nhận giao nhân viên' }).click();
+  await modal.getByRole('button', { name: 'Giao việc', exact: true }).click();
   await expect(modal.getByText('Đã giao công việc cho nhân viên.')).toBeVisible();
 });
 import AxeBuilder from '@axe-core/playwright';
@@ -332,8 +333,8 @@ for (const width of [390, 1440]) {
     await expect(section.getByRole('button', { name: 'Nạp hoa vào ô' })).toBeDisabled();
     expect(attempts).toBe(0);
 
-    await section.getByLabel(/Chọn ô Walk-in trống/).selectOption(slots[0].id);
-    await section.getByLabel('2. Chọn mẫu hoa').selectOption(product.id);
+    await chooseOption(section.getByLabel(/Chọn ô Walk-in trống/), slots[0].id);
+    await chooseOption(section.getByLabel('2. Chọn mẫu hoa'), product.id);
     await section.getByRole('button', { name: 'Nạp hoa vào ô' }).click();
     await expect(section.getByRole('alert')).toContainText('Ô đang được cập nhật');
     expect(
@@ -362,7 +363,7 @@ for (const width of [390, 1440]) {
     await page.keyboard.press('Escape');
     await expect(firstCard).toBeFocused();
 
-    await section.getByLabel(/Chọn ô Walk-in trống/).selectOption(slots[1].id);
+    await chooseOption(section.getByLabel(/Chọn ô Walk-in trống/), slots[1].id);
     await section.getByRole('button', { name: 'Nạp hoa vào ô' }).click();
     await expect(section.getByRole('alert')).toContainText('Làm mới kiosk');
     await expect(section.getByRole('button', { name: 'Nạp hoa vào ô' })).toHaveCount(0);
@@ -492,8 +493,8 @@ test('Seller cannot change slot types and stocks only WALK_IN', async ({ page })
   const section = page.locator('.seller-stock');
   const slot = section.getByLabel(/Chọn ô Walk-in trống/);
   await expect(slot.locator('option')).toHaveCount(2);
-  await slot.selectOption(slots[0].id);
-  await section.getByLabel('2. Chọn mẫu hoa').selectOption(productId);
+  await chooseOption(slot, slots[0].id);
+  await chooseOption(section.getByLabel('2. Chọn mẫu hoa'), productId);
   const review = section.getByRole('note', { name: 'Kiểm tra trước khi nạp hoa' });
   await expect(review).toContainText('Bó này chỉ mua trực tiếp tại kiosk');
 
@@ -624,8 +625,8 @@ for (const expireOnCheck of [false, true])
     });
 
     await page.goto('/seller/stock');
-    await page.getByLabel(/Chọn ô Walk-in trống/).selectOption(slotId);
-    await page.getByLabel('2. Chọn mẫu hoa').selectOption(productId);
+    await chooseOption(page.getByLabel(/Chọn ô Walk-in trống/), slotId);
+    await chooseOption(page.getByLabel('2. Chọn mẫu hoa'), productId);
     await page.getByRole('button', { name: 'Mở ô để nạp hoa' }).click();
     const modal = page.getByRole('dialog', { name: 'Chi tiết ô A01' });
     const card = page.getByRole('button', { name: 'Xem chi tiết ô A01' });

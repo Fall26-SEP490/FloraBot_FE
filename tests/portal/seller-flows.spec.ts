@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { setupSellerUsability, shopId, kioskId } from '../fixtures/seller-usability';
@@ -42,10 +43,11 @@ for (const width of [390, 1440]) {
     await form.getByRole('button', { name: 'Giao công việc', exact: true }).click();
     await expect(page.getByText('Chọn nhân viên phụ trách.', { exact: true })).toBeVisible();
     expect(sends).toBe(0);
-    await page.getByLabel('Nhân viên phụ trách', { exact: true }).selectOption('test-staff');
-    await page
-      .getByLabel('Shop và tủ giao hoa', { exact: true })
-      .selectOption(`${shopId}:${kioskId}`);
+    await chooseOption(page.getByLabel('Nhân viên phụ trách', { exact: true }), 'test-staff');
+    await chooseOption(
+      page.getByLabel('Shop và tủ giao hoa', { exact: true }),
+      `${shopId}:${kioskId}`,
+    );
     await page
       .getByLabel('Hướng dẫn công việc', { exact: true })
       .fill('Giao hai bó hồng, kiểm tra đúng tủ.');
@@ -165,7 +167,7 @@ test('Seller task counts state their current API page and preserve server status
   });
   await page.goto('/seller/tasks');
   await expect(page.locator('.seller-task-count')).toContainText('Còn công việc ở trang sau');
-  await page.getByLabel('Lọc trạng thái', { exact: true }).selectOption('SUBMITTED');
+  await chooseOption(page.getByLabel('Lọc trạng thái', { exact: true }), 'SUBMITTED');
   await expect(page.locator('.seller-task-count')).toContainText('Chờ duyệt báo cáo');
   await expect(page.locator('.seller-task-count')).not.toContainText('Còn công việc');
   expect(model.writes).toEqual([]);

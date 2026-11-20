@@ -1,3 +1,4 @@
+import Select from '@/shared/components/Select';
 import { AdminDisclosureSummary } from '@/features/portal/components/AdminUi';
 import { useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -108,7 +109,7 @@ function KioskOperationsManagerPanel({ kiosks }: { kiosks: Kiosk[] }) {
       >
         <div>
           <label htmlFor="ops-manager-kiosk">Chọn kiosk</label>
-          <select
+          <Select
             id="ops-manager-kiosk"
             value={selectedKioskId}
             disabled={assignManager.isPending}
@@ -120,11 +121,11 @@ function KioskOperationsManagerPanel({ kiosks }: { kiosks: Kiosk[] }) {
                 {k.name} · {k.code}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
         <div>
           <label htmlFor="ops-manager-account">Quản lý vận hành phụ trách</label>
-          <select
+          <Select
             id="ops-manager-account"
             ref={managerSelect}
             value={selectedManagerId}
@@ -146,7 +147,7 @@ function KioskOperationsManagerPanel({ kiosks }: { kiosks: Kiosk[] }) {
                   {m.fullName} · {m.email}
                 </option>
               ))}
-          </select>
+          </Select>
         </div>
         <Button
           type="submit"
@@ -312,7 +313,7 @@ function Assignment({
         })}
       >
         <label htmlFor={`kiosk-seller-${kiosk.id}`}>Shop quản lý toàn bộ kiosk</label>
-        <select
+        <Select
           id={`kiosk-seller-${kiosk.id}`}
           {...form.register('sellerId', { onChange: () => assign.reset() })}
           disabled={assign.isPending || !canAssign}
@@ -325,7 +326,7 @@ function Assignment({
               {seller.shopName} · {seller.phone}
             </option>
           ))}
-        </select>
+        </Select>
         {form.formState.errors.sellerId && (
           <p id={`kiosk-error-${kiosk.id}`} className="error">
             {form.formState.errors.sellerId.message}
@@ -485,7 +486,7 @@ export default function AdminSlots({ actorId }: { actorId: string }) {
               </div>
               <div>
                 <label htmlFor="kiosk-ownership">Lọc phân bổ</label>
-                <select
+                <Select
                   id="kiosk-ownership"
                   value={ownership}
                   onChange={(event) => setOwnership(event.target.value)}
@@ -493,11 +494,11 @@ export default function AdminSlots({ actorId }: { actorId: string }) {
                   <option value="UNASSIGNED">Chưa gán shop</option>
                   <option value="ASSIGNED">Đã gán shop</option>
                   <option value="ALL">Tất cả kiosk</option>
-                </select>
+                </Select>
               </div>
               <div>
                 <label htmlFor="kiosk-status">Lọc trạng thái kiosk</label>
-                <select
+                <Select
                   id="kiosk-status"
                   value={status}
                   onChange={(event) => setStatus(event.target.value)}
@@ -508,7 +509,7 @@ export default function AdminSlots({ actorId }: { actorId: string }) {
                       {name}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
             </div>
           )}

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Button } from '@florabot/ui';
+import { useEffect, useRef, useState } from 'react';
+import { Button, X } from '@florabot/ui';
 import {
   qualityDate,
   qualityLabels,
@@ -8,6 +8,10 @@ import {
   type ReceiptCapability,
 } from './quality-complaints.api';
 import styles from './quality-complaints.module.css';
+import sellerStyles from './seller-quality-complaints.module.css';
+import { displayVietnamDate, vietnamDateTime } from '@/shared/lib/vietnam-date';
+
+const sellerDate = (value: string) => displayVietnamDate(vietnamDateTime(value), true);
 
 const prefixes = {
   customer: '/api/receipts/complaints',
@@ -32,6 +36,17 @@ function EvidencePhoto({
   const [attempt, setAttempt] = useState(0);
   const [src, setSrc] = useState('');
   const [failed, setFailed] = useState(false);
+  const preview = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const dialog = preview.current;
+    const contain = (event: Event) => event.stopPropagation();
+    dialog?.addEventListener('keydown', contain);
+    dialog?.addEventListener('cancel', contain);
+    return () => {
+      dialog?.removeEventListener('keydown', contain);
+      dialog?.removeEventListener('cancel', contain);
+    };
+  }, []);
   const { orderId, trackingToken } = capability ?? {};
   useEffect(() => {
     if (!attempt) return;
@@ -78,18 +93,44 @@ function EvidencePhoto({
   }, [attempt, complaintId, photo.id, photo.url, scope, orderId, trackingToken]);
   const label = photo.source === 'STAFF_TASK' ? 'Ảnh xử lý của nhân viên' : 'Ảnh khách gửi';
   return (
-    <li>
+    <li className={scope === 'seller' ? sellerStyles.evidenceCard : undefined}>
       <p>
-        {label} · {qualityDate(photo.createdAt)}
+        {scope === 'seller' ? (
+          <>
+            <strong>{label}</strong>
+            <time dateTime={photo.createdAt}>{sellerDate(photo.createdAt)}</time>
+          </>
+        ) : (
+          <>
+            {label} · {qualityDate(photo.createdAt)}
+          </>
+        )}
       </p>
       {src ? (
-        <img className={styles.photo} src={src} alt={label} />
+        scope === 'seller' ? (
+          <button
+            type="button"
+            className={sellerStyles.imageButton}
+            onClick={() => preview.current?.showModal()}
+            aria-label={`Phóng to ${label.toLocaleLowerCase('vi')}`}
+          >
+            <img className={styles.photo} src={src} alt={label} />
+            <span>Phóng to ảnh</span>
+          </button>
+        ) : (
+          <img className={styles.photo} src={src} alt={label} />
+        )
       ) : (
         <>
           {failed && <p role="alert">Chưa tải được ảnh minh chứng.</p>}
           <Button
             type="button"
             variant="outline"
+            aria-label={
+              scope === 'seller'
+                ? `${failed ? 'Thử tải lại' : 'Xem'} ${label.toLocaleLowerCase('vi')}`
+                : undefined
+            }
             disabled={attempt > 0 && !failed}
             onClick={() => {
               setFailed(false);
@@ -99,6 +140,17 @@ function EvidencePhoto({
             {failed ? 'Thử tải lại ảnh' : attempt ? 'Đang tải ảnh…' : 'Xem ảnh'}
           </Button>
         </>
+      )}
+      {scope === 'seller' && (
+        <dialog ref={preview} className={sellerStyles.photoDialog} aria-label={label}>
+          <header>
+            <strong>{label}</strong>
+            <button type="button" aria-label="Đóng ảnh" onClick={() => preview.current?.close()}>
+              <X size={20} aria-hidden="true" />
+            </button>
+          </header>
+          {src && <img src={src} alt={label} />}
+        </dialog>
       )}
     </li>
   );
@@ -116,6 +168,122 @@ export default function QualityComplaintDetails({
   onPage: (page: number) => void;
 }) {
   const { evidence, replacement, task } = detail;
+  if (scope === 'seller')
+    return (
+      <>
+        <section className={sellerStyles.detailSection} aria-label="Phản ánh của khách">
+          <h3>Phản ánh của khách</h3>
+          <p className={sellerStyles.customerReason}>{detail.reason}</p>
+          {detail.items.length > 0 && (
+            <dl className={`${sellerStyles.facts} ${sellerStyles.orderFacts}`}>
+              <div>
+                <dt>Hoa trong đơn</dt>
+                <dd>
+                  <ul>
+                    {detail.items.map((item) => (
+                      <li key={item.orderItemId}>
+                        {item.name}
+                        {item.slotCode && <span>Ô {item.slotCode}</span>}
+                      </li>
+                    ))}
+                  </ul>
+                </dd>
+              </div>
+            </dl>
+          )}
+        </section>
+        {(detail.resolution || task || detail.outcome === 'REFUND_REVIEW') && (
+          <section className={sellerStyles.detailSection} aria-label="Quá trình xử lý">
+            <div className={sellerStyles.sectionHeading}>
+              <h3>Xử lý phản ánh</h3>
+              {detail.resolvedAt && <span>Hoàn tất {sellerDate(detail.resolvedAt)}</span>}
+            </div>
+            {detail.resolution && (
+              <div className={sellerStyles.result}>
+                <strong>Kết quả xử lý</strong>
+                <p>{detail.resolution}</p>
+              </div>
+            )}
+            <dl className={`${sellerStyles.facts} ${sellerStyles.processingFacts}`}>
+              {task && (
+                <div>
+                  <dt>Việc được giao</dt>
+                  <dd>{task.instructions}</dd>
+                </div>
+              )}
+              {task?.report && (
+                <div>
+                  <dt>Báo cáo nhân viên</dt>
+                  <dd>{task.report}</dd>
+                </div>
+              )}
+            </dl>
+            {detail.outcome === 'REFUND_REVIEW' && detail.status === 'OPEN' && (
+              <p className={sellerStyles.quiet}>
+                Hồ sơ đã chuyển sang xét duyệt. Khoản hoàn chưa được chi.
+              </p>
+            )}
+          </section>
+        )}
+        {replacement && (
+          <section className={sellerStyles.detailSection} aria-label="Hoa thay thế">
+            <h3>Hoa thay thế</h3>
+            <div className={sellerStyles.replacement}>
+              <span className={sellerStyles.badge}>
+                {qualityLabels[replacement.state] || replacement.state}
+              </span>
+              <span>Ô {replacement.slotCode}</span>
+            </div>
+            {replacement.state === 'READY' && (
+              <p className={sellerStyles.quiet}>
+                Khách nhận hoa tại kiosk của đơn gốc, không thanh toán thêm.
+              </p>
+            )}
+            {replacement.expiresAt && ['READY', 'LOADED'].includes(replacement.state) && (
+              <p className={sellerStyles.quiet}>Hạn giữ hoa: {sellerDate(replacement.expiresAt)}</p>
+            )}
+          </section>
+        )}
+        <section className={sellerStyles.detailSection} aria-label="Ảnh minh chứng">
+          <h3>
+            Ảnh minh chứng
+            {evidence.items.length > 0 && (
+              <span>
+                {evidence.items.length}
+                {evidence.hasMore ? '+' : ''}
+              </span>
+            )}
+          </h3>
+          {!evidence.items.length && <p className={sellerStyles.quiet}>Chưa có ảnh minh chứng.</p>}
+          <ul className={sellerStyles.evidenceGrid}>
+            {evidence.items.map((photo) => (
+              <EvidencePhoto key={photo.id} photo={photo} complaintId={detail.id} scope={scope} />
+            ))}
+          </ul>
+          {(Number(evidence.page) > 1 || evidence.hasMore) && (
+            <nav className={sellerStyles.evidencePages} aria-label="Phân trang ảnh minh chứng">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={Number(evidence.page) <= 1}
+                onClick={() => onPage(Number(evidence.page) - 1)}
+              >
+                Trang trước
+              </Button>
+              <span>Trang {evidence.page}</span>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={!evidence.hasMore}
+                onClick={() => onPage(Number(evidence.page) + 1)}
+              >
+                Trang sau
+              </Button>
+            </nav>
+          )}
+        </section>
+      </>
+    );
   return (
     <div className={styles.flow}>
       <p>

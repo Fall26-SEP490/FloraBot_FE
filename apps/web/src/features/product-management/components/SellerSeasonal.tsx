@@ -5,11 +5,13 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import type { components } from '../../../../../../packages/contracts/src/generated/api';
 import { request, type Session } from '@/shared/lib/api';
+import VietnamDateInput from '@/shared/components/VietnamDateInput';
+import { vietnamDate } from '@/shared/lib/vietnam-date';
 import '../../finance/styles/commerce-subscriptions.css';
 
 type Sales = components['schemas']['SeasonalSalesResponse'];
 type Forecast = components['schemas']['SeasonalForecastResponse'];
-const date = (value: Date) => value.toISOString().slice(0, 10);
+const date = vietnamDate;
 
 export default function SellerSeasonal({ session }: { session: Session }) {
   const sellerId = session.sellerId;
@@ -20,9 +22,8 @@ export default function SellerSeasonal({ session }: { session: Session }) {
     to: date(new Date()),
   }));
   const [target, setTarget] = useState(() => {
-    const d = new Date();
-    d.setMonth(d.getMonth() + 1);
-    return d.toISOString().slice(0, 7);
+    const [year, month] = vietnamDate().split('-').map(Number);
+    return `${month === 12 ? year + 1 : year}-${String(month === 12 ? 1 : month + 1).padStart(2, '0')}`;
   });
   const sales = useQuery({
     queryKey: ['seller-seasonal-sales', sellerId, range],
@@ -59,23 +60,25 @@ export default function SellerSeasonal({ session }: { session: Session }) {
           }}
         >
           <div className="seasonal-filter-fields">
-            <label className="seasonal-date-label">
+            <label className="seasonal-date-label" htmlFor="seasonal-from">
               <span>Từ ngày</span>
-              <input
-                type="date"
+              <VietnamDateInput
+                id="seasonal-from"
+                label="Từ ngày"
                 value={from}
                 max={to}
-                onChange={(event) => setFrom(event.target.value)}
+                onValueChange={setFrom}
                 required
               />
             </label>
-            <label className="seasonal-date-label">
+            <label className="seasonal-date-label" htmlFor="seasonal-to">
               <span>Đến ngày</span>
-              <input
-                type="date"
+              <VietnamDateInput
+                id="seasonal-to"
+                label="Đến ngày"
                 value={to}
                 min={from}
-                onChange={(event) => setTo(event.target.value)}
+                onValueChange={setTo}
                 required
               />
             </label>
@@ -148,12 +151,14 @@ export default function SellerSeasonal({ session }: { session: Session }) {
         <h2>Ước tính nhu cầu mùa tới</h2>
         <p>Dự báo phụ thuộc dữ liệu lịch sử. Sản phẩm chưa đủ dữ liệu sẽ không có số ước tính.</p>
         <div className="business-inline seasonal-forecast-form">
-          <label className="seasonal-date-label">
+          <label className="seasonal-date-label" htmlFor="seasonal-month">
             <span>Tháng dự báo</span>
-            <input
-              type="month"
+            <VietnamDateInput
+              id="seasonal-month"
+              label="Tháng dự báo"
+              kind="month"
               value={target}
-              onChange={(event) => setTarget(event.target.value)}
+              onValueChange={setTarget}
             />
           </label>
           <Button

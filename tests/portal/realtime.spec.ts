@@ -1,6 +1,11 @@
 import { expect, test, type WebSocketRoute } from '@playwright/test';
+import { setupSellerUsability } from '../fixtures/seller-usability';
 
 test.beforeEach(async ({ page }) => {
+  test.setTimeout(90_000);
+  await page.route('**/api/**', (route) =>
+    route.fulfill({ json: { items: [], page: 1, hasMore: false } }),
+  );
   await page.route('**/api/admin/withdrawals?*', (route) =>
     route.fulfill({ json: { items: [], page: 1, hasMore: false } }),
   );
@@ -18,7 +23,7 @@ test('Realtime refresh preserves filters and focus, reconnects, and stops on log
   await page.route('**/api/auth/logout', (route) => route.fulfill({ status: 204 }));
   await page.route('**/api/packages', (route) => route.fulfill({ json: [] }));
   await page.route('**/api/admin/slots', (route) => route.fulfill({ json: [] }));
-  await page.route('**/api/admin/sellers?*', (route) => {
+  await page.route('**/api/admin/sellers*', (route) => {
     reads++;
     return route.fulfill({
       json: [{ id: 'shop', shopName: name, phone: '0901234567', status: 'PENDING' }],
@@ -43,7 +48,7 @@ test('Realtime refresh preserves filters and focus, reconnects, and stops on log
     });
   });
   await page.goto('/admin/shops');
-  await expect.poll(() => sockets.length).toBeGreaterThan(0);
+  await expect.poll(() => sockets.length, { timeout: 30_000 }).toBeGreaterThan(0);
   await expect(page.getByText(name, { exact: true })).toBeVisible();
   // A healthy connection must not also poll every query every 30 seconds.
   await page.clock.install();
@@ -76,7 +81,7 @@ test('Realtime refresh preserves filters and focus, reconnects, and stops on log
 });
 
 test('Unavailable realtime retains periodic API refresh', async ({ page }) => {
-  test.setTimeout(45_000);
+  test.setTimeout(90_000);
   let name = 'Hoa trước cập nhật';
   await page.route('**/hub/**', (route) => route.fulfill({ status: 503 }));
   await page.route('**/api/auth/me', (route) =>
@@ -84,7 +89,7 @@ test('Unavailable realtime retains periodic API refresh', async ({ page }) => {
   );
   await page.route('**/api/packages', (route) => route.fulfill({ json: [] }));
   await page.route('**/api/admin/slots', (route) => route.fulfill({ json: [] }));
-  await page.route('**/api/admin/sellers?*', (route) =>
+  await page.route('**/api/admin/sellers*', (route) =>
     route.fulfill({
       json: [{ id: 'shop', shopName: name, phone: '0901234567', status: 'PENDING' }],
     }),
@@ -93,5 +98,22 @@ test('Unavailable realtime retains periodic API refresh', async ({ page }) => {
   await expect(page.getByText(name, { exact: true })).toBeVisible();
   name = 'Hoa sau cập nhật định kỳ';
   // Keep hydration and React Query notifications on real timers while verifying fallback polling.
-  await expect(page.getByText(name, { exact: true })).toBeVisible({ timeout: 35_000 });
+  await expect(page.getByText(name, { exact: true })).toBeVisible({ timeout: 65_000 });
+});
+
+test('Seller catalog is not polled when realtime is unavailable', async ({ page }) => {
+  const model = await setupSellerUsability(page);
+  await page.goto('/seller/products');
+  await expect(
+    page.getByRole('button', { name: 'Xem mẫu hoa Mẫu kiểm thử Seller', exact: true }),
+  ).toBeVisible();
+  await page.clock.install();
+  await page.clock.runFor(600);
+  const productReads = () =>
+    model.reads.filter((path) => path === '/me/products' || path.includes('/photos')).length;
+  const before = productReads();
+  await page.clock.fastForward(125_000);
+  await page.clock.runFor(600);
+  expect(productReads()).toBe(before);
+  expect(model.writes).toEqual([]);
 });

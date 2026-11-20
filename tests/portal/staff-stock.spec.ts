@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
@@ -126,8 +127,8 @@ for (const width of [390, 1440])
     await page.getByRole('button', { name: 'Ghi nhận đã nạp hoa' }).click();
     await expect(page.getByText('Chọn mẫu hoa.', { exact: true })).toBeVisible();
     expect(writes).toBe(0);
-    await page.getByLabel('Mẫu hoa cần nạp').selectOption('product-1');
-    await page.getByLabel('Ô Walk-in trống').selectOption('slot-1');
+    await chooseOption(page.getByLabel('Mẫu hoa cần nạp'), 'product-1');
+    await chooseOption(page.getByLabel('Ô Walk-in trống'), 'slot-1');
     await page.getByLabel('Mã QR trên bó hoa').fill('FLOWER-001');
     await page.getByRole('button', { name: 'Ghi nhận đã nạp hoa' }).click();
     await expect(page.getByText('Xác nhận đã đặt hoa đúng ô.', { exact: true })).toBeVisible();

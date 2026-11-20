@@ -1,3 +1,4 @@
+import Select from '@/shared/components/Select';
 import { RotateCcw, SlidersHorizontal, X } from '@florabot/ui';
 import { PRICE_TIERS } from '../catalog.constants';
 import type { CatalogFiltersController } from '../hooks/useCatalogFilters';
@@ -170,7 +171,7 @@ export function CatalogSidebar({
       <div className="catalog-sidebar-scroll-body">
         <label className="catalog-filter-field">
           Loại hoa
-          <select
+          <Select
             value={filters.flowerFilter}
             onChange={(event) => filters.setFlowerFilter(event.target.value)}
           >
@@ -191,7 +192,7 @@ export function CatalogSidebar({
                   {label}: còn {flowerCounts[code] ?? 0} mẫu
                 </option>
               ))}
-          </select>
+          </Select>
         </label>
         <CatalogFilterGroup title="Hình thức nhận hoa" options={availabilityOptions} />
         <CatalogFilterGroup title="Khoảng giá" options={priceOptions} />

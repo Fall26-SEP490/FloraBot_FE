@@ -1,6 +1,8 @@
 /* eslint-disable jsx-a11y/no-noninteractive-tabindex -- The scrollable lease table supports keyboard navigation. */
 
+import Select from '@/shared/components/Select';
 import { useDeferredValue, useId, useState, type FocusEvent } from 'react';
+import VietnamDateInput from '@/shared/components/VietnamDateInput';
 import { useIsFetching, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import type { components } from '../../../../../../packages/contracts/src/generated/api';
@@ -191,14 +193,14 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
         >
           <div>
             <label htmlFor="seller-report-mode">Xem theo</label>
-            <select
+            <Select
               id="seller-report-mode"
               value={mode}
               onChange={(e) => setMode(e.target.value as 'month' | 'range')}
             >
               <option value="month">Tháng</option>
               <option value="range">Khoảng ngày</option>
-            </select>
+            </Select>
           </div>
           {mode === 'month' ? (
             <div>
@@ -209,36 +211,36 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
                     ? 'Tháng tạo giao dịch'
                     : 'Tháng thu / hoàn'}
               </label>
-              <input
+              <VietnamDateInput
                 id="seller-report-month"
-                type="month"
+                kind="month"
                 required
                 value={month}
-                onChange={(e) => setMonth(e.target.value)}
+                onValueChange={setMonth}
               />
             </div>
           ) : (
             <>
               <div>
                 <label htmlFor="seller-report-from">Từ ngày</label>
-                <input
+                <VietnamDateInput
                   id="seller-report-from"
-                  type="date"
+                  label="Từ ngày"
                   required
                   max={to || undefined}
                   value={from}
-                  onChange={(e) => setFrom(e.target.value)}
+                  onValueChange={setFrom}
                 />
               </div>
               <div>
                 <label htmlFor="seller-report-to">Đến ngày</label>
-                <input
+                <VietnamDateInput
                   id="seller-report-to"
-                  type="date"
+                  label="Đến ngày"
                   required
                   min={from || undefined}
                   value={to}
-                  onChange={(e) => setTo(e.target.value)}
+                  onValueChange={setTo}
                 />
               </div>
             </>
@@ -246,7 +248,7 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
           {(tab === 'sales' || tab === 'orders') && (
             <div>
               <label htmlFor="seller-report-kiosk">Kiosk</label>
-              <select
+              <Select
                 id="seller-report-kiosk"
                 value={kioskId}
                 onChange={(e) => setKioskId(e.target.value)}
@@ -258,7 +260,7 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
                     {kiosk.code} · {kiosk.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
           )}
           <Button type="submit" disabled={busy}>
@@ -363,7 +365,7 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
       {tab === 'payments' && filter && (
         <>
           <label htmlFor="seller-report-payment-state">Trạng thái thanh toán</label>
-          <select
+          <Select
             id="seller-report-payment-state"
             value={paymentStatus}
             onChange={(e) => {
@@ -377,7 +379,7 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
                 {states[status] || status}
               </option>
             ))}
-          </select>
+          </Select>
           {payments.isPending ? (
             <p role="status">Đang tải giao dịch…</p>
           ) : payments.isError ? (

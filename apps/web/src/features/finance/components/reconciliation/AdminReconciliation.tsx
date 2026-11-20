@@ -1,4 +1,6 @@
 import { AdminFilterBar } from '@/features/portal/components/AdminUi';
+import VietnamDateInput from '@/shared/components/VietnamDateInput';
+import { vietnamDateTimeToUtc } from '@/shared/lib/vietnam-date';
 import StatementEditor, { type StatementEntry } from './StatementEditor';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Button } from '@florabot/ui';
@@ -81,7 +83,7 @@ export default function AdminReconciliation() {
   const sending = useRef(false);
   const reviewHeading = useRef<HTMLHeadingElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
-  const dateInput = useRef<HTMLInputElement>(null);
+  const dateInput = useRef<HTMLButtonElement>(null);
   useLayoutEffect(() => {
     if (review) reviewHeading.current?.focus();
   }, [review]);
@@ -127,7 +129,13 @@ export default function AdminReconciliation() {
         ?.focus();
   }
   function validDate() {
-    if (!date || !dateInput.current?.validity.valid || date === '0001-01-01') {
+    let valid = false;
+    try {
+      valid = date !== '0001-01-01' && Boolean(vietnamDateTimeToUtc(`${date}T00:00`));
+    } catch {
+      /* Show the same field error for missing or invalid dates. */
+    }
+    if (!valid) {
       setError('Chọn ngày cần đối soát.');
       dateInput.current?.focus();
       return false;
@@ -237,17 +245,17 @@ export default function AdminReconciliation() {
       >
         <div>
           <label htmlFor="reconciliation-date">Ngày đối soát (giờ Việt Nam)</label>
-          <input
-            ref={dateInput}
+          <VietnamDateInput
+            triggerRef={dateInput}
             id="reconciliation-date"
-            aria-describedby="reconciliation-error"
-            type="date"
+            label="Ngày đối soát (giờ Việt Nam)"
+            describedBy="reconciliation-error"
             min="0001-01-02"
             max="9999-12-31"
             value={date}
             disabled={busy}
-            onChange={(event) => {
-              setDate(event.target.value);
+            onValueChange={(value) => {
+              setDate(value);
               setDaily(null);
               setGateway(null);
               setReview(null);

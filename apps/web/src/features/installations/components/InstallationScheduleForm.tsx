@@ -1,4 +1,6 @@
+import Select from '@/shared/components/Select';
 import { useId } from 'react';
+import VietnamDateInput from '@/shared/components/VietnamDateInput';
 import { Button, ClipboardList } from '@florabot/ui';
 import type { UseQueryResult } from '@tanstack/react-query';
 import type { AccountDirectoryItem } from '../../account-management/account-management.types';
@@ -63,7 +65,7 @@ export function InstallationScheduleForm({
       <div className="form-fields-grid-2">
         <div className="kiosk-form-field">
           <label htmlFor={techSelectId}>Kỹ thuật viên phụ trách</label>
-          <select
+          <Select
             id={techSelectId}
             value={selectedTechId}
             onChange={(e) => onSelectTechId(e.target.value)}
@@ -74,7 +76,7 @@ export function InstallationScheduleForm({
                 {t.fullName} ({t.phone || t.email})
               </option>
             ))}
-          </select>
+          </Select>
           {techniciansQuery.isError && (
             <p role="alert" className="kiosk-field-error">
               Không tải được kỹ thuật viên.{' '}
@@ -104,7 +106,7 @@ export function InstallationScheduleForm({
               </button>
             )}
           </div>
-          <select
+          <Select
             id={kioskSelectId}
             value={kioskStillAvailable ? selectedKioskId : ''}
             onChange={(e) => onSelectKioskId(e.target.value)}
@@ -123,7 +125,7 @@ export function InstallationScheduleForm({
                 Pre-order) [{k.status}]
               </option>
             ))}
-          </select>
+          </Select>
           {selectedKioskId && !kioskStillAvailable && eligibleKiosksQuery.isSuccess && (
             <small role="status">
               Tủ đã chọn không còn khả dụng. Vui lòng chọn lại tủ trước khi lưu.
@@ -152,11 +154,11 @@ export function InstallationScheduleForm({
       <div className="form-fields-grid-2">
         <div className="kiosk-form-field">
           <label htmlFor={scheduleDateId}>Ngày dự kiến lắp đặt</label>
-          <input
+          <VietnamDateInput
             id={scheduleDateId}
-            type="date"
+            label="Ngày dự kiến lắp đặt"
             value={scheduledDate}
-            onChange={(e) => onScheduledDateChange(e.target.value)}
+            onValueChange={onScheduledDateChange}
           />
         </div>
         <div className="kiosk-form-field">

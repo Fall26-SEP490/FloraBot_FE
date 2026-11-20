@@ -1,5 +1,6 @@
 'use client';
 
+import Select from '@/shared/components/Select';
 import { useId, useState, type FormEvent, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button, Search, RefreshCw, X, Users } from '@florabot/ui';
@@ -155,7 +156,7 @@ export function DirectoryTools<T>({
       </div>
       <div>
         <label htmlFor={`${id}-status`}>Trạng thái</label>
-        <select
+        <Select
           id={`${id}-status`}
           value={d.status}
           onChange={(event) => {
@@ -169,12 +170,12 @@ export function DirectoryTools<T>({
               {statusLabels[value]}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
       {roles && (
         <div>
           <label htmlFor={`${id}-role`}>Vai trò</label>
-          <select
+          <Select
             id={`${id}-role`}
             value={d.role}
             onChange={(event) => {
@@ -188,7 +189,7 @@ export function DirectoryTools<T>({
                 {label}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
       )}
       <div className="platform-filter-actions">

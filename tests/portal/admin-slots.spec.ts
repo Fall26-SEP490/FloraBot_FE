@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
@@ -82,14 +83,14 @@ for (const width of [390, 1440]) {
     await section.getByLabel('Tìm mã kiosk, tên kiosk hoặc shop').fill('không tìm thấy');
     await expect(section.getByText('Không có kiosk phù hợp với bộ lọc hiện tại.')).toBeVisible();
     await section.getByLabel('Tìm mã kiosk, tên kiosk hoặc shop').fill('FPT-01');
-    await section.getByLabel('Lọc phân bổ').selectOption('UNASSIGNED');
+    await chooseOption(section.getByLabel('Lọc phân bổ'), 'UNASSIGNED');
     await section.locator('summary.admin-disclosure-summary').click();
 
     await section.getByRole('button', { name: 'Gán kiosk cho shop' }).click();
     await expect(section.getByLabel('Shop quản lý toàn bộ kiosk')).toBeFocused();
     expect(attempts).toBe(0);
 
-    await section.getByLabel('Shop quản lý toàn bộ kiosk').selectOption(seller.id);
+    await chooseOption(section.getByLabel('Shop quản lý toàn bộ kiosk'), seller.id);
     await section.getByRole('button', { name: 'Gán kiosk cho shop' }).click();
     await page.getByRole('button', { name: 'Gán toàn bộ kiosk' }).click();
     await expect(section.getByRole('alert')).toHaveText('Kiosk còn hoa hoặc đang có giao dịch.');
@@ -114,7 +115,7 @@ for (const width of [390, 1440]) {
       section.getByRole('status').filter({ hasText: 'Đã gán toàn bộ kiosk Đại học FPT' }),
     ).toBeFocused();
     await expect(section.locator('li')).toHaveCount(0);
-    await section.getByLabel('Lọc phân bổ').selectOption('ASSIGNED');
+    await chooseOption(section.getByLabel('Lọc phân bổ'), 'ASSIGNED');
     await section.locator('summary.admin-disclosure-summary').click();
     await expect(section.getByText('Tiệm Hoa Ban Mai', { exact: true })).toBeVisible();
     await expect(
@@ -176,10 +177,10 @@ test('Admin explicitly assigns and removes a kiosk manager', async ({ page }) =>
   const save = page.getByRole('button', { name: 'Lưu phân công vận hành' });
   const managerSelect = page.getByLabel('Quản lý vận hành phụ trách', { exact: true });
   await expect(save).toBeDisabled();
-  await managerSelect.selectOption(manager.id);
+  await chooseOption(managerSelect, manager.id);
   await save.click();
   await expect(page.getByText('Phụ trách: An Điều Phối', { exact: false })).toBeVisible();
-  await managerSelect.selectOption({ label: 'Gỡ phân công hiện tại' });
+  await chooseOption(managerSelect, { label: 'Gỡ phân công hiện tại' });
   await save.click();
   await expect(page.getByText('Chưa có quản lý phụ trách')).toBeVisible();
   expect(changes).toEqual([manager.id, null]);

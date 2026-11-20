@@ -18,7 +18,8 @@ const currency = (value: number | string | null | undefined) => {
   const num = Number(value);
   return `${(Number.isFinite(num) ? num : 0).toLocaleString('vi-VN')} đ`;
 };
-const dateTime = (value: string | null) => (value ? new Date(value).toLocaleString('vi-VN') : '—');
+const dateTime = (value: string | null) =>
+  value ? new Date(value).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) : '—';
 const errorText = (error: unknown) =>
   error instanceof Error ? error.message : 'Chưa xử lý được yêu cầu.';
 const channelLabels: Record<string, string> = {

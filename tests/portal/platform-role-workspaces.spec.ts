@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
@@ -352,7 +353,7 @@ test('Admin directory filters and sensitive profile is fetched again after close
 }) => {
   const { calls, state } = await setup(page, 'ADMIN');
   await page.goto('/admin/accounts');
-  await page.getByLabel('Vai trò', { exact: true }).selectOption('SELLER');
+  await chooseOption(page.getByLabel('Vai trò', { exact: true }), 'SELLER');
   await expect.poll(() => calls.some((call) => call.includes('role=SELLER'))).toBe(true);
   const opener = page.getByRole('button', { name: /^Hồ sơ / });
   await opener.click();
@@ -419,7 +420,7 @@ test('Admin directory and profile are accessible and fit mobile and desktop', as
 test('Clear directory filters restores the first unfiltered server page', async ({ page }) => {
   const { calls } = await setup(page);
   await page.goto('/operations/customers');
-  await page.getByLabel('Trạng thái', { exact: true }).selectOption('LOCKED');
+  await chooseOption(page.getByLabel('Trạng thái', { exact: true }), 'LOCKED');
   await page.getByLabel('Tìm kiếm', { exact: true }).fill('customer');
   await page.getByRole('button', { name: 'Tìm kiếm', exact: true }).click();
   await expect

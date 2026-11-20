@@ -1,5 +1,6 @@
 'use client';
 
+import Select from '@/shared/components/Select';
 import { useCallback, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Boxes, Button, RefreshCw, Search } from '@florabot/ui';
@@ -105,7 +106,7 @@ export function AvailableKiosksModal({ open, onClose, session }: AvailableKiosks
           </div>
           <div className="kiosk-form-field">
             <label htmlFor="inventory-slot-filter">Quy mô ô</label>
-            <select
+            <Select
               id="inventory-slot-filter"
               value={slotFilter}
               onChange={(event) => setSlotFilter(event.target.value)}
@@ -116,7 +117,7 @@ export function AvailableKiosksModal({ open, onClose, session }: AvailableKiosks
                   {count} ô
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
           <Button
             variant="outline"

@@ -84,7 +84,7 @@ for (const width of [390, 1440]) {
       return uploads === 1 ? route.fulfill({ json: photos[0] }) : route.abort();
     });
     await page.goto('/seller/products');
-    await page.locator('.product-order-list summary').click();
+    await page.locator('.product-order-list .product-order-summary').click();
     const section = page.locator('.product-photos-inline');
     await expect.poll(() => reads).toBe(1);
     await expect(
@@ -166,7 +166,7 @@ test('Seller captures a product photo from the device camera before uploading', 
   });
 
   await page.goto('/seller/products');
-  await page.locator('.product-order-list summary').click();
+  await page.locator('.product-order-list .product-order-summary').click();
   const section = page.locator('.product-photos-inline');
   await section.getByRole('button', { name: 'Chụp ảnh', exact: true }).click();
   const camera = section.getByLabel(`Hình ảnh trực tiếp từ camera cho ${product.name}`);
@@ -191,10 +191,9 @@ test('Expired shop reads gallery pages, retries failed reads and rejects unsafe 
       json: { id: 'user', name: 'Shop', role: 'SELLER', sellerId, sellerStatus: 'PAST_DUE' },
     }),
   );
-  let reads = 0;
+  let failPhotos = true;
   await page.route('**/photos*', (route) => {
-    reads++;
-    if (reads === 1) return route.fulfill({ status: 503, json: {} });
+    if (failPhotos) return route.fulfill({ status: 503, json: {} });
     const second = route.request().url().endsWith('page=2');
     return route.fulfill({
       json: {
@@ -214,10 +213,11 @@ test('Expired shop reads gallery pages, retries failed reads and rejects unsafe 
     });
   });
   await page.goto('/seller/products');
-  await page.locator('.product-order-list summary').click();
+  await page.locator('.product-order-list .product-order-summary').click();
   const section = page.locator('.product-photos-inline');
   await expect(section.getByLabel(`Chọn ảnh cho ${product.name}`)).toHaveCount(0);
   await expect(section.getByRole('alert')).toContainText('Chưa tải được danh sách ảnh');
+  failPhotos = false;
   await section.getByRole('button', { name: 'Làm mới', exact: true }).click();
   await expect(section.getByTitle(/Không hiển thị được/)).toBeVisible();
   await expect(section.locator('img[src^="javascript:"]')).toHaveCount(0);

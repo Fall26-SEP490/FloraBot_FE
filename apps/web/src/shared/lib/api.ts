@@ -35,6 +35,18 @@ export function isTransientSessionError(error: unknown): boolean {
 export const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: false, staleTime: 30_000 } },
 });
+// Catalog/reference reads do not need another request on every short window switch.
+// Explicit edits and realtime invalidation still refresh them immediately.
+for (const root of [
+  'products',
+  'dashboard-products',
+  'seller-accessories',
+  'preorder-accessories',
+  'seller-payment-channel',
+  'dashboard-seller-staff',
+]) {
+  queryClient.setQueryDefaults([root], { staleTime: 120_000 });
+}
 let refresh: Promise<boolean> | undefined;
 let logoutRequest: Promise<void> | undefined;
 

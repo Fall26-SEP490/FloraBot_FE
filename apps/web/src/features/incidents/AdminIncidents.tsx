@@ -1,3 +1,4 @@
+import Select from '@/shared/components/Select';
 import { AdminFilterBar, AdminDisclosureSummary } from '@/features/portal/components/AdminUi';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -220,7 +221,7 @@ export default function AdminIncidents() {
       >
         <div>
           <label htmlFor="incident-status">Trạng thái sự cố</label>
-          <select
+          <Select
             id="incident-status"
             value={status}
             onChange={(event) => {
@@ -230,7 +231,7 @@ export default function AdminIncidents() {
           >
             <option value="OPEN">Đang mở · cũ nhất trước</option>
             <option value="RESOLVED_FIXED">Đã xử lý · mới nhất trước</option>
-          </select>
+          </Select>
         </div>
         <div>
           <label htmlFor="admin-incident-search">Tìm sự cố trong trang</label>

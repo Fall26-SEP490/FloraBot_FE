@@ -1,0 +1,445 @@
+.editor.editor {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  font: 14px/1.6 var(--font-body, 'Be Vietnam Pro', sans-serif);
+  color: #203e2d;
+}
+.summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  margin-bottom: 22px;
+  border-radius: 8px;
+  background: #f3f7f0;
+}
+.summary > div {
+  display: grid;
+  gap: 4px;
+}
+.summary > div > span {
+  color: #52665b;
+  font-size: 12px;
+}
+.summary strong {
+  font-size: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.badge {
+  padding: 3px 8px;
+  font-size: 12px;
+  border-radius: 5px;
+  color: #52665b;
+  background: #e8ede7;
+}
+.badge[data-active='true'] {
+  color: #245b3e;
+  background: #e0eddb;
+}
+.editor.editor :global(.product-editor-grid) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  padding: 0;
+  background: transparent;
+}
+.editor.editor :global(.product-editor-card) {
+  display: grid;
+  gap: 14px;
+  padding: 0 0 20px;
+  margin: 0;
+  border: 0;
+  border-bottom: 1px solid #dce5dc;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: none;
+}
+.editor.editor :global(.product-editor-commerce) {
+  order: -1;
+}
+.editor.editor :global(.product-photo-source-actions) {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.editor.editor :global(.product-photo-source-actions) > :is(label, button) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-sizing: border-box;
+  margin: 0;
+  min-height: 36px;
+  height: 36px;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.editor.editor :global(.product-editor-card-header) {
+  padding: 0;
+  border: 0;
+  gap: 12px;
+}
+.editor.editor :global(.product-editor-card-header) h4 {
+  font-size: 15px;
+  line-height: 1.5;
+  font-weight: 600;
+  margin: 0;
+}
+.editor.editor :global(.product-editor-card-header) button {
+  min-height: 36px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+.editor.editor :global(.product-editor-desc) {
+  margin: 0;
+  font-size: 14px;
+  color: #52665b;
+}
+.editor.editor :global(.product-specs-list) {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+}
+.editor.editor :global(.product-specs-list) > div {
+  display: grid;
+  gap: 3px;
+  padding: 0;
+  border: 0;
+}
+.editor.editor :global(.product-specs-list) dt {
+  font-size: 12px;
+  color: #52665b;
+}
+.editor.editor :global(.product-specs-list) dd {
+  margin: 0;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 500;
+}
+.editor.editor :global(.product-tags-container) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.editor.editor :global(.product-tags-title) {
+  font-size: 12px;
+  color: #52665b;
+}
+.editor.editor :global(.product-tag-chip) {
+  font-size: 12px;
+  font-weight: 400;
+}
+.editor.editor :global(.product-photos-inline) {
+  margin: 0;
+  padding: 16px 0 0;
+  border-top: 1px solid #e1e8df;
+}
+.editor.editor :global(.product-photos-header) {
+  margin: 0 0 12px;
+  padding: 0;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.editor.editor :global(.product-photos-header) h4 {
+  font-size: 14px;
+}
+.editor.editor :global(.product-photo-gallery) {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+}
+.editor.editor :global(.product-photo-item) {
+  width: auto;
+  min-width: 0;
+  border: 1px solid #dce5dc;
+  border-radius: 8px;
+  overflow: hidden;
+  padding: 0;
+  background: #fff;
+  box-shadow: none;
+}
+.editor.editor :global(.product-photo-media-btn) {
+  width: 100%;
+  height: 150px;
+  border: 0;
+  padding: 0;
+}
+.editor.editor :global(.product-photo-media-btn) img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.editor.editor :global(.product-photo-item-actions) {
+  padding: 8px;
+  gap: 6px;
+}
+.editor.editor :global(.product-photo-item-actions) button,
+.editor.editor :global(.product-photo-cover-state) {
+  font-size: 12px;
+  min-height: 30px;
+  padding: 4px 8px;
+}
+.editor.editor :global(.price-snapshot-note),
+.metadataModal.metadataModal :global(.price-snapshot-note) {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  font-size: 12px;
+  color: #52665b;
+  line-height: 1.6;
+}
+.editor.editor :global(.product-quick-actions) {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+  display: grid;
+  gap: 16px;
+}
+.editor.editor :global(.product-inline-form) {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: #fff;
+}
+.editor.editor :global(.product-inline-form) label {
+  font-size: 12px;
+  font-weight: 500;
+}
+.editor.editor :global(.field-action) {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.editor.editor :global(.field-action) input {
+  min-height: 44px;
+  font-size: 14px;
+}
+.editor.editor :global(.field-action) button {
+  min-height: 44px;
+  font-size: 13px;
+}
+:global(.management-modal-backdrop):has(> .metadataModal),
+:global(.management-modal-backdrop):has(> .photoModal) {
+  z-index: 10000;
+  backdrop-filter: none;
+  background: rgb(19 45 33 / 48%);
+}
+.metadataModal.metadataModal {
+  padding: 0;
+  width: min(720px, calc(100vw - 24px));
+  font: 14px/1.6 var(--font-body, 'Be Vietnam Pro', sans-serif);
+}
+.metadataModal :global(.management-modal-header) {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #fff;
+  padding: 18px 20px;
+  margin: 0;
+}
+.metadataModal :global(.management-modal-header) h2 {
+  font-size: 18px;
+  line-height: 1.5;
+}
+.metadataModal :global(.product-edit-section) {
+  padding: 18px 20px 0;
+}
+.metadataModal.metadataModal :global(.product-metadata-editor) {
+  display: grid;
+  gap: 16px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: #fff;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.metadataModal.metadataModal :global(.product-metadata-editor) > * {
+  grid-column: 1 / -1;
+}
+.metadataModal.metadataModal :global(.product-metadata-editor) > :global(.product-edit-quantity) {
+  grid-column: 2;
+}
+.metadataModal.metadataModal :global(.form-grid-2) > :global(.form-field):first-child {
+  grid-column: 1 / -1;
+}
+.metadataModal.metadataModal :global(.form-grid-2) > :global(.form-field):last-child {
+  grid-column: 1;
+}
+.metadataModal.metadataModal :global(.form-field) {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  min-width: 0;
+  align-content: start;
+}
+.metadataModal.metadataModal :global(.form-field) label {
+  font-size: 13px;
+  margin: 0;
+  font-weight: 500;
+}
+.metadataModal.metadataModal :global(.form-grid-2) {
+  display: contents;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+.metadataModal.metadataModal :global(.form-field) input,
+.metadataModal.metadataModal :global(.form-field) textarea {
+  font: inherit;
+  font-size: 14px;
+  min-height: 44px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+}
+.metadataModal.metadataModal :global(.field-subhint) {
+  font-size: 12px;
+  margin: 0;
+  color: #52665b;
+}
+.metadataModal.metadataModal :global(.dimensions-fieldset) {
+  margin: 0;
+  padding: 12px;
+  background: #f7f9f5;
+  border: 1px solid #dce5dc;
+  border-radius: 8px;
+}
+.metadataModal.metadataModal :global(.dimensions-grid) {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.metadataModal.metadataModal :global(.form-actions) {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  margin: 0 -20px;
+  padding: 14px 20px;
+  border-top: 1px solid #dce5dc;
+  background: #fff;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.metadataModal :global(.management-modal-close),
+.photoModal :global(.management-modal-close) {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.photoModal.photoModal {
+  padding: 0;
+  width: min(960px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  font: 14px/1.6 var(--font-body, 'Be Vietnam Pro', sans-serif);
+}
+.photoModal.photoModal {
+  width: fit-content;
+  max-width: calc(100vw - 24px);
+}
+.photoModal.photoModal :global(.management-modal-header) {
+  padding: 10px 12px;
+}
+.photoModal.photoModal :global(.product-photo-lightbox-toolbar)[hidden] {
+  display: none;
+}
+.photoModal :global(.management-modal-header) {
+  padding: 14px 18px;
+  margin: 0;
+  background: #fff;
+}
+.photoModal :global(.management-modal-header) h2 {
+  font-size: 16px;
+  line-height: 1.5;
+}
+.photoModal.photoModal :global(.product-photo-lightbox-body) {
+  padding: 0;
+  gap: 0;
+}
+.photoModal.photoModal :global(.product-photo-lightbox-stage) {
+  max-height: none;
+  overflow: visible;
+  display: grid;
+  place-items: center;
+  padding: 6px;
+  background: #f3f5f1;
+  border-radius: 0;
+  min-height: 0;
+  height: auto;
+}
+.photoModal.photoModal :global(.product-photo-lightbox-img) {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: calc(100dvh - 140px);
+  object-fit: contain;
+  border-radius: 4px;
+}
+.photoModal.photoModal :global(.product-photo-lightbox-toolbar) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  margin: 0;
+}
+.photoModal.photoModal :global(.product-photo-lightbox-nav),
+.photoModal.photoModal :global(.product-photo-lightbox-actions) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.photoModal.photoModal :global(.product-photo-lightbox-toolbar) :is(button, a) {
+  min-height: 36px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+@media (max-width: 600px) {
+  .metadataModal.metadataModal :global(.product-metadata-editor) {
+    grid-template-columns: 1fr;
+  }
+  .metadataModal.metadataModal :global(.product-metadata-editor) > :global(.product-edit-quantity) {
+    grid-column: 1;
+  }
+  .summary {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .summary > .badge {
+    grid-column: 1 / -1;
+    width: fit-content;
+  }
+  .editor.editor :global(.product-photo-gallery) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .editor.editor :global(.product-editor-card-header) {
+    flex-wrap: wrap;
+  }
+  .metadataModal :global(.product-edit-section) {
+    padding-inline: 16px;
+  }
+  .metadataModal.metadataModal :global(.form-actions) {
+    margin-inline: -16px;
+    padding-inline: 16px;
+  }
+}

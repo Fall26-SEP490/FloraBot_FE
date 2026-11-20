@@ -18,6 +18,18 @@ import {
 import type { ProductItem, CreateProductInput, UpdateProductMetadataInput } from '../product.types';
 import { parseTags, errorText } from '../product.utils';
 
+function formatPriceDisplay(value: unknown): string {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return '';
+  return new Intl.NumberFormat('vi-VN').format(value);
+}
+
+function parsePriceInput(raw: string): number {
+  const digits = raw.replace(/\D/g, '');
+  if (!digits) return Number.NaN;
+  const parsed = Number(digits);
+  return Number.isSafeInteger(parsed) ? parsed : Number.MAX_SAFE_INTEGER;
+}
+
 export function ProductCreateForm({
   sellerId,
   canEdit,
@@ -107,7 +119,7 @@ export function ProductCreateForm({
       };
       const created = await postProduct(payload);
       await queryClient.invalidateQueries({ queryKey: ['products', sellerId] });
-      setSuccessMessage('Đã tạo mẫu hoa mới ở trạng thái Bản nháp.');
+      setSuccessMessage('Đã tạo mẫu hoa mới ở trạng thái Bản mẫu.');
       form.reset();
       if (onSuccess) onSuccess(created?.id);
     } catch (err) {
@@ -126,7 +138,7 @@ export function ProductCreateForm({
     >
       <h3 className="sr-only">Thêm mẫu hoa mới</h3>
       <div className="product-form-badge-strip">
-        <span className="product-badge-pill">Bản nháp</span>
+        <span className="product-badge-pill">Bản mẫu</span>
         <span className="product-badge-note">Thêm ảnh và bật bán sau khi tạo.</span>
       </div>
 
@@ -154,19 +166,33 @@ export function ProductCreateForm({
       <div className="form-grid-2">
         <div className="form-field">
           <label htmlFor="create-product-price">Giá bán (VNĐ)</label>
-          <input
-            id="create-product-price"
-            type="number"
-            min="1"
-            step="1"
-            inputMode="numeric"
-            placeholder="Ví dụ: 250000"
-            disabled={!canEdit || submitting}
-            {...form.register('price', { valueAsNumber: true })}
-            aria-invalid={!!form.formState.errors.price}
-            aria-describedby={
-              form.formState.errors.price ? 'create-product-price-error' : undefined
-            }
+          <Controller
+            control={form.control}
+            name="price"
+            render={({ field }) => (
+              <div className="product-price-input">
+                <input
+                  id="create-product-price"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  placeholder="Ví dụ: 250.000"
+                  disabled={!canEdit || submitting}
+                  name={field.name}
+                  ref={field.ref}
+                  value={formatPriceDisplay(field.value)}
+                  onChange={(event) => field.onChange(parsePriceInput(event.target.value))}
+                  onBlur={field.onBlur}
+                  aria-invalid={!!form.formState.errors.price}
+                  aria-describedby={
+                    form.formState.errors.price ? 'create-product-price-error' : undefined
+                  }
+                />
+                <span className="product-price-unit" aria-hidden="true">
+                  ₫
+                </span>
+              </div>
+            )}
           />
           {form.formState.errors.price && (
             <p className="error" id="create-product-price-error">
@@ -187,11 +213,10 @@ export function ProductCreateForm({
             disabled={!canEdit || submitting}
             {...form.register('quantity', { valueAsNumber: true })}
             aria-invalid={!!form.formState.errors.quantity}
-            aria-describedby="create-product-quantity-help create-product-quantity-error"
+            aria-describedby={
+              form.formState.errors.quantity ? 'create-product-quantity-error' : undefined
+            }
           />
-          <p className="quiet field-subhint" id="create-product-quantity-help">
-            Số bó có sẵn tại shop.
-          </p>
           {form.formState.errors.quantity && (
             <p className="error" id="create-product-quantity-error">
               {form.formState.errors.quantity.message}
@@ -201,9 +226,6 @@ export function ProductCreateForm({
       </div>
 
       <div className="product-classification">
-        {!classificationError && (
-          <p className="product-classification-hint">{REQUIRED_FLOWER_TAGS_MESSAGE}</p>
-        )}
         <FlowerTagFields
           {...tagProps}
           section="choices"
@@ -431,8 +453,7 @@ export function ProductMetadataEditor({
       aria-label={`Chỉnh sửa thông tin ${product.name}`}
     >
       <p className="price-snapshot-note">
-        Lưu ý: Thay đổi giá áp dụng cho các lần nạp hoa tiếp theo, không thay đổi giá của bó hoa
-        đang bán trong tủ hoặc đơn đặt trước đã tạo.
+        Giá mới áp dụng cho lần nạp tiếp theo. Hoa trong tủ và đơn đã tạo giữ nguyên giá.
       </p>
 
       <div className="form-grid-2">
@@ -477,7 +498,7 @@ export function ProductMetadataEditor({
         </div>
       </div>
 
-      <div className="form-field">
+      <div className="form-field product-edit-quantity">
         <label htmlFor={`${idPrefix}-quantity`}>Tồn bó tại shop</label>
         <input
           id={`${idPrefix}-quantity`}
@@ -494,8 +515,7 @@ export function ProductMetadataEditor({
           aria-describedby={`${idPrefix}-quantity-help ${idPrefix}-quantity-error`}
         />
         <p className="quiet field-subhint" id={`${idPrefix}-quantity-help`}>
-          Nhập tổng số bó thực tế còn tại shop. Khi thu hồi hoa từ kiosk, hãy kiểm tra và cập nhật
-          tồn tại đây.
+          Tổng số bó thực tế còn tại shop. Chỉ sửa khi cần điều chỉnh tồn.
         </p>
         {form.formState.errors.quantity && (
           <p className="error" id={`${idPrefix}-quantity-error`}>

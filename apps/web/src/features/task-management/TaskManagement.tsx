@@ -1,3 +1,4 @@
+import Select from '@/shared/components/Select';
 import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
@@ -277,6 +278,7 @@ function FilteredTaskList(props: StaffTasksProps) {
           <button
             type="button"
             aria-label="Đóng thông báo kết quả công việc"
+            className="icon-close-control"
             onClick={() => setTransitionResult(null)}
           >
             ×
@@ -389,7 +391,7 @@ function FilteredTaskList(props: StaffTasksProps) {
             >
               Lọc trạng thái
             </label>
-            <select
+            <Select
               id="task-status"
               value={status}
               onChange={(event) => {
@@ -403,7 +405,7 @@ function FilteredTaskList(props: StaffTasksProps) {
                   {text}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
           {role === 'OPERATIONS_MANAGER' && managerView === 'tasks' && (
             <Button

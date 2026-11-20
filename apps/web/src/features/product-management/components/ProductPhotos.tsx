@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import detailStyles from '../styles/product-detail.module.css';
 import { useQuery } from '@tanstack/react-query';
 import { Button, Eye, Flower2, ImageIcon, Plus, RefreshCw } from '@florabot/ui';
 import { ApiError, queryClient } from '@/shared/lib/api';
@@ -285,7 +287,7 @@ export default function ProductPhotos({
     <div className="product-photos-inline" aria-labelledby={`photos-title-${productId}`}>
       <div className="product-photos-header">
         <span id={`photos-title-${productId}`} className="product-photos-title">
-          Hình ảnh mẫu hoa {photos.isSuccess ? `(${items.length})` : ''}
+          Hình ảnh mẫu hoa
         </span>
 
         <div className="product-photo-source-actions">
@@ -392,9 +394,7 @@ export default function ProductPhotos({
                 </button>
                 {canEdit && (
                   <div className="product-photo-item-actions">
-                    {isCover ? (
-                      <span className="product-photo-cover-state">Đang làm ảnh bìa</span>
-                    ) : canReorderPage ? (
+                    {isCover ? null : canReorderPage ? (
                       <button
                         type="button"
                         className="product-photo-action-btn is-primary"
@@ -446,90 +446,54 @@ export default function ProductPhotos({
         </ul>
       )}
 
-      <Modal
-        open={Boolean(viewerPhoto)}
-        onClose={() => setViewerPhotoId(null)}
-        size="lg"
-        className="product-photo-lightbox-modal"
-        title={
-          viewerPhoto
-            ? `${productName} · Ảnh ${(page - 1) * 20 + viewerIndex + 1}/${items.length}`
-            : productName
-        }
-        description={
-          viewerPhoto && (viewerPhoto.isCover ?? (page === 1 && viewerIndex === 0))
-            ? 'Ảnh bìa đang hiển thị đại diện trên catalog và màn hình kiosk.'
-            : 'Xem ảnh kích thước đầy đủ và điều chỉnh vị trí hiển thị trên catalog.'
-        }
-      >
-        {viewerPhoto && (
-          <div className="product-photo-lightbox-body">
-            <div className="product-photo-lightbox-stage">
-              <img
-                src={viewerPhoto.url}
-                alt={`Ảnh kích thước đầy đủ ${(page - 1) * 20 + viewerIndex + 1} của ${productName}`}
-                className="product-photo-lightbox-img"
-                referrerPolicy="no-referrer"
-              />
-            </div>
-            <div className="product-photo-lightbox-toolbar">
-              <div className="product-photo-lightbox-nav">
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={viewerIndex <= 0}
-                  onClick={() => setViewerPhotoId(items[viewerIndex - 1]?.id ?? null)}
-                >
-                  ← Ảnh trước
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={viewerIndex >= items.length - 1}
-                  onClick={() => setViewerPhotoId(items[viewerIndex + 1]?.id ?? null)}
-                >
-                  Ảnh sau →
-                </Button>
-                <a
-                  href={viewerPhoto.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="button button-outline product-photo-open-raw"
-                >
-                  Mở ảnh gốc
-                </a>
-              </div>
-              {canEdit && (
-                <div className="product-photo-lightbox-actions">
-                  {!(viewerPhoto.isCover ?? (page === 1 && viewerIndex === 0)) &&
-                    canReorderPage && (
-                      <Button
-                        type="button"
-                        disabled={pending}
-                        onClick={() => void handleSetCover(viewerPhoto.id)}
-                      >
-                        Đặt làm ảnh bìa
-                      </Button>
-                    )}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={pending}
-                    onClick={async () => {
-                      const nextId =
-                        items[viewerIndex + 1]?.id ?? items[viewerIndex - 1]?.id ?? null;
-                      await handleHidePhoto(viewerPhoto.id);
-                      setViewerPhotoId(nextId);
-                    }}
-                  >
-                    Ẩn ảnh này
-                  </Button>
+      {viewerPhoto &&
+        createPortal(
+          <Modal
+            open={Boolean(viewerPhoto)}
+            onClose={() => setViewerPhotoId(null)}
+            size="lg"
+            className={`product-photo-lightbox-modal ${detailStyles.photoModal}`}
+            title={productName}
+          >
+            {viewerPhoto && (
+              <div className="product-photo-lightbox-body">
+                <div className="product-photo-lightbox-stage">
+                  <img
+                    src={viewerPhoto.url}
+                    alt={`Ảnh kích thước đầy đủ ${(page - 1) * 20 + viewerIndex + 1} của ${productName}`}
+                    className="product-photo-lightbox-img"
+                    referrerPolicy="no-referrer"
+                  />
                 </div>
-              )}
-            </div>
-          </div>
+                <div className="product-photo-lightbox-toolbar" hidden={items.length <= 1}>
+                  <div className="product-photo-lightbox-nav">
+                    {items.length > 1 && (
+                      <>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={viewerIndex <= 0}
+                          onClick={() => setViewerPhotoId(items[viewerIndex - 1]?.id ?? null)}
+                        >
+                          ← Ảnh trước
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={viewerIndex >= items.length - 1}
+                          onClick={() => setViewerPhotoId(items[viewerIndex + 1]?.id ?? null)}
+                        >
+                          Ảnh sau →
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </Modal>,
+          document.body,
         )}
-      </Modal>
 
       {(page > 1 || photos.data?.hasMore) && (
         <div className="product-photo-pagination">

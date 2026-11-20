@@ -1,22 +1,15 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import {
-  Boxes,
-  Button,
-  ChevronDown,
-  CircleAlert,
-  Flower2,
-  Plus,
-  RefreshCw,
-  Store,
-} from '@florabot/ui';
+import { ArrowRight, Button, Plus, Search } from '@florabot/ui';
 import { money } from '@florabot/contracts';
-import { queryClient, type Session } from '@/shared/lib/api';
-import { TablePagination } from '../../shared/components/DataTable';
-import { Modal } from '../../shared/components/Modal';
-import { clampPage, paginate } from '../../shared/pagination';
+import { type Session } from '@/shared/lib/api';
+import Select from '@/shared/components/Select';
+import SidePanel from '@/shared/components/SidePanel';
+import { TablePagination } from '@/shared/components/DataTable';
+import { Modal } from '@/shared/components/Modal';
+import { clampPage, paginate } from '@/shared/pagination';
 import { fetchProducts } from './product.api';
 import type { Product } from './product.types';
 import { PAGE_SIZE, statusNames } from './product.types';
@@ -24,188 +17,208 @@ import { errorText } from './product.utils';
 import ProductEditor from './components/ProductEditor';
 import ProductThumbnail from './components/ProductThumbnail';
 import { ProductCreateForm } from './components/ProductCatalogForm';
+import styles from './styles/seller-catalog.module.css';
 import './styles/products.css';
 
 export default function ProductManagement({ session }: { session: Session }) {
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<'ALL' | 'ACTIVE' | 'DRAFT' | 'INACTIVE'>('ALL');
+  const [filter, setFilter] = useState('ALL');
   const [page, setPage] = useState(1);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [createNotice, setCreateNotice] = useState('');
-  const [expandedProductId, setExpandedProductId] = useState<string | null>(null);
-  const createNoticeRef = useRef<HTMLParagraphElement>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [createdId, setCreatedId] = useState<string | null>(null);
-  const pendingScroll = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (!createNotice) return;
-    const target = pendingScroll.current;
-    if (!target) {
-      createNoticeRef.current?.focus();
-      return;
-    }
-    const card = document.getElementById(`product-created-${target}`);
-    if (card) {
-      card.scrollIntoView({ block: 'start' });
-      card.focus({ preventScroll: true });
-      pendingScroll.current = null;
-    }
-  }, [createNotice, createdId]);
-
   const sellerId = session.sellerId;
   const query = useQuery<Product[]>({
     queryKey: ['products', sellerId],
     queryFn: fetchProducts,
     enabled: !!sellerId,
   });
-
-  if (!sellerId) {
+  if (!sellerId)
     return <p role="alert">Tài khoản chưa gắn với shop. Vui lòng liên hệ đội ngũ vận hành.</p>;
-  }
-
   const canEdit = session.sellerStatus === 'ACTIVE';
   const allProducts = query.data ?? [];
-
-  // Metrics for summary cards & tabs
-  const totalCount = allProducts.length;
-  const activeCount = allProducts.filter((p) => p.status === 'ACTIVE').length;
-  const draftCount = allProducts.filter((p) => p.status === 'DRAFT').length;
-  const inactiveCount = allProducts.filter((p) => p.status === 'INACTIVE').length;
-
-  const normalizedSearch = search.trim().toLocaleLowerCase('vi');
-  const filteredProducts = allProducts
-    .filter((product) => {
-      const matchSearch =
-        !normalizedSearch ||
-        product.name.toLocaleLowerCase('vi').includes(normalizedSearch) ||
-        product.tags?.some((t) => t.toLocaleLowerCase('vi').includes(normalizedSearch));
-      const matchStatus = filter === 'ALL' || product.status === filter;
-      return matchSearch && matchStatus;
-    })
+  const needle = search.trim().toLocaleLowerCase('vi');
+  const filtered = allProducts
+    .filter(
+      (product) =>
+        (filter === 'ALL' || product.status === filter) &&
+        (!needle ||
+          [product.name, ...(product.tags ?? [])]
+            .join(' ')
+            .toLocaleLowerCase('vi')
+            .includes(needle)),
+    )
     .sort((a, b) => Number(b.id === createdId) - Number(a.id === createdId));
-
-  const safePage = clampPage(page, filteredProducts.length, PAGE_SIZE);
-  const pageItems = paginate(filteredProducts, safePage, PAGE_SIZE);
-
+  const safePage = clampPage(page, filtered.length, PAGE_SIZE);
+  const selected = allProducts.find((product) => product.id === selectedId);
   return (
-    <div id="seller-products" className="seller-products" aria-labelledby="products-title">
-      <h2 id="products-title" className="sr-only">
-        Quản lý mẫu hoa
-      </h2>
-
+    <div
+      id="seller-products"
+      className={styles.catalog}
+      role="region"
+      aria-label="Danh mục mẫu hoa"
+    >
       {!canEdit && (
-        <div className="product-alert warning" role="alert">
-          <CircleAlert size={16} aria-hidden="true" />
-          <p>
-            Shop cần có gói đang hoạt động để chỉnh sửa hoặc tạo mới sản phẩm. Bạn hiện tại chỉ có
-            quyền xem danh mục.
-          </p>
-        </div>
+        <p className={styles.notice} role="status">
+          Shop cần có gói đang hoạt động để thêm hoặc chỉnh sửa mẫu hoa.
+        </p>
       )}
-
-      {/* Main Filter Container - Harmonized with .filters in seller-orders */}
-      <div className="product-filters-card">
-        <div className="product-filter-heading">
-          <div>
-            <h3>Danh mục mẫu hoa</h3>
-            <p>
-              Quản lý mẫu hoa của shop, điều chỉnh giá bán, kích thước đóng gói và cập nhật hình
-              ảnh.
-            </p>
-          </div>
-          <div className="product-filter-actions">
-            <Button
-              variant="outline"
-              className="product-refresh-btn"
-              disabled={query.isFetching}
-              onClick={() => {
-                void query.refetch();
-                void queryClient.invalidateQueries({ queryKey: ['product-photos', sellerId] });
-              }}
-              title="Tải lại danh sách mẫu hoa"
-            >
-              <RefreshCw
-                size={15}
-                aria-hidden="true"
-                className={query.isFetching ? 'is-spinning' : ''}
-              />
-              <span>{query.isFetching ? 'Đang cập nhật…' : 'Làm mới'}</span>
-            </Button>
-            {canEdit && (
-              <Button
-                type="button"
-                className="product-create-btn"
-                onClick={() => {
-                  setCreateNotice('');
-                  setShowCreateForm(true);
+      {createNotice && (
+        <p className={styles.notice} role="status">
+          {createNotice}
+        </p>
+      )}
+      <div className={styles.surface}>
+        <div className={styles.toolbar}>
+          <label className={styles.searchField}>
+            <span>Tìm mẫu hoa</span>
+            <span className={styles.searchInput}>
+              <Search size={18} aria-hidden="true" />
+              <input
+                id="product-search"
+                type="search"
+                placeholder="Tên mẫu hoa hoặc từ khóa"
+                value={search}
+                onChange={(event) => {
+                  setSearch(event.target.value);
+                  setPage(1);
                 }}
-                aria-expanded={showCreateForm}
-                aria-controls="product-create-section"
-              >
-                <Plus size={15} aria-hidden="true" />
-                <span>Thêm mẫu hoa</span>
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* Summary Stat Strip - Harmonized with .summary in seller-orders */}
-        <div className="product-summary" aria-label="Thống kê mẫu hoa">
-          {[
-            { label: 'Tất cả', value: 'ALL' as const, count: totalCount, icon: Flower2 },
-            { label: 'Đang bán', value: 'ACTIVE' as const, count: activeCount, icon: Store },
-            { label: 'Bản nháp', value: 'DRAFT' as const, count: draftCount, icon: Boxes },
-            {
-              label: 'Tạm ngừng bán',
-              value: 'INACTIVE' as const,
-              count: inactiveCount,
-              icon: CircleAlert,
-            },
-          ].map(({ label, value, count, icon: Icon }) => (
-            <button
-              key={value}
+              />
+            </span>
+          </label>
+          <label className={styles.stateField} htmlFor="product-state">
+            <span>Trạng thái</span>
+            <Select
+              id="product-state"
+              value={filter}
+              onChange={(event) => {
+                setFilter(event.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="ALL">Tất cả</option>
+              {Object.entries(statusNames).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </Select>
+          </label>
+          {canEdit && (
+            <Button
               type="button"
               onClick={() => {
-                setFilter(value);
-                setPage(1);
+                setCreateNotice('');
+                setShowCreateForm(true);
               }}
-              aria-pressed={filter === value}
             >
-              <span className="product-stat-icon">
-                <Icon size={20} aria-hidden="true" />
-              </span>
-              <span>
-                <small>{label}</small>
-                <strong>{query.isError ? '—' : query.isPending ? '…' : count}</strong>
-              </span>
-            </button>
+              <Plus size={17} aria-hidden="true" />
+              Thêm mẫu hoa
+            </Button>
+          )}
+        </div>
+        <div className={`${styles.columns} ${styles.productGrid}`} aria-hidden="true">
+          <span>Mẫu hoa</span>
+          <span>Kích thước (cm)</span>
+          <span>Giá bán</span>
+          <span>Tồn tại shop</span>
+          <span>Trạng thái</span>
+          <span />
+        </div>
+        {query.isPending && (
+          <p className={styles.empty} role="status">
+            Đang tải mẫu hoa…
+          </p>
+        )}
+        {query.isError && (
+          <div className={`${styles.empty} product-error-box`} role="alert">
+            <p>{errorText(query.error)}</p>
+            <Button variant="outline" onClick={() => void query.refetch()}>
+              Tải lại sản phẩm
+            </Button>
+          </div>
+        )}
+        {!query.isPending && !query.isError && !filtered.length && (
+          <div className={`${styles.empty} product-empty-state`} role="status">
+            <strong>
+              {allProducts.length ? 'Không tìm thấy mẫu hoa phù hợp' : 'Chưa có mẫu hoa'}
+            </strong>
+            <p>
+              {allProducts.length
+                ? 'Thử đổi từ khóa hoặc trạng thái.'
+                : 'Thêm mẫu hoa đầu tiên cho cửa hàng.'}
+            </p>
+          </div>
+        )}
+        <ul className={`${styles.list} product-order-list`}>
+          {paginate(filtered, safePage, PAGE_SIZE).map((product) => (
+            <li key={product.id}>
+              <button
+                type="button"
+                className={`${styles.row} ${styles.productGrid} product-order-summary`}
+                aria-label={`Xem mẫu hoa ${product.name}`}
+                onClick={() => setSelectedId(product.id)}
+              >
+                <span className={styles.productIdentity}>
+                  <ProductThumbnail
+                    sellerId={sellerId}
+                    productId={product.id}
+                    productName={product.name}
+                    className={styles.thumbnail}
+                  />
+                  <span>
+                    <strong>{product.name}</strong>
+                    <small>
+                      {product.tags?.map((tag) => `#${tag}`).join(' ') || 'Chưa có từ khóa'}
+                    </small>
+                  </span>
+                </span>
+                <span className={styles.dimension}>
+                  {product.lengthCm && product.widthCm && product.heightCm
+                    ? `${product.lengthCm} × ${product.widthCm} × ${product.heightCm}`
+                    : '—'}
+                </span>
+                <span className={styles.price}>{money(Number(product.price))}</span>
+                <span className={styles.stock}>
+                  {product.quantity == null ? '—' : `${product.quantity} bó`}
+                </span>
+                <span className={styles.status}>
+                  <span className={styles.badge} data-active={product.status === 'ACTIVE'}>
+                    {statusNames[product.status] || product.status}
+                  </span>
+                </span>
+                <span className={styles.arrow}>
+                  <ArrowRight size={16} aria-hidden="true" />
+                </span>
+              </button>
+            </li>
           ))}
-        </div>
-
-        {/* Search Bar - identical to seller-orders */}
-        <div className="product-search-bar">
-          <label className="product-search-field">
-            <span>Tìm mẫu hoa</span>
-            <input
-              id="product-search"
-              type="search"
-              placeholder="Tên mẫu hoa hoặc từ khóa (#tag)…"
-              value={search}
-              onChange={(event) => {
-                setSearch(event.target.value);
-                setPage(1);
-              }}
+        </ul>
+        {filtered.length > 0 && (
+          <div className={styles.pagination}>
+            <TablePagination
+              page={safePage}
+              pageSize={PAGE_SIZE}
+              totalItems={filtered.length}
+              onPageChange={setPage}
+              ariaLabel="Phân trang danh sách sản phẩm"
             />
-          </label>
-        </div>
+          </div>
+        )}
       </div>
-
-      {createNotice && (
-        <div ref={createNoticeRef} role="status" tabIndex={-1} className="product-alert success">
-          <p>{createNotice}</p>
-        </div>
+      {selected && (
+        <SidePanel title={selected.name} onClose={() => setSelectedId(null)}>
+          <div className={`${styles.editor} seller-products`}>
+            <ProductEditor
+              key={selected.id}
+              product={selected}
+              sellerId={sellerId}
+              canEdit={canEdit}
+            />
+          </div>
+        </SidePanel>
       )}
-
       {showCreateForm && (
         <Modal
           open
@@ -218,164 +231,21 @@ export default function ProductManagement({ session }: { session: Session }) {
             <ProductCreateForm
               sellerId={sellerId}
               canEdit={canEdit}
-              onSuccess={(createdProductId) => {
+              onSuccess={(id) => {
                 setShowCreateForm(false);
-                if (createdProductId) {
+                if (id) {
                   setSearch('');
                   setFilter('DRAFT');
                   setPage(1);
-                  setExpandedProductId(createdProductId);
-                  pendingScroll.current = createdProductId;
-                  setCreatedId(createdProductId);
+                  setCreatedId(id);
+                  setSelectedId(id);
                 }
-                setCreateNotice(
-                  'Đã tạo bản nháp. Tiếp theo: thêm ảnh mẫu, rồi bật bán khi mẫu đã sẵn sàng.',
-                );
+                setCreateNotice('Đã tạo bản mẫu. Thêm ảnh mẫu trước khi bật bán.');
               }}
               onCancel={() => setShowCreateForm(false)}
             />
           </div>
         </Modal>
-      )}
-
-      {query.isPending && (
-        <div className="product-loading-state" role="status">
-          <p>Đang tải danh sách mẫu hoa…</p>
-        </div>
-      )}
-
-      {query.error && (
-        <div className="product-error-box" role="alert">
-          <p className="error">{errorText(query.error)}</p>
-          <Button variant="outline" onClick={() => void query.refetch()}>
-            Tải lại sản phẩm
-          </Button>
-        </div>
-      )}
-
-      {!query.isPending && !query.isError && filteredProducts.length === 0 && (
-        <div className="product-empty-state" role="status">
-          <Flower2 size={32} className="product-empty-icon" aria-hidden="true" />
-          <h3>Không tìm thấy mẫu hoa nào</h3>
-          <p>
-            {allProducts.length
-              ? 'Thử tìm với từ khóa khác hoặc chuyển sang tab trạng thái khác.'
-              : 'Shop của bạn chưa có mẫu hoa nào. Hãy bấm "Thêm mẫu hoa" để bắt đầu kinh doanh.'}
-          </p>
-        </div>
-      )}
-
-      {/* Result Count */}
-      {filteredProducts.length > 0 && (
-        <p className="product-result-count" role="status">
-          Hiển thị {pageItems.length} / {filteredProducts.length} mẫu hoa · Trang {safePage}
-        </p>
-      )}
-
-      {/* Product List - Harmonized with seller-orders */}
-      {filteredProducts.length > 0 && (
-        <ul className="product-order-list">
-          {pageItems.map((product) => (
-            <li key={product.id}>
-              <details
-                id={`product-created-${product.id}`}
-                tabIndex={-1}
-                open={expandedProductId === product.id ? true : undefined}
-                onToggle={(event) => {
-                  if (!event.currentTarget.open && expandedProductId === product.id) {
-                    setExpandedProductId(null);
-                  }
-                }}
-              >
-                <summary className="product-order-summary">
-                  <div className="product-order-heading">
-                    <strong>{product.name}</strong>
-                    <span className="product-kind">
-                      {product.inventoryKind === 'LEGACY_FRESH' ? 'Hoa tươi' : 'Hoa thành phẩm'}
-                    </span>
-                    <span className="product-status" data-status={product.status}>
-                      {statusNames[product.status] || product.status}
-                    </span>
-                  </div>
-
-                  <div className="product-order-body">
-                    {/* Col 1: Product avatar & tags */}
-                    <span className="product-col-main">
-                      <ProductThumbnail
-                        sellerId={sellerId}
-                        productId={product.id}
-                        productName={product.name}
-                      />
-                      <span>
-                        <small>Từ khóa phân loại</small>
-                        <span className="product-tags-wrap">
-                          {product.tags && product.tags.length > 0 ? (
-                            product.tags.map((tag) => (
-                              <span key={tag} className="product-tag-chip">
-                                #{tag}
-                              </span>
-                            ))
-                          ) : (
-                            <span className="product-quiet-text">Chưa gắn từ khóa</span>
-                          )}
-                        </span>
-                      </span>
-                    </span>
-
-                    {/* Col 2: Kích thước */}
-                    <span className="product-col-specs">
-                      <small>Kích thước đóng gói (D × R × C)</small>
-                      <strong>
-                        {product.lengthCm && product.widthCm && product.heightCm
-                          ? `${product.lengthCm} × ${product.widthCm} × ${product.heightCm} cm`
-                          : 'Chưa cập nhật'}
-                      </strong>
-                    </span>
-
-                    {/* Col 3: Giá bán */}
-                    <span className="product-col-price">
-                      <small>Giá niêm yết</small>
-                      <strong className="product-price-strong">
-                        {money(Number(product.price))}
-                      </strong>
-                      <small>Tồn bó tại shop</small>
-                      <strong>
-                        {product.quantity == null ? 'Chưa có dữ liệu' : `${product.quantity} bó`}
-                      </strong>
-                    </span>
-                  </div>
-
-                  <div className="product-disclosure">
-                    <span className="product-show-details">Chi tiết mẫu hoa</span>
-                    <span className="product-hide-details">Thu gọn chi tiết</span>
-                    <ChevronDown
-                      size={14}
-                      className="product-disclosure-chevron"
-                      aria-hidden="true"
-                    />
-                  </div>
-                </summary>
-
-                {/* Expanded Actions/Editor */}
-                <div className="product-expanded-actions">
-                  <ProductEditor product={product} sellerId={sellerId} canEdit={canEdit} />
-                </div>
-              </details>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {filteredProducts.length > 0 && (
-        <div className="product-pagination-wrapper">
-          <TablePagination
-            page={safePage}
-            pageSize={PAGE_SIZE}
-            totalItems={filteredProducts.length}
-            onPageChange={setPage}
-            ariaLabel="Phân trang danh sách sản phẩm"
-          />
-        </div>
       )}
     </div>
   );
