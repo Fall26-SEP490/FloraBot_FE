@@ -61,8 +61,9 @@ export default function Select({
   onChange,
   onBlur,
   onFocus,
+  popupMinWidth,
   ...props
-}: ComponentPropsWithRef<'select'>) {
+}: ComponentPropsWithRef<'select'> & { popupMinWidth?: number }) {
   const generated = useId();
   const fieldId = id || generated;
   const native = useRef<HTMLSelectElement>(null);
@@ -107,6 +108,7 @@ export default function Select({
           options.find((option) => option.value === String(props.value ?? selected))?.label
         }
         disabled={props.disabled}
+        popupMinWidth={popupMinWidth}
         onValueChange={choose}
         buttonProps={{
           ref: trigger,

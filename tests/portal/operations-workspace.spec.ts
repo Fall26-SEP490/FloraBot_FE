@@ -272,13 +272,13 @@ for (const width of [390, 1440]) {
     await page.goto('/operations/installations');
     const trigger = page.getByRole('button', { name: 'Kho tủ khả dụng' });
     await trigger.click();
-    const dialog = page.getByRole('dialog', { name: 'Kho thiết bị Kiosk khả dụng' });
-    await expect(dialog.getByText('2 tủ khả dụng', { exact: true })).toBeVisible();
+    const dialog = page.getByRole('dialog', { name: 'Kho tủ khả dụng' });
+    await expect(dialog.getByText('Hiển thị 2 / 2 tủ', { exact: true })).toBeVisible();
     await expect(dialog.getByText('OFFLINE', { exact: true })).toBeVisible();
-    await chooseOption(dialog.getByLabel('Quy mô ô', { exact: true }), '8');
+    await chooseOption(dialog.getByLabel('Số ô', { exact: true }), '8');
     await expect(dialog.getByText('K-PRO-01', { exact: true })).toBeVisible();
     await expect(dialog.getByText('K-TRIAL-01', { exact: true })).toHaveCount(0);
-    await dialog.getByLabel('Tìm thiết bị').fill('không có thiết bị này');
+    await dialog.getByLabel('Tìm kiosk').fill('không có thiết bị này');
     await expect(dialog.getByRole('heading', { name: 'Không tìm thấy tủ phù hợp' })).toBeVisible();
     await dialog.getByRole('button', { name: 'Xóa bộ lọc' }).click();
     await expect(dialog.getByText('K-TRIAL-01', { exact: true })).toBeVisible();
@@ -369,7 +369,7 @@ test('Manager reviews location and slot layout using their distinct backend cont
   });
 
   await page.goto('/operations/terminations');
-  await page.getByText('Yêu cầu đổi vị trí kiosk chờ duyệt', { exact: true }).click();
+  await page.getByText('Đổi vị trí kiosk', { exact: true }).click();
   await expect(page.getByText('21 Nguyễn Huệ')).toBeVisible();
   const rejectLocation = page.getByRole('button', { name: 'Từ chối', exact: true });
   await expect(rejectLocation).toBeDisabled();
@@ -377,9 +377,7 @@ test('Manager reviews location and slot layout using their distinct backend cont
   await rejectLocation.click();
   await expect(page.getByText('Không có yêu cầu đổi vị trí kiosk đang chờ duyệt.')).toBeVisible();
 
-  await page
-    .getByText('Yêu cầu đổi cơ cấu ô (Walk-in / Pre-order) chờ duyệt', { exact: true })
-    .click();
+  await page.getByText('Đổi cơ cấu ô', { exact: true }).click();
   const approveLayout = page.getByRole('button', { name: 'Duyệt đổi cơ cấu ô' });
   await expect(approveLayout).toBeDisabled();
   await page.getByRole('checkbox', { name: 'Ô A01' }).check();

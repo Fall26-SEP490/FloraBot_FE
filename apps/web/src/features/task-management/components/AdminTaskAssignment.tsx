@@ -1,3 +1,4 @@
+import WorkspaceTable from '@/features/portal/components/WorkspaceTable';
 import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
 import { useState } from 'react';
@@ -421,9 +422,6 @@ export default function AdminTaskAssignment({
             <div>
               <span className="operations-eyebrow">TIẾP NHẬN & PHÂN CÔNG</span>
               <h2 id="operations-open-incidents">Phiếu sự cố đang mở</h2>
-              <p className="manager-panel-description">
-                Chọn phiếu để phân công kỹ thuật viên kiểm tra.
-              </p>
             </div>
             <div className="manager-inbox-actions">
               <Button
@@ -495,80 +493,94 @@ export default function AdminTaskAssignment({
                   Không tìm thấy sự cố phù hợp trong trang này.
                 </p>
               )}
-              <div className="manager-inbox-columns" aria-hidden="true">
-                <span>Kiosk / Ô tủ</span>
-                <span>Nội dung sự cố</span>
-                <span>Phân công</span>
-              </div>
-              <ul className="operations-incident-inbox">
-                {visibleIncidents.map((incident) => (
-                  <li key={incident.id}>
-                    <div className="operations-incident-content">
-                      <div className="operations-incident-meta">
-                        <span className="operations-incident-reference">
-                          SC-{incident.id.slice(-6).toUpperCase()}
-                        </span>
-                        {incident.slot?.slotCode && <span>Ô {incident.slot.slotCode}</span>}
-                      </div>
-                      <h3>
-                        {incident.location?.kioskName || 'Tủ hoa'}
-                        {incident.location?.kioskCode && (
-                          <small>{incident.location.kioskCode}</small>
-                        )}
-                      </h3>
-                      <details className="operations-incident-details">
-                        <summary>Chi tiết phiếu</summary>
-                        <p>Mã phiếu: {incident.id}</p>
-                        {incident.createdAt && (
-                          <p>
-                            Ghi nhận:{' '}
-                            {new Date(incident.createdAt).toLocaleString('vi-VN', {
-                              timeZone: 'Asia/Ho_Chi_Minh',
-                            })}
-                          </p>
-                        )}
-                      </details>
-                    </div>
-                    <div className="manager-incident-reason">
-                      <p>{incident.reason}</p>
-                      <span
-                        className={
-                          assignedTask(incident.id) ? 'manager-assigned-tag' : 'manager-open-tag'
-                        }
-                      >
-                        {assignedTask(incident.id)
-                          ? `${TASK_STATUS_LABELS[assignedTask(incident.id)!.status]} · ${assignedTask(incident.id)!.assigneeName}`
-                          : 'Đang mở'}
-                      </span>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={busy || Boolean(attempt)}
-                      aria-label={
-                        assignedTask(incident.id)
-                          ? `Xem công việc của sự cố ${incident.id}`
-                          : `Chọn sự cố ${incident.id} để phân công`
-                      }
-                      onClick={() => {
-                        const linked = assignedTask(incident.id);
-                        if (linked) {
-                          if (linkedTasks.some((task) => task.id === linked.id) && onOpenTask)
-                            onOpenTask(linked.id);
-                          else setLinkedIncident(incident);
-                          return;
-                        }
-                        setKind('INCIDENT');
-                        form.setValue('target', incident.id, { shouldValidate: true });
-                        setAssignmentOpen(true);
-                      }}
-                    >
-                      {assignedTask(incident.id) ? 'Xem công việc' : 'Phân công'}{' '}
-                      <ArrowRight size={15} aria-hidden="true" />
-                    </Button>
-                  </li>
-                ))}
-              </ul>
+              <WorkspaceTable label="Sự cố cần xử lý">
+                <table className="manager-incident-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Kiosk / Ô tủ</th>
+                      <th scope="col">Sự cố / Tiến độ</th>
+                      <th scope="col">Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {visibleIncidents.map((incident) => (
+                      <tr key={incident.id}>
+                        <td>
+                          <div className="operations-incident-content">
+                            <div className="operations-incident-meta">
+                              <span className="operations-incident-reference">
+                                SC-{incident.id.slice(-6).toUpperCase()}
+                              </span>
+                              {incident.slot?.slotCode && <span>Ô {incident.slot.slotCode}</span>}
+                            </div>
+                            <h3>
+                              {incident.location?.kioskName || 'Tủ hoa'}
+                              {incident.location?.kioskCode && (
+                                <small>{incident.location.kioskCode}</small>
+                              )}
+                            </h3>
+                            <details className="operations-incident-details">
+                              <summary>Chi tiết phiếu</summary>
+                              <p>Mã phiếu: {incident.id}</p>
+                              {incident.createdAt && (
+                                <p>
+                                  Ghi nhận:{' '}
+                                  {new Date(incident.createdAt).toLocaleString('vi-VN', {
+                                    timeZone: 'Asia/Ho_Chi_Minh',
+                                  })}
+                                </p>
+                              )}
+                            </details>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="manager-incident-reason">
+                            <p>{incident.reason}</p>
+                            <span
+                              className={
+                                assignedTask(incident.id)
+                                  ? 'manager-assigned-tag'
+                                  : 'manager-open-tag'
+                              }
+                            >
+                              {assignedTask(incident.id)
+                                ? `${TASK_STATUS_LABELS[assignedTask(incident.id)!.status]} · ${assignedTask(incident.id)!.assigneeName}`
+                                : 'Đang mở'}
+                            </span>
+                          </div>
+                        </td>
+                        <td>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            disabled={busy || Boolean(attempt)}
+                            aria-label={
+                              assignedTask(incident.id)
+                                ? `Xem công việc của sự cố ${incident.id}`
+                                : `Chọn sự cố ${incident.id} để phân công`
+                            }
+                            onClick={() => {
+                              const linked = assignedTask(incident.id);
+                              if (linked) {
+                                if (linkedTasks.some((task) => task.id === linked.id) && onOpenTask)
+                                  onOpenTask(linked.id);
+                                else setLinkedIncident(incident);
+                                return;
+                              }
+                              setKind('INCIDENT');
+                              form.setValue('target', incident.id, { shouldValidate: true });
+                              setAssignmentOpen(true);
+                            }}
+                          >
+                            {assignedTask(incident.id) ? 'Xem công việc' : 'Phân công'}{' '}
+                            <ArrowRight size={15} aria-hidden="true" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </WorkspaceTable>
               {matchingIncidents.length > 5 && (
                 <Button
                   type="button"

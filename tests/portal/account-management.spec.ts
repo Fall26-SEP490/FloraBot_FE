@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
@@ -383,7 +384,13 @@ test.describe('Account Management UI - Multi-Role, Hierarchy & Security', () => 
     await expect(table.getByRole('row').filter({ hasText: 'Kỹ Thuật Viên Mới' })).toBeVisible();
 
     // Disable technician
-    await page.getByRole('button', { name: 'Vô hiệu hóa Trần Kỹ Thuật Viên' }).click();
+    await chooseOption(
+      page.getByRole('combobox', {
+        name: 'Quản lý Trần Kỹ Thuật Viên',
+        exact: true,
+      }),
+      'DISABLED',
+    );
     const confirm = page.getByRole('dialog', {
       name: 'Vô hiệu hóa tài khoản Trần Kỹ Thuật Viên?',
     });

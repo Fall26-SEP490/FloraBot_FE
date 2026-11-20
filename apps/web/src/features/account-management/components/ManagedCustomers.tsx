@@ -1,9 +1,10 @@
 'use client';
+import DirectoryActions from './DirectoryActions';
 
 import { useId, useState, type FormEvent } from 'react';
 import { Button } from '@florabot/ui';
 import { ApiError, queryClient, request, type Session } from '@/shared/lib/api';
-import { DataTable } from '../../../shared/components/DataTable';
+import DataTable from './DirectoryTable';
 import { ConfirmDialog, Modal } from '../../../shared/components/Modal';
 import type { components } from '../../../../../../packages/contracts/src/generated/api';
 import AccountProfileDialog from './AccountProfileDialog';
@@ -127,13 +128,18 @@ function CreateCustomer({ close, created }: { close: () => void; created: () => 
 }
 
 export default function ManagedCustomers({ session }: { session: Session }) {
-  const d = useDirectory<Profile>(session, '/operations/customers', 'OPERATIONS_MANAGER');
   const [create, setCreate] = useState(false);
   const [selected, setSelected] = useState<Profile | null>(null);
   const [change, setChange] = useState<{ account: Profile; status: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const d = useDirectory<Profile>(
+    session,
+    '/operations/customers',
+    'OPERATIONS_MANAGER',
+    !create && !selected && !change,
+  );
   async function confirm() {
     if (!change || busy) return;
     setBusy(true);
@@ -157,11 +163,13 @@ export default function ManagedCustomers({ session }: { session: Session }) {
   if (session.role !== 'OPERATIONS_MANAGER')
     return <p role="alert">Khu vực này dành cho Quản lý vận hành.</p>;
   return (
-    <section className="platform-management" aria-labelledby="managed-customers-title">
+    <section
+      className="platform-management operations-directory-page operations-customers-page"
+      aria-labelledby="managed-customers-title"
+    >
       <DirectoryHeading
         id="managed-customers-title"
         title="Danh sách khách hàng"
-        description="Thông tin liên hệ và quyền truy cập của khách hàng."
         count={d.query.data?.items.length}
       >
         <Button onClick={() => setCreate(true)}>
@@ -194,31 +202,16 @@ export default function ManagedCustomers({ session }: { session: Session }) {
               key: 'actions',
               header: 'Thao tác',
               render: (row) => (
-                <div className="platform-actions">
-                  <Button variant="outline" onClick={() => setSelected(row)}>
-                    Chi tiết<span className="sr-only"> {row.fullName}</span>
-                  </Button>
-                  {accountStatuses
-                    .filter((status) => status !== row.status)
-                    .map((status) => (
-                      <Button
-                        key={status}
-                        variant="outline"
-                        disabled={busy}
-                        onClick={() => {
-                          setError('');
-                          setChange({ account: row, status });
-                        }}
-                      >
-                        {status === 'ACTIVE'
-                          ? 'Khôi phục'
-                          : status === 'LOCKED'
-                            ? 'Khóa'
-                            : 'Vô hiệu hóa'}
-                        <span className="sr-only"> {row.fullName}</span>
-                      </Button>
-                    ))}
-                </div>
+                <DirectoryActions
+                  name={row.fullName}
+                  statuses={accountStatuses.filter((status) => status !== row.status)}
+                  disabled={busy}
+                  onView={() => setSelected(row)}
+                  onStatus={(status) => {
+                    setError('');
+                    setChange({ account: row, status });
+                  }}
+                />
               ),
             },
           ]}
