@@ -168,6 +168,18 @@ for (const width of [1440, 390]) {
     await panel.getByRole('button', { name: 'Phóng to ảnh khách gửi', exact: true }).click();
     const photo = page.getByRole('dialog', { name: 'Ảnh khách gửi', exact: true });
     await expect(photo).toBeVisible();
+    await expect
+      .poll(async () => {
+        const box = await photo.boundingBox();
+        const viewport = page.viewportSize()!;
+        return box
+          ? Math.max(
+              Math.abs(box.x + box.width / 2 - viewport.width / 2),
+              Math.abs(box.y + box.height / 2 - viewport.height / 2),
+            )
+          : 999;
+      })
+      .toBeLessThan(3);
     await page.keyboard.press('Escape');
     await expect(photo).not.toBeVisible();
     await expect(panel).toBeVisible();

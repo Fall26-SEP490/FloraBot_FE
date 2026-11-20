@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+﻿import { expect, test, type Page } from '@playwright/test';
 
 const pending = {
   id: 'pending-hcm',
@@ -17,6 +17,8 @@ async function fixture(page: Page, initialPending = true) {
     unsafeLink: false,
     qrCode: '000201TEST-RENEWAL-QR' as string | null,
     creates: 0,
+    cancels: 0,
+    cancelConflict: false,
     links: [] as string[],
   };
   await page.route('**/hub/**', (r) => r.abort());
@@ -82,6 +84,15 @@ async function fixture(page: Page, initialPending = true) {
             },
           });
     }
+    if (path === '/api/sellers/shop/subscriptions/pending-hcm/cancel') {
+      state.cancels++;
+      if (state.cancelConflict) {
+        state.paid = true;
+        return r.fulfill({ status: 409, json: { detail: 'Kỳ gia hạn đã được thanh toán.' } });
+      }
+      state.pending = false;
+      return r.fulfill({ status: 204 });
+    }
     if (path.endsWith('/payment-link')) {
       state.links.push(path);
       return r.fulfill({
@@ -138,20 +149,75 @@ test('Payment callback opens the exact kiosk renewal from shared browser storage
   );
 });
 
+for (const width of [390, 1366]) {
+  test(`Pending renewal modal fits at ${width}`, async ({ page }) => {
+    await fixture(page);
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/seller/subscriptions');
+    await page.locator('.rental-data-row').filter({ hasText: 'Kiosk HCM' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Kỳ thuê: Kiosk HCM' });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.locator('.subscription-kiosk-status')).toHaveCSS(
+      'color',
+      'rgb(176, 46, 46)',
+    );
+    await expect(dialog.getByRole('button', { name: 'Hủy gia hạn', exact: true })).toBeVisible();
+    expect(await dialog.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+  });
+}
+
+test('Current lease modal keeps the renewal action next to its information', async ({ page }) => {
+  await fixture(page, false);
+  await page.goto('/seller/subscriptions');
+  await page.locator('.rental-data-row').filter({ hasText: 'Kiosk HCM' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Kỳ thuê: Kiosk HCM' });
+  await expect(dialog.locator('.subscription-kiosk-status')).toHaveCSS('color', 'rgb(176, 46, 46)');
+  const information = await dialog.locator('.subscription-kiosk-main').boundingBox();
+  const button = await dialog.getByRole('button', { name: 'Gia hạn thêm 12 tháng' }).boundingBox();
+  expect(information).not.toBeNull();
+  expect(button).not.toBeNull();
+  expect(button!.y - (information!.y + information!.height)).toBeLessThanOrEqual(24);
+});
+
+for (const conflict of [false, true]) {
+  test(`Cancel renewal ${conflict ? 'payment conflict' : 'success'} preserves the current lease`, async ({
+    page,
+  }) => {
+    const state = await fixture(page);
+    state.cancelConflict = conflict;
+    await page.goto('/seller/subscriptions');
+    await page.locator('.rental-data-row').filter({ hasText: 'Kiosk HCM' }).click();
+    const card = page.getByRole('article', { name: 'Kiosk HCM', exact: true });
+    await card.getByRole('button', { name: 'Hủy gia hạn', exact: true }).click();
+    const confirmation = page.getByRole('dialog', { name: 'Hủy kỳ gia hạn?' });
+    await expect(confirmation).toContainText('Kỳ thuê hiện tại giữ nguyên');
+    expect(state.cancels).toBe(0);
+    await confirmation.getByRole('button', { name: 'Hủy gia hạn', exact: true }).click();
+    await expect(confirmation).toHaveCount(0);
+    if (conflict) await expect(card).toContainText('Kỳ gia hạn đã được thanh toán.');
+    else {
+      await expect(card.getByRole('status')).toContainText('Đã hủy kỳ gia hạn');
+      await expect(card).toContainText('8/11/2026');
+      await expect(card).toContainText('8/11/2027');
+    }
+    await expect(card.getByRole('button', { name: 'Hủy gia hạn', exact: true })).toHaveCount(0);
+    expect(state.cancels).toBe(1);
+    expect(state.creates).toBe(0);
+    expect(state.links).toHaveLength(0);
+  });
+}
+
 test('Reload restores the pending kiosk renewal and pays its existing subscription', async ({
   page,
 }) => {
   const state = await fixture(page);
   await page.setViewportSize({ width: 390, height: 900 });
   await page.goto('/seller/subscriptions');
+  await page.locator('.rental-data-row').filter({ hasText: 'Kiosk HCM' }).click();
   const card = page.getByRole('article', { name: 'Kiosk HCM', exact: true });
   await expect(card.getByRole('button', { name: 'Gia hạn thêm 12 tháng' })).toHaveCount(0);
-  await expect(
-    page
-      .getByRole('article', { name: 'Kiosk Q1' })
-      .getByRole('button', { name: 'Gia hạn thêm 12 tháng' }),
-  ).toBeVisible();
   await page.reload();
+  await page.locator('.rental-data-row').filter({ hasText: 'Kiosk HCM' }).click();
   await card.getByRole('button', { name: 'Tiếp tục thanh toán' }).click();
   const dialog = page.getByRole('dialog', { name: 'Thanh toán gia hạn kiosk' });
   await expect(dialog.getByRole('img', { name: 'Mã QR thanh toán PayOS' })).toBeVisible();
@@ -176,6 +242,7 @@ for (const conflict of [false, true]) {
     const state = await fixture(page, false);
     state.conflict = conflict;
     await page.goto('/seller/subscriptions');
+    await page.locator('.rental-data-row').filter({ hasText: 'Kiosk HCM' }).click();
     const card = page.getByRole('article', { name: 'Kiosk HCM', exact: true });
     await card.getByRole('button', { name: 'Gia hạn thêm 12 tháng' }).click();
     await card.getByRole('button', { name: 'Tiếp tục thanh toán' }).click();
@@ -191,13 +258,14 @@ test('Unreadable subscriptions block duplicate creation and unsafe payment links
   const state = await fixture(page);
   state.readError = true;
   await page.goto('/seller/subscriptions');
+  await page.locator('.rental-data-row').filter({ hasText: 'Kiosk HCM' }).click();
   const card = page.getByRole('article', { name: 'Kiosk HCM', exact: true });
   await expect(card.getByRole('button', { name: 'Gia hạn thêm 12 tháng' })).toBeDisabled();
   state.readError = false;
-  await page.getByRole('button', { name: 'Tải lại kỳ thuê' }).click();
+  await card.getByRole('button', { name: 'Tải lại kỳ thuê trong chi tiết', exact: true }).click();
   state.unsafeLink = true;
   await card.getByRole('button', { name: 'Tiếp tục thanh toán' }).click();
-  const dialog = page.getByRole('dialog');
+  const dialog = page.getByRole('dialog', { name: 'Thanh toán gia hạn kiosk' });
   await expect(dialog.getByRole('alert')).toContainText('không thuộc cổng thanh toán');
   await expect(dialog.getByRole('link')).toHaveCount(0);
   expect(state.creates).toBe(0);
@@ -207,6 +275,7 @@ test('Missing renewal QR retries the same subscription without opening PayOS', a
   const state = await fixture(page);
   state.qrCode = null;
   await page.goto('/seller/subscriptions');
+  await page.locator('.rental-data-row').filter({ hasText: 'Kiosk HCM' }).click();
   await page
     .getByRole('article', { name: 'Kiosk HCM', exact: true })
     .getByRole('button', { name: 'Tiếp tục thanh toán' })

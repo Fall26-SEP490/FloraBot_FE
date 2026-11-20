@@ -1,5 +1,6 @@
 'use client';
 
+import RefreshRegion from '@/shared/components/RefreshRegion';
 import WorkspaceTable from '@/features/portal/components/WorkspaceTable';
 import { Modal } from '@/shared/components/Modal';
 import IconActionButton from '@/shared/components/IconActionButton';
@@ -1052,7 +1053,7 @@ function OrderActions({
                             <Button
                               type="button"
                               variant="outline"
-                              onClick={() => void accessoryCatalog.refetch()}
+                              onClick={() => accessoryCatalog.refetch()}
                               disabled={accessoryCatalog.isFetching || busy}
                             >
                               Kiểm tra lại tồn
@@ -1232,7 +1233,7 @@ function OrderActions({
                       type="button"
                       variant="outline"
                       disabled={slots.isFetching}
-                      onClick={() => void slots.refetch()}
+                      onClick={() => slots.refetch()}
                       action="reload"
                       label="Tải lại danh sách ô"
                     />
@@ -2055,7 +2056,7 @@ export default function WebRequests({
               type="button"
               variant="outline"
               disabled={query.isFetching}
-              onClick={() => void query.refetch()}
+              onClick={() => query.refetch()}
               action="reload"
               label="Làm mới"
             />
@@ -2079,393 +2080,397 @@ export default function WebRequests({
           )}
         </>
       )}
-      <Panel {...(mode === 'seller' ? { className: styles.sheetPanel } : {})}>
-        {mode === 'seller' && (
-          <>
-            <div className={styles.filters}>
-              <div className={styles.searchBar}>
-                <label className={styles.searchField}>
-                  <span>Tìm đơn của shop</span>
-                  <input
-                    type="search"
-                    value={search}
-                    placeholder="Mã đơn, tên hoa hoặc kiosk…"
-                    onChange={(event) => {
-                      setSearch(event.target.value);
-                      setResultPage(1);
-                    }}
-                  />
-                </label>
-                <div className={styles.statusField}>
-                  <label htmlFor="seller-order-status">Trạng thái đơn</label>
-                  <CustomSelect
-                    id="seller-order-status"
-                    value={filter}
-                    displayValue={
-                      sellerStatusOptions.find((option) => option.value === filter)?.label ??
-                      filterName
-                    }
-                    onValueChange={(value) => {
-                      setFilter(value as OrderFilter);
-                      setResultPage(1);
-                    }}
-                    options={sellerStatusOptions}
-                  />
-                </div>
-                <label className={styles.dateField} htmlFor="seller-pickup-filter">
-                  <span>Lọc theo ngày nhận</span>
-                  <VietnamDateInput
-                    id="seller-pickup-filter"
-                    label="Lọc theo ngày nhận"
-                    value={pickupDay}
-                    onValueChange={(value) => {
-                      setPickupDay(value);
-                      setResultPage(1);
-                    }}
-                  />
-                </label>
-                <div className={styles.filterActions}>
-                  {(search || pickupDay || filter !== 'all') && (
-                    <IconActionButton
-                      variant="outline"
-                      onClick={() => {
-                        setSearch('');
-                        setPickupDay('');
-                        setFilter('all');
+      <RefreshRegion>
+        <Panel {...(mode === 'seller' ? { className: styles.sheetPanel } : {})}>
+          {mode === 'seller' && (
+            <>
+              <div className={styles.filters}>
+                <div className={styles.searchBar}>
+                  <label className={styles.searchField}>
+                    <span>Tìm đơn của shop</span>
+                    <input
+                      type="search"
+                      value={search}
+                      placeholder="Mã đơn, tên hoa hoặc kiosk…"
+                      onChange={(event) => {
+                        setSearch(event.target.value);
                         setResultPage(1);
                       }}
-                      action="clear"
-                      label="Xóa bộ lọc"
                     />
-                  )}
+                  </label>
+                  <div className={styles.statusField}>
+                    <label htmlFor="seller-order-status">Trạng thái đơn</label>
+                    <CustomSelect
+                      id="seller-order-status"
+                      value={filter}
+                      displayValue={
+                        sellerStatusOptions.find((option) => option.value === filter)?.label ??
+                        filterName
+                      }
+                      onValueChange={(value) => {
+                        setFilter(value as OrderFilter);
+                        setResultPage(1);
+                      }}
+                      options={sellerStatusOptions}
+                    />
+                  </div>
+                  <label className={styles.dateField} htmlFor="seller-pickup-filter">
+                    <span>Lọc theo ngày nhận</span>
+                    <VietnamDateInput
+                      id="seller-pickup-filter"
+                      label="Lọc theo ngày nhận"
+                      value={pickupDay}
+                      onValueChange={(value) => {
+                        setPickupDay(value);
+                        setResultPage(1);
+                      }}
+                    />
+                  </label>
+                  <div className={styles.filterActions}>
+                    {(search || pickupDay || filter !== 'all') && (
+                      <IconActionButton
+                        variant="outline"
+                        onClick={() => {
+                          setSearch('');
+                          setPickupDay('');
+                          setFilter('all');
+                          setResultPage(1);
+                        }}
+                        action="clear"
+                        label="Xóa bộ lọc"
+                      />
+                    )}
 
-                  <IconActionButton
-                    action="reload"
-                    label="Tải lại đơn đặt trước"
-                    disabled={query.isFetching}
-                    onClick={() => void query.refetch()}
-                  />
+                    <IconActionButton
+                      action="reload"
+                      label="Tải lại đơn đặt trước"
+                      disabled={query.isFetching}
+                      onClick={() => query.refetch()}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          </>
-        )}
-        {mode === 'member' && query.isError && !query.data && !history.isError && (
-          <p role="alert">Chưa tải được đơn đặt trước; giao dịch mua hoa vẫn hiển thị bên dưới.</p>
-        )}
-        {mode === 'member' && query.isError && (
-          <IconActionButton
-            variant="outline"
-            disabled={query.isFetching}
-            onClick={() => void query.refetch()}
-            action="reload"
-            label="Tải lại đơn đặt trước"
-          />
-        )}
-        {mode === 'member' && history.isError && (
-          <div role="alert" className={customerStyles.historyNotice}>
-            Chưa tải được giao dịch mua hoa. Bạn vẫn có thể xử lý đơn đặt trước.
+            </>
+          )}
+          {mode === 'member' && query.isError && !query.data && !history.isError && (
+            <p role="alert">
+              Chưa tải được đơn đặt trước; giao dịch mua hoa vẫn hiển thị bên dưới.
+            </p>
+          )}
+          {mode === 'member' && query.isError && (
             <IconActionButton
               variant="outline"
-              onClick={() => void history.refetch()}
+              disabled={query.isFetching}
+              onClick={() => query.refetch()}
               action="reload"
-              label="Tải lại giao dịch"
+              label="Tải lại đơn đặt trước"
             />
-          </div>
-        )}
-        {query.isPending && (mode !== 'member' || history.isPending) ? (
-          <p role="status">Đang tải yêu cầu…</p>
-        ) : query.isError && !query.data && (mode !== 'member' || history.isError) ? (
-          <div role="alert">
-            <p>Chưa tải được yêu cầu.</p>
-            {mode === 'seller' && (
-              <Button
+          )}
+          {mode === 'member' && history.isError && (
+            <div role="alert" className={customerStyles.historyNotice}>
+              Chưa tải được giao dịch mua hoa. Bạn vẫn có thể xử lý đơn đặt trước.
+              <IconActionButton
                 variant="outline"
-                disabled={query.isFetching}
-                onClick={() => void query.refetch()}
-              >
-                Thử lại
-              </Button>
-            )}
-          </div>
-        ) : (
-          <>
-            {mode !== 'seller' && !filtered.length && (
-              <div className="operations-empty" role="status">
-                {mode === 'member' ? (
-                  <Flower2 size={32} aria-hidden="true" />
-                ) : (
-                  <ClipboardList size={32} aria-hidden="true" />
-                )}
-                <h3>
-                  {mode === 'member'
-                    ? history.isPending
-                      ? 'Đang tải giao dịch…'
-                      : loadedItems.length ||
-                          query.data?.hasMore ||
-                          history.data?.hasMore ||
-                          page > 1
-                        ? loadedItems.length
-                          ? 'Không tìm thấy đơn phù hợp'
-                          : 'Chưa có đơn ở trang này'
-                        : 'Chưa có đơn hàng'
-                    : items.length
-                      ? 'Không tìm thấy yêu cầu phù hợp'
-                      : 'Chưa có đơn đặt trước'}
-                </h3>
-                <p>
-                  {items.length
-                    ? mode === 'admin'
-                      ? 'Thử đổi trạng thái hoặc từ khóa. Bộ lọc áp dụng cho trang đang xem.'
-                      : 'Không có yêu cầu phù hợp bộ lọc trong trang này.'
-                    : mode === 'member' &&
-                        (filter !== 'all' || Boolean(searchNeedle)) &&
-                        loadedItems.length > 0
-                      ? 'Không có đơn phù hợp bộ lọc trong trang này. Thử xóa lọc hoặc kiểm tra trang khác.'
-                      : mode === 'member' && page === 1
-                        ? 'Chọn một mẫu hoa bạn thích và gửi mong muốn cho shop. Đơn của bạn sẽ xuất hiện tại đây.'
-                        : 'Chưa có yêu cầu ở trang này.'}
-                </p>
-                {mode === 'member' &&
-                  (filter !== 'all' || Boolean(searchNeedle)) &&
-                  loadedItems.length > 0 && (
-                    <IconActionButton
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        setFilter('all');
-                        setSearch('');
-                      }}
-                      action="clear"
-                      label="Xóa bộ lọc"
-                    />
-                  )}
-                {mode === 'member' &&
-                  !history.isPending &&
-                  !history.isError &&
-                  !query.isError &&
-                  loadedItems.length === 0 &&
-                  !query.data?.hasMore &&
-                  !history.data?.hasMore &&
-                  page === 1 && (
-                    <Link href="/dat-hoa" className="button button-outline">
-                      Khám phá hoa <ArrowRight size={16} aria-hidden="true" />
-                    </Link>
-                  )}
-              </div>
-            )}
-            {mode === 'member' ? (
-              <div className={customerStyles.orderGroups}>
-                {memberGroups.map(
-                  ({ id, title, rows }) =>
-                    rows.length > 0 &&
-                    (id === 'history' ? (
-                      <details
-                        key={id}
-                        data-order-history
-                        className={customerStyles.orderHistory}
-                        open={openMemberHistory || undefined}
-                      >
-                        <summary>
-                          {title} <span className={customerStyles.groupCount}>{rows.length}</span>
-                          <ChevronDown size={16} aria-hidden="true" />
-                        </summary>
-                        <ul className="member-orders customer-order-list">
-                          {rows.map(renderOrder)}
-                        </ul>
-                      </details>
-                    ) : (
-                      <section
-                        key={id}
-                        className={customerStyles.orderGroup}
-                        aria-labelledby={`order-group-${id}`}
-                      >
-                        <h2 id={`order-group-${id}`}>
-                          {title} <span className={customerStyles.groupCount}>{rows.length}</span>
-                        </h2>
-                        <ul className="member-orders customer-order-list">
-                          {rows.map(renderOrder)}
-                        </ul>
-                      </section>
-                    )),
-                )}
-              </div>
-            ) : mode === 'seller' ? (
-              <div className={styles.orderSheet}>
-                <div className={styles.sheetColumns} aria-hidden="true">
-                  <span>Mã đơn</span>
-                  <span>Mẫu hoa</span>
-                  <span>Kiosk</span>
-                  <span>Lịch nhận</span>
-                  <span>Giá</span>
-                  <span>Trạng thái</span>
-                  <span>Thao tác</span>
-                </div>
-                {filtered.length ? (
-                  <ul className={styles.orderList}>{displayItems.map(renderOrder)}</ul>
-                ) : (
-                  <div className={styles.emptyState} role="status">
-                    <h3>
-                      {pickupDay
-                        ? `Không có đơn nhận ngày ${displayVietnamDate(pickupDay)}`
-                        : searchNeedle || filter !== 'all'
-                          ? 'Không tìm thấy đơn phù hợp'
-                          : 'Chưa có đơn đặt trước'}
-                    </h3>
-                    <p>
-                      {searchNeedle || pickupDay || filter !== 'all'
-                        ? 'Thử đổi hoặc xóa bộ lọc để xem các đơn khác.'
-                        : 'Đơn đặt trước của khách sẽ hiển thị tại đây.'}
-                    </p>
-                  </div>
-                )}
-              </div>
-            ) : mode === 'admin' ? (
-              <>
-                <WorkspaceTable label="Giám sát đơn đặt trước">
-                  <table className="admin-monitor-table">
-                    <thead>
-                      <tr>
-                        <th scope="col">Đơn / Mẫu hoa</th>
-                        <th scope="col">Shop / Kiosk</th>
-                        <th scope="col">Lịch nhận / Giá</th>
-                        <th scope="col">Trạng thái</th>
-                        <th scope="col">Chi tiết</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {displayItems.map((row) => (
-                        <tr className="admin-monitor-order-row" key={row.id}>
-                          <td>
-                            <strong>{row.orderCode || `Yêu cầu ${row.id.slice(0, 8)}`}</strong>
-                            <span className="table-secondary">
-                              {row.productName ||
-                                (row.kind === 'CUSTOM' ? 'Hoa theo yêu cầu' : 'Hoa có sẵn')}
-                            </span>
-                          </td>
-                          <td>
-                            <strong>{row.shopName || '—'}</strong>
-                            <span className="table-secondary">{row.kioskName || '—'}</span>
-                          </td>
-                          <td>
-                            <time dateTime={row.pickupAt}>{when(row.pickupAt)}</time>
-                            <span className="table-secondary">
-                              {row.quotedPrice == null ? 'Chưa báo giá' : money(row.quotedPrice)}
-                            </span>
-                          </td>
-                          <td>
-                            <span
-                              className="table-badge"
-                              data-state={
-                                row.ready && row.orderStatus === 'PAID'
-                                  ? 'READY'
-                                  : row.orderStatus || row.state
-                              }
-                            >
-                              {statusName(row)}
-                            </span>
-                          </td>
-                          <td>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              aria-label={`Xem đơn ${row.orderCode || row.id}`}
-                              onClick={() => setSelectedAdminOrderId(row.id)}
-                            >
-                              Xem
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </WorkspaceTable>
-                <Modal
-                  open={!!selectedAdminOrder}
-                  onClose={() => setSelectedAdminOrderId(null)}
-                  title={`Đơn ${selectedAdminOrder?.orderCode || selectedAdminOrder?.id.slice(0, 8) || ''}`}
-                  size="lg"
-                  className="admin-monitor-dialog"
-                >
-                  {selectedAdminOrder && (
-                    <OrderActions
-                      key={selectedAdminOrder.id}
-                      row={selectedAdminOrder}
-                      base={base}
-                      mode="admin"
-                      role={session.data?.role}
-                      userId={session.data?.id}
-                      page={page}
-                      filter={filter}
-                      onReload={async () => {
-                        const fresh = await query.refetch();
-                        const updated = fresh.data?.items.find(
-                          (item) => item.id === selectedAdminOrder.id,
-                        );
-                        if (fresh.isError || !updated)
-                          throw new Error('Order could not be reloaded.');
-                        return updated;
-                      }}
-                    />
-                  )}
-                </Modal>
-              </>
-            ) : (
-              <ul className="admin-preorder-list">{displayItems.map(renderOrder)}</ul>
-            )}
-            {mode === 'seller' && query.data?.hasMore && (
-              <div className={styles.loadMore}>
-                <p>Chưa tải hết đơn của shop. Tải thêm để tiếp tục tìm và thống kê.</p>
+                onClick={() => history.refetch()}
+                action="reload"
+                label="Tải lại giao dịch"
+              />
+            </div>
+          )}
+          {query.isPending && (mode !== 'member' || history.isPending) ? (
+            <p role="status">Đang tải yêu cầu…</p>
+          ) : query.isError && !query.data && (mode !== 'member' || history.isError) ? (
+            <div role="alert">
+              <p>Chưa tải được yêu cầu.</p>
+              {mode === 'seller' && (
                 <Button
                   variant="outline"
                   disabled={query.isFetching}
-                  onClick={() => setQueueLimit((value) => value + 50)}
+                  onClick={() => query.refetch()}
                 >
-                  Tải thêm đơn của shop
+                  Thử lại
                 </Button>
-              </div>
-            )}
-            {(mode === 'seller'
-              ? totalResultPages > 1
-              : page > 1 ||
-                query.data?.hasMore ||
-                (mode === 'member' && history.data?.hasMore)) && (
-              <nav className="order-pagination" aria-label="Phân trang đơn đặt trước">
-                <Button
-                  variant="outline"
-                  disabled={displayPage === 1 || query.isFetching}
-                  onClick={() =>
-                    mode === 'seller' ? setResultPage(displayPage - 1) : changePage(page - 1)
-                  }
-                >
-                  <ArrowLeft size={15} aria-hidden="true" />
-                  <span>Trang trước</span>
-                </Button>
-                <span className="order-page-indicator">
-                  Trang {displayPage}
-                  {mode === 'seller' ? ` / ${totalResultPages}` : ''}
-                </span>
-                <Button
-                  variant="outline"
-                  disabled={
-                    (mode === 'seller'
-                      ? displayPage >= totalResultPages
-                      : !(query.data?.hasMore || (mode === 'member' && history.data?.hasMore))) ||
-                    query.isFetching ||
-                    (mode === 'member' && history.isFetching)
-                  }
-                  onClick={() =>
-                    mode === 'seller' ? setResultPage(displayPage + 1) : changePage(page + 1)
-                  }
-                >
-                  <span>Trang sau</span>
-                  <ArrowRight size={15} aria-hidden="true" />
-                </Button>
-              </nav>
-            )}
-          </>
-        )}
-      </Panel>
+              )}
+            </div>
+          ) : (
+            <>
+              {mode !== 'seller' && !filtered.length && (
+                <div className="operations-empty" role="status">
+                  {mode === 'member' ? (
+                    <Flower2 size={32} aria-hidden="true" />
+                  ) : (
+                    <ClipboardList size={32} aria-hidden="true" />
+                  )}
+                  <h3>
+                    {mode === 'member'
+                      ? history.isPending
+                        ? 'Đang tải giao dịch…'
+                        : loadedItems.length ||
+                            query.data?.hasMore ||
+                            history.data?.hasMore ||
+                            page > 1
+                          ? loadedItems.length
+                            ? 'Không tìm thấy đơn phù hợp'
+                            : 'Chưa có đơn ở trang này'
+                          : 'Chưa có đơn hàng'
+                      : items.length
+                        ? 'Không tìm thấy yêu cầu phù hợp'
+                        : 'Chưa có đơn đặt trước'}
+                  </h3>
+                  <p>
+                    {items.length
+                      ? mode === 'admin'
+                        ? 'Thử đổi trạng thái hoặc từ khóa. Bộ lọc áp dụng cho trang đang xem.'
+                        : 'Không có yêu cầu phù hợp bộ lọc trong trang này.'
+                      : mode === 'member' &&
+                          (filter !== 'all' || Boolean(searchNeedle)) &&
+                          loadedItems.length > 0
+                        ? 'Không có đơn phù hợp bộ lọc trong trang này. Thử xóa lọc hoặc kiểm tra trang khác.'
+                        : mode === 'member' && page === 1
+                          ? 'Chọn một mẫu hoa bạn thích và gửi mong muốn cho shop. Đơn của bạn sẽ xuất hiện tại đây.'
+                          : 'Chưa có yêu cầu ở trang này.'}
+                  </p>
+                  {mode === 'member' &&
+                    (filter !== 'all' || Boolean(searchNeedle)) &&
+                    loadedItems.length > 0 && (
+                      <IconActionButton
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          setFilter('all');
+                          setSearch('');
+                        }}
+                        action="clear"
+                        label="Xóa bộ lọc"
+                      />
+                    )}
+                  {mode === 'member' &&
+                    !history.isPending &&
+                    !history.isError &&
+                    !query.isError &&
+                    loadedItems.length === 0 &&
+                    !query.data?.hasMore &&
+                    !history.data?.hasMore &&
+                    page === 1 && (
+                      <Link href="/dat-hoa" className="button button-outline">
+                        Khám phá hoa <ArrowRight size={16} aria-hidden="true" />
+                      </Link>
+                    )}
+                </div>
+              )}
+              {mode === 'member' ? (
+                <div className={customerStyles.orderGroups}>
+                  {memberGroups.map(
+                    ({ id, title, rows }) =>
+                      rows.length > 0 &&
+                      (id === 'history' ? (
+                        <details
+                          key={id}
+                          data-order-history
+                          className={customerStyles.orderHistory}
+                          open={openMemberHistory || undefined}
+                        >
+                          <summary>
+                            {title} <span className={customerStyles.groupCount}>{rows.length}</span>
+                            <ChevronDown size={16} aria-hidden="true" />
+                          </summary>
+                          <ul className="member-orders customer-order-list">
+                            {rows.map(renderOrder)}
+                          </ul>
+                        </details>
+                      ) : (
+                        <section
+                          key={id}
+                          className={customerStyles.orderGroup}
+                          aria-labelledby={`order-group-${id}`}
+                        >
+                          <h2 id={`order-group-${id}`}>
+                            {title} <span className={customerStyles.groupCount}>{rows.length}</span>
+                          </h2>
+                          <ul className="member-orders customer-order-list">
+                            {rows.map(renderOrder)}
+                          </ul>
+                        </section>
+                      )),
+                  )}
+                </div>
+              ) : mode === 'seller' ? (
+                <div className={styles.orderSheet}>
+                  <div className={styles.sheetColumns} aria-hidden="true">
+                    <span>Mã đơn</span>
+                    <span>Mẫu hoa</span>
+                    <span>Kiosk</span>
+                    <span>Lịch nhận</span>
+                    <span>Giá</span>
+                    <span>Trạng thái</span>
+                    <span>Thao tác</span>
+                  </div>
+                  {filtered.length ? (
+                    <ul className={styles.orderList}>{displayItems.map(renderOrder)}</ul>
+                  ) : (
+                    <div className={styles.emptyState} role="status">
+                      <h3>
+                        {pickupDay
+                          ? `Không có đơn nhận ngày ${displayVietnamDate(pickupDay)}`
+                          : searchNeedle || filter !== 'all'
+                            ? 'Không tìm thấy đơn phù hợp'
+                            : 'Chưa có đơn đặt trước'}
+                      </h3>
+                      <p>
+                        {searchNeedle || pickupDay || filter !== 'all'
+                          ? 'Thử đổi hoặc xóa bộ lọc để xem các đơn khác.'
+                          : 'Đơn đặt trước của khách sẽ hiển thị tại đây.'}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : mode === 'admin' ? (
+                <>
+                  <WorkspaceTable label="Giám sát đơn đặt trước">
+                    <table className="admin-monitor-table">
+                      <thead>
+                        <tr>
+                          <th scope="col">Đơn / Mẫu hoa</th>
+                          <th scope="col">Shop / Kiosk</th>
+                          <th scope="col">Lịch nhận / Giá</th>
+                          <th scope="col">Trạng thái</th>
+                          <th scope="col">Chi tiết</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {displayItems.map((row) => (
+                          <tr className="admin-monitor-order-row" key={row.id}>
+                            <td>
+                              <strong>{row.orderCode || `Yêu cầu ${row.id.slice(0, 8)}`}</strong>
+                              <span className="table-secondary">
+                                {row.productName ||
+                                  (row.kind === 'CUSTOM' ? 'Hoa theo yêu cầu' : 'Hoa có sẵn')}
+                              </span>
+                            </td>
+                            <td>
+                              <strong>{row.shopName || '—'}</strong>
+                              <span className="table-secondary">{row.kioskName || '—'}</span>
+                            </td>
+                            <td>
+                              <time dateTime={row.pickupAt}>{when(row.pickupAt)}</time>
+                              <span className="table-secondary">
+                                {row.quotedPrice == null ? 'Chưa báo giá' : money(row.quotedPrice)}
+                              </span>
+                            </td>
+                            <td>
+                              <span
+                                className="table-badge"
+                                data-state={
+                                  row.ready && row.orderStatus === 'PAID'
+                                    ? 'READY'
+                                    : row.orderStatus || row.state
+                                }
+                              >
+                                {statusName(row)}
+                              </span>
+                            </td>
+                            <td>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                aria-label={`Xem đơn ${row.orderCode || row.id}`}
+                                onClick={() => setSelectedAdminOrderId(row.id)}
+                              >
+                                Xem
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </WorkspaceTable>
+                  <Modal
+                    open={!!selectedAdminOrder}
+                    onClose={() => setSelectedAdminOrderId(null)}
+                    title={`Đơn ${selectedAdminOrder?.orderCode || selectedAdminOrder?.id.slice(0, 8) || ''}`}
+                    size="lg"
+                    className="admin-monitor-dialog"
+                  >
+                    {selectedAdminOrder && (
+                      <OrderActions
+                        key={selectedAdminOrder.id}
+                        row={selectedAdminOrder}
+                        base={base}
+                        mode="admin"
+                        role={session.data?.role}
+                        userId={session.data?.id}
+                        page={page}
+                        filter={filter}
+                        onReload={async () => {
+                          const fresh = await query.refetch();
+                          const updated = fresh.data?.items.find(
+                            (item) => item.id === selectedAdminOrder.id,
+                          );
+                          if (fresh.isError || !updated)
+                            throw new Error('Order could not be reloaded.');
+                          return updated;
+                        }}
+                      />
+                    )}
+                  </Modal>
+                </>
+              ) : (
+                <ul className="admin-preorder-list">{displayItems.map(renderOrder)}</ul>
+              )}
+              {mode === 'seller' && query.data?.hasMore && (
+                <div className={styles.loadMore}>
+                  <p>Chưa tải hết đơn của shop. Tải thêm để tiếp tục tìm và thống kê.</p>
+                  <Button
+                    variant="outline"
+                    disabled={query.isFetching}
+                    onClick={() => setQueueLimit((value) => value + 50)}
+                  >
+                    Tải thêm đơn của shop
+                  </Button>
+                </div>
+              )}
+              {(mode === 'seller'
+                ? totalResultPages > 1
+                : page > 1 ||
+                  query.data?.hasMore ||
+                  (mode === 'member' && history.data?.hasMore)) && (
+                <nav className="order-pagination" aria-label="Phân trang đơn đặt trước">
+                  <Button
+                    variant="outline"
+                    disabled={displayPage === 1 || query.isFetching}
+                    onClick={() =>
+                      mode === 'seller' ? setResultPage(displayPage - 1) : changePage(page - 1)
+                    }
+                  >
+                    <ArrowLeft size={15} aria-hidden="true" />
+                    <span>Trang trước</span>
+                  </Button>
+                  <span className="order-page-indicator">
+                    Trang {displayPage}
+                    {mode === 'seller' ? ` / ${totalResultPages}` : ''}
+                  </span>
+                  <Button
+                    variant="outline"
+                    disabled={
+                      (mode === 'seller'
+                        ? displayPage >= totalResultPages
+                        : !(query.data?.hasMore || (mode === 'member' && history.data?.hasMore))) ||
+                      query.isFetching ||
+                      (mode === 'member' && history.isFetching)
+                    }
+                    onClick={() =>
+                      mode === 'seller' ? setResultPage(displayPage + 1) : changePage(page + 1)
+                    }
+                  >
+                    <span>Trang sau</span>
+                    <ArrowRight size={15} aria-hidden="true" />
+                  </Button>
+                </nav>
+              )}
+            </>
+          )}
+        </Panel>
+      </RefreshRegion>
     </Container>
   );
 }

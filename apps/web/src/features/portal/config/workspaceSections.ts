@@ -75,17 +75,13 @@ export const workspaceSections = {
       'Cập nhật địa chỉ và tọa độ kiosk để khách hàng tìm thấy điểm nhận hoa.',
     ],
     ['subscriptions', 'Thuê kiosk', 'Xem phí thuê đã chốt và đăng ký thuê thêm kiosk.'],
-    [
-      'commerce',
-      'Thanh toán & doanh số',
-      'Theo dõi kênh nhận tiền, giao dịch và tích điểm của shop.',
-    ],
+    ['commerce', 'Thanh toán', 'Theo dõi kênh nhận tiền, giao dịch và tích điểm của shop.'],
     [
       'refunds',
       'Hoàn tiền trực tiếp',
       'Chuyển khoản hoàn tiền đã duyệt và gửi chứng từ đối chiếu.',
     ],
-    ['seasonal', 'Doanh số theo mùa', 'Xem dữ liệu bán thực tế và dự báo có điều kiện.'],
+    ['seasonal', 'Phân tích doanh số', 'Xem doanh số thực tế và dự báo nhu cầu.'],
     ['terminations', 'Chấm dứt thuê kiosk', 'Gửi yêu cầu chấm dứt và theo dõi tiến độ bàn giao.'],
   ],
   OPERATIONS_MANAGER: [

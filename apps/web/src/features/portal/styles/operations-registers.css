@@ -27,8 +27,11 @@
 .available-kiosk-table code {
   display: block;
   margin-top: 5px;
-  color: #64736a;
+  color: #58685e;
   font-size: 11px;
+}
+.available-kiosk-table .inventory-connection[data-online='false'] {
+  color: #58685e;
 }
 .available-kiosk-table .inventory-row-actions {
   display: table-cell;

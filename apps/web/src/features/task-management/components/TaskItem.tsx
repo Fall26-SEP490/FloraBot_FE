@@ -416,12 +416,16 @@ export function TaskItem({
                   ? 'Bắt đầu công việc'
                   : reviewingIncident
                     ? 'Duyệt báo cáo sự cố'
-                    : 'Cập nhật tiến độ & Báo cáo'}
+                    : role === 'SELLER' && task.status === 'SUBMITTED'
+                      ? 'Duyệt báo cáo'
+                      : 'Cập nhật tiến độ & Báo cáo'}
             </h4>
           </div>
           <div className="staff-form-group">
             <label htmlFor={`action-${task.id}`}>
-              {reviewingIncident ? 'Kết quả xét duyệt' : 'Bước tiếp theo'}
+              {reviewingIncident || (role === 'SELLER' && task.status === 'SUBMITTED')
+                ? 'Kết quả xét duyệt'
+                : 'Bước tiếp theo'}
             </label>
             <Select
               id={`action-${task.id}`}
@@ -449,7 +453,15 @@ export function TaskItem({
               : 'Kết quả công việc'
             : canCancelOpenTask
               ? 'Lý do hủy'
-              : 'Nội dung cập nhật'}
+              : role === 'SELLER'
+                ? 'Nội dung phản hồi'
+                : 'Nội dung cập nhật'}
+          {role === 'SELLER' && (
+            <span className="task-required" aria-hidden="true">
+              {' '}
+              *
+            </span>
+          )}
         </label>
         {quickTemplates.length > 0 && (
           <div className="staff-quick-templates" aria-label="Gợi ý nội dung">
@@ -513,7 +525,13 @@ export function TaskItem({
                       : selectedTransition === 'IN_PROGRESS'
                         ? 'Yêu cầu kiểm tra lại'
                         : 'Xác nhận hủy'
-                    : 'Xác nhận cập nhật'}
+                    : role === 'SELLER' && task.status === 'SUBMITTED'
+                      ? selectedTransition === 'IN_PROGRESS'
+                        ? 'Yêu cầu làm lại'
+                        : selectedTransition === 'CANCELLED'
+                          ? 'Xác nhận hủy'
+                          : 'Duyệt báo cáo'
+                      : 'Xác nhận cập nhật'}
       </Button>
     </form>
   );
@@ -537,6 +555,7 @@ export function TaskItem({
         )}
       {canEditInstructions && (
         <details
+          className="staff-instructions-editor"
           open={editingInstructions}
           onToggle={(e) => setEditingInstructions(e.currentTarget.open)}
         >
@@ -549,7 +568,13 @@ export function TaskItem({
           {editingInstructions && (
             <form onSubmit={(e) => void saveInstructions(e)} noValidate>
               <label htmlFor={`edit-instructions-${task.id}`}>
-                Hướng dẫn công việc (10–2.000 ký tự)
+                {role === 'SELLER' ? 'Hướng dẫn công việc' : 'Hướng dẫn công việc (10–2.000 ký tự)'}
+                {role === 'SELLER' && (
+                  <span className="task-required" aria-hidden="true">
+                    {' '}
+                    *
+                  </span>
+                )}
               </label>
               <textarea
                 id={`edit-instructions-${task.id}`}
@@ -609,11 +634,6 @@ export function TaskItem({
           )}
         </div>
       )}
-      {qualityTask && role === 'SELLER' && (
-        <p>
-          Duyệt hoặc trả báo cáo ở <a href="/seller/complaints">Phản ánh chất lượng</a>.
-        </p>
-      )}
       {canWorkOnInventory && actorId && (!qualityTask || inventory.data || inventory.isError) && (
         <div className="staff-stocking-section">
           <div className="staff-stocking-header">
@@ -656,14 +676,16 @@ export function TaskItem({
         </div>
       )}
       {canCancelOpenTask && (
-        <div>
-          <p>
-            {task.status === 'ASSIGNED'
-              ? role === 'OPERATIONS_MANAGER'
-                ? 'Chờ kỹ thuật viên bắt đầu.'
-                : 'Chờ nhân viên bắt đầu.'
-              : 'Đang thực hiện · Chờ báo cáo.'}
-          </p>
+        <div className="staff-cancel-actions">
+          {role !== 'SELLER' && (
+            <p>
+              {task.status === 'ASSIGNED'
+                ? role === 'OPERATIONS_MANAGER'
+                  ? 'Chờ kỹ thuật viên bắt đầu.'
+                  : 'Chờ nhân viên bắt đầu.'
+                : 'Đang thực hiện · Chờ báo cáo.'}
+            </p>
+          )}
           <Button
             type="button"
             variant="outline"
@@ -679,6 +701,7 @@ export function TaskItem({
         </div>
       )}
       {choices.length > 0 &&
+        role !== 'SELLER' &&
         !needsRepairContext &&
         (compactStaff && canWorkOnInventory ? (
           <details className="staff-report-disclosure">
@@ -698,6 +721,14 @@ export function TaskItem({
           <p>{task.report}</p>
         </div>
       )}
+      {qualityTask && role === 'SELLER' && (
+        <div className="seller-quality-review-action">
+          <a className="button" href="/seller/complaints">
+            Duyệt / trả báo cáo <span aria-hidden="true">→</span>
+          </a>
+        </div>
+      )}
+      {role === 'SELLER' && choices.length > 0 && !needsRepairContext && transitionForm}
       <div className="staff-secondary-details">
         <StaffEvidence
           key={`${task.id}:${task.version}:${actorId}`}
@@ -913,10 +944,12 @@ export function TaskItem({
                 : qualityTask
                   ? 'Xử lý chất lượng hoa'
                   : 'Giao hoa'}{' '}
-            · {task.kioskName}
+            {!(role === 'SELLER' && initiallyOpen) && <>· {task.kioskName}</>}
           </CardTitle>
           {!isTechnician && !compactStaff && (
-            <p className="staff-assignee-text">Người thực hiện: {task.assigneeName}</p>
+            <p className="staff-assignee-text">
+              Người thực hiện: <strong>{task.assigneeName}</strong>
+            </p>
           )}
         </div>
         <span className="staff-task-label" data-status={task.status}>

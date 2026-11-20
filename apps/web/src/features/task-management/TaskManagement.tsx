@@ -3,7 +3,6 @@ import { Modal } from '@/shared/components/Modal';
 import { useCallback, useRef, useState } from 'react';
 import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
-import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft,
@@ -20,6 +19,7 @@ import { TaskItem } from './components/TaskItem';
 import { TASK_STATUS_LABELS } from './task-management.constants';
 import type { ActiveTaskRole, StaffTasksProps, TaskPage } from './task-management.types';
 import './styles/task-management.css';
+import '../account-management/styles/seller-team.css';
 import './styles/operational-detail-polish.css';
 
 export type { ActiveTaskRole, StaffTasksProps };
@@ -74,6 +74,7 @@ function FilteredTaskList(props: StaffTasksProps) {
         : ['INCIDENT', 'DELIVERY']);
 
   const [page, setPage] = useState(1);
+  const [assignmentOpen, setAssignmentOpen] = useState(false);
   const [selectedAdminTask, setSelectedAdminTask] = useState<string | null>(null);
   const [openTaskIds, setOpenTaskIds] = useState<Set<string>>(() => new Set());
   const handleTaskOpen = useCallback((id: string, open: boolean) => {
@@ -108,7 +109,9 @@ function FilteredTaskList(props: StaffTasksProps) {
   const tasks = useQuery({
     meta: {
       portalManagedRefresh: isPlatform,
-      portalRefreshPaused: isPlatform && (!!selectedAdminTask || openTaskIds.size > 0),
+      portalRefreshPaused:
+        (isPlatform || role === 'SELLER') &&
+        (!!selectedAdminTask || assignmentOpen || openTaskIds.size > 0),
     },
     queryKey: ['staff-tasks', role ?? 'none', actorId ?? 'none', scopeKey, page, status],
     queryFn: () => request<TaskPage>(`${apiBase}?page=${page}${status ? `&status=${status}` : ''}`),
@@ -116,16 +119,18 @@ function FilteredTaskList(props: StaffTasksProps) {
     refetchOnWindowFocus: !selectedAdminTask && openTaskIds.size === 0,
     refetchOnReconnect: !selectedAdminTask && openTaskIds.size === 0,
     refetchInterval: (query) =>
-      role === 'ADMIN' || role === 'OPERATIONS_MANAGER' || role === 'TECHNICIAN'
-        ? selectedAdminTask || openTaskIds.size > 0
-          ? false
-          : 30_000
-        : role === 'SELLER' &&
-            query.state.data?.items.some(
-              (task) => task.status === 'ASSIGNED' || task.status === 'IN_PROGRESS',
-            )
-          ? 10_000
-          : false,
+      selectedAdminTask || assignmentOpen
+        ? false
+        : role === 'ADMIN' || role === 'OPERATIONS_MANAGER' || role === 'TECHNICIAN'
+          ? selectedAdminTask || openTaskIds.size > 0
+            ? false
+            : 30_000
+          : role === 'SELLER' &&
+              query.state.data?.items.some(
+                (task) => task.status === 'ASSIGNED' || task.status === 'IN_PROGRESS',
+              )
+            ? 10_000
+            : false,
   });
 
   if (!isValidRole || !role) {
@@ -145,7 +150,7 @@ function FilteredTaskList(props: StaffTasksProps) {
       .replace(/đ/g, 'd')
       .replace(/[^a-z0-9]/g, '');
   const matchesSearch = (task: TaskPage['items'][number]) =>
-    !isPlatform ||
+    !(isPlatform || role === 'SELLER') ||
     normalizeSearch(
       `${task.kioskName} ${task.assigneeName} ${task.shopName || ''} ${task.id}`,
     ).includes(normalizeSearch(taskSearch.trim()));
@@ -190,6 +195,7 @@ function FilteredTaskList(props: StaffTasksProps) {
       <h2
         id="staff-tasks-title"
         className={
+          role === 'SELLER' ||
           role === 'ADMIN' ||
           role === 'OPERATIONS_MANAGER' ||
           role === 'TECHNICIAN' ||
@@ -200,7 +206,8 @@ function FilteredTaskList(props: StaffTasksProps) {
       >
         {sectionTitle}
       </h2>
-      {role !== 'ADMIN' &&
+      {role !== 'SELLER' &&
+        role !== 'ADMIN' &&
         role !== 'OPERATIONS_MANAGER' &&
         role !== 'TECHNICIAN' &&
         role !== 'SELLER_STAFF' && <p>{sectionDescription}</p>}
@@ -240,13 +247,6 @@ function FilteredTaskList(props: StaffTasksProps) {
             </div>
           </div>
         )}
-      {role === 'SELLER' && tasks.isSuccess && (
-        <p className={role === 'SELLER' ? 'seller-task-count' : 'manager-task-count'} role="status">
-          {tasks.data.items.length} công việc trong trang {page}
-          {status ? ` · ${TASK_STATUS_LABELS[status] || status}` : ''}.
-          {tasks.data.hasMore ? ' Còn công việc ở trang sau.' : ''}
-        </p>
-      )}
       {role === 'OPERATIONS_MANAGER' && (
         <nav className="manager-desk-navigation" aria-label="Khu vực xử lý sự cố">
           {(
@@ -316,26 +316,56 @@ function FilteredTaskList(props: StaffTasksProps) {
         id="manager-incident-area"
         hidden={role === 'OPERATIONS_MANAGER' && managerView !== 'incidents'}
       >
-        {canAssign && actorId && (
-          <AdminTaskAssignment
-            actorId={actorId}
-            linkedTasks={tasks.data?.items ?? []}
-            onOpenTask={(id) => {
-              setTaskSearch('');
-              setFocusedTaskId(id);
-              setManagerView('tasks');
-              setStatus('');
-              setPage(1);
-            }}
-            apiBase={apiBase}
-            role={role}
-            allowedKinds={allowedKinds}
-            directoryEndpoint={directoryEndpoint}
-            incidentsEndpoint={incidentsEndpoint}
-            deliveryScopesEndpoint={deliveryScopesEndpoint}
-            sellerId={sellerId}
-          />
-        )}
+        {canAssign &&
+          actorId &&
+          (role === 'SELLER' ? (
+            <Modal
+              open={assignmentOpen}
+              title="Giao công việc"
+              onClose={() => setAssignmentOpen(false)}
+              className="seller-task-create-modal"
+            >
+              {assignmentOpen && (
+                <AdminTaskAssignment
+                  actorId={actorId}
+                  linkedTasks={tasks.data?.items ?? []}
+                  onOpenTask={(id) => {
+                    setTaskSearch('');
+                    setFocusedTaskId(id);
+                    setManagerView('tasks');
+                    setStatus('');
+                    setPage(1);
+                  }}
+                  apiBase={apiBase}
+                  role={role}
+                  allowedKinds={allowedKinds}
+                  directoryEndpoint={directoryEndpoint}
+                  incidentsEndpoint={incidentsEndpoint}
+                  deliveryScopesEndpoint={deliveryScopesEndpoint}
+                  sellerId={sellerId}
+                />
+              )}
+            </Modal>
+          ) : (
+            <AdminTaskAssignment
+              actorId={actorId}
+              linkedTasks={tasks.data?.items ?? []}
+              onOpenTask={(id) => {
+                setTaskSearch('');
+                setFocusedTaskId(id);
+                setManagerView('tasks');
+                setStatus('');
+                setPage(1);
+              }}
+              apiBase={apiBase}
+              role={role}
+              allowedKinds={allowedKinds}
+              directoryEndpoint={directoryEndpoint}
+              incidentsEndpoint={incidentsEndpoint}
+              deliveryScopesEndpoint={deliveryScopesEndpoint}
+              sellerId={sellerId}
+            />
+          ))}
       </div>
       {role === 'TECHNICIAN' && (
         <nav className="technician-status-nav" aria-label="Chọn trạng thái công việc">
@@ -403,6 +433,23 @@ function FilteredTaskList(props: StaffTasksProps) {
           </div>
         )}
         <div className="staff-task-toolbar">
+          {role === 'SELLER' && (
+            <div className="seller-task-search">
+              <label htmlFor="seller-task-search">Tìm công việc</label>
+              <input
+                id="seller-task-search"
+                type="search"
+                value={taskSearch}
+                placeholder="Kiosk, nhân viên hoặc mã công việc"
+                onChange={(event) => setTaskSearch(event.target.value)}
+              />
+            </div>
+          )}
+          {role === 'SELLER' && canAssign && (
+            <Button type="button" onClick={() => setAssignmentOpen(true)}>
+              Giao việc mới
+            </Button>
+          )}
           <div
             hidden={
               role === 'TECHNICIAN' || (role === 'OPERATIONS_MANAGER' && managerView === 'review')
@@ -416,7 +463,7 @@ function FilteredTaskList(props: StaffTasksProps) {
                   : 'sr-only'
               }
             >
-              Lọc trạng thái
+              Trạng thái
             </label>
             <Select
               id="task-status"
@@ -459,6 +506,17 @@ function FilteredTaskList(props: StaffTasksProps) {
               label="Làm mới"
             />
           )}
+          {role === 'SELLER' && (taskSearch || status || page > 1) && (
+            <IconActionButton
+              action="clear"
+              label="Xóa bộ lọc công việc"
+              onClick={() => {
+                setTaskSearch('');
+                setStatus('');
+                setPage(1);
+              }}
+            />
+          )}
         </div>
         {tasks.isPending ? (
           <p role="status">Đang tải công việc…</p>
@@ -475,103 +533,151 @@ function FilteredTaskList(props: StaffTasksProps) {
                 xem thêm.
               </p>
             )}
-            {tasks.data.items.length === 0 ? (
+            {tasks.data.items.length === 0 || (role === 'SELLER' && matchedCount === 0) ? (
               <div className="operations-empty">
                 <ClipboardList size={36} aria-hidden="true" />
                 <h3>
                   {role === 'OPERATIONS_MANAGER' && managerView === 'review'
                     ? 'Chưa có báo cáo chờ duyệt'
-                    : 'Chưa có công việc'}
+                    : role === 'SELLER' && taskSearch
+                      ? 'Không có công việc khớp tìm kiếm'
+                      : 'Chưa có công việc'}
                 </h3>
-                {(role === 'SELLER' || role === 'SELLER_STAFF') && (
-                  <p>Chưa có công việc trong danh sách này.</p>
-                )}
-                {role === 'SELLER' && (
-                  <p>
-                    {status || page > 1
-                      ? 'Thử bỏ lọc trạng thái hoặc quay về trang đầu.'
-                      : 'Mở “Phân công công việc mới” để chọn nhân viên và tủ giao hoa.'}{' '}
-                    <Link href="/seller/staff">Quản lý nhân viên shop</Link>
-                  </p>
-                )}
+                {role === 'SELLER_STAFF' && <p>Chưa có công việc trong danh sách này.</p>}
                 {isPlatform && (status || page > 1) && (
                   <p className="platform-empty-hint">Thử đổi trạng thái hoặc về trang đầu.</p>
                 )}
               </div>
-            ) : role === 'ADMIN' ? (
-              <WorkspaceTable label="Giám sát công việc">
-                <table className="admin-monitor-table">
-                  <thead>
-                    <tr>
-                      <th scope="col">Công việc / Kiosk</th>
-                      <th scope="col">Người phụ trách</th>
-                      <th scope="col">Trạng thái</th>
-                      <th scope="col">Báo cáo gần nhất</th>
-                      <th scope="col">Chi tiết</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tasks.data.items.filter(matchesSearch).map((task) => (
-                      <tr key={task.id}>
-                        <td>
-                          <strong>
-                            {task.workType === 'FLOWER_QUALITY'
-                              ? 'Xử lý chất lượng hoa'
-                              : task.kind === 'INCIDENT'
-                                ? 'Kiểm tra sự cố'
-                                : task.kind === 'KIOSK_REMOVAL'
-                                  ? 'Tháo dỡ kiosk'
-                                  : 'Giao hoa'}
-                          </strong>
-                          <span className="table-secondary">{task.kioskName}</span>
-                        </td>
-                        <td>{task.assigneeName || '—'}</td>
-                        <td>
-                          <span className="table-badge" data-state={task.status}>
-                            {TASK_STATUS_LABELS[task.status] || task.status}
-                          </span>
-                        </td>
-                        <td>
-                          <span className="table-truncate" title={task.report || ''}>
-                            {task.report || '—'}
-                          </span>
-                        </td>
-                        <td>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            aria-label={`Xem công việc ${task.id}`}
-                            onClick={() => setSelectedAdminTask(task.id)}
-                          >
-                            Xem
-                          </Button>
-                          <Modal
-                            open={selectedAdminTask === task.id}
-                            onClose={() => setSelectedAdminTask(null)}
-                            title={`Công việc · ${task.kioskName}`}
-                            size="lg"
-                            className="admin-monitor-dialog"
-                          >
-                            {selectedAdminTask === task.id && (
-                              <TaskItem
-                                key={`${task.id}-${task.version}`}
-                                task={task}
-                                initiallyOpen
-                                mode="oversight"
-                                actorRole="ADMIN"
-                                actorId={actorId}
-                                apiBase={apiBase}
-                                canReassign={false}
-                                readOnly
-                              />
-                            )}
-                          </Modal>
-                        </td>
+            ) : role === 'ADMIN' || role === 'SELLER' ? (
+              <>
+                <WorkspaceTable
+                  label={role === 'SELLER' ? 'Danh sách công việc' : 'Giám sát công việc'}
+                >
+                  <table className="admin-monitor-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Công việc / Kiosk</th>
+                        <th scope="col">Người phụ trách</th>
+                        <th scope="col">Trạng thái</th>
+                        <th scope="col">Báo cáo gần nhất</th>
+                        <th scope="col">
+                          {role === 'SELLER' ? (
+                            <span className="sr-only">Chi tiết</span>
+                          ) : (
+                            'Chi tiết'
+                          )}
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </WorkspaceTable>
+                    </thead>
+                    <tbody>
+                      {tasks.data.items.filter(matchesSearch).map((task) => (
+                        <tr
+                          key={task.id}
+                          className={role === 'SELLER' ? 'seller-task-row' : undefined}
+                          tabIndex={role === 'SELLER' ? 0 : undefined}
+                          onClick={
+                            role === 'SELLER'
+                              ? (event) => {
+                                  if (
+                                    (event.target as HTMLElement).closest(
+                                      'button, a, input, select, textarea',
+                                    )
+                                  )
+                                    return;
+                                  setSelectedAdminTask(task.id);
+                                }
+                              : undefined
+                          }
+                          onKeyDown={
+                            role === 'SELLER'
+                              ? (event) => {
+                                  if (event.target !== event.currentTarget) return;
+                                  if (event.key === 'Enter' || event.key === ' ') {
+                                    event.preventDefault();
+                                    setSelectedAdminTask(task.id);
+                                  }
+                                }
+                              : undefined
+                          }
+                        >
+                          <td>
+                            <strong>
+                              {task.workType === 'FLOWER_QUALITY'
+                                ? 'Xử lý chất lượng hoa'
+                                : task.kind === 'INCIDENT'
+                                  ? 'Kiểm tra sự cố'
+                                  : task.kind === 'KIOSK_REMOVAL'
+                                    ? 'Tháo dỡ kiosk'
+                                    : 'Giao hoa'}
+                            </strong>
+                            <span className="table-secondary">{task.kioskName}</span>
+                          </td>
+                          <td>{task.assigneeName || '—'}</td>
+                          <td>
+                            <span className="table-badge" data-state={task.status}>
+                              {TASK_STATUS_LABELS[task.status] || task.status}
+                            </span>
+                          </td>
+                          <td>
+                            <span className="table-truncate" title={task.report || ''}>
+                              {task.report || '—'}
+                            </span>
+                          </td>
+                          <td>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className={role === 'SELLER' ? 'seller-task-open' : undefined}
+                              aria-label={`Xem công việc ${task.id}`}
+                              onClick={() => setSelectedAdminTask(task.id)}
+                            >
+                              {role === 'SELLER' ? (
+                                <>
+                                  <ArrowRight size={18} aria-hidden="true" />
+                                  <span className="sr-only">Xem</span>
+                                </>
+                              ) : (
+                                'Xem'
+                              )}
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </WorkspaceTable>
+                {tasks.data.items
+                  .filter((task) => task.id === selectedAdminTask)
+                  .map((task) => (
+                    <Modal
+                      key={task.id}
+                      open={selectedAdminTask === task.id}
+                      onClose={() => setSelectedAdminTask(null)}
+                      title={`Công việc: ${task.kioskName}`}
+                      size="lg"
+                      placement={role === 'SELLER' ? 'right' : 'center'}
+                      className={
+                        role === 'SELLER' ? 'seller-task-detail-modal' : 'admin-monitor-dialog'
+                      }
+                    >
+                      {selectedAdminTask === task.id && (
+                        <TaskItem
+                          key={`${task.id}-${task.version}`}
+                          task={task}
+                          initiallyOpen
+                          mode={mode}
+                          actorRole={role}
+                          actorId={actorId}
+                          apiBase={apiBase}
+                          sellerId={sellerId}
+                          directoryEndpoint={directoryEndpoint}
+                          canReassign={canReassign}
+                          readOnly={readOnly}
+                        />
+                      )}
+                    </Modal>
+                  ))}
+              </>
             ) : (
               (mode === 'worker'
                 ? [...tasks.data.items].sort((a, b) => {
@@ -600,7 +706,9 @@ function FilteredTaskList(props: StaffTasksProps) {
               ))
             )}
             {(page > 1 ||
-              (role === 'SELLER_STAFF' ? tasks.data.hasMore : tasks.data.items.length > 0)) && (
+              (role === 'SELLER_STAFF' || role === 'SELLER'
+                ? tasks.data.hasMore
+                : tasks.data.items.length > 0)) && (
               <nav aria-label="Phân trang công việc" className="order-pagination">
                 <Button
                   variant="outline"

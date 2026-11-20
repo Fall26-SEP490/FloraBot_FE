@@ -19,6 +19,7 @@ export function Modal({
   children,
   closeDisabled = false,
   size = 'md',
+  placement = 'center',
   className = '',
 }: {
   open: boolean;
@@ -30,6 +31,7 @@ export function Modal({
   children: ReactNode;
   closeDisabled?: boolean;
   size?: ModalSize;
+  placement?: 'center' | 'right';
   className?: string;
 }) {
   const titleId = useId();
@@ -93,7 +95,14 @@ export function Modal({
 
   if (!open) return null;
   return (
-    <div className="management-modal-backdrop">
+    <div
+      className={[
+        'management-modal-backdrop',
+        placement === 'right' && 'management-modal-backdrop--right',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
       <button
         type="button"
         className="management-modal-dismiss"
@@ -104,7 +113,14 @@ export function Modal({
       />
       <div
         ref={panelRef}
-        className={`management-modal management-modal--${size}${className ? ` ${className}` : ''}`}
+        className={[
+          'management-modal',
+          `management-modal--${size}`,
+          placement === 'right' && 'management-modal--right',
+          className,
+        ]
+          .filter(Boolean)
+          .join(' ')}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}

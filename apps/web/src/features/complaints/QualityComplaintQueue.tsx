@@ -75,7 +75,7 @@ function SellerActions({
   const eligibleSlots = (slots.data ?? []).filter(
     (item) =>
       item.kioskId === detail.kioskId &&
-      item.zone === 'WALK_IN' &&
+      (item.zone === 'WALK_IN' || item.zone === 'PREORDER') &&
       item.status === 'RENTED_EMPTY' &&
       !item.bouquetId &&
       item.sensorReady,
@@ -195,6 +195,12 @@ function SellerActions({
     }
   }
 
+  const canViewTask = task && ['ASSIGNED', 'IN_PROGRESS', 'SUBMITTED'].includes(task.status);
+  const needsNotice =
+    detail.handlingState === 'ATTENTION_REQUIRED' ||
+    (detail.status === 'OPEN' && detail.acceptedAt && !task && !detail.items.length);
+  if (!allowed.length && !canViewTask && !needsNotice && !message && !blocked) return null;
+
   return (
     <div className={`${styles.flow} ${styles.sellerActions}`}>
       {detail.status === 'OPEN' && detail.acceptedAt && !task && !detail.items.length && (
@@ -206,21 +212,21 @@ function SellerActions({
         <p>Kiểm tra ô tủ và thu hồi hoa đã nạp qua mục Hoa tại tủ trước khi chốt phương án khác.</p>
       )}
       <div className={styles.actions}>
-        {allowed.map((item) => (
-          <Button
-            key={item}
-            type="button"
-            variant={item === 'replacement/cancel' ? 'outline' : 'default'}
-            disabled={busy || blocked || stale}
-            aria-expanded={activeAction === item}
-            onClick={() => setAction(activeAction === item ? null : item)}
-          >
-            {text[item]}
-          </Button>
-        ))}
-        {task && ['ASSIGNED', 'IN_PROGRESS', 'SUBMITTED'].includes(task.status) && (
-          <a href="/seller/tasks">Xem công việc nhân viên</a>
-        )}
+        {allowed
+          .filter((item) => item !== activeAction)
+          .map((item) => (
+            <Button
+              key={item}
+              type="button"
+              variant={item === 'replacement/cancel' ? 'outline' : 'default'}
+              disabled={busy || blocked || stale}
+              aria-expanded={activeAction === item}
+              onClick={() => setAction(activeAction === item ? null : item)}
+            >
+              {text[item]}
+            </Button>
+          ))}
+        {canViewTask && <a href="/seller/tasks">Xem công việc nhân viên</a>}
       </div>
       {activeAction && (
         <form key={activeAction} className={styles.form} onSubmit={submit}>
@@ -290,11 +296,11 @@ function SellerActions({
                 Ô trống tại kiosk gốc
                 <Select required name="slotId" defaultValue="">
                   <option value="" disabled>
-                    Chọn ô bán sẵn
+                    Chọn ô trống
                   </option>
                   {eligibleSlots.map((item) => (
                     <option key={item.id} value={item.id}>
-                      {item.slotCode}
+                      {item.slotCode} · {item.zone === 'PREORDER' ? 'Đặt trước' : 'Bán sẵn'}
                     </option>
                   ))}
                 </Select>

@@ -465,9 +465,7 @@ test.describe('Account Management UI - Multi-Role, Hierarchy & Security', () => 
 
     await page.goto('/seller/staff');
 
-    await expect(
-      page.getByRole('heading', { level: 2, name: 'Quản lý Nhân viên shop' }),
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Nhân viên shop' })).toBeVisible();
     const table = page.getByRole('table', { name: 'Quản lý Nhân viên shop' });
 
     // Verify it called NEW GET /sellers/{id}/staff/accounts per coordinator finding

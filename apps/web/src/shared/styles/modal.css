@@ -220,3 +220,50 @@ div.management-modal.management-modal--sm > .management-modal-actions {
     justify-content: center;
   }
 }
+
+.management-modal-backdrop.management-modal-backdrop--right {
+  padding: 0;
+  place-items: stretch end;
+  overflow: hidden;
+}
+.management-modal.management-modal--right {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+  animation: management-panel-enter 180ms ease-out;
+}
+.management-modal--right > .management-modal-header {
+  flex: 0 0 auto;
+  margin: 0;
+}
+.management-modal--right > :not(.management-modal-header) {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+@keyframes management-panel-enter {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .management-modal.management-modal--right {
+    animation: none;
+  }
+}
+
+.workspace-portal-root.platform-workspace
+  .management-modal-backdrop.management-modal-backdrop--right {
+  padding: 0;
+  place-items: stretch end;
+}

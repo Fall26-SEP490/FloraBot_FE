@@ -40,7 +40,7 @@ for (const readableAfterSave of [true, false]) {
     await expect(bank.getByLabel('Tên ngân hàng nhận hoàn phí')).toHaveValue('MB Bank');
     await expect(bank.getByLabel('Tên chủ tài khoản')).toHaveValue('TEST HOLDER');
     await bank.getByLabel('Số tài khoản ngân hàng').fill('0012345678');
-    const saveButton = bank.getByRole('button', { name: 'Lưu tài khoản ngân hàng shop' });
+    const saveButton = bank.getByRole('button', { name: 'Lưu tài khoản', exact: true });
     const bankReadBack = page.waitForResponse(
       (response) => saved && response.url().endsWith(`/sellers/${sellerId}/bank`),
     );
@@ -124,7 +124,7 @@ test('Old wallet URL opens direct seller receipts without withdrawal actions', a
   );
   await page.goto('/seller/wallet');
   await expect(page).toHaveURL(/\/seller\/commerce$/);
-  await expect(page.getByRole('heading', { name: 'Thanh toán & doanh số' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Thanh toán', exact: true })).toBeVisible();
   await expect(page.getByText('Chưa có kênh PayOS của shop.')).toBeVisible();
   await expect(page.getByText('200.000 đ').first()).toBeVisible();
   await expect(page.getByRole('button', { name: /rút tiền/i })).toHaveCount(0);
@@ -150,7 +150,7 @@ test('Seller sees own active channel and shop receipts', async ({ page }) => {
   await page.goto('/seller/commerce');
   await expect(page.getByText('Đã kích hoạt')).toBeVisible();
   await expect(page.getByText('***1234')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Tiền bán hoa nhận trực tiếp' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Giao dịch bán hoa' })).toBeVisible();
   await expect(page.getByText('200.000 đ').first()).toBeVisible();
   await expect(page.getByRole('link', { name: 'Ví giao dịch cũ' })).toHaveCount(0);
 });
@@ -186,8 +186,8 @@ for (const waitingForCustomer of [true, false]) {
       }),
     );
     await page.goto('/seller/refunds');
-    const refunds = page.locator('.business-panel');
-    await refunds.locator('.business-card summary').click();
+    await page.locator('.finance-clickable-row').click();
+    const refunds = page.getByRole('dialog', { name: 'Chi tiết khoản hoàn' });
     await expect(
       refunds.getByText(
         waitingForCustomer

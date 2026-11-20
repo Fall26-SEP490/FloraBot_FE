@@ -1,3 +1,4 @@
+import RefreshRegion from '@/shared/components/RefreshRegion';
 import IconActionButton from '@/shared/components/IconActionButton';
 import Link from 'next/link';
 
@@ -7,7 +8,7 @@ import { useMutation, useQueries, useQuery } from '@tanstack/react-query';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button, Flower2, MapPin } from '@florabot/ui';
+import { Button, Flower2 } from '@florabot/ui';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
 import { queryClient, request, type Session } from '@/shared/lib/api';
 import ReportFault from '../incidents/ReportFault';
@@ -346,7 +347,7 @@ function KioskLayoutAndHistoryPanels({
             {history.isError && (
               <p role="alert" className="error">
                 Chưa tải được lịch sử thay đổi tại tủ.{' '}
-                <Button variant="outline" onClick={() => void history.refetch()}>
+                <Button variant="outline" onClick={() => history.refetch()}>
                   Thử lại
                 </Button>
               </p>
@@ -437,8 +438,6 @@ export default function SellerStock({ session }: { session: Session }) {
   const [stockView, setStockView] = useState<'slots' | 'history'>('slots');
   const [slotFilter, setSlotFilter] = useState<SlotFilter>('ALL');
   const [slotSearch, setSlotSearch] = useState('');
-  const [filterDraft, setFilterDraft] = useState<SlotFilter>('ALL');
-  const [searchDraft, setSearchDraft] = useState('');
   const [message, setMessage] = useState('');
   const [mapOpen, setMapOpen] = useState(false);
   const [productSearch, setProductSearch] = useState('');
@@ -671,685 +670,685 @@ export default function SellerStock({ session }: { session: Session }) {
   });
 
   return (
-    <section className="seller-stock stock-page" aria-labelledby="stock-title">
-      <h2 id="stock-title" className="sr-only">
-        Quản lý hoa tại tủ
-      </h2>
-      {!canStock && (
-        <p className="quiet stock-banner-notice stock-banner-warning">
-          Shop cần có kỳ thuê đang hoạt động để nạp hoa. Bạn vẫn có thể xem các ô đang quản lý.
-        </p>
-      )}
+    <RefreshRegion>
+      <section className="seller-stock stock-page" aria-labelledby="stock-title">
+        <h2 id="stock-title" className="sr-only">
+          Quản lý hoa tại tủ
+        </h2>
+        {!canStock && (
+          <p className="quiet stock-banner-notice stock-banner-warning">
+            Shop cần có kỳ thuê đang hoạt động để nạp hoa. Bạn vẫn có thể xem các ô đang quản lý.
+          </p>
+        )}
 
-      <div className="stock-toolbar-card stock-kiosk-summary">
-        <div className="stock-toolbar-top">
-          <div className="stock-kiosk-controls">
-            <div className="stock-kiosk-field">
-              <label htmlFor="stock-kiosk">Kiosk của tôi</label>
-              <CustomSelect
-                id="stock-kiosk"
-                value={selectedKioskId}
-                disabled={kiosks.isPending || kiosks.isError || stock.isPending}
-                onValueChange={(value) => {
-                  setSelectedKioskChoice(value);
-                  setStockView('slots');
-                  setSlotFilter('ALL');
-                  setFilterDraft('ALL');
-                  setSlotSearch('');
-                  setSearchDraft('');
-                  setDetailSlotId(null);
-                  form.reset({ slotId: '', productId: '' });
-                  stock.reset();
-                  setStockReason('Nạp hoa bán trực tiếp');
-                  setMessage('');
-                }}
-                options={
-                  availableKiosks.length
-                    ? availableKiosks.map((kiosk) => ({
-                        value: kiosk.id,
-                        label: `${kiosk.name} (${kiosk.code})`,
-                      }))
-                    : [{ value: '', label: 'Chọn kiosk' }]
-                }
-              />
+        <div className="stock-toolbar-card stock-kiosk-summary">
+          <div className="stock-toolbar-top">
+            <div className="stock-kiosk-controls">
+              <div className="stock-kiosk-field">
+                <label htmlFor="stock-kiosk">Kiosk của tôi</label>
+                <CustomSelect
+                  id="stock-kiosk"
+                  value={selectedKioskId}
+                  disabled={kiosks.isPending || kiosks.isError || stock.isPending}
+                  onValueChange={(value) => {
+                    setSelectedKioskChoice(value);
+                    setStockView('slots');
+                    setSlotFilter('ALL');
+                    setSlotSearch('');
+                    setDetailSlotId(null);
+                    form.reset({ slotId: '', productId: '' });
+                    stock.reset();
+                    setStockReason('Nạp hoa bán trực tiếp');
+                    setMessage('');
+                  }}
+                  options={
+                    availableKiosks.length
+                      ? availableKiosks.map((kiosk) => ({
+                          value: kiosk.id,
+                          label: `${kiosk.name} (${kiosk.code})`,
+                        }))
+                      : [{ value: '', label: 'Chọn kiosk' }]
+                  }
+                />
+              </div>
             </div>
           </div>
-          <IconActionButton
-            action="reload"
-            label="Tải lại tủ và ô tủ"
-            disabled={kiosks.isFetching || slots.isFetching}
-            onClick={() => {
-              void kiosks.refetch();
-              if (selectedKioskId) void slots.refetch();
-            }}
-          />
-        </div>
-        {selectedKiosk && (
-          <div className="stock-location-card">
-            <div>
-              <div className="stock-location-heading">
-                <span>Vị trí</span>
-                <span className="stock-kiosk-status" data-connected={kioskOnline} role="status">
-                  {kioskOnline
-                    ? 'Trực tuyến'
-                    : selectedKiosk.status === 'OFFLINE'
-                      ? 'Ngoại tuyến'
-                      : getKioskStatusLabel(selectedKiosk.status)}
-                </span>
-              </div>
-              <strong title={selectedKiosk.address || undefined}>
-                {selectedKiosk.address || 'Chưa cập nhật địa chỉ'}
-              </strong>
-            </div>
-            <div className="stock-actions">
-              <Button
-                variant="outline"
-                className="stock-location-icon"
-                aria-label="Xem bản đồ và sửa vị trí"
-                title="Xem bản đồ và sửa vị trí"
-                onClick={() => setMapOpen(true)}
-              >
-                <MapPin size={18} aria-hidden="true" />
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
-      <Modal open={mapOpen} title="Vị trí kiosk" onClose={() => setMapOpen(false)} size="lg">
-        {mapOpen && selectedKiosk && (
-          <>
-            <p>{selectedKiosk.address || 'Chưa cập nhật địa chỉ'}</p>
-            <p>{selectedKiosk.region || 'Chưa cập nhật khu vực'}</p>
-            {selectedKiosk.latitude != null && selectedKiosk.longitude != null ? (
-              <KioskPickerMap
-                latitude={Number(selectedKiosk.latitude)}
-                longitude={Number(selectedKiosk.longitude)}
-                interactive={false}
-              />
-            ) : (
-              <p>Kiosk chưa có tọa độ bản đồ.</p>
-            )}
-            <Link className="button button-outline" href="/seller/kiosks">
-              Sửa vị trí
-            </Link>
-          </>
-        )}
-      </Modal>
-      {(kiosks.isPending || products.isPending || slotsLoading) && (
-        <p role="status">Đang tải kiosk, ô tủ và sản phẩm…</p>
-      )}
-      {(kiosks.isError || slots.isError || products.isError) && (
-        <p role="alert" className="error">
-          Chưa tải đủ dữ liệu quản lý kiosk. Hệ thống sẽ tự thử lại.
-        </p>
-      )}
-      {!kiosks.isPending && !kiosks.isError && kiosks.data?.length === 0 && (
-        <p className="stock-banner-notice">
-          Shop chưa được phân bổ kiosk nào. Vui lòng liên hệ quản trị viên.
-        </p>
-      )}
-      {kiosks.isSuccess && !!kiosks.data?.length && availableKiosks.length === 0 && (
-        <p className="stock-banner-notice" role="status">
-          Các kiosk của shop hiện đã bị vô hiệu hóa.
-        </p>
-      )}
-      <p role="status" ref={notice} tabIndex={-1}>
-        {message}
-      </p>
-
-      {selectedKioskId && (
-        <nav className="stock-view-tabs" aria-label="Nội dung quản lý tủ">
-          <button
-            type="button"
-            aria-pressed={stockView === 'slots'}
-            onClick={() => setStockView('slots')}
-          >
-            Ô tủ
-          </button>
-          <button
-            type="button"
-            aria-pressed={stockView === 'history'}
-            onClick={() => {
-              setDetailSlotId(null);
-              setStockView('history');
-            }}
-          >
-            Lịch sử
-          </button>
-        </nav>
-      )}
-      <div className="stock-main-layout">
-        <div className="stock-workbench" hidden={stockView !== 'slots'}>
-          {selectedKioskId && (
-            <section className="stock-inventory" aria-labelledby="stock-slot-list">
-              <h3 id="stock-slot-list" className="sr-only">
-                Ô tủ
-              </h3>
-              <form
-                className="stock-table-filters"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  setSlotFilter(filterDraft);
-                  setSlotSearch(searchDraft);
-                }}
-              >
-                <div>
-                  <label htmlFor="stock-table-search">Tìm kiếm</label>
-                  <input
-                    id="stock-table-search"
-                    type="search"
-                    placeholder="Mã ô, tên hoa hoặc mã đơn"
-                    value={searchDraft}
-                    onChange={(event) => setSearchDraft(event.target.value)}
-                  />
+          {selectedKiosk && (
+            <div className="stock-location-card">
+              <div>
+                <div className="stock-location-heading">
+                  <span>Vị trí</span>
+                  <span className="stock-kiosk-status" data-connected={kioskOnline} role="status">
+                    {kioskOnline
+                      ? 'Trực tuyến'
+                      : selectedKiosk.status === 'OFFLINE'
+                        ? 'Ngoại tuyến'
+                        : getKioskStatusLabel(selectedKiosk.status)}
+                  </span>
                 </div>
-                <div>
-                  <label htmlFor="stock-table-status">Trạng thái / loại ô</label>
-                  <CustomSelect
-                    id="stock-table-status"
-                    value={filterDraft}
-                    onValueChange={(value) => setFilterDraft(value as SlotFilter)}
-                    options={[
-                      { value: 'ALL', label: 'Tất cả ô' },
-                      { value: 'WALK_IN_EMPTY', label: 'Ô trống tại chỗ' },
-                      { value: 'STOCKED', label: 'Đang có hoa' },
-                      { value: 'PREORDER', label: 'Ô đặt trước' },
-                      { value: 'UNKNOWN', label: 'Chưa phân loại' },
-                      { value: 'ATTENTION', label: 'Cần xử lý' },
-                    ]}
-                  />
-                </div>
-                <Button type="submit" variant="outline">
-                  Áp dụng
-                </Button>
-              </form>
-              {selectedKioskId && !slotsLoading && !slots.isError && allSlots.length === 0 && (
-                <p className="quiet">Kiosk chưa có ô nào để quản lý.</p>
-              )}
-              {selectedKioskId &&
-                !slotsLoading &&
-                allSlots.length > 0 &&
-                filteredSlots.length === 0 && (
-                  <div className="stock-filter-empty" role="status">
-                    <p>Không có ô tủ nào khớp với bộ lọc đang chọn.</p>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setSlotFilter('ALL');
-                        setFilterDraft('ALL');
-                        setSlotSearch('');
-                        setSearchDraft('');
-                      }}
-                    >
-                      Xem tất cả ô
-                    </Button>
-                  </div>
-                )}
-              <div className="stock-table-scroll" role="region" aria-label="Danh sách ô tủ">
-                <table className="stock-slots-table">
-                  <thead>
-                    <tr>
-                      <th scope="col">Ô tủ</th>
-                      <th scope="col">Loại ô</th>
-                      <th scope="col">Mẫu hoa</th>
-                      <th scope="col" className="stock-table-price">
-                        Giá
-                      </th>
-                      <th scope="col" className="stock-table-order">
-                        Đơn hàng
-                      </th>
-                      <th scope="col">Trạng thái</th>
-                      <th scope="col">
-                        <span className="sr-only">Thao tác</span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredSlots.map((slot) => {
-                      const product = products.data?.find((item) => item.id === slot.productId);
-                      const progress = slotMaintenanceProgress(slot, legacyProgress.get(slot.id));
-                      const openDetails = () => {
-                        form.reset({ slotId: slot.id, productId: '' });
-                        setProductSearch('');
-                        stock.reset();
-                        setDetailSlotId(slot.id);
-                      };
-                      return (
-                        <tr key={slot.id} onClick={openDetails} data-status={slot.status}>
-                          <th scope="row">
-                            <button
-                              type="button"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                openDetails();
-                              }}
-                              aria-label={`Xem chi tiết ô ${slot.slotCode}`}
-                            >
-                              {slot.slotCode}
-                            </button>
-                          </th>
-                          <td>
-                            <span className="stock-table-zone" data-zone={slotZone(slot)}>
-                              {zoneLabels[slotZone(slot)]}
-                            </span>
-                          </td>
-                          <td>
-                            {slot.bouquetId || slot.productId ? (
-                              product?.name || 'Bó hoa trong tủ'
-                            ) : (
-                              <span className="quiet">Ô trống</span>
-                            )}
-                          </td>
-                          <td className="stock-table-price">
-                            {slot.priceSnapshot == null ? '—' : money(slot.priceSnapshot)}
-                          </td>
-                          <td className="stock-table-order">{slot.orderCode || '—'}</td>
-                          <td>
-                            <SlotStatus slot={slot} progress={progress} />
-                          </td>
-                          <td className="stock-table-action">
-                            <span aria-hidden="true">→</span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                <strong title={selectedKiosk.address || undefined}>
+                  {selectedKiosk.address || 'Chưa cập nhật địa chỉ'}
+                </strong>
               </div>
-              <Modal
-                open={!!detailSlot}
-                title={`${detailSlot && detailSlot.status === 'RENTED_EMPTY' && slotZone(detailSlot) === 'WALK_IN' ? 'Nạp hoa vào ô' : 'Chi tiết ô'} ${detailSlot?.slotCode || ''}`}
-                description={selectedKiosk?.name}
-                onClose={closeSlotDetails}
-                closeDisabled={stock.isPending || assignmentBusy}
-                size="lg"
-                className="stock-slot-modal"
-              >
-                {detailSlot && (
-                  <div className="stock-slot-modal-body" key={detailSlot.id}>
-                    <div className="stock-slot-modal-status">
-                      <SlotStatus slot={detailSlot} progress={detailProgress} />
-                      <span>{zoneLabels[slotZone(detailSlot)]}</span>
-                    </div>
-                    {(detailSlot.orderCode || detailSlot.orderId) && (
-                      <p>
-                        Đơn liên quan: <strong>{detailSlot.orderCode || detailSlot.orderId}</strong>
-                      </p>
-                    )}
-                    {detailSlot.bouquetId && (
-                      <div className="stock-slot-modal-bouquet">
-                        <div className="stock-slot-modal-bouquet-head">
-                          <StockProductThumb sellerId={sellerId} productId={detailSlot.productId} />
-                          <strong>
-                            {products.data?.find((product) => product.id === detailSlot.productId)
-                              ?.name || 'Thông tin bó hoa trong ô'}
-                          </strong>
-                        </div>
-                        <dl className="stock-slot-details">
-                          <div>
-                            <dt>Sản phẩm</dt>
-                            <dd>
-                              {products.data?.find((product) => product.id === detailSlot.productId)
-                                ?.name || 'Chưa tải được tên sản phẩm'}
-                            </dd>
-                          </div>
-                          <div>
-                            <dt>Mã bó hoa</dt>
-                            <dd>{detailSlot.qrCode || 'Hệ thống chưa trả mã'}</dd>
-                          </div>
-                          <div>
-                            <dt>Giá khi nạp</dt>
-                            <dd>
-                              {detailSlot.priceSnapshot == null
-                                ? 'Chưa có thông tin'
-                                : money(detailSlot.priceSnapshot)}
-                            </dd>
-                          </div>
-                          <div>
-                            <dt>Hạn bán</dt>
-                            <dd>
-                              {!detailSlot.sellableUntil ||
-                              detailSlot.sellableUntil.startsWith('9999')
-                                ? 'Không áp dụng hạn tươi (Hoa giả)'
-                                : new Date(detailSlot.sellableUntil).toLocaleString('vi-VN', {
-                                    timeZone: 'Asia/Ho_Chi_Minh',
-                                  })}
-                            </dd>
-                          </div>
-                        </dl>
-                      </div>
-                    )}
-                    {canAssignInventory && (
-                      <div
-                        className="stock-operation-tabs"
-                        role="tablist"
-                        tabIndex={-1}
-                        aria-label="Cách thực hiện"
-                        onKeyDown={(event) => {
-                          if (
-                            !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key) ||
-                            stock.isPending ||
-                            assignmentBusy
-                          )
-                            return;
-                          event.preventDefault();
-                          const next =
-                            event.key === 'Home'
-                              ? 'SELF'
-                              : event.key === 'End'
-                                ? 'STAFF'
-                                : operationMode === 'SELF'
-                                  ? 'STAFF'
-                                  : 'SELF';
-                          setOperationChoice({ slotId: detailSlot.id, mode: next });
-                          event.currentTarget
-                            .querySelectorAll<HTMLButtonElement>('[role="tab"]')
-                            [next === 'SELF' ? 0 : 1]?.focus();
-                        }}
-                      >
-                        <button
-                          type="button"
-                          role="tab"
-                          id="stock-self-tab"
-                          tabIndex={operationMode === 'SELF' ? 0 : -1}
-                          aria-selected={operationMode === 'SELF'}
-                          aria-controls="stock-self-operation"
-                          disabled={stock.isPending || assignmentBusy}
-                          onClick={() =>
-                            setOperationChoice({ slotId: detailSlot.id, mode: 'SELF' })
-                          }
-                        >
-                          Tự thao tác tại tủ
-                        </button>
-                        <button
-                          type="button"
-                          role="tab"
-                          id="stock-staff-tab"
-                          tabIndex={operationMode === 'STAFF' ? 0 : -1}
-                          aria-selected={operationMode === 'STAFF'}
-                          aria-controls="stock-staff-operation"
-                          disabled={stock.isPending || assignmentBusy}
-                          onClick={() =>
-                            setOperationChoice({ slotId: detailSlot.id, mode: 'STAFF' })
-                          }
-                        >
-                          Giao nhân viên
-                        </button>
-                      </div>
-                    )}
-                    <div
-                      id="stock-self-operation"
-                      role={canAssignInventory ? 'tabpanel' : undefined}
-                      aria-labelledby={canAssignInventory ? 'stock-self-tab' : undefined}
-                      hidden={canAssignInventory && operationMode === 'STAFF'}
-                    >
-                      {canStock && selectedSlot && detailSlot?.id === selectedSlot.id && (
-                        <form
-                          id="stock-fill"
-                          tabIndex={-1}
-                          className="stock-form"
-                          noValidate
-                          onSubmit={form.handleSubmit((values) => {
-                            const slot = slots.data?.find((item) => item.id === values.slotId);
-                            if (
-                              !slot ||
-                              slot.kioskId !== selectedKioskId ||
-                              slot.status !== 'RENTED_EMPTY' ||
-                              !!slot.bouquetId ||
-                              slot.zone !== 'WALK_IN'
-                            ) {
-                              form.setError(
-                                'slotId',
-                                {
-                                  message:
-                                    'Ô không còn phù hợp. Chọn lại ô trống đúng hình thức bán.',
-                                },
-                                { shouldFocus: true },
-                              );
-                              return;
-                            }
-                            stock.mutate(values);
-                          })}
-                        >
-                          {!slotsLoading && !slots.isError && !matchingEmpty.length && (
-                            <div className="stock-empty-notice" role="note">
-                              <strong>Không có ô Walk-in trống để nạp hoa</strong>
-                              <p>
-                                {walkInSlots.length > 0
-                                  ? `${walkInSlots.length} ô đã chọn Walk-in, nhưng chưa ô nào trống để nạp bó mới.`
-                                  : 'Kiosk này chưa có ô nào được chọn làm Walk-in.'}
-                              </p>
-                              <p>
-                                Loại ô được chốt theo hồ sơ thuê. Ô chưa phân loại không thể nạp
-                                hoa; liên hệ đội vận hành để kiểm tra.
-                              </p>
-                            </div>
-                          )}
-                          {matchingEmpty.length > 0 && !slots.isError && (
-                            <>
-                              <div className="stock-fields">
-                                <div>
-                                  <input type="hidden" {...form.register('slotId')} />
-
-                                  {form.formState.errors.slotId && (
-                                    <p className="error" id="stock-slot-error">
-                                      {form.formState.errors.slotId.message}
-                                    </p>
-                                  )}
-                                </div>
-                                <div>
-                                  <label htmlFor="stock-product">Mẫu hoa</label>
-                                  <input type="hidden" {...form.register('productId')} />
-                                  {available.length > 8 && (
-                                    <input
-                                      id="stock-product-search"
-                                      type="search"
-                                      aria-label="Tìm mẫu hoa"
-                                      placeholder="Tìm mẫu hoa"
-                                      value={productSearch}
-                                      disabled={stock.isPending}
-                                      onChange={(event) => setProductSearch(event.target.value)}
-                                    />
-                                  )}
-                                  <CustomSelect
-                                    id="stock-product"
-                                    value={selectedProductId || ''}
-                                    disabled={productSelectDisabled}
-                                    onValueChange={(value) =>
-                                      form.setValue('productId', value, {
-                                        shouldValidate: true,
-                                        shouldDirty: true,
-                                      })
-                                    }
-                                    options={[
-                                      { value: '', label: 'Chọn mẫu hoa' },
-                                      ...available
-                                        .filter(
-                                          (product) =>
-                                            product.id === selectedProductId ||
-                                            product.name
-                                              .toLocaleLowerCase('vi')
-                                              .includes(
-                                                productSearch.trim().toLocaleLowerCase('vi'),
-                                              ),
-                                        )
-                                        .map((product) => ({
-                                          value: product.id,
-                                          label: `${product.name}${product.quantity == null ? '' : ` — Còn ${product.quantity} bó`}`,
-                                          disabled: Number(product.quantity) === 0,
-                                        })),
-                                    ]}
-                                  />
-                                  {form.formState.errors.productId && (
-                                    <p className="error" id="stock-product-error">
-                                      {form.formState.errors.productId.message}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                              {selectedProduct && Number(selectedProduct.quantity) === 0 && (
-                                <p role="status" className="error">
-                                  Mẫu hoa đã hết tồn tại shop. Cập nhật tồn thực tế trong Mẫu hoa
-                                  trước khi nạp.
-                                </p>
-                              )}
-                              {selectedSlot && selectedProduct && (
-                                <div className="stock-fill-preview">
-                                  <StockProductThumb
-                                    sellerId={sellerId}
-                                    productId={selectedProduct.id}
-                                  />
-                                  <div>
-                                    <strong>{money(selectedProduct.price)}</strong>
-                                    <small>
-                                      {selectedProduct.shelfLifeHours
-                                        ? `Hạn bán ${selectedProduct.shelfLifeHours} giờ từ lúc nạp`
-                                        : selectedProduct.name}
-                                    </small>
-                                  </div>
-                                </div>
-                              )}{' '}
-                              {!products.isPending && !products.isError && !available.length && (
-                                <p className="quiet">
-                                  Bật bán ít nhất một sản phẩm trong danh mục trước khi nạp hoa.
-                                </p>
-                              )}
-                              {selectedSlot?.sensorEnabled && (
-                                <details className="stock-maintenance-reason">
-                                  <summary>Ghi chú nạp hoa</summary>
-                                  <label className="sr-only" htmlFor="stock-maintenance-reason">
-                                    Lý do nạp hoa
-                                  </label>
-                                  <textarea
-                                    id="stock-maintenance-reason"
-                                    value={stockReason}
-                                    maxLength={500}
-                                    onChange={(event) => setStockReason(event.target.value)}
-                                  />
-                                  {!selectedSlot.sensorReady && (
-                                    <p role="note">
-                                      Ô chưa được admin xác minh đủ cảm biến cửa và hoa.
-                                    </p>
-                                  )}
-                                </details>
-                              )}
-                              <p className="stock-fill-note">
-                                Kiểm tra mẫu hoa và đứng cạnh tủ trước khi nạp.
-                              </p>
-                              {!stock.isPending && stockBlockReasons.length > 0 && (
-                                <div
-                                  className="stock-fill-blockers"
-                                  id="stock-fill-blockers"
-                                  role="status"
-                                >
-                                  {stockBlockReasons.map((reason) => (
-                                    <p key={reason}>{reason}</p>
-                                  ))}
-                                </div>
-                              )}
-                              <div className="stock-actions stock-fill-footer">
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  disabled={stock.isPending}
-                                  onClick={closeSlotDetails}
-                                >
-                                  Hủy
-                                </Button>
-                                <Button
-                                  type="submit"
-                                  disabled={blocked || !selectedSlot || !selectedProduct}
-                                  aria-describedby={
-                                    !stock.isPending && stockBlockReasons.length
-                                      ? 'stock-fill-blockers'
-                                      : undefined
-                                  }
-                                >
-                                  {stock.isPending
-                                    ? 'Đang xử lý…'
-                                    : selectedSlot?.sensorEnabled
-                                      ? 'Mở ô và nạp hoa'
-                                      : 'Nạp hoa'}
-                                </Button>
-                              </div>
-                            </>
-                          )}
-                          {stock.isError && (
-                            <div role="alert" className="error">
-                              <p>{stock.error.message}</p>
-                              <p>Kiểm tra trạng thái ô trước khi thử lại.</p>
-                            </div>
-                          )}
-                        </form>
-                      )}
-
-                      {detailSlot.sensorEnabled ? (
-                        <SlotMaintenance
-                          key={`${selectedKioskId}:${detailSlot.id}`}
-                          sellerId={sellerId}
-                          kioskId={selectedKioskId}
-                          slot={detailSlot}
-                          products={available}
-                          canStock={canStock}
-                          loadSessionId={
-                            loadSession?.kioskId === selectedKioskId &&
-                            loadSession.slotId === detailSlot.id
-                              ? loadSession.sessionId
-                              : undefined
-                          }
-                          onLoadFinished={() => setLoadSession(undefined)}
-                        />
-                      ) : (
-                        <>
-                          <RemoveSlotBouquet kioskId={selectedKioskId} slot={detailSlot} />
-                          <ReturnFlowers slot={detailSlot} sellerId={sellerId} />
-                        </>
-                      )}
-                    </div>
-                    {canAssignInventory && (
-                      <div
-                        id="stock-staff-operation"
-                        role="tabpanel"
-                        aria-labelledby="stock-staff-tab"
-                        hidden={operationMode !== 'STAFF'}
-                      >
-                        <AssignInventoryTask
-                          key={`${selectedKioskId}:${detailSlot.id}:${detailSlot.bouquetId}`}
-                          sellerId={sellerId}
-                          kioskId={selectedKioskId}
-                          slot={detailSlot}
-                          products={available.filter((product) => Number(product.quantity) !== 0)}
-                          visible={operationMode === 'STAFF'}
-                          onBusy={setAssignmentBusy}
-                        />
-                      </div>
-                    )}
-                    <details className="stock-slot-support" open={detailSlot.status === 'FAULT'}>
-                      <summary>Báo sự cố</summary>
-                      <ReportFault
-                        slot={detailSlot}
-                        sellerId={sellerId}
-                        compact
-                        onDone={closeSlotDetails}
-                      />
-                    </details>
-                  </div>
-                )}
-              </Modal>
-            </section>
+              <div className="stock-actions">
+                <IconActionButton
+                  action="reload"
+                  label="Tải lại tủ và ô tủ"
+                  disabled={kiosks.isFetching || slots.isFetching}
+                  onClick={async () => {
+                    await kiosks.refetch();
+                    if (selectedKioskId) await slots.refetch();
+                  }}
+                />
+                <IconActionButton
+                  action="location"
+                  label="Xem bản đồ và sửa vị trí"
+                  className="stock-location-icon"
+                  aria-label="Xem bản đồ và sửa vị trí"
+                  title="Xem bản đồ và sửa vị trí"
+                  onClick={() => setMapOpen(true)}
+                />
+              </div>
+            </div>
           )}
         </div>
-        {selectedKioskId && slots.isSuccess && (
-          <KioskLayoutAndHistoryPanels
-            key={selectedKioskId}
-            kioskId={selectedKioskId}
-            totalSlots={allSlots.length}
-            currentWalkIn={walkInSlots.length}
-            currentPreorder={preorderSlots.length}
-            historyOpen={stockView === 'history'}
-          />
+        <Modal open={mapOpen} title="Vị trí kiosk" onClose={() => setMapOpen(false)} size="lg">
+          {mapOpen && selectedKiosk && (
+            <>
+              <p>{selectedKiosk.address || 'Chưa cập nhật địa chỉ'}</p>
+              <p>{selectedKiosk.region || 'Chưa cập nhật khu vực'}</p>
+              {selectedKiosk.latitude != null && selectedKiosk.longitude != null ? (
+                <KioskPickerMap
+                  latitude={Number(selectedKiosk.latitude)}
+                  longitude={Number(selectedKiosk.longitude)}
+                  interactive={false}
+                />
+              ) : (
+                <p>Kiosk chưa có tọa độ bản đồ.</p>
+              )}
+              <Link className="button button-outline" href="/seller/kiosks">
+                Sửa vị trí
+              </Link>
+            </>
+          )}
+        </Modal>
+        {(kiosks.isPending || products.isPending || slotsLoading) && (
+          <p role="status">Đang tải kiosk, ô tủ và sản phẩm…</p>
         )}
-      </div>
-    </section>
+        {(kiosks.isError || slots.isError || products.isError) && (
+          <p role="alert" className="error">
+            Chưa tải đủ dữ liệu quản lý kiosk. Hệ thống sẽ tự thử lại.
+          </p>
+        )}
+        {!kiosks.isPending && !kiosks.isError && kiosks.data?.length === 0 && (
+          <p className="stock-banner-notice">
+            Shop chưa được phân bổ kiosk nào. Vui lòng liên hệ quản trị viên.
+          </p>
+        )}
+        {kiosks.isSuccess && !!kiosks.data?.length && availableKiosks.length === 0 && (
+          <p className="stock-banner-notice" role="status">
+            Các kiosk của shop hiện đã bị vô hiệu hóa.
+          </p>
+        )}
+        <p role="status" ref={notice} tabIndex={-1}>
+          {message}
+        </p>
+
+        {selectedKioskId && (
+          <nav className="stock-view-tabs" aria-label="Nội dung quản lý tủ">
+            <button
+              type="button"
+              aria-pressed={stockView === 'slots'}
+              onClick={() => setStockView('slots')}
+            >
+              Ô tủ
+            </button>
+            <button
+              type="button"
+              aria-pressed={stockView === 'history'}
+              onClick={() => {
+                setDetailSlotId(null);
+                setStockView('history');
+              }}
+            >
+              Lịch sử
+            </button>
+          </nav>
+        )}
+        <div className="stock-main-layout">
+          <div className="stock-workbench" hidden={stockView !== 'slots'}>
+            {selectedKioskId && (
+              <section className="stock-inventory" aria-labelledby="stock-slot-list">
+                <h3 id="stock-slot-list" className="sr-only">
+                  Ô tủ
+                </h3>
+                <div className="stock-table-filters">
+                  <div>
+                    <label htmlFor="stock-table-search">Tìm kiếm</label>
+                    <input
+                      id="stock-table-search"
+                      type="search"
+                      placeholder="Mã ô, tên hoa hoặc mã đơn"
+                      value={slotSearch}
+                      onChange={(event) => setSlotSearch(event.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="stock-table-status">Trạng thái / loại ô</label>
+                    <CustomSelect
+                      id="stock-table-status"
+                      value={slotFilter}
+                      onValueChange={(value) => setSlotFilter(value as SlotFilter)}
+                      options={[
+                        { value: 'ALL', label: 'Tất cả ô' },
+                        { value: 'WALK_IN_EMPTY', label: 'Ô trống tại chỗ' },
+                        { value: 'STOCKED', label: 'Đang có hoa' },
+                        { value: 'PREORDER', label: 'Ô đặt trước' },
+                        { value: 'UNKNOWN', label: 'Chưa phân loại' },
+                        { value: 'ATTENTION', label: 'Cần xử lý' },
+                      ]}
+                    />
+                  </div>
+                  <div className="stock-filter-actions">
+                    {(slotSearch || slotFilter !== 'ALL') && (
+                      <IconActionButton
+                        action="clear"
+                        label="Xóa bộ lọc ô tủ"
+                        onClick={() => {
+                          setSlotFilter('ALL');
+                          setSlotSearch('');
+                        }}
+                      />
+                    )}
+                  </div>
+                </div>
+                {selectedKioskId && !slotsLoading && !slots.isError && allSlots.length === 0 && (
+                  <p className="quiet">Kiosk chưa có ô nào để quản lý.</p>
+                )}
+                {selectedKioskId &&
+                  !slotsLoading &&
+                  allSlots.length > 0 &&
+                  filteredSlots.length === 0 && (
+                    <div className="stock-filter-empty" role="status">
+                      <p>Không có ô tủ nào khớp với bộ lọc đang chọn.</p>
+                    </div>
+                  )}
+                <div
+                  className="stock-table-scroll"
+                  role="region"
+                  aria-label="Danh sách ô tủ"
+                  hidden={filteredSlots.length === 0}
+                >
+                  <table className="stock-slots-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Ô tủ</th>
+                        <th scope="col">Loại ô</th>
+                        <th scope="col">Mẫu hoa</th>
+                        <th scope="col" className="stock-table-price">
+                          Giá
+                        </th>
+                        <th scope="col" className="stock-table-order">
+                          Đơn hàng
+                        </th>
+                        <th scope="col">Trạng thái</th>
+                        <th scope="col">
+                          <span className="sr-only">Thao tác</span>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredSlots.map((slot) => {
+                        const product = products.data?.find((item) => item.id === slot.productId);
+                        const progress = slotMaintenanceProgress(slot, legacyProgress.get(slot.id));
+                        const openDetails = () => {
+                          form.reset({ slotId: slot.id, productId: '' });
+                          setProductSearch('');
+                          stock.reset();
+                          setDetailSlotId(slot.id);
+                        };
+                        return (
+                          <tr key={slot.id} onClick={openDetails} data-status={slot.status}>
+                            <th scope="row">
+                              <button
+                                type="button"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  openDetails();
+                                }}
+                                aria-label={`Xem chi tiết ô ${slot.slotCode}`}
+                              >
+                                {slot.slotCode}
+                              </button>
+                            </th>
+                            <td>
+                              <span className="stock-table-zone" data-zone={slotZone(slot)}>
+                                {zoneLabels[slotZone(slot)]}
+                              </span>
+                            </td>
+                            <td>
+                              {slot.bouquetId || slot.productId ? (
+                                product?.name || 'Bó hoa trong tủ'
+                              ) : (
+                                <span className="quiet">Ô trống</span>
+                              )}
+                            </td>
+                            <td className="stock-table-price">
+                              {slot.priceSnapshot == null ? '—' : money(slot.priceSnapshot)}
+                            </td>
+                            <td className="stock-table-order">{slot.orderCode || '—'}</td>
+                            <td>
+                              <SlotStatus slot={slot} progress={progress} />
+                            </td>
+                            <td className="stock-table-action">
+                              <span aria-hidden="true">→</span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <Modal
+                  open={!!detailSlot}
+                  title={`${detailSlot && detailSlot.status === 'RENTED_EMPTY' && slotZone(detailSlot) === 'WALK_IN' ? 'Nạp hoa vào ô' : 'Chi tiết ô'} ${detailSlot?.slotCode || ''}`}
+                  description={selectedKiosk?.name}
+                  onClose={closeSlotDetails}
+                  closeDisabled={stock.isPending || assignmentBusy}
+                  size="lg"
+                  className="stock-slot-modal"
+                >
+                  {detailSlot && (
+                    <div className="stock-slot-modal-body" key={detailSlot.id}>
+                      <div className="stock-slot-modal-status">
+                        <SlotStatus slot={detailSlot} progress={detailProgress} />
+                        <span>{zoneLabels[slotZone(detailSlot)]}</span>
+                      </div>
+                      {(detailSlot.orderCode || detailSlot.orderId) && (
+                        <p>
+                          Đơn liên quan:{' '}
+                          <strong>{detailSlot.orderCode || detailSlot.orderId}</strong>
+                        </p>
+                      )}
+                      {detailSlot.bouquetId && (
+                        <div className="stock-slot-modal-bouquet">
+                          <div className="stock-slot-modal-bouquet-head">
+                            <StockProductThumb
+                              sellerId={sellerId}
+                              productId={detailSlot.productId}
+                            />
+                            <strong>
+                              {products.data?.find((product) => product.id === detailSlot.productId)
+                                ?.name || 'Thông tin bó hoa trong ô'}
+                            </strong>
+                          </div>
+                          <dl className="stock-slot-details">
+                            <div>
+                              <dt>Sản phẩm</dt>
+                              <dd>
+                                {products.data?.find(
+                                  (product) => product.id === detailSlot.productId,
+                                )?.name || 'Chưa tải được tên sản phẩm'}
+                              </dd>
+                            </div>
+                            <div>
+                              <dt>Mã bó hoa</dt>
+                              <dd>{detailSlot.qrCode || 'Hệ thống chưa trả mã'}</dd>
+                            </div>
+                            <div>
+                              <dt>Giá khi nạp</dt>
+                              <dd>
+                                {detailSlot.priceSnapshot == null
+                                  ? 'Chưa có thông tin'
+                                  : money(detailSlot.priceSnapshot)}
+                              </dd>
+                            </div>
+                            <div>
+                              <dt>Hạn bán</dt>
+                              <dd>
+                                {!detailSlot.sellableUntil ||
+                                detailSlot.sellableUntil.startsWith('9999')
+                                  ? 'Không áp dụng hạn tươi (Hoa giả)'
+                                  : new Date(detailSlot.sellableUntil).toLocaleString('vi-VN', {
+                                      timeZone: 'Asia/Ho_Chi_Minh',
+                                    })}
+                              </dd>
+                            </div>
+                          </dl>
+                        </div>
+                      )}
+                      {canAssignInventory && (
+                        <div
+                          className="stock-operation-tabs"
+                          role="tablist"
+                          tabIndex={-1}
+                          aria-label="Cách thực hiện"
+                          onKeyDown={(event) => {
+                            if (
+                              !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key) ||
+                              stock.isPending ||
+                              assignmentBusy
+                            )
+                              return;
+                            event.preventDefault();
+                            const next =
+                              event.key === 'Home'
+                                ? 'SELF'
+                                : event.key === 'End'
+                                  ? 'STAFF'
+                                  : operationMode === 'SELF'
+                                    ? 'STAFF'
+                                    : 'SELF';
+                            setOperationChoice({ slotId: detailSlot.id, mode: next });
+                            event.currentTarget
+                              .querySelectorAll<HTMLButtonElement>('[role="tab"]')
+                              [next === 'SELF' ? 0 : 1]?.focus();
+                          }}
+                        >
+                          <button
+                            type="button"
+                            role="tab"
+                            id="stock-self-tab"
+                            tabIndex={operationMode === 'SELF' ? 0 : -1}
+                            aria-selected={operationMode === 'SELF'}
+                            aria-controls="stock-self-operation"
+                            disabled={stock.isPending || assignmentBusy}
+                            onClick={() =>
+                              setOperationChoice({ slotId: detailSlot.id, mode: 'SELF' })
+                            }
+                          >
+                            Tự thao tác tại tủ
+                          </button>
+                          <button
+                            type="button"
+                            role="tab"
+                            id="stock-staff-tab"
+                            tabIndex={operationMode === 'STAFF' ? 0 : -1}
+                            aria-selected={operationMode === 'STAFF'}
+                            aria-controls="stock-staff-operation"
+                            disabled={stock.isPending || assignmentBusy}
+                            onClick={() =>
+                              setOperationChoice({ slotId: detailSlot.id, mode: 'STAFF' })
+                            }
+                          >
+                            Giao nhân viên
+                          </button>
+                        </div>
+                      )}
+                      <div
+                        id="stock-self-operation"
+                        role={canAssignInventory ? 'tabpanel' : undefined}
+                        aria-labelledby={canAssignInventory ? 'stock-self-tab' : undefined}
+                        hidden={canAssignInventory && operationMode === 'STAFF'}
+                      >
+                        {canStock && selectedSlot && detailSlot?.id === selectedSlot.id && (
+                          <form
+                            id="stock-fill"
+                            tabIndex={-1}
+                            className="stock-form"
+                            noValidate
+                            onSubmit={form.handleSubmit((values) => {
+                              const slot = slots.data?.find((item) => item.id === values.slotId);
+                              if (
+                                !slot ||
+                                slot.kioskId !== selectedKioskId ||
+                                slot.status !== 'RENTED_EMPTY' ||
+                                !!slot.bouquetId ||
+                                slot.zone !== 'WALK_IN'
+                              ) {
+                                form.setError(
+                                  'slotId',
+                                  {
+                                    message:
+                                      'Ô không còn phù hợp. Chọn lại ô trống đúng hình thức bán.',
+                                  },
+                                  { shouldFocus: true },
+                                );
+                                return;
+                              }
+                              stock.mutate(values);
+                            })}
+                          >
+                            {!slotsLoading && !slots.isError && !matchingEmpty.length && (
+                              <div className="stock-empty-notice" role="note">
+                                <strong>Không có ô Walk-in trống để nạp hoa</strong>
+                                <p>
+                                  {walkInSlots.length > 0
+                                    ? `${walkInSlots.length} ô đã chọn Walk-in, nhưng chưa ô nào trống để nạp bó mới.`
+                                    : 'Kiosk này chưa có ô nào được chọn làm Walk-in.'}
+                                </p>
+                                <p>
+                                  Loại ô được chốt theo hồ sơ thuê. Ô chưa phân loại không thể nạp
+                                  hoa; liên hệ đội vận hành để kiểm tra.
+                                </p>
+                              </div>
+                            )}
+                            {matchingEmpty.length > 0 && !slots.isError && (
+                              <>
+                                <div className="stock-fields">
+                                  <div>
+                                    <input type="hidden" {...form.register('slotId')} />
+
+                                    {form.formState.errors.slotId && (
+                                      <p className="error" id="stock-slot-error">
+                                        {form.formState.errors.slotId.message}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div>
+                                    <label htmlFor="stock-product">Mẫu hoa</label>
+                                    <input type="hidden" {...form.register('productId')} />
+                                    {available.length > 8 && (
+                                      <input
+                                        id="stock-product-search"
+                                        type="search"
+                                        aria-label="Tìm mẫu hoa"
+                                        placeholder="Tìm mẫu hoa"
+                                        value={productSearch}
+                                        disabled={stock.isPending}
+                                        onChange={(event) => setProductSearch(event.target.value)}
+                                      />
+                                    )}
+                                    <CustomSelect
+                                      id="stock-product"
+                                      value={selectedProductId || ''}
+                                      disabled={productSelectDisabled}
+                                      onValueChange={(value) =>
+                                        form.setValue('productId', value, {
+                                          shouldValidate: true,
+                                          shouldDirty: true,
+                                        })
+                                      }
+                                      options={[
+                                        { value: '', label: 'Chọn mẫu hoa' },
+                                        ...available
+                                          .filter(
+                                            (product) =>
+                                              product.id === selectedProductId ||
+                                              product.name
+                                                .toLocaleLowerCase('vi')
+                                                .includes(
+                                                  productSearch.trim().toLocaleLowerCase('vi'),
+                                                ),
+                                          )
+                                          .map((product) => ({
+                                            value: product.id,
+                                            label: `${product.name}${product.quantity == null ? '' : ` — Còn ${product.quantity} bó`}`,
+                                            disabled: Number(product.quantity) === 0,
+                                          })),
+                                      ]}
+                                    />
+                                    {form.formState.errors.productId && (
+                                      <p className="error" id="stock-product-error">
+                                        {form.formState.errors.productId.message}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                                {selectedProduct && Number(selectedProduct.quantity) === 0 && (
+                                  <p role="status" className="error">
+                                    Mẫu hoa đã hết tồn tại shop. Cập nhật tồn thực tế trong Mẫu hoa
+                                    trước khi nạp.
+                                  </p>
+                                )}
+                                {selectedSlot && selectedProduct && (
+                                  <div className="stock-fill-preview">
+                                    <StockProductThumb
+                                      sellerId={sellerId}
+                                      productId={selectedProduct.id}
+                                    />
+                                    <div>
+                                      <strong>{money(selectedProduct.price)}</strong>
+                                      <small>
+                                        {selectedProduct.shelfLifeHours
+                                          ? `Hạn bán ${selectedProduct.shelfLifeHours} giờ từ lúc nạp`
+                                          : selectedProduct.name}
+                                      </small>
+                                    </div>
+                                  </div>
+                                )}{' '}
+                                {!products.isPending && !products.isError && !available.length && (
+                                  <p className="quiet">
+                                    Bật bán ít nhất một sản phẩm trong danh mục trước khi nạp hoa.
+                                  </p>
+                                )}
+                                {selectedSlot?.sensorEnabled && (
+                                  <details className="stock-maintenance-reason">
+                                    <summary>Ghi chú nạp hoa</summary>
+                                    <label className="sr-only" htmlFor="stock-maintenance-reason">
+                                      Lý do nạp hoa
+                                    </label>
+                                    <textarea
+                                      id="stock-maintenance-reason"
+                                      value={stockReason}
+                                      maxLength={500}
+                                      onChange={(event) => setStockReason(event.target.value)}
+                                    />
+                                    {!selectedSlot.sensorReady && (
+                                      <p role="note">
+                                        Ô chưa được admin xác minh đủ cảm biến cửa và hoa.
+                                      </p>
+                                    )}
+                                  </details>
+                                )}
+                                <p className="stock-fill-note">
+                                  Kiểm tra mẫu hoa và đứng cạnh tủ trước khi nạp.
+                                </p>
+                                {!stock.isPending && stockBlockReasons.length > 0 && (
+                                  <div
+                                    className="stock-fill-blockers"
+                                    id="stock-fill-blockers"
+                                    role="status"
+                                  >
+                                    {stockBlockReasons.map((reason) => (
+                                      <p key={reason}>{reason}</p>
+                                    ))}
+                                  </div>
+                                )}
+                                <div className="stock-actions stock-fill-footer">
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    disabled={stock.isPending}
+                                    onClick={closeSlotDetails}
+                                  >
+                                    Hủy
+                                  </Button>
+                                  <Button
+                                    type="submit"
+                                    disabled={blocked || !selectedSlot || !selectedProduct}
+                                    aria-describedby={
+                                      !stock.isPending && stockBlockReasons.length
+                                        ? 'stock-fill-blockers'
+                                        : undefined
+                                    }
+                                  >
+                                    {stock.isPending
+                                      ? 'Đang xử lý…'
+                                      : selectedSlot?.sensorEnabled
+                                        ? 'Mở ô và nạp hoa'
+                                        : 'Nạp hoa'}
+                                  </Button>
+                                </div>
+                              </>
+                            )}
+                            {stock.isError && (
+                              <div role="alert" className="error">
+                                <p>{stock.error.message}</p>
+                                <p>Kiểm tra trạng thái ô trước khi thử lại.</p>
+                              </div>
+                            )}
+                          </form>
+                        )}
+
+                        {detailSlot.sensorEnabled ? (
+                          <SlotMaintenance
+                            key={`${selectedKioskId}:${detailSlot.id}`}
+                            sellerId={sellerId}
+                            kioskId={selectedKioskId}
+                            slot={detailSlot}
+                            products={available}
+                            canStock={canStock}
+                            loadSessionId={
+                              loadSession?.kioskId === selectedKioskId &&
+                              loadSession.slotId === detailSlot.id
+                                ? loadSession.sessionId
+                                : undefined
+                            }
+                            onLoadFinished={() => setLoadSession(undefined)}
+                          />
+                        ) : (
+                          <>
+                            <RemoveSlotBouquet kioskId={selectedKioskId} slot={detailSlot} />
+                            <ReturnFlowers slot={detailSlot} sellerId={sellerId} />
+                          </>
+                        )}
+                      </div>
+                      {canAssignInventory && (
+                        <div
+                          id="stock-staff-operation"
+                          role="tabpanel"
+                          aria-labelledby="stock-staff-tab"
+                          hidden={operationMode !== 'STAFF'}
+                        >
+                          <AssignInventoryTask
+                            key={`${selectedKioskId}:${detailSlot.id}:${detailSlot.bouquetId}`}
+                            sellerId={sellerId}
+                            kioskId={selectedKioskId}
+                            slot={detailSlot}
+                            products={available.filter((product) => Number(product.quantity) !== 0)}
+                            visible={operationMode === 'STAFF'}
+                            onBusy={setAssignmentBusy}
+                          />
+                        </div>
+                      )}
+                      <details className="stock-slot-support" open={detailSlot.status === 'FAULT'}>
+                        <summary>Báo sự cố</summary>
+                        <ReportFault
+                          slot={detailSlot}
+                          sellerId={sellerId}
+                          compact
+                          onDone={closeSlotDetails}
+                        />
+                      </details>
+                    </div>
+                  )}
+                </Modal>
+              </section>
+            )}
+          </div>
+          {selectedKioskId && slots.isSuccess && (
+            <KioskLayoutAndHistoryPanels
+              key={selectedKioskId}
+              kioskId={selectedKioskId}
+              totalSlots={allSlots.length}
+              currentWalkIn={walkInSlots.length}
+              currentPreorder={preorderSlots.length}
+              historyOpen={stockView === 'history'}
+            />
+          )}
+        </div>
+      </section>
+    </RefreshRegion>
   );
 }

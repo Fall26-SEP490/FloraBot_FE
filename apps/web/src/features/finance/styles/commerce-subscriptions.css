@@ -386,6 +386,10 @@
   background: #dcfce7;
   color: #166534;
 }
+.subscription-kiosk-status[data-status='OFFLINE'] {
+  background: #fff0f0;
+  color: #b02e2e;
+}
 .subscription-kiosk-slots {
   font-size: 0.8rem;
   color: #3f5748;

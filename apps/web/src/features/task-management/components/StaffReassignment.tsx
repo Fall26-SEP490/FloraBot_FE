@@ -95,13 +95,15 @@ export default function StaffReassignment({
   return (
     <details className="staff-reassignment" onToggle={(event) => setOpen(event.currentTarget.open)}>
       <summary>Đổi người phụ trách</summary>
-      <p>
-        Hiện phụ trách: {assigneeName}. Sau bàn giao, người cũ mất quyền thao tác và người mới cần
-        bắt đầu công việc.{' '}
-        {role === 'OPERATIONS_MANAGER'
-          ? 'Báo cáo và ảnh minh chứng trước đó vẫn được giữ.'
-          : 'Các lần nạp hoa trước đó vẫn được giữ.'}
-      </p>
+      {role !== 'SELLER' && (
+        <p>
+          Hiện phụ trách: {assigneeName}. Sau bàn giao, người cũ mất quyền thao tác và người mới cần
+          bắt đầu công việc.{' '}
+          {role === 'OPERATIONS_MANAGER'
+            ? 'Báo cáo và ảnh minh chứng trước đó vẫn được giữ.'
+            : 'Các lần nạp hoa trước đó vẫn được giữ.'}
+        </p>
+      )}
       {staff.isPending ? (
         <p role="status">Đang tải nhân viên…</p>
       ) : staff.isError ? (
