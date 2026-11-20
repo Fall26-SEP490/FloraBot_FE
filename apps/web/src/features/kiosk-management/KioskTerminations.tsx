@@ -1,4 +1,5 @@
 'use client';
+import { liveListOptions } from '@/shared/lib/live-list';
 
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -529,8 +530,12 @@ function ManagerTerminationCard({
 
       <div className="termination-next-action">
         <div>
-          <span className="termination-owner">{nextStep.owner}</span>
-          <p>{nextStep.text}</p>
+          {!archived && (
+            <>
+              <span className="termination-owner">{nextStep.owner}</span>
+              <p>{nextStep.text}</p>
+            </>
+          )}
         </div>
         <Button
           type="button"
@@ -597,7 +602,7 @@ function ManagerTerminationCard({
               <strong>Kết quả xem xét:</strong> {item.reviewReason}
             </p>
           )}
-          {(item.lifecycleStatus || item.removalTaskStatus) && (
+          {!archived && (item.lifecycleStatus || item.removalTaskStatus) && (
             <p>
               <strong>Trạng thái chi tiết:</strong>{' '}
               {archived
@@ -657,10 +662,7 @@ function ManagerTerminationCard({
             }}
           >
             <h4>Phân công kỹ thuật viên tháo dỡ</h4>
-            <p>
-              Giao công việc tháo dỡ để kỹ thuật viên kiểm tra hiện trường, thu hồi thiết bị và gửi
-              báo cáo/ảnh minh chứng trước khi hoàn tất bàn giao.
-            </p>
+
             <label htmlFor={`term-assignee-${item.id}`}>Kỹ thuật viên phụ trách</label>
             <select
               id={`term-assignee-${item.id}`}
@@ -708,10 +710,6 @@ function ManagerTerminationCard({
         {item.status === 'ACCEPTED' && !needsAssignment && !canComplete && (
           <div className="termination-waiting-box" role="status">
             <strong>Đang chờ kỹ thuật viên tháo dỡ & gửi báo cáo</strong>
-            <p>
-              Sau khi kỹ thuật viên hoàn thành tháo dỡ và gửi báo cáo bên ứng dụng Kỹ thuật viên,
-              mục xác nhận bàn giao sẽ tự động mở tại đây.
-            </p>
           </div>
         )}
         {item.correlatedTaskId && (
@@ -740,9 +738,8 @@ function ManagerTerminationCard({
           <div className="business-form termination-action-panel">
             <h4>Xác nhận hoàn tất bàn giao</h4>
             <p>
-              Kỹ thuật viên đã gửi báo cáo tháo dỡ. Kiểm tra ảnh/báo cáo và tình trạng thực tế trước
-              khi xác nhận. Hệ thống vẫn kiểm tra hoa, ô khóa, đơn hàng và các công việc chưa kết
-              thúc.
+              Kiểm tra ảnh, báo cáo và thực tế tại tủ trước khi bàn giao. Tủ cần sạch hoa, ô khóa và
+              việc tồn đọng.
             </p>
             <label htmlFor={`term-notes-${item.id}`}>Ghi chú bàn giao (tùy chọn)</label>
             <textarea
@@ -777,31 +774,19 @@ function ManagerTerminationCard({
             {item.completionNotes && <p>Ghi chú bàn giao: {item.completionNotes}</p>}
             {archived ? (
               <div role="status">
-                <h4>Đã ngừng sử dụng và lưu trữ tủ</h4>
-                <p>
-                  Luồng chấm dứt và lưu trữ đã hoàn tất. Tủ không còn trong kho khả dụng hoặc danh
-                  sách cấp phát. Lịch sử đơn hàng, thanh toán và vận hành được giữ lại.
-                </p>
+                <p>Lịch sử được giữ lại.</p>
               </div>
             ) : (
               <>
                 <h4>Bước 4 · Ngừng sử dụng và lưu trữ tủ</h4>
-                <p>
-                  Bàn giao đã hoàn tất. Lưu trữ là bước cuối để ngừng sử dụng tủ; sau khi thành
-                  công, tủ không còn trong kho khả dụng hoặc danh sách cấp phát.
-                </p>
+                <p>Lưu trữ để ngừng sử dụng tủ. Lịch sử được giữ lại.</p>
                 {awaitingKioskState && <p role="status">Đang kiểm tra trạng thái tủ…</p>}
                 {kioskState.data && (
                   <p>
                     Trạng thái kết nối: <strong>{kioskState.data.kioskStatus}</strong>.
                   </p>
                 )}
-                {mustGoOffline && (
-                  <p>
-                    Tủ phải chuyển về OFFLINE trước khi lưu trữ. Sau khi ngắt kết nối thiết bị, cập
-                    nhật lại trạng thái.
-                  </p>
-                )}
+                {mustGoOffline && <p>Tủ phải OFFLINE trước khi lưu trữ.</p>}
                 {kioskState.isError && (
                   <p role="alert">
                     Chưa đọc được trạng thái tủ. Tải lại trạng thái để kiểm tra trước khi lưu trữ.
@@ -1090,8 +1075,8 @@ export function OperationsTerminations() {
   const [locationOpen, setLocationOpen] = useState(false);
   const [layoutOpen, setLayoutOpen] = useState(false);
   const records = useQuery({
+    ...liveListOptions(!expandedId),
     queryKey: ['operations-terminations', status, page],
-    refetchInterval: 30_000,
     queryFn: () =>
       request<Page>(
         `/operations/kiosk-termination-requests?page=${page}&limit=20${status ? `&status=${status}` : ''}`,
@@ -1130,11 +1115,12 @@ export function OperationsTerminations() {
       <div className="business-heading">
         <div>
           <h2>Hồ sơ chấm dứt thuê kiosk</h2>
-          <p>Quản lý yêu cầu chấm dứt thuê, bàn giao và lưu trữ kiosk.</p>
         </div>
-        <Button variant="outline" onClick={() => void records.refetch()}>
-          Làm mới
-        </Button>
+        {records.isError && (
+          <Button variant="outline" onClick={() => void records.refetch()}>
+            Làm mới
+          </Button>
+        )}
       </div>
       <div className="termination-list-tools">
         <div>

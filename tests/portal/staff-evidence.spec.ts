@@ -69,7 +69,7 @@ for (const admin of [false, true])
       return route.abort('failed');
     });
     await page.goto(admin ? '/admin/tasks' : '/staff');
-    if (admin) await page.locator('.manager-task-details > summary').click();
+    if (admin) await page.getByRole('button', { name: /^Xem công việc / }).click();
     if (!admin) await page.locator('.staff-task-open').click();
     const panel = page.locator('.staff-evidence');
     await expect(panel.locator('summary')).toBeVisible();

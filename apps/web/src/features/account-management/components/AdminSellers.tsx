@@ -1,4 +1,6 @@
-import { AdminFilterBar, AdminDisclosureSummary } from '@/features/portal/components/AdminUi';
+import { liveListOptions } from '@/shared/lib/live-list';
+import WorkspaceTable from '@/features/portal/components/WorkspaceTable';
+import { AdminFilterBar } from '@/features/portal/components/AdminUi';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -17,7 +19,7 @@ const leaseExpiry = (value: string | null) =>
     ? new Date(`${value}T00:00:00+07:00`).toLocaleDateString('vi-VN', {
         timeZone: 'Asia/Ho_Chi_Minh',
       })
-    : 'Chưa có kỳ thuê kiosk đang hiệu lực';
+    : '—';
 
 export default function AdminSellers() {
   const { t } = useTranslation();
@@ -25,6 +27,7 @@ export default function AdminSellers() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const sellers = useQuery({
+    ...liveListOptions(),
     queryKey: ['admin-sellers', status],
     queryFn: () => request<Seller[]>(`/admin/sellers${status ? `?status=${status}` : ''}`),
   });
@@ -38,22 +41,9 @@ export default function AdminSellers() {
   return (
     <section className="admin-sellers" aria-labelledby="admin-sellers-title">
       <h2 id="admin-sellers-title">Hồ sơ các shop hoa</h2>
-      <div className="status-notice notice-info">
-        <p>
-          Đăng ký mở shop mới được theo dõi ở mục{' '}
-          <Link href="/admin/installations">Hồ sơ thuê kiosk</Link>.
-        </p>
-      </div>
       <AdminFilterBar
         actions={
           <>
-            <Button
-              variant="outline"
-              disabled={sellers.isFetching}
-              onClick={() => void sellers.refetch()}
-            >
-              Cập nhật danh sách
-            </Button>
             {(search || status) && (
               <Button
                 variant="outline"
@@ -101,9 +91,6 @@ export default function AdminSellers() {
           </select>
         </div>
       </AdminFilterBar>
-      <p className="quiet">
-        Hiển thị tối đa 100 hồ sơ mới nhất, chia thành từng trang để dễ theo dõi.
-      </p>
       {sellers.isPending && <p role="status">Đang tải hồ sơ shop…</p>}
       {sellers.isError && (
         <div className="admin-sellers-error">
@@ -114,47 +101,48 @@ export default function AdminSellers() {
         </div>
       )}
       {visible?.length === 0 && <p>Không có hồ sơ phù hợp với bộ lọc hiện tại.</p>}
-      <ul className="admin-shop-list">
-        {pageItems.map((seller) => (
-          <li key={seller.id}>
-            <details>
-              <AdminDisclosureSummary
-                statusCode={seller.status}
-                title={seller.shopName}
-                meta={seller.phone || 'Chưa có số điện thoại'}
-                status={t(`status.${seller.status}`)}
-              />
-              <div className="shop-profile">
-                <dl>
-                  <div>
-                    <dt>Số điện thoại</dt>
-                    <dd>{seller.phone}</dd>
-                  </div>
-                  <div>
-                    <dt>Địa chỉ / khu vực</dt>
-                    <dd>{seller.address || 'Chưa cung cấp'}</dd>
-                  </div>
-                  <div>
-                    <dt>Hạn thuê kiosk gần nhất</dt>
-                    <dd>{leaseExpiry(seller.packageExpiresAt)}</dd>
-                  </div>
-                </dl>
-                <p>
-                  <Link href={`/admin/reports?sellerId=${encodeURIComponent(seller.id)}`}>
-                    Xem doanh số và lịch sử thuê của shop
-                  </Link>
-                </p>
-                {seller.status === 'PENDING' && (
-                  <p className="quiet">
-                    Shop đang chờ xử lý hồ sơ thuê kiosk. Theo dõi tiến độ tại{' '}
-                    <Link href="/admin/installations">Hồ sơ thuê kiosk</Link>.
-                  </p>
-                )}
-              </div>
-            </details>
-          </li>
-        ))}
-      </ul>
+      {pageItems.length > 0 && (
+        <WorkspaceTable label="Danh sách shop hoa">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Shop</th>
+                <th scope="col">Liên hệ</th>
+                <th scope="col">Hạn thuê gần nhất</th>
+                <th scope="col">Trạng thái</th>
+                <th scope="col">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pageItems.map((seller) => (
+                <tr key={seller.id}>
+                  <td>
+                    <strong>{seller.shopName}</strong>
+                  </td>
+                  <td>
+                    {seller.phone || '—'}
+                    <span className="table-secondary">{seller.address || '—'}</span>
+                  </td>
+                  <td>{leaseExpiry(seller.packageExpiresAt)}</td>
+                  <td>
+                    <span className="table-badge" data-state={seller.status}>
+                      {t(`status.${seller.status}`)}
+                    </span>
+                  </td>
+                  <td>
+                    <Link href={`/admin/reports?sellerId=${encodeURIComponent(seller.id)}`}>
+                      Báo cáo
+                    </Link>
+                    {seller.status === 'PENDING' && (
+                      <Link href="/admin/installations">Hồ sơ thuê</Link>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </WorkspaceTable>
+      )}
       {(visible?.length ?? 0) > 0 && (
         <TablePagination
           page={safePage}

@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import ManagerKioskPricing from '../kiosk-pricing/ManagerKioskPricing';
 import { Esp32ConfigurationPanel } from '../kiosk-management/Esp32ConfigurationPanel';
+import { Modal } from '@/shared/components/Modal';
 import { Check, CircleAlert } from '@florabot/ui';
 import { queryClient, type Session } from '@/shared/lib/api';
 import type {
@@ -50,7 +51,7 @@ export default function OperationsInstallations({ session }: OperationsInstallat
   const closeKey = useCallback(() => setProvisionedKeyInfo(null), []);
 
   const { statusFilter, setStatusFilter, page, setPage, applicationsQuery, invalidateQueue } =
-    useInstallationList(session);
+    useInstallationList(session, !selectedAppId && !enrollModalOpen && !inventoryModalOpen);
 
   const handleRefresh = () => {
     void applicationsQuery.refetch();
@@ -100,12 +101,7 @@ export default function OperationsInstallations({ session }: OperationsInstallat
       {!isManager && (
         <div role="status" className="installation-readonly-notice">
           <CircleAlert size={18} aria-hidden="true" />
-          <p>
-            <strong>Chế độ giám sát (Admin)</strong>
-            <span>
-              Xem hồ sơ và tiến độ. Quản lý vận hành phụ trách xác nhận, phân công và bàn giao.
-            </span>
-          </p>
+          <p>Chỉ xem · Manager phụ trách xử lý và bàn giao.</p>
         </div>
       )}
 
@@ -142,18 +138,39 @@ export default function OperationsInstallations({ session }: OperationsInstallat
         onOpenInventory={() => setInventoryModalOpen(true)}
       />
 
-      {selectedAppId && (
-        <InstallationDetails
-          key={`${session.id}-${selectedAppId}`}
-          appId={selectedAppId}
-          session={session}
-          isManager={isManager}
-          onClose={handleCloseDetail}
-          onOpenEnroll={handleOpenEnroll}
-          onShowProvisionedKey={setProvisionedKeyInfo}
-          onInvalidateQueue={invalidateQueue}
-        />
-      )}
+      {selectedAppId &&
+        (isManager ? (
+          <InstallationDetails
+            key={`${session.id}-${selectedAppId}`}
+            appId={selectedAppId}
+            session={session}
+            isManager={isManager}
+            onClose={handleCloseDetail}
+            onOpenEnroll={handleOpenEnroll}
+            onShowProvisionedKey={setProvisionedKeyInfo}
+            onInvalidateQueue={invalidateQueue}
+          />
+        ) : (
+          <Modal
+            open
+            onClose={handleCloseDetail}
+            title="Hồ sơ thuê kiosk"
+            size="lg"
+            className="installation-record-dialog"
+          >
+            <InstallationDetails
+              key={`${session.id}-${selectedAppId}`}
+              appId={selectedAppId}
+              session={session}
+              isManager={false}
+              inDialog
+              onClose={handleCloseDetail}
+              onOpenEnroll={handleOpenEnroll}
+              onShowProvisionedKey={setProvisionedKeyInfo}
+              onInvalidateQueue={invalidateQueue}
+            />
+          </Modal>
+        ))}
 
       <EnrollKioskModal
         open={enrollModalOpen}

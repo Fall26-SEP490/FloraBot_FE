@@ -833,10 +833,10 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     await page.goto('/operations/installations');
 
     // Admin sees monitor notice
-    await expect(page.getByText('Chế độ giám sát (Admin)')).toBeVisible();
+    await expect(page.getByText('Chỉ xem · Manager phụ trách xử lý và bàn giao.')).toBeVisible();
 
     // Click details
-    await page.getByRole('button', { name: 'Chi tiết' }).click();
+    await page.getByRole('button', { name: 'Xem', exact: true }).click();
 
     // Verify operational write buttons are NOT present for Admin!
     await expect(page.getByRole('button', { name: /Xác nhận liên hệ/ })).toHaveCount(0);

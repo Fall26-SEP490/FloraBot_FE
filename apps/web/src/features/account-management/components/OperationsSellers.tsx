@@ -1,5 +1,7 @@
 'use client';
 
+import WorkspaceTable from '@/features/portal/components/WorkspaceTable';
+
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
@@ -287,18 +289,32 @@ function SellerDetail({ id, actorId, close }: { id: string; actorId: string; clo
                 retry={() => void history.refetch()}
               >
                 {!history.data?.items.length && <p>Chưa có thay đổi trạng thái trong lịch sử.</p>}
-                <ul className="platform-history">
-                  {history.data?.items.map((item) => (
-                    <li key={item.id}>
-                      <p>
-                        {dateText(item.createdAt)} · {item.fromStatus || 'Chưa ghi nhận'} →{' '}
-                        {item.toStatus || 'Chưa ghi nhận'}
-                      </p>
-                      <p>{item.reason || 'Bản ghi chưa có lý do.'}</p>
-                      <small>Người thực hiện: {item.actorId || 'Chưa ghi nhận'}</small>
-                    </li>
-                  ))}
-                </ul>
+                {!!history.data?.items.length && (
+                  <WorkspaceTable label="Lịch sử trạng thái shop">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th scope="col">Thời gian</th>
+                          <th scope="col">Trạng thái</th>
+                          <th scope="col">Lý do</th>
+                          <th scope="col">Người thực hiện</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {history.data.items.map((item) => (
+                          <tr key={item.id}>
+                            <td>{dateText(item.createdAt)}</td>
+                            <td>
+                              {item.fromStatus || '—'} → {item.toStatus || '—'}
+                            </td>
+                            <td>{item.reason || '—'}</td>
+                            <td>{item.actorId || '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </WorkspaceTable>
+                )}
                 <PageControls
                   page={historyPage}
                   hasMore={history.data?.hasMore ?? false}

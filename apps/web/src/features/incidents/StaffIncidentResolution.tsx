@@ -6,7 +6,7 @@ import type {
   StaffIncidentResolutionAttempt,
   StaffIncidentResolutionProps,
 } from './incidents.types';
-import { restoreIncidentResolutionAttempt } from './incidents.utils';
+import { incidentResolutionError, restoreIncidentResolutionAttempt } from './incidents.utils';
 
 export type { StaffIncidentResolutionProps };
 
@@ -44,6 +44,7 @@ export default function StaffIncidentResolution({
       form.reset();
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['staff-detail', taskId] }),
+        queryClient.invalidateQueries({ queryKey: ['repair-readiness', actorId, apiBase, taskId] }),
         queryClient.invalidateQueries({ queryKey: ['staff-tasks'] }),
         queryClient.invalidateQueries({ queryKey: ['assignment-incidents'] }),
         queryClient.invalidateQueries({ queryKey: ['admin-incidents'] }),
@@ -53,11 +54,13 @@ export default function StaffIncidentResolution({
       if (cause instanceof ApiError && [400, 403, 404, 409].includes(cause.status)) {
         sessionStorage.removeItem(key);
         setAttempt(null);
-        setError(
-          cause.status === 409 && slotRepair
-            ? 'Hệ thống chưa chấp nhận báo cáo sửa ô. Cần kiểm tra trạng thái công việc, quyền sửa, chu kỳ cửa và cảm biến trước khi gửi lại.'
-            : cause.message,
-        );
+        setError(incidentResolutionError(cause, slotRepair));
+        if (cause.status === 409) {
+          void queryClient.invalidateQueries({
+            queryKey: ['repair-readiness', actorId, apiBase, taskId],
+          });
+          void queryClient.invalidateQueries({ queryKey: ['staff-detail', taskId] });
+        }
       } else
         setError(
           !saved
@@ -90,7 +93,7 @@ export default function StaffIncidentResolution({
       <summary>{slotRepair ? 'Báo cáo kết quả sửa ô tủ' : 'Ghi nhận đã sửa sự cố'}</summary>
       <p>
         {slotRepair
-          ? 'Sau khi xác nhận mã tại kiosk, kiểm tra ô rồi đóng cửa. Gửi báo cáo khi tủ đã ghi nhận cửa đóng và tình trạng hoa. Quản lý vận hành sẽ duyệt và đóng sự cố.'
+          ? 'Gửi kết quả kiểm tra thực tế để Manager nghiệm thu. Điều kiện cửa, cảm biến và phiên phục hồi được kiểm tra tại thời điểm gửi.'
           : 'Chỉ xác nhận sau khi kiểm tra tại tủ. Gửi kết quả để ghi nhận sự cố đã được xử lý và chuyển báo cáo cho Quản lý vận hành nghiệm thu công việc.'}
       </p>
       {attempt ? (

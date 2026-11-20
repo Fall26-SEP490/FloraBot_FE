@@ -1,5 +1,8 @@
 'use client';
 
+import WorkspaceTable from '@/features/portal/components/WorkspaceTable';
+import { Modal } from '@/shared/components/Modal';
+
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import PayosCheckout from '@/shared/components/PayosCheckout';
@@ -1433,11 +1436,13 @@ function OrderActions({
             </strong>
           )}
           <p>
-            {sellerWaitingForQuote && quoteExpired
-              ? 'Chỉnh sửa và gửi báo giá mới nếu shop vẫn nhận được yêu cầu.'
-              : sellerWaitingForQuote || sellerWaitingForPayment
-                ? 'Bạn có thể chuẩn bị hoa sau khi đơn đã thanh toán.'
-                : orderNextStep(row, mode)}
+            {mode === 'admin'
+              ? statusName(row)
+              : sellerWaitingForQuote && quoteExpired
+                ? 'Chỉnh sửa và gửi báo giá mới nếu shop vẫn nhận được yêu cầu.'
+                : sellerWaitingForQuote || sellerWaitingForPayment
+                  ? 'Bạn có thể chuẩn bị hoa sau khi đơn đã thanh toán.'
+                  : orderNextStep(row, mode)}
           </p>
         </div>
       )}
@@ -1469,6 +1474,7 @@ export default function WebRequests({
   sellerId?: string;
 }) {
   const session = useQuery(sessionQuery);
+  const [selectedAdminOrderId, setSelectedAdminOrderId] = useState<string | null>(null);
   const params = useSearchParams();
   const initialPage = Number(params.get('page'));
   const initialFilter = params.get('filter');
@@ -1660,6 +1666,8 @@ export default function WebRequests({
     scrolledRequest.current = closing ? null : requestId;
     rememberOrderView(closing ? null : requestId, page, filter);
   }
+  const selectedAdminOrder =
+    mode === 'admin' ? displayItems.find((row) => row.id === selectedAdminOrderId) : undefined;
   const renderOrder = (row: (typeof displayItems)[number]) =>
     row.purchase ? (
       <CustomerPurchaseCard
@@ -2172,14 +2180,6 @@ export default function WebRequests({
                 )}
             </div>
           )}
-          {mode === 'admin' && displayItems.length > 0 && (
-            <div className="admin-preorder-columns" aria-hidden="true">
-              <span>Đơn / mẫu hoa</span>
-              <span>Shop / tủ nhận</span>
-              <span>Lịch nhận / giá</span>
-              <span>Trạng thái</span>
-            </div>
-          )}
           {mode === 'member' ? (
             <div className={customerStyles.orderGroups}>
               {memberGroups.map(
@@ -2212,10 +2212,98 @@ export default function WebRequests({
                   )),
               )}
             </div>
+          ) : mode === 'admin' ? (
+            <>
+              <WorkspaceTable label="Giám sát đơn đặt trước">
+                <table className="admin-monitor-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Đơn / Mẫu hoa</th>
+                      <th scope="col">Shop / Kiosk</th>
+                      <th scope="col">Lịch nhận / Giá</th>
+                      <th scope="col">Trạng thái</th>
+                      <th scope="col">Chi tiết</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {displayItems.map((row) => (
+                      <tr className="admin-monitor-order-row" key={row.id}>
+                        <td>
+                          <strong>{row.orderCode || `Yêu cầu ${row.id.slice(0, 8)}`}</strong>
+                          <span className="table-secondary">
+                            {row.productName ||
+                              (row.kind === 'CUSTOM' ? 'Hoa theo yêu cầu' : 'Hoa có sẵn')}
+                          </span>
+                        </td>
+                        <td>
+                          <strong>{row.shopName || '—'}</strong>
+                          <span className="table-secondary">{row.kioskName || '—'}</span>
+                        </td>
+                        <td>
+                          <time dateTime={row.pickupAt}>{when(row.pickupAt)}</time>
+                          <span className="table-secondary">
+                            {row.quotedPrice == null ? 'Chưa báo giá' : money(row.quotedPrice)}
+                          </span>
+                        </td>
+                        <td>
+                          <span
+                            className="table-badge"
+                            data-state={
+                              row.ready && row.orderStatus === 'PAID'
+                                ? 'READY'
+                                : row.orderStatus || row.state
+                            }
+                          >
+                            {statusName(row)}
+                          </span>
+                        </td>
+                        <td>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            aria-label={`Xem đơn ${row.orderCode || row.id}`}
+                            onClick={() => setSelectedAdminOrderId(row.id)}
+                          >
+                            Xem
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </WorkspaceTable>
+              <Modal
+                open={!!selectedAdminOrder}
+                onClose={() => setSelectedAdminOrderId(null)}
+                title={`Đơn ${selectedAdminOrder?.orderCode || selectedAdminOrder?.id.slice(0, 8) || ''}`}
+                size="lg"
+                className="admin-monitor-dialog"
+              >
+                {selectedAdminOrder && (
+                  <OrderActions
+                    key={selectedAdminOrder.id}
+                    row={selectedAdminOrder}
+                    base={base}
+                    mode="admin"
+                    role={session.data?.role}
+                    userId={session.data?.id}
+                    page={page}
+                    filter={filter}
+                    onReload={async () => {
+                      const fresh = await query.refetch();
+                      const updated = fresh.data?.items.find(
+                        (item) => item.id === selectedAdminOrder.id,
+                      );
+                      if (fresh.isError || !updated)
+                        throw new Error('Order could not be reloaded.');
+                      return updated;
+                    }}
+                  />
+                )}
+              </Modal>
+            </>
           ) : (
-            <ul className={mode === 'seller' ? styles.orderList : 'admin-preorder-list'}>
-              {displayItems.map(renderOrder)}
-            </ul>
+            <ul className={styles.orderList}>{displayItems.map(renderOrder)}</ul>
           )}
           {mode === 'seller' && query.data?.hasMore && (
             <div className={styles.loadMore}>

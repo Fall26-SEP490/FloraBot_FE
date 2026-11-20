@@ -1,3 +1,4 @@
+import { liveListOptions } from '@/shared/lib/live-list';
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { validApplicationStatus } from '../operations-presentation';
@@ -5,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { queryClient, request, type Session } from '@/shared/lib/api';
 import type { KioskApplicationPage } from '../installations.types';
 
-export function useInstallationList(session: Session) {
+export function useInstallationList(session: Session, autoRefresh = true) {
   const params = useSearchParams();
   const [statusFilter, setStatusFilter] = useState(() =>
     validApplicationStatus(params.get('status')),
@@ -17,12 +18,14 @@ export function useInstallationList(session: Session) {
   }`;
 
   const applicationsQuery = useQuery({
+    ...liveListOptions(autoRefresh),
     queryKey: ['operations-kiosk-applications', session.id, statusFilter, page],
     queryFn: () => request<KioskApplicationPage>(queryPath),
   });
 
   const invalidateQueue = () => {
     void queryClient.invalidateQueries({
+      ...liveListOptions(autoRefresh),
       queryKey: ['operations-kiosk-applications', session.id],
     });
   };

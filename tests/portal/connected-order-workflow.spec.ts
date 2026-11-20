@@ -555,7 +555,7 @@ test('Customer request with accessories → seller quote → customer payment �
     () => [row],
   );
   await admin.goto('/admin/orders');
-  await admin.locator('.admin-preorder-row').click();
+  await admin.getByRole('button', { name: /^Xem đơn / }).click();
   await expect(admin.getByRole('region', { name: 'Chi tiết báo giá' })).toContainText('20.000 đ');
 });
 
@@ -911,18 +911,18 @@ test('Admin monitors preorder details without seller cancellation controls', asy
   );
   await page.setViewportSize({ width: 1440, height: 950 });
   await page.goto('/admin/orders');
-  const summary = page.locator('.admin-preorder-row').filter({ hasText: 'FB-1001' });
+  const summary = page.locator('.admin-monitor-order-row').filter({ hasText: 'FB-1001' });
   await expect(summary).toContainText('Tiệm Hoa Hồng');
   await expect(summary).toContainText(flower.kioskName);
   await expect(summary).toContainText('350.000 đ');
   const attention = page.getByRole('button', { name: 'Cần theo dõi 1' });
   await attention.click();
   await expect(summary).toHaveCount(0);
-  await expect(page.locator('.admin-preorder-row')).toContainText('FB-1002');
+  await expect(page.locator('.admin-monitor-order-row')).toContainText('FB-1002');
   await attention.click();
   const search = page.getByRole('searchbox', { name: 'Tìm đơn trong trang' });
   await search.fill('tiem hoa hong');
-  await expect(page.locator('.admin-preorder-row')).toHaveCount(1);
+  await expect(page.locator('.admin-monitor-order-row')).toHaveCount(1);
   await search.clear();
   expect(writes).toEqual([]);
   await page.screenshot({ path: info.outputPath('admin-preorders-desktop.png') });

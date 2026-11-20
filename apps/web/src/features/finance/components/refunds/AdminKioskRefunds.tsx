@@ -1,4 +1,5 @@
 'use client';
+import { liveListOptions } from '@/shared/lib/live-list';
 
 import { useId, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -387,6 +388,7 @@ export default function AdminKioskRefunds({ session }: AdminKioskRefundsProps) {
 
   // Query: Refund queue scoped by identity
   const refundsQuery = useQuery({
+    ...liveListOptions(!selectedRefundId),
     queryKey: ['admin-kiosk-refunds', session.id],
     queryFn: () => request<AdminKioskRefundSummary[]>('/admin/kiosk-applications/refunds'),
   });
@@ -439,19 +441,21 @@ export default function AdminKioskRefunds({ session }: AdminKioskRefundsProps) {
         <span>
           Yêu cầu trong danh sách: <strong>{refundsQuery.isSuccess ? refunds.length : '—'}</strong>
         </span>
-        <Button
-          variant="outline"
-          className="refresh-btn"
-          onClick={() => void refundsQuery.refetch()}
-          disabled={refundsQuery.isFetching}
-        >
-          <RefreshCw
-            className={refundsQuery.isFetching ? 'spin' : ''}
-            size={16}
-            aria-hidden="true"
-          />
-          Làm mới
-        </Button>
+        {refundsQuery.isError && (
+          <Button
+            variant="outline"
+            className="refresh-btn"
+            onClick={() => void refundsQuery.refetch()}
+            disabled={refundsQuery.isFetching}
+          >
+            <RefreshCw
+              className={refundsQuery.isFetching ? 'spin' : ''}
+              size={16}
+              aria-hidden="true"
+            />
+            Làm mới
+          </Button>
+        )}
       </div>
 
       {refundsQuery.isLoading && (

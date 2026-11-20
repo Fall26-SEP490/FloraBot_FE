@@ -182,15 +182,9 @@ export function TechnicianJobDetailCard({
                 ? 'Đã nộp báo cáo thành công!'
                 : 'Đã bàn giao kiosk cho shop'}
         </h3>
-        <p className="technician-next-step">
-          {selectedJob.status === 'SCHEDULED'
-            ? 'Đến đúng địa điểm và bắt đầu khi sẵn sàng lắp đặt.'
-            : selectedJob.status === 'INSTALLING'
-              ? 'Tải ít nhất một ảnh, sau đó ghi kết quả và gửi báo cáo.'
-              : selectedJob.status === 'AWAITING_HANDOVER'
-                ? 'Đã gửi báo cáo. Chờ Quản lý vận hành kiểm tra và bàn giao.'
-                : 'Quản lý vận hành đã bàn giao kiosk cho shop.'}
-        </p>
+        {selectedJob.status === 'INSTALLING' && (
+          <p className="technician-next-step">Cần ít nhất 1 ảnh và báo cáo.</p>
+        )}
       </div>
       {/* Contact Information & Stepper */}
       <ol className="installation-progress" aria-label="Tiến độ lắp đặt">
@@ -258,10 +252,6 @@ export function TechnicianJobDetailCard({
       {selectedJob.status === 'SCHEDULED' && (
         <div className="tech-action-step">
           <h3>Bắt đầu lắp đặt</h3>
-          <p>
-            Khi bạn đã có mặt tại điểm lắp đặt và chuẩn bị thiết bị, hãy bấm nút bắt đầu để cập nhật
-            trạng thái làm việc.
-          </p>
           <Button
             onClick={() => startMutation.mutate(selectedJob.id)}
             disabled={startMutation.isPending || needsOutcomeCheck}

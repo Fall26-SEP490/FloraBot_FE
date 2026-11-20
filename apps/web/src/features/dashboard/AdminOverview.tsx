@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
-import { ArrowRight, Button, Check, CircleAlert, Eye, Users } from '@florabot/ui';
+import { ArrowRight, Button, Check, CircleAlert, Users } from '@florabot/ui';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
 import { request, type Session } from '@/shared/lib/api';
 import type { WebOrder } from '../orders/orders.types';
@@ -36,25 +36,18 @@ function FeedPanel({
   href,
   action,
   empty,
-  monitor = false,
 }: {
   title: string;
   query: UseQueryResult<Feed>;
   href: string;
   action: string;
   empty: string;
-  monitor?: boolean;
 }) {
   return (
     <section className="admin-surface admin-feed-panel" aria-label={title}>
       <div className="admin-section-heading">
         <div>
           <h2>{title}</h2>
-          {monitor && (
-            <p className="admin-readonly-label">
-              <Eye size={15} aria-hidden="true" /> Chỉ giám sát
-            </p>
-          )}
         </div>
         <Link className="admin-text-link" href={href}>
           {action}
@@ -82,7 +75,6 @@ function FeedPanel({
       ) : query.data.rows.length === 0 ? (
         <div className="admin-calm-empty">
           <Check size={24} aria-hidden="true" />
-          <h3>Chưa có mục nào trong danh sách</h3>
           <p>{empty}</p>
         </div>
       ) : (
@@ -103,12 +95,10 @@ function FeedPanel({
           ))}
         </ul>
       )}
-      {query.isSuccess && (
+      {query.isSuccess && query.data.rows.length > 0 && (
         <p className="admin-feed-note">
-          {query.data.rows.length > 0
-            ? `Hiển thị ${Math.min(query.data.rows.length, 3)} / ${query.data.rows.length} mục đã tải.`
-            : 'Danh sách vừa tải chưa có mục nào.'}
-          {query.data.more && ' Còn trang tiếp theo.'} Cập nhật{' '}
+          {Math.min(query.data.rows.length, 3)} / {query.data.rows.length} mục đã tải
+          {query.data.more && ' · Còn trang sau'} ·{' '}
           {new Date(query.dataUpdatedAt).toLocaleTimeString('vi-VN', {
             timeZone: 'Asia/Ho_Chi_Minh',
             hour: '2-digit',
@@ -229,9 +219,7 @@ export default function AdminOverview({ session }: { session: Session }) {
               <AdminQueueItem key={queue.key} queue={queue} query={query} compact />
             ))}
           </div>
-          <p className="admin-feed-note">
-            Số lượng theo lần tải hiện tại; dấu + nghĩa là còn trang tiếp theo.
-          </p>
+          <p className="admin-feed-note">Số đã tải · Dấu +: còn trang sau.</p>
         </section>
         <FeedPanel
           title="Giám sát sự cố vận hành"
@@ -239,7 +227,6 @@ export default function AdminOverview({ session }: { session: Session }) {
           href="/admin/incidents"
           action="Giám sát sự cố"
           empty="Chưa có sự cố đang mở trong danh sách vừa tải."
-          monitor
         />
       </div>
       <div className="admin-overview-secondary">
@@ -249,7 +236,6 @@ export default function AdminOverview({ session }: { session: Session }) {
           href="/admin/orders"
           action="Xem đơn"
           empty="Yêu cầu mới sẽ xuất hiện khi khách đặt hoa trên website."
-          monitor
         />
         <FeedPanel
           title="Báo cáo cần theo dõi"
@@ -257,7 +243,6 @@ export default function AdminOverview({ session }: { session: Session }) {
           href="/admin/tasks"
           action="Giám sát báo cáo"
           empty="Chưa có báo cáo đã gửi trong danh sách. Quản lý vận hành hoặc chủ shop phụ trách kiểm tra kết quả."
-          monitor
         />
       </div>
       <PersonnelSummary actorId={session.id} />

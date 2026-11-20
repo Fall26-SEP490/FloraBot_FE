@@ -1,4 +1,5 @@
 'use client';
+import { liveListOptions } from '@/shared/lib/live-list';
 
 import { useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -480,6 +481,7 @@ export default function QualityComplaintQueue({
   const [page, setPage] = useState(1);
   const [state, setState] = useState(sellerId ? '' : 'REFUND_REVIEW');
   const queue = useQuery({
+    ...(sellerId ? {} : liveListOptions()),
     queryKey: ['quality-queue', root, sellerId, state, page],
     queryFn: () =>
       request<QualitySchema['QualityComplaintPage']>(
@@ -515,19 +517,21 @@ export default function QualityComplaintQueue({
             ))}
           </select>
         </label>
-        <Button
-          type="button"
-          variant="outline"
-          disabled={queue.isFetching}
-          onClick={() => void queue.refetch()}
-        >
-          Làm mới hồ sơ
-        </Button>
+        {(Boolean(sellerId) || queue.isError) && (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={queue.isFetching}
+            onClick={() => void queue.refetch()}
+          >
+            Làm mới hồ sơ
+          </Button>
+        )}
       </div>
       {queue.isPending ? (
         <p role="status">Đang tải phản ánh…</p>
       ) : queue.isError ? (
-        <p role="alert">Chưa tải được danh sách phản ánh. Chọn “Làm mới hồ sơ” để thử lại.</p>
+        <p role="alert">Chưa tải được danh sách phản ánh.</p>
       ) : (
         <>
           {!queue.data.items.length && <p>Chưa có phản ánh ở trạng thái này.</p>}

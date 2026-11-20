@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { Button, RefreshCw, Search, SlidersHorizontal, Store, Users } from '@florabot/ui';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
 import { queryClient, request } from '@/shared/lib/api';
+import { liveListOptions } from '@/shared/lib/live-list';
 import { ConfirmDialog } from '../../shared/components/Modal';
 import { AdminKioskSlotDetails } from './AdminKioskSlotDetails';
 import { Esp32ConfigurationPanel } from './Esp32ConfigurationPanel';
@@ -45,12 +46,14 @@ function KioskOperationsManagerPanel({ kiosks }: { kiosks: Kiosk[] }) {
 
   const assignments = useQuery({
     queryKey: ['admin-kiosk-manager-assignments', page],
+    ...liveListOptions(!selectedKioskId),
     queryFn: () =>
       request<KioskManagerAssignmentPage>(`/admin/kiosk-manager-assignments?page=${page}`),
   });
 
   const managers = useQuery({
     queryKey: ['admin-managers-list'],
+    ...liveListOptions(!selectedKioskId),
     queryFn: () => request<ManagerAccountItem[]>('/admin/managers'),
   });
 
@@ -381,12 +384,15 @@ export default function AdminSlots({ actorId }: { actorId: string }) {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [confirmation, setConfirmation] = useState('');
   const notice = useRef<HTMLParagraphElement>(null);
+  const [openKioskId, setOpenKioskId] = useState<string | null>(null);
   const kiosks = useQuery({
     queryKey: ['admin-kiosks'],
+    ...liveListOptions(!openKioskId),
     queryFn: () => request<Kiosk[]>('/admin/kiosks'),
   });
   const sellers = useQuery({
     queryKey: ['admin-sellers', 'ACTIVE'],
+    ...liveListOptions(!openKioskId),
     queryFn: () => request<Seller[]>('/admin/sellers?status=ACTIVE'),
     enabled: view === 'shop',
   });
@@ -420,15 +426,17 @@ export default function AdminSlots({ actorId }: { actorId: string }) {
             <Users size={18} aria-hidden="true" /> Phân công quản lý
           </button>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={refresh}
-          disabled={kiosks.isFetching || (view === 'shop' && sellers.isFetching)}
-        >
-          <RefreshCw size={16} aria-hidden="true" />
-          Làm mới danh sách kiosk
-        </Button>
+        {(kiosks.isError || sellers.isError) && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={refresh}
+            disabled={kiosks.isFetching || (view === 'shop' && sellers.isFetching)}
+          >
+            <RefreshCw size={16} aria-hidden="true" />
+            Làm mới danh sách kiosk
+          </Button>
+        )}
       </div>
 
       {kiosks.isError && (
@@ -563,7 +571,15 @@ export default function AdminSlots({ actorId }: { actorId: string }) {
             <ul className="admin-shop-list allocation-kiosk-list">
               {visible.map((kiosk) => (
                 <li key={kiosk.id}>
-                  <details name="admin-kiosk-allocation">
+                  <details
+                    name="admin-kiosk-allocation"
+                    onToggle={(event) => {
+                      const open = event.currentTarget.open;
+                      setOpenKioskId((current) =>
+                        open ? kiosk.id : current === kiosk.id ? null : current,
+                      );
+                    }}
+                  >
                     <AdminDisclosureSummary
                       statusCode={kiosk.status}
                       title={kiosk.name}

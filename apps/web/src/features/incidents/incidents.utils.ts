@@ -55,3 +55,18 @@ export function incidentProgressLabel(
   if (progress === 'UNASSIGNED') return 'Chưa phân công';
   return 'Chưa đóng';
 }
+
+export function incidentResolutionError(
+  error: { status: number; code?: string; message: string },
+  slotRepair: boolean,
+): string {
+  if (
+    error.status === 409 &&
+    slotRepair &&
+    !error.code?.startsWith('REPAIR_') &&
+    error.code !== 'TASK_VERSION_CONFLICT'
+  ) {
+    return 'Hệ thống chưa chấp nhận báo cáo sửa ô. Cần kiểm tra trạng thái công việc, quyền sửa, chu kỳ cửa và cảm biến trước khi gửi lại.';
+  }
+  return error.message;
+}

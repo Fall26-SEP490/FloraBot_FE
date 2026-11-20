@@ -1,3 +1,4 @@
+import WorkspaceTable from '@/features/portal/components/WorkspaceTable';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import { request } from '@/shared/lib/api';
@@ -56,47 +57,55 @@ export default function TechnicianIoTHealth({
           )}
           {!fresh && <p>Đang chờ dữ liệu mới. Trạng thái từng ô chưa xác định.</p>}
           {data.slots?.length === 0 && <p>Chưa có ô tủ để kiểm tra.</p>}
-          <div className={wholeKiosk ? 'technician-kiosk-slots' : undefined}>
-            {data.slots?.map((slot) => (
-              <div key={slot.slotCode}>
-                {wholeKiosk ? <h3>Ô {slot.slotCode}</h3> : <h5>Ô {slot.slotCode}</h5>}
-                <dl className="account-details">
-                  <div>
-                    <dt>LM393 · Cảm biến hoa</dt>
-                    <dd>
-                      {!fresh || slot.flowerDetected == null
-                        ? 'Chưa xác định'
-                        : slot.flowerDetected
-                          ? 'Phát hiện vật'
-                          : 'Không phát hiện vật'}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>MC-38 · Cảm biến cửa</dt>
-                    <dd>
-                      {!fresh || slot.doorClosed == null
-                        ? 'Chưa xác định'
-                        : slot.doorClosed
-                          ? 'Báo cửa đóng'
-                          : 'Báo cửa mở'}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Lần thao tác cửa gần nhất</dt>
-                    <dd>
-                      {fresh && slot.lastCycle
-                        ? (cycles[slot.lastCycle] ?? 'Chưa xác định')
-                        : 'Chưa xác định'}
-                      {fresh && slot.lastCycleAt && ` · ${formatTaskDate(slot.lastCycleAt)}`}
-                    </dd>
-                  </div>
-                </dl>
-              </div>
-            ))}
-          </div>
+          {!!data.slots?.length && (
+            <WorkspaceTable label="Tín hiệu từng ô tủ">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">Ô tủ</th>
+                    <th scope="col">Cảm biến hoa</th>
+                    <th scope="col">Cảm biến cửa</th>
+                    <th scope="col">Thao tác cửa gần nhất</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.slots.map((slot) => (
+                    <tr key={slot.slotCode}>
+                      <td>
+                        <strong>{slot.slotCode}</strong>
+                      </td>
+                      <td>
+                        {!fresh || slot.flowerDetected == null
+                          ? 'Chưa xác định'
+                          : slot.flowerDetected
+                            ? 'Phát hiện vật'
+                            : 'Không phát hiện vật'}
+                      </td>
+                      <td>
+                        {!fresh || slot.doorClosed == null
+                          ? 'Chưa xác định'
+                          : slot.doorClosed
+                            ? 'Báo cửa đóng'
+                            : 'Báo cửa mở'}
+                      </td>
+                      <td>
+                        {fresh && slot.lastCycle
+                          ? (cycles[slot.lastCycle] ?? 'Chưa xác định')
+                          : 'Chưa xác định'}
+                        {fresh && slot.lastCycleAt && (
+                          <span className="table-secondary">
+                            {formatTaskDate(slot.lastCycleAt)}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </WorkspaceTable>
+          )}
           <p className="quiet">
-            Nếu tín hiệu không khớp thực tế, hãy kiểm tra dây cảm biến, nam châm, nguồn khóa và cơ
-            cấu chốt tại ô. Tủ hiện chưa đo dòng qua khóa điện.
+            Tín hiệu cảm biến cần đối chiếu tại tủ; chưa có đo dòng khóa điện.
           </p>
         </>
       )}

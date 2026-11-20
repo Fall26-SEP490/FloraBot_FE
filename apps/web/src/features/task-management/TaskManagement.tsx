@@ -1,4 +1,6 @@
-import { useRef, useState } from 'react';
+import WorkspaceTable from '@/features/portal/components/WorkspaceTable';
+import { Modal } from '@/shared/components/Modal';
+import { useCallback, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -69,6 +71,17 @@ function FilteredTaskList(props: StaffTasksProps) {
         : ['INCIDENT', 'DELIVERY']);
 
   const [page, setPage] = useState(1);
+  const [selectedAdminTask, setSelectedAdminTask] = useState<string | null>(null);
+  const [openTaskIds, setOpenTaskIds] = useState<Set<string>>(() => new Set());
+  const handleTaskOpen = useCallback((id: string, open: boolean) => {
+    setOpenTaskIds((previous) => {
+      if (previous.has(id) === open) return previous;
+      const next = new Set(previous);
+      if (open) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }, []);
   const [status, setStatus] = useState(() =>
     role === 'OPERATIONS_MANAGER' &&
     props.initialStatus &&
@@ -93,9 +106,13 @@ function FilteredTaskList(props: StaffTasksProps) {
     queryKey: ['staff-tasks', role ?? 'none', actorId ?? 'none', scopeKey, page, status],
     queryFn: () => request<TaskPage>(`${apiBase}?page=${page}${status ? `&status=${status}` : ''}`),
     enabled: isValidRole,
+    refetchOnWindowFocus: !selectedAdminTask && openTaskIds.size === 0,
+    refetchOnReconnect: !selectedAdminTask && openTaskIds.size === 0,
     refetchInterval: (query) =>
-      role === 'OPERATIONS_MANAGER' || role === 'TECHNICIAN'
-        ? 30_000
+      role === 'ADMIN' || role === 'OPERATIONS_MANAGER' || role === 'TECHNICIAN'
+        ? selectedAdminTask || openTaskIds.size > 0
+          ? false
+          : 30_000
         : role === 'SELLER' &&
             query.state.data?.items.some(
               (task) => task.status === 'ASSIGNED' || task.status === 'IN_PROGRESS',
@@ -166,16 +183,20 @@ function FilteredTaskList(props: StaffTasksProps) {
       <h2
         id="staff-tasks-title"
         className={
-          role === 'OPERATIONS_MANAGER' || role === 'TECHNICIAN' || role === 'SELLER_STAFF'
+          role === 'ADMIN' ||
+          role === 'OPERATIONS_MANAGER' ||
+          role === 'TECHNICIAN' ||
+          role === 'SELLER_STAFF'
             ? 'sr-only'
             : undefined
         }
       >
         {sectionTitle}
       </h2>
-      {role !== 'OPERATIONS_MANAGER' && role !== 'TECHNICIAN' && role !== 'SELLER_STAFF' && (
-        <p>{sectionDescription}</p>
-      )}
+      {role !== 'ADMIN' &&
+        role !== 'OPERATIONS_MANAGER' &&
+        role !== 'TECHNICIAN' &&
+        role !== 'SELLER_STAFF' && <p>{sectionDescription}</p>}
       {tasks.data &&
         role !== 'SELLER' &&
         role !== 'OPERATIONS_MANAGER' &&
@@ -417,18 +438,20 @@ function FilteredTaskList(props: StaffTasksProps) {
               Đã hoàn thành
             </Button>
           )}
-          <Button
-            variant="outline"
-            aria-label="Tải lại công việc"
-            disabled={tasks.isFetching}
-            onClick={async () => {
-              const result = await tasks.refetch();
-              if (!result.isError) setReload((value) => value + 1);
-            }}
-          >
-            <RefreshCw size={15} aria-hidden="true" className={tasks.isFetching ? 'spin' : ''} />
-            {role === 'TECHNICIAN' ? 'Làm mới' : 'Tải lại công việc'}
-          </Button>
+          {(role === 'SELLER' || role === 'SELLER_STAFF' || tasks.isError) && (
+            <Button
+              variant="outline"
+              aria-label="Tải lại công việc"
+              disabled={tasks.isFetching}
+              onClick={async () => {
+                const result = await tasks.refetch();
+                if (!result.isError) setReload((value) => value + 1);
+              }}
+            >
+              <RefreshCw size={15} aria-hidden="true" className={tasks.isFetching ? 'spin' : ''} />
+              {role === 'TECHNICIAN' ? 'Làm mới' : 'Tải lại công việc'}
+            </Button>
+          )}
         </div>
         {tasks.isPending ? (
           <p role="status">Đang tải công việc…</p>
@@ -453,15 +476,9 @@ function FilteredTaskList(props: StaffTasksProps) {
                     ? 'Chưa có báo cáo chờ duyệt'
                     : 'Chưa có công việc'}
                 </h3>
-                <p>
-                  {role === 'OPERATIONS_MANAGER'
-                    ? managerView === 'review'
-                      ? 'Báo cáo của kỹ thuật viên sẽ xuất hiện tại đây sau khi được gửi.'
-                      : status
-                        ? 'Thử chọn trạng thái khác để xem công việc.'
-                        : 'Mở Phân công công việc mới để chọn sự cố và người xử lý.'
-                    : 'Chưa có công việc trong danh sách này.'}
-                </p>
+                {(role === 'SELLER' || role === 'SELLER_STAFF') && (
+                  <p>Chưa có công việc trong danh sách này.</p>
+                )}
                 {role === 'SELLER' && (
                   <p>
                     {status || page > 1
@@ -470,16 +487,84 @@ function FilteredTaskList(props: StaffTasksProps) {
                     <Link href="/seller/staff">Quản lý nhân viên shop</Link>
                   </p>
                 )}
-                {isPlatform && role !== 'OPERATIONS_MANAGER' && (
-                  <p className="platform-empty-hint">
-                    {status || page > 1
-                      ? 'Thử đổi bộ lọc hoặc quay về trang đầu để xem các công việc khác.'
-                      : role === 'TECHNICIAN'
-                        ? 'Khi được quản lý phân công, thông tin địa điểm, hướng dẫn và tiến độ sẽ xuất hiện tại đây.'
-                        : 'Các công việc được ghi nhận và phân công sẽ xuất hiện tại đây để theo dõi.'}
-                  </p>
+                {isPlatform && (status || page > 1) && (
+                  <p className="platform-empty-hint">Thử đổi trạng thái hoặc về trang đầu.</p>
                 )}
               </div>
+            ) : role === 'ADMIN' ? (
+              <WorkspaceTable label="Giám sát công việc">
+                <table className="admin-monitor-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Công việc / Kiosk</th>
+                      <th scope="col">Người phụ trách</th>
+                      <th scope="col">Trạng thái</th>
+                      <th scope="col">Báo cáo gần nhất</th>
+                      <th scope="col">Chi tiết</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tasks.data.items.filter(matchesSearch).map((task) => (
+                      <tr key={task.id}>
+                        <td>
+                          <strong>
+                            {task.workType === 'FLOWER_QUALITY'
+                              ? 'Xử lý chất lượng hoa'
+                              : task.kind === 'INCIDENT'
+                                ? 'Kiểm tra sự cố'
+                                : task.kind === 'KIOSK_REMOVAL'
+                                  ? 'Tháo dỡ kiosk'
+                                  : 'Giao hoa'}
+                          </strong>
+                          <span className="table-secondary">{task.kioskName}</span>
+                        </td>
+                        <td>{task.assigneeName || '—'}</td>
+                        <td>
+                          <span className="table-badge" data-state={task.status}>
+                            {TASK_STATUS_LABELS[task.status] || task.status}
+                          </span>
+                        </td>
+                        <td>
+                          <span className="table-truncate" title={task.report || ''}>
+                            {task.report || '—'}
+                          </span>
+                        </td>
+                        <td>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            aria-label={`Xem công việc ${task.id}`}
+                            onClick={() => setSelectedAdminTask(task.id)}
+                          >
+                            Xem
+                          </Button>
+                          <Modal
+                            open={selectedAdminTask === task.id}
+                            onClose={() => setSelectedAdminTask(null)}
+                            title={`Công việc · ${task.kioskName}`}
+                            size="lg"
+                            className="admin-monitor-dialog"
+                          >
+                            {selectedAdminTask === task.id && (
+                              <TaskItem
+                                key={`${task.id}-${task.version}`}
+                                task={task}
+                                initiallyOpen
+                                mode="oversight"
+                                actorRole="ADMIN"
+                                actorId={actorId}
+                                apiBase={apiBase}
+                                canReassign={false}
+                                readOnly
+                              />
+                            )}
+                          </Modal>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </WorkspaceTable>
             ) : (
               (mode === 'worker'
                 ? [...tasks.data.items].sort((a, b) => {
@@ -502,6 +587,7 @@ function FilteredTaskList(props: StaffTasksProps) {
                   directoryEndpoint={directoryEndpoint}
                   canReassign={canReassign}
                   readOnly={readOnly}
+                  onOpenChange={handleTaskOpen}
                   onTransition={role === 'OPERATIONS_MANAGER' ? setTransitionResult : undefined}
                 />
               ))

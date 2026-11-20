@@ -260,7 +260,6 @@ export function InstallationActionCards({
           <div className="operations-kiosk-assignment">
             <div>
               <strong>Tủ đã phân bổ: {appDetail.assignedKioskCode}</strong>
-              <p>Bạn có thể cấp lại khóa API thiết bị nếu cần nạp lại cấu hình phần cứng.</p>
             </div>
             <Button
               variant="outline"

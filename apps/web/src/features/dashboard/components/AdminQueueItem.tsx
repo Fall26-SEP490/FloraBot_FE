@@ -26,7 +26,6 @@ export default function AdminQueueItem({
             <ArrowRight size={17} aria-hidden="true" />
           </Link>
         </h3>
-        {!compact && <p>{queue.description}</p>}
         {query.isPending ? (
           <p role="status">Đang tải yêu cầu…</p>
         ) : query.isError ? (

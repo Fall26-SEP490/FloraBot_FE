@@ -1,4 +1,5 @@
 'use client';
+import { liveListOptions } from '@/shared/lib/live-list';
 
 import { useId, useState, type FormEvent, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -68,7 +69,7 @@ export function DirectoryHeading({
 }: {
   id: string;
   title: string;
-  description: string;
+  description?: string;
   count?: number;
   children?: ReactNode;
 }) {
@@ -76,7 +77,7 @@ export function DirectoryHeading({
     <div className="platform-directory-heading">
       <div>
         <h2 id={id}>{title}</h2>
-        <p>{description}</p>
+        {description && <p>{description}</p>}
       </div>
       <div className="platform-directory-actions">
         {count !== undefined && (
@@ -91,7 +92,12 @@ export function DirectoryHeading({
   );
 }
 
-export function useDirectory<T>(session: Session, endpoint: string, allowedRole: string) {
+export function useDirectory<T>(
+  session: Session,
+  endpoint: string,
+  allowedRole: string,
+  autoRefresh = true,
+) {
   const [draft, setDraft] = useState('');
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
@@ -102,6 +108,7 @@ export function useDirectory<T>(session: Session, endpoint: string, allowedRole:
   if (status) params.set('status', status);
   if (role) params.set('role', role);
   const query = useQuery({
+    ...liveListOptions(autoRefresh),
     queryKey: ['platform-directory', session.id, endpoint, search, status, role, page],
     queryFn: () => request<{ items: T[]; page: number; hasMore: boolean }>(`${endpoint}?${params}`),
     enabled: session.role === allowedRole,
@@ -125,10 +132,12 @@ export function DirectoryTools<T>({
   directory: d,
   statuses = accountStatuses,
   roles = false,
+  showRefresh = false,
 }: {
   directory: ReturnType<typeof useDirectory<T>>;
   statuses?: readonly string[];
   roles?: boolean;
+  showRefresh?: boolean;
 }) {
   const id = useId();
   return (
@@ -193,14 +202,16 @@ export function DirectoryTools<T>({
       )}
       <div className="platform-filter-actions">
         <Button type="submit">Tìm kiếm</Button>
-        <Button
-          type="button"
-          variant="outline"
-          disabled={d.query.isFetching}
-          onClick={() => void d.query.refetch()}
-        >
-          <RefreshCw size={16} aria-hidden="true" /> Tải lại
-        </Button>
+        {(showRefresh || d.query.isError) && (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={d.query.isFetching}
+            onClick={() => void d.query.refetch()}
+          >
+            <RefreshCw size={16} aria-hidden="true" /> Tải lại
+          </Button>
+        )}
         {(d.search || d.draft || d.status || d.role) && (
           <Button
             type="button"

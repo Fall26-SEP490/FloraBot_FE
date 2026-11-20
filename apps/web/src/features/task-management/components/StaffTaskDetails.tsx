@@ -1,3 +1,4 @@
+import WorkspaceTable from '@/features/portal/components/WorkspaceTable';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
@@ -6,7 +7,6 @@ import { TASK_DETAIL_ACTIONS, TASK_DETAIL_STATES } from '../task-management.cons
 import type { StaffTaskDetailsProps, TaskDetail } from '../task-management.types';
 import { formatTaskDate } from '../task-management.utils';
 import TechnicianIoTHealth from './TechnicianIoTHealth';
-import RepairReadinessPanel from './RepairReadinessPanel';
 
 export type { StaffTaskDetailsProps };
 
@@ -48,17 +48,6 @@ export default function StaffTaskDetails({
       {open && role === 'TECHNICIAN' && (
         <TechnicianIoTHealth path={`/staff/tasks/${taskId}/iot-health`} actorId={actorId} />
       )}
-      {open &&
-        details.data?.slotCode &&
-        ['IN_PROGRESS', 'SUBMITTED'].includes(details.data.status ?? '') &&
-        (role === 'TECHNICIAN' || role === 'OPERATIONS_MANAGER') && (
-          <RepairReadinessPanel
-            taskId={taskId}
-            apiBase={apiBase}
-            actorId={actorId}
-            version={version}
-          />
-        )}
       {details.isPending ? (
         <p role="status">Đang tải thông tin công việc…</p>
       ) : details.isError ? (
@@ -130,10 +119,6 @@ export default function StaffTaskDetails({
                   </dd>
                 </div>
               </dl>
-              <p className="quiet">
-                Đây là bản ghi được trả về. Việc nghiệm thu vẫn cần đối chiếu thời điểm, thực tế tại
-                tủ và điều kiện hệ thống.
-              </p>
             </section>
           )}
           {details.data.incident && (
@@ -151,18 +136,62 @@ export default function StaffTaskDetails({
               {details.data.incident.decision && (
                 <p>Kết quả xử lý: {details.data.incident.decision}</p>
               )}
-              <p>
-                {role === 'ADMIN'
-                  ? 'Manager phụ trách phân công và nghiệm thu. Bạn đang xem thông tin giám sát.'
-                  : role === 'TECHNICIAN' || role === 'OPERATIONS_MANAGER'
-                    ? 'Gửi báo cáo công việc để Quản lý vận hành xem xét. Báo cáo không tự hoàn tiền hoặc mở cửa tủ.'
-                    : 'Gửi báo cáo công việc để chủ shop theo dõi. Báo cáo không tự cập nhật tồn kho mở bán.'}
-              </p>
+              {role !== 'ADMIN' && role !== 'TECHNICIAN' && role !== 'OPERATIONS_MANAGER' && (
+                <p>Gửi báo cáo để chủ shop theo dõi.</p>
+              )}
             </section>
           )}
           <h4>Lịch sử công việc</h4>
           {details.data.history.length === 0 ? (
             <p>Chưa có lịch sử ở trang này.</p>
+          ) : role === 'ADMIN' || role === 'TECHNICIAN' || role === 'OPERATIONS_MANAGER' ? (
+            <WorkspaceTable label="Lịch sử công việc">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">Thời gian</th>
+                    <th scope="col">Hoạt động</th>
+                    <th scope="col">Người thực hiện</th>
+                    <th scope="col">Nội dung</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {details.data.history.map((event) => (
+                    <tr key={event.id}>
+                      <td>
+                        <time dateTime={event.createdAt}>{formatTaskDate(event.createdAt)}</time>
+                      </td>
+                      <td>
+                        <strong>{TASK_DETAIL_ACTIONS[event.action] || event.action}</strong>
+                        {event.toStatus && (
+                          <span className="table-secondary">
+                            {event.fromStatus
+                              ? `${TASK_DETAIL_STATES[event.fromStatus] || event.fromStatus} → `
+                              : ''}
+                            {TASK_DETAIL_STATES[event.toStatus] || event.toStatus}
+                          </span>
+                        )}
+                      </td>
+                      <td>{event.actorName || '—'}</td>
+                      <td>
+                        {event.report ? (
+                          event.report.length > 160 ? (
+                            <details>
+                              <summary>Xem báo cáo</summary>
+                              <p>{event.report}</p>
+                            </details>
+                          ) : (
+                            event.report
+                          )
+                        ) : (
+                          '—'
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </WorkspaceTable>
           ) : (
             <ol className="staff-task-history">
               {details.data.history.map((event) => (

@@ -61,7 +61,6 @@ export function InstallationHandoverPanel({
 
   return (
     <div className="operations-action-card">
-      <span className="installation-eyebrow">Bước 03 · Nghiệm thu & bàn giao</span>
       <h3>Kiểm tra kết quả lắp đặt</h3>
       <div className="report-display-box">
         <strong>Báo cáo từ Kỹ thuật viên ({appDetail.assignedTechnicianName}):</strong>
@@ -69,7 +68,7 @@ export function InstallationHandoverPanel({
       </div>
 
       <div className="evidence-review-section">
-        <h4>Ảnh minh chứng được đính kèm:</h4>
+        <h4>Ảnh minh chứng</h4>
         {evidencePhotos.length > 0 ? (
           <div className="evidence-thumbnails-grid">
             {evidencePhotos.map((ev, idx) => (
@@ -91,8 +90,7 @@ export function InstallationHandoverPanel({
       {isManager && (
         <>
           <p className="kiosk-help-text">
-            Sau khi bạn kiểm tra ảnh và báo cáo, bàn giao sẽ gán kiosk cho shop và chuyển tài khoản
-            khách hàng thành Seller.
+            Bàn giao sẽ gán kiosk cho shop và kích hoạt vai trò Seller.
           </p>
           <div className="action-buttons-row">
             <Button

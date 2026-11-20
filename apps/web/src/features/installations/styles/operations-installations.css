@@ -541,3 +541,37 @@
 .operations-installations-view .table-pagination-row[aria-busy='true'] .button:disabled {
   cursor: wait;
 }
+
+/* Compact register shared by Admin and Operations. */
+.workspace-portal-root
+  .installation-register-table
+  > :is(thead, tbody)
+  > tr
+  > :is(th, td):last-child {
+  width: 130px;
+}
+.workspace-portal-root .installation-register-table > tbody > tr > td:last-child > button {
+  width: 100%;
+  min-width: 0;
+  padding: 8px 6px;
+  font-size: 12px;
+  white-space: normal;
+  justify-content: center;
+}
+.workspace-portal-root .installation-register-table .is-selected-row {
+  background: #eaf4eb;
+}
+.workspace-portal-root .installation-record-dialog .operations-detail-panel {
+  margin: 0;
+  border: 0;
+  box-shadow: none;
+}
+@media (max-width: 640px) {
+  .workspace-portal-root
+    .installation-register-table
+    > :is(thead, tbody)
+    > tr
+    > :is(th, td):last-child {
+    width: 72px;
+  }
+}

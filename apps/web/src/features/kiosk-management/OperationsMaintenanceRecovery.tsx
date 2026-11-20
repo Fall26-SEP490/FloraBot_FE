@@ -1,3 +1,4 @@
+import { liveListOptions } from '@/shared/lib/live-list';
 import { useCallback, useState, type FormEvent } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
@@ -222,6 +223,7 @@ export default function OperationsMaintenanceRecovery({ managerId }: { managerId
   const close = useCallback(() => setSelected(undefined), []);
   const queryKey = ['operations-maintenance-recoveries', managerId] as const;
   const recoveries = useQuery({
+    ...liveListOptions(!selected),
     queryKey: [...queryKey, page],
     queryFn: () => request<RecoveryPage>(`/operations/maintenance-recoveries?page=${page}`),
   });
@@ -233,13 +235,15 @@ export default function OperationsMaintenanceRecovery({ managerId }: { managerId
     >
       <div className="business-heading">
         <h2 id="maintenance-recovery-title">Phiên cần xác minh</h2>
-        <Button
-          variant="outline"
-          disabled={recoveries.isFetching}
-          onClick={() => void recoveries.refetch()}
-        >
-          Làm mới
-        </Button>
+        {recoveries.isError && (
+          <Button
+            variant="outline"
+            disabled={recoveries.isFetching}
+            onClick={() => void recoveries.refetch()}
+          >
+            Làm mới
+          </Button>
+        )}
       </div>
 
       {notice && <p role="status">{notice}</p>}

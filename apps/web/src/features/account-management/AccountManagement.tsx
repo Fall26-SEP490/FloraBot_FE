@@ -1,4 +1,5 @@
 'use client';
+import { liveListOptions } from '@/shared/lib/live-list';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -314,6 +315,9 @@ export default function AccountManagement({
     refetch,
     isFetching,
   } = useQuery({
+    ...(actorRole === 'ADMIN' || actorRole === 'OPERATIONS_MANAGER'
+      ? liveListOptions(!createOpen && !viewing && !statusConfirm)
+      : {}),
     queryKey,
     queryFn: () => request<AccountDirectoryItem[]>(queryPath),
     enabled: isAuthorized,
@@ -604,21 +608,23 @@ export default function AccountManagement({
       <div className="account-directory-card">
         <div className="management-heading">
           <div>
-            <p className="management-eyebrow">{eyebrow}</p>
+            {actorRole === 'SELLER' && <p className="management-eyebrow">{eyebrow}</p>}
             <h2 id="account-management-title">{title}</h2>
-            <p>{description}</p>
+            {actorRole === 'SELLER' && <p>{description}</p>}
           </div>
           <div className="management-heading-actions">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => void refetch()}
-              disabled={isFetching}
-              aria-label="Tải lại danh sách"
-            >
-              <RefreshCw size={14} aria-hidden="true" className={isFetching ? 'spin' : ''} />
-              {isFetching ? 'Đang tải…' : 'Làm mới'}
-            </Button>
+            {(actorRole === 'SELLER' || isError) && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => void refetch()}
+                disabled={isFetching}
+                aria-label="Tải lại danh sách"
+              >
+                <RefreshCw size={14} aria-hidden="true" className={isFetching ? 'spin' : ''} />
+                {isFetching ? 'Đang tải…' : 'Làm mới'}
+              </Button>
+            )}
             <Button
               ref={createButtonRef}
               type="button"
