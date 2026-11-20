@@ -82,6 +82,7 @@ test('Admin oversight shows task data without instruction or mutation controls',
 }) => {
   const model = await setup(page, 'ADMIN');
   await page.goto('/admin/tasks');
+  await page.getByRole('button', { name: /^Xem công việc / }).click();
   await expect(page.getByText('Kiểm tra chốt cửa tại tủ', { exact: true })).toBeVisible();
   await expect(page.getByText('Sửa hướng dẫn công việc', { exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Lưu hướng dẫn' })).toHaveCount(0);

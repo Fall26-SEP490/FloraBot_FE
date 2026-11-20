@@ -1,6 +1,8 @@
-import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
-import { AdminFilterBar, AdminDisclosureSummary } from '@/features/portal/components/AdminUi';
+import { liveListOptions } from '@/shared/lib/live-list';
+import WorkspaceTable from '@/features/portal/components/WorkspaceTable';
+import { Modal } from '@/shared/components/Modal';
+import { AdminFilterBar } from '@/features/portal/components/AdminUi';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
@@ -34,150 +36,151 @@ function IncidentItem({ row, hidden = false }: { row: Incident; hidden?: boolean
   });
   const incident = detail.data?.incident ?? row;
   return (
-    <li hidden={hidden}>
-      <details onToggle={(event) => setOpen(event.currentTarget.open)}>
-        <AdminDisclosureSummary
-          statusCode={incident.status}
+    <tr hidden={hidden}>
+      <td>
+        <time dateTime={row.createdAt}>{formatIncidentDate(row.createdAt)}</time>
+      </td>
+      <td>
+        <strong>{formatIncidentLabel(row)}</strong>
+        <span className="table-secondary">
+          {row.kind === 'DISPENSE_FAILED' ? 'Không giao được hoa' : 'Sự cố thiết bị'}
+        </span>
+      </td>
+      <td>
+        <span className="table-truncate" title={row.reason}>
+          {row.reason}
+        </span>
+      </td>
+      <td>
+        <span className="table-badge" data-state={incident.status}>
+          {incidentProgressLabel(incident)}
+        </span>
+      </td>
+      <td>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setOpen(true)}
+          aria-label={`Xem sự cố ${row.id}`}
+        >
+          Xem
+        </Button>
+        <Modal
+          open={open}
+          onClose={() => setOpen(false)}
           title={formatIncidentLabel(row)}
-          meta={
-            <>
-              <time
-                className="admin-incident-created"
-                dateTime={row.createdAt}
-                title={formatIncidentDate(row.createdAt)}
-              >
-                {new Date(row.createdAt).toLocaleDateString('vi-VN', {
-                  timeZone: 'Asia/Ho_Chi_Minh',
-                  day: '2-digit',
-                  month: '2-digit',
-                  year: 'numeric',
-                })}
-                {' · '}
-                {new Date(row.createdAt).toLocaleTimeString('vi-VN', {
-                  timeZone: 'Asia/Ho_Chi_Minh',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  hour12: false,
-                })}
-              </time>
-              <span className="admin-incident-kind">
-                {row.kind === 'DISPENSE_FAILED' ? 'Không giao được hoa' : 'Sự cố thiết bị'}
-              </span>
-            </>
-          }
-          status={incidentProgressLabel(incident)}
-        />
-        {open && (
-          <div className="incident-detail">
-            {detail.isPending ? (
-              <p role="status">Đang tải chi tiết sự cố…</p>
-            ) : detail.isError ? (
-              <>
-                <p role="alert" className="error">
-                  Chưa tải được chi tiết sự cố.
-                </p>
-                <IconActionButton
-                  variant="outline"
-                  onClick={() => void detail.refetch()}
-                  action="reload"
-                  label="Tải lại chi tiết"
-                />
-              </>
-            ) : (
-              <>
-                <p>{detail.data.incident.location?.address}</p>
-                <p className="incident-text">{detail.data.incident.reason}</p>
-                <p className="quiet">Mã sự cố: {row.id}</p>
-                {detail.data.incident.task && (
-                  <p>
-                    Người phụ trách: <strong>{detail.data.incident.task.assigneeName}</strong> ·{' '}
-                    {incidentProgressLabel(detail.data.incident)}
-                    <br />
-                    Mã công việc: {detail.data.incident.task.id}
+          size="lg"
+          className="admin-monitor-dialog"
+        >
+          {open && (
+            <div className="incident-detail">
+              {detail.isPending ? (
+                <p role="status">Đang tải chi tiết sự cố…</p>
+              ) : detail.isError ? (
+                <>
+                  <p role="alert" className="error">
+                    Chưa tải được chi tiết sự cố.
                   </p>
-                )}
-                <h3>Ảnh minh chứng</h3>
-                {detail.data.evidence.items.length > 0 && (
-                  <p className="quiet">
-                    Gồm ảnh báo sự cố và ảnh công việc đã liên kết. Chọn ảnh để mở ở tab mới.
-                  </p>
-                )}
-                {detail.data.evidence.items.length === 0 ? (
-                  <p>Phiếu chưa có ảnh báo sự cố hoặc ảnh công việc được liên kết.</p>
-                ) : (
-                  <ul className="incident-evidence">
-                    {detail.data.evidence.items.map((photo, index) => {
-                      const url = safeUrl(photo.url);
-                      const photoIndex = (evidencePage - 1) * 20 + index + 1;
-                      const sourceLabel =
-                        photo.source === 'STAFF_TASK'
-                          ? ' · Ảnh kiểm tra kỹ thuật'
-                          : photo.source === 'INCIDENT'
-                            ? ' · Ảnh báo sự cố'
-                            : '';
-                      return (
-                        <li key={photo.id}>
-                          {url ? (
-                            <>
-                              <a href={url} target="_blank" rel="noopener noreferrer">
-                                Mở ảnh minh chứng {photoIndex}
-                              </a>
-                              {sourceLabel && <span className="quiet">{sourceLabel}</span>}
-                            </>
-                          ) : (
-                            <span>Ảnh {photoIndex}: đường dẫn không hợp lệ để mở an toàn.</span>
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-                {detail.data.evidence.hasMore && (
-                  <p>
-                    Đang hiển thị 20 ảnh ở trang {evidencePage}. Còn ảnh khác trong hồ sơ, cần đối
-                    chiếu đầy đủ trước khi kết luận.
-                  </p>
-                )}
-                {(evidencePage > 1 || detail.data.evidence.hasMore) && (
-                  <nav className="stock-actions" aria-label="Phân trang ảnh sự cố">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={evidencePage === 1 || detail.isFetching}
-                      onClick={() => setEvidencePage((value) => Math.max(1, value - 1))}
-                    >
-                      Ảnh trang trước
-                    </Button>
-                    <span>Trang ảnh {evidencePage}</span>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={!detail.data.evidence.hasMore || detail.isFetching}
-                      onClick={() => setEvidencePage((value) => value + 1)}
-                    >
-                      Ảnh trang sau
-                    </Button>
-                  </nav>
-                )}
-                {detail.data.incident.status === 'OPEN' ? (
-                  <p className="quiet">Phiếu đang được Quản lý vận hành xử lý.</p>
-                ) : (
-                  <>
-                    <h3>Đã xử lý</h3>
-                    <p className="incident-text">
-                      {detail.data.incident.decision || 'Chưa có ghi chú.'}
+                  <Button variant="outline" onClick={() => void detail.refetch()}>
+                    Tải lại chi tiết
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <p>{detail.data.incident.location?.address}</p>
+                  <p className="incident-text">{detail.data.incident.reason}</p>
+                  <p className="quiet">Mã sự cố: {row.id}</p>
+                  {detail.data.incident.task && (
+                    <p>
+                      Người phụ trách: <strong>{detail.data.incident.task.assigneeName}</strong> ·{' '}
+                      {incidentProgressLabel(detail.data.incident)}
+                      <br />
+                      Mã công việc: {detail.data.incident.task.id}
                     </p>
-                    {detail.data.incident.resolvedAt && (
-                      <p>{formatIncidentDate(detail.data.incident.resolvedAt)}</p>
-                    )}
-                  </>
-                )}
-              </>
-            )}
-          </div>
-        )}
-      </details>
-    </li>
+                  )}
+                  <h3>Ảnh minh chứng</h3>
+                  {detail.data.evidence.items.length > 0 && (
+                    <p className="quiet">
+                      Gồm ảnh báo sự cố và ảnh công việc đã liên kết. Chọn ảnh để mở ở tab mới.
+                    </p>
+                  )}
+                  {detail.data.evidence.items.length === 0 ? (
+                    <p>Phiếu chưa có ảnh báo sự cố hoặc ảnh công việc được liên kết.</p>
+                  ) : (
+                    <ul className="incident-evidence">
+                      {detail.data.evidence.items.map((photo, index) => {
+                        const url = safeUrl(photo.url);
+                        const photoIndex = (evidencePage - 1) * 20 + index + 1;
+                        const sourceLabel =
+                          photo.source === 'STAFF_TASK'
+                            ? ' · Ảnh kiểm tra kỹ thuật'
+                            : photo.source === 'INCIDENT'
+                              ? ' · Ảnh báo sự cố'
+                              : '';
+                        return (
+                          <li key={photo.id}>
+                            {url ? (
+                              <>
+                                <a href={url} target="_blank" rel="noopener noreferrer">
+                                  Mở ảnh minh chứng {photoIndex}
+                                </a>
+                                {sourceLabel && <span className="quiet">{sourceLabel}</span>}
+                              </>
+                            ) : (
+                              <span>Ảnh {photoIndex}: đường dẫn không hợp lệ để mở an toàn.</span>
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                  {detail.data.evidence.hasMore && (
+                    <p>
+                      Đang hiển thị 20 ảnh ở trang {evidencePage}. Còn ảnh khác trong hồ sơ, cần đối
+                      chiếu đầy đủ trước khi kết luận.
+                    </p>
+                  )}
+                  {(evidencePage > 1 || detail.data.evidence.hasMore) && (
+                    <nav className="stock-actions" aria-label="Phân trang ảnh sự cố">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={evidencePage === 1 || detail.isFetching}
+                        onClick={() => setEvidencePage((value) => Math.max(1, value - 1))}
+                      >
+                        Ảnh trang trước
+                      </Button>
+                      <span>Trang ảnh {evidencePage}</span>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={!detail.data.evidence.hasMore || detail.isFetching}
+                        onClick={() => setEvidencePage((value) => value + 1)}
+                      >
+                        Ảnh trang sau
+                      </Button>
+                    </nav>
+                  )}
+                  {detail.data.incident.status === 'OPEN' ? (
+                    <p className="quiet">Phiếu đang được Quản lý vận hành xử lý.</p>
+                  ) : (
+                    <>
+                      <h3>Đã xử lý</h3>
+                      <p className="incident-text">
+                        {detail.data.incident.decision || 'Chưa có ghi chú.'}
+                      </p>
+                      {detail.data.incident.resolvedAt && (
+                        <p>{formatIncidentDate(detail.data.incident.resolvedAt)}</p>
+                      )}
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </Modal>
+      </td>
+    </tr>
   );
 }
 
@@ -197,30 +200,30 @@ export default function AdminIncidents() {
       normalizeSearch(search.trim()),
     );
   const queue = useQuery({
+    ...liveListOptions(),
     queryKey: ['admin-incidents', status, page],
     queryFn: () => request<Page>(`/admin/incidents?status=${status}&page=${page}`),
   });
   return (
     <section className="admin-incidents" aria-labelledby="incidents-title">
       <h2 id="incidents-title">Theo dõi sự cố tủ hoa</h2>
-      <p className="incident-oversight-note">
-        <strong>Giám sát tiến độ</strong>
-      </p>
       <AdminFilterBar
         actions={
-          <>
-            <Button
-              variant="outline"
-              disabled={queue.isFetching}
-              onClick={() => {
-                setPage(1);
-                void queryClient.invalidateQueries({ queryKey: ['admin-incidents'] });
-                void queryClient.invalidateQueries({ queryKey: ['admin-incident'] });
-              }}
-            >
-              Cập nhật danh sách sự cố
-            </Button>
-          </>
+          queue.isError ? (
+            <>
+              <Button
+                variant="outline"
+                disabled={queue.isFetching}
+                onClick={() => {
+                  setPage(1);
+                  void queryClient.invalidateQueries({ queryKey: ['admin-incidents'] });
+                  void queryClient.invalidateQueries({ queryKey: ['admin-incident'] });
+                }}
+              >
+                Cập nhật danh sách sự cố
+              </Button>
+            </>
+          ) : undefined
         }
       >
         <div>
@@ -252,7 +255,7 @@ export default function AdminIncidents() {
         <p role="status">Đang tải danh sách sự cố…</p>
       ) : queue.isError ? (
         <p role="alert" className="error">
-          Chưa tải được sự cố. Chọn “Cập nhật danh sách sự cố” để thử lại.
+          Chưa tải được sự cố. Hệ thống sẽ tự thử lại.
         </p>
       ) : (
         <>
@@ -276,11 +279,26 @@ export default function AdminIncidents() {
               để xem thêm.
             </p>
           )}
-          <ul className="admin-shop-list">
-            {queue.data.items.map((row) => (
-              <IncidentItem key={row.id} row={row} hidden={!matches(row)} />
-            ))}
-          </ul>
+          {queue.data.items.some(matches) && (
+            <WorkspaceTable label="Giám sát sự cố tủ">
+              <table className="admin-monitor-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Thời gian</th>
+                    <th scope="col">Kiosk / Ô tủ</th>
+                    <th scope="col">Sự cố</th>
+                    <th scope="col">Tiến độ</th>
+                    <th scope="col">Chi tiết</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {queue.data.items.map((row) => (
+                    <IncidentItem key={row.id} row={row} hidden={!matches(row)} />
+                  ))}
+                </tbody>
+              </table>
+            </WorkspaceTable>
+          )}
           <nav className="stock-actions" aria-label="Phân trang sự cố">
             <Button
               variant="outline"
@@ -298,9 +316,6 @@ export default function AdminIncidents() {
               Trang sự cố sau
             </Button>
           </nav>
-          <p className="quiet">
-            Danh sách có thể thay đổi khi người khác xử lý. Cập nhật để quay lại trang đầu.
-          </p>
         </>
       )}
     </section>

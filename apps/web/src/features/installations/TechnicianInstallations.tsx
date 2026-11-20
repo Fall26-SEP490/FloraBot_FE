@@ -1,4 +1,5 @@
 'use client';
+import { liveListOptions } from '@/shared/lib/live-list';
 
 import IconActionButton from '@/shared/components/IconActionButton';
 import { useEffect, useRef, useState } from 'react';
@@ -33,6 +34,7 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
 
   // Query: Assigned installation jobs (scoped by signed-in technician)
   const jobsQuery = useQuery({
+    ...liveListOptions(!detailOpen),
     queryKey: ['technician-kiosk-installations', session.id],
     queryFn: () => request<TechnicianInstallationSummary[]>('/staff/kiosk-installations'),
   });
@@ -95,6 +97,7 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
 
   const invalidate = () => {
     void queryClient.invalidateQueries({
+      ...liveListOptions(!detailOpen),
       queryKey: ['technician-kiosk-installations', session.id],
     });
     if (selectedJob?.id) {
@@ -112,15 +115,7 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
       <div className="dashboard-page-heading">
         <div>
           <h1>Lắp đặt kiosk</h1>
-          <p>Xem lịch được giao, tải ảnh và gửi báo cáo lắp đặt.</p>
         </div>
-        <IconActionButton
-          variant="outline"
-          disabled={jobsQuery.isFetching}
-          onClick={invalidate}
-          action="reload"
-          label="Làm mới công việc lắp đặt"
-        />
       </div>
 
       {jobsQuery.isLoading && (
@@ -154,10 +149,6 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
             <ClipboardList size={30} aria-hidden="true" />
           </span>
           <h3>Chưa có công việc lắp đặt nào</h3>
-          <p>Hiện bạn không có công việc lắp đặt kiosk nào đang chờ thực hiện.</p>
-          <p className="platform-empty-hint">
-            Công việc sẽ xuất hiện tại đây khi Quản lý vận hành phân công cho bạn.
-          </p>
           <Link className="button button-outline" href="/technician">
             Xem công việc kỹ thuật
           </Link>

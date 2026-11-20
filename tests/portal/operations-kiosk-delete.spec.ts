@@ -255,7 +255,9 @@ test('Deleting a selected kiosk also clears its schedule option and prevents sta
 test('Admin cannot access kiosk inventory or delete controls', async ({ page }) => {
   const model = await setup(page, 'ADMIN');
   await page.goto('/admin/installations');
-  await expect(page.getByText('Chế độ giám sát (Admin)', { exact: true })).toBeVisible();
+  await expect(
+    page.getByText('Chỉ xem · Manager phụ trách xử lý và bàn giao.', { exact: true }),
+  ).toBeVisible();
   await expect(page.getByRole('button', { name: 'Kho tủ khả dụng' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: /Lưu trữ tủ/ })).toHaveCount(0);
   expect(model.eligibleReads).toBe(0);

@@ -72,13 +72,15 @@ for (const width of [390, 1440]) {
     });
     await page.goto('/admin/incidents');
     const section = page.locator('.admin-incidents');
-    await section.locator('summary').click();
+    await section.getByRole('button', { name: /^Xem sự cố / }).click();
     await expect(section.getByRole('link', { name: 'Mở ảnh minh chứng 1' })).toHaveAttribute(
       'rel',
       'noopener noreferrer',
     );
     await expect(section.locator('a[href^="javascript:"]')).toHaveCount(0);
-    await expect(section.getByText('Chế độ giám sát.', { exact: false })).toBeVisible();
+    await expect(
+      section.getByText('Phiếu đang được Quản lý vận hành xử lý.', { exact: true }),
+    ).toBeVisible();
     await expect(section.getByLabel('Kết quả kiểm tra và xử lý')).toHaveCount(0);
     await expect(section.getByRole('button', { name: 'Xác nhận đóng sự cố' })).toHaveCount(0);
     await expect(section.locator('form')).toHaveCount(0);
@@ -117,7 +119,7 @@ test('Admin recovers read errors and paginates without closing incidents', async
   await section.getByRole('button', { name: 'Trang sự cố sau' }).click();
   await expect(section.getByText('Trang 2', { exact: true })).toBeVisible();
   await section.getByRole('button', { name: 'Trang sự cố trước' }).click();
-  await section.locator('summary').click();
+  await section.getByRole('button', { name: /^Xem sự cố / }).click();
   await expect(
     section.getByText('Phiếu chưa có ảnh báo sự cố hoặc ảnh công việc được liên kết.'),
   ).toBeVisible();
@@ -141,7 +143,7 @@ test('Admin can read the resolved incident decision and time', async ({ page }) 
   await page.goto('/admin/incidents');
   const section = page.locator('.admin-incidents');
   await chooseOption(section.getByLabel('Trạng thái sự cố'), 'RESOLVED_FIXED');
-  await section.locator('summary').click();
+  await section.getByRole('button', { name: /^Xem sự cố / }).click();
   await expect(section.getByRole('heading', { name: 'Đã xử lý', exact: true })).toBeVisible();
   await expect(section.getByText(closed.decision)).toBeVisible();
   await expect(section.locator('form')).toHaveCount(0);
@@ -197,7 +199,7 @@ test('Admin opens staff task evidence URL and paginates incident evidence', asyn
 
   await page.goto('/admin/incidents');
   const section = page.locator('.admin-incidents');
-  await section.locator('summary').click();
+  await section.getByRole('button', { name: /^Xem sự cố / }).click();
   const link1 = section.getByRole('link', { name: 'Mở ảnh minh chứng 1' });
   await expect(link1).toHaveAttribute(
     'href',

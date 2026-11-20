@@ -1,4 +1,5 @@
 'use client';
+import { liveListOptions } from '@/shared/lib/live-list';
 
 import IconActionButton from '@/shared/components/IconActionButton';
 import { useId, useRef, useState } from 'react';
@@ -388,6 +389,7 @@ export default function AdminKioskRefunds({ session }: AdminKioskRefundsProps) {
 
   // Query: Refund queue scoped by identity
   const refundsQuery = useQuery({
+    ...liveListOptions(!selectedRefundId),
     queryKey: ['admin-kiosk-refunds', session.id],
     queryFn: () => request<AdminKioskRefundSummary[]>('/admin/kiosk-applications/refunds'),
   });
@@ -440,14 +442,16 @@ export default function AdminKioskRefunds({ session }: AdminKioskRefundsProps) {
         <span>
           Yêu cầu trong danh sách: <strong>{refundsQuery.isSuccess ? refunds.length : '—'}</strong>
         </span>
-        <IconActionButton
-          variant="outline"
-          className="refresh-btn"
-          onClick={() => void refundsQuery.refetch()}
-          disabled={refundsQuery.isFetching}
-          action="reload"
-          label="Làm mới"
-        />
+        {refundsQuery.isError && (
+          <IconActionButton
+            variant="outline"
+            className="refresh-btn"
+            onClick={() => void refundsQuery.refetch()}
+            disabled={refundsQuery.isFetching}
+            action="reload"
+            label="Làm mới"
+          />
+        )}
       </div>
 
       {refundsQuery.isLoading && (

@@ -107,7 +107,7 @@ export default function StaffEvidence({
   return (
     <details className="staff-evidence" onToggle={(event) => setOpen(event.currentTarget.open)}>
       <summary>Ảnh minh chứng công việc</summary>
-      <p className="staff-evidence-intro">Minh chứng để đối chiếu kết quả thực hiện tại tủ.</p>
+
       {evidence.isPending ? (
         <p role="status">Đang tải danh sách ảnh…</p>
       ) : evidence.isError ? (
@@ -179,8 +179,7 @@ export default function StaffEvidence({
         ) : active ? (
           <>
             <p className="staff-evidence-instruction">
-              Chọn và tải ảnh lên, sau đó bấm <strong>Gắn ảnh vào công việc</strong> để lưu vào báo
-              cáo.
+              Tải ảnh → <strong>Gắn ảnh vào công việc</strong>.
             </p>
             <EvidenceUpload
               key={`${version}:${uploadKey}`}
@@ -189,9 +188,7 @@ export default function StaffEvidence({
               disabled={busy}
               onReference={setReference}
             />
-            {reference && (
-              <p role="status">Ảnh đã tải lên, chưa gắn vào công việc. Bấm nút bên dưới để lưu.</p>
-            )}
+            {reference && <p role="status">Ảnh đã tải lên, chưa gắn vào công việc.</p>}
             <Button
               disabled={busy || !reference}
               onClick={() => void send({ id: crypto.randomUUID(), version, reference }, false)}
@@ -202,8 +199,8 @@ export default function StaffEvidence({
         ) : (
           <p>
             {taskStatus === 'SUBMITTED' || taskStatus === 'COMPLETED' || taskStatus === 'CANCELLED'
-              ? 'Công việc đã kết thúc bước thực hiện. Các ảnh đã gắn vẫn xem được ở danh sách trên.'
-              : 'Bắt đầu công việc để gửi ảnh. Ảnh đã lưu vẫn xem được sau khi gửi báo cáo.'}
+              ? 'Đã kết thúc bước thực hiện.'
+              : 'Bắt đầu công việc để gửi ảnh.'}
           </p>
         ))}
       {notice && <p role="status">{notice}</p>}

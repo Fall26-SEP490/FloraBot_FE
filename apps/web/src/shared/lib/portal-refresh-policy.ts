@@ -7,8 +7,9 @@ const sessionReads = /^(session|auth-config)$/;
 
 export function portalRefreshCandidate(query: Query, periodic = false): boolean {
   const root = String(query.queryKey[0] ?? '');
-  if (!query.isActive() || sessionReads.test(root)) return false;
+  if (!query.isActive() || sessionReads.test(root) || query.meta?.portalRefreshPaused) return false;
   if (!periodic) return true;
+  if (query.meta?.portalManagedRefresh) return false;
   if (query.state.fetchStatus !== 'idle') return false;
   if (staticReads.test(root)) return false;
   // A component polling its own state already has fresh data; do not fetch it twice.

@@ -196,10 +196,6 @@ export default function AdminReconciliation() {
   return (
     <section className="admin-reconciliation" aria-labelledby="reconciliation-title">
       <h2 id="reconciliation-title">Đối chiếu sổ cái và sao kê</h2>
-      <p>
-        So sánh sổ cái nội bộ và các khoản thu PAYOS với sao kê bạn cung cấp. Báo cáo chỉ chỉ ra
-        chênh lệch, không tạo khoản thu hay chuyển tiền.
-      </p>
       <div className="reconciliation-view-picker" role="group" aria-label="Chọn loại đối soát">
         <button
           type="button"
@@ -269,12 +265,6 @@ export default function AdminReconciliation() {
       <p id="reconciliation-error" role="alert" className="error">
         {error}
       </p>
-      {view === 'daily' && !daily && !busy && (
-        <div className="reconciliation-start">
-          <strong>Xem báo cáo theo ngày</strong>
-          <p>Chọn ngày đối soát rồi bấm “Xem báo cáo ngày” để tải số liệu.</p>
-        </div>
-      )}
       {view === 'daily' && daily && (
         <div className="reconciliation-report">
           <h3>Báo cáo ngày {date}</h3>
@@ -356,10 +346,6 @@ export default function AdminReconciliation() {
         }}
       >
         <h3>Đối soát sao kê PAYOS</h3>
-        <p className="quiet">
-          Chọn ngày → nhập giao dịch → kiểm tra sao kê → xem chênh lệch. Nội dung nhập được giữ khi
-          chuyển mục trong trang; bấm “Xóa dữ liệu trên màn hình” để xóa.
-        </p>
         {!review && (
           <>
             <div className="admin-segmented" role="group" aria-label="Cách nhập sao kê">

@@ -1,4 +1,5 @@
 'use client';
+import { liveListOptions } from '@/shared/lib/live-list';
 
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -19,6 +20,7 @@ export default function AdminPaymentChannels() {
   const [sellerId, setSellerId] = useState('');
   const [secretRef, setSecretRef] = useState('');
   const channels = useQuery({
+    ...liveListOptions(),
     queryKey: ['admin-payment-channels'],
     queryFn: () => request<Channel[]>('/admin/payment-channels'),
   });
@@ -101,14 +103,16 @@ export default function AdminPaymentChannels() {
             <h2 id="channel-list-title">Kênh đã cấu hình</h2>
             <p>Kiểm tra tài khoản nhận tiền và xác thực các kênh đang chờ.</p>
           </div>
-          <Button
-            variant="outline"
-            disabled={channels.isFetching}
-            onClick={() => void channels.refetch()}
-          >
-            <RefreshCw size={16} aria-hidden="true" />
-            {channels.isFetching ? 'Đang cập nhật…' : 'Cập nhật danh sách'}
-          </Button>
+          {channels.isError && (
+            <Button
+              variant="outline"
+              disabled={channels.isFetching}
+              onClick={() => void channels.refetch()}
+            >
+              <RefreshCw size={16} aria-hidden="true" />
+              {channels.isFetching ? 'Đang cập nhật…' : 'Cập nhật danh sách'}
+            </Button>
+          )}
         </div>
         {verify.isSuccess && (
           <p className="admin-channel-feedback" role="status">

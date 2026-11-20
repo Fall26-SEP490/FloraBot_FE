@@ -12,6 +12,7 @@ import { InstallationActionCards } from './InstallationActionCards';
 
 interface InstallationDetailsProps {
   appId: string;
+  inDialog?: boolean;
   session: Session;
   isManager: boolean;
   onClose: () => void;
@@ -22,6 +23,7 @@ interface InstallationDetailsProps {
 
 export function InstallationDetails({
   appId,
+  inDialog = false,
   session,
   isManager,
   onClose,
@@ -95,10 +97,10 @@ export function InstallationDetails({
   const activeStep = appDetail ? getOperationsActiveStep(appDetail.status, needsSchedule) : -1;
 
   useEffect(() => {
-    if (!appDetail?.id) return;
+    if (!appDetail?.id || inDialog) return;
     panelRef.current?.focus({ preventScroll: true });
     panelRef.current?.scrollIntoView({ block: 'start' });
-  }, [appDetail?.id]);
+  }, [appDetail?.id, inDialog]);
 
   return (
     <section
@@ -110,7 +112,6 @@ export function InstallationDetails({
     >
       <div className="detail-panel-header">
         <div>
-          {!isManager && <span className="installation-eyebrow">Hồ sơ triển khai kiosk</span>}
           <span className="kiosk-status-pill" data-status={appDetail?.status}>
             {appDetail ? KIOSK_STATUS_LABELS[appDetail.status] || appDetail.status : 'Đang tải...'}
           </span>
@@ -118,14 +119,16 @@ export function InstallationDetails({
             {appDetail ? `Chi tiết: ${appDetail.shopName}` : 'Đang tải hồ sơ...'}
           </h2>
         </div>
-        <button
-          type="button"
-          className="kiosk-modal-close"
-          onClick={onClose}
-          aria-label="Đóng chi tiết"
-        >
-          <X size={20} aria-hidden="true" />
-        </button>
+        {!inDialog && (
+          <button
+            type="button"
+            className="kiosk-modal-close"
+            onClick={onClose}
+            aria-label="Đóng chi tiết"
+          >
+            <X size={20} aria-hidden="true" />
+          </button>
+        )}
       </div>
 
       {actionSuccess && (

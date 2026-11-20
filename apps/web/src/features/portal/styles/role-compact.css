@@ -63,6 +63,13 @@
       width: 78px;
       box-sizing: border-box;
       z-index: 30;
+      overflow-x: clip;
+      transition:
+        width 200ms ease,
+        box-shadow 200ms ease;
+      @media (prefers-reduced-motion: reduce) {
+        transition: none;
+      }
     }
     & .role-sidebar-expanded {
       width: 258px;
@@ -109,4 +116,76 @@
       flex: none;
     }
   }
+}
+
+/* Keep menu targets in the same place while the icon rail expands on hover. */
+.workspace-portal-root.platform-workspace[data-platform-role]:is(
+    [data-platform-role='admin'],
+    [data-platform-role='operations'],
+    [data-platform-role='technician']
+  ) {
+  @media (min-width: 901px) {
+    & .workspace-sidebar nav a {
+      height: 44px;
+      min-height: 44px;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      white-space: nowrap;
+    }
+    & .workspace-sidebar :is(.admin-nav-search, .manager-nav-search) {
+      display: flex;
+      height: 44px;
+      min-height: 44px;
+      box-sizing: border-box;
+      margin-block: 10px;
+    }
+    & .role-sidebar-collapsed :is(.admin-nav-search, .manager-nav-search) {
+      justify-content: center;
+      padding: 10px;
+      background: transparent;
+      border-color: transparent;
+    }
+    & .role-sidebar-collapsed :is(.admin-nav-search, .manager-nav-search) input {
+      display: none;
+    }
+    & .workspace-sidebar .workspace-nav-group {
+      margin-block: 10px;
+      padding: 0;
+      border: 0;
+    }
+    & .workspace-sidebar .workspace-nav-group > :is(summary, p) {
+      display: flex;
+      align-items: center;
+      height: 28px;
+      min-height: 28px;
+      margin: 0;
+      padding: 0;
+      white-space: nowrap;
+      box-sizing: border-box;
+    }
+    & .role-sidebar-collapsed .workspace-nav-group > :is(summary, p) {
+      visibility: hidden;
+    }
+  }
+}
+
+.workspace-portal-root .repair-readiness-panel {
+  padding: 16px;
+  margin-block: 16px;
+  border: 1px solid #dbe7de;
+  border-radius: 10px;
+  background: #f7faf7;
+}
+.workspace-portal-root .repair-readiness-panel h4 {
+  margin: 0 0 8px;
+}
+
+.workspace-portal-root .repair-readiness-panel[data-blocked='true'] {
+  border-color: #e5cf95;
+  background: #fffaf0;
+}
+.workspace-portal-root .repair-readiness-panel[data-blocked='true'] p[role='status'] {
+  background: #fff3d9;
+  border-color: #e5cf95;
+  color: #785317;
 }

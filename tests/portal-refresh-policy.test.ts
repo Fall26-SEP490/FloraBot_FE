@@ -38,6 +38,15 @@ describe('Portal refresh scheduling', () => {
       expect(portalRefreshCandidate(query(root), true)).toBe(false);
     }
   });
+  it('respects paused forms and avoids polling lists with their own timer twice', () => {
+    const managed = query('staff-tasks');
+    Object.assign(managed, { meta: { portalManagedRefresh: true, portalRefreshPaused: false } });
+    expect(portalRefreshCandidate(managed, true)).toBe(false);
+    expect(portalRefreshCandidate(managed)).toBe(true);
+    Object.assign(managed, { meta: { portalManagedRefresh: true, portalRefreshPaused: true } });
+    expect(portalRefreshCandidate(managed, true)).toBe(false);
+    expect(portalRefreshCandidate(managed)).toBe(false);
+  });
   it('retains fallback for operational queries without duplicating their own polling', () => {
     vi.useFakeTimers();
     vi.setSystemTime(100_000);

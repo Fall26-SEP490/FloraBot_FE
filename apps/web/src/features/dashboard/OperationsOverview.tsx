@@ -1,4 +1,5 @@
 'use client';
+import { liveListOptions } from '@/shared/lib/live-list';
 
 import Link from 'next/link';
 import { useQueries, useQuery } from '@tanstack/react-query';
@@ -31,12 +32,14 @@ const stages = [
 export default function OperationsOverview({ session }: { session: Session }) {
   const enabled = session.role === 'OPERATIONS_MANAGER';
   const applications = useQuery({
+    ...liveListOptions(),
     queryKey: ['operations-kiosk-applications', session.id, 'overview'],
     queryFn: () => request<KioskApplicationPage>('/operations/kiosk-applications?page=1&limit=5'),
     enabled,
   });
   const counts = useQueries({
     queries: stages.map(({ status }) => ({
+      ...liveListOptions(),
       queryKey: ['operations-kiosk-applications', session.id, 'workbench', status],
       enabled,
       queryFn: ({ signal }: { signal: AbortSignal }) =>
@@ -50,6 +53,7 @@ export default function OperationsOverview({ session }: { session: Session }) {
     })),
   });
   const reports = useQuery({
+    ...liveListOptions(),
     queryKey: ['staff-tasks', 'OPERATIONS_MANAGER', session.id, 'overview-submitted'],
     enabled,
     queryFn: ({ signal }) =>
@@ -62,11 +66,13 @@ export default function OperationsOverview({ session }: { session: Session }) {
       ),
   });
   const technicians = useQuery({
+    ...liveListOptions(),
     queryKey: ['account-directory', 'TECHNICIAN', 'platform', '/operations/technicians'],
     queryFn: () => request<AccountDirectoryItem[]>('/operations/technicians'),
     enabled,
   });
   const kiosks = useQuery({
+    ...liveListOptions(),
     queryKey: ['eligible-kiosks', session.id, 'overview'],
     queryFn: () => request<EligibleKioskResponse[]>('/operations/eligible-kiosks'),
     enabled,
@@ -125,7 +131,6 @@ export default function OperationsOverview({ session }: { session: Session }) {
             <div className="operations-empty">
               <Store size={26} aria-hidden="true" />
               <h3>Chưa có hồ sơ thuê kiosk</h3>
-              <p>Hồ sơ mới sẽ xuất hiện tại đây.</p>
             </div>
           )}
           {applications.isSuccess && (
@@ -181,21 +186,22 @@ export default function OperationsOverview({ session }: { session: Session }) {
               })}
             </ul>
           )}
-          <p className="manager-count-note">Hiển thị tối đa 5 hồ sơ gần nhất.</p>
         </section>
         <aside className="manager-overview-side" aria-label="Hàng đợi và nguồn lực">
           <section className="manager-workbench" aria-labelledby="manager-work-title">
             <div className="manager-section-heading">
               <h2 id="manager-work-title">Việc cần xử lý</h2>
-              <Button
-                variant="outline"
-                aria-label="Làm mới"
-                disabled={queries.some((query) => query.isFetching)}
-                onClick={() => queries.forEach((query) => void query.refetch())}
-              >
-                <RefreshCw size={16} aria-hidden="true" />
-                <span className="sr-only">Làm mới</span>
-              </Button>
+              {queries.some((query) => query.isError) && (
+                <Button
+                  variant="outline"
+                  aria-label="Làm mới"
+                  disabled={queries.some((query) => query.isFetching)}
+                  onClick={() => queries.forEach((query) => void query.refetch())}
+                >
+                  <RefreshCw size={16} aria-hidden="true" />
+                  <span className="sr-only">Làm mới</span>
+                </Button>
+              )}
             </div>
             {queueClear && (
               <p className="manager-queue-clear" role="status">

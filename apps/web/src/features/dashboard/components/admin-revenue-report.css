@@ -93,3 +93,49 @@
     padding: 16px;
   }
 }
+
+/* Keep the controls visible and aligned within the shared role workspace. */
+.workspace-portal-root .admin-revenue-filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 16px 20px;
+  padding: 18px;
+  border: 1px solid #dbe7de;
+  border-radius: 12px;
+  background: #f7faf7;
+}
+.workspace-portal-root .admin-revenue-filters > div {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+}
+.workspace-portal-root .admin-revenue-filters label {
+  margin: 0;
+}
+.workspace-portal-root .admin-revenue-filters :is(input, select) {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.workspace-portal-root .admin-revenue-filters nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.workspace-portal-root .admin-revenue-filters > button {
+  justify-self: start;
+}
+.admin-revenue-applied-period {
+  color: #576d60;
+  font-size: 12px;
+}
+@media (max-width: 600px) {
+  .workspace-portal-root .admin-revenue-filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

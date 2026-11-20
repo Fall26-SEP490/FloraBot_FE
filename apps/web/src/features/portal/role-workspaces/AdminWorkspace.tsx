@@ -150,13 +150,6 @@ export default function AdminWorkspace({ section = 'overview' }: { section?: str
                   ? 'Tổng quan quản trị'
                   : workspaceSections['ADMIN'].find(([key]) => key === section)?.[1]}
               </h1>
-              <p>
-                {section === 'overview'
-                  ? 'Chào ' +
-                    session.data.name +
-                    '. Xem yêu cầu cần xử lý và theo dõi vận hành tại đây.'
-                  : workspaceSections['ADMIN'].find(([key]) => key === section)?.[2]}
-              </p>
             </div>
             {section === 'overview' && (
               <Link className="button button-primary" href="/admin/approvals">

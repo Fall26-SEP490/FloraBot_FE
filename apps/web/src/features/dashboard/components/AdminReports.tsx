@@ -1,4 +1,5 @@
 'use client';
+import { liveListOptions } from '@/shared/lib/live-list';
 
 /* eslint-disable jsx-a11y/no-noninteractive-tabindex -- Scrollable report regions need keyboard focus for horizontal scrolling. */
 
@@ -372,6 +373,7 @@ export default function AdminReports({ session }: { session: Session }) {
   const financial = isRevenueReport(report);
   const config = reports[report];
   const query = useQuery({
+    ...liveListOptions(),
     queryKey: ['admin-reports', session.id, report],
     queryFn: async () => {
       const rows = await request<ReportRow[]>(`/admin/reports/${report}`);
@@ -420,7 +422,8 @@ export default function AdminReports({ session }: { session: Session }) {
           <AdminFilterBar
             label="Loại báo cáo"
             actions={
-              !financial && (
+              !financial &&
+              query.isError && (
                 <Button
                   variant="outline"
                   disabled={query.isFetching}

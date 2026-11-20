@@ -1,0 +1,352 @@
+/* Scope the account register to this page; other directories keep their layout. */
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page {
+  padding: 22px;
+  border: 1px solid #d8e4dc;
+  border-radius: 16px;
+  background: #fff;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page
+  .platform-directory-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page
+  h2 {
+  margin: 0;
+  font-size: 18px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page
+  .platform-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) repeat(2, minmax(0, 1fr));
+  align-items: end;
+  gap: 14px;
+  margin: 0 0 20px;
+  padding: 16px;
+  border: 1px solid #dde7df;
+  border-radius: 12px;
+  background: #f6f9f6;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page
+  .platform-tools
+  label {
+  margin: 0 0 7px;
+  font-size: 12px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page
+  .platform-tools
+  :is(input, select) {
+  box-sizing: border-box;
+  min-height: 44px;
+  font-size: 13px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page
+  .platform-filter-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page
+  .management-table-wrap {
+  width: 100%;
+  max-width: 100%;
+  max-height: none;
+  overflow: visible;
+  border: 1px solid #d5e2d9;
+  border-radius: 10px;
+  padding: 0;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page
+  .management-table {
+  display: table;
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 12px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page
+  .management-table
+  thead {
+  display: table-header-group;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page
+  .management-table
+  tbody {
+  display: table-row-group;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page
+  .management-table
+  tr {
+  display: table-row;
+  border: 0;
+  box-shadow: none;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page
+  .management-table
+  :is(th, td) {
+  display: table-cell;
+  min-width: 0;
+  padding: 14px 10px;
+  border: 0;
+  border-right: 1px solid #e1e9e3;
+  border-bottom: 1px solid #e1e9e3;
+  text-align: left;
+  vertical-align: middle;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page
+  .management-table
+  th {
+  position: static;
+  background: #eaf2ec;
+  color: #234735;
+  font-size: 12px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page
+  .management-table
+  td::before {
+  display: none;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page
+  .management-table
+  :is(th, td):nth-child(1) {
+  width: 35%;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page
+  .management-table
+  :is(th, td):nth-child(2) {
+  width: 16%;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page
+  .management-table
+  :is(th, td):nth-child(3) {
+  width: 16%;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page
+  .management-table
+  :is(th, td):nth-child(4) {
+  width: 20%;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page
+  .management-table
+  :is(th, td):nth-child(5) {
+  width: 13%;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page
+  .management-table
+  :is(th, td):last-child {
+  border-right: 0;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page
+  .management-table
+  tbody
+  tr:nth-child(even) {
+  background: #f7faf7;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page
+  .management-table
+  tbody
+  tr:hover {
+  background: #edf5ed;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page
+  .platform-identity {
+  gap: 10px;
+  min-width: 0;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page
+  .platform-identity
+  > div {
+  min-width: 0;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page
+  .platform-identity-avatar {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  font-size: 12px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page
+  .platform-identity-secondary {
+  margin-top: 4px;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page
+  .management-table
+  button {
+  min-width: 0;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+.admin-account-role {
+  color: #385b49;
+  font-weight: 600;
+}
+.admin-account-bank strong,
+.admin-account-bank small {
+  display: block;
+  font-size: 12px;
+}
+.admin-account-bank small {
+  margin-top: 4px;
+  color: #67796d;
+}
+.admin-account-profile-dialog .platform-management {
+  padding: 8px 20px 20px;
+}
+.admin-account-profile-dialog .platform-profile-hero {
+  padding-bottom: 18px;
+  border-bottom: 1px solid #e1e9e3;
+}
+.admin-account-profile-dialog .management-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 24px;
+  margin-block: 8px 20px;
+}
+.admin-account-profile-dialog .management-details > div {
+  min-width: 0;
+  padding: 12px 0;
+  border-bottom: 1px solid #e8eee9;
+}
+.admin-account-profile-dialog .management-details dt {
+  color: #67796d;
+  font-size: 12px;
+}
+.admin-account-profile-dialog .management-details dd {
+  margin: 5px 0 0;
+  font-size: 14px;
+}
+@media (max-width: 640px) {
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    .admin-accounts-page {
+    padding: 14px;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    .admin-accounts-page
+    .platform-tools {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    .admin-accounts-page
+    .management-table-wrap {
+    overflow-x: auto;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='admin']
+    main.admin-content
+    .admin-accounts-page
+    .management-table {
+    min-width: 600px;
+  }
+  .admin-account-profile-dialog .management-details {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page
+  .management-table
+  thead {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip: auto;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page
+  .management-table
+  tbody {
+  padding: 0;
+  gap: 0;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page
+  .management-table
+  td[data-label='Thao tác'] {
+  display: table-cell;
+  border-top: 0;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  main.admin-content
+  .admin-accounts-page
+  .management-table
+  .management-table-empty {
+  display: table-cell !important;
+  text-align: center;
+  padding: 24px;
+}

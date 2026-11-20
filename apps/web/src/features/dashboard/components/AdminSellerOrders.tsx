@@ -1,3 +1,4 @@
+import { liveListOptions } from '@/shared/lib/live-list';
 /* eslint-disable jsx-a11y/no-noninteractive-tabindex -- Scrollable report regions need keyboard focus for horizontal scrolling. */
 import Select from '@/shared/components/Select';
 import { useState } from 'react';
@@ -177,6 +178,7 @@ export default function AdminSellerOrders({
     ...(status ? { status } : {}),
   });
   const orders = useQuery({
+    ...liveListOptions(!selected),
     queryKey: ['admin-seller-orders', actorId, sellerId, from, to, kioskId, status, page],
     queryFn: () => request<Page>(`/admin/sellers/${sellerId}/orders?${params}`),
   });

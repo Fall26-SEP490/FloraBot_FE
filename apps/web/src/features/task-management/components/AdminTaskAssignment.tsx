@@ -434,16 +434,18 @@ export default function AdminTaskAssignment({
               >
                 {attempt ? 'Kiểm tra phân công' : 'Phân công mới'}
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                aria-label="Làm mới sự cố"
-                title="Làm mới sự cố"
-                disabled={incidents.isFetching || Boolean(attempt)}
-                onClick={() => void incidents.refetch()}
-              >
-                <RefreshCw size={16} aria-hidden="true" />
-              </Button>
+              {incidents.isError && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  aria-label="Làm mới sự cố"
+                  title="Làm mới sự cố"
+                  disabled={incidents.isFetching || Boolean(attempt)}
+                  onClick={() => void incidents.refetch()}
+                >
+                  <RefreshCw size={16} aria-hidden="true" />
+                </Button>
+              )}
             </div>
           </div>
           <div className="manager-inbox-tools">

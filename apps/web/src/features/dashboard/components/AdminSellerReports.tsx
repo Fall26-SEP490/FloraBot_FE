@@ -1,3 +1,5 @@
+import { liveListOptions } from '@/shared/lib/live-list';
+import WorkspaceTable from '@/features/portal/components/WorkspaceTable';
 /* eslint-disable jsx-a11y/no-noninteractive-tabindex -- The scrollable lease table supports keyboard navigation. */
 
 import Select from '@/shared/components/Select';
@@ -87,6 +89,7 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
   const [page, setPage] = useState(1);
   const [leasePage, setLeasePage] = useState(1);
   const kiosks = useQuery({
+    ...liveListOptions(),
     queryKey: ['admin-seller-report-kiosks', actorId, seller.id],
     queryFn: () => request<Kiosk[]>(`/admin/sellers/${seller.id}/report-kiosks`),
   });
@@ -97,6 +100,7 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
       : {},
   );
   const sales = useQuery({
+    ...liveListOptions(),
     queryKey: ['admin-seller-sales', actorId, seller.id, filter],
     queryFn: () => request<Sales>(`/sellers/${seller.id}/reports/sales?${params}`),
     enabled: tab === 'sales' && !!filter,
@@ -109,6 +113,7 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
     ...(paymentStatus ? { status: paymentStatus } : {}),
   });
   const payments = useQuery({
+    ...liveListOptions(),
     queryKey: [
       'admin-seller-payments',
       actorId,
@@ -122,6 +127,7 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
     enabled: tab === 'payments' && !!filter,
   });
   const leases = useQuery({
+    ...liveListOptions(),
     queryKey: ['admin-seller-leases', actorId, seller.id, leasePage],
     queryFn: () => request<Leases>(`/sellers/${seller.id}/subscriptions?page=${leasePage}`),
     enabled: tab === 'leases',
@@ -324,9 +330,9 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
                   <dd>{sales.data.paidOrders.toLocaleString('vi-VN')}</dd>
                 </div>
               </dl>
-              <div className="reports-table-wrap">
+              <WorkspaceTable label="Bảng báo cáo shop">
                 <table>
-                  <caption>Doanh số theo kiosk trong kỳ đã chọn</caption>
+                  <caption className="sr-only">Doanh số theo kiosk</caption>
                   <thead>
                     <tr>
                       <th>Kiosk</th>
@@ -340,13 +346,13 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
                         <td>
                           {kiosk.kioskCode} · {kiosk.kioskName}
                         </td>
-                        <td>{money(kiosk.grossPaid)}</td>
-                        <td>{kiosk.orderCount.toLocaleString('vi-VN')}</td>
+                        <td className="table-number">{money(kiosk.grossPaid)}</td>
+                        <td className="table-number">{kiosk.orderCount.toLocaleString('vi-VN')}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </WorkspaceTable>
               {!sales.data.byKiosk.length && <p>Không có dữ liệu kiosk trong kỳ này.</p>}
             </>
           )}
@@ -395,11 +401,9 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
             </div>
           ) : (
             <>
-              <div className="reports-table-wrap">
+              <WorkspaceTable label="Bảng báo cáo shop">
                 <table>
-                  <caption>
-                    Giao dịch của shop · Trang {page} · Tổng {payments.data.totalCount}
-                  </caption>
+                  <caption className="sr-only">Giao dịch thanh toán</caption>
                   <thead>
                     <tr>
                       <th>Mã giao dịch</th>
@@ -417,13 +421,17 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
                           <br />
                           {item.paidAt ? date(item.paidAt) : 'Chưa ghi nhận thu tiền'}
                         </td>
-                        <td>{money(item.amount)}</td>
-                        <td>{states[item.status] || item.status}</td>
+                        <td className="table-number">{money(item.amount)}</td>
+                        <td>
+                          <span className="table-badge" data-state={item.status}>
+                            {states[item.status] || item.status}
+                          </span>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </WorkspaceTable>
               {!payments.data.payments.length && <p>Không có giao dịch khớp bộ lọc.</p>}
               <nav className="stock-actions" aria-label="Phân trang giao dịch seller">
                 <Button
@@ -448,13 +456,6 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
       )}
       {tab === 'leases' && (
         <>
-          <Button
-            variant="outline"
-            disabled={leases.isFetching}
-            onClick={() => void leases.refetch()}
-          >
-            {leases.isFetching ? 'Đang tải…' : 'Cập nhật kỳ thuê'}
-          </Button>
           {leases.isPending ? (
             <p role="status">Đang tải lịch sử thuê…</p>
           ) : leases.isError ? (

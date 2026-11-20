@@ -85,17 +85,15 @@ for (const width of [390, 1440]) {
     await expect(page.getByText('Không có hồ sơ phù hợp với bộ lọc hiện tại.')).toBeVisible();
     await page.getByLabel('Tìm tên shop hoặc số điện thoại').fill('');
     await chooseOption(page.getByLabel('Lọc trạng thái shop'), 'ACTIVE');
-    await expect(page.locator('.admin-shop-list li')).toHaveCount(1);
-    await page.locator('.admin-shop-list summary').click();
-    await expect(page.locator('.shop-profile')).toContainText('7/11/2027');
+    const shopTable = page.getByRole('region', { name: 'Danh sách shop hoa', exact: true });
+    await expect(shopTable.locator('tbody tr')).toHaveCount(1);
+    await expect(shopTable).toContainText('7/11/2027');
     await chooseOption(page.getByLabel('Lọc trạng thái shop'), 'PENDING');
-    await page.locator('.admin-shop-list summary').click();
-    await expect(page.locator('.shop-profile')).toContainText(
-      'Chưa có kỳ thuê kiosk đang hiệu lực',
+    await expect(shopTable.getByRole('cell', { name: '—', exact: true })).toBeVisible();
+    await expect(shopTable.getByRole('link', { name: 'Hồ sơ thuê', exact: true })).toHaveAttribute(
+      'href',
+      '/admin/installations',
     );
-    await expect(
-      page.locator('.shop-profile').getByRole('link', { name: 'Hồ sơ thuê kiosk' }),
-    ).toHaveAttribute('href', '/admin/installations');
     await expect(page.getByRole('button', { name: 'Duyệt hồ sơ shop' })).toHaveCount(0);
     expect(
       (

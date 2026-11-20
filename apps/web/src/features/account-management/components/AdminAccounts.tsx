@@ -5,6 +5,7 @@ import { Button } from '@florabot/ui';
 import { request, type Session } from '@/shared/lib/api';
 import { Modal } from '../../../shared/components/Modal';
 import { DataTable } from '../../../shared/components/DataTable';
+import '../styles/admin-accounts.css';
 import type {
   AdminAccountSummary as Summary,
   AdminAccountProfileResponse as Detail,
@@ -82,7 +83,13 @@ function SensitiveProfile({
     };
   }, [id, actorId, version]);
   return (
-    <Modal open title="Hồ sơ tài khoản hệ thống" onClose={close}>
+    <Modal
+      open
+      title="Hồ sơ tài khoản"
+      onClose={close}
+      size="lg"
+      className="admin-account-profile-dialog"
+    >
       <div className="platform-management">
         <LoadState pending={loading} error={error || null} retry={reload}>
           {!profile && !error && (
@@ -196,18 +203,21 @@ function SensitiveProfile({
 }
 
 export default function AdminAccounts({ session }: { session: Session }) {
-  const d = useDirectory<Summary>(session, '/admin/accounts', 'ADMIN');
   const [selected, setSelected] = useState<string | null>(null);
+  const d = useDirectory<Summary>(session, '/admin/accounts', 'ADMIN', selected === null);
   if (session.role !== 'ADMIN') return <p role="alert">Hồ sơ toàn hệ thống dành cho Admin.</p>;
   return (
-    <section className="platform-management" aria-labelledby="admin-accounts-title">
+    <section
+      className="platform-management admin-accounts-page"
+      aria-labelledby="admin-accounts-title"
+    >
       <DirectoryHeading
         id="admin-accounts-title"
-        title="Danh bạ tài khoản"
-        description="Tra cứu theo vai trò, trạng thái và thông tin liên hệ."
+        title="Danh sách tài khoản"
+
         count={d.query.data?.items.length}
       />
-      <DirectoryTools directory={d} roles />
+      <DirectoryTools directory={d} roles showRefresh={false} />
       <LoadState
         pending={d.query.isPending}
         error={d.query.error}
@@ -226,15 +236,26 @@ export default function AdminAccounts({ session }: { session: Session }) {
                 <DirectoryIdentity name={row.fullName} secondary={row.email || 'Chưa có email'} />
               ),
             },
-            { key: 'role', header: 'Vai trò', render: (row) => roleLabels[row.role] ?? row.role },
+            {
+              key: 'role',
+              header: 'Vai trò',
+              render: (row) => (
+                <span className="admin-account-role">{roleLabels[row.role] ?? row.role}</span>
+              ),
+            },
             { key: 'status', header: 'Trạng thái', render: (row) => <Status value={row.status} /> },
             {
               key: 'bank',
               header: 'Ngân hàng cá nhân',
               render: (row) =>
-                row.bank
-                  ? `${row.bank.bankName || 'Ngân hàng'} · ••••${row.bank.accountLast4 || ''}`
-                  : 'Chưa có',
+                row.bank ? (
+                  <span className="admin-account-bank">
+                    <strong>{row.bank.bankName || 'Ngân hàng'}</strong>
+                    <small>••••{row.bank.accountLast4 || ''}</small>
+                  </span>
+                ) : (
+                  'Chưa có'
+                ),
             },
             {
               key: 'actions',

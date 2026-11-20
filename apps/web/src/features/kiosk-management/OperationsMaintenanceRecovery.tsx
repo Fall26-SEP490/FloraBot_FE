@@ -1,3 +1,4 @@
+import { liveListOptions } from '@/shared/lib/live-list';
 import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
 import { useCallback, useState, type FormEvent } from 'react';
@@ -228,6 +229,7 @@ export default function OperationsMaintenanceRecovery({ managerId }: { managerId
   const close = useCallback(() => setSelected(undefined), []);
   const queryKey = ['operations-maintenance-recoveries', managerId] as const;
   const recoveries = useQuery({
+    ...liveListOptions(!selected),
     queryKey: [...queryKey, page],
     queryFn: () => request<RecoveryPage>(`/operations/maintenance-recoveries?page=${page}`),
   });
@@ -239,13 +241,15 @@ export default function OperationsMaintenanceRecovery({ managerId }: { managerId
     >
       <div className="business-heading">
         <h2 id="maintenance-recovery-title">Phiên cần xác minh</h2>
-        <IconActionButton
-          variant="outline"
-          disabled={recoveries.isFetching}
-          onClick={() => void recoveries.refetch()}
-          action="reload"
-          label="Làm mới"
-        />
+        {recoveries.isError && (
+          <IconActionButton
+            variant="outline"
+            disabled={recoveries.isFetching}
+            onClick={() => void recoveries.refetch()}
+            action="reload"
+            label="Làm mới"
+          />
+        )}
       </div>
 
       {notice && <p role="status">{notice}</p>}

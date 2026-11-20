@@ -22,17 +22,18 @@ export default function AdminApprovalCenter({ actorId }: { actorId: string }) {
         <div className="admin-section-heading">
           <div>
             <h2 id="approval-center-title">Admin cần xử lý</h2>
-            <p>Chọn loại yêu cầu để kiểm tra hồ sơ và thực hiện bước tiếp theo.</p>
           </div>
-          <Button
-            variant="outline"
-            disabled={busy}
-            data-busy={busy}
-            onClick={() => void Promise.all(rows.map(({ query }) => query.refetch()))}
-          >
-            <RefreshCw size={16} aria-hidden="true" />
-            {busy ? 'Đang cập nhật…' : 'Cập nhật danh sách'}
-          </Button>
+          {rows.some(({ query }) => query.isError) && (
+            <Button
+              variant="outline"
+              disabled={busy}
+              data-busy={busy}
+              onClick={() => void Promise.all(rows.map(({ query }) => query.refetch()))}
+            >
+              <RefreshCw size={16} aria-hidden="true" />
+              {busy ? 'Đang cập nhật…' : 'Cập nhật danh sách'}
+            </Button>
+          )}
         </div>
         <div className="admin-queue-toolbar">
           <div className="admin-segmented" role="group" aria-label="Hiển thị yêu cầu cần xử lý">
@@ -59,9 +60,6 @@ export default function AdminApprovalCenter({ actorId }: { actorId: string }) {
           {visibleReviewRows.length === 0 && (
             <div className="admin-calm-empty" role="status">
               <h3>Chưa có yêu cầu cần xử lý</h3>
-              <p>
-                Các danh sách vừa tải đều trống. Chọn “Tất cả” để mở từng mục hoặc cập nhật lại.
-              </p>
             </div>
           )}
         </div>
@@ -73,7 +71,6 @@ export default function AdminApprovalCenter({ actorId }: { actorId: string }) {
         <div className="admin-section-heading">
           <div>
             <h2 id="admin-monitor-title">Theo dõi vận hành</h2>
-            <p>Theo dõi sự cố và hồ sơ thuê. Quản lý vận hành phụ trách xếp lịch và bàn giao.</p>
           </div>
         </div>
         <div className="admin-queue-list">

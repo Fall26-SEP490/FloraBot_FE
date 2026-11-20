@@ -80,7 +80,7 @@ for (const admin of [false, true])
       });
     });
     await page.goto(admin ? '/admin/tasks' : '/staff');
-    if (admin) await page.locator('.manager-task-details > summary').click();
+    if (admin) await page.getByRole('button', { name: /^Xem công việc / }).click();
     if (!admin) {
       await page.getByText('Lịch sử công việc', { exact: true }).click();
       await page.getByRole('button', { name: 'Xem báo cáo' }).click();

@@ -190,7 +190,7 @@ test('Admin can inspect applications without manager mutations or directory quer
   });
   const writes = await setup(page, { role: 'ADMIN' });
   await page.goto(`/operations/installations?application=${application.id}`);
-  await expect(page.getByText('Chế độ giám sát (Admin)')).toBeVisible();
+  await expect(page.getByText('Chỉ xem · Manager phụ trách xử lý và bàn giao.')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Lưu lịch & Phân công' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Thêm tủ mới', exact: true })).toHaveCount(0);
   expect(requests).not.toContain('/api/operations/technicians');
@@ -514,7 +514,7 @@ test('Manager assigns dismantling technician, confirms handover without mandator
   await expect(page.getByRole('button', { name: 'Lưu trữ tủ K-HCM-06' })).toHaveCount(0);
   await page.reload();
   await page.getByRole('button', { name: 'Mở hồ sơ K-HCM-06', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Đã ngừng sử dụng và lưu trữ tủ' })).toBeVisible();
+  await expect(page.getByText('Lịch sử được giữ lại.', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Lưu trữ tủ K-HCM-06' })).toHaveCount(0);
   expect(archived).toBe(true);
 });

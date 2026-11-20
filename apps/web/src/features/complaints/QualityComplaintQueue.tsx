@@ -1,4 +1,5 @@
 'use client';
+import { liveListOptions } from '@/shared/lib/live-list';
 
 import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
@@ -473,6 +474,7 @@ function QualityComplaintList({
   const [page, setPage] = useState(1);
   const [state, setState] = useState('REFUND_REVIEW');
   const queue = useQuery({
+    ...liveListOptions(),
     queryKey: ['quality-queue', root, undefined, state, page],
     queryFn: () =>
       request<QualitySchema['QualityComplaintPage']>(
@@ -508,19 +510,21 @@ function QualityComplaintList({
             ))}
           </Select>
         </label>
-        <IconActionButton
-          type="button"
-          variant="outline"
-          disabled={queue.isFetching}
-          onClick={() => void queue.refetch()}
-          action="reload"
-          label="Làm mới hồ sơ"
-        />
+        {queue.isError && (
+          <IconActionButton
+            type="button"
+            variant="outline"
+            disabled={queue.isFetching}
+            onClick={() => void queue.refetch()}
+            action="reload"
+            label="Làm mới hồ sơ"
+          />
+        )}
       </div>
       {queue.isPending ? (
         <p role="status">Đang tải phản ánh…</p>
       ) : queue.isError ? (
-        <p role="alert">Chưa tải được danh sách phản ánh. Chọn “Làm mới hồ sơ” để thử lại.</p>
+        <p role="alert">Chưa tải được danh sách phản ánh.</p>
       ) : (
         <>
           {!queue.data.items.length && <p>Chưa có phản ánh ở trạng thái này.</p>}

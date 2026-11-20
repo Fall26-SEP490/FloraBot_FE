@@ -159,7 +159,9 @@ for (const width of [390, 1440]) {
     );
     await leases.getByRole('link', { name: 'Hồ sơ thuê kiosk mới' }).click();
     await expect(page).toHaveURL(/\/admin\/installations$/);
-    await expect(page.getByText('Chế độ giám sát (Admin)', { exact: true })).toBeVisible();
+    await expect(
+      page.getByText('Chỉ xem · Manager phụ trách xử lý và bàn giao.', { exact: true }),
+    ).toBeVisible();
     expect(
       await page
         .getByRole('button', { name: 'Chờ xác nhận', exact: true })

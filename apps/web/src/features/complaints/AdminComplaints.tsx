@@ -1,3 +1,4 @@
+import { liveListOptions } from '@/shared/lib/live-list';
 import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
 import { AdminFilterBar, AdminDisclosureSummary } from '@/features/portal/components/AdminUi';
@@ -138,10 +139,7 @@ function Complaint({
                   ))}
                 </ul>
                 <h3>Ảnh khách cung cấp</h3>
-                <p className="quiet">
-                  Liên kết chưa được xác minh nội dung; mở ở tab mới. Đối chiếu ảnh và thông tin đơn
-                  trước khi quyết định.
-                </p>
+                <p className="quiet">Ảnh mở ở tab mới; cần đối chiếu trước khi xử lý.</p>
                 {detail.data.evidence.items.length === 0 ? (
                   <p>Chưa có ảnh minh chứng.</p>
                 ) : (
@@ -311,6 +309,7 @@ export default function AdminComplaints() {
     if (notice) noticeRef.current?.focus();
   }, [notice]);
   const queue = useQuery({
+    ...liveListOptions(),
     queryKey: ['admin-complaints', status, page],
     queryFn: () => request<Queue>(`/admin/complaints?status=${status}&page=${page}`),
     enabled: !showQuality,
@@ -346,24 +345,22 @@ export default function AdminComplaints() {
         />
       ) : (
         <>
-          <p>
-            Xem phản ánh và ghi nhận quyết định cho từng đơn. Phản ánh đang mở được xếp cũ nhất
-            trước.
-          </p>
           <AdminFilterBar
             actions={
-              <>
-                <Button
-                  variant="outline"
-                  disabled={queue.isFetching}
-                  onClick={() => {
-                    setPage(1);
-                    void queryClient.invalidateQueries({ queryKey: ['admin-complaints'] });
-                  }}
-                >
-                  Cập nhật phản ánh
-                </Button>
-              </>
+              queue.isError ? (
+                <>
+                  <Button
+                    variant="outline"
+                    disabled={queue.isFetching}
+                    onClick={() => {
+                      setPage(1);
+                      void queryClient.invalidateQueries({ queryKey: ['admin-complaints'] });
+                    }}
+                  >
+                    Cập nhật phản ánh
+                  </Button>
+                </>
+              ) : undefined
             }
           >
             <div>
@@ -388,7 +385,7 @@ export default function AdminComplaints() {
             <p role="status">Đang tải phản ánh…</p>
           ) : queue.isError ? (
             <p role="alert" className="error">
-              Chưa tải được danh sách. Chọn “Cập nhật phản ánh” để thử lại.
+              Chưa tải được danh sách phản ánh.
             </p>
           ) : (
             <>

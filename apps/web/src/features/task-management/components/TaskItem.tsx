@@ -18,6 +18,7 @@ import type { QualityComplaint } from '../../complaints/quality-complaints.api';
 import StaffReassignment from './StaffReassignment';
 import StaffTaskDetails, { staffTaskDetailsQuery } from './StaffTaskDetails';
 import TechnicianRepairAccess from './TechnicianRepairAccess';
+import RepairReadinessPanel from './RepairReadinessPanel';
 import StaffPreorderFulfillment, {
   preorderBlocker,
   staffPreordersQuery,
@@ -38,10 +39,14 @@ export function TaskItem({
   onTransition,
   focused = false,
   hidden = false,
+  initiallyOpen = false,
+  onOpenChange,
 }: {
   task: Task;
   focused?: boolean;
   hidden?: boolean;
+  initiallyOpen?: boolean;
+  onOpenChange?: (id: string, open: boolean) => void;
   mode: 'worker' | 'manager' | 'oversight';
   actorRole: ActiveTaskRole;
   actorId?: string;
@@ -65,7 +70,8 @@ export function TaskItem({
           ? 'Xem báo cáo'
           : 'Xem chi tiết';
   const isManager = mode === 'manager';
-  const [taskOpen, setTaskOpen] = useState(false);
+  const [taskOpen, setTaskOpen] = useState(initiallyOpen);
+  useEffect(() => () => onOpenChange?.(task.id, false), [task.id, onOpenChange]);
   const [showCancellation, setShowCancellation] = useState(false);
   const qualityTask = task.workType === 'FLOWER_QUALITY';
   const [qualityEvidencePage, setQualityEvidencePage] = useState(1);
@@ -137,6 +143,10 @@ export function TaskItem({
             : null;
   const needsRepairContext =
     isTechnician && task.kind === 'INCIDENT' && task.status === 'IN_PROGRESS';
+  const checkRepairReadiness =
+    task.kind === 'INCIDENT' &&
+    ['IN_PROGRESS', 'SUBMITTED'].includes(task.status) &&
+    (isTechnician || (isManager && role === 'OPERATIONS_MANAGER'));
   const showIncidentOutcome =
     task.kind === 'INCIDENT' &&
     task.status === 'COMPLETED' &&
@@ -149,8 +159,8 @@ export function TaskItem({
       actorId,
       task.version,
     ),
-    enabled: (needsRepairContext && taskOpen) || showIncidentOutcome,
-    refetchInterval: needsRepairContext && taskOpen ? 15_000 : false,
+    enabled: ((needsRepairContext || checkRepairReadiness) && taskOpen) || showIncidentOutcome,
+    refetchInterval: (needsRepairContext || checkRepairReadiness) && taskOpen ? 15_000 : false,
   });
   const slotRepair =
     needsRepairContext &&
@@ -270,6 +280,9 @@ export function TaskItem({
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['staff-tasks'] }, { throwOnError: true }),
         queryClient.invalidateQueries({ queryKey: ['staff-inventory-maintenance', task.id] }),
+        queryClient.invalidateQueries({
+          queryKey: ['repair-readiness', actorId, apiBase, task.id],
+        }),
         queryClient.invalidateQueries(
           { queryKey: ['staff-detail', task.id] },
           { throwOnError: true },
@@ -303,12 +316,23 @@ export function TaskItem({
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['staff-tasks'] }),
         queryClient.invalidateQueries({ queryKey: ['staff-inventory-maintenance', task.id] }),
+        queryClient.invalidateQueries({
+          queryKey: ['repair-readiness', actorId, apiBase, task.id],
+        }),
         queryClient.invalidateQueries({ queryKey: ['assignment-incidents'] }),
         queryClient.invalidateQueries({ queryKey: ['admin-incidents'] }),
         queryClient.invalidateQueries({ queryKey: ['admin-incident'] }),
         queryClient.invalidateQueries({ queryKey: ['staff-detail', task.id] }),
       ]);
     } catch (cause) {
+      if (cause instanceof ApiError && cause.status === 409 && cause.code?.startsWith('REPAIR_')) {
+        setUncertain(true);
+        setError(cause.message);
+        void queryClient.invalidateQueries({
+          queryKey: ['repair-readiness', actorId, apiBase, task.id],
+        });
+        return;
+      }
       if (isTechnician && cause instanceof ApiError && cause.status === 409) {
         setConflictVersion(task.version);
         return;
@@ -321,7 +345,9 @@ export function TaskItem({
       ) {
         setUncertain(true);
         setError(
-          'Chưa duyệt được báo cáo. Tải lại công việc và kiểm tra kết quả xác minh tại tủ trước khi duyệt lại.',
+          cause.code === 'TASK_VERSION_CONFLICT'
+            ? cause.message
+            : 'Chưa duyệt được báo cáo. Tải lại công việc và kiểm tra kết quả xác minh tại tủ trước khi duyệt lại.',
         );
         return;
       }
@@ -551,6 +577,14 @@ export function TaskItem({
   );
   const taskContent = (
     <>
+      {checkRepairReadiness && taskOpen && repairDetails.data?.slotCode && (
+        <RepairReadinessPanel
+          taskId={task.id}
+          apiBase={apiBase}
+          actorId={actorId}
+          version={task.version}
+        />
+      )}
       {qualityTask && staffDelivery && (
         <div className="staff-stocking-section">
           <h4>Xử lý chất lượng hoa</h4>
@@ -626,9 +660,9 @@ export function TaskItem({
           <p>
             {task.status === 'ASSIGNED'
               ? role === 'OPERATIONS_MANAGER'
-                ? 'Đang chờ kỹ thuật viên bắt đầu công việc.'
-                : 'Đang chờ nhân viên bắt đầu công việc.'
-              : 'Nhân viên đang thực hiện. Bạn có thể duyệt khi nhận được báo cáo.'}
+                ? 'Chờ kỹ thuật viên bắt đầu.'
+                : 'Chờ nhân viên bắt đầu.'
+              : 'Đang thực hiện · Chờ báo cáo.'}
           </p>
           <Button
             type="button"
@@ -831,7 +865,10 @@ export function TaskItem({
       ) : isTechnician ? (
         <details
           className="technician-task-body"
-          onToggle={(event) => setTaskOpen(event.currentTarget.open)}
+          onToggle={(event) => {
+            setTaskOpen(event.currentTarget.open);
+            onOpenChange?.(task.id, event.currentTarget.open);
+          }}
         >
           <summary>
             {nextLabel}
@@ -897,8 +934,16 @@ export function TaskItem({
                 : 'Chưa có thông tin trạng thái sự cố.'}
         </p>
       )}
-      {(isManager && role === 'OPERATIONS_MANAGER') || (role === 'ADMIN' && readOnly) ? (
-        <details className="manager-task-details" open={focused || undefined}>
+      {!initiallyOpen &&
+      ((isManager && role === 'OPERATIONS_MANAGER') || (role === 'ADMIN' && readOnly)) ? (
+        <details
+          className="manager-task-details"
+          open={focused || undefined}
+          onToggle={(event) => {
+            setTaskOpen(event.currentTarget.open);
+            onOpenChange?.(task.id, event.currentTarget.open);
+          }}
+        >
           <summary>
             {role === 'ADMIN'
               ? 'Xem báo cáo & tiến độ'

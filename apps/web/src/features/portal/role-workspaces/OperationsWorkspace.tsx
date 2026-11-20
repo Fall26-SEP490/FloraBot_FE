@@ -131,25 +131,6 @@ export default function OperationsWorkspace({ section = 'overview' }: { section?
                               ? 'Khôi phục phiên thao tác'
                               : 'Tổng quan vận hành'}
               </h1>
-              {section !== 'overview' && (
-                <p>
-                  {section === 'sellers'
-                    ? 'Theo dõi shop, thông tin chủ shop và lịch sử trạng thái hoạt động.'
-                    : section === 'customers'
-                      ? 'Quản lý thông tin liên hệ và trạng thái tài khoản khách hàng.'
-                      : section === 'technicians'
-                        ? 'Quản lý đội ngũ, thông tin liên hệ và trạng thái tài khoản kỹ thuật viên.'
-                        : section === 'installations'
-                          ? 'Xác nhận liên hệ, xếp lịch và kiểm tra bàn giao kiosk.'
-                          : section === 'tasks'
-                            ? 'Phân công sự cố, điều chỉnh người phụ trách và duyệt báo cáo khắc phục.'
-                            : section === 'terminations'
-                              ? 'Duyệt chấm dứt, điều phối tháo dỡ, nghiệm thu bàn giao và lưu trữ tủ.'
-                              : section === 'maintenance-recovery'
-                                ? 'Chỉ xử lý các phiên nạp, thu hồi hoặc thay hoa đã hết hạn và cần kiểm tra.'
-                                : `Chào ${session.data.name}, xem các việc cần xử lý tại đây.`}
-                </p>
-              )}
             </div>
           </div>
           {section === 'installations' ? (

@@ -1,4 +1,5 @@
 'use client';
+import { liveListOptions } from '@/shared/lib/live-list';
 
 import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
@@ -315,6 +316,9 @@ export default function AccountManagement({
     refetch,
     isFetching,
   } = useQuery({
+    ...(actorRole === 'ADMIN' || actorRole === 'OPERATIONS_MANAGER'
+      ? liveListOptions(!createOpen && !viewing && !statusConfirm)
+      : {}),
     queryKey,
     queryFn: () => request<AccountDirectoryItem[]>(queryPath),
     enabled: isAuthorized,
@@ -605,20 +609,22 @@ export default function AccountManagement({
       <div className="account-directory-card">
         <div className="management-heading">
           <div>
-            <p className="management-eyebrow">{eyebrow}</p>
+            {actorRole === 'SELLER' && <p className="management-eyebrow">{eyebrow}</p>}
             <h2 id="account-management-title">{title}</h2>
-            <p>{description}</p>
+            {actorRole === 'SELLER' && <p>{description}</p>}
           </div>
           <div className="management-heading-actions">
-            <IconActionButton
-              type="button"
-              variant="outline"
-              onClick={() => void refetch()}
-              disabled={isFetching}
-              aria-label="Tải lại danh sách"
-              action="reload"
-              label="Làm mới"
-            />
+            {(actorRole === 'SELLER' || isError) && (
+              <IconActionButton
+                type="button"
+                variant="outline"
+                onClick={() => void refetch()}
+                disabled={isFetching}
+                aria-label="Tải lại danh sách"
+                action="reload"
+                label="Làm mới"
+              />
+            )}
             <Button
               ref={createButtonRef}
               type="button"

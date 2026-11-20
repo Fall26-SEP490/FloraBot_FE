@@ -1,3 +1,4 @@
+import { liveListOptions } from '@/shared/lib/live-list';
 import Select from '@/shared/components/Select';
 import { useState } from 'react';
 import VietnamDateInput from '@/shared/components/VietnamDateInput';
@@ -6,6 +7,7 @@ import { Button } from '@florabot/ui';
 import { request } from '@/shared/lib/api';
 import { revenueInteger } from '../revenue-report.utils';
 import { vietnamToday } from '../seller-report.utils';
+import WorkspaceTable from '@/features/portal/components/WorkspaceTable';
 
 type RevenueRow = {
   day: string;
@@ -61,10 +63,12 @@ export default function AdminRevenueReport({
   if (filter.seller) params.set('sellerId', filter.seller);
   if (filter.kiosk) params.set('kioskId', filter.kiosk);
   const query = useQuery({
+    ...liveListOptions(),
     queryKey: ['admin-revenue-period', actorId, kind, filter, page],
     queryFn: () => request<RevenuePage>(`/admin/revenue/${kind}?${params}`),
   });
   const kiosks = useQuery({
+    ...liveListOptions(),
     queryKey: ['revenue-history-kiosks', actorId, seller],
     queryFn: () =>
       request<{ id: string; code: string; name: string }[]>(
@@ -241,6 +245,10 @@ export default function AdminRevenueReport({
         <>
           <section className="admin-revenue-summary" aria-label="Tổng toàn kỳ">
             <h3>Tổng toàn kỳ</h3>
+            <p className="admin-revenue-applied-period">
+              {filter.from.split('-').reverse().join('/')} –{' '}
+              {filter.to.split('-').reverse().join('/')}
+            </p>
             <dl>
               {fields.map(([key, label]) => (
                 <div key={key}>
@@ -256,7 +264,7 @@ export default function AdminRevenueReport({
               )}
             </dl>
           </section>
-          <div className="admin-report-sheet admin-system-sheet">
+          <WorkspaceTable label="Chi tiết doanh thu toàn kỳ">
             <table>
               <caption>{query.data.totalCount} dòng trong kỳ đã lọc</caption>
               <thead>
@@ -276,7 +284,13 @@ export default function AdminRevenueReport({
               <tbody>
                 {query.data.items.map((row) => (
                   <tr key={`${row.day}:${row.kioskId}:${row.sellerId}`}>
-                    <td>{row.day}</td>
+                    <td>
+                      <time dateTime={row.day}>
+                        {new Date(`${row.day}T00:00:00+07:00`).toLocaleDateString('vi-VN', {
+                          timeZone: 'Asia/Ho_Chi_Minh',
+                        })}
+                      </time>
+                    </td>
                     {kind === 'flowers' && (
                       <>
                         <td>{row.kiosk}</td>
@@ -288,7 +302,7 @@ export default function AdminRevenueReport({
                       </>
                     )}
                     {fields.map(([key]) => (
-                      <td key={key} className="sheet-number">
+                      <td key={key} className="table-number">
                         {money(row[key])}
                       </td>
                     ))}
@@ -296,7 +310,7 @@ export default function AdminRevenueReport({
                 ))}
               </tbody>
             </table>
-          </div>
+          </WorkspaceTable>
           {!query.data.items.length && <p role="status">Không có giao dịch trong kỳ đã chọn.</p>}
           <nav className="stock-actions" aria-label="Phân trang báo cáo toàn kỳ">
             <Button
