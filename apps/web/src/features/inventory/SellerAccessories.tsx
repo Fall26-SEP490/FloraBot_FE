@@ -1,3 +1,4 @@
+import RefreshRegion from '@/shared/components/RefreshRegion';
 import { useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, Button, Plus, Search } from '@florabot/ui';
@@ -403,95 +404,99 @@ export default function SellerAccessories({ session }: { session: Session }) {
           {createNotice}
         </p>
       )}
-      <div className={styles.surface}>
-        <div className={styles.toolbar}>
-          <label className={styles.searchField}>
-            <span>Tìm phụ kiện</span>
-            <span className={styles.searchInput}>
-              <Search size={18} aria-hidden="true" />
-              <input
-                id="accessory-search"
-                type="search"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Tên phụ kiện"
-              />
-            </span>
-          </label>
-          <label className={styles.stateField} htmlFor="accessory-state">
-            <span>Trạng thái</span>
-            <Select
-              id="accessory-state"
-              value={status}
-              onChange={(event) => setStatus(event.target.value)}
-            >
-              <option value="ALL">Tất cả</option>
-              <option value="ACTIVE">Đang bán</option>
-              <option value="INACTIVE">Tạm ngừng bán</option>
-            </Select>
-          </label>
-          <Button
-            type="button"
-            onClick={() => {
-              setCreateNotice('');
-              setCreateOpen(true);
-            }}
-          >
-            <Plus size={17} aria-hidden="true" />
-            Thêm phụ kiện
-          </Button>
-          <IconActionButton
-            action="reload"
-            label="Tải lại phụ kiện"
-            disabled={inventory.isFetching}
-            onClick={() => void inventory.refetch()}
-          />
-        </div>
-        <div className={`${styles.columns} ${styles.accessoryGrid}`} aria-hidden="true">
-          <span>Phụ kiện</span>
-          <span>Giá bán</span>
-          <span>Tồn tại shop</span>
-          <span>Trạng thái</span>
-          <span />
-        </div>
-        {inventory.isPending && (
-          <p className={styles.empty} role="status">
-            Đang tải phụ kiện…
-          </p>
-        )}
-        {inventory.isError && (
-          <div className={styles.empty} role="alert">
-            <p>Chưa tải được tồn mới nhất.</p>
+      <RefreshRegion>
+        <div className={styles.surface}>
+          <div className={styles.toolbar}>
+            <label className={styles.searchField}>
+              <span>Tìm phụ kiện</span>
+              <span className={styles.searchInput}>
+                <Search size={18} aria-hidden="true" />
+                <input
+                  id="accessory-search"
+                  type="search"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Tên phụ kiện"
+                />
+              </span>
+            </label>
+            <label className={styles.stateField} htmlFor="accessory-state">
+              <span>Trạng thái</span>
+              <Select
+                id="accessory-state"
+                value={status}
+                onChange={(event) => setStatus(event.target.value)}
+              >
+                <option value="ALL">Tất cả</option>
+                <option value="ACTIVE">Đang bán</option>
+                <option value="INACTIVE">Tạm ngừng bán</option>
+              </Select>
+            </label>
             <Button
-              variant="outline"
-              disabled={inventory.isFetching}
-              onClick={() => void inventory.refetch()}
+              type="button"
+              onClick={() => {
+                setCreateNotice('');
+                setCreateOpen(true);
+              }}
             >
-              Thử lại
+              <Plus size={17} aria-hidden="true" />
+              Thêm phụ kiện
             </Button>
-          </div>
-        )}
-        {inventory.isSuccess && !visible.length && (
-          <div className={styles.empty} role="status">
-            <strong>{items.length ? 'Không tìm thấy phụ kiện phù hợp' : 'Chưa có phụ kiện'}</strong>
-            <p>
-              {items.length
-                ? 'Thử đổi từ khóa hoặc trạng thái.'
-                : 'Thêm phụ kiện đầu tiên cho cửa hàng.'}
-            </p>
-          </div>
-        )}
-        <ul className={styles.list}>
-          {visible.map((item) => (
-            <Restock
-              key={item.id}
-              item={item}
-              sellerId={session.sellerId!}
-              refresh={refreshInventory}
+            <IconActionButton
+              action="reload"
+              label="Tải lại phụ kiện"
+              disabled={inventory.isFetching}
+              onClick={() => inventory.refetch()}
             />
-          ))}
-        </ul>
-      </div>
+          </div>
+          <div className={`${styles.columns} ${styles.accessoryGrid}`} aria-hidden="true">
+            <span>Phụ kiện</span>
+            <span>Giá bán</span>
+            <span>Tồn tại shop</span>
+            <span>Trạng thái</span>
+            <span />
+          </div>
+          {inventory.isPending && (
+            <p className={styles.empty} role="status">
+              Đang tải phụ kiện…
+            </p>
+          )}
+          {inventory.isError && (
+            <div className={styles.empty} role="alert">
+              <p>Chưa tải được tồn mới nhất.</p>
+              <Button
+                variant="outline"
+                disabled={inventory.isFetching}
+                onClick={() => inventory.refetch()}
+              >
+                Thử lại
+              </Button>
+            </div>
+          )}
+          {inventory.isSuccess && !visible.length && (
+            <div className={styles.empty} role="status">
+              <strong>
+                {items.length ? 'Không tìm thấy phụ kiện phù hợp' : 'Chưa có phụ kiện'}
+              </strong>
+              <p>
+                {items.length
+                  ? 'Thử đổi từ khóa hoặc trạng thái.'
+                  : 'Thêm phụ kiện đầu tiên cho cửa hàng.'}
+              </p>
+            </div>
+          )}
+          <ul className={styles.list}>
+            {visible.map((item) => (
+              <Restock
+                key={item.id}
+                item={item}
+                sellerId={session.sellerId!}
+                refresh={refreshInventory}
+              />
+            ))}
+          </ul>
+        </div>
+      </RefreshRegion>
       {createOpen && (
         <Modal
           open

@@ -2,6 +2,10 @@
 import { liveListOptions } from '@/shared/lib/live-list';
 
 import IconActionButton from '@/shared/components/IconActionButton';
+import RefreshRegion from '@/shared/components/RefreshRegion';
+import { Modal } from '@/shared/components/Modal';
+import { createPortal } from 'react-dom';
+import '../finance/styles/seller-rental.css';
 import Select from '@/shared/components/Select';
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -64,6 +68,7 @@ const textError = (error: unknown) =>
   error instanceof Error ? error.message : 'Không xử lý được yêu cầu.';
 
 function SellerTerminationCard({ kiosk, sellerId }: { kiosk: SellerKioskItem; sellerId: string }) {
+  const [detailOpen, setDetailOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
   const [reason, setReason] = useState('');
@@ -94,9 +99,7 @@ function SellerTerminationCard({ kiosk, sellerId }: { kiosk: SellerKioskItem; se
     onSuccess: async () => {
       setReason('');
       setIsFormOpen(false);
-      setNotice(
-        'Đã gửi yêu cầu chấm dứt. Đội vận hành sẽ liên hệ để xác nhận quy trình bàn giao kiosk.',
-      );
+      setNotice('Đã gửi yêu cầu chấm dứt.');
       await queryClient.invalidateQueries({ queryKey: key });
     },
   });
@@ -120,191 +123,258 @@ function SellerTerminationCard({ kiosk, sellerId }: { kiosk: SellerKioskItem; se
   const isPendingReview = current.data?.status === 'REQUESTED';
 
   return (
-    <article className="seller-termination-card" aria-label={kiosk.name || kiosk.code}>
-      <div className="seller-termination-main">
-        <div className="seller-termination-info">
-          <div className="seller-termination-badges">
-            <span className="subscription-kiosk-code">{kiosk.code}</span>
-            {current.data ? (
-              <span className="seller-termination-badge" data-status={current.data.status}>
-                {statusLabel[current.data.status] || current.data.status}
-              </span>
-            ) : (
-              <span className="seller-termination-badge is-active">Đang thuê vận hành</span>
-            )}
-          </div>
-          <h3 className="seller-termination-kiosk-name">{kiosk.name}</h3>
-          {kiosk.address && (
-            <p className="seller-termination-kiosk-address">
-              <MapPin size={15} aria-hidden="true" />
-              <span>{kiosk.address}</span>
-            </p>
-          )}
-        </div>
+    <>
+      <tr
+        className="rental-data-row"
+        tabIndex={0}
+        onClick={() => setDetailOpen(true)}
+        onKeyDown={(event) => {
+          if (event.target === event.currentTarget && ['Enter', ' '].includes(event.key)) {
+            event.preventDefault();
+            setDetailOpen(true);
+          }
+        }}
+      >
+        <td>
+          <strong>{kiosk.name || kiosk.code}</strong>
+          <small>Mã: {kiosk.code}</small>
+        </td>
+        <td>{kiosk.address || '—'}</td>
+        <td>
+          <span className="seller-termination-badge" data-status={current.data?.status}>
+            {current.isPending
+              ? 'Đang tải…'
+              : current.isError
+                ? 'Chưa tải được'
+                : current.data
+                  ? statusLabel[current.data.status] || current.data.status
+                  : 'Đang thuê'}
+          </span>
+        </td>
+        <td>
+          {current.data
+            ? lifecycleLabel[current.data.lifecycleStatus || ''] ||
+              removalTaskLabel[current.data.removalTaskStatus || ''] ||
+              '—'
+            : '—'}
+        </td>
+        <td>
+          <button
+            type="button"
+            className="button button-outline"
+            onClick={() => setDetailOpen(true)}
+          >
+            Xem
+          </button>
+        </td>
+      </tr>
+      {detailOpen &&
+        createPortal(
+          <Modal
+            open
+            title={`Chấm dứt thuê: ${kiosk.name || kiosk.code}`}
+            size="lg"
+            className="rental-detail-modal"
+            onClose={() => setDetailOpen(false)}
+          >
+            <article className="seller-termination-card" aria-label={kiosk.name || kiosk.code}>
+              <div className="seller-termination-main">
+                <div className="seller-termination-info">
+                  <h3 className="seller-termination-kiosk-name">{kiosk.name || kiosk.code}</h3>
+                  <div className="seller-termination-badges">
+                    <span className="subscription-kiosk-code">Mã: {kiosk.code}</span>
+                    {current.data ? (
+                      <span className="seller-termination-badge" data-status={current.data.status}>
+                        {statusLabel[current.data.status] || current.data.status}
+                      </span>
+                    ) : (
+                      <span className="seller-termination-badge is-active">Đang thuê vận hành</span>
+                    )}
+                  </div>
+                  {kiosk.address && (
+                    <p className="seller-termination-kiosk-address">
+                      <MapPin size={15} aria-hidden="true" />
+                      <span>{kiosk.address}</span>
+                    </p>
+                  )}
+                </div>
 
-        <div className="seller-termination-action">
-          {!hasRequest && !isFormOpen && (
-            <Button
-              type="button"
-              variant="outline"
-              className="seller-termination-trigger-btn"
-              onClick={() => setIsFormOpen(true)}
-            >
-              Yêu cầu chấm dứt
-            </Button>
-          )}
-          {isPendingReview && !isWithdrawOpen && (
-            <Button
-              type="button"
-              variant="outline"
-              className="seller-termination-withdraw-trigger-btn"
-              onClick={() => setIsWithdrawOpen(true)}
-            >
-              Rút yêu cầu chấm dứt
-            </Button>
-          )}
-        </div>
-      </div>
+                <div className="seller-termination-action">
+                  {!hasRequest && !isFormOpen && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="seller-termination-trigger-btn"
+                      onClick={() => {
+                        setNotice('');
+                        setIsFormOpen(true);
+                      }}
+                    >
+                      Yêu cầu chấm dứt
+                    </Button>
+                  )}
+                </div>
+              </div>
 
-      {current.isPending ? (
-        <p role="status">Đang tải hồ sơ…</p>
-      ) : current.isError ? (
-        <p role="alert">{textError(current.error)}</p>
-      ) : current.data ? (
-        <div className="seller-termination-content">
-          <div className="seller-termination-info-box">
-            <div className="seller-termination-info-row">
-              <span className="seller-termination-info-label">Lý do chấm dứt:</span>
-              <span className="seller-termination-info-val">{current.data.reason}</span>
-            </div>
-            {current.data.reviewReason && (
-              <div className="seller-termination-info-row">
-                <span className="seller-termination-info-label">Phản hồi từ ban quản lý:</span>
-                <span className="seller-termination-info-val">{current.data.reviewReason}</span>
-              </div>
-            )}
-            {(current.data.lifecycleStatus || current.data.removalTaskStatus) && (
-              <div className="seller-termination-info-row">
-                <span className="seller-termination-info-label">Tiến độ tháo dỡ:</span>
-                <span className="seller-termination-info-val">
-                  {lifecycleLabel[current.data.lifecycleStatus || ''] ||
-                    removalTaskLabel[current.data.removalTaskStatus || ''] ||
-                    statusLabel[current.data.status] ||
-                    current.data.status}
-                  {current.data.removalTaskStatus &&
-                  removalTaskLabel[current.data.removalTaskStatus] &&
-                  current.data.lifecycleStatus
-                    ? ` (${removalTaskLabel[current.data.removalTaskStatus]})`
-                    : ''}
-                </span>
-              </div>
-            )}
-          </div>
+              {current.isPending ? (
+                <p role="status">Đang tải hồ sơ…</p>
+              ) : current.isError ? (
+                <p role="alert">{textError(current.error)}</p>
+              ) : current.data ? (
+                <div className="seller-termination-content">
+                  <div className="seller-termination-info-box">
+                    <div className="seller-termination-info-row">
+                      <span className="seller-termination-info-label">Lý do chấm dứt:</span>
+                      <span className="seller-termination-info-val">{current.data.reason}</span>
+                    </div>
+                    {current.data.reviewReason && (
+                      <div className="seller-termination-info-row">
+                        <span className="seller-termination-info-label">
+                          Phản hồi từ ban quản lý:
+                        </span>
+                        <span className="seller-termination-info-val">
+                          {current.data.reviewReason}
+                        </span>
+                      </div>
+                    )}
+                    {!['CANCELLED', 'REJECTED'].includes(current.data.status) &&
+                      (current.data.lifecycleStatus || current.data.removalTaskStatus) && (
+                        <div className="seller-termination-info-row">
+                          <span className="seller-termination-info-label">Tiến độ xử lý:</span>
+                          <span className="seller-termination-info-val">
+                            {lifecycleLabel[current.data.lifecycleStatus || ''] ||
+                              removalTaskLabel[current.data.removalTaskStatus || ''] ||
+                              statusLabel[current.data.status] ||
+                              current.data.status}
+                          </span>
+                        </div>
+                      )}
+                  </div>
 
-          {isPendingReview && isWithdrawOpen && (
-            <form
-              className="seller-termination-form-panel"
-              onSubmit={(event) => {
-                event.preventDefault();
-                if (current.data && withdrawReason.trim().length >= 10) {
-                  withdraw.mutate(current.data);
-                }
-              }}
-            >
-              <div className="seller-termination-form-header">
-                <strong>Rút lại yêu cầu chấm dứt</strong>
-                <span>Nhập lý do rút yêu cầu (10–2.000 ký tự)</span>
-              </div>
-              <textarea
-                id={`termination-withdraw-${kiosk.id}`}
-                minLength={10}
-                maxLength={2000}
-                required
-                rows={3}
-                placeholder="Nhập lý do rút lại yêu cầu chấm dứt thuê kiosk này…"
-                value={withdrawReason}
-                onChange={(event) => setWithdrawReason(event.target.value)}
-              />
-              <div className="seller-termination-form-actions">
-                <Button
-                  type="submit"
-                  disabled={withdraw.isPending || withdrawReason.trim().length < 10}
-                >
-                  {withdraw.isPending ? 'Đang xử lý…' : 'Xác nhận rút yêu cầu'}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setIsWithdrawOpen(false);
-                    setWithdrawReason('');
+                  {isPendingReview && isWithdrawOpen && (
+                    <form
+                      className="seller-termination-form-panel"
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        if (current.data && withdrawReason.trim().length >= 10) {
+                          withdraw.mutate(current.data);
+                        }
+                      }}
+                    >
+                      <div className="seller-termination-form-header">
+                        <label htmlFor={`termination-withdraw-${kiosk.id}`}>
+                          Lý do rút yêu cầu{' '}
+                          <span className="rental-required" aria-hidden="true">
+                            *
+                          </span>
+                        </label>
+                      </div>
+                      <textarea
+                        id={`termination-withdraw-${kiosk.id}`}
+                        minLength={10}
+                        maxLength={2000}
+                        required
+                        rows={3}
+                        placeholder="Nhập lý do rút yêu cầu…"
+                        value={withdrawReason}
+                        onChange={(event) => setWithdrawReason(event.target.value)}
+                      />
+                      <div className="seller-termination-form-actions">
+                        <Button
+                          type="submit"
+                          disabled={withdraw.isPending || withdrawReason.trim().length < 10}
+                        >
+                          {withdraw.isPending ? 'Đang xử lý…' : 'Xác nhận rút yêu cầu'}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setIsWithdrawOpen(false);
+                            setWithdrawReason('');
+                          }}
+                        >
+                          Hủy bỏ
+                        </Button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              ) : null}
+
+              {!hasRequest && isFormOpen && (
+                <form
+                  className="seller-termination-form-panel"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    if (reason.trim().length >= 10) {
+                      create.mutate();
+                    }
                   }}
                 >
-                  Hủy bỏ
-                </Button>
-              </div>
-            </form>
-          )}
-        </div>
-      ) : null}
-
-      {!hasRequest && isFormOpen && (
-        <form
-          className="seller-termination-form-panel"
-          onSubmit={(event) => {
-            event.preventDefault();
-            if (reason.trim().length >= 10) {
-              create.mutate();
-            }
-          }}
-        >
-          <div className="seller-termination-form-header">
-            <strong>Gửi yêu cầu chấm dứt thuê kiosk</strong>
-            <span>
-              Đội vận hành sẽ tiếp nhận và liên hệ thỏa thuận thời gian kiểm tra bàn giao.
-            </span>
-          </div>
-          <label htmlFor={`termination-reason-${kiosk.id}`}>
-            Lý do chấm dứt thuê <span className="seller-form-hint">(tối thiểu 10 ký tự)</span>
-          </label>
-          <textarea
-            id={`termination-reason-${kiosk.id}`}
-            minLength={10}
-            maxLength={2000}
-            required
-            rows={3}
-            placeholder="Mô tả lý do bạn muốn dừng thuê kiosk này…"
-            value={reason}
-            onChange={(event) => setReason(event.target.value)}
-          />
-          <div className="seller-termination-form-actions">
-            <Button type="submit" disabled={create.isPending || reason.trim().length < 10}>
-              {create.isPending ? 'Đang gửi…' : 'Gửi yêu cầu'}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setIsFormOpen(false);
-                setReason('');
-              }}
-            >
-              Hủy bỏ
-            </Button>
-          </div>
-        </form>
-      )}
-      {notice && (
-        <p role="status" className="seller-termination-notice">
-          {notice}
-        </p>
-      )}
-      {(create.isError || withdraw.isError) && (
-        <p role="alert" className="error seller-termination-error">
-          {textError(create.error || withdraw.error)}
-        </p>
-      )}
-    </article>
+                  <label htmlFor={`termination-reason-${kiosk.id}`}>
+                    Lý do chấm dứt thuê{' '}
+                    <span className="rental-required" aria-hidden="true">
+                      *
+                    </span>
+                  </label>
+                  <textarea
+                    id={`termination-reason-${kiosk.id}`}
+                    minLength={10}
+                    maxLength={2000}
+                    required
+                    rows={3}
+                    placeholder="Mô tả lý do bạn muốn dừng thuê kiosk này…"
+                    value={reason}
+                    onChange={(event) => setReason(event.target.value)}
+                  />
+                  <div className="seller-termination-form-actions">
+                    <Button type="submit" disabled={create.isPending || reason.trim().length < 10}>
+                      {create.isPending ? 'Đang gửi…' : 'Gửi yêu cầu'}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setIsFormOpen(false);
+                        setReason('');
+                      }}
+                    >
+                      Hủy bỏ
+                    </Button>
+                  </div>
+                </form>
+              )}
+              {notice && !isFormOpen && !isWithdrawOpen && (
+                <p role="status" className="seller-termination-notice">
+                  {notice}
+                </p>
+              )}
+              {(create.isError || withdraw.isError) && (
+                <p role="alert" className="error seller-termination-error">
+                  {textError(create.error || withdraw.error)}
+                </p>
+              )}
+              {isPendingReview && !isWithdrawOpen && (
+                <div className="seller-termination-action seller-termination-footer">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="seller-termination-withdraw-trigger-btn"
+                    onClick={() => {
+                      setNotice('');
+                      setIsWithdrawOpen(true);
+                    }}
+                  >
+                    Rút yêu cầu chấm dứt
+                  </Button>
+                </div>
+              )}
+            </article>
+          </Modal>,
+          document.body,
+        )}
+    </>
   );
 }
 
@@ -317,28 +387,53 @@ export function SellerTerminations({ session }: { session: Session }) {
   });
   if (!sellerId) return <p role="alert">Tài khoản chưa liên kết với shop.</p>;
   return (
-    <section className="business-panel seller-terminations-panel">
-      <div className="seller-terminations-head">
-        <h2>Yêu cầu chấm dứt thuê kiosk</h2>
-        <p>
-          Gửi yêu cầu để đội vận hành kiểm tra. Shop vẫn quản lý kiosk cho tới khi bàn giao được
-          hoàn tất.
-        </p>
-      </div>
-      {kiosks.isPending ? (
-        <p role="status">Đang tải kiosk…</p>
-      ) : kiosks.isError ? (
-        <p role="alert">{textError(kiosks.error)}</p>
-      ) : kiosks.data?.length ? (
-        <div className="business-card-list">
-          {kiosks.data.map((item) => (
-            <SellerTerminationCard key={item.id} kiosk={item} sellerId={sellerId} />
-          ))}
+    <RefreshRegion className="seller-rental">
+      <section className="business-panel seller-terminations-panel">
+        <div className="seller-terminations-head">
+          <div>
+            <h2>Kiosk đang thuê</h2>
+            <p>Shop quản lý kiosk đến khi hoàn tất bàn giao.</p>
+          </div>
+          <IconActionButton
+            action="reload"
+            label="Tải lại yêu cầu chấm dứt"
+            disabled={kiosks.isFetching}
+            onClick={() =>
+              Promise.all([
+                kiosks.refetch(),
+                queryClient.refetchQueries({ queryKey: ['seller-termination', sellerId] }),
+              ])
+            }
+          />
         </div>
-      ) : (
-        <p className="seller-empty-state">Shop chưa có kiosk đang quản lý.</p>
-      )}
-    </section>
+        {kiosks.isPending ? (
+          <p role="status">Đang tải kiosk…</p>
+        ) : kiosks.isError ? (
+          <p role="alert">{textError(kiosks.error)}</p>
+        ) : kiosks.data?.length ? (
+          <div className="business-table-scroll">
+            <table className="business-table rental-data-table">
+              <thead>
+                <tr>
+                  <th>Kiosk</th>
+                  <th>Địa chỉ</th>
+                  <th>Trạng thái</th>
+                  <th>Tiến độ bàn giao</th>
+                  <th>Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                {kiosks.data.map((item) => (
+                  <SellerTerminationCard key={item.id} kiosk={item} sellerId={sellerId} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="seller-empty-state">Shop chưa có kiosk đang quản lý.</p>
+        )}
+      </section>
+    </RefreshRegion>
   );
 }
 

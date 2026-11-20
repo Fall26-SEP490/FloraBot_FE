@@ -1595,3 +1595,14 @@
     max-width: 88%;
   }
 }
+
+/* Validation and error messages use plain red text throughout the seller workspace. */
+.workspace-portal-root.platform-workspace .seller-workspace :is(p.error, p[role='alert']) {
+  color: var(--color-status-danger-ink, #c5221f) !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  text-align: left;
+}

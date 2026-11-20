@@ -18,6 +18,15 @@ for (const role of ['CUSTOMER', 'SELLER']) {
           });
         if (path === '/api/member/kiosk-applications/current')
           return route.fulfill({ status: 404, json: {} });
+        if (path === '/api/sellers/lease-shop/bank')
+          return route.fulfill({
+            json: {
+              status: 'READY',
+              bankName: 'MB',
+              holder: 'NGUYEN THI LAN',
+              accountSuffix: '1234',
+            },
+          });
         if (path === '/api/kiosk-packages')
           return route.fulfill({
             json: {
@@ -36,10 +45,14 @@ for (const role of ['CUSTOMER', 'SELLER']) {
       await expect(page.getByRole('heading', { name: 'Chọn số ô muốn thuê' })).toBeVisible();
       await expect(
         page.getByRole('heading', {
-          name: role === 'SELLER' ? 'Kiosk mới sẽ đặt ở đâu?' : 'Thông tin đăng ký',
+          name: role === 'SELLER' ? 'Vị trí lắp đặt' : 'Thông tin đăng ký',
           exact: true,
         }),
       ).toBeVisible();
+      await expect(page.locator('.kiosk-form-section')).toHaveCSS(
+        'background-color',
+        'rgb(255, 255, 255)',
+      );
       const submit = page.getByRole('button', { name: 'Nộp hồ sơ thuê kiosk' });
       const consent = page.getByRole('checkbox', { name: /Tôi đã kiểm tra/ });
       await expect(submit).toBeDisabled();
@@ -61,7 +74,10 @@ for (const role of ['CUSTOMER', 'SELLER']) {
       await walk.fill('2');
       if (role === 'CUSTOMER')
         await expect(page.getByText('Tài khoản nhận hoàn phí', { exact: true })).toBeVisible();
-      else await expect(page.locator('.lease-profile-note')).toBeVisible();
+      else {
+        await expect(page.locator('.lease-seller-card')).toBeVisible();
+        await expect(page.locator('.lease-profile-note')).toHaveCount(0);
+      }
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
       ).toBe(true);

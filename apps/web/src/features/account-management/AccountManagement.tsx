@@ -30,6 +30,7 @@ import {
 import { paginate } from '../../shared/pagination';
 import AccountProfileDialog from './components/AccountProfileDialog';
 import './styles/account-management.css';
+import './styles/seller-team.css';
 
 export type AccountStatus = 'ACTIVE' | 'LOCKED' | 'DISABLED';
 export type AccountRole = 'OPERATIONS_MANAGER' | 'TECHNICIAN' | 'SELLER_STAFF';
@@ -214,7 +215,12 @@ function SellerStaffProfileEditor({
       ) : (
         <form className="management-form" onSubmit={(e) => void handleSave(e)} noValidate>
           <div className="management-field">
-            <label htmlFor={`staff-edit-name-${staff.id}`}>Họ và tên *</label>
+            <label htmlFor={`staff-edit-name-${staff.id}`}>
+              Họ và tên{' '}
+              <span className="account-required" aria-hidden="true">
+                *
+              </span>
+            </label>
             <input
               id={`staff-edit-name-${staff.id}`}
               value={fullName}
@@ -271,8 +277,6 @@ export default function AccountManagement({
   actorRole,
   targetRole,
   title,
-  eyebrow,
-  description,
   createLabel,
   itemName,
   apiBase,
@@ -421,6 +425,7 @@ export default function AccountManagement({
     return (
       <section
         className="management-panel account-management-workspace"
+        data-seller-directory={actorRole === 'SELLER' ? '' : undefined}
         role="alert"
         aria-labelledby="unauthorized-management-title"
       >
@@ -455,15 +460,46 @@ export default function AccountManagement({
   const lockedCount = accounts.filter((a) => a.status === 'LOCKED').length;
   const disabledCount = accounts.filter((a) => a.status === 'DISABLED').length;
 
+  const directoryActions = (
+    <div className="management-heading-actions">
+      {(actorRole === 'SELLER' || isError) && (
+        <IconActionButton
+          type="button"
+          variant="outline"
+          onClick={() => refetch()}
+          disabled={isFetching}
+          aria-label="Tải lại danh sách"
+          action="reload"
+          label="Làm mới"
+        />
+      )}
+      <Button
+        ref={createButtonRef}
+        type="button"
+        onClick={() => {
+          form.reset();
+          createMutation.reset();
+          setShowPassword(false);
+          setActionError(null);
+          setCreateOpen(true);
+        }}
+      >
+        <Plus size={15} aria-hidden="true" />
+        {createLabel}
+      </Button>
+    </div>
+  );
   const columns: readonly DataTableColumn<AccountDirectoryItem>[] = [
     {
       key: 'fullName',
       header: 'Họ và tên',
       render: (item) => (
         <div className="account-identity-cell">
-          <span className="account-identity-avatar" aria-hidden="true">
-            {getInitials(item.fullName)}
-          </span>
+          {actorRole !== 'SELLER' && (
+            <span className="account-identity-avatar" aria-hidden="true">
+              {getInitials(item.fullName)}
+            </span>
+          )}
           <div className="account-identity-meta">
             <strong>{item.fullName}</strong>
             <small>{roleDisplayText[item.role] || item.role}</small>
@@ -564,83 +600,65 @@ export default function AccountManagement({
   return (
     <section
       className="management-panel account-management-workspace"
+      data-seller-directory={actorRole === 'SELLER' ? '' : undefined}
       aria-labelledby="account-management-title"
     >
+      {actorRole === 'SELLER' && (
+        <h2 id="account-management-title" className="sr-only">
+          {title}
+        </h2>
+      )}
       {/* Summary stats strip at top */}
-      <div
-        role="region"
-        className="management-stats order-summary-strip"
-        aria-label={`Thống kê ${title.toLocaleLowerCase('vi-VN')}`}
-      >
-        <article className="operations-metric">
-          <div className="account-stat-top">
-            <span>Tổng số {itemName}</span>
-            <div className="account-stat-icon">
-              <Users size={18} aria-hidden="true" />
+      {actorRole !== 'SELLER' && (
+        <div
+          role="region"
+          className="management-stats order-summary-strip"
+          aria-label={`Thống kê ${title.toLocaleLowerCase('vi-VN')}`}
+        >
+          <article className="operations-metric">
+            <div className="account-stat-top">
+              <span>Tổng số {itemName}</span>
+              <div className="account-stat-icon">
+                <Users size={18} aria-hidden="true" />
+              </div>
             </div>
-          </div>
-          <strong>{accounts.length}</strong>
-          <small>Tài khoản trong danh sách</small>
-        </article>
-        <article className="operations-metric">
-          <div className="account-stat-top">
-            <span>Đang hoạt động</span>
-            <div className="account-stat-icon account-stat-icon--green">
-              <CheckCircle2 size={18} aria-hidden="true" />
+            <strong>{accounts.length}</strong>
+            <small>Tài khoản trong danh sách</small>
+          </article>
+          <article className="operations-metric">
+            <div className="account-stat-top">
+              <span>Đang hoạt động</span>
+              <div className="account-stat-icon account-stat-icon--green">
+                <CheckCircle2 size={18} aria-hidden="true" />
+              </div>
             </div>
-          </div>
-          <strong>{activeCount}</strong>
-          <small>Đang làm việc bình thường</small>
-        </article>
-        <article className="operations-metric">
-          <div className="account-stat-top">
-            <span>Tạm khóa / Vô hiệu</span>
-            <div className="account-stat-icon account-stat-icon--amber">
-              <Lock size={18} aria-hidden="true" />
+            <strong>{activeCount}</strong>
+            <small>Đang làm việc bình thường</small>
+          </article>
+          <article className="operations-metric">
+            <div className="account-stat-top">
+              <span>Tạm khóa / Vô hiệu</span>
+              <div className="account-stat-icon account-stat-icon--amber">
+                <Lock size={18} aria-hidden="true" />
+              </div>
             </div>
-          </div>
-          <strong>{lockedCount + disabledCount}</strong>
-          <small>
-            {lockedCount} tạm khóa · {disabledCount} vô hiệu hóa
-          </small>
-        </article>
-      </div>
+            <strong>{lockedCount + disabledCount}</strong>
+            <small>
+              {lockedCount} tạm khóa · {disabledCount} vô hiệu hóa
+            </small>
+          </article>
+        </div>
+      )}
 
       <div className="account-directory-card">
-        <div className="management-heading">
-          <div>
-            {actorRole === 'SELLER' && <p className="management-eyebrow">{eyebrow}</p>}
-            <h2 id="account-management-title">{title}</h2>
-            {actorRole === 'SELLER' && <p>{description}</p>}
+        {actorRole !== 'SELLER' && (
+          <div className="management-heading">
+            <div>
+              <h2 id="account-management-title">{title}</h2>
+            </div>
+            {directoryActions}
           </div>
-          <div className="management-heading-actions">
-            {(actorRole === 'SELLER' || isError) && (
-              <IconActionButton
-                type="button"
-                variant="outline"
-                onClick={() => void refetch()}
-                disabled={isFetching}
-                aria-label="Tải lại danh sách"
-                action="reload"
-                label="Làm mới"
-              />
-            )}
-            <Button
-              ref={createButtonRef}
-              type="button"
-              onClick={() => {
-                form.reset();
-                createMutation.reset();
-                setShowPassword(false);
-                setActionError(null);
-                setCreateOpen(true);
-              }}
-            >
-              <Plus size={15} aria-hidden="true" />
-              {createLabel}
-            </Button>
-          </div>
-        </div>
+        )}
 
         {actionSuccess && (
           <div role="status" className="management-alert management-alert-success">
@@ -660,35 +678,46 @@ export default function AccountManagement({
         )}
 
         {/* Quick Status Filter Tabs */}
-        <div className="account-status-tabs" role="group" aria-label="Bộ lọc nhanh theo trạng thái">
-          {(
-            [
-              { id: 'ALL', label: 'Tất cả', count: accounts.length },
-              { id: 'ACTIVE', label: 'Đang hoạt động', count: activeCount },
-              { id: 'LOCKED', label: 'Tạm khóa', count: lockedCount },
-              { id: 'DISABLED', label: 'Đã vô hiệu hóa', count: disabledCount },
-            ] as const
-          ).map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              className={`account-status-tab ${statusFilter === tab.id ? 'is-active' : ''}`}
-              onClick={() => {
-                setStatusFilter(tab.id);
-                setPage(1);
-              }}
-            >
-              <span>{tab.label}</span>
-              <span className="account-status-tab-count">{tab.count}</span>
-            </button>
-          ))}
-        </div>
+        {actorRole !== 'SELLER' && (
+          <div
+            className="account-status-tabs"
+            role="group"
+            aria-label="Bộ lọc nhanh theo trạng thái"
+          >
+            {(
+              [
+                { id: 'ALL', label: 'Tất cả', count: accounts.length },
+                { id: 'ACTIVE', label: 'Đang hoạt động', count: activeCount },
+                { id: 'LOCKED', label: 'Tạm khóa', count: lockedCount },
+                { id: 'DISABLED', label: 'Đã vô hiệu hóa', count: disabledCount },
+              ] as const
+            ).map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                className={`account-status-tab ${statusFilter === tab.id ? 'is-active' : ''}`}
+                onClick={() => {
+                  setStatusFilter(tab.id);
+                  setPage(1);
+                }}
+              >
+                <span>{tab.label}</span>
+                <span className="account-status-tab-count">{tab.count}</span>
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Search and Filter toolbar */}
         <div className="management-toolbar">
           <div className="management-search">
-            <label htmlFor="account-search-input" className="sr-only">
-              Tìm kiếm theo họ tên, email hoặc số điện thoại
+            <label
+              htmlFor="account-search-input"
+              className={actorRole === 'SELLER' ? undefined : 'sr-only'}
+            >
+              {actorRole === 'SELLER'
+                ? 'Tìm nhân viên'
+                : 'Tìm kiếm theo họ tên, email hoặc số điện thoại'}
             </label>
             <div className="management-search-wrapper">
               <Search size={15} aria-hidden="true" className="management-search-icon" />
@@ -705,8 +734,11 @@ export default function AccountManagement({
             </div>
           </div>
           <div>
-            <label htmlFor="account-status-filter" className="sr-only">
-              Lọc theo trạng thái
+            <label
+              htmlFor="account-status-filter"
+              className={actorRole === 'SELLER' ? undefined : 'sr-only'}
+            >
+              {actorRole === 'SELLER' ? 'Trạng thái' : 'Lọc theo trạng thái'}
             </label>
             <Select
               id="account-status-filter"
@@ -717,12 +749,24 @@ export default function AccountManagement({
                 setPage(1);
               }}
             >
-              <option value="ALL">Tất cả trạng thái ({accounts.length})</option>
-              <option value="ACTIVE">Đang hoạt động ({activeCount})</option>
-              <option value="LOCKED">Tạm khóa ({lockedCount})</option>
-              <option value="DISABLED">Đã vô hiệu hóa ({disabledCount})</option>
+              <option value="ALL">Tất cả trạng thái</option>
+              <option value="ACTIVE">Đang hoạt động</option>
+              <option value="LOCKED">Tạm khóa</option>
+              <option value="DISABLED">Đã vô hiệu hóa</option>
             </Select>
           </div>
+          {actorRole === 'SELLER' && (search || statusFilter !== 'ALL') && (
+            <IconActionButton
+              action="clear"
+              label="Xóa bộ lọc nhân viên"
+              onClick={() => {
+                setSearch('');
+                setStatusFilter('ALL');
+                setPage(1);
+              }}
+            />
+          )}
+          {actorRole === 'SELLER' && directoryActions}
         </div>
 
         {/* Loading & Error States */}
@@ -779,7 +823,7 @@ export default function AccountManagement({
       <Modal
         open={createOpen}
         title={createLabel}
-        description="Nhập thông tin để tạo tài khoản mới. Mật khẩu phải từ 6 đến 72 ký tự."
+        className={actorRole === 'SELLER' ? 'seller-staff-create-modal' : undefined}
         onClose={closeCreate}
         closeDisabled={createMutation.isPending}
       >
@@ -802,7 +846,10 @@ export default function AccountManagement({
           <div className="account-form-grid">
             <div className="management-field">
               <label htmlFor="account-fullname">
-                Họ và tên <span aria-hidden="true">*</span>
+                Họ và tên{' '}
+                <span className="account-required" aria-hidden="true">
+                  *
+                </span>
               </label>
               <input
                 id="account-fullname"
@@ -846,7 +893,10 @@ export default function AccountManagement({
           <div className="account-form-grid">
             <div className="management-field">
               <label htmlFor="account-email">
-                Địa chỉ email <span aria-hidden="true">*</span>
+                Địa chỉ email{' '}
+                <span className="account-required" aria-hidden="true">
+                  *
+                </span>
               </label>
               <input
                 id="account-email"
@@ -869,7 +919,10 @@ export default function AccountManagement({
 
             <div className="management-field">
               <label htmlFor="account-password">
-                Mật khẩu <span aria-hidden="true">*</span>
+                Mật khẩu{' '}
+                <span className="account-required" aria-hidden="true">
+                  *
+                </span>
               </label>
               <div className="management-password-wrap">
                 <input
@@ -938,23 +991,11 @@ export default function AccountManagement({
       <Modal
         open={viewing !== null && targetRole === 'SELLER_STAFF'}
         title={`Chi tiết ${itemName}`}
-        description="Thông tin tài khoản trên hệ thống FloraBot."
+        className="seller-staff-detail-modal"
         onClose={closeDetails}
       >
         {viewing && (
           <div className="account-detail-view">
-            <div className="account-detail-hero">
-              <div className="account-detail-hero-id">
-                <span className="account-detail-hero-avatar" aria-hidden="true">
-                  {getInitials(viewing.fullName)}
-                </span>
-                <div className="account-detail-hero-text">
-                  <strong>{viewing.fullName}</strong>
-                  <span>{viewing.email}</span>
-                </div>
-              </div>
-              <StatusBadge status={viewing.status} />
-            </div>
             <dl className="management-details">
               <div>
                 <dt>Họ và tên</dt>

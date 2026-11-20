@@ -56,6 +56,7 @@ export async function request<T>(
   retry = true,
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
   extraHeaders?: Record<string, string>,
+  responseType: 'json' | 'text' = 'json',
 ): Promise<T> {
   const resolvedMethod = method ?? (body === undefined ? 'GET' : 'POST');
   const response = await fetch(`/api${path}`, {
@@ -99,7 +100,8 @@ export async function request<T>(
       .finally(() => {
         refresh = undefined;
       });
-    if (await refresh) return request<T>(path, body, false, resolvedMethod, extraHeaders);
+    if (await refresh)
+      return request<T>(path, body, false, resolvedMethod, extraHeaders, responseType);
   }
   if (!response.ok) {
     const problem = (await response.json().catch(() => ({}))) as {
@@ -147,7 +149,9 @@ export async function request<T>(
       problem.code || problem.detail,
     );
   }
-  return response.status === 204 ? (undefined as T) : (response.json() as Promise<T>);
+  return response.status === 204
+    ? (undefined as T)
+    : ((responseType === 'text' ? response.text() : response.json()) as Promise<T>);
 }
 
 export function logoutSession(): Promise<void> {

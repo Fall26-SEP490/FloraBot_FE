@@ -1,15 +1,21 @@
 /* Keep the public rental layout independent from staff pricing and workspace forms. */
+.workspace-portal-root:has(.kiosk-onboarding-container) {
+  background:
+    linear-gradient(#fafbf5e6, #fafbf5e6),
+    url('/images/generated/florabot-pattern.webp') top left / 520px repeat;
+  min-height: 100vh;
+}
 .kiosk-onboarding-container {
-  max-width: 1240px;
-  padding-top: 32px;
+  max-width: 1180px;
+  padding-top: 24px;
 }
 .kiosk-onboarding-container .kiosk-onboarding-header {
-  margin-bottom: 28px;
+  margin-bottom: 24px;
   border-bottom: 0;
   padding-bottom: 0;
 }
 .kiosk-onboarding-container .kiosk-breadcrumb {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 .kiosk-onboarding-container .kiosk-lease-eyebrow {
   color: #52715c;
@@ -41,8 +47,8 @@
 }
 .kiosk-onboarding-container .kiosk-registration-layout {
   display: grid;
-  grid-template-columns: minmax(320px, 360px) minmax(0, 1fr);
-  gap: 28px;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 24px;
   align-items: start;
 }
 .kiosk-lease-sidebar {
@@ -55,11 +61,11 @@
 }
 .kiosk-onboarding-container .kiosk-packages-section {
   margin: 0;
-  padding: 24px;
+  padding: 20px;
   background: #fff;
   border: 1px solid #dce5dd;
-  border-radius: 18px;
-  box-shadow: 0 4px 20px #193d2d04;
+  border-radius: 12px;
+  box-shadow: none;
 }
 .lease-section-heading {
   display: flex;
@@ -88,7 +94,7 @@
   margin: 0;
 }
 .kiosk-onboarding-container .slot-demand {
-  margin: 24px 0 0;
+  margin: 18px 0 0;
 }
 .kiosk-onboarding-container .slot-demand legend {
   position: absolute;
@@ -103,9 +109,9 @@
 }
 .kiosk-onboarding-container .slot-demand-inputs > div {
   padding: 16px;
-  background: #f7f9f5;
-  border: 1px solid #e2e9df;
-  border-radius: 12px;
+  background: #fafbf8;
+  border: 0;
+  border-radius: 8px;
   gap: 6px;
 }
 .kiosk-onboarding-container .slot-demand-inputs label {
@@ -177,7 +183,7 @@
   gap: 8px;
   margin-top: 20px;
   padding: 18px 0 12px;
-  border-color: #e1e8df;
+  border: 0;
 }
 .kiosk-onboarding-container .slot-demand-total span {
   font-size: 12px;
@@ -198,7 +204,7 @@
   background: #ffffff;
   border: 1px solid #dce5dd;
   border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(25, 61, 45, 0.04);
+  box-shadow: none;
 }
 .kiosk-onboarding-container .kiosk-registration-guide h2 {
   font-size: 14.5px;
@@ -207,7 +213,7 @@
   margin-bottom: 14px;
 }
 .kiosk-onboarding-container .kiosk-registration-guide ol {
-  margin: 0 0 16px;
+  margin: 0;
   gap: 14px;
   padding-left: 0;
   list-style: none;
@@ -255,11 +261,11 @@
   margin-top: 12px;
 }
 .kiosk-onboarding-container .kiosk-form-section {
-  padding: 30px;
+  padding: 24px;
   background: #ffffff;
   border: 1px solid #dce5dd;
-  border-radius: 18px;
-  box-shadow: 0 4px 20px #193d2d04;
+  border-radius: 12px;
+  box-shadow: none;
 }
 .lease-form-eyebrow,
 .lease-review-label {
@@ -277,7 +283,7 @@
   font-size: 13px;
 }
 .kiosk-onboarding-container .kiosk-application-form {
-  gap: 22px;
+  gap: 20px;
 }
 .kiosk-onboarding-container .kiosk-form-group {
   padding-top: 16px;
@@ -303,11 +309,11 @@
   text-underline-offset: 3px;
 }
 .kiosk-rental-review {
-  padding: 22px 24px;
-  border: 1px solid #cde0cb;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #f8fbf6 0%, #eff7ec 100%);
-  box-shadow: 0 4px 16px rgba(25, 61, 45, 0.04);
+  padding: 16px;
+  border: 0;
+  border-radius: 8px;
+  background: #f5f8f2;
+  box-shadow: none;
 }
 .kiosk-rental-review > p {
   margin: 0;
@@ -324,8 +330,7 @@
   gap: 8px;
   margin: 12px 0;
   padding: 10px 0;
-  border-top: 1px dashed #d0e2ce;
-  border-bottom: 1px dashed #d0e2ce;
+  border: 0;
   font-size: 13.5px;
   color: #335440;
 }
@@ -342,8 +347,8 @@
   margin: 0 0 10px;
 }
 .kiosk-rental-review .rental-consent {
-  border-top: 1px solid #dce6d7;
-  padding-top: 14px;
+  border: 0;
+  padding-top: 0;
   margin-top: 12px;
   font-size: 13px;
   font-weight: 600;
@@ -420,11 +425,11 @@
   justify-content: center;
 }
 .lease-seller-card {
-  margin-bottom: 24px;
-  padding: 16px 18px;
-  background: #f4f8f4;
-  border: 1px solid #cfe0d3;
-  border-radius: 14px;
+  margin-bottom: 0;
+  padding: 16px;
+  background: #fafbf8;
+  border: 0;
+  border-radius: 8px;
 }
 .lease-seller-header {
   display: flex;
@@ -471,10 +476,10 @@
 }
 .lease-seller-bank-row {
   margin-top: 12px;
-  padding: 10px 14px;
-  background: #fff;
-  border: 1px solid #cce0d1;
-  border-radius: 10px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
   font-size: 13px;
   display: flex;
   align-items: center;
@@ -482,8 +487,25 @@
   flex-wrap: wrap;
 }
 .lease-seller-bank-row.is-ready {
-  border-left: 4px solid #2d5a3f;
-  background: #fbfdfb;
+  border: 0;
+  background: transparent;
+}
+.kiosk-onboarding-container .kiosk-form-section.is-additional .kiosk-form-group > legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.kiosk-onboarding-container .kiosk-form-section.is-additional .kiosk-form-group {
+  padding-top: 0;
+  border: 0;
+}
+.kiosk-onboarding-container .kiosk-field-error-banner {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: #b02e2e;
 }
 .lease-seller-bank-badge {
   font-weight: 700;
@@ -509,6 +531,9 @@
   }
 }
 @media (max-width: 540px) {
+  .kiosk-onboarding-container .kiosk-registration-guide {
+    display: none;
+  }
   .kiosk-onboarding-container {
     padding: 22px 16px 48px;
   }

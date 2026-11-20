@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Modal } from '@/shared/components/Modal';
+import photoStyles from '../../product-management/styles/product-detail.module.css';
 import Image from 'next/image';
 import '../styles/staff-evidence.css';
 import { useQuery } from '@tanstack/react-query';
@@ -28,6 +31,7 @@ export default function StaffEvidence({
   taskStatus,
   apiBase: explicitApiBase,
   mode,
+  role,
 }: StaffEvidenceProps & { taskStatus?: string }) {
   const isWorker = mode !== undefined ? mode === 'worker' : !admin;
   const path = explicitApiBase
@@ -42,6 +46,7 @@ export default function StaffEvidence({
   );
   const [reference, setReference] = useState('');
   const [open, setOpen] = useState(false);
+  const [viewerId, setViewerId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -105,7 +110,11 @@ export default function StaffEvidence({
     }
   }
   return (
-    <details className="staff-evidence" onToggle={(event) => setOpen(event.currentTarget.open)}>
+    <details
+      className="staff-evidence"
+      data-seller-evidence={role === 'SELLER' ? '' : undefined}
+      onToggle={(event) => setOpen(event.currentTarget.open)}
+    >
       <summary>Ảnh minh chứng công việc</summary>
 
       {evidence.isPending ? (
@@ -125,25 +134,98 @@ export default function StaffEvidence({
             <ol className="staff-evidence-grid">
               {evidence.data.items.map((item, index) => (
                 <li key={item.id}>
-                  <a href={`/api${path}/${item.id}`} target="_blank" rel="noopener noreferrer">
-                    <span className="staff-evidence-preview">
+                  {role === 'SELLER' ? (
+                    <button
+                      type="button"
+                      className="task-evidence-photo"
+                      onClick={() => setViewerId(item.id)}
+                      aria-label={`Xem lớn ảnh minh chứng ${(page - 1) * 25 + index + 1}`}
+                    >
                       <Image
                         src={`/api${path}/${item.id}`}
                         alt={`Ảnh minh chứng ${(page - 1) * 25 + index + 1}`}
                         width={240}
-                        height={160}
+                        height={180}
                         unoptimized
                         loading="lazy"
                       />
-                    </span>
-                    Xem ảnh {(page - 1) * 25 + index + 1} (mở tab mới)
-                  </a>
-                  {' · '}
+                      <span className="task-evidence-zoom">Xem lớn</span>
+                    </button>
+                  ) : (
+                    <>
+                      <a href={`/api${path}/${item.id}`} target="_blank" rel="noopener noreferrer">
+                        <span className="staff-evidence-preview">
+                          <Image
+                            src={`/api${path}/${item.id}`}
+                            alt={`Ảnh minh chứng ${(page - 1) * 25 + index + 1}`}
+                            width={240}
+                            height={160}
+                            unoptimized
+                            loading="lazy"
+                          />
+                        </span>
+                        Xem ảnh {(page - 1) * 25 + index + 1} (mở tab mới)
+                      </a>
+                      {' · '}
+                    </>
+                  )}
                   <time dateTime={item.createdAt}>{formatTaskDate(item.createdAt)}</time>
                 </li>
               ))}
             </ol>
           )}
+          {viewerId &&
+            evidence.data.items.some((item) => item.id === viewerId) &&
+            createPortal(
+              <Modal
+                open
+                title="Ảnh minh chứng công việc"
+                size="lg"
+                className={photoStyles.photoModal}
+                onClose={() => setViewerId(null)}
+              >
+                <div className="task-evidence-lightbox">
+                  <Image
+                    src={`/api${path}/${viewerId}`}
+                    alt="Ảnh minh chứng công việc"
+                    width={1200}
+                    height={900}
+                    unoptimized
+                  />
+                  {evidence.data.items.length > 1 && (
+                    <div className="task-evidence-nav">
+                      <Button
+                        variant="outline"
+                        disabled={viewerId === evidence.data.items[0]?.id}
+                        onClick={() =>
+                          setViewerId(
+                            evidence.data.items[
+                              evidence.data.items.findIndex((item) => item.id === viewerId) - 1
+                            ]?.id ?? viewerId,
+                          )
+                        }
+                      >
+                        Ảnh trước
+                      </Button>
+                      <Button
+                        variant="outline"
+                        disabled={viewerId === evidence.data.items.at(-1)?.id}
+                        onClick={() =>
+                          setViewerId(
+                            evidence.data.items[
+                              evidence.data.items.findIndex((item) => item.id === viewerId) + 1
+                            ]?.id ?? viewerId,
+                          )
+                        }
+                      >
+                        Ảnh sau
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </Modal>,
+              document.body,
+            )}
           <div className="staff-history-pagination" aria-label="Phân trang ảnh minh chứng">
             {(page > 1 || evidence.data.hasMore) && (
               <>

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Button, X } from '@florabot/ui';
 import {
   qualityDate,
@@ -161,11 +161,13 @@ export default function QualityComplaintDetails({
   scope,
   capability,
   onPage,
+  actions,
 }: {
   detail: QualityComplaint;
   scope: Scope;
   capability?: ReceiptCapability;
   onPage: (page: number) => void;
+  actions?: ReactNode;
 }) {
   const { evidence, replacement, task } = detail;
   if (scope === 'seller')
@@ -242,6 +244,14 @@ export default function QualityComplaintDetails({
             {replacement.expiresAt && ['READY', 'LOADED'].includes(replacement.state) && (
               <p className={sellerStyles.quiet}>Hạn giữ hoa: {sellerDate(replacement.expiresAt)}</p>
             )}
+          </section>
+        )}
+        {actions && (
+          <section
+            className={`${sellerStyles.detailSection} ${sellerStyles.actionsSection}`}
+            aria-label="Thao tác xử lý"
+          >
+            {actions}
           </section>
         )}
         <section className={sellerStyles.detailSection} aria-label="Ảnh minh chứng">

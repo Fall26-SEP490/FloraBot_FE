@@ -34,15 +34,18 @@ for (const width of [390, 1440]) {
             preorderAnnualPrice: 120000,
           },
         });
+      if (path === '/api/sellers/seller/subscriptions')
+        return route.fulfill({ json: { subscriptions: [] } });
       return route.fulfill({ json: [] });
     });
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/seller/subscriptions');
-    await expect(page.locator('#subscriptions')).toContainText('540.000');
-    await expect(page.locator('#subscriptions')).toContainText('3 ô Walk-in · 2 ô Pre-order');
-    await expect(
-      page.getByRole('link', { name: 'Xem hồ sơ hoặc thuê thêm kiosk' }),
-    ).toHaveAttribute('href', '/thue-kiosk');
+    await expect(page.locator('#subscriptions')).toBeVisible();
+    await expect(page.locator('.subscription-application-card')).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Thuê thêm kiosk mới' })).toHaveAttribute(
+      'href',
+      '/thue-kiosk',
+    );
     await expect(page.getByRole('button', { name: /gia hạn|Đăng ký kỳ thuê/i })).toHaveCount(0);
     expect(writes).toEqual([]);
   });

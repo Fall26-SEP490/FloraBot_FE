@@ -201,102 +201,122 @@ test('Seller accepts, assigns, returns a report and escalates with server versio
   expect(writes).toEqual(['accept', 'assignment', 'review', 'review']);
 });
 
-test('Seller plans a replacement in an eligible slot and cancels it with the latest version', async ({
-  page,
-}) => {
-  await role(page, 'SELLER');
-  const taskId = '80000000-0000-0000-0000-000000000006';
-  const productId = '80000000-0000-0000-0000-000000000007';
-  const slotId = '80000000-0000-0000-0000-000000000008';
-  let current = {
-    ...detail,
-    acceptedAt: date,
-    handlingState: 'IN_PROGRESS',
-    task: {
-      id: taskId,
-      version: 2,
-      status: 'IN_PROGRESS',
-      orderItemId: itemId,
-      instructions: 'Kiểm tra và chuẩn bị hoa thay.',
-      report: null as string | null,
-    },
-  };
-  await page.route('**/api/me/complaints?*', (route) =>
-    route.fulfill({ json: { items: [current], page: 1, hasMore: false } }),
-  );
-  await page.route('**/api/me/products', (route) =>
-    route.fulfill({
-      json: [
-        { id: productId, name: 'Bó cúc vàng', status: 'ACTIVE', quantity: 2 },
-        { id: 'sold-out', name: 'Hoa hồng hết hàng', status: 'ACTIVE', quantity: 0 },
-      ],
-    }),
-  );
-  await page.route(`**/api/me/kiosks/${kioskId}/slots`, (route) =>
-    route.fulfill({
-      json: [
-        {
-          id: slotId,
-          slotCode: 'A02',
-          kioskId,
-          zone: 'WALK_IN',
-          status: 'RENTED_EMPTY',
-          sensorReady: true,
-        },
-        {
-          id: 'preorder',
-          slotCode: 'P01',
-          kioskId,
-          zone: 'PREORDER',
-          status: 'RENTED_EMPTY',
-          sensorReady: true,
-        },
-      ],
-    }),
-  );
-  await page.route(`**/api/me/complaints/${id}**`, (route) => {
-    if (route.request().method() === 'GET') return route.fulfill({ json: current });
-    const path = new URL(route.request().url()).pathname;
-    const body = route.request().postDataJSON();
-    if (path.endsWith('/replacement-plan')) {
-      expect(body).toEqual({ version: 1, taskVersion: 2, productId, slotId });
-      current = {
-        ...current,
-        version: 3,
-        handlingState: 'REVIEW_REQUIRED',
-        task: { ...current.task, status: 'SUBMITTED', version: 4, report: 'Đã kiểm tra bó hoa.' },
-        replacement: { taskId, productId, slotId, slotCode: 'A02', state: 'PLANNED' },
-      };
-    } else {
-      expect(path.endsWith('/replacement/cancel')).toBe(true);
-      expect(body).toEqual({ version: 3, reason: 'Shop không còn mẫu hoa thay phù hợp.' });
-      current = {
-        ...current,
-        version: 5,
-        replacement: { ...current.replacement!, state: 'CANCELLED' },
-      };
-    }
-    return route.fulfill({ json: { version: current.version } });
+for (const zone of ['WALK_IN', 'PREORDER']) {
+  test(`Seller plans a replacement in an eligible ${zone} slot and cancels it with the latest version`, async ({
+    page,
+  }) => {
+    await role(page, 'SELLER');
+    const taskId = '80000000-0000-0000-0000-000000000006';
+    const productId = '80000000-0000-0000-0000-000000000007';
+    const slotId = '80000000-0000-0000-0000-000000000008';
+    let current = {
+      ...detail,
+      acceptedAt: date,
+      handlingState: 'IN_PROGRESS',
+      task: {
+        id: taskId,
+        version: 2,
+        status: 'IN_PROGRESS',
+        orderItemId: itemId,
+        instructions: 'Kiểm tra và chuẩn bị hoa thay.',
+        report: null as string | null,
+      },
+    };
+    await page.route('**/api/me/complaints?*', (route) =>
+      route.fulfill({ json: { items: [current], page: 1, hasMore: false } }),
+    );
+    await page.route('**/api/me/products', (route) =>
+      route.fulfill({
+        json: [
+          { id: productId, name: 'Bó cúc vàng', status: 'ACTIVE', quantity: 2 },
+          { id: 'sold-out', name: 'Hoa hồng hết hàng', status: 'ACTIVE', quantity: 0 },
+        ],
+      }),
+    );
+    await page.route(`**/api/me/kiosks/${kioskId}/slots`, (route) =>
+      route.fulfill({
+        json: [
+          {
+            id: slotId,
+            slotCode: 'A02',
+            kioskId,
+            zone,
+            status: 'RENTED_EMPTY',
+            sensorReady: true,
+          },
+          {
+            id: 'held-preorder',
+            slotCode: 'P01',
+            kioskId,
+            zone: 'PREORDER',
+            status: 'HELD',
+            sensorReady: true,
+            holdOrderId: 'another-order',
+          },
+          {
+            id: 'unmonitored-preorder',
+            slotCode: 'P02',
+            kioskId,
+            zone: 'PREORDER',
+            status: 'RENTED_EMPTY',
+            sensorReady: false,
+          },
+          {
+            id: 'busy-preorder',
+            slotCode: 'P03',
+            kioskId,
+            zone: 'PREORDER',
+            status: 'STOCKED',
+            sensorReady: true,
+            bouquetId: 'another-bouquet',
+          },
+        ],
+      }),
+    );
+    await page.route(`**/api/me/complaints/${id}**`, (route) => {
+      if (route.request().method() === 'GET') return route.fulfill({ json: current });
+      const path = new URL(route.request().url()).pathname;
+      const body = route.request().postDataJSON();
+      if (path.endsWith('/replacement-plan')) {
+        expect(body).toEqual({ version: 1, taskVersion: 2, productId, slotId });
+        current = {
+          ...current,
+          version: 3,
+          handlingState: 'REVIEW_REQUIRED',
+          task: { ...current.task, status: 'SUBMITTED', version: 4, report: 'Đã kiểm tra bó hoa.' },
+          replacement: { taskId, productId, slotId, slotCode: 'A02', state: 'PLANNED' },
+        };
+      } else {
+        expect(path.endsWith('/replacement/cancel')).toBe(true);
+        expect(body).toEqual({ version: 3, reason: 'Shop không còn mẫu hoa thay phù hợp.' });
+        current = {
+          ...current,
+          version: 5,
+          replacement: { ...current.replacement!, state: 'CANCELLED' },
+        };
+      }
+      return route.fulfill({ json: { version: current.version } });
+    });
+    await page.goto('/seller/complaints');
+    await page.getByRole('button', { name: 'Xem phản ánh đơn FB-QUALITY', exact: true }).click();
+    await page.getByRole('button', { name: 'Chọn hoa thay và ô tủ' }).click();
+    const products = page.getByRole('combobox', { name: 'Mẫu hoa còn tồn', exact: true });
+    const slots = page.getByRole('combobox', { name: 'Ô trống tại kiosk gốc', exact: true });
+    await chooseOption(products, productId);
+    await chooseOption(slots, slotId);
+    await expect(products.locator('option[value="sold-out"]')).toHaveCount(0);
+    for (const rejected of ['held-preorder', 'unmonitored-preorder', 'busy-preorder'])
+      await expect(slots.locator(`option[value="${rejected}"]`)).toHaveCount(0);
+    await page.getByRole('button', { name: 'Xác nhận', exact: true }).click();
+    await page.getByRole('button', { name: 'Duyệt báo cáo' }).click();
+    await expect(page.locator('option[value="REPLACEMENT"][disabled]')).toHaveCount(1);
+    const cancel = page.getByRole('button', { name: 'Hủy phương án hoa thay' });
+    await cancel.click();
+    await page.getByLabel('Lý do hủy').fill('Shop không còn mẫu hoa thay phù hợp.');
+    await page.getByRole('button', { name: 'Xác nhận', exact: true }).click();
+    await expect(cancel).toHaveCount(0);
   });
-  await page.goto('/seller/complaints');
-  await page.getByRole('button', { name: 'Xem phản ánh đơn FB-QUALITY', exact: true }).click();
-  await page.getByRole('button', { name: 'Chọn hoa thay và ô tủ' }).click();
-  const products = page.getByRole('combobox', { name: 'Mẫu hoa còn tồn', exact: true });
-  const slots = page.getByRole('combobox', { name: 'Ô trống tại kiosk gốc', exact: true });
-  await chooseOption(products, productId);
-  await chooseOption(slots, slotId);
-  await expect(products.locator('option[value="sold-out"]')).toHaveCount(0);
-  await expect(slots.locator('option[value="preorder"]')).toHaveCount(0);
-  await page.getByRole('button', { name: 'Xác nhận', exact: true }).click();
-  await page.getByRole('button', { name: 'Duyệt báo cáo' }).click();
-  await expect(page.locator('option[value="REPLACEMENT"][disabled]')).toHaveCount(1);
-  const cancel = page.getByRole('button', { name: 'Hủy phương án hoa thay' });
-  await cancel.click();
-  await page.getByLabel('Lý do hủy').fill('Shop không còn mẫu hoa thay phù hợp.');
-  await page.getByRole('button', { name: 'Xác nhận', exact: true }).click();
-  await expect(cancel).toHaveCount(0);
-});
-
+}
 test('Staff submits a quality report without photo or general stocking actions', async ({
   page,
 }) => {

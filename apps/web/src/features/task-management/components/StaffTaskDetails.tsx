@@ -43,8 +43,14 @@ export default function StaffTaskDetails({
     refetchInterval: open ? 30_000 : false,
   });
   return (
-    <details className="staff-task-details" onToggle={(event) => setOpen(event.currentTarget.open)}>
-      <summary>Thông tin tủ, sự cố và lịch sử công việc</summary>
+    <details
+      className="staff-task-details"
+      data-seller-details={role === 'SELLER' ? '' : undefined}
+      onToggle={(event) => setOpen(event.currentTarget.open)}
+    >
+      <summary>
+        {role === 'SELLER' ? 'Thông tin tủ và lịch sử' : 'Thông tin tủ, sự cố và lịch sử công việc'}
+      </summary>
       {open && role === 'TECHNICIAN' && (
         <TechnicianIoTHealth path={`/staff/tasks/${taskId}/iot-health`} actorId={actorId} />
       )}
@@ -62,7 +68,9 @@ export default function StaffTaskDetails({
           <dl className="account-details">
             <div>
               <dt>Tình trạng tủ</dt>
-              <dd>{TASK_DETAIL_STATES[details.data.kioskStatus] || details.data.kioskStatus}</dd>
+              <dd data-task-state={details.data.kioskStatus}>
+                {TASK_DETAIL_STATES[details.data.kioskStatus] || details.data.kioskStatus}
+              </dd>
             </div>
             <div>
               <dt>Tín hiệu gần nhất</dt>
@@ -196,17 +204,21 @@ export default function StaffTaskDetails({
             <ol className="staff-task-history">
               {details.data.history.map((event) => (
                 <li key={event.id}>
-                  <p>
-                    <strong>{TASK_DETAIL_ACTIONS[event.action] || event.action}</strong> ·{' '}
-                    {event.actorName}
-                  </p>
-                  <time dateTime={event.createdAt}>{formatTaskDate(event.createdAt)}</time>
-                  {event.toStatus && (
+                  <div className="task-history-heading">
                     <p>
+                      <strong>{TASK_DETAIL_ACTIONS[event.action] || event.action}</strong> ·{' '}
+                      <span className="task-history-actor">{event.actorName}</span>
+                    </p>
+                    <time dateTime={event.createdAt}>{formatTaskDate(event.createdAt)}</time>
+                  </div>
+                  {event.toStatus && (
+                    <p className="task-history-transition">
                       {event.fromStatus
                         ? `${TASK_DETAIL_STATES[event.fromStatus] || event.fromStatus} → `
                         : ''}
-                      {TASK_DETAIL_STATES[event.toStatus] || event.toStatus}
+                      <strong data-task-state={event.toStatus}>
+                        {TASK_DETAIL_STATES[event.toStatus] || event.toStatus}
+                      </strong>
                     </p>
                   )}
                   {event.report && <p>{event.report}</p>}

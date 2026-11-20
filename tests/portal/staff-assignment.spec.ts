@@ -167,7 +167,7 @@ test('Shop Owner assigns DELIVERY to own seller staff and recovers the same requ
   });
 
   await page.goto('/seller/tasks');
-  await page.getByText('Phân công công việc mới', { exact: true }).click();
+  await page.getByRole('button', { name: 'Giao việc mới', exact: true }).click();
 
   await expect(page.getByLabel('Loại công việc')).toHaveCount(0);
 
@@ -176,7 +176,7 @@ test('Shop Owner assigns DELIVERY to own seller staff and recovers the same requ
   expect(writes).toBe(0);
 
   await chooseOption(page.getByLabel('Nhân viên phụ trách'), 'staff-lan-1');
-  await chooseOption(page.getByLabel('Shop và tủ giao hoa'), 'shop-lan:kiosk-2');
+  await chooseOption(page.getByLabel('Tủ giao hoa'), 'shop-lan:kiosk-2');
   await page.getByLabel('Hướng dẫn công việc').fill('Giao 5 bó hồng pastel vào ô tủ Landmark');
 
   expect(
@@ -193,13 +193,21 @@ test('Shop Owner assigns DELIVERY to own seller staff and recovers the same requ
   expect(writes).toBe(1);
 
   await page.reload();
-  await page.getByText('Phân công công việc mới', { exact: true }).click();
+  await page.getByRole('button', { name: 'Giao việc mới', exact: true }).click();
   await page.getByRole('button', { name: 'Thử lại với mã yêu cầu cũ' }).click();
   await expect(
     page.getByText('Đã phân công. Nhân viên sẽ thấy công việc trong tài khoản.'),
   ).toBeVisible();
   expect(writes).toBe(2);
-  const task = page.getByRole('article', { name: 'Giao hoa · Tủ Landmark' });
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Đóng hộp thoại', exact: true })
+    .click();
+  await page
+    .getByRole('button', { name: /^Xem công việc / })
+    .first()
+    .click();
+  const task = page.getByRole('dialog').getByRole('article', { name: 'Giao hoa', exact: true });
   await expect(task.getByText('Chờ bắt đầu', { exact: true })).toBeVisible();
   await expect(task.getByLabel('Bước tiếp theo')).toHaveCount(0);
   await task.getByRole('button', { name: 'Hủy công việc', exact: true }).click();

@@ -1,5 +1,6 @@
 'use client';
 
+import RefreshRegion from '@/shared/components/RefreshRegion';
 import IconActionButton from '@/shared/components/IconActionButton';
 import { useId, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -67,11 +68,7 @@ function ComplaintPanel({
         {detail.isError && (
           <div className={styles.error} role="alert">
             <p>Chưa cập nhật được hồ sơ. Tải lại trước khi thao tác.</p>
-            <Button
-              variant="outline"
-              disabled={detail.isFetching}
-              onClick={() => void detail.refetch()}
-            >
+            <Button variant="outline" disabled={detail.isFetching} onClick={() => detail.refetch()}>
               Thử lại
             </Button>
           </div>
@@ -80,8 +77,12 @@ function ComplaintPanel({
           !detail.isError && <p role="status">Đang tải phản ánh…</p>
         ) : (
           <>
-            <QualityComplaintDetails detail={data} scope="seller" onPage={setEvidencePage} />
-            {renderActions(data, reload, detail.isError || detail.isFetching, setBusy)}
+            <QualityComplaintDetails
+              detail={data}
+              scope="seller"
+              onPage={setEvidencePage}
+              actions={renderActions(data, reload, detail.isError || detail.isFetching, setBusy)}
+            />
           </>
         )}
       </div>
@@ -120,156 +121,154 @@ export default function SellerQualityComplaints({
   );
   return (
     <div className={styles.sellerQueue} role="region" aria-label="Hồ sơ chất lượng hoa">
-      <div className={styles.surface}>
-        <div className={styles.filters}>
-          <label htmlFor={searchId} className={styles.searchField}>
-            <span>Tìm phản ánh</span>
-            <span className={styles.searchInput}>
-              <Search size={18} aria-hidden="true" />
-              <input
-                id={searchId}
-                type="search"
-                placeholder="Mã đơn, nội dung hoặc tên hoa"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
+      <RefreshRegion>
+        <div className={styles.surface}>
+          <div className={styles.filters}>
+            <label htmlFor={searchId} className={styles.searchField}>
+              <span>Tìm phản ánh</span>
+              <span className={styles.searchInput}>
+                <Search size={18} aria-hidden="true" />
+                <input
+                  id={searchId}
+                  type="search"
+                  placeholder="Mã đơn, nội dung hoặc tên hoa"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                />
+              </span>
+            </label>
+            <label htmlFor={stateId} className={styles.stateField}>
+              <span>Trạng thái</span>
+              <Select
+                id={stateId}
+                value={state}
+                onChange={(event) => {
+                  setState(event.target.value);
+                  setPage(1);
+                }}
+              >
+                <option value="">Tất cả</option>
+                {Object.entries(states).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </Select>
+            </label>
+            {(state || search) && (
+              <IconActionButton
+                variant="outline"
+                onClick={() => {
+                  setSearch('');
+                  setState('');
+                  setPage(1);
+                }}
+                action="clear"
+                label="Xóa bộ lọc"
               />
-            </span>
-          </label>
-          <label htmlFor={stateId} className={styles.stateField}>
-            <span>Trạng thái</span>
-            <Select
-              id={stateId}
-              value={state}
-              onChange={(event) => {
-                setState(event.target.value);
-                setPage(1);
-              }}
-            >
-              <option value="">Tất cả</option>
-              {Object.entries(states).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </Select>
-          </label>
-          {(state || search) && (
+            )}
             <IconActionButton
-              variant="outline"
-              onClick={() => {
-                setSearch('');
-                setState('');
-                setPage(1);
-              }}
-              action="clear"
-              label="Xóa bộ lọc"
-            />
-          )}
-          <IconActionButton
-            action="reload"
-            label="Tải lại phản ánh"
-            disabled={queue.isFetching}
-            onClick={() => void queue.refetch()}
-          />
-        </div>
-        {needle && (page > 1 || queue.data?.hasMore) && (
-          <p className={styles.scopeHint}>
-            Tìm trong trang hiện tại. Chuyển trang để xem thêm phản ánh.
-          </p>
-        )}
-        {queue.isError && (
-          <div className={styles.error} role="alert">
-            <p>Chưa tải được danh sách phản ánh.</p>
-            <Button
-              variant="outline"
+              action="reload"
+              label="Tải lại phản ánh"
               disabled={queue.isFetching}
-              onClick={() => void queue.refetch()}
-            >
-              Thử lại
-            </Button>
+              onClick={() => queue.refetch()}
+            />
           </div>
-        )}
-        <div className={styles.columns} aria-hidden="true">
-          <span>Mã đơn</span>
-          <span>Nội dung phản ánh</span>
-          <span>Hoa trong đơn</span>
-          <span>Ngày gửi</span>
-          <span>Trạng thái</span>
-          <span />
-        </div>
-        {queue.isPending ? (
-          <p className={styles.empty} role="status">
-            Đang tải phản ánh…
-          </p>
-        ) : !queue.isError && !rows.length ? (
-          <div className={styles.empty} role="status">
-            <strong>
-              {needle
-                ? 'Không tìm thấy phản ánh phù hợp'
-                : state
-                  ? 'Chưa có phản ánh ở trạng thái này'
-                  : 'Chưa có phản ánh chất lượng'}
-            </strong>
-            <p>
-              {needle || state
-                ? 'Thử đổi hoặc xóa bộ lọc.'
-                : 'Phản ánh của khách sẽ hiển thị tại đây.'}
+          {needle && (page > 1 || queue.data?.hasMore) && (
+            <p className={styles.scopeHint}>
+              Tìm trong trang hiện tại. Chuyển trang để xem thêm phản ánh.
             </p>
+          )}
+          {queue.isError && (
+            <div className={styles.error} role="alert">
+              <p>Chưa tải được danh sách phản ánh.</p>
+              <Button variant="outline" disabled={queue.isFetching} onClick={() => queue.refetch()}>
+                Thử lại
+              </Button>
+            </div>
+          )}
+          <div className={styles.columns} aria-hidden="true">
+            <span>Mã đơn</span>
+            <span>Nội dung phản ánh</span>
+            <span>Hoa trong đơn</span>
+            <span>Ngày gửi</span>
+            <span>Trạng thái</span>
+            <span />
           </div>
-        ) : (
-          <ul className={styles.records}>
-            {rows.map((row) => (
-              <li key={row.id}>
-                <button
-                  type="button"
-                  className={styles.record}
-                  aria-label={`Xem phản ánh đơn ${row.orderCode}`}
-                  onClick={() => setSelected(row)}
-                >
-                  <span className={styles.orderCode}>{row.orderCode}</span>
-                  <span className={styles.reason}>{row.reason}</span>
-                  <span
-                    className={styles.flowers}
-                    title={row.items.map((item) => item.name).join(', ')}
+          {queue.isPending ? (
+            <p className={styles.empty} role="status">
+              Đang tải phản ánh…
+            </p>
+          ) : !queue.isError && !rows.length ? (
+            <div className={styles.empty} role="status">
+              <strong>
+                {needle
+                  ? 'Không tìm thấy phản ánh phù hợp'
+                  : state
+                    ? 'Chưa có phản ánh ở trạng thái này'
+                    : 'Chưa có phản ánh chất lượng'}
+              </strong>
+              <p>
+                {needle || state
+                  ? 'Thử đổi hoặc xóa bộ lọc.'
+                  : 'Phản ánh của khách sẽ hiển thị tại đây.'}
+              </p>
+            </div>
+          ) : (
+            <ul className={styles.records}>
+              {rows.map((row) => (
+                <li key={row.id}>
+                  <button
+                    type="button"
+                    className={styles.record}
+                    aria-label={`Xem phản ánh đơn ${row.orderCode}`}
+                    onClick={() => setSelected(row)}
                   >
-                    {row.items.map((item) => item.name).join(', ') || '—'}
-                  </span>
-                  <span className={styles.created}>{date(row.createdAt)}</span>
-                  <span className={styles.state}>
-                    <span className={styles.badge} data-state={row.handlingState}>
-                      {states[row.handlingState] || row.handlingState}
+                    <span className={styles.orderCode}>{row.orderCode}</span>
+                    <span className={styles.reason}>{row.reason}</span>
+                    <span
+                      className={styles.flowers}
+                      title={row.items.map((item) => item.name).join(', ')}
+                    >
+                      {row.items.map((item) => item.name).join(', ') || '—'}
                     </span>
-                  </span>
-                  <span className={styles.openIcon}>
-                    <ArrowRight size={16} aria-hidden="true" />
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-        {(page > 1 || queue.data?.hasMore) && (
-          <nav className={styles.pagination} aria-label="Phân trang phản ánh">
-            <Button
-              variant="outline"
-              disabled={page <= 1 || queue.isFetching}
-              onClick={() => setPage((value) => value - 1)}
-            >
-              <ArrowLeft size={15} aria-hidden="true" />
-              Trang trước
-            </Button>
-            <span>Trang {page}</span>
-            <Button
-              variant="outline"
-              disabled={!queue.data?.hasMore || queue.isFetching}
-              onClick={() => setPage((value) => value + 1)}
-            >
-              Trang sau
-              <ArrowRight size={15} aria-hidden="true" />
-            </Button>
-          </nav>
-        )}
-      </div>
+                    <span className={styles.created}>{date(row.createdAt)}</span>
+                    <span className={styles.state}>
+                      <span className={styles.badge} data-state={row.handlingState}>
+                        {states[row.handlingState] || row.handlingState}
+                      </span>
+                    </span>
+                    <span className={styles.openIcon}>
+                      <ArrowRight size={16} aria-hidden="true" />
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {(page > 1 || queue.data?.hasMore) && (
+            <nav className={styles.pagination} aria-label="Phân trang phản ánh">
+              <Button
+                variant="outline"
+                disabled={page <= 1 || queue.isFetching}
+                onClick={() => setPage((value) => value - 1)}
+              >
+                <ArrowLeft size={15} aria-hidden="true" />
+                Trang trước
+              </Button>
+              <span>Trang {page}</span>
+              <Button
+                variant="outline"
+                disabled={!queue.data?.hasMore || queue.isFetching}
+                onClick={() => setPage((value) => value + 1)}
+              >
+                Trang sau
+                <ArrowRight size={15} aria-hidden="true" />
+              </Button>
+            </nav>
+          )}
+        </div>
+      </RefreshRegion>
       {selected && (
         <ComplaintPanel
           key={selected.id}

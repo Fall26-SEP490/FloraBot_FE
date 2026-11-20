@@ -1,6 +1,8 @@
 'use client';
 
 import IconActionButton from '@/shared/components/IconActionButton';
+import RefreshRegion from '@/shared/components/RefreshRegion';
+import { Modal } from '@/shared/components/Modal';
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
@@ -10,6 +12,7 @@ import VietnamDateInput from '@/shared/components/VietnamDateInput';
 import { vietnamDateTimeToUtc } from '@/shared/lib/vietnam-date';
 import { queryClient, request, type Session } from '@/shared/lib/api';
 import '../../styles/commerce-subscriptions.css';
+import '../../styles/seller-finance.css';
 
 type Page = components['schemas']['SellerRefundPageResponse'];
 type BaseDetail = components['schemas']['SellerRefundDetailResponse'];
@@ -126,18 +129,15 @@ function RefundCard({ id, sellerId }: { id: string; sellerId: string }) {
           Chưa tải được trạng thái mới. Bản nháp vẫn được giữ.
           <IconActionButton
             variant="outline"
-            onClick={() => void detail.refetch()}
+            onClick={() => detail.refetch()}
             disabled={detail.isFetching}
             action="reload"
             label="Tải lại khoản hoàn"
           />
         </div>
       )}
-      <h3>
-        Đơn {item.orderCode} · <span className="refund-amount">{money(item.amount)}</span>
-      </h3>
-      <p>
-        Trạng thái:{' '}
+      <div className="refund-detail-heading">
+        <h3>Đơn {item.orderCode}</h3>
         <span
           className="refund-status-pill"
           data-status={item.status}
@@ -159,8 +159,11 @@ function RefundCard({ id, sellerId }: { id: string; sellerId: string }) {
         >
           {refundStatusLabels[item.status] || item.status}
         </span>
-        {item.isApproved ? ' · Đã được duyệt' : ' · Chờ duyệt'}
-      </p>
+      </div>
+      <div className="refund-detail-amount">
+        <span>Số tiền hoàn</span>
+        <strong>{money(item.amount)}</strong>
+      </div>
       {item.status === 'PENDING' && (
         <p className="business-note">
           {!item.isApproved
@@ -169,14 +172,26 @@ function RefundCard({ id, sellerId }: { id: string; sellerId: string }) {
               ? 'Đã gửi chứng từ. Chờ Admin đối chiếu để hoàn tất khoản hoàn.'
               : !item.canAccessBank
                 ? 'Khách cần bổ sung tài khoản nhận hoàn trên biên nhận. Sau đó tải lại hồ sơ để tiếp tục.'
-                : 'Mở tài khoản nhận hoàn, chuyển khoản cho khách rồi gửi mã giao dịch và ảnh chứng từ bên dưới.'}
+                : 'Chuyển khoản cho khách và gửi chứng từ để đối chiếu.'}
         </p>
       )}
-      {item.reason && <p>Lý do: {item.reason}</p>}
+      {item.reason && (
+        <div className="refund-detail-reason">
+          <span>Lý do hoàn tiền</span>
+          <p>{item.reason.replace(/^AUTO_REFUND:\s*/i, 'Hoàn tự động: ')}</p>
+        </div>
+      )}
       {item.submission && (
         <div>
           <p>
-            Chứng từ đã gửi: {item.submission.providerReference} · {item.submission.status}
+            Chứng từ: {item.submission.providerReference} ·{' '}
+            {(
+              {
+                PENDING_REVIEW: 'Chờ đối chiếu',
+                REJECTED: 'Bị từ chối',
+                CONFIRMED: 'Đã đối chiếu',
+              } as Record<string, string>
+            )[item.submission.status] || item.submission.status}
             {item.submission.attemptCount != null
               ? ` · Lần gửi ${item.submission.attemptCount}/4`
               : ''}
@@ -188,7 +203,12 @@ function RefundCard({ id, sellerId }: { id: string; sellerId: string }) {
       )}
       {item.canAccessBank && (!item.submission || item.submission.status === 'REJECTED') && (
         <div className="business-form">
-          <label htmlFor={`bank-reason-${id}`}>Lý do xem tài khoản nhận hoàn</label>
+          <label htmlFor={`bank-reason-${id}`}>
+            Lý do xem tài khoản nhận hoàn{' '}
+            <span className="finance-required" aria-hidden="true">
+              *
+            </span>
+          </label>
           <input
             id={`bank-reason-${id}`}
             minLength={5}
@@ -230,12 +250,12 @@ function RefundCard({ id, sellerId }: { id: string; sellerId: string }) {
                 ? 'Chứng từ trước đó bị từ chối. Vui lòng kiểm tra lại và gửi chứng từ chuyển khoản mới (tối đa 3 lần gửi lại).'
                 : 'Chỉ gửi xác nhận sau khi bạn đã tự chuyển khoản đúng số tiền và tài khoản trên.'}
             </p>
-            {!bank && (
-              <p role="status">
-                Bản nháp vẫn được giữ. Hiện lại tài khoản nhận tiền trước khi gửi xác nhận.
-              </p>
-            )}
-            <label htmlFor={`refund-reference-${id}`}>Mã giao dịch ngân hàng</label>
+            <label htmlFor={`refund-reference-${id}`}>
+              Mã giao dịch ngân hàng{' '}
+              <span className="finance-required" aria-hidden="true">
+                *
+              </span>
+            </label>
             <input
               id={`refund-reference-${id}`}
               minLength={3}
@@ -243,7 +263,12 @@ function RefundCard({ id, sellerId }: { id: string; sellerId: string }) {
               value={providerReference}
               onChange={(event) => setProviderReference(event.target.value)}
             />
-            <label htmlFor={`refund-time-${id}`}>Thời điểm chuyển khoản</label>
+            <label htmlFor={`refund-time-${id}`}>
+              Thời điểm chuyển khoản{' '}
+              <span className="finance-required" aria-hidden="true">
+                *
+              </span>
+            </label>
             <VietnamDateInput
               id={`refund-time-${id}`}
               kind="datetime-local"
@@ -305,6 +330,7 @@ function RefundCard({ id, sellerId }: { id: string; sellerId: string }) {
 export default function SellerRefunds({ session }: { session: Session }) {
   const sellerId = session.sellerId;
   const [page, setPage] = useState(1);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const refunds = useQuery({
     queryKey: ['seller-refunds', sellerId, page],
     enabled: Boolean(sellerId),
@@ -312,74 +338,108 @@ export default function SellerRefunds({ session }: { session: Session }) {
   });
   if (!sellerId) return <p role="alert">Tài khoản chưa liên kết với shop.</p>;
   return (
-    <section className="business-panel">
-      <div className="business-heading">
-        <div>
-          <h2>Hoàn tiền trực tiếp</h2>
-          <p>Khoản hoàn đã duyệt cần được shop chuyển khoản và gửi chứng từ để đối chiếu.</p>
-        </div>
-        <IconActionButton
-          variant="outline"
-          onClick={() => void refunds.refetch()}
-          action="reload"
-          label="Làm mới"
-        />
-      </div>
-      {refunds.isError && <p role="alert">{refunds.error.message}</p>}
-      {refunds.isPending ? (
-        <p role="status">Đang tải khoản hoàn…</p>
-      ) : refunds.data?.items.length ? (
-        <div className="business-card-list">
-          {refunds.data.items.map((item) => (
-            <details className="business-card" key={item.id}>
-              <summary className="refund-summary-head">
-                <div className="refund-summary-main">
-                  <span className="refund-order-code">Đơn {item.orderCode}</span>
-                  <span className="refund-amount">{money(item.amount)}</span>
-                </div>
-                <div className="refund-summary-meta">
-                  <span
-                    className="refund-status-pill"
-                    data-status={item.status}
-                    style={
-                      refundStatusStyles[item.status]
-                        ? {
-                            background: refundStatusStyles[item.status].bg,
-                            color: refundStatusStyles[item.status].color,
-                            borderColor: refundStatusStyles[item.status].border,
-                          }
-                        : undefined
-                    }
-                  >
-                    {refundStatusLabels[item.status] || item.status}
-                  </span>
-                  <span className="refund-toggle-arrow" aria-hidden="true">
-                    ▾
-                  </span>
-                </div>
-              </summary>
-              <RefundCard id={item.id} sellerId={sellerId} />
-            </details>
-          ))}
-        </div>
-      ) : !refunds.isError ? (
-        <p>Chưa có khoản hoàn trực tiếp.</p>
-      ) : null}
-      {refunds.data && (
-        <div className="business-pagination">
-          <Button variant="outline" disabled={page <= 1} onClick={() => setPage(page - 1)}>
-            Trước
-          </Button>
-          <span>Trang {page}</span>
-          <Button
+    <RefreshRegion className="seller-finance">
+      <section className="business-panel seller-refunds">
+        <div className="business-heading">
+          <div>
+            <h2>Danh sách khoản hoàn</h2>
+          </div>
+          <IconActionButton
             variant="outline"
-            disabled={!refunds.data.hasMore}
-            onClick={() => setPage(page + 1)}
-          >
-            Sau
-          </Button>
+            onClick={() => refunds.refetch()}
+            disabled={refunds.isFetching}
+            action="reload"
+            label="Làm mới"
+          />
         </div>
+        {refunds.isError && <p role="alert">{refunds.error.message}</p>}
+        {refunds.isPending ? (
+          <p role="status">Đang tải khoản hoàn…</p>
+        ) : refunds.data?.items.length ? (
+          <div className="business-table-scroll">
+            <table className="business-table">
+              <thead>
+                <tr>
+                  <th>Mã đơn</th>
+                  <th>Số tiền hoàn</th>
+                  <th>Trạng thái</th>
+                  <th>
+                    <span className="sr-only">Chi tiết</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {refunds.data.items.map((item) => (
+                  <tr
+                    key={item.id}
+                    className="finance-clickable-row"
+                    tabIndex={0}
+                    onClick={() => setSelectedId(item.id)}
+                    onKeyDown={(event) => {
+                      if (
+                        event.target === event.currentTarget &&
+                        (event.key === 'Enter' || event.key === ' ')
+                      ) {
+                        event.preventDefault();
+                        setSelectedId(item.id);
+                      }
+                    }}
+                  >
+                    <td>
+                      <strong>{item.orderCode}</strong>
+                    </td>
+                    <td className="finance-money">{money(item.amount)}</td>
+                    <td>
+                      <span className="finance-status" data-finance-state={item.status}>
+                        {refundStatusLabels[item.status] || item.status}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="finance-open"
+                        aria-label={`Xem khoản hoàn ${item.orderCode}`}
+                      >
+                        →
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : !refunds.isError ? (
+          <p>Chưa có khoản hoàn trực tiếp.</p>
+        ) : null}
+        {refunds.data && (page > 1 || refunds.data.hasMore) && (
+          <div className="business-pagination">
+            <Button variant="outline" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+              Trước
+            </Button>
+            <span>Trang {page}</span>
+            <Button
+              variant="outline"
+              disabled={!refunds.data.hasMore}
+              onClick={() => setPage(page + 1)}
+            >
+              Sau
+            </Button>
+          </div>
+        )}
+      </section>
+      {selectedId && (
+        <Modal
+          open
+          size="lg"
+          title="Chi tiết khoản hoàn"
+          className="seller-finance-panel seller-refund-modal"
+          onClose={() => setSelectedId(null)}
+        >
+          <RefreshRegion>
+            <RefundCard id={selectedId} sellerId={sellerId} />
+          </RefreshRegion>
+        </Modal>
       )}
-    </section>
+    </RefreshRegion>
   );
 }

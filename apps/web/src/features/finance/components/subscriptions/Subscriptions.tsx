@@ -1,5 +1,9 @@
-'use client';
+﻿'use client';
 import IconActionButton from '@/shared/components/IconActionButton';
+import RefreshRegion from '@/shared/components/RefreshRegion';
+import { Modal, ConfirmDialog } from '@/shared/components/Modal';
+import { createPortal } from 'react-dom';
+import '../../styles/seller-rental.css';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -9,9 +13,9 @@ import { ApiError, request, type Session } from '@/shared/lib/api';
 import PayosCheckout from '@/shared/components/PayosCheckout';
 import { validatePayosCheckoutUrl } from '@/shared/lib/payos-checkout';
 import type { components } from '../../../../../../../packages/contracts/src/generated/api';
-import type { KioskApplicationResponse } from '../../../installations/installations.types';
+
 import type { SellerKioskItem } from '../../../kiosk-management/kiosk-management.types';
-import { ApplicationRentalSummary } from '../../../kiosk-pricing/ApplicationRentalSummary';
+
 import { rentalMoney } from '../../../kiosk-pricing/kiosk-pricing';
 import { rememberPaymentReturn } from '../../../orders/payment-return';
 import '../../styles/commerce-subscriptions.css';
@@ -65,6 +69,28 @@ function KioskRenewalCard({
     (s) => s.kioskId === kiosk.id && s.status === 'PENDING_PAYMENT',
   );
   const [error, setError] = useState('');
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelNotice, setCancelNotice] = useState('');
+  const cancelRenewal = useMutation({
+    mutationFn: (id: string) =>
+      request(`/sellers/${sellerId}/subscriptions/${id}/cancel`, undefined, false, 'POST'),
+    onSuccess: async () => {
+      setCancelOpen(false);
+      setOpenPaymentId(null);
+      setPayment(null);
+      setCancelNotice('Đã hủy kỳ gia hạn. Kỳ thuê hiện tại giữ nguyên.');
+      await onRefresh();
+    },
+    onError: async (cause: unknown) => {
+      setCancelOpen(false);
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : 'Chưa xác nhận được việc hủy. Tải lại kỳ thuê để kiểm tra.',
+      );
+      await onRefresh().catch(() => undefined);
+    },
+  });
 
   const currentSub = subscriptions.find(
     (s) => s.kioskId === kiosk.id && (s.status === 'ACTIVE' || s.status === 'PAST_DUE'),
@@ -76,6 +102,8 @@ function KioskRenewalCard({
   const showingPayment = Boolean(renewal && openPaymentId === renewal.id);
   const paymentWasOpen = useRef(false);
   const returned = Boolean(activeReturn);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [returnDismissed, setReturnDismissed] = useState(false);
   useEffect(() => {
     if (returned) card.current?.focus();
   }, [returned]);
@@ -135,171 +163,265 @@ function KioskRenewalCard({
   });
 
   return (
-    <article
-      id={`renewal-${kiosk.id}`}
-      ref={card}
-      tabIndex={-1}
-      className="subscription-kiosk-card"
-      aria-label={kiosk.name || kiosk.code}
-    >
-      <div className="subscription-kiosk-main">
-        <div className="subscription-kiosk-badges">
-          <span className="subscription-kiosk-code">{kiosk.code}</span>
-          <span className="subscription-kiosk-status" data-status={kiosk.status}>
-            {kioskStatusLabel[kiosk.status] || kiosk.status}
+    <>
+      <tr
+        className="rental-data-row"
+        tabIndex={0}
+        onClick={() => setDetailOpen(true)}
+        onKeyDown={(event) => {
+          if (event.target === event.currentTarget && ['Enter', ' '].includes(event.key)) {
+            event.preventDefault();
+            setDetailOpen(true);
+          }
+        }}
+      >
+        <td>
+          <strong>{kiosk.name || kiosk.code}</strong>
+          <small>Mã: {kiosk.code}</small>
+        </td>
+        <td>{kiosk.slotCount ?? '—'}</td>
+        <td>
+          {currentSub
+            ? `${new Date(currentSub.periodTo).toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`
+            : '—'}
+        </td>
+        <td>{currentSub ? rentalMoney(currentSub.price) : '—'}</td>
+        <td>
+          <span
+            className="subscription-status"
+            data-status={renewal ? 'PENDING_PAYMENT' : currentSub?.status}
+          >
+            {renewal
+              ? 'Chờ thanh toán'
+              : currentSub
+                ? subscriptionStatusLabel[currentSub.status] || currentSub.status
+                : 'Chưa có kỳ thuê'}
           </span>
-          {typeof kiosk.slotCount === 'number' && (
-            <span className="subscription-kiosk-slots">{kiosk.slotCount} ô tủ</span>
-          )}
-        </div>
-        <h3>{kiosk.name}</h3>
-        {activeReturn && (
-          <p role="status">
-            {activeReturn.status === 'ACTIVE' && (
-              <CheckCircle2 className="payos-confirmed-icon" size={16} aria-hidden="true" />
-            )}
-            {activeReturn.status === 'ACTIVE'
-              ? 'Đã thanh toán. Kỳ gia hạn của kiosk đã được cập nhật.'
-              : activeReturn.status === 'PENDING_PAYMENT'
-                ? 'Đang chờ xác nhận thanh toán gia hạn. Nếu đã chuyển khoản, đừng thanh toán lại.'
-                : 'Kỳ thuê này đã kết thúc hoặc không còn chờ thanh toán.'}
-          </p>
-        )}
-        {kiosk.address && (
-          <p className="subscription-kiosk-address">
-            <MapPin size={14} aria-hidden="true" />
-            <span>{kiosk.address}</span>
-          </p>
-        )}
-        {currentSub && (
-          <p
-            className="subscription-kiosk-contract-info"
-            style={{
-              marginTop: '0.35rem',
-              fontSize: '0.84rem',
-              color: currentSub.status === 'PAST_DUE' ? '#a81c1c' : '#2d5a3f',
+        </td>
+        <td>
+          <button
+            type="button"
+            className="button button-outline"
+            onClick={() => setDetailOpen(true)}
+          >
+            {renewal ? 'Thanh toán' : 'Gia hạn'}
+          </button>
+        </td>
+      </tr>
+      {(detailOpen || (returned && !returnDismissed)) &&
+        createPortal(
+          <Modal
+            open
+            title={`Kỳ thuê: ${kiosk.name || kiosk.code}`}
+            size="lg"
+            className="rental-detail-modal"
+            closeDisabled={cancelRenewal.isPending}
+            onClose={() => {
+              setDetailOpen(false);
+              setReturnDismissed(true);
             }}
           >
-            {currentSub.status === 'PAST_DUE' ? 'Kỳ thuê đã hết hạn: ' : 'Hạn kỳ hiện tại: '}
-            <strong>
-              {new Date(currentSub.periodFrom).toLocaleDateString('vi-VN', {
-                timeZone: 'Asia/Ho_Chi_Minh',
-              })}{' '}
-              –{' '}
-              {new Date(currentSub.periodTo).toLocaleDateString('vi-VN', {
-                timeZone: 'Asia/Ho_Chi_Minh',
-              })}
-            </strong>{' '}
-            ({rentalMoney(currentSub.price)})
-          </p>
-        )}
-      </div>
+            <article
+              id={`renewal-${kiosk.id}`}
+              ref={card}
+              tabIndex={-1}
+              className="subscription-kiosk-card"
+              aria-label={kiosk.name || kiosk.code}
+            >
+              <div className="subscription-kiosk-main">
+                <h3>{kiosk.name || kiosk.code}</h3>
+                <div className="subscription-kiosk-badges">
+                  <span className="subscription-kiosk-code">Mã: {kiosk.code}</span>
+                  <span className="subscription-kiosk-status" data-status={kiosk.status}>
+                    {kioskStatusLabel[kiosk.status] || kiosk.status}
+                  </span>
+                  {typeof kiosk.slotCount === 'number' && (
+                    <span className="subscription-kiosk-slots">{kiosk.slotCount} ô tủ</span>
+                  )}
+                </div>
+                {activeReturn && (
+                  <p role="status">
+                    {activeReturn.status === 'ACTIVE' && (
+                      <CheckCircle2 className="payos-confirmed-icon" size={16} aria-hidden="true" />
+                    )}
+                    {activeReturn.status === 'ACTIVE'
+                      ? 'Đã thanh toán. Kỳ gia hạn của kiosk đã được cập nhật.'
+                      : activeReturn.status === 'PENDING_PAYMENT'
+                        ? 'Đang chờ xác nhận thanh toán gia hạn. Nếu đã chuyển khoản, đừng thanh toán lại.'
+                        : 'Kỳ thuê này đã kết thúc hoặc không còn chờ thanh toán.'}
+                  </p>
+                )}
+                {kiosk.address && (
+                  <p className="subscription-kiosk-address">
+                    <MapPin size={14} aria-hidden="true" />
+                    <span>{kiosk.address}</span>
+                  </p>
+                )}
+                {currentSub && (
+                  <p
+                    className="subscription-kiosk-contract-info"
+                    style={{
+                      marginTop: '0.35rem',
+                      fontSize: '0.84rem',
+                      color: currentSub.status === 'PAST_DUE' ? '#a81c1c' : '#2d5a3f',
+                    }}
+                  >
+                    {currentSub.status === 'PAST_DUE'
+                      ? 'Kỳ thuê đã hết hạn: '
+                      : 'Hạn kỳ hiện tại: '}
+                    <strong>
+                      {new Date(currentSub.periodFrom).toLocaleDateString('vi-VN', {
+                        timeZone: 'Asia/Ho_Chi_Minh',
+                      })}{' '}
+                      –{' '}
+                      {new Date(currentSub.periodTo).toLocaleDateString('vi-VN', {
+                        timeZone: 'Asia/Ho_Chi_Minh',
+                      })}
+                    </strong>{' '}
+                    ({rentalMoney(currentSub.price)})
+                  </p>
+                )}
+              </div>
 
-      <div className="subscription-kiosk-action">
-        {!renewal ? (
-          <Button
-            type="button"
-            variant="outline"
-            disabled={!subscriptionsReady || createRenewal.isPending}
-            onClick={() => createRenewal.mutate()}
-          >
-            {createRenewal.isPending ? 'Đang tạo kỳ gia hạn…' : 'Gia hạn thêm 12 tháng'}
-          </Button>
-        ) : (
-          <div className="subscription-renewal-box">
-            <strong>Đang chờ thanh toán gia hạn</strong>
-            <div className="subscription-renewal-meta">
-              <span>
-                Kỳ mới:{' '}
-                <strong>
-                  {new Date(renewal.periodFrom).toLocaleDateString('vi-VN', {
-                    timeZone: 'Asia/Ho_Chi_Minh',
-                  })}{' '}
-                  –{' '}
-                  {new Date(renewal.periodTo).toLocaleDateString('vi-VN', {
-                    timeZone: 'Asia/Ho_Chi_Minh',
-                  })}
-                </strong>
-              </span>
-              <strong className="subscription-renewal-amount">{rentalMoney(renewal.price)}</strong>
-            </div>
-            <div className="subscription-renewal-buttons">
-              <Button
-                type="button"
-                disabled={createPaymentLink.isPending}
-                onClick={() => {
-                  setOpenPaymentId(renewal.id);
-                  setPayment(null);
-                  setError('');
-                  createPaymentLink.mutate(renewal.id);
-                }}
-              >
-                {createPaymentLink.isPending ? 'Đang tải mã QR…' : 'Tiếp tục thanh toán'}
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
+              <div className="subscription-kiosk-action">
+                {!subscriptionsReady && (
+                  <IconActionButton
+                    action="reload"
+                    label="Tải lại kỳ thuê trong chi tiết"
+                    onClick={onRefresh}
+                  />
+                )}
+                {!renewal ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={!subscriptionsReady || createRenewal.isPending}
+                    onClick={() => createRenewal.mutate()}
+                  >
+                    {createRenewal.isPending ? 'Đang tạo kỳ gia hạn…' : 'Gia hạn thêm 12 tháng'}
+                  </Button>
+                ) : (
+                  <div className="subscription-renewal-box">
+                    <strong>Đang chờ thanh toán gia hạn</strong>
+                    <div className="subscription-renewal-meta">
+                      <span>
+                        Kỳ mới:{' '}
+                        <strong>
+                          {new Date(renewal.periodFrom).toLocaleDateString('vi-VN', {
+                            timeZone: 'Asia/Ho_Chi_Minh',
+                          })}{' '}
+                          –{' '}
+                          {new Date(renewal.periodTo).toLocaleDateString('vi-VN', {
+                            timeZone: 'Asia/Ho_Chi_Minh',
+                          })}
+                        </strong>
+                      </span>
+                      <strong className="subscription-renewal-amount">
+                        {rentalMoney(renewal.price)}
+                      </strong>
+                    </div>
+                    <div className="subscription-renewal-buttons">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="rental-cancel-renewal"
+                        disabled={
+                          cancelRenewal.isPending ||
+                          createPaymentLink.isPending ||
+                          !subscriptionsReady
+                        }
+                        onClick={() => setCancelOpen(true)}
+                      >
+                        Hủy gia hạn
+                      </Button>
+                      <Button
+                        type="button"
+                        disabled={createPaymentLink.isPending || cancelRenewal.isPending}
+                        onClick={() => {
+                          setOpenPaymentId(renewal.id);
+                          setPayment(null);
+                          setError('');
+                          createPaymentLink.mutate(renewal.id);
+                        }}
+                      >
+                        {createPaymentLink.isPending ? 'Đang tải mã QR…' : 'Tiếp tục thanh toán'}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
 
-      {renewal && showingPayment && (
-        <PayosCheckout
-          checkoutUrl={payment?.data.checkoutUrl}
-          qrCode={payment?.data.qrCode}
-          amount={payment?.data.amount ?? renewal.price}
-          title="Thanh toán gia hạn kiosk"
-          description={kiosk.name || kiosk.code}
-          recipientName={payment?.data.recipientName}
-          recipientAccountMasked={payment?.data.recipientAccountMasked}
-          onRetryQr={() => createPaymentLink.mutate(renewal.id)}
-          isLoadingQr={createPaymentLink.isPending}
-          qrError={error}
-          allowStatusCheck={issuedRenewalIds.includes(renewal.id)}
-          onClose={() => setOpenPaymentId(null)}
-          onRefresh={async () => {
-            const rows = await onRefresh();
-            const updated = rows.find((s) => s.id === renewal.id);
-            if (!updated) throw new Error('Renewal not found');
-            if (updated.status === 'ACTIVE') setPaymentOutcome('confirmed');
-            if (updated.status === 'CANCELLED') setPaymentOutcome('cancelled');
-            return updated.status !== 'PENDING_PAYMENT';
-          }}
-        />
-      )}
-      {paymentOutcome && (paymentOutcome === 'cancelled' || activeReturn?.id !== openPaymentId) && (
-        <p role="status">
-          {paymentOutcome === 'confirmed' ? (
-            <>
-              <CheckCircle2 className="payos-confirmed-icon" size={16} aria-hidden="true" />
-              Đã thanh toán. Kỳ gia hạn của kiosk đã được cập nhật.
-            </>
-          ) : (
-            'Kỳ gia hạn đã bị hủy. Kiểm tra lịch sử nếu bạn đã chuyển khoản.'
-          )}
-        </p>
-      )}
-      {error && !showingPayment && (
-        <p role="alert" className="error subscription-kiosk-error">
-          {error}
-        </p>
-      )}
-    </article>
+              {cancelNotice && <p role="status">{cancelNotice}</p>}
+              {renewal && showingPayment && (
+                <PayosCheckout
+                  checkoutUrl={payment?.data.checkoutUrl}
+                  qrCode={payment?.data.qrCode}
+                  amount={payment?.data.amount ?? renewal.price}
+                  title="Thanh toán gia hạn kiosk"
+                  description={kiosk.name || kiosk.code}
+                  recipientName={payment?.data.recipientName}
+                  recipientAccountMasked={payment?.data.recipientAccountMasked}
+                  onRetryQr={() => createPaymentLink.mutate(renewal.id)}
+                  isLoadingQr={createPaymentLink.isPending}
+                  qrError={error}
+                  allowStatusCheck={issuedRenewalIds.includes(renewal.id)}
+                  onClose={() => setOpenPaymentId(null)}
+                  onRefresh={async () => {
+                    const rows = await onRefresh();
+                    const updated = rows.find((s) => s.id === renewal.id);
+                    if (!updated) throw new Error('Renewal not found');
+                    if (updated.status === 'ACTIVE') setPaymentOutcome('confirmed');
+                    if (updated.status === 'CANCELLED') setPaymentOutcome('cancelled');
+                    return updated.status !== 'PENDING_PAYMENT';
+                  }}
+                />
+              )}
+              {paymentOutcome &&
+                (paymentOutcome === 'cancelled' || activeReturn?.id !== openPaymentId) && (
+                  <p role="status">
+                    {paymentOutcome === 'confirmed' ? (
+                      <>
+                        <CheckCircle2
+                          className="payos-confirmed-icon"
+                          size={16}
+                          aria-hidden="true"
+                        />
+                        Đã thanh toán. Kỳ gia hạn của kiosk đã được cập nhật.
+                      </>
+                    ) : (
+                      'Kỳ gia hạn đã bị hủy. Kiểm tra lịch sử nếu bạn đã chuyển khoản.'
+                    )}
+                  </p>
+                )}
+              {error && !showingPayment && (
+                <p role="alert" className="error subscription-kiosk-error">
+                  {error}
+                </p>
+              )}
+            </article>
+          </Modal>,
+          document.body,
+        )}
+      {cancelOpen &&
+        renewal &&
+        createPortal(
+          <ConfirmDialog
+            open
+            title="Hủy kỳ gia hạn?"
+            description="Chỉ hủy kỳ gia hạn chưa thanh toán. Kỳ thuê hiện tại giữ nguyên. Nếu đã chuyển tiền, hãy kiểm tra thanh toán trước."
+            confirmLabel="Hủy gia hạn"
+            pending={cancelRenewal.isPending}
+            onCancel={() => setCancelOpen(false)}
+            onConfirm={() => cancelRenewal.mutate(renewal.id)}
+          />,
+          document.body,
+        )}
+    </>
   );
 }
 
 export default function Subscriptions({ session }: { session: Session }) {
   const returnedRenewalId = useSearchParams().get('renewalId');
-  const application = useQuery({
-    queryKey: ['current-kiosk-application', session.id],
-    queryFn: async () => {
-      try {
-        return await request<KioskApplicationResponse>('/member/kiosk-applications/current');
-      } catch (err) {
-        if (err instanceof ApiError && err.status === 404) return null;
-        throw err;
-      }
-    },
-  });
-
   const kiosks = useQuery({
     queryKey: ['seller-kiosks', session.sellerId],
     queryFn: async () => {
@@ -335,99 +457,111 @@ export default function Subscriptions({ session }: { session: Session }) {
     : 'Theo từng tủ';
 
   return (
-    <section id="subscriptions" className="subscriptions business-panel" tabIndex={-1}>
-      <div className="subscription-hero">
-        <div>
-          <h2>Gói thuê & gia hạn kiosk</h2>
-          <p>
-            Kỳ thuê 12 tháng tính theo tổng số ô của từng tủ. Bạn có thể gia hạn trực tuyến qua
-            PayOS hoặc đăng ký thuê thêm kiosk mới.
-          </p>
-        </div>
-        <div className="subscription-cta-group">
-          <Link href="/thue-kiosk" className="button button-primary">
-            Thuê thêm kiosk mới
-          </Link>
-          <Link href="/seller/kiosks" className="button button-outline">
-            Quản lý vị trí tủ
-          </Link>
-        </div>
-      </div>
-
-      <div className="business-facts">
-        <div>
-          <span>Hạn kỳ thuê gần nhất</span>
-          <strong>{expiryText}</strong>
-        </div>
-        <div>
-          <span>Số kiosk đang vận hành</span>
-          <strong>{kiosks.data ? `${kiosks.data.length} tủ` : '—'}</strong>
-        </div>
-        <div>
-          <span>Chu kỳ gia hạn</span>
-          <strong>12 tháng / kỳ</strong>
-        </div>
-      </div>
-
-      {session.sellerId && (
-        <div className="subscription-kiosk-section">
-          <div className="subscription-section-head">
-            <h3>Các kiosk đang thuê</h3>
-            <span>Chọn tủ để khởi tạo kỳ gia hạn 12 tháng tiếp theo</span>
+    <RefreshRegion className="seller-rental">
+      <section id="subscriptions" className="subscriptions business-panel" tabIndex={-1}>
+        <div className="subscription-hero">
+          <div>
+            <h2>Kỳ thuê kiosk</h2>
           </div>
-
-          {kiosks.isPending && <p role="status">Đang tải danh sách kiosk của shop…</p>}
-          {kiosks.isError && (
-            <div role="alert" className="subscription-alert-box">
-              <p>Chưa tải được danh sách kiosk của shop.</p>
-              <Button variant="outline" onClick={() => void kiosks.refetch()}>
-                Thử lại
-              </Button>
-            </div>
-          )}
-          {kiosks.data && kiosks.data.length === 0 && (
-            <p className="seller-empty-state">Shop hiện chưa có kiosk nào đang hoạt động.</p>
-          )}
-          {subscriptionsQuery.isError && (
-            <div role="alert">
-              <p>Chưa tải được kỳ thuê hiện tại. Tải lại để tiếp tục gia hạn.</p>
-              <IconActionButton
-                onClick={() => void subscriptionsQuery.refetch()}
-                action="reload"
-                label="Tải lại kỳ thuê"
-              />
-            </div>
-          )}
-          {subscriptionsQuery.isPending && (
-            <p role="status">Đang kiểm tra kỳ thuê và yêu cầu gia hạn…</p>
-          )}
-          {kiosks.data && kiosks.data.length > 0 && (
-            <div className="subscription-kiosk-list">
-              {kiosks.data.map((kiosk) => (
-                <KioskRenewalCard
-                  key={kiosk.id}
-                  kiosk={kiosk}
-                  sellerId={session.sellerId!}
-                  userId={session.id}
-                  subscriptions={subList}
-                  subscriptionsReady={subscriptionsQuery.isSuccess}
-                  returnedRenewalId={returnedRenewalId}
-                  onRefresh={async () =>
-                    (await subscriptionsQuery.refetch({ throwOnError: true })).data
-                      ?.subscriptions ?? []
-                  }
-                />
-              ))}
-            </div>
-          )}
+          <div className="subscription-cta-group">
+            <Link href="/thue-kiosk" className="button button-primary">
+              Thuê thêm kiosk mới
+            </Link>
+            <IconActionButton
+              action="reload"
+              label="Làm mới danh sách kiosk"
+              disabled={kiosks.isFetching || subscriptionsQuery.isFetching}
+              onClick={() => Promise.all([kiosks.refetch(), subscriptionsQuery.refetch()])}
+            />
+          </div>
         </div>
-      )}
 
+        <div className="business-facts">
+          <div>
+            <span>Hạn kỳ thuê gần nhất</span>
+            <strong>{expiryText}</strong>
+          </div>
+          <div>
+            <span>Số kiosk đang vận hành</span>
+            <strong>{kiosks.data ? `${kiosks.data.length} tủ` : '—'}</strong>
+          </div>
+          <div>
+            <span>Chu kỳ gia hạn</span>
+            <strong>12 tháng / kỳ</strong>
+          </div>
+        </div>
+
+        {session.sellerId && (
+          <div className="subscription-kiosk-section">
+            <div className="subscription-section-head">
+              <h3>Các kiosk đang thuê</h3>
+            </div>
+
+            {kiosks.isPending && <p role="status">Đang tải danh sách kiosk của shop…</p>}
+            {kiosks.isError && (
+              <div role="alert" className="subscription-alert-box">
+                <p>Chưa tải được danh sách kiosk của shop.</p>
+                <Button variant="outline" onClick={() => void kiosks.refetch()}>
+                  Thử lại
+                </Button>
+              </div>
+            )}
+            {kiosks.data && kiosks.data.length === 0 && (
+              <p className="seller-empty-state">Shop hiện chưa có kiosk nào đang hoạt động.</p>
+            )}
+            {subscriptionsQuery.isError && (
+              <div role="alert">
+                <p>Chưa tải được kỳ thuê hiện tại. Tải lại để tiếp tục gia hạn.</p>
+                <IconActionButton
+                  onClick={() => subscriptionsQuery.refetch()}
+                  action="reload"
+                  label="Tải lại kỳ thuê"
+                />
+              </div>
+            )}
+            {subscriptionsQuery.isPending && (
+              <p role="status">Đang kiểm tra kỳ thuê và yêu cầu gia hạn…</p>
+            )}
+            {kiosks.data && kiosks.data.length > 0 && (
+              <div className="business-table-scroll">
+                <table className="business-table rental-data-table">
+                  <thead>
+                    <tr>
+                      <th>Kiosk</th>
+                      <th>Số ô</th>
+                      <th>Ngày hết hạn</th>
+                      <th>Phí kỳ thuê</th>
+                      <th>Trạng thái</th>
+                      <th>Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {kiosks.data.map((kiosk) => (
+                      <KioskRenewalCard
+                        key={kiosk.id}
+                        kiosk={kiosk}
+                        sellerId={session.sellerId!}
+                        userId={session.id}
+                        subscriptions={subList}
+                        subscriptionsReady={subscriptionsQuery.isSuccess}
+                        returnedRenewalId={returnedRenewalId}
+                        onRefresh={async () =>
+                          (await subscriptionsQuery.refetch({ throwOnError: true })).data
+                            ?.subscriptions ?? []
+                        }
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+      </section>
       {session.sellerId && subList.length > 0 && (
-        <div className="subscription-kiosk-section">
+        <section className="business-panel subscription-history">
           <div className="subscription-section-head">
-            <h3>Lịch sử hợp đồng thuê kiosk (Kỳ 12 tháng)</h3>
-            <span>Hợp đồng năm gắn với từng kiosk đang vận hành</span>
+            <h2>Lịch sử kỳ thuê</h2>
           </div>
           <div className="business-table-scroll">
             <table className="business-table">
@@ -470,42 +604,8 @@ export default function Subscriptions({ session }: { session: Session }) {
               </tbody>
             </table>
           </div>
-        </div>
+        </section>
       )}
-
-      {application.isError && (
-        <div role="alert" className="subscription-alert-box">
-          <p>Chưa tải được hồ sơ đăng ký thuê kiosk.</p>
-          <IconActionButton
-            variant="outline"
-            onClick={() => void application.refetch()}
-            action="reload"
-            label="Tải lại hồ sơ"
-          />
-        </div>
-      )}
-
-      {application.data && (
-        <div className="subscription-application-card">
-          <div className="subscription-application-head">
-            <div>
-              <h3>Hồ sơ đăng ký thuê gần nhất</h3>
-              <p className="subscription-application-desc">
-                Thông tin định mức ô và tổng phí đã phê duyệt cho hồ sơ thuê của shop.
-              </p>
-            </div>
-            <Link
-              href="/thue-kiosk"
-              className="button button-outline subscription-application-link"
-            >
-              Xem hồ sơ hoặc thuê thêm kiosk
-            </Link>
-          </div>
-          <div className="subscription-application-body">
-            <ApplicationRentalSummary application={application.data} />
-          </div>
-        </div>
-      )}
-    </section>
+    </RefreshRegion>
   );
 }

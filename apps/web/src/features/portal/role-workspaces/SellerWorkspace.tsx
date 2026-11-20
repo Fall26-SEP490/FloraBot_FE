@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -197,7 +197,12 @@ export default function SellerWorkspace({ section = 'overview' }: { section?: st
             section !== 'products' &&
             section !== 'accessories' &&
             section !== 'complaints' &&
-            section !== 'kiosks' && (
+            section !== 'kiosks' &&
+            section !== 'tasks' &&
+            section !== 'staff' &&
+            !['commerce', 'refunds', 'seasonal', 'subscriptions', 'terminations'].includes(
+              section,
+            ) && (
               <nav className="seller-breadcrumb" aria-label="Vị trí hiện tại">
                 <Link href="/seller">Tổng quan cửa hàng</Link>
               </nav>
@@ -212,12 +217,17 @@ export default function SellerWorkspace({ section = 'overview' }: { section?: st
                 section !== 'accessories' &&
                 section !== 'complaints' &&
                 section !== 'kiosks' &&
+                section !== 'tasks' &&
+                section !== 'staff' &&
+                !['commerce', 'refunds', 'seasonal', 'subscriptions', 'terminations'].includes(
+                  section,
+                ) &&
                 currentSection?.[2] && <p>{currentSection[2]}</p>}
             </div>
           </div>
           {activeHub?.tabs && (
             <nav
-              className={`seller-stage-tabs ${section === 'products' || section === 'accessories' ? catalogStyles.tabs : ''}`}
+              className={`seller-stage-tabs ${['products', 'accessories', 'tasks', 'staff', 'commerce', 'refunds', 'seasonal', 'subscriptions', 'terminations'].includes(section) ? catalogStyles.tabs : ''}`}
               aria-label={`Phân mục ${activeHub.label}`}
             >
               {activeHub.tabs.map(([tabKey, tabLabel]) => (

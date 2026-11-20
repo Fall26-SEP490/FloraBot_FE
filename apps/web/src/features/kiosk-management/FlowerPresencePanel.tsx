@@ -1,5 +1,6 @@
 'use client';
 
+import RefreshRegion from '@/shared/components/RefreshRegion';
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import IconActionButton from '@/shared/components/IconActionButton';
@@ -41,65 +42,67 @@ export function FlowerPresencePanel({
     now - observed <= 45000;
 
   const content = (
-    <div className="flower-presence-body">
-      <div className="flower-presence-toolbar">
-        <p className="quiet">
-          Tự cập nhật mỗi 5 giây ·{' '}
-          {query.data?.observedAt
-            ? `Lần đo gần nhất: ${new Date(query.data.observedAt).toLocaleString('vi-VN')}`
-            : 'Chưa có lần đo'}
+    <RefreshRegion>
+      <div className="flower-presence-body">
+        <div className="flower-presence-toolbar">
+          <p className="quiet">
+            Tự cập nhật mỗi 5 giây ·{' '}
+            {query.data?.observedAt
+              ? `Lần đo gần nhất: ${new Date(query.data.observedAt).toLocaleString('vi-VN')}`
+              : 'Chưa có lần đo'}
+          </p>
+          <IconActionButton
+            action="reload"
+            label="Đọc lại cảm biến"
+            disabled={query.isFetching}
+            onClick={() => query.refetch()}
+          />
+        </div>
+        <p className="flower-presence-warning">
+          Tín hiệu cảm biến không xác nhận khách đã lấy hàng. “Không có hoa” có thể do chưa cắm cảm
+          biến; cần kiểm tra dây và độ nhạy.
         </p>
-        <IconActionButton
-          action="reload"
-          label="Đọc lại cảm biến"
-          disabled={query.isFetching}
-          onClick={() => void query.refetch()}
-        />
+        {query.isPending && <p role="status">Đang đọc trạng thái cảm biến…</p>}
+        {query.isError ? (
+          <p role="alert">Chưa tải được dữ liệu cảm biến. Thử tải lại.</p>
+        ) : (
+          query.data && (
+            <>
+              {fresh && (
+                <p className="flower-presence-status" role="status">
+                  Đang nhận dữ liệu cảm biến.
+                </p>
+              )}
+              {query.data.slots?.length ? (
+                <dl className="flower-presence-list">
+                  {query.data.slots.map((slot) => {
+                    const value = fresh ? slot.hasFlowers : null;
+                    return (
+                      <div key={slot.slotId}>
+                        <dt>Ô {slot.slotCode}</dt>
+                        <dd
+                          data-state={
+                            value === true ? 'present' : value === false ? 'absent' : 'unknown'
+                          }
+                        >
+                          {value === true
+                            ? 'Có hoa'
+                            : value === false
+                              ? 'Không có hoa'
+                              : 'Chưa xác định'}
+                        </dd>
+                      </div>
+                    );
+                  })}
+                </dl>
+              ) : (
+                <p className="quiet">Chưa có dữ liệu cảm biến cho các ô tủ.</p>
+              )}
+            </>
+          )
+        )}
       </div>
-      <p className="flower-presence-warning">
-        Tín hiệu cảm biến không xác nhận khách đã lấy hàng. “Không có hoa” có thể do chưa cắm cảm
-        biến; cần kiểm tra dây và độ nhạy.
-      </p>
-      {query.isPending && <p role="status">Đang đọc trạng thái cảm biến…</p>}
-      {query.isError ? (
-        <p role="alert">Chưa tải được dữ liệu cảm biến. Thử tải lại.</p>
-      ) : (
-        query.data && (
-          <>
-            {fresh && (
-              <p className="flower-presence-status" role="status">
-                Đang nhận dữ liệu cảm biến.
-              </p>
-            )}
-            {query.data.slots?.length ? (
-              <dl className="flower-presence-list">
-                {query.data.slots.map((slot) => {
-                  const value = fresh ? slot.hasFlowers : null;
-                  return (
-                    <div key={slot.slotId}>
-                      <dt>Ô {slot.slotCode}</dt>
-                      <dd
-                        data-state={
-                          value === true ? 'present' : value === false ? 'absent' : 'unknown'
-                        }
-                      >
-                        {value === true
-                          ? 'Có hoa'
-                          : value === false
-                            ? 'Không có hoa'
-                            : 'Chưa xác định'}
-                      </dd>
-                    </div>
-                  );
-                })}
-              </dl>
-            ) : (
-              <p className="quiet">Chưa có dữ liệu cảm biến cho các ô tủ.</p>
-            )}
-          </>
-        )
-      )}
-    </div>
+    </RefreshRegion>
   );
 
   if (alwaysOpen)

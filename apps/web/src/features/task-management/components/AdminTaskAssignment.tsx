@@ -51,7 +51,7 @@ export default function AdminTaskAssignment({
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [assignmentOpen, setAssignmentOpen] = useState(
-    effectiveRole === 'OPERATIONS_MANAGER' && Boolean(attempt),
+    effectiveRole === 'SELLER' || (effectiveRole === 'OPERATIONS_MANAGER' && Boolean(attempt)),
   );
   const form = useForm<Fields>();
   const [incidentSearch, setIncidentSearch] = useState('');
@@ -212,12 +212,6 @@ export default function AdminTaskAssignment({
         </>
       ) : (
         <>
-          {effectiveRole === 'SELLER' && (
-            <p className="assignment-help">
-              Chọn người phụ trách, tủ cần giao và hướng dẫn cụ thể. Đây là phân công giao hoa; việc
-              nạp hoa được nhân viên ghi nhận khi thực hiện công việc.
-            </p>
-          )}
           {effectiveRole !== 'SELLER' && allowedKinds.length > 1 && (
             <div>
               <label htmlFor="assignment-kind">Loại công việc</label>
@@ -284,7 +278,14 @@ export default function AdminTaskAssignment({
                 </p>
               )}
               <div className="assignment-field">
-                <label htmlFor="assignment-staff">Nhân viên phụ trách</label>
+                <label htmlFor="assignment-staff">
+                  Nhân viên phụ trách{' '}
+                  {effectiveRole === 'SELLER' && (
+                    <span className="assignment-required" aria-hidden="true">
+                      *
+                    </span>
+                  )}
+                </label>
                 <Select
                   id="assignment-staff"
                   {...form.register('assigneeId', { required: 'Chọn nhân viên phụ trách.' })}
@@ -308,7 +309,17 @@ export default function AdminTaskAssignment({
               </div>
               <div className="assignment-field">
                 <label htmlFor="assignment-target">
-                  {kind === 'INCIDENT' ? 'Sự cố cần kiểm tra' : 'Shop và tủ giao hoa'}
+                  {kind === 'INCIDENT'
+                    ? 'Sự cố cần kiểm tra'
+                    : effectiveRole === 'SELLER'
+                      ? 'Tủ giao hoa'
+                      : 'Shop và tủ giao hoa'}
+                  {effectiveRole === 'SELLER' && (
+                    <span className="assignment-required" aria-hidden="true">
+                      {' '}
+                      *
+                    </span>
+                  )}
                 </label>
                 <Select
                   id="assignment-target"
@@ -337,7 +348,9 @@ export default function AdminTaskAssignment({
                           key={`${item.sellerId}:${item.kioskId}`}
                           value={`${item.sellerId}:${item.kioskId}`}
                         >
-                          {item.shopName} · {item.kioskName} · {item.address}
+                          {effectiveRole === 'SELLER'
+                            ? item.kioskName
+                            : `${item.shopName} · ${item.kioskName} · ${item.address}`}
                         </option>
                       ))}
                 </Select>
@@ -377,7 +390,14 @@ export default function AdminTaskAssignment({
                   </div>
                 )}
               <div className="assignment-field assignment-field-wide">
-                <label htmlFor="assignment-instructions">Hướng dẫn công việc</label>
+                <label htmlFor="assignment-instructions">
+                  Hướng dẫn công việc{' '}
+                  {effectiveRole === 'SELLER' && (
+                    <span className="assignment-required" aria-hidden="true">
+                      *
+                    </span>
+                  )}
+                </label>
                 <textarea
                   id="assignment-instructions"
                   rows={3}

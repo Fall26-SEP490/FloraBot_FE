@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { chooseVietnamDate } from '../fixtures/vietnam-date';
 
 test('Seller keeps refund proof while bank details are hidden on a tab switch', async ({
   page,
@@ -34,12 +35,18 @@ test('Seller keeps refund proof while bank details are hidden on a tab switch', 
     return route.fulfill({ json: { items: [], hasMore: false } });
   });
   await page.goto('/seller/refunds');
-  await page.locator('.refund-summary-head').click();
+  await page.locator('.finance-clickable-row').click();
   await page.getByLabel('Lý do xem tài khoản nhận hoàn').fill('Đối chiếu giao dịch hoàn tiền');
   await page.getByRole('button', { name: 'Xem tài khoản nhận tiền' }).click();
   const reference = page.getByLabel('Mã giao dịch ngân hàng');
   await reference.fill('REF-TEST-123');
-  await page.getByLabel('Thời điểm chuyển khoản').fill('2026-11-16T10:15');
+  await chooseVietnamDate(page, 'Thời điểm chuyển khoản', '2026-11-16');
+  const calendar = page.locator('[data-vietnam-calendar]');
+  await calendar.getByRole('combobox', { name: 'Giờ', exact: true }).click();
+  await page.getByRole('option', { name: '10', exact: true }).click();
+  await calendar.getByRole('combobox', { name: 'Phút', exact: true }).click();
+  await page.getByRole('option', { name: '15', exact: true }).click();
+  await calendar.getByRole('button', { name: 'Xong', exact: true }).click();
   await page
     .locator('input[type=file]')
     .setInputFiles({ name: 'chung-tu.png', mimeType: 'image/png', buffer: Buffer.from('mock') });
@@ -52,7 +59,9 @@ test('Seller keeps refund proof while bank details are hidden on a tab switch', 
   });
   await expect(page.getByText('100200300')).toHaveCount(0);
   await expect(reference).toHaveValue('REF-TEST-123');
-  await expect(page.getByLabel('Thời điểm chuyển khoản')).toHaveValue('2026-11-16T10:15');
+  await expect(
+    page.getByRole('combobox', { name: 'Thời điểm chuyển khoản', exact: true }),
+  ).toContainText('16/11/2026 10:15');
   await expect(page.getByText('chung-tu.png')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Gửi xác nhận chuyển khoản' })).toBeDisabled();
   const revealAgain = page.getByRole('button', { name: 'Hiện lại tài khoản nhận tiền' }).last();

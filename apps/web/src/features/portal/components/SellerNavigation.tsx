@@ -9,6 +9,7 @@ import {
   MapPin,
   Users,
   Banknote,
+  ChartColumn,
   Store,
   MessageSquare,
   Search,
@@ -103,14 +104,20 @@ export const sellerNavHubs: readonly { title: string; items: readonly SellerNavH
     items: [
       {
         key: 'commerce',
-        label: 'Thanh toán & doanh số',
+        label: 'Thanh toán',
         icon: Banknote,
-        sections: ['commerce', 'refunds', 'seasonal'],
+        sections: ['commerce', 'refunds'],
         tabs: [
-          ['commerce', 'Kênh nhận tiền & doanh số'],
+          ['commerce', 'Kênh nhận tiền'],
           ['refunds', 'Hoàn tiền trực tiếp'],
-          ['seasonal', 'Doanh số theo mùa'],
         ],
+      },
+      {
+        key: 'seasonal',
+        label: 'Phân tích doanh số',
+        icon: ChartColumn,
+        sections: ['seasonal'],
+        tabs: null,
       },
       {
         key: 'subscriptions',
@@ -141,7 +148,8 @@ const searchTerms: Record<string, string> = {
   products: 'tạo mẫu thêm hoa sản phẩm ảnh giá phụ kiện',
   orders: 'báo giá chuẩn bị đơn',
   tasks: 'giao hoa phân công nhân viên tài khoản',
-  commerce: 'thanh toán doanh số hoàn tiền mùa dự báo',
+  commerce: 'thanh toán kênh nhận tiền giao dịch hoàn tiền',
+  seasonal: 'phân tích doanh số doanh thu theo mùa dự báo nhu cầu',
   subscriptions: 'thuê kiosk gói thuê chấm dứt',
 };
 

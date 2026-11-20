@@ -18,6 +18,7 @@ export interface ShopBankSectionProps {
   title?: string;
   sectionId?: string;
   onBankReadyChange?: (isReady: boolean) => void;
+  compact?: boolean;
 }
 
 export function ShopBankSection({
@@ -26,6 +27,7 @@ export function ShopBankSection({
   title = 'Tài khoản ngân hàng của shop (Nhận hoàn phí thuê kiosk)',
   sectionId,
   onBankReadyChange,
+  compact = false,
 }: ShopBankSectionProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [bankName, setBankName] = useState<string | null>(null);
@@ -175,30 +177,36 @@ export function ShopBankSection({
       <div className="business-heading">
         <div>
           <h2 id={`shop-bank-title-${sellerId}`}>{title}</h2>
-          <p>Dùng làm thông tin nhận hoàn phí thuê kiosk từ hệ thống và đối soát cửa hàng.</p>
+          <p>
+            {compact
+              ? 'Nhận hoàn phí thuê kiosk từ hệ thống.'
+              : 'Dùng làm thông tin nhận hoàn phí thuê kiosk từ hệ thống và đối soát cửa hàng.'}
+          </p>
         </div>
-        {isReady && !isEditing && (
+        {isReady && !isEditing && !compact && (
           <Button type="button" variant="outline" onClick={startEditing}>
             Thay đổi tài khoản
           </Button>
         )}
       </div>
 
-      <aside className="shop-bank-distinction-card" aria-label="Phân biệt tài khoản">
-        <div className="shop-bank-distinction-badge">Lưu ý quan trọng</div>
-        <p>
-          <strong>• Ngân hàng shop:</strong> Dùng làm thông tin nhận hoàn phí thuê kiosk khi có hủy
-          đơn hoặc hoàn phí từ Ban quản lý.
-        </p>
-        <p>
-          <strong>• Kênh PayOS Seller:</strong> Dùng nhận tiền bán hoa từ khách mua hoa tại kiosk
-          (Kênh PayOS ACTIVE không thay thế ngân hàng shop).
-        </p>
-        <p>
-          <strong>• Tài khoản cá nhân:</strong> Dành cho khiếu nại mua hàng cá nhân tại trang hồ sơ
-          người dùng, độc lập và không cập nhật ngân hàng shop.
-        </p>
-      </aside>
+      {!compact && (
+        <aside className="shop-bank-distinction-card" aria-label="Phân biệt tài khoản">
+          <div className="shop-bank-distinction-badge">Lưu ý quan trọng</div>
+          <p>
+            <strong>• Ngân hàng shop:</strong> Dùng làm thông tin nhận hoàn phí thuê kiosk khi có
+            hủy đơn hoặc hoàn phí từ Ban quản lý.
+          </p>
+          <p>
+            <strong>• Kênh PayOS Seller:</strong> Dùng nhận tiền bán hoa từ khách mua hoa tại kiosk
+            (Kênh PayOS ACTIVE không thay thế ngân hàng shop).
+          </p>
+          <p>
+            <strong>• Tài khoản cá nhân:</strong> Dành cho khiếu nại mua hàng cá nhân tại trang hồ
+            sơ người dùng, độc lập và không cập nhật ngân hàng shop.
+          </p>
+        </aside>
+      )}
 
       {bankQuery.isPending && (
         <p role="status" className="shop-bank-loading">
@@ -216,7 +224,7 @@ export function ShopBankSection({
           <IconActionButton
             type="button"
             variant="outline"
-            onClick={() => void bankQuery.refetch()}
+            onClick={() => bankQuery.refetch()}
             action="reload"
             label="Tải lại"
           />
@@ -235,7 +243,7 @@ export function ShopBankSection({
           <IconActionButton
             type="button"
             variant="outline"
-            onClick={() => void bankQuery.refetch()}
+            onClick={() => bankQuery.refetch()}
             action="reload"
             label="Tải lại thông tin ngân hàng"
           />
@@ -245,8 +253,12 @@ export function ShopBankSection({
       {bankQuery.data && !showForm && (
         <div className="shop-bank-ready-card">
           <div className="shop-bank-status-row">
-            <span className="status-pill status-ACTIVE">✓ Đã sẵn sàng (READY)</span>
-            <span className="shop-bank-status-desc">Hồ sơ ngân hàng đủ điều kiện thuê kiosk</span>
+            <span className="status-pill status-ACTIVE">
+              {compact ? 'Đã sẵn sàng' : '✓ Đã sẵn sàng (READY)'}
+            </span>
+            {!compact && (
+              <span className="shop-bank-status-desc">Hồ sơ ngân hàng đủ điều kiện thuê kiosk</span>
+            )}
           </div>
 
           <div className="business-facts shop-bank-facts">
@@ -263,6 +275,13 @@ export function ShopBankSection({
               <strong>•••• •••• •••• {bankQuery.data.accountSuffix || '••••'}</strong>
             </div>
           </div>
+          {compact && (
+            <div className="finance-settings-actions">
+              <Button type="button" variant="outline" onClick={startEditing}>
+                Thay đổi tài khoản
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
@@ -285,7 +304,12 @@ export function ShopBankSection({
 
           <form onSubmit={handleSubmit} className="shop-bank-form" noValidate>
             <div className="profile-form-group">
-              <label htmlFor={`shop-bank-name-${sellerId}`}>Tên ngân hàng nhận hoàn phí *</label>
+              <label htmlFor={`shop-bank-name-${sellerId}`}>
+                Tên ngân hàng nhận hoàn phí{' '}
+                <span className="finance-required" aria-hidden="true">
+                  *
+                </span>
+              </label>
               <VietnamBankSelect
                 id={`shop-bank-name-${sellerId}`}
                 value={bankName ?? bankQuery.data?.bankName ?? ''}
@@ -309,7 +333,12 @@ export function ShopBankSection({
 
             <div className="profile-form-group">
               <label htmlFor={`shop-bank-holder-${sellerId}`}>
-                Tên chủ tài khoản (Viết hoa, không dấu hoặc có dấu) *
+                {compact
+                  ? 'Tên chủ tài khoản'
+                  : 'Tên chủ tài khoản (Viết hoa, không dấu hoặc có dấu)'}{' '}
+                <span className="finance-required" aria-hidden="true">
+                  *
+                </span>
               </label>
               <input
                 id={`shop-bank-holder-${sellerId}`}
@@ -330,14 +359,23 @@ export function ShopBankSection({
             </div>
 
             <div className="profile-form-group">
-              <label htmlFor={`shop-bank-account-${sellerId}`}>Số tài khoản ngân hàng *</label>
+              <label htmlFor={`shop-bank-account-${sellerId}`}>
+                Số tài khoản ngân hàng{' '}
+                <span className="finance-required" aria-hidden="true">
+                  *
+                </span>
+              </label>
               <input
                 id={`shop-bank-account-${sellerId}`}
                 type="text"
                 inputMode="numeric"
                 autoComplete="off"
                 maxLength={34}
-                placeholder="Nhập số tài khoản ngân hàng (4–34 số/chữ, không khoảng trắng)"
+                placeholder={
+                  compact
+                    ? 'Nhập số tài khoản'
+                    : 'Nhập số tài khoản ngân hàng (4–34 số/chữ, không khoảng trắng)'
+                }
                 value={accountRaw}
                 disabled={saveBankMutation.isPending}
                 onChange={(e) => {
@@ -350,21 +388,18 @@ export function ShopBankSection({
                 }}
                 aria-invalid={Boolean(fieldErrors.accountRaw)}
               />
-              <small className="shop-bank-field-hint">
-                Số tài khoản gửi bảo mật qua HTTPS và được mã hóa lưu trữ. Hệ thống không lưu số tài
-                khoản thô.
-              </small>
+              {!compact && (
+                <small className="shop-bank-field-hint">
+                  Số tài khoản gửi bảo mật qua HTTPS và được mã hóa lưu trữ. Hệ thống không lưu số
+                  tài khoản thô.
+                </small>
+              )}
               {fieldErrors.accountRaw && (
                 <p className="profile-field-error">{fieldErrors.accountRaw}</p>
               )}
             </div>
 
             <div className="shop-bank-form-actions">
-              <Button type="submit" disabled={saveBankMutation.isPending}>
-                {saveBankMutation.isPending
-                  ? 'Đang lưu tài khoản…'
-                  : 'Lưu tài khoản ngân hàng shop'}
-              </Button>
               {isReady && (
                 <Button
                   type="button"
@@ -375,6 +410,13 @@ export function ShopBankSection({
                   Hủy
                 </Button>
               )}
+              <Button type="submit" disabled={saveBankMutation.isPending}>
+                {saveBankMutation.isPending
+                  ? 'Đang lưu tài khoản…'
+                  : compact
+                    ? 'Lưu tài khoản'
+                    : 'Lưu tài khoản ngân hàng shop'}
+              </Button>
             </div>
           </form>
         </div>

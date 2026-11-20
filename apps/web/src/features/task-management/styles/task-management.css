@@ -887,10 +887,10 @@
 #staff-tasks p.error,
 #staff-tasks p[role='alert'] {
   color: var(--color-status-danger-ink);
-  background: var(--color-status-danger-surface);
-  border: 1px solid var(--color-status-danger-line);
-  padding: 8px 12px;
-  border-radius: var(--radius-workspace-badge);
+  background: transparent;
+  border: 0;
+  padding: 0;
+  border-radius: 0;
   font-size: 12.5px;
   margin: 8px 0;
 }

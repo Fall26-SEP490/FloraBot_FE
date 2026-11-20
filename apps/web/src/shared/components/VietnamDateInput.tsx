@@ -21,6 +21,7 @@ export default function VietnamDateInput({
   describedBy,
   invalid,
   triggerRef,
+  showToday = true,
 }: {
   id?: string;
   value: string;
@@ -35,6 +36,7 @@ export default function VietnamDateInput({
   describedBy?: string;
   invalid?: boolean;
   triggerRef?: Ref<HTMLButtonElement>;
+  showToday?: boolean;
 }) {
   const generated = useId();
   const fieldId = id ?? generated;
@@ -391,9 +393,10 @@ export default function VietnamDateInput({
                   Xóa
                 </button>
               )}
-              {kind !== 'time' && (
+              {kind !== 'time' && showToday && (
                 <button
                   type="button"
+                  disabled={!allowed(kind === 'month' ? vietnamDate().slice(0, 7) : vietnamDate())}
                   onClick={() => {
                     const today = vietnamDate();
                     if (allowed(kind === 'month' ? today.slice(0, 7) : today)) {
@@ -408,7 +411,7 @@ export default function VietnamDateInput({
                     }
                   }}
                 >
-                  Hôm nay
+                  {kind === 'month' ? 'Tháng này' : 'Hôm nay'}
                 </button>
               )}
               <button

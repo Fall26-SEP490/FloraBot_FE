@@ -1,0 +1,889 @@
+/* Seller finance follows the catalogue's flat surfaces and compact controls. */
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .seller-workspace
+  main.seller-content
+  .seller-finance {
+  min-width: 0;
+  font-size: 14px;
+  & .business-stack {
+    gap: 20px;
+    min-width: 0;
+  }
+  & .seller-commerce {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+  & .seller-receipts,
+  & .seller-loyalty {
+    grid-column: 1 / -1;
+  }
+  & .business-panel {
+    padding: 20px;
+    min-width: 0;
+    margin: 0;
+    border: 1px solid #dce5dc;
+    border-radius: 12px;
+    box-shadow: none;
+  }
+  & h2 {
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.5;
+  }
+  & .business-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0 0 18px;
+  }
+  & .business-heading > div:first-child {
+    min-width: 0;
+  }
+  & .business-heading p {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: #63746c;
+  }
+  & .business-facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 16px 20px;
+    margin: 20px 0;
+  }
+  & .business-facts > div {
+    padding: 0;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+  }
+  & .business-facts span {
+    margin: 0 0 6px;
+    font-size: 12px;
+    color: #63746c;
+  }
+  & .business-facts strong {
+    font-size: 15px;
+    color: #245b3d;
+  }
+  & .seller-receipts .business-facts {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  & .seller-receipts .business-facts strong,
+  & .seller-seasonal .business-facts strong {
+    font-size: 24px;
+  }
+  & .seller-receipts .business-facts > div:nth-child(2) strong {
+    color: #93600a;
+  }
+  & .business-table-scroll {
+    min-width: 0;
+    margin: 20px -20px -20px;
+    overflow-x: auto;
+  }
+  & .business-table {
+    width: 100%;
+    margin: 0;
+    border: 0;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 14px;
+  }
+  & .business-table th {
+    padding: 13px 20px;
+    background: #f3f7f0;
+    font-size: 12px;
+    font-weight: 500;
+    color: #52665b;
+  }
+  & .business-table td {
+    padding: 18px 20px;
+    border: 0;
+    border-bottom: 1px solid #e0e8df;
+    white-space: normal;
+    vertical-align: middle;
+  }
+  & .business-table tr:last-child td {
+    border-bottom: 0;
+  }
+  & .business-table tbody tr {
+    background: white;
+  }
+  & .business-table tbody tr:hover {
+    background: #fafcf8;
+  }
+  & .business-table td strong {
+    font-weight: 600;
+  }
+  & .finance-money {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    color: #245b3d;
+    font-weight: 600;
+  }
+  & .business-pagination {
+    margin: 20px 0 -4px;
+    padding-top: 16px;
+    justify-content: flex-end;
+    border: 0;
+  }
+  & .business-table-scroll:has(+ .business-pagination) {
+    margin-bottom: 0;
+  }
+  & .business-note,
+  & .shop-bank-alert-box {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #93600a;
+    font-size: 13px;
+  }
+  & .shop-bank-alert-box.is-error {
+    color: #b02e2e;
+  }
+  & .shop-bank-alert-box.is-success {
+    color: #23723d;
+  }
+  & .shop-bank-ready-card {
+    padding: 0;
+    border: 0;
+    gap: 8px;
+  }
+  & .shop-bank-facts {
+    margin-bottom: 0;
+  }
+  & .shop-bank-form-wrapper {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+  & .shop-bank-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    padding: 0;
+    margin: 16px 0 0;
+  }
+  & .shop-bank-form > .profile-form-group:first-child {
+    grid-column: 1 / -1;
+  }
+  & .profile-form-group {
+    display: grid;
+    gap: 7px;
+    min-width: 0;
+    margin: 0;
+  }
+  & .profile-form-group label {
+    margin: 0;
+    font-size: 13px;
+  }
+  & .profile-form-group :is(input, button[aria-haspopup], button[role='combobox']) {
+    height: 44px;
+    min-height: 44px;
+    margin: 0;
+    box-sizing: border-box;
+    font-size: 14px;
+  }
+  & .shop-bank-form-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: flex-end;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  & .shop-bank-form-actions button {
+    margin: 0;
+  }
+  & .seller-loyalty > p {
+    margin: 6px 0 16px;
+    font-size: 13px;
+    color: #63746c;
+  }
+  & .seller-loyalty .business-inline {
+    justify-content: flex-start;
+  }
+  & .seasonal-filter-form {
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-start;
+    gap: 12px;
+    margin: 18px 0;
+  }
+  & .seasonal-filter-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 210px));
+    gap: 12px;
+    min-width: 0;
+  }
+  & .seasonal-date-label {
+    display: grid;
+    gap: 7px;
+    margin: 0;
+    min-width: 0;
+    font-size: 13px;
+  }
+  & .seasonal-submit-btn {
+    margin: 0;
+    min-height: 44px;
+  }
+  & .seasonal-forecast-form {
+    justify-content: flex-start;
+    align-items: flex-end;
+    gap: 12px;
+    margin: 18px 0;
+  }
+  & .seasonal-forecast-form .seasonal-date-label {
+    width: 210px;
+  }
+  & .seller-seasonal .business-facts {
+    grid-template-columns: repeat(2, minmax(0, 180px));
+  }
+  & .seller-seasonal .business-table {
+    table-layout: fixed;
+  }
+  & .seller-seasonal .business-table th:first-child {
+    width: 48%;
+  }
+  & .seller-seasonal .business-table th:not(:first-child),
+  & .seller-seasonal .business-table td:not(:first-child) {
+    text-align: right;
+  }
+  & .seller-seasonal .business-panel > p {
+    margin: 6px 0 14px;
+  }
+  & .finance-cell-note {
+    display: block;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #63746c;
+    margin-top: 5px;
+  }
+  & .finance-clickable-row {
+    cursor: pointer;
+  }
+  & .finance-clickable-row:focus-visible {
+    outline: 2px solid #245b3d;
+    outline-offset: -2px;
+  }
+  & .seller-refunds .business-table-scroll {
+    margin-top: 0;
+  }
+  & .seller-refunds .business-table td:last-child {
+    width: 44px;
+    text-align: right;
+  }
+}
+.finance-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.finance-actions .button {
+  margin: 0;
+}
+.finance-required {
+  color: #b02e2e;
+}
+.finance-muted {
+  color: #63746c;
+  font-size: 13px;
+}
+.finance-status {
+  display: inline-flex;
+  padding: 4px 8px;
+  border-radius: 5px;
+  white-space: nowrap;
+  font-size: 12px;
+  background: #eff3ef;
+  color: #52665b;
+}
+[data-finance-state='ACTIVE'],
+[data-finance-state='PAID'],
+[data-finance-state='COMPLETED'],
+[data-finance-state='APPROVED'] {
+  color: #23723d;
+}
+.finance-status:is(
+  [data-finance-state='ACTIVE'],
+  [data-finance-state='PAID'],
+  [data-finance-state='COMPLETED'],
+  [data-finance-state='APPROVED']
+) {
+  background: #eaf6ee;
+}
+[data-finance-state='PENDING'],
+[data-finance-state='PENDING_VERIFICATION'],
+[data-finance-state='PAUSED'] {
+  color: #93600a;
+}
+.finance-status[data-finance-state='PENDING'] {
+  background: #fff7e6;
+}
+.finance-status[data-finance-state='TRANSFERRED'] {
+  color: #24658d;
+  background: #edf5fc;
+}
+.finance-status:is(
+  [data-finance-state='CANCELLED'],
+  [data-finance-state='REJECTED'],
+  [data-finance-state='EXPIRED']
+) {
+  color: #b02e2e;
+  background: #fff0f0;
+}
+.finance-open {
+  width: 38px;
+  height: 38px;
+  border: 0;
+  background: transparent;
+  color: #245b3d;
+  cursor: pointer;
+  margin: 0;
+}
+.seller-finance-panel.seller-finance-panel {
+  & .business-refund-detail {
+    padding: 20px;
+    font-size: 14px;
+  }
+  & h3 {
+    margin: 0 0 12px;
+    font-size: 18px;
+  }
+  & .refund-amount {
+    color: #245b3d;
+  }
+  & p {
+    margin: 10px 0;
+    line-height: 1.6;
+  }
+  & .business-note {
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: #93600a;
+    font-size: 13px;
+  }
+  & .business-note:has(strong) {
+    display: grid;
+    gap: 8px;
+    margin: 18px 0;
+    padding: 14px;
+    border-radius: 8px;
+    background: #f3f7f0;
+    color: #203e2d;
+  }
+  & .business-note p {
+    margin: 0;
+  }
+  & .business-form {
+    display: grid;
+    max-width: none;
+    gap: 8px;
+    margin: 20px 0;
+  }
+  & .business-form label {
+    font-size: 13px;
+    margin: 0;
+  }
+  & .business-form input:not([type='checkbox']) {
+    width: 100%;
+    min-height: 44px;
+    height: 44px;
+    box-sizing: border-box;
+    margin: 0;
+  }
+  & .business-form > button {
+    justify-self: end;
+    margin: 6px 0 0;
+    min-height: 44px;
+  }
+  & .business-form label:has(input[type='checkbox']) {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.6;
+  }
+  & input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+    min-height: 16px;
+    margin: 3px 0 0;
+    flex-shrink: 0;
+  }
+  & [role='alert'] {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #b02e2e;
+  }
+}
+@media (max-width: 1100px) {
+  .workspace-portal-root.platform-workspace[data-platform-role='seller']
+    .seller-workspace
+    main.seller-content
+    .seller-finance
+    .seller-commerce {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 600px) {
+  .workspace-portal-root.platform-workspace[data-platform-role='seller']
+    .seller-workspace
+    main.seller-content
+    .seller-finance {
+    & .business-panel {
+      padding: 16px;
+    }
+    & .business-heading {
+      gap: 12px;
+    }
+    & .business-facts,
+    & .seller-receipts .business-facts {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    & .shop-bank-form {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    & .business-table-scroll {
+      margin-left: -16px;
+      margin-right: -16px;
+      margin-bottom: -16px;
+    }
+    & .business-table th,
+    & .business-table td {
+      padding: 12px;
+    }
+    & .business-table {
+      min-width: 500px;
+    }
+    & .seasonal-filter-form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+    }
+    & .seasonal-filter-fields {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    & .seasonal-filter-form > button {
+      justify-self: end;
+    }
+    & .business-heading .finance-actions {
+      width: 100%;
+      justify-content: flex-end;
+    }
+  }
+}
+
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .seller-workspace
+  main.seller-content
+  .seller-finance {
+  & .business-panel {
+    overflow: hidden;
+  }
+  & .business-panel h2 {
+    font-size: 18px !important;
+  }
+  & .business-table th,
+  & .business-facts span {
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  & .shop-bank-ready-card {
+    background: transparent;
+    border: 0;
+    padding: 0;
+  }
+  & .shop-bank-facts {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    margin: 12px 0 0;
+  }
+  & .shop-bank-facts > div {
+    padding: 0;
+  }
+  & .shop-bank-facts > div:last-child {
+    grid-column: auto;
+  }
+  & .shop-bank-facts > div:last-child strong {
+    white-space: nowrap;
+  }
+  & .business-heading:has(> [data-icon-action]) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+  & .seller-channel [data-icon-action] {
+    margin: 0;
+  }
+  & .seller-receipts .business-table {
+    min-width: 760px;
+  }
+  & .seller-receipts .business-table :is(th, td) {
+    white-space: nowrap;
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+}
+@media (max-width: 600px) {
+  .workspace-portal-root.platform-workspace[data-platform-role='seller']
+    .seller-workspace
+    main.seller-content
+    .seller-finance
+    .shop-bank-facts
+    > div:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .seller-workspace
+  main.seller-content
+  .seller-finance {
+  & .business-facts > div > span {
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  & .business-facts > div:hover {
+    box-shadow: none;
+  }
+  & .business-heading > .button,
+  & .finance-actions > .button {
+    min-height: 44px;
+  }
+  & .shop-bank-status-row {
+    margin-bottom: 0;
+  }
+}
+
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .seller-workspace
+  main.seller-content
+  .seller-finance {
+  & .seller-commerce {
+    align-items: stretch;
+  }
+  & :is(.shop-bank-section, .seller-channel) {
+    display: flex;
+    flex-direction: column;
+  }
+  & :is(.shop-bank-section, .seller-channel) > .business-heading {
+    align-items: start;
+    margin-bottom: 18px;
+    min-height: 51px;
+  }
+  & .seller-channel > .business-heading > [data-icon-action] {
+    align-self: start;
+    margin: 0 !important;
+  }
+  & .shop-bank-ready-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-top: 0;
+  }
+  & .channel-ready-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  & :is(.shop-bank-status-row, .finance-channel-status) {
+    min-height: 28px;
+    display: flex;
+    align-items: center;
+    margin: 0;
+  }
+  & :is(.shop-bank-status-row .status-pill, .finance-channel-status .finance-status) {
+    padding: 4px 10px;
+    font-size: 12px;
+    line-height: 18px;
+    font-weight: 600;
+    box-sizing: border-box;
+  }
+  & .shop-bank-status-row .status-pill {
+    border: 0;
+    border-radius: 5px;
+    background: #eaf6ee;
+  }
+  & .shop-bank-facts,
+  & .channel-bank-facts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 18px 0 0;
+    padding: 0;
+    gap: 16px;
+  }
+  & .channel-bank-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  & .finance-settings-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 20px;
+    margin-top: auto;
+  }
+  & .finance-settings-actions button {
+    min-height: 44px;
+    margin: 0;
+  }
+}
+@media (max-width: 600px) {
+  .workspace-portal-root.platform-workspace[data-platform-role='seller']
+    .seller-workspace
+    main.seller-content
+    .seller-finance {
+    & .shop-bank-facts {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    & .finance-settings-actions {
+      justify-content: flex-start;
+    }
+  }
+}
+
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .seller-workspace
+  main.seller-content
+  .seller-finance
+  :is(.shop-bank-section, .seller-channel)
+  > .business-heading {
+  & h2 {
+    line-height: 27px;
+  }
+  & p {
+    line-height: 20px;
+  }
+}
+
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .seller-workspace
+  main.seller-content
+  .seller-finance {
+  & .shop-bank-section {
+    overflow: visible;
+  }
+  & .shop-bank-section:focus-within {
+    position: relative;
+    z-index: 2;
+  }
+  & .shop-bank-form {
+    width: 100%;
+    max-width: none;
+    margin-top: 0;
+  }
+  & .shop-bank-form-actions {
+    flex-direction: row;
+    align-items: center;
+  }
+  & .shop-bank-form-actions > button {
+    width: auto;
+    flex: 0 0 auto;
+  }
+  & .shop-bank-form-wrapper {
+    padding: 0;
+  }
+  & .shop-bank-form input {
+    font-size: 14px;
+  }
+  & .finance-status[data-finance-state='SUCCEEDED'] {
+    color: #23723d;
+    background: #eaf6ee;
+  }
+  & .finance-status:is([data-finance-state='FAILED'], [data-finance-state='CANCELED']) {
+    color: #b02e2e;
+    background: #fff0f0;
+  }
+}
+
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .seller-workspace
+  main.seller-content
+  .seller-finance
+  .seller-seasonal {
+  & .seasonal-forecast-notes {
+    display: grid;
+    gap: 5px;
+    margin: 12px 0 16px;
+  }
+  & .seasonal-forecast-notes p {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #93600a;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  & .forecast-explanation {
+    margin: 4px 0 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  & .forecast-explanation summary {
+    display: list-item;
+    width: fit-content;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-size: 12px;
+    color: #245b3d;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  & .forecast-explanation p {
+    margin: 6px 0 0;
+    padding: 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #63746c;
+  }
+}
+
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .seller-workspace
+  main.seller-content
+  .seller-finance {
+  container-name: seller-finance;
+  container-type: inline-size;
+  & .seller-seasonal {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+  }
+  & .seasonal-sales-panel .business-table th:first-child {
+    width: 60%;
+  }
+  & .seasonal-forecast-panel .business-table th:first-child {
+    width: 44%;
+  }
+  & .seasonal-forecast-panel .business-table th:nth-child(2),
+  & .seasonal-forecast-panel .business-table th:nth-child(3) {
+    width: 14%;
+  }
+  & .seasonal-forecast-panel .business-table th:last-child {
+    width: 28%;
+  }
+  & .seller-seasonal .business-table td:first-child {
+    overflow-wrap: anywhere;
+  }
+  & .seller-seasonal .business-table td:not(:first-child) {
+    font-variant-numeric: tabular-nums;
+  }
+}
+@container seller-finance (min-width:1180px) {
+  .workspace-portal-root.platform-workspace[data-platform-role='seller']
+    .seller-workspace
+    main.seller-content
+    .seller-finance {
+    & .seller-seasonal {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    & .seasonal-filter-form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+      gap: 12px;
+    }
+    & .seasonal-filter-fields {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    & .seasonal-filter-form > button {
+      white-space: nowrap;
+    }
+    & .seller-seasonal .business-table th,
+    & .seller-seasonal .business-table td {
+      padding: 14px 16px;
+    }
+    & .seasonal-forecast-panel .finance-money {
+      white-space: normal;
+    }
+  }
+}
+
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .seller-workspace
+  main.seller-content
+  .seller-refund-modal {
+  width: min(680px, calc(100vw - 32px));
+  max-width: 680px;
+  padding: 0;
+  & > .management-modal-header {
+    margin: 0;
+    padding: 20px 22px;
+  }
+  & > [data-refresh-region] {
+    margin: 0;
+  }
+  & .business-refund-detail {
+    padding: 20px 22px 24px;
+  }
+}
+
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .seller-workspace
+  main.seller-content
+  .seller-refund-modal {
+  & > [data-refresh-region] {
+    margin: 0 !important;
+  }
+  & .business-refund-detail {
+    margin: 0;
+    padding: 20px 22px 24px;
+    border: 0;
+    background: #fff;
+  }
+  & .refund-detail-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 16px;
+  }
+  & .refund-detail-heading h3 {
+    margin: 0;
+    font-size: 16px;
+    overflow-wrap: anywhere;
+  }
+  & .refund-detail-amount {
+    display: grid;
+    gap: 5px;
+    margin: 18px 0;
+  }
+  & .refund-detail-amount > span,
+  & .refund-detail-reason > span {
+    color: #63746c;
+    font-size: 12px;
+  }
+  & .refund-detail-amount strong {
+    font-size: 24px;
+    line-height: 1.4;
+    color: #245b3d;
+    font-variant-numeric: tabular-nums;
+  }
+  & .refund-detail-reason {
+    margin-top: 16px;
+  }
+  & .refund-detail-reason p {
+    margin: 5px 0 0;
+    font-size: 14px;
+    overflow-wrap: anywhere;
+  }
+  & .business-refund-detail > .business-note {
+    margin: 12px 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #93600a;
+  }
+}

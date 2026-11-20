@@ -237,7 +237,6 @@ function CustomerKioskContent({
         </nav>
         <div className="kiosk-lease-heading">
           <div>
-            <span className="kiosk-lease-eyebrow">FLORABOT · THUÊ KIOSK</span>
             <h1>
               {appData ? 'Hồ sơ thuê kiosk' : additional ? 'Thuê thêm kiosk' : 'Đăng ký thuê kiosk'}
             </h1>
@@ -324,7 +323,6 @@ function CustomerKioskContent({
             <div className="kiosk-lease-sidebar">
               <section className="kiosk-packages-section" aria-labelledby="slot-demand-heading">
                 <div className="lease-section-heading">
-                  <span aria-hidden="true">01</span>
                   <div>
                     <h2 id="slot-demand-heading">Chọn số ô muốn thuê</h2>
                     <p>Chọn tổng từ 1 đến 50 ô.</p>
@@ -366,20 +364,14 @@ function CustomerKioskContent({
                 <ol>
                   <li>
                     <strong>Thanh toán phí thuê</strong>
-                    <span>Thanh toán cho FloraBot qua PayOS.</span>
                   </li>
                   <li>
                     <strong>Xác nhận & lắp đặt</strong>
-                    <span>Quản lý kiểm tra hồ sơ và hẹn lịch kỹ thuật.</span>
                   </li>
                   <li>
                     <strong>Bàn giao kiosk</strong>
-                    <span>Nhận bàn giao và bắt đầu sử dụng kiosk.</span>
                   </li>
                 </ol>
-                <p className="kiosk-guide-note">
-                  Sau khi nộp, bạn có thể theo dõi thanh toán và tiến độ lắp đặt ngay tại đây.
-                </p>
               </aside>
             </div>
             <KioskApplicationForm

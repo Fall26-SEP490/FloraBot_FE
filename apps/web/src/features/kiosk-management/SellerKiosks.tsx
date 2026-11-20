@@ -1,5 +1,6 @@
 'use client';
 
+import RefreshRegion from '@/shared/components/RefreshRegion';
 import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
 import { useEffect, useRef, useState } from 'react';
@@ -624,14 +625,16 @@ export default function SellerKiosks({ session }: SellerKiosksProps) {
 
   if (!sellerId) {
     return (
-      <section className="seller-kiosks-page" aria-labelledby="kiosks-title">
-        <h2 id="kiosks-title" className="sr-only">
-          Vị trí kiosk
-        </h2>
-        <div className="kiosk-empty-state" role="note">
-          <p>Tài khoản của bạn chưa liên kết với shop nào để quản lý kiosk.</p>
-        </div>
-      </section>
+      <RefreshRegion>
+        <section className="seller-kiosks-page" aria-labelledby="kiosks-title">
+          <h2 id="kiosks-title" className="sr-only">
+            Vị trí kiosk
+          </h2>
+          <div className="kiosk-empty-state" role="note">
+            <p>Tài khoản của bạn chưa liên kết với shop nào để quản lý kiosk.</p>
+          </div>
+        </section>
+      </RefreshRegion>
     );
   }
 
@@ -659,202 +662,204 @@ export default function SellerKiosks({ session }: SellerKiosksProps) {
   const selectedKiosk = pageItems.find((kiosk) => kiosk.id === selectedKioskId) ?? pageItems[0];
 
   return (
-    <section className="seller-kiosks-page" aria-labelledby="kiosks-title">
-      <h2 id="kiosks-title" className="sr-only">
-        Danh sách kiosk
-      </h2>
+    <RefreshRegion>
+      <section className="seller-kiosks-page" aria-labelledby="kiosks-title">
+        <h2 id="kiosks-title" className="sr-only">
+          Danh sách kiosk
+        </h2>
 
-      {session.role === 'SELLER_STAFF' && (
-        <div className="kiosk-role-warning" role="note">
-          <CircleAlert size={18} aria-hidden="true" />
-          <span>
-            Bạn đang đăng nhập với vai trò <strong>Nhân viên shop</strong>. Bạn có thể xem vị trí
-            kiosk nhưng chỉ <strong>Chủ shop (SELLER)</strong> mới có quyền cập nhật địa chỉ và tọa
-            độ.
-          </span>
-        </div>
-      )}
-
-      {incompleteKiosks.length > 0 && (
-        <div className="kiosk-required-banner" role="alert">
-          <div className="kiosk-banner-content">
-            <CircleAlert size={22} className="kiosk-banner-icon" aria-hidden="true" />
-            <div>
-              <h3>Yêu cầu cập nhật vị trí kiosk</h3>
-              <p>
-                Hiện có <strong>{incompleteKiosks.length}</strong> kiosk chưa hoàn tất thông tin vị
-                trí (thiếu địa chỉ hoặc tọa độ). Vui lòng cập nhật ngay để khách hàng có thể định vị
-                và nhận hoa.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {kiosks.length > 0 && (
-        <div className="seller-kiosks-toolbar">
-          <div className="kiosk-search-field">
-            <label htmlFor="seller-kiosk-search">Tìm kiếm kiosk</label>
-            <input
-              id="seller-kiosk-search"
-              type="search"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setPage(1);
-              }}
-              placeholder="Tìm theo tên kiosk, mã tủ, địa chỉ hoặc khu vực…"
-              className="kiosk-search-input"
-            />
-          </div>
-          <div className="kiosk-filter-group">
-            <label htmlFor="seller-kiosk-status-filter">Trạng thái kiosk</label>
-            <Select
-              id="seller-kiosk-status-filter"
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setPage(1);
-              }}
-              className="kiosk-select-filter"
-              aria-label="Lọc theo trạng thái kiosk"
-            >
-              <option value="ALL">Tất cả trạng thái</option>
-              <option value="ONLINE">Trực tuyến</option>
-              <option value="OFFLINE">Ngoại tuyến</option>
-              <option value="MAINTENANCE">Sự cố</option>
-            </Select>
-            <IconActionButton
-              variant="outline"
-              onClick={() => void kiosksQuery.refetch()}
-              disabled={kiosksQuery.isFetching}
-              className="kiosk-reload-btn"
-              action="reload"
-              label="Tải lại danh sách kiosk"
-            />
-            {(searchQuery || statusFilter !== 'ALL') && kiosks.length > 0 && (
-              <IconActionButton
-                variant="outline"
-                className="kiosk-clear-filters"
-                onClick={() => {
-                  setSearchQuery('');
-                  setStatusFilter('ALL');
-                  setPage(1);
-                }}
-                action="clear"
-                label="Xóa bộ lọc kiosk"
-              />
-            )}
-          </div>
-        </div>
-      )}
-
-      {kiosksQuery.isPending && (
-        <div className="kiosk-loading-state" role="status">
-          <p>Đang tải danh sách kiosk của shop…</p>
-        </div>
-      )}
-
-      {kiosksQuery.isError && (
-        <div className="kiosk-error-state" role="alert">
-          <CircleAlert size={20} aria-hidden="true" />
-          <p>
-            {kiosksQuery.error instanceof ApiError
-              ? kiosksQuery.error.message
-              : 'Không thể tải danh sách kiosk. Vui lòng kiểm tra kết nối mạng và thử lại.'}
-          </p>
-          <Button
-            variant="default"
-            className="kiosk-reload-btn"
-            onClick={() => void kiosksQuery.refetch()}
-          >
-            Thử lại
-          </Button>
-        </div>
-      )}
-
-      {!kiosksQuery.isPending && !kiosksQuery.isError && kiosks.length === 0 && (
-        <div className="kiosk-empty-state">
-          <MapPin size={36} aria-hidden="true" />
-          <h2>Chưa có kiosk nào được phân bổ</h2>
-          <p>
-            Shop của bạn hiện chưa được phân bổ tủ kiosk nào. Vui lòng kiểm tra hồ sơ thuê kiosk
-            hoặc liên hệ quản trị viên hệ thống để được hỗ trợ phân bổ tủ.
-          </p>
-          <IconActionButton
-            variant="outline"
-            className="kiosk-reload-btn"
-            onClick={() => void kiosksQuery.refetch()}
-            disabled={kiosksQuery.isFetching}
-            action="reload"
-            label="Tải lại danh sách"
-          />
-        </div>
-      )}
-
-      {!kiosksQuery.isPending &&
-        !kiosksQuery.isError &&
-        kiosks.length > 0 &&
-        pageItems.length === 0 && (
-          <div className="kiosk-empty-state" role="status">
-            <p>Không tìm thấy kiosk nào khớp với bộ lọc tìm kiếm.</p>
+        {session.role === 'SELLER_STAFF' && (
+          <div className="kiosk-role-warning" role="note">
+            <CircleAlert size={18} aria-hidden="true" />
+            <span>
+              Bạn đang đăng nhập với vai trò <strong>Nhân viên shop</strong>. Bạn có thể xem vị trí
+              kiosk nhưng chỉ <strong>Chủ shop (SELLER)</strong> mới có quyền cập nhật địa chỉ và
+              tọa độ.
+            </span>
           </div>
         )}
 
-      {pageItems.length > 0 && (
-        <div className="kiosk-workbench">
-          <nav className="kiosk-selection" aria-label="Chọn kiosk">
-            <h3>
-              Danh sách kiosk <span>({filteredKiosks.length})</span>
-            </h3>
-            <div className="kiosk-selection-items">
-              {pageItems.map((kiosk) => (
-                <button
-                  key={kiosk.id}
-                  type="button"
-                  className="kiosk-selection-item"
-                  aria-pressed={selectedKiosk.id === kiosk.id}
-                  onClick={() => setSelectedKioskId(kiosk.id)}
-                >
-                  <span className="kiosk-selection-top">
-                    <strong>{kiosk.name}</strong>
-                    <span
-                      className={`kiosk-status-badge ${isKioskActive(kiosk.status) ? 'badge-active' : kiosk.status === 'MAINTENANCE' ? 'badge-maintenance' : 'badge-offline'}`}
-                    >
-                      {getSellerKioskStatusLabel(kiosk.status)}
-                    </span>
-                  </span>
-                  <span className="kiosk-selection-code">Mã: {kiosk.code}</span>
-                  {!kiosk.address?.trim() && kiosk.region && (
-                    <span className="kiosk-selection-address">{kiosk.region}</span>
-                  )}
-                  {!kiosk.locationComplete && (
-                    <span className="kiosk-selection-incomplete">Cần bổ sung vị trí</span>
-                  )}
-                </button>
-              ))}
+        {incompleteKiosks.length > 0 && (
+          <div className="kiosk-required-banner" role="alert">
+            <div className="kiosk-banner-content">
+              <CircleAlert size={22} className="kiosk-banner-icon" aria-hidden="true" />
+              <div>
+                <h3>Yêu cầu cập nhật vị trí kiosk</h3>
+                <p>
+                  Hiện có <strong>{incompleteKiosks.length}</strong> kiosk chưa hoàn tất thông tin
+                  vị trí (thiếu địa chỉ hoặc tọa độ). Vui lòng cập nhật ngay để khách hàng có thể
+                  định vị và nhận hoa.
+                </p>
+              </div>
             </div>
-          </nav>
-          <div className="kiosks-list">
-            <KioskCard
-              key={selectedKiosk.id}
-              kiosk={selectedKiosk}
-              sellerId={sellerId}
-              isSellerRole={isSellerRole}
+          </div>
+        )}
+
+        {kiosks.length > 0 && (
+          <div className="seller-kiosks-toolbar">
+            <div className="kiosk-search-field">
+              <label htmlFor="seller-kiosk-search">Tìm kiếm kiosk</label>
+              <input
+                id="seller-kiosk-search"
+                type="search"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setPage(1);
+                }}
+                placeholder="Tìm theo tên kiosk, mã tủ, địa chỉ hoặc khu vực…"
+                className="kiosk-search-input"
+              />
+            </div>
+            <div className="kiosk-filter-group">
+              <label htmlFor="seller-kiosk-status-filter">Trạng thái kiosk</label>
+              <Select
+                id="seller-kiosk-status-filter"
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="kiosk-select-filter"
+                aria-label="Lọc theo trạng thái kiosk"
+              >
+                <option value="ALL">Tất cả trạng thái</option>
+                <option value="ONLINE">Trực tuyến</option>
+                <option value="OFFLINE">Ngoại tuyến</option>
+                <option value="MAINTENANCE">Sự cố</option>
+              </Select>
+              <IconActionButton
+                variant="outline"
+                onClick={async () => await kiosksQuery.refetch()}
+                disabled={kiosksQuery.isFetching}
+                className="kiosk-reload-btn"
+                action="reload"
+                label="Tải lại danh sách kiosk"
+              />
+              {(searchQuery || statusFilter !== 'ALL') && kiosks.length > 0 && (
+                <IconActionButton
+                  variant="outline"
+                  className="kiosk-clear-filters"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setStatusFilter('ALL');
+                    setPage(1);
+                  }}
+                  action="clear"
+                  label="Xóa bộ lọc kiosk"
+                />
+              )}
+            </div>
+          </div>
+        )}
+
+        {kiosksQuery.isPending && (
+          <div className="kiosk-loading-state" role="status">
+            <p>Đang tải danh sách kiosk của shop…</p>
+          </div>
+        )}
+
+        {kiosksQuery.isError && (
+          <div className="kiosk-error-state" role="alert">
+            <CircleAlert size={20} aria-hidden="true" />
+            <p>
+              {kiosksQuery.error instanceof ApiError
+                ? kiosksQuery.error.message
+                : 'Không thể tải danh sách kiosk. Vui lòng kiểm tra kết nối mạng và thử lại.'}
+            </p>
+            <Button
+              variant="default"
+              className="kiosk-reload-btn"
+              onClick={() => kiosksQuery.refetch()}
+            >
+              Thử lại
+            </Button>
+          </div>
+        )}
+
+        {!kiosksQuery.isPending && !kiosksQuery.isError && kiosks.length === 0 && (
+          <div className="kiosk-empty-state">
+            <MapPin size={36} aria-hidden="true" />
+            <h2>Chưa có kiosk nào được phân bổ</h2>
+            <p>
+              Shop của bạn hiện chưa được phân bổ tủ kiosk nào. Vui lòng kiểm tra hồ sơ thuê kiosk
+              hoặc liên hệ quản trị viên hệ thống để được hỗ trợ phân bổ tủ.
+            </p>
+            <IconActionButton
+              variant="outline"
+              className="kiosk-reload-btn"
+              onClick={async () => await kiosksQuery.refetch()}
+              disabled={kiosksQuery.isFetching}
+              action="reload"
+              label="Tải lại danh sách"
             />
           </div>
-        </div>
-      )}
+        )}
 
-      {filteredKiosks.length > PAGE_SIZE && (
-        <TablePagination
-          page={safePage}
-          pageSize={PAGE_SIZE}
-          totalItems={filteredKiosks.length}
-          onPageChange={setPage}
-          ariaLabel="Phân trang danh sách kiosk"
-        />
-      )}
-    </section>
+        {!kiosksQuery.isPending &&
+          !kiosksQuery.isError &&
+          kiosks.length > 0 &&
+          pageItems.length === 0 && (
+            <div className="kiosk-empty-state" role="status">
+              <p>Không tìm thấy kiosk nào khớp với bộ lọc tìm kiếm.</p>
+            </div>
+          )}
+
+        {pageItems.length > 0 && (
+          <div className="kiosk-workbench">
+            <nav className="kiosk-selection" aria-label="Chọn kiosk">
+              <h3>
+                Danh sách kiosk <span>({filteredKiosks.length})</span>
+              </h3>
+              <div className="kiosk-selection-items">
+                {pageItems.map((kiosk) => (
+                  <button
+                    key={kiosk.id}
+                    type="button"
+                    className="kiosk-selection-item"
+                    aria-pressed={selectedKiosk.id === kiosk.id}
+                    onClick={() => setSelectedKioskId(kiosk.id)}
+                  >
+                    <span className="kiosk-selection-top">
+                      <strong>{kiosk.name}</strong>
+                      <span
+                        className={`kiosk-status-badge ${isKioskActive(kiosk.status) ? 'badge-active' : kiosk.status === 'MAINTENANCE' ? 'badge-maintenance' : 'badge-offline'}`}
+                      >
+                        {getSellerKioskStatusLabel(kiosk.status)}
+                      </span>
+                    </span>
+                    <span className="kiosk-selection-code">Mã: {kiosk.code}</span>
+                    {!kiosk.address?.trim() && kiosk.region && (
+                      <span className="kiosk-selection-address">{kiosk.region}</span>
+                    )}
+                    {!kiosk.locationComplete && (
+                      <span className="kiosk-selection-incomplete">Cần bổ sung vị trí</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </nav>
+            <div className="kiosks-list">
+              <KioskCard
+                key={selectedKiosk.id}
+                kiosk={selectedKiosk}
+                sellerId={sellerId}
+                isSellerRole={isSellerRole}
+              />
+            </div>
+          </div>
+        )}
+
+        {filteredKiosks.length > PAGE_SIZE && (
+          <TablePagination
+            page={safePage}
+            pageSize={PAGE_SIZE}
+            totalItems={filteredKiosks.length}
+            onPageChange={setPage}
+            ariaLabel="Phân trang danh sách kiosk"
+          />
+        )}
+      </section>
+    </RefreshRegion>
   );
 }

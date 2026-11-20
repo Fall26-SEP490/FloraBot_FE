@@ -50,6 +50,7 @@ export {
   CircleAlert,
   Package,
   Banknote,
+  ChartColumn,
   ListChecks,
   Users,
   User,
