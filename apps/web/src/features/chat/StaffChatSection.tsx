@@ -1,5 +1,6 @@
 'use client';
 
+import Select from '@/shared/components/Select';
 import './chat.css';
 import Link from 'next/link';
 
@@ -127,7 +128,7 @@ export function StaffChatSection({ session }: { session: Session }) {
             {seller ? (
               <div className="staff-chat-start">
                 <label htmlFor="staff-chat-person">Chọn nhân viên đang hoạt động</label>
-                <select
+                <Select
                   id="staff-chat-person"
                   value={staffId}
                   onChange={(event) => {
@@ -142,7 +143,7 @@ export function StaffChatSection({ session }: { session: Session }) {
                       {person.fullName}
                     </option>
                   ))}
-                </select>
+                </Select>
                 {directory.isPending && <p role="status">Đang tải nhân viên…</p>}
                 {directory.isError && (
                   <div role="alert">

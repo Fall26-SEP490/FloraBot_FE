@@ -1,3 +1,4 @@
+import Select from '@/shared/components/Select';
 import { ApplicationRentalSummary } from '../../kiosk-pricing/ApplicationRentalSummary';
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
@@ -137,7 +138,7 @@ function EnrollKioskForm({ session, onClose, application, onSuccess }: EnrollKio
         </div>
         <div className="kiosk-form-field">
           <label htmlFor="new-region-select">Khu vực (Region)</label>
-          <select
+          <Select
             id="new-region-select"
             value={newRegion}
             onChange={(e) => setNewRegion(e.target.value)}
@@ -147,7 +148,7 @@ function EnrollKioskForm({ session, onClose, application, onSuccess }: EnrollKio
                 {r.label}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
       </div>
 

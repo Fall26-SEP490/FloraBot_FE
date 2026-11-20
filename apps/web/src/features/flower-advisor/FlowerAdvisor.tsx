@@ -19,6 +19,7 @@ import { Modal } from '@/shared/components/Modal';
 import { fetchPublicKiosks } from '../kiosk-location/kiosk-location.api';
 import { FlowerAdvisorSuggestion } from './FlowerAdvisorSuggestion';
 import { FlowerAdvisorKioskPicker } from './FlowerAdvisorKioskPicker';
+import { FlowerAdvisorKioskCards } from './FlowerAdvisorKioskCards';
 import { flowerChatMode } from './flower-advisor.utils';
 import type { FlowerChatAnswer, FlowerChatInput, FlowerChatPrompt } from './flower-advisor.types';
 import './flower-advisor.css';
@@ -444,6 +445,13 @@ export function FlowerAdvisor({ audience = 'customer' }: { audience?: 'customer'
                       >
                         {exchange.error && <p className="flower-advisor-error">{exchange.error}</p>}
                         {exchange.answer && <p>{exchange.answer.message}</p>}
+                        {audience === 'customer' && exchange.answer?.intent === 'FLOWERS' && (
+                          <FlowerAdvisorKioskCards
+                            question={exchange.input.question}
+                            message={exchange.answer.message}
+                            items={kiosks.data ?? []}
+                          />
+                        )}
                         {(exchange.error || exchange.answer?.intent === 'UNAVAILABLE') && (
                           <button
                             type="button"
@@ -508,7 +516,7 @@ export function FlowerAdvisor({ audience = 'customer' }: { audience?: 'customer'
                 <span>{question.length}/500</span>
               </p>
               <Link className="flower-advisor-privacy" href="/chinh-sach-rieng-tu">
-                Chính sách riêng tư
+                Chính sách bảo mật
               </Link>
             </div>
           </>

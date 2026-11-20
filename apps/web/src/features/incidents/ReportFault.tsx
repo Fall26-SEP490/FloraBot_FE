@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@florabot/ui';
 import { ApiError, queryClient, request } from '@/shared/lib/api';
 import EvidenceUpload from '../../shared/components/EvidenceUpload';
+import EvidencePreview from '../../shared/components/EvidencePreview';
 import type {
   FlowResult,
   ReportDeviceFaultRequest,
@@ -25,7 +26,17 @@ const schema = z.object({
 });
 type Fields = z.infer<typeof schema>;
 
-export default function ReportFault({ slot, sellerId }: { slot: SellerSlot; sellerId: string }) {
+export default function ReportFault({
+  slot,
+  sellerId,
+  compact = false,
+  onDone,
+}: {
+  slot: SellerSlot;
+  sellerId: string;
+  compact?: boolean;
+  onDone?: () => void;
+}) {
   const marker = `florabot:fault-unconfirmed:${sellerId}:${slot.id}`;
   const [uncertain, setUncertain] = useState(() => {
     try {
@@ -35,6 +46,7 @@ export default function ReportFault({ slot, sellerId }: { slot: SellerSlot; sell
     }
   });
   const [editing, setEditing] = useState(false);
+  const [previewFile, setPreviewFile] = useState<File | null>(null);
   const [review, setReview] = useState<Fields | null>(null);
   const confirmRef = useRef<HTMLButtonElement>(null);
   const startRef = useRef<HTMLButtonElement>(null);
@@ -44,6 +56,7 @@ export default function ReportFault({ slot, sellerId }: { slot: SellerSlot; sell
     resolver: zodResolver(schema),
     defaultValues: { description: '', photo: '' },
   });
+  const photoReference = useWatch({ control: form.control, name: 'photo' });
   useEffect(() => {
     if (review) confirmRef.current?.focus();
   }, [review]);
@@ -69,6 +82,7 @@ export default function ReportFault({ slot, sellerId }: { slot: SellerSlot; sell
       setReview(null);
       setEditing(false);
       form.reset();
+      setPreviewFile(null);
       requestAnimationFrame(() => noticeRef.current?.focus());
     },
     onError: (error) => {
@@ -90,6 +104,7 @@ export default function ReportFault({ slot, sellerId }: { slot: SellerSlot; sell
     setEditing(false);
     setReview(null);
     form.reset();
+    setPreviewFile(null);
     report.reset();
     requestAnimationFrame(() => startRef.current?.focus());
   };
@@ -102,12 +117,28 @@ export default function ReportFault({ slot, sellerId }: { slot: SellerSlot; sell
   const prefix = `fault-${slot.id}`;
   return (
     <div className="fault-report">
-      <h4>Cần hỗ trợ ô tủ này?</h4>
-      <p>
-        Ghi lại tình trạng bạn quan sát được để đội ngũ kiểm tra đúng ô. Nếu cửa đang mở, chờ cửa
-        đóng và không cố tác động vào khóa.
-      </p>
-      {uncertain && !report.isPending ? (
+      {!compact && !report.isSuccess && <h4>Cần hỗ trợ ô tủ này?</h4>}
+      {!review && !report.isSuccess && (
+        <p>
+          {compact
+            ? 'Nếu cửa đang mở, chờ cửa đóng và không tác động vào khóa.'
+            : 'Ghi lại tình trạng bạn quan sát được để đội ngũ kiểm tra đúng ô. Nếu cửa đang mở, chờ cửa đóng và không cố tác động vào khóa.'}
+        </p>
+      )}
+      {report.isSuccess ? (
+        <div className="fault-result">
+          <span className="fault-result-label">Chờ xử lý</span>
+          <h4>Đã gửi báo cáo</h4>
+          <p ref={noticeRef} tabIndex={-1} role="status">
+            Đội vận hành sẽ kiểm tra ô {slot.slotCode} trước khi mở bán lại.
+          </p>
+          {onDone && (
+            <Button type="button" onClick={onDone}>
+              Đóng
+            </Button>
+          )}
+        </div>
+      ) : uncertain && !report.isPending ? (
         <div role="alert">
           <p>
             Chưa xác nhận được kết quả lần gửi trước. Làm mới danh sách ô và liên hệ đội ngũ để đối
@@ -135,7 +166,7 @@ export default function ReportFault({ slot, sellerId }: { slot: SellerSlot; sell
             requestAnimationFrame(() => form.setFocus('description'));
           }}
         >
-          Báo sự cố ô {slot.slotCode}
+          {compact ? 'Báo sự cố' : `Báo sự cố ô ${slot.slotCode}`}
         </Button>
       ) : (
         <form noValidate onSubmit={form.handleSubmit((values) => setReview(values))}>
@@ -164,27 +195,39 @@ export default function ReportFault({ slot, sellerId }: { slot: SellerSlot; sell
                   onReference={field.onChange}
                   disabled={report.isPending}
                   error={form.formState.errors.photo?.message}
+                  autoUpload
+                  onFileChange={setPreviewFile}
+                  helpText="PNG, JPEG hoặc WebP, tối đa 5 MB. Ảnh chỉ dùng để xử lý sự cố."
                 />
               )}
             />
           </div>
           {review && (
-            <div>
-              <h4>Kiểm tra trước khi báo sự cố</h4>
-              <p>
-                <strong>
-                  {slot.kioskName} · Ô {slot.slotCode}
-                </strong>
-              </p>
-              <p className="fault-description">{review.description}</p>
-              <p className="fault-description">Ảnh minh chứng đã lưu riêng tư.</p>
-              <p>
-                Báo sự cố có thể dừng bán tại ô này, hủy lượt thanh toán chưa hoàn tất hoặc tạo yêu
-                cầu hoàn tiền cho đơn đang giao. Chỉ xác nhận khi bạn đã kiểm tra đúng ô.
+            <div className="fault-review">
+              <h4>Xác nhận báo cáo</h4>
+              <dl className="fault-review-summary">
+                <div>
+                  <dt>Vị trí</dt>
+                  <dd>
+                    {slot.kioskName ? `${slot.kioskName} / ` : ''}Ô {slot.slotCode}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Tình trạng</dt>
+                  <dd className="fault-description">{review.description}</dd>
+                </div>
+                <div>
+                  <dt>Minh chứng</dt>
+                  <dd>Ảnh đã lưu{previewFile && <EvidencePreview file={previewFile} />}</dd>
+                </div>
+              </dl>
+              <p className="fault-review-note">
+                Gửi báo cáo có thể dừng bán tại ô, hủy lượt thanh toán chưa hoàn tất hoặc tạo yêu
+                cầu hoàn tiền cho đơn đang giao.
               </p>
             </div>
           )}
-          <div className="stock-actions">
+          <div className="stock-actions fault-actions">
             {review ? (
               <>
                 <Button
@@ -193,7 +236,7 @@ export default function ReportFault({ slot, sellerId }: { slot: SellerSlot; sell
                   disabled={report.isPending || unavailable}
                   onClick={confirm}
                 >
-                  {report.isPending ? 'Đang gửi báo cáo…' : 'Xác nhận báo sự cố'}
+                  {report.isPending ? 'Đang gửi…' : 'Gửi báo cáo'}
                 </Button>
                 <Button
                   variant="outline"
@@ -203,14 +246,16 @@ export default function ReportFault({ slot, sellerId }: { slot: SellerSlot; sell
                     requestAnimationFrame(() => form.setFocus('description'));
                   }}
                 >
-                  Sửa báo cáo
+                  Chỉnh sửa
                 </Button>
               </>
             ) : (
-              <Button type="submit">Kiểm tra báo cáo</Button>
+              <Button type="submit" disabled={!photoReference?.startsWith('evidence:v1:')}>
+                Tiếp tục
+              </Button>
             )}
             <Button variant="outline" disabled={report.isPending} onClick={close}>
-              Hủy báo cáo
+              Hủy
             </Button>
           </div>
         </form>
@@ -222,11 +267,6 @@ export default function ReportFault({ slot, sellerId }: { slot: SellerSlot; sell
             : 'Kết nối bị gián đoạn. Báo cáo có thể đã được ghi nhận.'}
         </p>
       )}
-      <p role="status" ref={noticeRef} tabIndex={-1}>
-        {report.isSuccess
-          ? 'Đã ghi nhận báo cáo sự cố. Đội ngũ cần kiểm tra trước khi ô được mở bán lại.'
-          : ''}
-      </p>
     </div>
   );
 }

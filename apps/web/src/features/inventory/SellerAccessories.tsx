@@ -1,6 +1,9 @@
 import { useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Button, RefreshCw } from '@florabot/ui';
+import { ArrowRight, Button, Plus, Search } from '@florabot/ui';
+import Select from '@/shared/components/Select';
+import { Modal } from '@/shared/components/Modal';
+import styles from '../product-management/styles/seller-catalog.module.css';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
 import { ApiError, queryClient, request, type Session } from '@/shared/lib/api';
 
@@ -58,7 +61,7 @@ function Restock({
       setError(
         rejected
           ? cause.message
-          : 'Chưa xác định được lần bổ sung này đã ghi nhận chưa. Làm mới tồn và nhờ đội ngũ đối chiếu lịch sử trước khi bổ sung tiếp. Không gửi lại cùng số lượng.',
+          : 'Chưa xác định được lần bổ sung này đã ghi nhận chưa. Nhờ đội ngũ đối chiếu lịch sử trước khi bổ sung tiếp. Không gửi lại cùng số lượng.',
       );
       setReview(undefined);
     } finally {
@@ -68,7 +71,7 @@ function Restock({
       await refresh();
     }
   }
-  const [editOpen, setEditOpen] = useState(false);
+  const [open, setOpen] = useState(false);
   const [editName, setEditName] = useState(item.name);
   const [editPrice, setEditPrice] = useState(String(item.price));
   const [crudBusy, setCrudBusy] = useState(false);
@@ -134,157 +137,194 @@ function Restock({
   }
 
   return (
-    <li className="accessory-card">
-      <div className="accessory-card-header">
-        <h3>{item.name}</h3>
-        <div className="accessory-meta-pills">
-          <span className="accessory-stock-pill" data-empty={Number(item.stockQuantity) === 0}>
-            Tồn hiện tại: <strong>{item.stockQuantity}</strong>
-          </span>
-          <span className="accessory-price-pill">
-            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(
-              Number(item.price),
-            )}
-          </span>
-        </div>
-      </div>
-
-      <p className="accessory-status-strip">
-        <span className="accessory-pill" data-active={item.status === 'ACTIVE'}>
-          {item.status === 'ACTIVE' ? 'Phụ kiện đang bật bán' : 'Phụ kiện đang tắt bán'}
+    <li>
+      <button
+        type="button"
+        className={`${styles.row} ${styles.accessoryGrid}`}
+        aria-label={`Xem phụ kiện ${item.name}`}
+        onClick={() => setOpen(true)}
+      >
+        <span className={styles.productIdentity}>
+          <strong>{item.name}</strong>
         </span>
-      </p>
-
-      <details
-        className="accessory-edit-disclosure"
-        open={editOpen}
-        onToggle={(e) => setEditOpen(e.currentTarget.open)}
-      >
-        <summary>Chỉnh sửa thông tin hoặc trạng thái bán</summary>
-        {editOpen && (
-          <form className="accessory-restock-box" onSubmit={(e) => void saveMetadata(e)}>
-            <div className="accessory-restock-row">
-              <label htmlFor={`accessory-name-${item.id}`}>
-                Tên phụ kiện
-                <input
-                  id={`accessory-name-${item.id}`}
-                  value={editName}
-                  maxLength={120}
-                  disabled={crudBusy}
-                  onChange={(e) => setEditName(e.target.value)}
-                />
-              </label>
-              <label htmlFor={`accessory-price-${item.id}`}>
-                Giá bán (VND)
-                <input
-                  id={`accessory-price-${item.id}`}
-                  type="number"
-                  min={1}
-                  step={1}
-                  value={editPrice}
-                  disabled={crudBusy}
-                  onChange={(e) => setEditPrice(e.target.value)}
-                />
-              </label>
-            </div>
-            <div className="stock-actions" style={{ marginTop: '0.5rem' }}>
-              <Button type="submit" disabled={crudBusy}>
-                {crudBusy ? 'Đang lưu…' : 'Lưu phụ kiện'}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={crudBusy}
-                onClick={() => void toggleStatus()}
-              >
-                {item.status === 'ACTIVE' ? 'Tắt bán phụ kiện' : 'Bật bán phụ kiện'}
-              </Button>
-            </div>
-            {(crudError || crudNotice) && (
-              <p role={crudError ? 'alert' : 'status'} className={crudError ? 'error' : undefined}>
-                {crudError || crudNotice}
-              </p>
-            )}
-          </form>
-        )}
-      </details>
-
-      <form
-        className="accessory-restock-box"
-        noValidate
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (pending || uncertain) return;
-          setMessage('');
-          if (!valid) {
-            setError('Nhập số lượng nguyên từ 1 đến 2.147.483.647.');
-            input.current?.focus();
-            return;
-          }
-          setError('');
-          setReview(qty);
-          requestAnimationFrame(() => reviewPanel.current?.focus());
-        }}
-      >
-        <label htmlFor={`accessory-${item.id}`}>Số lượng bổ sung cho {item.name}</label>
-        {review === undefined && (
-          <div className="accessory-restock-row">
-            <input
-              id={`accessory-${item.id}`}
-              ref={input}
-              inputMode="numeric"
-              autoComplete="off"
-              placeholder="Nhập số lượng..."
-              value={quantity}
-              disabled={pending || uncertain}
-              onChange={(event) => setQuantity(event.target.value)}
-              aria-describedby={`accessory-notice-${item.id}`}
-              aria-invalid={!!error && !valid}
-            />
-            <Button type="submit" disabled={pending || uncertain}>
-              Kiểm tra số lượng
-            </Button>
-          </div>
-        )}
-        {review !== undefined && (
-          <div ref={reviewPanel} tabIndex={-1} className="accessory-review-panel">
-            <p>
-              Bổ sung <strong>{review}</strong> {item.name} vào kho shop?
-            </p>
-            <div className="stock-actions">
-              <Button type="button" disabled={pending} onClick={() => void submit()}>
-                {pending ? 'Đang ghi nhận…' : 'Xác nhận bổ sung'}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={pending}
-                onClick={() => {
-                  setReview(undefined);
-                  requestAnimationFrame(() => input.current?.focus());
-                }}
-              >
-                Sửa số lượng
-              </Button>
-            </div>
-          </div>
-        )}
-        <p
-          id={`accessory-notice-${item.id}`}
-          role={error ? 'alert' : 'status'}
-          ref={confirmation}
-          tabIndex={-1}
-          className={error ? 'error' : undefined}
+        <span className={styles.price}>
+          {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(
+            Number(item.price),
+          )}
+        </span>
+        <span className={styles.stock}>{item.stockQuantity}</span>
+        <span className={styles.status}>
+          <span className={styles.badge} data-active={item.status === 'ACTIVE'}>
+            {item.status === 'ACTIVE' ? 'Đang bán' : 'Tạm ngừng bán'}
+          </span>
+        </span>
+        <span className={styles.arrow}>
+          <ArrowRight size={16} aria-hidden="true" />
+        </span>
+      </button>
+      {open && (
+        <Modal
+          open
+          size="md"
+          className={styles.accessoryModal}
+          title={item.name}
+          onClose={() => setOpen(false)}
+          closeDisabled={pending || crudBusy}
         >
-          {error || message}
-        </p>
-      </form>
+          <div className={styles.editor}>
+            <div className="accessory-card-header">
+              <h3>{item.name}</h3>
+              <div className="accessory-meta-pills">
+                <span
+                  className="accessory-stock-pill"
+                  data-empty={Number(item.stockQuantity) === 0}
+                >
+                  Tồn hiện tại: <strong>{item.stockQuantity}</strong>
+                </span>
+                <span className="accessory-price-pill">
+                  {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(
+                    Number(item.price),
+                  )}
+                </span>
+              </div>
+            </div>
+
+            <p className="accessory-status-strip">
+              <span className="accessory-pill" data-active={item.status === 'ACTIVE'}>
+                {item.status === 'ACTIVE' ? 'Phụ kiện đang bật bán' : 'Phụ kiện đang tắt bán'}
+              </span>
+            </p>
+
+            <div className="accessory-edit-disclosure">
+              <form className="accessory-restock-box" onSubmit={(e) => void saveMetadata(e)}>
+                <div className="accessory-restock-row">
+                  <label htmlFor={`accessory-name-${item.id}`}>
+                    Tên phụ kiện
+                    <input
+                      id={`accessory-name-${item.id}`}
+                      value={editName}
+                      maxLength={120}
+                      disabled={crudBusy}
+                      onChange={(e) => setEditName(e.target.value)}
+                    />
+                  </label>
+                  <label htmlFor={`accessory-price-${item.id}`}>
+                    Giá bán (VND)
+                    <input
+                      id={`accessory-price-${item.id}`}
+                      type="number"
+                      min={1}
+                      step={1}
+                      value={editPrice}
+                      disabled={crudBusy}
+                      onChange={(e) => setEditPrice(e.target.value)}
+                    />
+                  </label>
+                </div>
+                <div className="stock-actions" style={{ marginTop: '0.5rem' }}>
+                  <Button type="submit" disabled={crudBusy}>
+                    {crudBusy ? 'Đang lưu…' : 'Lưu phụ kiện'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={crudBusy}
+                    onClick={() => void toggleStatus()}
+                  >
+                    {item.status === 'ACTIVE' ? 'Tắt bán phụ kiện' : 'Bật bán phụ kiện'}
+                  </Button>
+                </div>
+                {(crudError || crudNotice) && (
+                  <p
+                    role={crudError ? 'alert' : 'status'}
+                    className={crudError ? 'error' : undefined}
+                  >
+                    {crudError || crudNotice}
+                  </p>
+                )}
+              </form>
+            </div>
+
+            <form
+              className="accessory-restock-box"
+              noValidate
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (pending || uncertain) return;
+                setMessage('');
+                if (!valid) {
+                  setError('Nhập số lượng nguyên từ 1 đến 2.147.483.647.');
+                  input.current?.focus();
+                  return;
+                }
+                setError('');
+                setReview(qty);
+                requestAnimationFrame(() => reviewPanel.current?.focus());
+              }}
+            >
+              <label htmlFor={`accessory-${item.id}`}>Số lượng bổ sung cho {item.name}</label>
+              {review === undefined && (
+                <div className="accessory-restock-row">
+                  <input
+                    id={`accessory-${item.id}`}
+                    ref={input}
+                    inputMode="numeric"
+                    autoComplete="off"
+                    placeholder="Nhập số lượng..."
+                    value={quantity}
+                    disabled={pending || uncertain}
+                    onChange={(event) => setQuantity(event.target.value)}
+                    aria-describedby={`accessory-notice-${item.id}`}
+                    aria-invalid={!!error && !valid}
+                  />
+                  <Button type="submit" disabled={pending || uncertain}>
+                    Kiểm tra số lượng
+                  </Button>
+                </div>
+              )}
+              {review !== undefined && (
+                <div ref={reviewPanel} tabIndex={-1} className="accessory-review-panel">
+                  <p>
+                    Bổ sung <strong>{review}</strong> {item.name} vào kho shop?
+                  </p>
+                  <div className="stock-actions">
+                    <Button type="button" disabled={pending} onClick={() => void submit()}>
+                      {pending ? 'Đang ghi nhận…' : 'Xác nhận bổ sung'}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={pending}
+                      onClick={() => {
+                        setReview(undefined);
+                        requestAnimationFrame(() => input.current?.focus());
+                      }}
+                    >
+                      Sửa số lượng
+                    </Button>
+                  </div>
+                </div>
+              )}
+              <p
+                id={`accessory-notice-${item.id}`}
+                role={error ? 'alert' : 'status'}
+                ref={confirmation}
+                tabIndex={-1}
+                className={error ? 'error' : undefined}
+              >
+                {error || message}
+              </p>
+            </form>
+          </div>
+        </Modal>
+      )}
     </li>
   );
 }
 
 export default function SellerAccessories({ session }: { session: Session }) {
   const [search, setSearch] = useState('');
+  const [status, setStatus] = useState('ALL');
   const [createOpen, setCreateOpen] = useState(false);
   const [newName, setNewName] = useState('');
   const [newPrice, setNewPrice] = useState('');
@@ -335,6 +375,7 @@ export default function SellerAccessories({ session }: { session: Session }) {
       setNewPrice('');
       setSearch('');
       setCreateNotice(`Đã thêm phụ kiện ${trimmedName}.`);
+      setCreateOpen(false);
       await refreshInventory();
     } catch (cause) {
       setCreateError(cause instanceof ApiError ? cause.message : 'Chưa tạo được phụ kiện mới.');
@@ -349,48 +390,125 @@ export default function SellerAccessories({ session }: { session: Session }) {
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/đ/g, 'd');
-  const visible = items.filter((item) => fold(item.name).includes(fold(search.trim())));
+  const visible = items.filter(
+    (item) =>
+      fold(item.name).includes(fold(search.trim())) && (status === 'ALL' || item.status === status),
+  );
   if (!session.sellerId) return null;
   return (
-    <section className="seller-accessories" aria-labelledby="accessories-title">
-      <div className="accessory-page-header">
-        <div>
-          <h2 id="accessories-title">Kho phụ kiện của shop</h2>
-          <p>Dùng chung cho đơn đặt trước ở mọi tủ của shop.</p>
+    <div className={styles.catalog} role="region" aria-label="Kho phụ kiện">
+      {createNotice && (
+        <p className={styles.notice} role="status">
+          {createNotice}
+        </p>
+      )}
+      <div className={styles.surface}>
+        <div className={styles.toolbar}>
+          <label className={styles.searchField}>
+            <span>Tìm phụ kiện</span>
+            <span className={styles.searchInput}>
+              <Search size={18} aria-hidden="true" />
+              <input
+                id="accessory-search"
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Tên phụ kiện"
+              />
+            </span>
+          </label>
+          <label className={styles.stateField} htmlFor="accessory-state">
+            <span>Trạng thái</span>
+            <Select
+              id="accessory-state"
+              value={status}
+              onChange={(event) => setStatus(event.target.value)}
+            >
+              <option value="ALL">Tất cả</option>
+              <option value="ACTIVE">Đang bán</option>
+              <option value="INACTIVE">Tạm ngừng bán</option>
+            </Select>
+          </label>
+          <Button
+            type="button"
+            onClick={() => {
+              setCreateNotice('');
+              setCreateOpen(true);
+            }}
+          >
+            <Plus size={17} aria-hidden="true" />
+            Thêm phụ kiện
+          </Button>
         </div>
-        <Button
-          variant="outline"
-          className="accessory-refresh-btn"
-          disabled={inventory.isFetching}
-          onClick={() => void inventory.refetch()}
-        >
-          <RefreshCw size={15} aria-hidden="true" className={inventory.isFetching ? 'spin' : ''} />
-          Làm mới tồn phụ kiện
-        </Button>
+        <div className={`${styles.columns} ${styles.accessoryGrid}`} aria-hidden="true">
+          <span>Phụ kiện</span>
+          <span>Giá bán</span>
+          <span>Tồn tại shop</span>
+          <span>Trạng thái</span>
+          <span />
+        </div>
+        {inventory.isPending && (
+          <p className={styles.empty} role="status">
+            Đang tải phụ kiện…
+          </p>
+        )}
+        {inventory.isError && (
+          <div className={styles.empty} role="alert">
+            <p>Chưa tải được tồn mới nhất.</p>
+            <Button
+              variant="outline"
+              disabled={inventory.isFetching}
+              onClick={() => void inventory.refetch()}
+            >
+              Thử lại
+            </Button>
+          </div>
+        )}
+        {inventory.isSuccess && !visible.length && (
+          <div className={styles.empty} role="status">
+            <strong>{items.length ? 'Không tìm thấy phụ kiện phù hợp' : 'Chưa có phụ kiện'}</strong>
+            <p>
+              {items.length
+                ? 'Thử đổi từ khóa hoặc trạng thái.'
+                : 'Thêm phụ kiện đầu tiên cho cửa hàng.'}
+            </p>
+          </div>
+        )}
+        <ul className={styles.list}>
+          {visible.map((item) => (
+            <Restock
+              key={item.id}
+              item={item}
+              sellerId={session.sellerId!}
+              refresh={refreshInventory}
+            />
+          ))}
+        </ul>
       </div>
-
-      <details
-        className="accessory-create-disclosure"
-        open={createOpen}
-        onToggle={(e) => setCreateOpen(e.currentTarget.open)}
-      >
-        <summary>Thêm phụ kiện mới</summary>
-        {createOpen && (
-          <form className="accessory-restock-box" onSubmit={(e) => void handleCreateAccessory(e)}>
-            <div className="accessory-filters">
-              <div>
-                <label htmlFor="new-accessory-name">Tên phụ kiện</label>
+      {createOpen && (
+        <Modal
+          open
+          size="sm"
+          className={styles.accessoryModal}
+          title="Thêm phụ kiện"
+          closeDisabled={creating}
+          onClose={() => setCreateOpen(false)}
+        >
+          <div className={styles.editor}>
+            <form noValidate onSubmit={(event) => void handleCreateAccessory(event)}>
+              <label htmlFor="new-accessory-name">
+                Tên phụ kiện
                 <input
                   id="new-accessory-name"
                   value={newName}
                   maxLength={120}
                   disabled={creating}
-                  onChange={(e) => setNewName(e.target.value)}
-                  placeholder="Ví dụ: Thiệp chúc mừng, Nơ lụa…"
+                  onChange={(event) => setNewName(event.target.value)}
+                  placeholder="Tên phụ kiện"
                 />
-              </div>
-              <div>
-                <label htmlFor="new-accessory-price">Giá bán (VND)</label>
+              </label>
+              <label htmlFor="new-accessory-price">
+                Giá bán (VND)
                 <input
                   id="new-accessory-price"
                   type="number"
@@ -398,80 +516,32 @@ export default function SellerAccessories({ session }: { session: Session }) {
                   step={1}
                   value={newPrice}
                   disabled={creating}
-                  onChange={(e) => setNewPrice(e.target.value)}
-                  placeholder="15000"
+                  onChange={(event) => setNewPrice(event.target.value)}
+                  placeholder="Nhập giá bán"
                 />
+              </label>
+              {createError && (
+                <p role="alert" className="error">
+                  {createError}
+                </p>
+              )}
+              <div className="stock-actions">
+                <Button type="submit" disabled={creating}>
+                  {creating ? 'Đang thêm…' : 'Tạo phụ kiện'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={creating}
+                  onClick={() => setCreateOpen(false)}
+                >
+                  Hủy
+                </Button>
               </div>
-            </div>
-            <div className="stock-actions" style={{ marginTop: '0.5rem' }}>
-              <Button type="submit" disabled={creating}>
-                {creating ? 'Đang thêm…' : 'Tạo phụ kiện'}
-              </Button>
-            </div>
-            {(createError || createNotice) && (
-              <p
-                role={createError ? 'alert' : 'status'}
-                className={createError ? 'error' : undefined}
-              >
-                {createError || createNotice}
-              </p>
-            )}
-          </form>
-        )}
-      </details>
-
-      {items.length > 0 && (
-        <div className="accessory-filters">
-          <div>
-            <label htmlFor="accessory-search">Tìm phụ kiện</label>
-            <input
-              id="accessory-search"
-              type="search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Nhập tên phụ kiện…"
-            />
+            </form>
           </div>
-          <p role="status">
-            Hiển thị {visible.length} / {items.length} phụ kiện.
-          </p>
-          {search && (
-            <Button
-              variant="outline"
-              onClick={() => {
-                setSearch('');
-              }}
-            >
-              Xóa bộ lọc phụ kiện
-            </Button>
-          )}
-        </div>
+        </Modal>
       )}
-
-      {inventory.isFetching && <p role="status">Đang tải tồn phụ kiện…</p>}
-      {inventory.isError && (
-        <p role="alert" className="error">
-          Chưa tải được tồn mới nhất. Chọn “Làm mới tồn phụ kiện” để thử lại.
-        </p>
-      )}
-      {inventory.isSuccess && inventory.data.length === 0 && (
-        <p className="seller-empty-state">Kho shop chưa có phụ kiện. Thêm phụ kiện để bắt đầu.</p>
-      )}
-      {items.length > 0 && visible.length === 0 && (
-        <p role="status" className="seller-empty-state">
-          Không tìm thấy phụ kiện phù hợp. Thử tên khác hoặc xóa tìm kiếm.
-        </p>
-      )}
-      <ul className="admin-shop-list accessory-list">
-        {visible.map((item) => (
-          <Restock
-            key={item.id}
-            item={item}
-            sellerId={session.sellerId!}
-            refresh={refreshInventory}
-          />
-        ))}
-      </ul>
-    </section>
+    </div>
   );
 }

@@ -61,7 +61,11 @@ export const workspaceSections = {
       'Mẫu hoa',
       'Tạo mẫu giới thiệu cho khách: ảnh, giá và kích thước. Việc nạp bó hoa vào tủ được thực hiện riêng.',
     ],
-    ['stock', 'Hoa tại tủ', 'Kiểm tra từng ô, nạp bó hoa bán tại tủ, thu hồi hoa và báo sự cố.'],
+    [
+      'stock',
+      'Nạp hoa tại tủ',
+      'Kiểm tra từng ô, nạp bó hoa bán tại tủ, thu hồi hoa và báo sự cố.',
+    ],
     ['accessories', 'Phụ kiện', 'Quản lý phụ kiện đi kèm chỉ áp dụng cho đơn đặt trước.'],
     ['tasks', 'Giao việc nhân viên', 'Phân công giao hoa và theo dõi tiến độ nhân viên shop.'],
     ['staff', 'Nhân viên shop', 'Tạo tài khoản và quản lý trạng thái nhân viên shop.'],

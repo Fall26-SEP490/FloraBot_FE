@@ -1,5 +1,6 @@
 'use client';
 
+import Select from '@/shared/components/Select';
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button, MapPin } from '@florabot/ui';
@@ -662,7 +663,7 @@ function ManagerTerminationCard({
               báo cáo/ảnh minh chứng trước khi hoàn tất bàn giao.
             </p>
             <label htmlFor={`term-assignee-${item.id}`}>Kỹ thuật viên phụ trách</label>
-            <select
+            <Select
               id={`term-assignee-${item.id}`}
               required
               value={assigneeId}
@@ -675,7 +676,7 @@ function ManagerTerminationCard({
                   {tech.name}
                 </option>
               ))}
-            </select>
+            </Select>
             <label htmlFor={`term-instructions-${item.id}`}>
               Hướng dẫn tháo dỡ (10–2.000 ký tự)
             </label>
@@ -1149,7 +1150,7 @@ export function OperationsTerminations() {
         </div>
         <div>
           <label htmlFor="termination-filter">Trạng thái </label>
-          <select
+          <Select
             id="termination-filter"
             value={status}
             onChange={(event) => {
@@ -1165,7 +1166,7 @@ export function OperationsTerminations() {
             <option value="REJECTED">Đã từ chối</option>
             <option value="CANCELLED">Đã rút yêu cầu</option>
             <option value="COMPLETED">Đã bàn giao</option>
-          </select>
+          </Select>
         </div>
       </div>
       {records.isPending ? (

@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
@@ -67,7 +68,7 @@ for (const width of [390, 1440])
     await expect(panel.getByText('Chọn người nhận bàn giao.', { exact: true })).toBeVisible();
     expect(writes).toBe(0);
     await expect(panel.locator('option[value="old"]')).toHaveCount(0);
-    await panel.getByLabel('Người nhận bàn giao').selectOption('new');
+    await chooseOption(panel.getByLabel('Người nhận bàn giao'), 'new');
     await panel
       .getByLabel('Lý do và thông tin bàn giao')
       .fill('Bàn giao ca chiều cho nhân viên Linh');

@@ -1,3 +1,4 @@
+import Select from '@/shared/components/Select';
 import { useCallback, useState, type FormEvent } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
@@ -166,7 +167,7 @@ function RecoveryForm({
           </label>
           <label>
             Tình trạng thực tế trong ô
-            <select
+            <Select
               value={contents}
               onChange={(event) => setContents(event.target.value)}
               required
@@ -175,7 +176,7 @@ function RecoveryForm({
               <option value="">Chọn tình trạng hoa</option>
               {row.bouquetId && <option value="ORIGINAL_BOUQUET">Bó hoa cũ vẫn còn trong ô</option>}
               <option value="EMPTY">Ô đã trống</option>
-            </select>
+            </Select>
           </label>
           <label>
             Ghi chú kiểm tra

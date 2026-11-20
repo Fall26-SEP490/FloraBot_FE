@@ -82,7 +82,7 @@ export default function KioskShopSupport({ kioskId }: { kioskId: string }) {
             <p role="status">Đang kiểm tra đăng nhập…</p>
           ) : !session.data ? (
             <>
-              <p>Đăng nhập bằng tài khoản khách hàng trên điện thoại để gửi tin nhắn riêng tư.</p>
+              <p>Đăng nhập bằng tài khoản khách hàng trên điện thoại để gửi tin nhắn đến shop.</p>
               <Link
                 className="button button-primary"
                 href={`/dang-nhap?returnUrl=${encodeURIComponent(returnUrl)}`}

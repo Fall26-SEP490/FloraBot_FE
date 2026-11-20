@@ -1,6 +1,9 @@
 'use client';
 
+import Select from '@/shared/components/Select';
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
+import detailStyles from '../styles/product-detail.module.css';
 import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -46,14 +49,14 @@ export default function ProductEditor({
   const inputId = `price-${product.id}`;
 
   return (
-    <div className="product-editor">
+    <div className={`product-editor ${detailStyles.editor}`}>
       <div className="product-editor-grid">
         <section
           className="product-editor-card product-editor-overview"
           aria-label={`Tổng quan ${product.name}`}
         >
           <div className="product-editor-card-header">
-            <h4>Thông tin, Kích thước &amp; Hình ảnh</h4>
+            <h4>Thông tin mẫu hoa</h4>
             <Button
               type="button"
               variant="outline"
@@ -66,20 +69,14 @@ export default function ProductEditor({
               Chỉnh sửa thông tin
             </Button>
           </div>
-          <p className="product-editor-desc">
-            {product.description || 'Shop chưa thêm mô tả chi tiết cho mẫu hoa này.'}
-          </p>
+          {product.description && <p className="product-editor-desc">{product.description}</p>}
 
           <dl className="product-specs-list">
-            <div>
-              <dt>Tồn bó tại shop</dt>
-              <dd>{product.quantity == null ? 'Chưa có dữ liệu' : `${product.quantity} bó`}</dd>
-            </div>
             <div>
               <dt>Kích thước đóng gói</dt>
               <dd>
                 {product.lengthCm && product.widthCm && product.heightCm
-                  ? `${product.lengthCm} × ${product.widthCm} × ${product.heightCm} cm (Dài × Rộng × Cao)`
+                  ? `${product.lengthCm} × ${product.widthCm} × ${product.heightCm} cm`
                   : 'Chưa cập nhật kích thước'}
               </dd>
             </div>
@@ -121,11 +118,10 @@ export default function ProductEditor({
           aria-label={`Giá và trạng thái ${product.name}`}
         >
           <div className="product-editor-card-header">
-            <h4>Giá bán &amp; Trạng thái</h4>
+            <h4>Giá bán và trạng thái</h4>
           </div>
           <p className="price-snapshot-note">
-            Lưu ý: Thay đổi giá áp dụng cho các lần nạp hoa tiếp theo, không thay đổi giá của bó hoa
-            đang bán trong tủ hoặc đơn đặt trước đã tạo.
+            Giá mới áp dụng cho lần nạp tiếp theo. Hoa trong tủ và đơn đã tạo giữ nguyên giá.
           </p>
           <div className="product-quick-actions">
             <form
@@ -178,7 +174,7 @@ export default function ProductEditor({
             >
               <label htmlFor={`status-${product.id}`}>Trạng thái kinh doanh</label>
               <div className="field-action">
-                <select
+                <Select
                   id={`status-${product.id}`}
                   value={status}
                   onChange={(event) => setStatus(event.target.value)}
@@ -189,7 +185,7 @@ export default function ProductEditor({
                       {label}
                     </option>
                   ))}
-                </select>
+                </Select>
                 <Button
                   type="submit"
                   variant="outline"
@@ -213,26 +209,27 @@ export default function ProductEditor({
         </section>
       </div>
 
-      {showMetadataEditor && (
-        <Modal
-          open
-          size="lg"
-          className="product-form-modal"
-          title={`Chỉnh sửa ${product.name}`}
-          description="Cập nhật thông tin, giá niêm yết và kích thước đóng gói của mẫu hoa."
-          onClose={() => setShowMetadataEditor(false)}
-        >
-          <div id={`edit-section-${product.id}`} className="product-edit-section">
-            <ProductMetadataEditor
-              product={product}
-              sellerId={sellerId}
-              canEdit={canEdit}
-              onSuccess={() => setShowMetadataEditor(false)}
-              onCancel={() => setShowMetadataEditor(false)}
-            />
-          </div>
-        </Modal>
-      )}
+      {showMetadataEditor &&
+        createPortal(
+          <Modal
+            open
+            size="lg"
+            className={`product-form-modal ${detailStyles.metadataModal}`}
+            title={`Chỉnh sửa ${product.name}`}
+            onClose={() => setShowMetadataEditor(false)}
+          >
+            <div id={`edit-section-${product.id}`} className="product-edit-section">
+              <ProductMetadataEditor
+                product={product}
+                sellerId={sellerId}
+                canEdit={canEdit}
+                onSuccess={() => setShowMetadataEditor(false)}
+                onCancel={() => setShowMetadataEditor(false)}
+              />
+            </div>
+          </Modal>,
+          document.body,
+        )}
     </div>
   );
 }

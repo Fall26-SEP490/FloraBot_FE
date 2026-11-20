@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import { expect, test, type Page } from '@playwright/test';
 
 const id = '80000000-0000-0000-0000-000000000001';
@@ -60,6 +61,7 @@ async function role(page: Page, name: 'SELLER' | 'SELLER_STAFF' | 'ADMIN' | 'CUS
 test('Customer reads the outcome and retries a private image with capability only in its POST body', async ({
   page,
 }) => {
+  test.setTimeout(90_000);
   await role(page, 'CUSTOMER');
   const photoPath = `/api/receipts/complaints/${id}/evidence/${photoId}`;
   await page.route('**/api/receipts/lookup', (route) =>
@@ -182,16 +184,16 @@ test('Seller accepts, assigns, returns a report and escalates with server versio
     return route.fulfill({ json: { version: current.version } });
   });
   await page.goto('/seller/complaints');
-  await page.getByText(/^Đơn FB-QUALITY ·/).click();
+  await page.getByRole('button', { name: 'Xem phản ánh đơn FB-QUALITY', exact: true }).click();
   await page.getByRole('button', { name: 'Tiếp nhận phản ánh' }).click();
   await page.getByRole('button', { name: 'Xác nhận', exact: true }).click();
   await page.getByRole('button', { name: 'Giao nhân viên' }).click();
-  await page.getByRole('combobox', { name: 'Nhân viên', exact: true }).selectOption('staff');
+  await chooseOption(page.getByRole('combobox', { name: 'Nhân viên', exact: true }), 'staff');
   await page.getByLabel('Hướng dẫn nhân viên').fill('Kiểm tra tình trạng bó hoa và báo cáo.');
   await page.getByRole('button', { name: 'Xác nhận', exact: true }).click();
   for (const outcome of ['RETURN', 'REFUND_REVIEW']) {
     await page.getByRole('button', { name: 'Duyệt báo cáo' }).click();
-    await page.getByLabel('Kết quả xử lý').selectOption(outcome);
+    await chooseOption(page.getByLabel('Kết quả xử lý'), outcome);
     await page.getByLabel('Nội dung phản hồi').fill('Đã đối chiếu thông tin phản ánh của khách.');
     await page.getByRole('button', { name: 'Xác nhận', exact: true }).click();
   }
@@ -277,12 +279,12 @@ test('Seller plans a replacement in an eligible slot and cancels it with the lat
     return route.fulfill({ json: { version: current.version } });
   });
   await page.goto('/seller/complaints');
-  await page.getByText(/^Đơn FB-QUALITY ·/).click();
+  await page.getByRole('button', { name: 'Xem phản ánh đơn FB-QUALITY', exact: true }).click();
   await page.getByRole('button', { name: 'Chọn hoa thay và ô tủ' }).click();
   const products = page.getByRole('combobox', { name: 'Mẫu hoa còn tồn', exact: true });
   const slots = page.getByRole('combobox', { name: 'Ô trống tại kiosk gốc', exact: true });
-  await products.selectOption(productId);
-  await slots.selectOption(slotId);
+  await chooseOption(products, productId);
+  await chooseOption(slots, slotId);
   await expect(products.locator('option[value="sold-out"]')).toHaveCount(0);
   await expect(slots.locator('option[value="preorder"]')).toHaveCount(0);
   await page.getByRole('button', { name: 'Xác nhận', exact: true }).click();

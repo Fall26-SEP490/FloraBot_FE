@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { setupSellerUsability, shopId, kioskId, productId } from '../fixtures/seller-usability';
@@ -154,7 +155,7 @@ for (const width of [390, 1440]) {
     );
     await expect(page.getByLabel('2. Chọn mẫu hoa', { exact: true })).toBeFocused();
     expect(stockWrites).toBe(0);
-    await page.getByLabel('2. Chọn mẫu hoa', { exact: true }).selectOption(productId);
+    await chooseOption(page.getByLabel('2. Chọn mẫu hoa', { exact: true }), productId);
     await expect(page.getByRole('note', { name: 'Kiểm tra trước khi nạp hoa' })).toContainText(
       'chỉ mua trực tiếp tại kiosk',
     );

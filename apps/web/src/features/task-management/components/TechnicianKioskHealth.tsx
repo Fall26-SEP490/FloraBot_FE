@@ -1,3 +1,4 @@
+import Select from '@/shared/components/Select';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
@@ -34,7 +35,7 @@ export default function TechnicianKioskHealth({ actorId }: { actorId: string }) 
       ) : kiosk ? (
         <>
           <label htmlFor="technician-health-kiosk">Kiosk được giao</label>
-          <select
+          <Select
             id="technician-health-kiosk"
             value={kiosk.id}
             onChange={(event) => setSelected(event.target.value)}
@@ -44,7 +45,7 @@ export default function TechnicianKioskHealth({ actorId }: { actorId: string }) 
                 {item.code} · {item.name}
               </option>
             ))}
-          </select>
+          </Select>
           <TechnicianIoTHealth
             key={kiosk.id}
             path={`/staff/kiosk-health/${kiosk.id}`}

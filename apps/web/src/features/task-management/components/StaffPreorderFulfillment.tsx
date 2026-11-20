@@ -1,3 +1,4 @@
+import Select from '@/shared/components/Select';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
@@ -133,7 +134,7 @@ export default function StaffPreorderFulfillment({
         <form onSubmit={(event) => void submit(event)}>
           <p>Chọn đơn đến giờ nạp, rồi chọn ô và nhập mã trên tem bó hoa.</p>
           <label htmlFor={`preorder-${taskId}`}>Đơn đặt trước</label>
-          <select
+          <Select
             id={`preorder-${taskId}`}
             value={requestId}
             onChange={(event) => {
@@ -150,14 +151,14 @@ export default function StaffPreorderFulfillment({
                 {new Date(order.pickupAt).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}
               </option>
             ))}
-          </select>
+          </Select>
           <PreorderPackingList
             items={
               options.data.preorders.find((order) => order.requestId === requestId)?.accessories
             }
           />
           <label htmlFor={`preorder-slot-${taskId}`}>Ô PREORDER trống</label>
-          <select
+          <Select
             id={`preorder-slot-${taskId}`}
             value={slotId}
             onChange={(event) => {
@@ -173,7 +174,7 @@ export default function StaffPreorderFulfillment({
                 {slot.slotCode}
               </option>
             ))}
-          </select>
+          </Select>
           <label htmlFor={`preorder-qr-${taskId}`}>Mã định danh bó hoa</label>
           <input
             id={`preorder-qr-${taskId}`}

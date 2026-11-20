@@ -46,7 +46,14 @@ export default function SellerRepairApprovals({ sellerId }: { sellerId: string }
           </strong>
           <p>{repair.reason}</p>
           {repair.expiresAt ? (
-            <p role="status">Đã duyệt đến {new Date(repair.expiresAt).toLocaleString('vi-VN')}.</p>
+            <p role="status">
+              Đã duyệt đến{' '}
+              {new Date(repair.expiresAt).toLocaleString('vi-VN', {
+                timeZone: 'Asia/Ho_Chi_Minh',
+                hour12: false,
+              })}
+              .
+            </p>
           ) : (
             <Button
               type="button"

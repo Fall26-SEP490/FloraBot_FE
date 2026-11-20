@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { setupAdminSurfaces } from '../fixtures/admin-surfaces';
@@ -108,10 +109,10 @@ test('Admin shop and kiosk filters reset and disclosures work with keyboard', as
   await page.goto('/admin/slots');
   await expect(page.getByLabel('Lọc phân bổ', { exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Bộ lọc', exact: true }).click();
-  await expect(page.getByLabel('Lọc phân bổ', { exact: true })).toHaveValue('ALL');
-  await page.getByLabel('Lọc phân bổ', { exact: true }).selectOption('UNASSIGNED');
+  await expect(page.getByLabel('Lọc phân bổ', { exact: true })).toContainText('Tất cả kiosk');
+  await chooseOption(page.getByLabel('Lọc phân bổ', { exact: true }), 'UNASSIGNED');
   await page.getByRole('button', { name: 'Đặt lại bộ lọc', exact: true }).click();
-  await expect(page.getByLabel('Lọc phân bổ', { exact: true })).toHaveValue('ALL');
+  await expect(page.getByLabel('Lọc phân bổ', { exact: true })).toContainText('Tất cả kiosk');
   expect(model.writes).toEqual([]);
 });
 

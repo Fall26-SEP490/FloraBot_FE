@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import { fillPickup } from '../fixtures/quotation';
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
@@ -64,7 +65,7 @@ test('CUSTOMER places CUSTOM with selected kiosk and no door action', async ({ p
     .click();
   await expect(page.getByText(/email đăng nhập của bạn/)).toHaveCount(0);
   await expect(page.getByText(/OTP gửi qua SMS/)).toHaveCount(0);
-  await page.getByLabel('Tủ nhận hoa').selectOption(otherKiosk.kioskId);
+  await chooseOption(page.getByLabel('Tủ nhận hoa'), otherKiosk.kioskId);
   {
     const date = new Date(Date.now() + 48 * 60 * 60 * 1000);
     const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000)

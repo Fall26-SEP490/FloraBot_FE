@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
@@ -233,7 +234,7 @@ test('Deleting a selected kiosk also clears its schedule option and prevents sta
   const model = await setup(page);
   await page.goto('/operations/installations?application=app-delete-test');
   const select = page.getByLabel('Tủ kiosk cấp phát', { exact: true });
-  await select.selectOption(targetId);
+  await chooseOption(select, targetId);
   await expect(select).toHaveValue(targetId);
   const inventory = await openInventory(page);
   const dialog = await confirmDialog(page);

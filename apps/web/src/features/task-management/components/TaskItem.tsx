@@ -1,3 +1,4 @@
+import Select from '@/shared/components/Select';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
@@ -395,7 +396,7 @@ export function TaskItem({
             <label htmlFor={`action-${task.id}`}>
               {reviewingIncident ? 'Kết quả xét duyệt' : 'Bước tiếp theo'}
             </label>
-            <select
+            <Select
               id={`action-${task.id}`}
               {...form.register('status', { required: true })}
               disabled={busy || uncertain}
@@ -409,7 +410,7 @@ export function TaskItem({
                       : TASK_STATUS_LABELS[choice]}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
         </>
       )}

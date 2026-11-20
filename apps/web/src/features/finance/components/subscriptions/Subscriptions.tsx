@@ -181,8 +181,13 @@ function KioskRenewalCard({
           >
             {currentSub.status === 'PAST_DUE' ? 'Kỳ thuê đã hết hạn: ' : 'Hạn kỳ hiện tại: '}
             <strong>
-              {new Date(currentSub.periodFrom).toLocaleDateString('vi-VN')} –{' '}
-              {new Date(currentSub.periodTo).toLocaleDateString('vi-VN')}
+              {new Date(currentSub.periodFrom).toLocaleDateString('vi-VN', {
+                timeZone: 'Asia/Ho_Chi_Minh',
+              })}{' '}
+              –{' '}
+              {new Date(currentSub.periodTo).toLocaleDateString('vi-VN', {
+                timeZone: 'Asia/Ho_Chi_Minh',
+              })}
             </strong>{' '}
             ({rentalMoney(currentSub.price)})
           </p>
@@ -206,8 +211,13 @@ function KioskRenewalCard({
               <span>
                 Kỳ mới:{' '}
                 <strong>
-                  {new Date(renewal.periodFrom).toLocaleDateString('vi-VN')} –{' '}
-                  {new Date(renewal.periodTo).toLocaleDateString('vi-VN')}
+                  {new Date(renewal.periodFrom).toLocaleDateString('vi-VN', {
+                    timeZone: 'Asia/Ho_Chi_Minh',
+                  })}{' '}
+                  –{' '}
+                  {new Date(renewal.periodTo).toLocaleDateString('vi-VN', {
+                    timeZone: 'Asia/Ho_Chi_Minh',
+                  })}
                 </strong>
               </span>
               <strong className="subscription-renewal-amount">{rentalMoney(renewal.price)}</strong>
@@ -435,8 +445,13 @@ export default function Subscriptions({ session }: { session: Session }) {
                         </strong>
                       </td>
                       <td>
-                        {new Date(sub.periodFrom).toLocaleDateString('vi-VN')} –{' '}
-                        {new Date(sub.periodTo).toLocaleDateString('vi-VN')}
+                        {new Date(sub.periodFrom).toLocaleDateString('vi-VN', {
+                          timeZone: 'Asia/Ho_Chi_Minh',
+                        })}{' '}
+                        –{' '}
+                        {new Date(sub.periodTo).toLocaleDateString('vi-VN', {
+                          timeZone: 'Asia/Ho_Chi_Minh',
+                        })}
                       </td>
                       <td>{rentalMoney(sub.price)}</td>
                       <td>

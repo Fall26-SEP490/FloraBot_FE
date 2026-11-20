@@ -44,7 +44,7 @@ test.describe('Public Navigation and Footer Overhaul', () => {
     await expect(contactLink).toBeVisible();
     await expect(contactLink).toHaveAttribute('href', '/lien-he');
 
-    const privacyLink = footer.getByRole('link', { name: 'Chính sách riêng tư', exact: true });
+    const privacyLink = footer.getByRole('link', { name: 'Chính sách bảo mật', exact: true });
     await expect(privacyLink).toBeVisible();
     await expect(privacyLink).toHaveAttribute('href', '/chinh-sach-rieng-tu');
 

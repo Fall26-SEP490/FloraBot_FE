@@ -1,3 +1,4 @@
+import Select from '@/shared/components/Select';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
@@ -219,7 +220,7 @@ export default function AdminTaskAssignment({
           {effectiveRole !== 'SELLER' && allowedKinds.length > 1 && (
             <div>
               <label htmlFor="assignment-kind">Loại công việc</label>
-              <select
+              <Select
                 id="assignment-kind"
                 value={kind}
                 disabled={busy || allowedKinds.length <= 1}
@@ -234,7 +235,7 @@ export default function AdminTaskAssignment({
                 {allowedKinds.includes('DELIVERY') && (
                   <option value="DELIVERY">Giao hoa cho shop</option>
                 )}
-              </select>
+              </Select>
             </div>
           )}
           {staff.isPending || targetQuery.isPending ? (
@@ -283,7 +284,7 @@ export default function AdminTaskAssignment({
               )}
               <div className="assignment-field">
                 <label htmlFor="assignment-staff">Nhân viên phụ trách</label>
-                <select
+                <Select
                   id="assignment-staff"
                   {...form.register('assigneeId', { required: 'Chọn nhân viên phụ trách.' })}
                   aria-invalid={!!form.formState.errors.assigneeId}
@@ -297,7 +298,7 @@ export default function AdminTaskAssignment({
                       {item.name}
                     </option>
                   ))}
-                </select>
+                </Select>
                 {form.formState.errors.assigneeId?.message && (
                   <p id="assignment-staff-error" className="error">
                     {form.formState.errors.assigneeId.message}
@@ -308,7 +309,7 @@ export default function AdminTaskAssignment({
                 <label htmlFor="assignment-target">
                   {kind === 'INCIDENT' ? 'Sự cố cần kiểm tra' : 'Shop và tủ giao hoa'}
                 </label>
-                <select
+                <Select
                   id="assignment-target"
                   {...form.register('target', { required: 'Chọn nơi cần thực hiện công việc.' })}
                   aria-invalid={!!form.formState.errors.target}
@@ -338,7 +339,7 @@ export default function AdminTaskAssignment({
                           {item.shopName} · {item.kioskName} · {item.address}
                         </option>
                       ))}
-                </select>
+                </Select>
                 {form.formState.errors.target?.message && (
                   <p id="assignment-target-error" className="error">
                     {form.formState.errors.target.message}
@@ -465,14 +466,14 @@ export default function AdminTaskAssignment({
               <label className="sr-only" htmlFor="incident-order">
                 Sắp xếp sự cố trong trang
               </label>
-              <select
+              <Select
                 id="incident-order"
                 value={incidentOrder}
                 onChange={(event) => setIncidentOrder(event.target.value)}
               >
                 <option value="newest">Mới nhất</option>
                 <option value="oldest">Cũ nhất</option>
-              </select>
+              </Select>
             </div>
           </div>
           {incidents.isPending ? (

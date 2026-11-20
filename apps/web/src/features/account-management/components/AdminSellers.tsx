@@ -1,3 +1,4 @@
+import Select from '@/shared/components/Select';
 import { AdminFilterBar, AdminDisclosureSummary } from '@/features/portal/components/AdminUi';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -84,7 +85,7 @@ export default function AdminSellers() {
         </div>
         <div>
           <label htmlFor="shop-status">Lọc trạng thái shop</label>
-          <select
+          <Select
             id="shop-status"
             value={status}
             onChange={(event) => {
@@ -98,7 +99,7 @@ export default function AdminSellers() {
                 {t(`status.${value}`)}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
       </AdminFilterBar>
       <p className="quiet">

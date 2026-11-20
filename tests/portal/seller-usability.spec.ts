@@ -54,7 +54,7 @@ const sections = [
 ] as const;
 for (const width of [390, 1440])
   for (const [section, title, selector] of sections) {
-    test(`Seller ${section} has usable help, responsive content and accessible controls at ${width}`, async ({
+    test(`Seller ${section} has responsive content and accessible controls without a guide at ${width}`, async ({
       page,
     }) => {
       const model = await setupSellerUsability(page);
@@ -62,7 +62,7 @@ for (const width of [390, 1440])
       await page.goto(section === 'overview' ? '/seller' : '/seller/' + section);
       await expect(page.getByRole('heading', { level: 1, name: title, exact: true })).toBeVisible();
       await expect(page.locator(selector).first()).toBeVisible();
-      await expect(page.locator('.seller-guide > summary')).toBeVisible();
+      await expect(page.locator('.seller-guide')).toHaveCount(0);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
         true,
       );
@@ -149,19 +149,11 @@ for (const width of [390, 1440]) {
     await expect(nav.locator('[aria-current="page"]')).toHaveCount(1);
     await expect(nav.locator('[aria-current="page"]')).toHaveAttribute('href', '/seller/tasks');
     if (width === 390) await nav.getByLabel('Tìm chức năng cửa hàng').press('Escape');
-    const help = page.locator('.seller-guide');
-    await help.locator('summary').press('Enter');
-    await expect(help).toContainText('không còn được phép truy cập shop');
-    await help.getByRole('link').focus();
-    await page.keyboard.press('Escape');
-    await expect(help).not.toHaveAttribute('open');
-    await expect(help.locator('summary')).toBeFocused();
-    await help.locator('summary').click();
+    await expect(page.locator('.seller-guide')).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
     await page.getByRole('heading', { level: 1 }).click();
-    await expect(help).not.toHaveAttribute('open');
   });
 }
 
@@ -202,12 +194,12 @@ test('Seller can reset order filters and only one set of product status filters 
   const model = await setupSellerUsability(page);
   await page.goto('/seller/orders');
   await page.getByLabel('Tìm đơn của shop').fill('khongco');
-  await expect(page.getByRole('heading', { name: 'Không tìm thấy yêu cầu phù hợp' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Không tìm thấy đơn phù hợp' })).toBeVisible();
   await page.getByRole('button', { name: 'Xóa bộ lọc', exact: true }).click();
   await expect(page.getByLabel('Tìm đơn của shop')).toHaveValue('');
   await expect(page.locator('.web-orders summary')).toHaveCount(1);
   await page.goto('/seller/products');
-  await expect(page.locator('.product-summary button')).toHaveCount(4);
+  await expect(page.getByRole('combobox', { name: 'Trạng thái', exact: true })).toBeVisible();
   await expect(page.locator('.product-tabs')).toHaveCount(0);
   expect(model.writes).toEqual([]);
 });
@@ -275,15 +267,18 @@ test('Seller catalog errors do not claim the shop has no products and retry pres
   await expect(page.locator('.product-order-list')).toContainText('Mẫu kiểm thử Seller');
   expect(model.writes).toEqual([]);
 });
-test('Seller guidance distinguishes empty catalog and physical stock without invented products', async ({
+test('Seller overview shows an empty catalog without a guide or invented products', async ({
   page,
 }) => {
   const model = await setupSellerUsability(page);
   model.empty = true;
   await page.goto('/seller');
-  await expect(page.getByRole('link', { name: 'Tạo mẫu hoa đầu tiên', exact: true })).toBeVisible();
-  await page.locator('.seller-guide summary').press('Enter');
-  await expect(page.locator('.seller-guide-content')).toContainText('Tạo mẫu chưa có nghĩa');
+  await expect(page.locator('.seller-guide')).toHaveCount(0);
+  await expect(
+    page
+      .getByRole('region', { name: 'Cửa hàng của tôi', exact: true })
+      .getByRole('link', { name: /Mẫu hoa đang bán/ }),
+  ).toContainText('0/0');
   expect(model.writes).toEqual([]);
 });
 test('Seller overview failure isolates order data from wallet and avoids a fabricated zero', async ({

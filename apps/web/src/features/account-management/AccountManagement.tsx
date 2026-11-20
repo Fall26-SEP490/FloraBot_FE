@@ -1,5 +1,6 @@
 'use client';
 
+import Select from '@/shared/components/Select';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -702,7 +703,7 @@ export default function AccountManagement({
             <label htmlFor="account-status-filter" className="sr-only">
               Lọc theo trạng thái
             </label>
-            <select
+            <Select
               id="account-status-filter"
               className="management-filter-select"
               value={statusFilter}
@@ -715,7 +716,7 @@ export default function AccountManagement({
               <option value="ACTIVE">Đang hoạt động ({activeCount})</option>
               <option value="LOCKED">Tạm khóa ({lockedCount})</option>
               <option value="DISABLED">Đã vô hiệu hóa ({disabledCount})</option>
-            </select>
+            </Select>
           </div>
         </div>
 

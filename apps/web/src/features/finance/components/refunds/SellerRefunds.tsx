@@ -5,6 +5,8 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import type { components } from '../../../../../../../packages/contracts/src/generated/api';
 import EvidenceUpload from '@/shared/components/EvidenceUpload';
+import VietnamDateInput from '@/shared/components/VietnamDateInput';
+import { vietnamDateTimeToUtc } from '@/shared/lib/vietnam-date';
 import { queryClient, request, type Session } from '@/shared/lib/api';
 import '../../styles/commerce-subscriptions.css';
 
@@ -93,7 +95,7 @@ function RefundCard({ id, sellerId }: { id: string; sellerId: string }) {
           bankHolder: bank.holder,
           accountNumber: bank.account,
           providerReference: providerReference.trim(),
-          transferredAt: new Date(transferredAt).toISOString(),
+          transferredAt: vietnamDateTimeToUtc(transferredAt),
           evidenceTicket,
         },
         true,
@@ -241,11 +243,13 @@ function RefundCard({ id, sellerId }: { id: string; sellerId: string }) {
               onChange={(event) => setProviderReference(event.target.value)}
             />
             <label htmlFor={`refund-time-${id}`}>Thời điểm chuyển khoản</label>
-            <input
+            <VietnamDateInput
               id={`refund-time-${id}`}
-              type="datetime-local"
+              kind="datetime-local"
+              label="Thời điểm chuyển khoản"
+              required
               value={transferredAt}
-              onChange={(event) => setTransferredAt(event.target.value)}
+              onValueChange={setTransferredAt}
             />
             <EvidenceUpload
               id={`refund-proof-${id}`}

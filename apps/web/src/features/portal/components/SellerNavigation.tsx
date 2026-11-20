@@ -6,6 +6,7 @@ import {
   CircleAlert,
   Flower2,
   Boxes,
+  MapPin,
   Users,
   Banknote,
   Store,
@@ -68,13 +69,17 @@ export const sellerNavHubs: readonly { title: string; items: readonly SellerNavH
       },
       {
         key: 'stock',
-        label: 'Hoa tại tủ',
+        label: 'Nạp hoa tại tủ',
         icon: Boxes,
-        sections: ['stock', 'kiosks'],
-        tabs: [
-          ['stock', 'Tồn kho tại tủ'],
-          ['kiosks', 'Vị trí kiosk'],
-        ],
+        sections: ['stock'],
+        tabs: null,
+      },
+      {
+        key: 'kiosks',
+        label: 'Vị trí kiosk',
+        icon: MapPin,
+        sections: ['kiosks'],
+        tabs: null,
       },
     ],
   },
@@ -131,7 +136,8 @@ export const findSellerNavHub = (section: string): SellerNavHub | undefined => {
 };
 
 const searchTerms: Record<string, string> = {
-  stock: 'nạp hoa thu hồi hoa lấy hoa báo sự cố vị trí kiosk',
+  stock: 'nạp hoa thu hồi hoa lấy hoa báo sự cố',
+  kiosks: 'vị trí kiosk địa chỉ khu vực bản đồ',
   products: 'tạo mẫu thêm hoa sản phẩm ảnh giá phụ kiện',
   orders: 'báo giá chuẩn bị đơn',
   tasks: 'giao hoa phân công nhân viên tài khoản',
@@ -181,14 +187,16 @@ export default function SellerNavigation({
       <Link
         href="/seller"
         aria-label="Tổng quan cửa hàng"
+        title="Tổng quan cửa hàng"
         onClick={closeMenu}
         onKeyDown={onEscape}
         aria-current={section === 'overview' ? 'page' : undefined}
       >
-        <LayoutDashboard size={18} aria-hidden="true" /> Tổng quan
+        <LayoutDashboard size={18} aria-hidden="true" />
+        <span className="seller-nav-label">Tổng quan</span>
       </Link>
       <div className="seller-nav-search">
-        <Search size={17} aria-hidden="true" />
+        <Search size={18} aria-hidden="true" />
         <label className="sr-only" htmlFor="seller-nav-search">
           Tìm chức năng cửa hàng
         </label>
@@ -213,23 +221,29 @@ export default function SellerNavigation({
           {group.items.map((hub) => {
             const Icon = hub.icon;
             const isCurrent = (hub.sections as readonly string[]).includes(section);
+            const hasUnread = hub.key === 'chats' && unreadChatsCount > 0;
+            const label = hasUnread
+              ? `${hub.label}, ${unreadChatsCount} tin nhắn chưa đọc`
+              : hub.label;
             return (
               <Link
                 key={hub.key}
                 href={`/seller/${hub.key}`}
+                aria-label={label}
+                title={label}
                 onClick={closeMenu}
                 onKeyDown={onEscape}
                 aria-current={isCurrent ? 'page' : undefined}
               >
                 <Icon size={18} aria-hidden="true" />
-                <span>{hub.label}</span>
-                {hub.key === 'chats' && unreadChatsCount > 0 && (
-                  <span
-                    className="workspace-badge"
-                    aria-label={`${unreadChatsCount} tin nhắn chưa đọc`}
-                  >
-                    {unreadChatsCount > 99 ? '99+' : unreadChatsCount}
-                  </span>
+                <span className="seller-nav-label">{hub.label}</span>
+                {hasUnread && (
+                  <>
+                    <span className="workspace-badge" aria-hidden="true">
+                      {unreadChatsCount > 99 ? '99+' : unreadChatsCount}
+                    </span>
+                    <span className="workspace-badge-dot" aria-hidden="true" />
+                  </>
                 )}
               </Link>
             );

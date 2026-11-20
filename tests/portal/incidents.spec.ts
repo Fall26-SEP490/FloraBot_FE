@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
@@ -139,7 +140,7 @@ test('Admin can read the resolved incident decision and time', async ({ page }) 
   );
   await page.goto('/admin/incidents');
   const section = page.locator('.admin-incidents');
-  await section.getByLabel('Trạng thái sự cố').selectOption('RESOLVED_FIXED');
+  await chooseOption(section.getByLabel('Trạng thái sự cố'), 'RESOLVED_FIXED');
   await section.locator('summary').click();
   await expect(section.getByRole('heading', { name: 'Đã xử lý', exact: true })).toBeVisible();
   await expect(section.getByText(closed.decision)).toBeVisible();

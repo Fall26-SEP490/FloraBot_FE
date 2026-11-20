@@ -57,9 +57,10 @@ test('Landing leads to real customer pages and protects the account area', async
   expect((await request.get('/api/shop/catalog')).status()).toBe(200);
   await page.goto('/dang-ky');
   await expect(page.getByRole('button', { name: 'Tạo tài khoản', exact: true })).toBeVisible();
-  await expect(
-    page.getByRole('link', { name: 'chính sách riêng tư (mở tab mới)' }),
-  ).toHaveAttribute('href', '/chinh-sach-rieng-tu');
+  await expect(page.getByRole('link', { name: 'chính sách bảo mật (mở tab mới)' })).toHaveAttribute(
+    'href',
+    '/chinh-sach-rieng-tu',
+  );
   await page.goto('/tai-khoan');
   await expect(page).toHaveURL('/dang-nhap');
   await page.getByRole('link', { name: 'Quên mật khẩu?' }).click();

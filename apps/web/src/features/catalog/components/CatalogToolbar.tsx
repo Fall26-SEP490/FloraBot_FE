@@ -1,3 +1,4 @@
+import Select from '@/shared/components/Select';
 import type { RefObject } from 'react';
 import { MapPin, SlidersHorizontal } from '@florabot/ui';
 import type { SortOption } from '../catalog.types';
@@ -68,7 +69,7 @@ export function CatalogToolbar({
         )}
 
         <div className="catalog-sort-wrapper">
-          <select
+          <Select
             className="catalog-sort-select"
             aria-label="Sắp xếp sản phẩm"
             value={sortBy}
@@ -79,7 +80,7 @@ export function CatalogToolbar({
             <option value="price-asc">Giá: Thấp đến cao</option>
             <option value="price-desc">Giá: Cao đến thấp</option>
             <option value="name-asc">Tên: A – Z</option>
-          </select>
+          </Select>
         </div>
       </div>
     </div>

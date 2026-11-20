@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import { expect, test } from '@playwright/test';
 import { chooseVietnamBank } from '../fixtures/vietnam-bank';
 import { randomBytes, randomUUID } from 'node:crypto';
@@ -270,7 +271,7 @@ test('Public complaint creates exactly one dispute and evidence record through t
       `SELECT count(*) FROM payment.payments WHERE order_id='${order}' AND kind='REFUND' AND amount=100000 AND status='PENDING' AND approved_by='${admin}' AND paid_at IS NULL;`,
     ),
   ).toBe('1');
-  await section.getByLabel('Trạng thái phản ánh').selectOption('RESOLVED_REFUND');
+  await chooseOption(section.getByLabel('Trạng thái phản ánh'), 'RESOLVED_REFUND');
   await section.getByText(`Đơn BROWSER-${order}`, { exact: true }).click();
   await expect(section.getByRole('heading', { name: 'Đã duyệt hoàn 100.000 đ' })).toBeVisible();
 

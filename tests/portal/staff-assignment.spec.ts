@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
@@ -70,8 +71,8 @@ test('Operations Manager assigns INCIDENT and recovers the same request after re
   await expect(page.getByText('Chọn nhân viên phụ trách.', { exact: true })).toBeVisible();
   expect(writes).toBe(0);
 
-  await page.getByLabel('Nhân viên phụ trách').selectOption('tech-1');
-  await page.getByLabel('Sự cố cần kiểm tra').selectOption('incident-1');
+  await chooseOption(page.getByLabel('Nhân viên phụ trách'), 'tech-1');
+  await chooseOption(page.getByLabel('Sự cố cần kiểm tra'), 'incident-1');
   await page.getByLabel('Hướng dẫn công việc').fill('Kiểm tra sửa chữa sự cố chốt cửa tại tủ FPT');
 
   expect(
@@ -174,8 +175,8 @@ test('Shop Owner assigns DELIVERY to own seller staff and recovers the same requ
   await expect(page.getByText('Chọn nhân viên phụ trách.', { exact: true })).toBeVisible();
   expect(writes).toBe(0);
 
-  await page.getByLabel('Nhân viên phụ trách').selectOption('staff-lan-1');
-  await page.getByLabel('Shop và tủ giao hoa').selectOption('shop-lan:kiosk-2');
+  await chooseOption(page.getByLabel('Nhân viên phụ trách'), 'staff-lan-1');
+  await chooseOption(page.getByLabel('Shop và tủ giao hoa'), 'shop-lan:kiosk-2');
   await page.getByLabel('Hướng dẫn công việc').fill('Giao 5 bó hồng pastel vào ô tủ Landmark');
 
   expect(

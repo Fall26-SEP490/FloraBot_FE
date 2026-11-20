@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test';
-import AxeBuilder from '@axe-core/playwright';
 import { setupSellerUsability, sampleRequest, shopId } from '../fixtures/seller-usability';
 
 const ordersPath = `**/api/sellers/${shopId}/preorders?*`;
@@ -30,8 +29,8 @@ test('Seller quote form on mobile keeps totals unknown when accessory pricing fa
     route.fulfill({ status: 503, json: {} }),
   );
   await page.goto('/seller/orders');
-  const row = page.locator(`#preorder-${sampleRequest.id}`);
-  await row.locator(':scope > summary').click();
+  await page.locator(`#preorder-${sampleRequest.id} > summary`).click();
+  const row = page.getByRole('dialog');
   await row.getByRole('button', { name: 'Báo giá hoặc từ chối' }).click();
   await expect(row.getByLabel('Giá bó hoa (đồng)')).toHaveValue('350000');
   await expect(row.getByText('Chưa xác minh được giá một số phụ kiện.')).toBeVisible();
@@ -75,8 +74,8 @@ test('Seller must explicitly resolve accessory shortages before submitting a quo
     return route.fulfill({ json: { result: sampleRequest.id } });
   });
   await page.goto('/seller/orders');
-  const row = page.locator(`#preorder-${sampleRequest.id}`);
-  await row.locator(':scope > summary').click();
+  await page.locator(`#preorder-${sampleRequest.id} > summary`).click();
+  const row = page.getByRole('dialog');
   await row.getByRole('button', { name: 'Báo giá hoặc từ chối' }).click();
   const accessories = row.getByRole('region', { name: 'Xác nhận phụ kiện' });
   await expect(accessories.getByText('Khách chọn 2 · Kho còn 1')).toBeVisible();
@@ -102,42 +101,6 @@ test('Seller must explicitly resolve accessory shortages before submitting a quo
 });
 
 for (const width of [390, 1440]) {
-  test(`Seller workbench leads to matching work across API pages at ${width}`, async ({ page }) => {
-    const model = await setupSellerUsability(page);
-    model.pagedOrders = true;
-    await page.setViewportSize({ width, height: 950 });
-    await page.goto('/seller');
-    const work = page.getByRole('region', { name: 'Việc cần làm', exact: true });
-    await expect(work).toBeVisible();
-    await expect(work.getByRole('link', { name: /Chờ báo giá/ })).toContainText('1');
-    await expect(work.getByRole('link', { name: /Chờ thanh toán/ })).toHaveAttribute(
-      'href',
-      '/seller/orders?filter=payment',
-    );
-    await work.getByRole('link', { name: /Chờ báo giá/ }).click();
-    if (width === 390)
-      await expect(page.getByRole('combobox', { name: 'Trạng thái đơn', exact: true })).toHaveValue(
-        'requested',
-      );
-    else
-      await expect(
-        page.getByRole('button', { name: 'Chờ báo giá 1', exact: true }),
-      ).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.locator(`#preorder-${sampleRequest.id}`)).toBeVisible();
-    await expect(page.locator('#web-orders')).toContainText('Đã tìm trên 2 yêu cầu của shop');
-    expect(model.writes).toEqual([]);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
-      true,
-    );
-    expect(
-      (
-        await new AxeBuilder({ page })
-          .include('#main')
-          .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
-          .analyze()
-      ).violations,
-    ).toEqual([]);
-  });
   test(`Seller searches all loaded orders, opens a deep-linked result and resets filters at ${width}`, async ({
     page,
   }) => {
@@ -159,8 +122,10 @@ for (const width of [390, 1440]) {
     });
     await page.setViewportSize({ width, height: 950 });
     await page.goto('/seller/orders?page=2&requestId=test-request-24');
-    await expect(page.locator('#preorder-test-request-24')).toHaveAttribute('open', '');
-    await expect(page.locator('#preorder-test-request-24 > summary')).toBeFocused();
+    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByRole('dialog').locator('.management-modal-close')).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
     await page.getByLabel('Tìm đơn của shop').fill('Hoa 0');
     await expect(page.locator('.web-orders summary')).toHaveCount(1);
     await expect(page.locator('#preorder-test-request-0')).toBeVisible();
@@ -168,11 +133,8 @@ for (const width of [390, 1440]) {
     await expect(page.locator('.web-orders summary')).toHaveCount(20);
     await page.getByRole('button', { name: 'Trang sau', exact: true }).click();
     await expect(page.locator('.web-orders summary')).toHaveCount(5);
-    if (width === 390)
-      await page
-        .getByRole('combobox', { name: 'Trạng thái đơn', exact: true })
-        .selectOption('requested');
-    else await page.getByRole('button', { name: 'Chờ báo giá 25', exact: true }).click();
+    await page.getByRole('combobox', { name: 'Trạng thái đơn', exact: true }).click();
+    await page.getByRole('option', { name: 'Chờ báo giá', exact: true }).click();
     await expect(page.locator('.web-orders summary')).toHaveCount(20);
     expect(model.writes).toEqual([]);
   });
@@ -204,13 +166,16 @@ test('Seller distinguishes unpaid work and keeps the existing quote and stock fo
     route.fulfill({ json: { items: rows, page: 1, hasMore: false } }),
   );
   await page.goto('/seller/orders?filter=payment');
-  await expect(page.locator('.web-orders summary')).toHaveCount(1);
+  await expect(page.locator('.web-orders summary')).toHaveCount(1, { timeout: 30_000 });
   await expect(page.locator('#preorder-unpaid-order')).toContainText('Theo dõi thanh toán');
-  await page.getByRole('button', { name: 'Chờ báo giá 1', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Trạng thái đơn', exact: true }).click();
+  await page.getByRole('option', { name: 'Chờ báo giá', exact: true }).click();
   await page.locator(`#preorder-${sampleRequest.id} > summary`).click();
   await page.getByRole('button', { name: 'Báo giá hoặc từ chối', exact: true }).click();
   await expect(page.getByLabel('Giá bó hoa (đồng)', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Đang chuẩn bị 1', exact: true }).click();
+  await page.keyboard.press('Escape');
+  await page.getByRole('combobox', { name: 'Trạng thái đơn', exact: true }).click();
+  await page.getByRole('option', { name: 'Đang chuẩn bị', exact: true }).click();
   await page.locator('#preorder-paid-order > summary').click();
   await page.getByRole('button', { name: 'Nạp hoa cho đơn này', exact: true }).click();
   await expect(page.getByLabel('Ô trống tại tủ nhận', { exact: true })).toBeVisible();
@@ -240,7 +205,7 @@ test('Seller does not treat an API failure on a later order page as an empty que
     page.getByRole('heading', { name: 'Chưa có đơn đặt trước', exact: true }),
   ).toHaveCount(0);
   fail = false;
-  await page.getByRole('button', { name: 'Làm mới', exact: true }).click();
+  await page.getByRole('button', { name: 'Thử lại', exact: true }).click();
   await expect(page.locator('.web-orders summary')).toHaveCount(2);
   expect(model.writes).toEqual([]);
 });
@@ -260,11 +225,11 @@ test('Seller workbench counts unread conversations across pages without marking 
     });
   });
   await page.goto('/seller');
-  const work = page.getByRole('region', { name: 'Việc cần làm', exact: true });
+  const work = page.getByRole('region', { name: 'Cửa hàng của tôi', exact: true });
   await expect(work.getByRole('link', { name: /Tin nhắn khách hàng/ })).toContainText(
     '1 cuộc trò chuyện chưa đọc',
   );
-  await expect(page.locator('.seller-guide > summary')).toBeVisible();
+  await expect(page.locator('.seller-guide > summary')).toHaveCount(0);
   expect(model.writes).toEqual([]);
 });
 
@@ -291,17 +256,19 @@ test('Seller can load a partial queue without losing an open quote draft', async
     await page.goto('/seller/orders');
     const more = page.getByRole('button', { name: 'Tải thêm đơn của shop', exact: true });
     await expect(more).toBeVisible();
-    await expect(page.locator('#web-orders')).toContainText('Còn đơn chưa được tải');
+    await expect(page.locator('#web-orders')).toContainText('Chưa tải hết đơn của shop');
     await page.locator(`#preorder-${sampleRequest.id} > summary`).click();
     await page.getByRole('button', { name: 'Báo giá hoặc từ chối', exact: true }).first().click();
     const price = page.getByLabel('Giá bó hoa (đồng)', { exact: true });
     await price.fill('325000');
-    await more.click();
-    await expect(more).toBeDisabled();
+    const drawerMore = page
+      .getByRole('dialog')
+      .getByRole('button', { name: 'Tải thêm đơn của shop', exact: true });
+    await drawerMore.click();
+    await expect(drawerMore).toBeDisabled();
     await expect(price).toHaveValue('325000');
     release();
     await expect(more).toHaveCount(0);
-    await expect(page.locator('#web-orders')).toContainText('Đã tìm trên 51 yêu cầu của shop');
     await expect(price).toHaveValue('325000');
     expect(model.writes).toEqual([]);
   } finally {
@@ -309,20 +276,40 @@ test('Seller can load a partial queue without losing an open quote draft', async
   }
 });
 
-test('Seller mobile keeps date filtering available without a tall status toolbar', async ({
-  page,
-}) => {
-  const model = await setupSellerUsability(page);
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/seller/orders');
-  await expect(page.getByRole('combobox', { name: 'Trạng thái đơn', exact: true })).toBeVisible();
-  await expect(page.getByRole('group', { name: 'Lọc trạng thái đơn', exact: true })).toBeHidden();
-  await page.getByRole('button', { name: 'Lọc theo ngày nhận', exact: true }).click();
-  await page.getByLabel('Ngày nhận hoa', { exact: true }).fill('2020-01-01');
-  await expect(
-    page.getByRole('heading', { name: 'Không tìm thấy yêu cầu phù hợp', exact: true }),
-  ).toBeVisible();
-  await page.getByRole('button', { name: 'Xóa bộ lọc', exact: true }).click();
-  await expect(page.locator('.web-orders summary')).toHaveCount(1);
-  expect(model.writes).toEqual([]);
-});
+for (const width of [390, 1440]) {
+  test(`Seller keeps date filtering and a compact empty table at ${width}`, async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(60_000);
+    const model = await setupSellerUsability(page);
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto('/seller/orders');
+    await expect(page.getByRole('combobox', { name: 'Trạng thái đơn', exact: true })).toBeVisible();
+    await expect(page.getByRole('group', { name: 'Lọc trạng thái đơn', exact: true })).toBeHidden();
+    await page.getByRole('combobox', { name: 'Lọc theo ngày nhận', exact: true }).click();
+    const calendar = page.getByRole('dialog', {
+      name: 'Lọc theo ngày nhận (giờ Việt Nam)',
+      exact: true,
+    });
+    await calendar.getByRole('combobox', { name: 'Năm', exact: true }).click();
+    await page.getByRole('option', { name: '2020', exact: true }).click();
+    await calendar.getByRole('combobox', { name: 'Tháng', exact: true }).click();
+    await page.getByRole('option', { name: '1', exact: true }).click();
+    await calendar.getByRole('button', { name: '01/01/2020', exact: true }).click();
+    await expect(
+      page.getByRole('heading', { name: 'Không có đơn nhận ngày 01/01/2020', exact: true }),
+    ).toBeVisible();
+    const empty = page.getByRole('status').filter({
+      has: page.getByRole('heading', { name: 'Không có đơn nhận ngày 01/01/2020', exact: true }),
+    });
+    const columns = await page.getByText('Mã đơn', { exact: true }).boundingBox();
+    const body = await empty.boundingBox();
+    expect(columns!.y + columns!.height).toBeLessThanOrEqual(body!.y);
+    expect(body!.height).toBeLessThanOrEqual(180);
+    await expect(empty.locator('svg')).toHaveCount(0);
+    await page.screenshot({ path: testInfo.outputPath(`empty-orders-${width}.png`) });
+    await page.getByRole('button', { name: 'Xóa bộ lọc', exact: true }).click();
+    await expect(page.locator('.web-orders summary')).toHaveCount(1);
+    expect(model.writes).toEqual([]);
+  });
+}

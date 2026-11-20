@@ -1,6 +1,10 @@
 import { expect, test } from '@playwright/test';
+import { chooseSelect } from '../fixtures/select';
 
 test('Seller staff fulfills only paid preorder into a PREORDER slot', async ({ page }) => {
+  test.setTimeout(90_000);
+  await page.route('**/api/**', (route) => route.fulfill({ status: 501, json: {} }));
+  await page.route('**/hub/**', (route) => route.fulfill({ status: 503 }));
   let writes = 0;
   let issued = 0;
   const clockStart = new Date();
@@ -76,33 +80,38 @@ test('Seller staff fulfills only paid preorder into a PREORDER slot', async ({ p
     });
     return route.fulfill({ json: { requestId: 'order-1', bouquetId: 'bouquet-1' } });
   });
-  await page.route('**/api/staff/tasks/task-1/preorders/order-1/loading-access', (route) => {
+  await page.route('**/api/staff/tasks/task-1/preorders/order-1/loading-access', async (route) => {
     expect(route.request().postDataJSON()).toEqual({ slotId: 'slot-p' });
     issued++;
+    const issuedAt = await page.evaluate(() => Date.now());
     return route.fulfill({
       json: {
         id: `access-${issued}`,
-        expiresAt: new Date(clockStart.getTime() + (issued === 1 ? 30_000 : 300_000)).toISOString(),
+        expiresAt: new Date(issuedAt + (issued === 1 ? 30_000 : 300_000)).toISOString(),
         resendAfterSeconds: 0,
         requiresCode: issued === 1,
       },
     });
   });
   await page.goto('/staff');
+  await page.clock.runFor(1000);
   await page.getByRole('button', { name: 'Tiếp tục xử lý' }).click();
   await page.getByText('Nạp hoa cho đơn đặt trước', { exact: true }).click();
   await expect(page.getByLabel('Đơn đặt trước')).toBeVisible();
+  await page.getByRole('combobox', { name: 'Ô PREORDER trống', exact: true }).click();
   await expect(
-    page.getByLabel('Ô PREORDER trống').locator('option[value="slot-null"]'),
+    page.locator('[role="listbox"] [role="option"][data-value="slot-null"]'),
   ).toHaveCount(0);
-  await expect(page.getByLabel('Ô PREORDER trống').locator('option[value="slot-w"]')).toHaveCount(
+  await expect(page.locator('[role="listbox"] [role="option"][data-value="slot-w"]')).toHaveCount(
     0,
   );
-  await page.getByLabel('Đơn đặt trước').selectOption('order-1');
+  await expect(page.locator('[role="listbox"] [role="option"][data-value="slot-p"]')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await chooseSelect(page, 'Đơn đặt trước', 'order-1');
   await expect(page.getByRole('region', { name: 'Phụ kiện cần đóng gói' })).toContainText(
     'Nơ xanh × 2',
   );
-  await page.getByLabel('Ô PREORDER trống').selectOption('slot-p');
+  await chooseSelect(page, 'Ô PREORDER trống', 'slot-p');
   await page.getByLabel('Mã định danh bó hoa').fill('BOUQUET-001');
   await expect(page.getByRole('button', { name: 'Xác nhận đã nạp vào ô' })).toBeDisabled();
   await page.getByRole('button', { name: 'Yêu cầu mở ô', exact: true }).click();

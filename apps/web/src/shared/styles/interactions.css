@@ -216,3 +216,33 @@
     box-shadow: none !important;
   }
 }
+
+.evidence-file-control[data-auto-upload='true'] {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+.evidence-file-control[data-auto-upload='true'] > .button {
+  width: auto;
+  margin: 0;
+}
+.evidence-file-control[data-auto-upload='true'] > .evidence-file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+:root .form-field-error {
+  display: block;
+  grid-column: 1 / -1;
+  margin: 5px 0 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #b42318;
+  font-size: 12px;
+  line-height: 1.5;
+}
+[aria-invalid='true']:not([aria-hidden='true']) {
+  border-color: #b42318;
+}

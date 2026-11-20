@@ -9,20 +9,20 @@ const sections = [
 ];
 
 export const metadata = {
-  title: 'Chính sách riêng tư — FloraBot',
+  title: 'Chính sách bảo mật — FloraBot',
   description:
     'Thông tin FloraBot sử dụng, mục đích xử lý và quyền của bạn đối với dữ liệu trong bản thử nghiệm.',
 };
 export default function Page() {
   return (
     <Layout
-      title="Chính sách riêng tư — FloraBot"
+      title="Chính sách bảo mật — FloraBot"
       description="Thông tin FloraBot sử dụng, mục đích xử lý và quyền của bạn đối với dữ liệu trong bản thử nghiệm."
     >
       <main id="main" className="privacy-page" tabIndex={-1}>
         <header className="privacy-hero">
           <div>
-            <h1>Quyền riêng tư của bạn.</h1>
+            <h1>Bảo vệ thông tin của bạn.</h1>
             <p>Thông tin được dùng để tư vấn và xử lý giao dịch.</p>
           </div>
           <div className="privacy-meta">

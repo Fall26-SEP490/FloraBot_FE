@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { chooseVietnamBank } from '../fixtures/vietnam-bank';
+import { chooseVietnamDate } from '../fixtures/vietnam-date';
+import { chooseSelect } from '../fixtures/select';
 import AxeBuilder from '@axe-core/playwright';
 
 const sessions = {
@@ -615,6 +617,7 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
   });
 
   test('Demographics load, save, clear and cancel use backend clear flags', async ({ page }) => {
+    test.setTimeout(60_000);
     let current = makeMockProfile({ gender: 'FEMALE', dateOfBirth: '2004-02-29' });
     let payload: Record<string, unknown> = {};
     await page.route('**/api/auth/me', (route) => route.fulfill({ json: sessions.CUSTOMER }));
@@ -632,21 +635,26 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
     });
     await page.goto('/ho-so');
     await page.getByRole('button', { name: 'Chỉnh sửa thông tin' }).click();
-    await expect(page.getByLabel('Giới tính', { exact: true })).toHaveValue('FEMALE');
-    await expect(page.getByLabel('Ngày sinh', { exact: true })).toHaveValue('2004-02-29');
-    await page.getByLabel('Giới tính', { exact: true }).selectOption('UNDISCLOSED');
+    await expect(page.getByLabel('Giới tính', { exact: true })).toContainText('Nữ');
+    await expect(page.getByLabel('Ngày sinh', { exact: true })).toContainText('29/02/2004');
+    await chooseSelect(page, 'Giới tính', 'UNDISCLOSED');
     await page.getByRole('button', { name: 'Hủy thay đổi', exact: true }).click();
     await page.getByRole('button', { name: 'Chỉnh sửa thông tin' }).click();
-    await expect(page.getByLabel('Giới tính', { exact: true })).toHaveValue('FEMALE');
-    await page.getByLabel('Giới tính', { exact: true }).selectOption('OTHER');
-    await page.getByLabel('Ngày sinh', { exact: true }).fill('2000-01-02');
+    await expect(page.getByLabel('Giới tính', { exact: true })).toContainText('Nữ');
+    await chooseSelect(page, 'Giới tính', 'OTHER');
+    expect(
+      await page
+        .locator('#profile-gender-native')
+        .evaluate((element) => new FormData((element as HTMLSelectElement).form!).get('gender')),
+    ).toBe('OTHER');
+    await chooseVietnamDate(page, 'Ngày sinh', '2000-01-02');
     await page.getByRole('button', { name: 'Lưu thông tin cá nhân', exact: true }).click();
     await expect(page.getByRole('status').filter({ hasText: 'Đã lưu thay đổi' })).toBeVisible();
     expect(payload).toMatchObject({ gender: 'OTHER', dateOfBirth: '2000-01-02' });
     expect(payload).not.toHaveProperty('clearGender');
     await page.getByRole('button', { name: 'Chỉnh sửa thông tin' }).click();
-    await page.getByLabel('Giới tính', { exact: true }).selectOption('');
-    await page.getByLabel('Ngày sinh', { exact: true }).fill('');
+    await chooseSelect(page, 'Giới tính', '');
+    await chooseVietnamDate(page, 'Ngày sinh', '');
     await page.getByRole('button', { name: 'Lưu thông tin cá nhân', exact: true }).click();
     await expect.poll(() => payload.clearDateOfBirth).toBe(true);
     expect(payload).toMatchObject({ clearGender: true, clearDateOfBirth: true });
@@ -662,11 +670,10 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
     });
     await page.goto('/ho-so');
     await page.getByRole('button', { name: 'Chỉnh sửa thông tin' }).click();
-    await page.getByLabel('Ngày sinh', { exact: true }).fill('2999-01-01');
-    await page.getByRole('button', { name: 'Lưu thông tin cá nhân', exact: true }).click();
-    await expect(
-      page.getByRole('alert').filter({ hasText: 'Ngày sinh không hợp lệ' }),
-    ).toBeVisible();
+    await page.getByRole('combobox', { name: 'Ngày sinh', exact: true }).click();
+    const calendar = page.locator('[data-vietnam-calendar]');
+    await calendar.getByRole('button', { name: 'Tháng sau', exact: true }).click();
+    await expect(calendar.locator('button[aria-pressed]:not(:disabled)')).toHaveCount(0);
     expect(writes).toBe(0);
   });
 

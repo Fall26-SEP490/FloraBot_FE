@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import { expect, test } from '@playwright/test';
 import { randomBytes, randomInt } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
@@ -88,9 +89,10 @@ test('Real registration, admin approval, provisioning and seller subscription', 
   ).toBeVisible();
   const shop = page.locator('.admin-sellers li').filter({ hasText: shopName });
   await shop.locator('summary').click();
-  await shop
-    .getByLabel(`Gói thuê cho ${shopName}`)
-    .selectOption('20000000-0000-0000-0000-00000000000a');
+  await chooseOption(
+    shop.getByLabel(`Gói thuê cho ${shopName}`),
+    '20000000-0000-0000-0000-00000000000a',
+  );
   await shop.getByRole('button', { name: 'Duyệt hồ sơ shop' }).click();
   await expect(
     page
@@ -270,7 +272,7 @@ test('Real registration, admin approval, provisioning and seller subscription', 
   await incident.getByRole('button', { name: 'Xác nhận đóng sự cố' }).click();
   expect((await resolution).status()).toBe(200);
   await expect(incidents.getByRole('status')).toContainText('Đã ghi nhận xử lý');
-  await incidents.getByLabel('Trạng thái sự cố').selectOption('RESOLVED_FIXED');
+  await chooseOption(incidents.getByLabel('Trạng thái sự cố'), 'RESOLVED_FIXED');
   await incident.locator('summary').click();
   await expect(incident.getByText('Đã kiểm tra khóa trong môi trường thử nghiệm.')).toBeVisible();
   await expect(incident.getByRole('button', { name: 'Kiểm tra kết quả xử lý' })).toHaveCount(0);

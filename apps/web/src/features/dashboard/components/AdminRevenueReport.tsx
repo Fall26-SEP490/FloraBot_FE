@@ -1,4 +1,6 @@
+import Select from '@/shared/components/Select';
 import { useState } from 'react';
+import VietnamDateInput from '@/shared/components/VietnamDateInput';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import { request } from '@/shared/lib/api';
@@ -110,22 +112,22 @@ export default function AdminRevenueReport({
       >
         <div>
           <label htmlFor="period-revenue-from">Từ ngày</label>
-          <input
+          <VietnamDateInput
             id="period-revenue-from"
-            type="date"
+            label="Từ ngày"
             required
             value={from}
-            onChange={(e) => setFrom(e.target.value)}
+            onValueChange={setFrom}
           />
         </div>
         <div>
           <label htmlFor="period-revenue-to">Đến ngày</label>
-          <input
+          <VietnamDateInput
             id="period-revenue-to"
-            type="date"
+            label="Đến ngày"
             required
             value={to}
-            onChange={(e) => setTo(e.target.value)}
+            onValueChange={setTo}
           />
         </div>
         {kind === 'flowers' && (
@@ -143,7 +145,7 @@ export default function AdminRevenueReport({
                 }}
               />
               <label htmlFor="period-revenue-seller">Shop</label>
-              <select
+              <Select
                 id="period-revenue-seller"
                 value={seller}
                 onChange={(e) => {
@@ -164,7 +166,7 @@ export default function AdminRevenueReport({
                     {s.shopName}
                   </option>
                 ))}
-              </select>
+              </Select>
               <nav aria-label="Phân trang danh sách shop">
                 <Button
                   type="button"
@@ -192,7 +194,7 @@ export default function AdminRevenueReport({
             </div>
             <div>
               <label htmlFor="period-revenue-kiosk">Kiosk</label>
-              <select
+              <Select
                 id="period-revenue-kiosk"
                 value={kiosk}
                 disabled={!seller || kiosks.isPending || kiosks.isError}
@@ -204,7 +206,7 @@ export default function AdminRevenueReport({
                     {k.code} — {k.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
           </>
         )}

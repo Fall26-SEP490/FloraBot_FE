@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import { fixture, mockLandingClientData } from './landing-test-data';
 import { expect, test } from '@playwright/test';
 
@@ -126,7 +127,7 @@ for (const width of [390, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/chinh-sach-rieng-tu');
     await page.evaluate(() => document.fonts.ready);
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Quyền riêng tư của bạn.');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Bảo vệ thông tin của bạn.');
     await page.keyboard.press('Tab');
     await expect(page.getByRole('link', { name: 'Bỏ qua tới nội dung' })).toBeFocused();
     await page.keyboard.press('Enter');
@@ -197,7 +198,7 @@ test('Registration preserves values after API error and prevents another send af
   await page.locator('#shop-name').fill('Tiệm Hoa Thử');
   await page.locator('#phone').fill('0901234567');
   await page.locator('#area').fill('Thủ Đức');
-  await page.locator('#package').selectOption(fixture.packages[0].id);
+  await chooseOption(page.locator('#package'), fixture.packages[0].id);
   let requests = 0;
   await page.route('**/api/sellers', async (route) => {
     requests++;
@@ -220,7 +221,7 @@ test('Server validation focuses the field and keeps registration data', async ({
   await page.locator('#shop-name').fill('Tiệm Hoa Thử');
   await page.locator('#phone').fill('0901234567');
   await page.locator('#area').fill('Thủ Đức');
-  await page.locator('#package').selectOption(fixture.packages[0].id);
+  await chooseOption(page.locator('#package'), fixture.packages[0].id);
   await page.route('**/api/sellers', (route) =>
     route.fulfill({ status: 422, json: { errors: { phone: ['Số điện thoại này đã đăng ký.'] } } }),
   );
@@ -274,7 +275,7 @@ test('Connection failure has Vietnamese feedback and allows a retry', async ({ p
   await page.locator('#shop-name').fill('Tiệm Hoa Thử');
   await page.locator('#phone').fill('0901234567');
   await page.locator('#area').fill('Thủ Đức');
-  await page.locator('#package').selectOption(fixture.packages[0].id);
+  await chooseOption(page.locator('#package'), fixture.packages[0].id);
   await page.route('**/api/sellers', (route) => route.abort());
   await page.getByRole('button', { name: 'Đăng ký tư vấn' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Kết nối bị gián đoạn' })).toBeVisible();

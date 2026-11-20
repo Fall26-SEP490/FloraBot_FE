@@ -1,3 +1,4 @@
+import { chooseOption } from '../fixtures/select';
 import { expect, test } from '@playwright/test';
 import { randomBytes, randomUUID, randomInt } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
@@ -109,9 +110,10 @@ test('Admin signs in, loads all workspaces and approves a shop through real API 
   await shops.getByLabel('Tìm tên shop hoặc số điện thoại').fill(shopName);
   const shop = shops.locator('li').filter({ hasText: shopName });
   await shop.locator('summary').click();
-  await shop
-    .getByLabel(`Gói thuê cho ${shopName}`)
-    .selectOption('20000000-0000-0000-0000-00000000000a');
+  await chooseOption(
+    shop.getByLabel(`Gói thuê cho ${shopName}`),
+    '20000000-0000-0000-0000-00000000000a',
+  );
   await shop.getByRole('button', { name: 'Duyệt hồ sơ shop' }).click();
   await expect(shops.getByRole('status')).toContainText(`Đã duyệt ${shopName}`);
   expect(errors).toEqual([]);
