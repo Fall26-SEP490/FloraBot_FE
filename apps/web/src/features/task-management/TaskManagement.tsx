@@ -20,6 +20,7 @@ import { TaskItem } from './components/TaskItem';
 import { TASK_STATUS_LABELS } from './task-management.constants';
 import type { ActiveTaskRole, StaffTasksProps, TaskPage } from './task-management.types';
 import './styles/task-management.css';
+import './styles/operational-detail-polish.css';
 
 export type { ActiveTaskRole, StaffTasksProps };
 

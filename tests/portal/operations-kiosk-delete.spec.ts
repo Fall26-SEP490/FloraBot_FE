@@ -111,7 +111,7 @@ async function setup(page: Page, role = 'OPERATIONS_MANAGER') {
 
 async function openInventory(page: Page) {
   await page.getByRole('button', { name: 'Kho tủ khả dụng' }).click();
-  return page.getByRole('dialog', { name: 'Kho thiết bị Kiosk khả dụng' });
+  return page.getByRole('dialog', { name: 'Kho tủ khả dụng' });
 }
 async function confirmDialog(page: Page) {
   await page.getByRole('button', { name: `Lưu trữ tủ ${targetCode}`, exact: true }).click();

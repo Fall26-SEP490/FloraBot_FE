@@ -1,3 +1,6 @@
+import '@/features/account-management/styles/operations-detail-polish.css';
+import WorkspaceTable from '@/features/portal/components/WorkspaceTable';
+import '@/features/portal/styles/operations-registers.css';
 import { liveListOptions } from '@/shared/lib/live-list';
 import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
@@ -104,7 +107,9 @@ function RecoveryForm({
   return (
     <Modal
       open
-      title={`Kết thúc phiên bảo trì ô ${row.slotCode}`}
+      title={`Kiểm tra ô ${row.slotCode}`}
+      size="md"
+      className="maintenance-recovery-dialog"
       description={`${row.kioskName} · ${row.kioskCode}`}
       onClose={onClose}
       closeDisabled={recovery.isPending}
@@ -142,19 +147,21 @@ function RecoveryForm({
                     : candidate.data.stage}
                 </dd>
               </div>
-              <div>
-                <dt>Mã phiên</dt>
-                <dd>{candidate.data.sessionId}</dd>
-              </div>
-              <div>
-                <dt>Mã lệnh mở cửa</dt>
-                <dd>{candidate.data.commandId ?? 'Chưa có mã lệnh được ghi nhận'}</dd>
-              </div>
             </dl>
-            <p>
-              Mã lệnh không chứng minh cửa đã mở. Chỉ xác nhận sau khi kiểm tra cửa và hoa thực tế
-              tại tủ.
-            </p>
+            <details className="recovery-identifiers">
+              <summary>Phiên và lệnh mở cửa</summary>
+              <dl>
+                <div>
+                  <dt>Mã phiên</dt>
+                  <dd>{candidate.data.sessionId}</dd>
+                </div>
+                <div>
+                  <dt>Mã lệnh mở cửa</dt>
+                  <dd>{candidate.data.commandId ?? 'Chưa có mã lệnh được ghi nhận'}</dd>
+                </div>
+              </dl>
+            </details>
+            <p>Lệnh mở chưa xác nhận cửa đã mở. Kiểm tra cửa và hoa tại tủ trước khi lưu.</p>
           </>
         )}
         <fieldset
@@ -169,7 +176,7 @@ function RecoveryForm({
               onChange={(event) => setDoorClosed(event.target.checked)}
               required
             />
-            Tôi đã kiểm tra tại tủ và xác nhận cửa ô đang đóng.
+            Đã kiểm tra tại tủ và xác nhận cửa ô đang đóng.
           </label>
           <label>
             Tình trạng thực tế trong ô
@@ -240,7 +247,9 @@ export default function OperationsMaintenanceRecovery({ managerId }: { managerId
       aria-labelledby="maintenance-recovery-title"
     >
       <div className="business-heading">
-        <h2 id="maintenance-recovery-title">Phiên cần xác minh</h2>
+        <h2 id="maintenance-recovery-title" className="sr-only">
+          Phiên cần xác minh
+        </h2>
         {recoveries.isError && (
           <IconActionButton
             variant="outline"
@@ -262,31 +271,48 @@ export default function OperationsMaintenanceRecovery({ managerId }: { managerId
       ) : recoveries.data.items.length === 0 ? (
         <p>Không có phiên hết hạn cần khôi phục.</p>
       ) : (
-        <ul className="maintenance-recovery-list">
-          {recoveries.data.items.map((row) => (
-            <li key={row.sessionId}>
-              <div>
-                <h3>
-                  Ô {row.slotCode} · {row.kioskName}
-                </h3>
-                <p>
-                  {row.kioskCode} · {actions[row.action] ?? row.action} · Hết hạn{' '}
-                  {dateFormat.format(new Date(row.expiresAt))}
-                </p>
-              </div>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setNotice('');
-                  setSelected(row);
-                }}
-                aria-label={`Kiểm tra ô ${row.slotCode} tại ${row.kioskCode}`}
-              >
-                Kiểm tra và kết thúc
-              </Button>
-            </li>
-          ))}
-        </ul>
+        <WorkspaceTable label="Phiên thao tác cần khôi phục">
+          <table className="operations-recovery-table">
+            <thead>
+              <tr>
+                <th scope="col">Kiosk</th>
+                <th scope="col">Ô tủ</th>
+                <th scope="col">Thao tác</th>
+                <th scope="col">Hết hạn</th>
+                <th scope="col">Xử lý</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recoveries.data.items.map((row) => (
+                <tr key={row.sessionId}>
+                  <td>
+                    <strong>{row.kioskName}</strong>
+                    <span className="table-secondary">{row.kioskCode}</span>
+                  </td>
+                  <td>{row.slotCode}</td>
+                  <td>{actions[row.action] ?? row.action}</td>
+                  <td>
+                    <time dateTime={row.expiresAt}>
+                      {dateFormat.format(new Date(row.expiresAt))}
+                    </time>
+                  </td>
+                  <td>
+                    <Button
+                      variant="outline"
+                      aria-label={`Kiểm tra ô ${row.slotCode} tại ${row.kioskCode}`}
+                      onClick={() => {
+                        setNotice('');
+                        setSelected(row);
+                      }}
+                    >
+                      Kiểm tra
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </WorkspaceTable>
       )}
       {(page > 1 || recoveries.data?.hasMore) && (
         <nav className="business-pagination" aria-label="Trang phiên bảo trì">

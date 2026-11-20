@@ -1,6 +1,9 @@
 'use client';
 
 import IconActionButton from '@/shared/components/IconActionButton';
+import '@/features/portal/styles/operations-registers.css';
+import WorkspaceTable from '@/features/portal/components/WorkspaceTable';
+import { liveListOptions } from '@/shared/lib/live-list';
 import Select from '@/shared/components/Select';
 import { useCallback, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -19,6 +22,7 @@ interface AvailableKiosksModalProps {
 }
 
 export function AvailableKiosksModal({ open, onClose, session }: AvailableKiosksModalProps) {
+  const [selectedKiosk, setSelectedKiosk] = useState<EligibleKioskResponse | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<EligibleKioskResponse | null>(null);
   const [deleteSuccess, setDeleteSuccess] = useState('');
   const [lastDeleteId, setLastDeleteId] = useState<string | null>(null);
@@ -44,6 +48,7 @@ export function AvailableKiosksModal({ open, onClose, session }: AvailableKiosks
   const [slotFilter, setSlotFilter] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const kiosksQuery = useQuery({
+    ...liveListOptions(!deleteTarget && !selectedKiosk),
     queryKey: ['available-kiosks-inventory', session.id],
     queryFn: () => request<EligibleKioskResponse[]>('/operations/eligible-kiosks'),
     enabled: open && isManager,
@@ -67,33 +72,20 @@ export function AvailableKiosksModal({ open, onClose, session }: AvailableKiosks
   return (
     <>
       <Modal
-        open={open && !deleteTarget}
+        open={open && !deleteTarget && !selectedKiosk}
         onClose={onClose}
-        title="Kho thiết bị Kiosk khả dụng"
+        title="Kho tủ khả dụng"
         size="lg"
         className="installation-modal installation-inventory-modal"
-        description="Tra cứu tủ chưa được phân bổ để chuẩn bị cho lịch lắp đặt."
       >
         {deleteSuccess && (
           <p role="status" className="inventory-delete-success">
             {deleteSuccess}
           </p>
         )}
-        <div className="inventory-overview">
-          <span className="installation-feature-icon">
-            <Boxes size={23} aria-hidden="true" />
-          </span>
-          <div>
-            <strong>
-              {kiosksQuery.isSuccess ? `${allKiosks.length} tủ khả dụng` : 'Kho tủ lắp đặt'}
-            </strong>
-            <p>Tủ OFFLINE vẫn có thể được phân công trước khi kết nối.</p>
-          </div>
-          <p>Tạo tủ từ hồ sơ đã thanh toán và xác nhận.</p>
-        </div>
         <div className="inventory-filters">
           <div className="kiosk-form-field">
-            <label htmlFor="inventory-search">Tìm thiết bị</label>
+            <label htmlFor="inventory-search">Tìm kiosk</label>
             <div className="installation-search">
               <Search size={17} aria-hidden="true" />
               <input
@@ -106,7 +98,7 @@ export function AvailableKiosksModal({ open, onClose, session }: AvailableKiosks
             </div>
           </div>
           <div className="kiosk-form-field">
-            <label htmlFor="inventory-slot-filter">Quy mô ô</label>
+            <label htmlFor="inventory-slot-filter">Số ô</label>
             <Select
               id="inventory-slot-filter"
               value={slotFilter}
@@ -120,13 +112,6 @@ export function AvailableKiosksModal({ open, onClose, session }: AvailableKiosks
               ))}
             </Select>
           </div>
-          <IconActionButton
-            variant="outline"
-            onClick={() => void kiosksQuery.refetch()}
-            disabled={kiosksQuery.isFetching}
-            action="reload"
-            label="Làm mới"
-          />
         </div>
         {kiosksQuery.isPending ? (
           <p role="status" className="installation-loading">
@@ -147,14 +132,7 @@ export function AvailableKiosksModal({ open, onClose, session }: AvailableKiosks
             <h3>
               {allKiosks.length === 0 ? 'Chưa có tủ trống trong kho' : 'Không tìm thấy tủ phù hợp'}
             </h3>
-            <p>
-              {allKiosks.length === 0
-                ? 'Đăng ký thiết bị mới để chuẩn bị phân công lắp đặt.'
-                : 'Thử thay đổi từ khóa hoặc chọn tất cả quy mô ô.'}
-            </p>
-            {allKiosks.length === 0 ? (
-              <p>Mở hồ sơ đã xác nhận để tạo tủ theo đúng phân bổ đã đăng ký.</p>
-            ) : (
+            {allKiosks.length > 0 && (
               <IconActionButton
                 variant="outline"
                 onClick={() => {
@@ -171,16 +149,14 @@ export function AvailableKiosksModal({ open, onClose, session }: AvailableKiosks
             <p className="inventory-result-count" role="status">
               Hiển thị {filteredKiosks.length} / {allKiosks.length} tủ
             </p>
-            <div className="inventory-table-wrap">
-              <table className="inventory-table" aria-label="Danh sách tủ khả dụng">
+            <WorkspaceTable label="Danh sách tủ khả dụng">
+              <table className="available-kiosk-table" aria-label="Danh sách tủ khả dụng">
                 <thead>
                   <tr>
                     <th scope="col">Thiết bị</th>
-                    <th scope="col">Quy mô</th>
+                    <th scope="col">Số ô</th>
                     <th scope="col">Kết nối</th>
-                    <th scope="col">
-                      <span className="sr-only">Thao tác</span>
-                    </th>
+                    <th scope="col">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -189,12 +165,6 @@ export function AvailableKiosksModal({ open, onClose, session }: AvailableKiosks
                       <td data-label="Thiết bị">
                         <strong>{kiosk.name}</strong>
                         <code>{kiosk.code}</code>
-                        <FlowerPresencePanel kioskId={kiosk.id} />
-                        <Esp32ConfigurationPanel
-                          actorId={session.id}
-                          scope="manager"
-                          resourceId={kiosk.id}
-                        />
                       </td>
                       <td data-label="Quy mô">
                         <span className="inventory-slot-count">{kiosk.slotCount} ô</span>
@@ -211,6 +181,13 @@ export function AvailableKiosksModal({ open, onClose, session }: AvailableKiosks
                       <td data-label="Thao tác" className="inventory-row-actions">
                         <Button
                           variant="outline"
+                          aria-label={`Xem tủ ${kiosk.code}`}
+                          onClick={() => setSelectedKiosk(kiosk)}
+                        >
+                          Xem
+                        </Button>
+                        <Button
+                          variant="outline"
                           className="inventory-delete-button"
                           aria-label={`Lưu trữ tủ ${kiosk.code}`}
                           aria-describedby="inventory-delete-policy"
@@ -225,27 +202,42 @@ export function AvailableKiosksModal({ open, onClose, session }: AvailableKiosks
                             setDeleteTarget(kiosk);
                           }}
                         >
-                          Xóa
+                          Lưu trữ
                         </Button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            </div>
+            </WorkspaceTable>
           </>
         )}
         <div className="installation-modal-footer">
-          <p id="inventory-delete-policy">
-            Kho hiển thị tủ đủ điều kiện cấp phát cho hồ sơ thuê mới. Nút Xóa là lưu trữ mềm để
-            ngừng sử dụng tủ; tủ đã lưu trữ không còn trong kho này. Hồ sơ chấm dứt thuê được xử lý
-            tại mục Chấm dứt thuê kiosk.
+          <p id="inventory-delete-policy" className="sr-only">
+            Chỉ lưu trữ tủ OFFLINE và đủ điều kiện. Lịch sử được giữ lại.
           </p>
           <Button variant="outline" onClick={onClose}>
             Đóng
           </Button>
         </div>
       </Modal>
+      {open && selectedKiosk && (
+        <Modal
+          open
+          title={selectedKiosk.name}
+          description={selectedKiosk.code}
+          size="lg"
+          className="installation-modal inventory-device-dialog"
+          onClose={() => setSelectedKiosk(null)}
+        >
+          <FlowerPresencePanel kioskId={selectedKiosk.id} />
+          <Esp32ConfigurationPanel
+            actorId={session.id}
+            scope="manager"
+            resourceId={selectedKiosk.id}
+          />
+        </Modal>
+      )}
       {open && deleteTarget && (
         <DeleteKioskModal
           key={deleteTarget.id}

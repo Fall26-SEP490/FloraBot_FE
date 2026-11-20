@@ -1,6 +1,6 @@
 import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
-import { AdminDisclosureSummary } from '@/features/portal/components/AdminUi';
+import WorkspaceTable from '@/features/portal/components/WorkspaceTable';
 import { useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useForm, useWatch } from 'react-hook-form';
@@ -10,7 +10,7 @@ import { Button, Search, SlidersHorizontal, Store, Users } from '@florabot/ui';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
 import { queryClient, request } from '@/shared/lib/api';
 import { liveListOptions } from '@/shared/lib/live-list';
-import { ConfirmDialog } from '../../shared/components/Modal';
+import { ConfirmDialog, Modal } from '../../shared/components/Modal';
 import { AdminKioskSlotDetails } from './AdminKioskSlotDetails';
 import { Esp32ConfigurationPanel } from './Esp32ConfigurationPanel';
 import './styles/admin-kiosk-allocation.css';
@@ -65,6 +65,7 @@ function KioskOperationsManagerPanel({ kiosks }: { kiosks: Kiosk[] }) {
     onSuccess: async (_, { managerId }) => {
       setError('');
       setSelectedManagerId('');
+      setSelectedKioskId('');
       setNotice(
         managerId
           ? 'Đã phân công Quản lý vận hành phụ trách kiosk.'
@@ -80,11 +81,15 @@ function KioskOperationsManagerPanel({ kiosks }: { kiosks: Kiosk[] }) {
     },
   });
 
-  const managerSelect = useRef<HTMLSelectElement>(null);
+  const selectedAssignment = assignments.data?.items.find(
+    (item) => item.kioskId === selectedKioskId,
+  );
+  const selectedKiosk = kiosks.find((item) => item.id === selectedKioskId);
   function selectKiosk(kioskId: string) {
     setSelectedKioskId(kioskId);
-
-    setSelectedManagerId('');
+    setSelectedManagerId(
+      assignments.data?.items.find((item) => item.kioskId === kioskId)?.managerId ?? '',
+    );
     setNotice('');
     setError('');
   }
@@ -96,70 +101,10 @@ function KioskOperationsManagerPanel({ kiosks }: { kiosks: Kiosk[] }) {
       aria-labelledby="kiosk-manager-heading"
     >
       <div className="allocation-section-heading">
-        <h2 id="kiosk-manager-heading">Phân công quản lý</h2>
-        <p>Chọn kiosk và người phụ trách vận hành, lắp đặt và xử lý sự cố.</p>
+        <h2 id="kiosk-manager-heading" className="sr-only">
+          Phân công quản lý
+        </h2>
       </div>
-      <form
-        className="allocation-manager-form"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (selectedKioskId && selectedManagerId && !assignManager.isPending) {
-            assignManager.mutate({
-              kioskId: selectedKioskId,
-              managerId: selectedManagerId === 'unassign' ? null : selectedManagerId,
-            });
-          }
-        }}
-      >
-        <div>
-          <label htmlFor="ops-manager-kiosk">Chọn kiosk</label>
-          <Select
-            id="ops-manager-kiosk"
-            value={selectedKioskId}
-            disabled={assignManager.isPending}
-            onChange={(e) => selectKiosk(e.target.value)}
-          >
-            <option value="">Chọn kiosk</option>
-            {kiosks.map((k) => (
-              <option key={k.id} value={k.id}>
-                {k.name} · {k.code}
-              </option>
-            ))}
-          </Select>
-        </div>
-        <div>
-          <label htmlFor="ops-manager-account">Quản lý vận hành phụ trách</label>
-          <Select
-            id="ops-manager-account"
-            ref={managerSelect}
-            value={selectedManagerId}
-            disabled={!selectedKioskId || assignManager.isPending}
-            onChange={(e) => {
-              setSelectedManagerId(e.target.value);
-              setNotice('');
-              setError('');
-            }}
-          >
-            <option value="" disabled>
-              {managers.isPending ? 'Đang tải quản lý…' : 'Chọn quản lý hoặc thao tác'}
-            </option>
-            <option value="unassign">Gỡ phân công hiện tại</option>
-            {managers.data
-              ?.filter((m) => m.status === 'ACTIVE')
-              .map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.fullName} · {m.email}
-                </option>
-              ))}
-          </Select>
-        </div>
-        <Button
-          type="submit"
-          disabled={!selectedKioskId || !selectedManagerId || assignManager.isPending}
-        >
-          {assignManager.isPending ? 'Đang lưu…' : 'Lưu phân công vận hành'}
-        </Button>
-      </form>
       {managers.isError && (
         <div role="alert">
           <p>Chưa tải được danh sách quản lý.</p>
@@ -172,13 +117,84 @@ function KioskOperationsManagerPanel({ kiosks }: { kiosks: Kiosk[] }) {
           />
         </div>
       )}
-      {(error || notice) && (
-        <p role={error ? 'alert' : 'status'} className={error ? 'error' : 'allocation-feedback'}>
-          {error || notice}
+      {notice && (
+        <p role="status" className="allocation-feedback">
+          {notice}
         </p>
       )}
 
-      <h3 className="allocation-subheading">Quản lý đang phụ trách</h3>
+      <Modal
+        open={!!selectedKioskId}
+        onClose={() => {
+          if (!assignManager.isPending) setSelectedKioskId('');
+        }}
+        title="Phân công quản lý"
+        closeDisabled={assignManager.isPending}
+        size="md"
+        className="allocation-manager-dialog"
+      >
+        <form
+          className="allocation-manager-form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (selectedKioskId && selectedManagerId && !assignManager.isPending) {
+              assignManager.mutate({
+                kioskId: selectedKioskId,
+                managerId: selectedManagerId === 'unassign' ? null : selectedManagerId,
+              });
+            }
+          }}
+        >
+          <div className="allocation-current-kiosk">
+            <strong>{selectedKiosk?.name || selectedAssignment?.kioskCode}</strong>
+            <span>{selectedKiosk?.code || selectedAssignment?.kioskCode}</span>
+          </div>
+          <div>
+            <label htmlFor="ops-manager-account">Quản lý vận hành phụ trách</label>
+            <Select
+              id="ops-manager-account"
+              value={selectedManagerId}
+              disabled={!selectedKioskId || assignManager.isPending}
+              onChange={(e) => {
+                setSelectedManagerId(e.target.value);
+                setNotice('');
+                setError('');
+              }}
+            >
+              <option value="" disabled>
+                {managers.isPending ? 'Đang tải quản lý…' : 'Chọn quản lý hoặc thao tác'}
+              </option>
+              {selectedAssignment?.managerId && (
+                <option value="unassign">Gỡ phân công hiện tại</option>
+              )}
+              {managers.data
+                ?.filter((m) => m.status === 'ACTIVE')
+                .map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.fullName} · {m.email}
+                  </option>
+                ))}
+            </Select>
+          </div>
+          <Button
+            type="submit"
+            disabled={
+              !selectedKioskId ||
+              !selectedManagerId ||
+              selectedManagerId === selectedAssignment?.managerId ||
+              assignManager.isPending ||
+              managers.isError
+            }
+          >
+            {assignManager.isPending ? 'Đang lưu…' : 'Lưu phân công'}
+          </Button>
+        </form>
+        {error && (
+          <p role="alert" className="error">
+            {error}
+          </p>
+        )}
+      </Modal>
       {assignments.isPending && <p role="status">Đang tải danh sách phân công…</p>}
       {assignments.isError && (
         <div role="alert">
@@ -194,47 +210,59 @@ function KioskOperationsManagerPanel({ kiosks }: { kiosks: Kiosk[] }) {
       )}
       {assignments.data?.items.length === 0 && <p>Chưa có kiosk ở trang này.</p>}
       {!!assignments.data?.items.length && (
-        <ul className="allocation-manager-list">
-          {assignments.data.items.map((item) => (
-            <li key={item.kioskId}>
-              <div>
-                <strong>
-                  {kiosks.find((kiosk) => kiosk.id === item.kioskId)?.name ?? item.kioskCode}
-                </strong>
-                <span>{item.kioskCode}</span>
-              </div>
-              <div>
-                <span>
-                  {item.managerName
-                    ? `Phụ trách: ${item.managerName}`
-                    : 'Chưa có quản lý phụ trách'}
-                </span>
-                {item.assignedAt && (
-                  <small>
-                    Phân công lúc{' '}
-                    {new Date(item.assignedAt).toLocaleString('vi-VN', {
-                      timeZone: 'Asia/Ho_Chi_Minh',
-                    })}
-                  </small>
-                )}
-              </div>
-              {kiosks.some((kiosk) => kiosk.id === item.kioskId) && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  aria-label={`Chọn quản lý cho ${item.kioskCode}`}
-                  disabled={assignManager.isPending}
-                  onClick={() => {
-                    selectKiosk(item.kioskId);
-                    requestAnimationFrame(() => managerSelect.current?.focus());
-                  }}
-                >
-                  Chọn quản lý
-                </Button>
-              )}
-            </li>
-          ))}
-        </ul>
+        <WorkspaceTable label="Phân công quản lý kiosk">
+          <table className="allocation-table allocation-manager-table">
+            <thead>
+              <tr>
+                <th scope="col">Kiosk</th>
+                <th scope="col">Quản lý phụ trách</th>
+                <th scope="col">Ngày phân công</th>
+                <th scope="col">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              {assignments.data.items.map((item) => (
+                <tr key={item.kioskId}>
+                  <td>
+                    <strong>
+                      {kiosks.find((kiosk) => kiosk.id === item.kioskId)?.name ?? item.kioskCode}
+                    </strong>
+                    <span className="table-secondary">{item.kioskCode}</span>
+                  </td>
+                  <td>
+                    {item.managerName || (
+                      <span className="allocation-unassigned">Chưa phân công</span>
+                    )}
+                  </td>
+                  <td>
+                    {item.assignedAt ? (
+                      <time dateTime={item.assignedAt}>
+                        {new Date(item.assignedAt).toLocaleDateString('vi-VN', {
+                          timeZone: 'Asia/Ho_Chi_Minh',
+                        })}
+                      </time>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
+                  <td>
+                    {kiosks.some((kiosk) => kiosk.id === item.kioskId) && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        aria-label={`Chọn quản lý cho ${item.kioskCode}`}
+                        disabled={assignManager.isPending}
+                        onClick={() => selectKiosk(item.kioskId)}
+                      >
+                        {item.managerId ? 'Thay đổi' : 'Phân công'}
+                      </Button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </WorkspaceTable>
       )}
       {assignments.data && (page > 1 || assignments.data.hasMore) && (
         <nav className="allocation-pagination" aria-label="Phân trang quản lý phụ trách">
@@ -345,9 +373,7 @@ function Assignment({
           </p>
         )}
         <p id={`kiosk-help-${kiosk.id}`} className="quiet">
-          Gán toàn bộ {kiosk.slotCount} ô. Shop nhận phải có gói thuê còn hiệu lực cho đúng kiosk
-          này. Gói của shop hiện tại không tự chuyển sang shop mới. Các ô phải trống, không bị giữ
-          hay khóa.
+          Shop nhận cần gói thuê còn hiệu lực; các ô phải trống, không bị giữ hoặc khóa.
         </p>
         {!canAssign && (
           <p className="quiet">Kiosk đang bảo trì hoặc ngừng hoạt động nên chưa thể phân bổ.</p>
@@ -463,10 +489,23 @@ export default function AdminSlots({ actorId }: { actorId: string }) {
           aria-labelledby="admin-slots-title"
         >
           <div className="allocation-heading-row">
-            <div className="allocation-section-heading">
-              <h2 id="admin-slots-title">Danh sách kiosk</h2>
-              <p>Chọn một kiosk để xem các ô hoặc gán toàn bộ tủ cho một shop.</p>
+            <h2 id="admin-slots-title" className="sr-only">
+              Danh sách kiosk
+            </h2>
+            <div className="allocation-search">
+              <label htmlFor="kiosk-search">Tìm kiosk hoặc shop</label>
+              <div>
+                <Search size={17} aria-hidden="true" />
+                <input
+                  id="kiosk-search"
+                  type="search"
+                  placeholder="Nhập mã, tên kiosk hoặc shop"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                />
+              </div>
             </div>
+
             <Button
               type="button"
               variant="outline"
@@ -487,19 +526,6 @@ export default function AdminSlots({ actorId }: { actorId: string }) {
               role="group"
               aria-label="Bộ lọc kiosk"
             >
-              <div className="allocation-search">
-                <label htmlFor="kiosk-search">Tìm mã kiosk, tên kiosk hoặc shop</label>
-                <div>
-                  <Search size={17} aria-hidden="true" />
-                  <input
-                    id="kiosk-search"
-                    type="search"
-                    placeholder="Nhập mã, tên kiosk hoặc shop"
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                  />
-                </div>
-              </div>
               <div>
                 <label htmlFor="kiosk-ownership">Lọc phân bổ</label>
                 <Select
@@ -577,69 +603,103 @@ export default function AdminSlots({ actorId }: { actorId: string }) {
             </div>
           )}
           {!!visible?.length && (
-            <ul className="admin-shop-list allocation-kiosk-list">
-              {visible.map((kiosk) => (
-                <li key={kiosk.id}>
-                  <details
-                    name="admin-kiosk-allocation"
-                    onToggle={(event) => {
-                      const open = event.currentTarget.open;
-                      setOpenKioskId((current) =>
-                        open ? kiosk.id : current === kiosk.id ? null : current,
-                      );
-                    }}
-                  >
-                    <AdminDisclosureSummary
-                      statusCode={kiosk.status}
-                      title={kiosk.name}
-                      meta={
-                        <>
-                          <span className="allocation-kiosk-code">{kiosk.code}</span>
-                          <span>{kiosk.slotCount} ô</span>
-                          <span>
-                            {kiosk.sellerName || (kiosk.sellerId ? 'Đã gán shop' : 'Chưa gán shop')}
+            <WorkspaceTable label="Phân bổ kiosk cho shop">
+              <table className="allocation-table allocation-shop-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Kiosk</th>
+                    <th scope="col">Số ô</th>
+                    <th scope="col">Shop</th>
+                    <th scope="col">Kết nối</th>
+                    <th scope="col">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visible.map((kiosk) => (
+                    <tr key={kiosk.id}>
+                      <td>
+                        <strong>{kiosk.name}</strong>
+                        <span className="table-secondary">{kiosk.code}</span>
+                      </td>
+                      <td>{kiosk.slotCount}</td>
+                      <td>
+                        {kiosk.sellerName || (
+                          <span className="allocation-unassigned">
+                            {kiosk.sellerId ? 'Đã gán shop' : 'Chưa gán shop'}
                           </span>
-                        </>
-                      }
-                      status={kioskStatuses[kiosk.status] || kiosk.status}
-                    />
-                    <div className="allocation-kiosk-body">
-                      <section aria-label="Phân bổ cho shop">
-                        <h3>Phân bổ cho shop</h3>
-                        {sellers.isPending ? (
-                          <p role="status">Đang tải shop…</p>
-                        ) : sellers.data?.length ? (
-                          <Assignment
-                            kiosk={kiosk}
-                            sellers={sellers.data}
-                            onAssigned={(message) => {
-                              setConfirmation(message);
-                              notice.current?.focus();
-                            }}
-                          />
-                        ) : (
-                          !sellers.isError && (
-                            <p>Chưa có shop đang hoạt động và đủ điều kiện nhận kiosk.</p>
-                          )
                         )}
-                      </section>
-                      <section className="allocation-kiosk-tools" aria-label="Ô tủ và thiết bị">
-                        <h3>Ô tủ và thiết bị</h3>
-                        <AdminKioskSlotDetails kioskId={kiosk.id} kioskCode={kiosk.code} />
-                        <Esp32ConfigurationPanel
-                          actorId={actorId}
-                          scope="admin"
-                          resourceId={kiosk.id}
-                        />
-                      </section>
-                    </div>
-                  </details>
-                </li>
-              ))}
-            </ul>
+                      </td>
+                      <td>
+                        <span className="table-badge" data-state={kiosk.status}>
+                          {kioskStatuses[kiosk.status] || kiosk.status}
+                        </span>
+                      </td>
+                      <td>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          aria-label={`Xem phân bổ ${kiosk.code}`}
+                          onClick={() => setOpenKioskId(kiosk.id)}
+                        >
+                          Xem
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </WorkspaceTable>
           )}
         </section>
       )}
+      <Modal
+        open={!!openKioskId}
+        onClose={() => setOpenKioskId(null)}
+        title={kiosks.data?.find((item) => item.id === openKioskId)?.name || 'Phân bổ kiosk'}
+        size="lg"
+        className="allocation-detail-dialog"
+      >
+        {(() => {
+          const kiosk = kiosks.data?.find((item) => item.id === openKioskId);
+          if (!kiosk) return null;
+          return (
+            <div className="allocation-kiosk-body" key={kiosk.id}>
+              <p className="allocation-current-kiosk">
+                <strong>{kiosk.code}</strong>
+                <span>
+                  {kiosk.slotCount} ô · {kiosk.sellerName || 'Chưa gán shop'}
+                </span>
+              </p>
+              <section aria-label="Phân bổ cho shop">
+                {sellers.isPending ? (
+                  <p role="status">Đang tải shop…</p>
+                ) : sellers.data?.length ? (
+                  <Assignment
+                    kiosk={kiosk}
+                    sellers={sellers.data}
+                    onAssigned={(message) => {
+                      setOpenKioskId(null);
+                      setConfirmation(message);
+                      requestAnimationFrame(() => notice.current?.focus());
+                    }}
+                  />
+                ) : (
+                  <p role={sellers.isError ? 'alert' : undefined}>
+                    {sellers.isError
+                      ? 'Chưa tải được danh sách shop.'
+                      : 'Chưa có shop đang hoạt động.'}
+                  </p>
+                )}
+              </section>
+              <section className="allocation-kiosk-tools" aria-label="Ô tủ và thiết bị">
+                <h3>Ô tủ và thiết bị</h3>
+                <AdminKioskSlotDetails kioskId={kiosk.id} kioskCode={kiosk.code} />
+                <Esp32ConfigurationPanel actorId={actorId} scope="admin" resourceId={kiosk.id} />
+              </section>
+            </div>
+          );
+        })()}
+      </Modal>
     </section>
   );
 }

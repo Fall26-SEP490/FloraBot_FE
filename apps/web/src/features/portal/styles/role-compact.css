@@ -47,16 +47,29 @@
   & .incident-oversight-note {
     margin: 8px 0 0;
   }
-  @media (min-width: 901px) {
+  @media (min-width: 0px) {
+    /* Keep the side rail on narrow windows instead of switching to a top menu. */
     & .workspace-sidebar {
       display: flex;
       flex-direction: column;
+      position: sticky;
+      top: 72px;
+      height: calc(100dvh - 72px);
+      padding: 18px 10px;
     }
     & .workspace-sidebar nav {
+      display: flex !important;
+      flex-direction: column;
+      flex-wrap: nowrap;
       min-height: 0;
+      max-height: 100%;
+      padding-top: 0;
       overflow-y: auto;
+      overflow-x: hidden;
     }
     & .dashboard-shell {
+      display: grid;
+      align-items: start;
       grid-template-columns: 78px minmax(0, 1fr);
     }
     & .workspace-sidebar {
@@ -124,7 +137,7 @@
     [data-platform-role='operations'],
     [data-platform-role='technician']
   ) {
-  @media (min-width: 901px) {
+  @media (min-width: 0px) {
     & .workspace-sidebar nav a {
       height: 44px;
       min-height: 44px;

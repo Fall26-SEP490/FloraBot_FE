@@ -1,0 +1,28 @@
+.actions {
+  display: inline-flex;
+  vertical-align: middle;
+}
+.actions .trigger {
+  width: 96px !important;
+  min-width: 96px !important;
+  min-height: 34px !important;
+  height: 34px !important;
+  padding: 6px 10px !important;
+  gap: 8px;
+  border: 1px solid #c7dacd;
+  border-radius: 8px;
+  background: #f1f7f2;
+  color: #214d37;
+  font-size: 12px !important;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.actions .trigger:hover {
+  background: #e4efe7;
+  border-color: #779b84;
+}
+.actions .trigger > svg {
+  display: block !important;
+  width: 14px;
+  height: 14px;
+}

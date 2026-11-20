@@ -1,4 +1,7 @@
 'use client';
+import DirectoryTable from './components/DirectoryTable';
+import DirectoryActions from './components/DirectoryActions';
+import './styles/operations-detail-polish.css';
 import { liveListOptions } from '@/shared/lib/live-list';
 
 import IconActionButton from '@/shared/components/IconActionButton';
@@ -455,6 +458,8 @@ export default function AccountManagement({
   const lockedCount = accounts.filter((a) => a.status === 'LOCKED').length;
   const disabledCount = accounts.filter((a) => a.status === 'DISABLED').length;
 
+  const isTechnicianDirectory = actorRole === 'OPERATIONS_MANAGER' && targetRole === 'TECHNICIAN';
+  const AccountTable = isTechnicianDirectory ? DirectoryTable : DataTable;
   const columns: readonly DataTableColumn<AccountDirectoryItem>[] = [
     {
       key: 'fullName',
@@ -466,7 +471,9 @@ export default function AccountManagement({
           </span>
           <div className="account-identity-meta">
             <strong>{item.fullName}</strong>
-            <small>{roleDisplayText[item.role] || item.role}</small>
+            <small>
+              {isTechnicianDirectory ? item.email : roleDisplayText[item.role] || item.role}
+            </small>
           </div>
         </div>
       ),
@@ -498,72 +505,91 @@ export default function AccountManagement({
       key: 'actions',
       header: 'Thao tác',
       className: 'management-actions-cell',
-      render: (item) => (
-        <div className="management-row-actions">
-          {actorRole === 'SELLER' && targetRole === 'SELLER_STAFF' && item.status === 'ACTIVE' && (
-            <Link href={`/seller/staff-chats?staff=${encodeURIComponent(item.id)}`}>
-              Nhắn tin<span className="sr-only"> {item.fullName}</span>
-            </Link>
-          )}
-          <button type="button" onClick={() => setViewing(item)}>
-            Chi tiết
-            <span className="sr-only"> {item.fullName}</span>
-          </button>
-          {item.status === 'ACTIVE' && (
-            <>
-              <button
-                type="button"
-                onClick={() => setStatusConfirm({ account: item, targetStatus: 'LOCKED' })}
-              >
-                Khóa
-                <span className="sr-only"> {item.fullName}</span>
-              </button>
-              <button
-                type="button"
-                className="management-row-danger"
-                onClick={() => setStatusConfirm({ account: item, targetStatus: 'DISABLED' })}
-              >
-                Vô hiệu hóa
-                <span className="sr-only"> {item.fullName}</span>
-              </button>
-            </>
-          )}
-          {item.status === 'LOCKED' && (
-            <>
+      render: (item) =>
+        isTechnicianDirectory ? (
+          <DirectoryActions
+            name={item.fullName}
+            statuses={(['ACTIVE', 'LOCKED', 'DISABLED'] as const).filter(
+              (value) =>
+                value !== item.status && (item.status !== 'DISABLED' || value === 'ACTIVE'),
+            )}
+            onView={() => setViewing(item)}
+            onStatus={(status) =>
+              setStatusConfirm({ account: item, targetStatus: status as AccountStatus })
+            }
+          />
+        ) : (
+          <div className="management-row-actions">
+            {actorRole === 'SELLER' &&
+              targetRole === 'SELLER_STAFF' &&
+              item.status === 'ACTIVE' && (
+                <Link href={`/seller/staff-chats?staff=${encodeURIComponent(item.id)}`}>
+                  Nhắn tin<span className="sr-only"> {item.fullName}</span>
+                </Link>
+              )}
+            <button type="button" onClick={() => setViewing(item)}>
+              Chi tiết
+              <span className="sr-only"> {item.fullName}</span>
+            </button>
+            {item.status === 'ACTIVE' && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setStatusConfirm({ account: item, targetStatus: 'LOCKED' })}
+                >
+                  Khóa
+                  <span className="sr-only"> {item.fullName}</span>
+                </button>
+                <button
+                  type="button"
+                  className="management-row-danger"
+                  onClick={() => setStatusConfirm({ account: item, targetStatus: 'DISABLED' })}
+                >
+                  Vô hiệu hóa
+                  <span className="sr-only"> {item.fullName}</span>
+                </button>
+              </>
+            )}
+            {item.status === 'LOCKED' && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setStatusConfirm({ account: item, targetStatus: 'ACTIVE' })}
+                >
+                  Mở khóa
+                  <span className="sr-only"> {item.fullName}</span>
+                </button>
+                <button
+                  type="button"
+                  className="management-row-danger"
+                  onClick={() => setStatusConfirm({ account: item, targetStatus: 'DISABLED' })}
+                >
+                  Vô hiệu hóa
+                  <span className="sr-only"> {item.fullName}</span>
+                </button>
+              </>
+            )}
+            {item.status === 'DISABLED' && (
               <button
                 type="button"
                 onClick={() => setStatusConfirm({ account: item, targetStatus: 'ACTIVE' })}
               >
-                Mở khóa
+                Khôi phục
                 <span className="sr-only"> {item.fullName}</span>
               </button>
-              <button
-                type="button"
-                className="management-row-danger"
-                onClick={() => setStatusConfirm({ account: item, targetStatus: 'DISABLED' })}
-              >
-                Vô hiệu hóa
-                <span className="sr-only"> {item.fullName}</span>
-              </button>
-            </>
-          )}
-          {item.status === 'DISABLED' && (
-            <button
-              type="button"
-              onClick={() => setStatusConfirm({ account: item, targetStatus: 'ACTIVE' })}
-            >
-              Khôi phục
-              <span className="sr-only"> {item.fullName}</span>
-            </button>
-          )}
-        </div>
-      ),
+            )}
+          </div>
+        ),
     },
   ];
 
   return (
     <section
-      className="management-panel account-management-workspace"
+      className={
+        isTechnicianDirectory
+          ? 'management-panel account-management-workspace technician-directory'
+          : 'management-panel account-management-workspace'
+      }
       aria-labelledby="account-management-title"
     >
       {/* Summary stats strip at top */}
@@ -752,9 +778,11 @@ export default function AccountManagement({
         {/* Data Table */}
         {!isLoading && !isError && (
           <>
-            <DataTable
+            <AccountTable
               caption={title}
-              columns={columns}
+              columns={
+                isTechnicianDirectory ? columns.filter((column) => column.key !== 'email') : columns
+              }
               rows={pagedRows}
               getRowKey={(item) => item.id}
               emptyMessage={

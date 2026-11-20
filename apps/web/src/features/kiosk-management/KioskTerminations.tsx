@@ -1,4 +1,7 @@
 'use client';
+import WorkspaceTable from '@/features/portal/components/WorkspaceTable';
+import { Modal } from '@/shared/components/Modal';
+import '@/features/portal/styles/operations-registers.css';
 import { liveListOptions } from '@/shared/lib/live-list';
 
 import IconActionButton from '@/shared/components/IconActionButton';
@@ -348,7 +351,9 @@ function ManagerTerminationCard({
   onReviewed,
   expanded,
   onToggle,
+  inDialog = false,
 }: {
+  inDialog?: boolean;
   expanded: boolean;
   onToggle: () => void;
   item: Termination;
@@ -512,53 +517,59 @@ function ManagerTerminationCard({
 
   return (
     <article className="business-card termination-card">
-      <div className="termination-card-head">
-        <div>
-          <div className="termination-card-title">
-            {item.kioskCode && <span className="termination-code-pill">{item.kioskCode}</span>}
-            <h3>
-              {item.kioskName || item.kioskCode} · {item.shopName}
-            </h3>
+      {!inDialog && (
+        <>
+          <div className="termination-card-head">
+            <div>
+              <div className="termination-card-title">
+                {item.kioskCode && <span className="termination-code-pill">{item.kioskCode}</span>}
+                <h3>
+                  {item.kioskName || item.kioskCode} · {item.shopName}
+                </h3>
+              </div>
+              <p className="termination-meta-time">
+                Yêu cầu lúc{' '}
+                {new Date(item.requestedAt).toLocaleString('vi-VN', {
+                  timeZone: 'Asia/Ho_Chi_Minh',
+                })}
+              </p>
+            </div>
+            <span className="termination-status-pill" data-status={item.status}>
+              {archived ? 'Đã lưu trữ tủ' : statusLabel[item.status] || item.status}
+            </span>
           </div>
-          <p className="termination-meta-time">
-            Yêu cầu lúc{' '}
-            {new Date(item.requestedAt).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}
-          </p>
-        </div>
-        <span className="termination-status-pill" data-status={item.status}>
-          {archived ? 'Đã lưu trữ tủ' : statusLabel[item.status] || item.status}
-        </span>
-      </div>
 
-      <div className="termination-next-action">
-        <div>
-          {!archived && (
-            <>
-              <span className="termination-owner">{nextStep.owner}</span>
-              <p>{nextStep.text}</p>
-            </>
-          )}
-        </div>
-        <Button
-          type="button"
-          variant={nextStep.attention && !expanded ? 'default' : 'outline'}
-          aria-expanded={expanded}
-          aria-controls={`termination-body-${item.id}`}
-          aria-label={`${expanded ? 'Thu gọn' : 'Mở'} hồ sơ ${item.kioskCode || item.kioskName}`}
-          onClick={onToggle}
-        >
-          {expanded ? 'Thu gọn' : nextStep.action}
-        </Button>
-      </div>
+          <div className="termination-next-action">
+            <div>
+              {!archived && (
+                <>
+                  <span className="termination-owner">{nextStep.owner}</span>
+                  <p>{nextStep.text}</p>
+                </>
+              )}
+            </div>
+            <Button
+              type="button"
+              variant={nextStep.attention && !expanded ? 'default' : 'outline'}
+              aria-expanded={expanded}
+              aria-controls={`termination-body-${item.id}`}
+              aria-label={`${expanded ? 'Thu gọn' : 'Mở'} hồ sơ ${item.kioskCode || item.kioskName}`}
+              onClick={onToggle}
+            >
+              {expanded ? 'Thu gọn' : nextStep.action}
+            </Button>
+          </div>
+        </>
+      )}
       <div id={`termination-body-${item.id}`} hidden={!expanded}>
         {item.status !== 'REJECTED' && item.status !== 'CANCELLED' && (
           <ol className="termination-stepper" aria-label="Tiến trình chấm dứt thuê">
             <li className="termination-step" data-state={step1State}>
-              <strong>Bước 1 · Duyệt yêu cầu</strong>
+              <strong>1 · Duyệt yêu cầu</strong>
               <span>{item.status === 'REQUESTED' ? 'Chờ xem xét' : 'Đã chấp thuận'}</span>
             </li>
             <li className="termination-step" data-state={step2State}>
-              <strong>Bước 2 · Tháo dỡ kiosk</strong>
+              <strong>2 · Tháo dỡ</strong>
               <span>
                 {item.status === 'COMPLETED'
                   ? 'Đã hoàn tất'
@@ -570,7 +581,7 @@ function ManagerTerminationCard({
               </span>
             </li>
             <li className="termination-step" data-state={step3State}>
-              <strong>Bước 3 · Xác nhận bàn giao</strong>
+              <strong>3 · Bàn giao</strong>
               <span>
                 {item.status === 'COMPLETED'
                   ? 'Đã bàn giao'
@@ -583,7 +594,7 @@ function ManagerTerminationCard({
               className="termination-step"
               data-state={archived ? 'done' : item.status === 'COMPLETED' ? 'active' : 'idle'}
             >
-              <strong>Bước 4 · Ngừng sử dụng &amp; lưu trữ</strong>
+              <strong>4 · Lưu trữ</strong>
               <span>
                 {archived
                   ? 'Đã lưu trữ, kết thúc luồng'
@@ -1116,7 +1127,7 @@ export function OperationsTerminations() {
     <section className="business-panel">
       <div className="business-heading">
         <div>
-          <h2>Hồ sơ chấm dứt thuê kiosk</h2>
+          <h2 className="sr-only">Hồ sơ chấm dứt thuê kiosk</h2>
         </div>
         {records.isError && (
           <IconActionButton
@@ -1164,7 +1175,64 @@ export function OperationsTerminations() {
       ) : records.isError ? (
         <p role="alert">{textError(records.error)}</p>
       ) : records.data?.items.length ? (
-        <div className="business-card-list termination-compact-list">
+        <WorkspaceTable label="Hồ sơ chấm dứt thuê kiosk">
+          <table className="operations-termination-table">
+            <thead>
+              <tr>
+                <th scope="col">Kiosk / Shop</th>
+                <th scope="col">Ngày yêu cầu</th>
+                <th scope="col">Trạng thái</th>
+                <th scope="col">Tháo dỡ</th>
+                <th scope="col">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              {records.data.items
+                .filter((item) =>
+                  [item.kioskCode, item.kioskName, item.shopName]
+                    .filter(Boolean)
+                    .join(' ')
+                    .toLocaleLowerCase('vi')
+                    .includes(search.trim().toLocaleLowerCase('vi')),
+                )
+                .map((item) => (
+                  <tr key={item.id}>
+                    <td>
+                      <strong>{item.kioskName || item.kioskCode}</strong>
+                      <span className="table-secondary">
+                        {item.kioskCode} · {item.shopName}
+                      </span>
+                    </td>
+                    <td>
+                      <time dateTime={item.requestedAt}>
+                        {new Date(item.requestedAt).toLocaleDateString('vi-VN', {
+                          timeZone: 'Asia/Ho_Chi_Minh',
+                        })}
+                      </time>
+                    </td>
+                    <td>
+                      <span className="table-badge" data-state={item.status}>
+                        {statusLabel[item.status] || item.status}
+                      </span>
+                    </td>
+                    <td>
+                      {item.removalTaskStatus
+                        ? removalTaskLabel[item.removalTaskStatus] || item.removalTaskStatus
+                        : '—'}
+                    </td>
+                    <td>
+                      <Button
+                        variant="outline"
+                        aria-label={`Mở hồ sơ ${item.kioskCode || item.kioskName}`}
+                        onClick={() => setExpandedId(item.id)}
+                      >
+                        Xem
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
           {search.trim() &&
             !records.data.items.some((item) =>
               [item.kioskCode, item.kioskName, item.shopName]
@@ -1172,32 +1240,43 @@ export function OperationsTerminations() {
                 .join(' ')
                 .toLocaleLowerCase('vi')
                 .includes(search.trim().toLocaleLowerCase('vi')),
-            ) && <p>Không có hồ sơ phù hợp trong trang này.</p>}
-          {records.data.items
-            .filter((item) =>
-              [item.kioskCode, item.kioskName, item.shopName]
-                .filter(Boolean)
-                .join(' ')
-                .toLocaleLowerCase('vi')
-                .includes(search.trim().toLocaleLowerCase('vi')),
-            )
-            .map((item) => (
-              <ManagerTerminationCard
-                key={item.id}
-                item={item}
-                expanded={expandedId === item.id}
-                onToggle={() => setExpandedId(expandedId === item.id ? null : item.id)}
-                technicians={technicians.data ?? []}
-                onReviewed={() => {
-                  setStatus('');
-                  setPage(1);
-                }}
-              />
-            ))}
-        </div>
+            ) && (
+              <p className="operations-register-empty">Không có hồ sơ phù hợp trong trang này.</p>
+            )}
+        </WorkspaceTable>
       ) : (
         <p>Không có hồ sơ trong trạng thái này.</p>
       )}
+      <Modal
+        open={!!expandedId}
+        onClose={() => setExpandedId(null)}
+        title={
+          records.data?.items.find((item) => item.id === expandedId)?.kioskCode ||
+          'Hồ sơ chấm dứt thuê'
+        }
+        size="lg"
+        description={
+          records.data?.items.find((item) => item.id === expandedId)?.shopName ?? undefined
+        }
+        className="termination-record-dialog"
+      >
+        {records.data?.items
+          .filter((item) => item.id === expandedId)
+          .map((item) => (
+            <ManagerTerminationCard
+              key={item.id}
+              item={item}
+              expanded
+              inDialog
+              onToggle={() => setExpandedId(null)}
+              technicians={technicians.data ?? []}
+              onReviewed={() => {
+                setStatus('');
+                setPage(1);
+              }}
+            />
+          ))}
+      </Modal>
       {records.data && (
         <div
           className="business-pagination termination-pagination"
@@ -1224,7 +1303,7 @@ export function OperationsTerminations() {
         onToggle={(e) => setLocationOpen(e.currentTarget.open)}
       >
         <summary>
-          <strong>Yêu cầu đổi vị trí kiosk chờ duyệt</strong>
+          <strong>Đổi vị trí kiosk</strong>
         </summary>
         {locationOpen && (
           <div style={{ marginTop: '0.75rem' }}>
@@ -1252,7 +1331,7 @@ export function OperationsTerminations() {
         onToggle={(e) => setLayoutOpen(e.currentTarget.open)}
       >
         <summary>
-          <strong>Yêu cầu đổi cơ cấu ô (Walk-in / Pre-order) chờ duyệt</strong>
+          <strong>Đổi cơ cấu ô</strong>
         </summary>
         {layoutOpen && (
           <div style={{ marginTop: '0.75rem' }}>

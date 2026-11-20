@@ -1,0 +1,163 @@
+.workspace-portal-root.platform-workspace[data-platform-role='operations']
+  #staff-tasks
+  .manager-desk-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 20px;
+  border: 1px solid #d9e5dc;
+  border-radius: 10px;
+  background: #f0f5f0;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='operations']
+  #staff-tasks
+  .manager-desk-navigation
+  button {
+  width: auto;
+  min-height: 42px;
+  gap: 8px;
+  padding: 9px 14px;
+  border: 0;
+  border-radius: 7px;
+  box-shadow: none;
+  background: transparent;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='operations']
+  #staff-tasks
+  .manager-desk-navigation
+  button[aria-pressed='true'] {
+  background: #214d38;
+  color: white;
+  box-shadow: none;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='operations']
+  #staff-tasks
+  .manager-desk-nav-icon {
+  flex: 0 0 18px;
+  height: 18px;
+  background: transparent;
+  border-radius: 0;
+  color: inherit;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='operations']
+  #staff-tasks
+  .manager-desk-navigation
+  strong {
+  font-size: 12px;
+}
+#staff-tasks .manager-incident-table th:first-child {
+  width: 34%;
+}
+#staff-tasks .manager-incident-table th:nth-child(2) {
+  width: 46%;
+}
+#staff-tasks .manager-incident-table th:last-child {
+  width: 130px;
+}
+#staff-tasks .manager-incident-table h3 {
+  font-size: 13px;
+  margin: 5px 0;
+}
+#staff-tasks .manager-incident-table h3 small {
+  display: block;
+  font-size: 11px;
+  color: #64736a;
+  margin-top: 4px;
+}
+#staff-tasks .manager-incident-table .operations-incident-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 11px;
+}
+#staff-tasks .manager-incident-table .operations-incident-details {
+  margin-top: 8px;
+  font-size: 11px;
+}
+#staff-tasks .manager-incident-table .manager-incident-reason p {
+  margin: 0 0 10px;
+}
+#staff-tasks .manager-incident-table button {
+  min-height: 36px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+.workspace-portal-root.platform-workspace:is(
+    [data-platform-role='operations'],
+    [data-platform-role='technician']
+  )
+  #staff-tasks
+  .staff-task-card {
+  border-radius: 10px;
+  box-shadow: none;
+  padding: 18px;
+  margin-block: 0 16px;
+}
+.workspace-portal-root.platform-workspace:is(
+    [data-platform-role='operations'],
+    [data-platform-role='technician']
+  )
+  #staff-tasks
+  .staff-task-heading {
+  gap: 14px;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid #e1e9e3;
+}
+.workspace-portal-root.platform-workspace:is(
+    [data-platform-role='operations'],
+    [data-platform-role='technician']
+  )
+  #staff-tasks
+  .staff-task-heading
+  h3 {
+  font-size: 15px;
+}
+.workspace-portal-root.platform-workspace:is(
+    [data-platform-role='operations'],
+    [data-platform-role='technician']
+  )
+  #staff-tasks
+  .staff-assignee-text {
+  margin-top: 5px;
+  font-size: 12px;
+}
+.workspace-portal-root.platform-workspace:is(
+    [data-platform-role='operations'],
+    [data-platform-role='technician']
+  )
+  #staff-tasks
+  .staff-instructions-callout {
+  padding: 12px;
+  border: 1px solid #e0e8e2;
+  border-radius: 8px;
+  background: #f6f9f6;
+  font-size: 13px;
+}
+.workspace-portal-root.platform-workspace:is(
+    [data-platform-role='operations'],
+    [data-platform-role='technician']
+  )
+  #staff-tasks
+  .staff-task-body {
+  padding-top: 16px;
+}
+@media (max-width: 640px) {
+  #staff-tasks .manager-incident-table {
+    min-width: 560px;
+  }
+  #staff-tasks .workspace-table {
+    overflow-x: auto;
+  }
+  .workspace-portal-root.platform-workspace[data-platform-role='operations']
+    #staff-tasks
+    .manager-desk-navigation
+    button {
+    flex: 1;
+    justify-content: center;
+    padding: 8px;
+  }
+}
