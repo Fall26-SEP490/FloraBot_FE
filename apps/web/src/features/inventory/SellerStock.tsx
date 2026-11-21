@@ -888,9 +888,6 @@ export default function SellerStock({ session }: { session: Session }) {
                         <th scope="col" className="stock-table-price">
                           Giá
                         </th>
-                        <th scope="col" className="stock-table-order">
-                          Đơn hàng
-                        </th>
                         <th scope="col">Trạng thái</th>
                         <th scope="col">
                           <span className="sr-only">Thao tác</span>
@@ -936,7 +933,6 @@ export default function SellerStock({ session }: { session: Session }) {
                             <td className="stock-table-price">
                               {slot.priceSnapshot == null ? '—' : money(slot.priceSnapshot)}
                             </td>
-                            <td className="stock-table-order">{slot.orderCode || '—'}</td>
                             <td>
                               <SlotStatus slot={slot} progress={progress} />
                             </td>
