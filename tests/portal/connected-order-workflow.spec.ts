@@ -389,6 +389,10 @@ test('Customer request with accessories → seller quote → customer payment �
           requiresCode: true,
         };
       }
+      if (path === '/me/maintenance-access/loading-access-1/confirm') {
+        expect(body.code).toBe('012345');
+        return { status: 'ACCEPTED', expiresAt: new Date(Date.now() + 300_000).toISOString() };
+      }
       if (path.endsWith('/fulfill')) {
         expect(body.slotId).toBe(slotId);
         expect(body.qrCode).toBe('TEST-BOUQUET-01');
@@ -521,6 +525,10 @@ test('Customer request with accessories → seller quote → customer payment �
   await expect(page.getByRole('button', { name: 'Xác nhận nạp hoa', exact: true })).toBeDisabled();
   await page.getByRole('button', { name: 'Yêu cầu mở ô', exact: true }).click();
   await expect(page.getByText(/Mã đã gửi qua email/)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Xác nhận nạp hoa', exact: true })).toBeDisabled();
+  await page.getByLabel('Mã OTP 6 số').fill('012345');
+  await page.getByRole('button', { name: 'Xác nhận mở ô', exact: true }).click();
+  await expect(page.getByText('Đã gửi lệnh mở ô. Chờ tủ phản hồi.')).toBeVisible();
   await page
     .getByRole('checkbox', { name: 'Tôi đã đối chiếu và xác nhận thông tin trên.' })
     .check();

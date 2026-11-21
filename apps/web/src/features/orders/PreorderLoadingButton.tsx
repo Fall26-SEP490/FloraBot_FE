@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@florabot/ui';
 import { ApiError, request } from '@/shared/lib/api';
+import MaintenanceCodeForm from '@/shared/components/MaintenanceCodeForm';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
 
 type LoadingAccess = components['schemas']['PreorderLoadingAccessSent'];
@@ -22,6 +23,7 @@ export default function PreorderLoadingButton({
   const [wait, setWait] = useState(0);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
+  const [challenge, setChallenge] = useState<LoadingAccess | null>(null);
   const lifecycle = useRef<AbortController | null>(null);
   useEffect(() => {
     const controller = new AbortController();
@@ -44,12 +46,13 @@ export default function PreorderLoadingButton({
       if (!result.id || !Number.isFinite(Date.parse(result.expiresAt))) {
         throw new Error('Chưa nhận được thời hạn của lượt nạp. Hãy yêu cầu lại.');
       }
-      onAccess({ id: result.id, expiresAt: result.expiresAt });
+      setChallenge(result.requiresCode ? result : null);
+      if (!result.requiresCode) onAccess({ id: result.id, expiresAt: result.expiresAt });
       const cooldown = Number(result.resendAfterSeconds);
       setWait(Number.isFinite(cooldown) ? Math.max(0, Math.ceil(cooldown)) : 0);
       setNotice(
         result.requiresCode
-          ? 'Mã đã gửi qua email. Nhập mã trên màn hình đúng kiosk, nạp hoa rồi xác nhận.'
+          ? 'Mã đã gửi qua email. Nhập mã bên dưới để mở ô.'
           : 'Đang có lượt nạp tại ô này. Sau khi đặt hoa vào, bấm xác nhận.',
       );
     } catch (cause) {
@@ -85,6 +88,22 @@ export default function PreorderLoadingButton({
         notice && <p role="status">{notice}</p>
       )}
       {error && <p role="alert">{error}</p>}
+      {challenge && (
+        <MaintenanceCodeForm
+          key={challenge.id}
+          challenge={challenge}
+          onConfirmed={(result) => {
+            if (!result.expiresAt || !Number.isFinite(Date.parse(result.expiresAt))) {
+              setError(
+                'Đã gửi lệnh mở ô nhưng chưa nhận được hạn xác nhận. Kiểm tra lượt nạp trước khi tiếp tục.',
+              );
+              return;
+            }
+            onAccess({ id: challenge.id, expiresAt: result.expiresAt });
+            setNotice('Đặt hoa vào ô, đóng cửa rồi xác nhận nạp.');
+          }}
+        />
+      )}
     </>
   );
 }

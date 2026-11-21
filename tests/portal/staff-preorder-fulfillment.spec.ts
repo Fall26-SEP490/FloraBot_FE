@@ -93,6 +93,15 @@ test('Seller staff fulfills only paid preorder into a PREORDER slot', async ({ p
       },
     });
   });
+  let confirmations = 0;
+  await page.route('**/api/me/maintenance-access/access-1/confirm', async (route) => {
+    confirmations++;
+    expect(route.request().postDataJSON()).toEqual({ code: '012345' });
+    const now = await page.evaluate(() => Date.now());
+    return route.fulfill({
+      json: { status: 'ACCEPTED', expiresAt: new Date(now + 30_000).toISOString() },
+    });
+  });
   await page.goto('/staff');
   await page.clock.runFor(1000);
   await page.getByRole('button', { name: 'Tiếp tục xử lý' }).click();
@@ -116,6 +125,12 @@ test('Seller staff fulfills only paid preorder into a PREORDER slot', async ({ p
   await expect(page.getByRole('button', { name: 'Xác nhận đã nạp vào ô' })).toBeDisabled();
   await page.getByRole('button', { name: 'Yêu cầu mở ô', exact: true }).click();
   await expect(page.getByText(/Mã đã gửi qua email/)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Xác nhận đã nạp vào ô' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Xác nhận mở ô', exact: true })).toBeDisabled();
+  await page.getByLabel('Mã OTP 6 số').fill('012345');
+  await page.getByRole('button', { name: 'Xác nhận mở ô', exact: true }).click();
+  await expect(page.getByText('Đã gửi lệnh mở ô. Chờ tủ phản hồi.')).toBeVisible();
+  expect(confirmations).toBe(1);
   await expect(page.getByRole('button', { name: 'Xác nhận đã nạp vào ô' })).toBeEnabled();
   await page.clock.fastForward(31_000);
   await expect(page.getByText(/Đã hết thời hạn xác nhận/)).toBeVisible();

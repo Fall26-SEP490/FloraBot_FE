@@ -372,6 +372,85 @@ test('Staff submits a quality report without photo or general stocking actions',
   await expect(page.getByRole('heading', { name: 'Chờ chủ shop duyệt' })).toBeVisible();
 });
 
+test('staff enters replacement loading OTP on web for the assigned quality task', async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  await role(page, 'SELLER_STAFF');
+  await page.route('**/api/staff/tasks?*', (route) =>
+    route.fulfill({
+      json: {
+        page: 1,
+        hasMore: false,
+        items: [
+          {
+            id: 'task',
+            kind: 'DELIVERY',
+            workType: 'FLOWER_QUALITY',
+            complaintId: id,
+            version: 2,
+            status: 'IN_PROGRESS',
+            instructions: 'Nạp bó hoa thay thế theo phản ánh.',
+            kioskName: 'Kiosk gốc',
+            assigneeName: 'Thảo',
+          },
+        ],
+      },
+    }),
+  );
+  await page.route('**/api/staff/tasks/task/quality?*', (route) =>
+    route.fulfill({
+      json: {
+        ...detail,
+        handlingState: 'IN_PROGRESS',
+        replacement: {
+          state: 'PLANNED',
+          taskId: 'task',
+          productId: 'flower',
+          slotId: 'slot',
+          slotCode: 'P01',
+        },
+      },
+    }),
+  );
+  let opened = false;
+  await page.route('**/api/staff/tasks/task/inventory-maintenance', (route) =>
+    route.fulfill({
+      json: {
+        kioskId,
+        slotId: 'slot',
+        slotCode: 'P01',
+        action: 'LOAD',
+        status: 'IN_PROGRESS',
+        sessionStage: opened ? 'Loading' : null,
+        sessionSubstate: null,
+      },
+    }),
+  );
+  await page.route('**/api/staff/tasks/task/inventory-maintenance/access', (route) => {
+    expect(route.request().postDataJSON()).toEqual({ operation: 'START', reason: null });
+    return route.fulfill({
+      json: {
+        id: 'replacement-code',
+        code: '012345',
+        expiresAt: new Date(Date.now() + 120_000).toISOString(),
+      },
+    });
+  });
+  await page.route('**/api/me/maintenance-access/replacement-code/confirm', (route) => {
+    expect(route.request().postDataJSON()).toEqual({ code: '012345' });
+    opened = true;
+    return route.fulfill({ json: { status: 'ACCEPTED' } });
+  });
+  await page.goto('/staff');
+  await page.locator('.staff-task-open').first().click();
+  await page.getByRole('button', { name: 'Lấy mã mở ô', exact: true }).click();
+  await page.getByLabel('Mã OTP 6 số').fill('012345');
+  await page.getByRole('button', { name: 'Xác nhận mở ô', exact: true }).click();
+  await expect(page.getByText('Đã gửi lệnh mở ô. Chờ tủ phản hồi.')).toBeVisible();
+  expect(opened).toBe(true);
+});
+
 test('Admin opens a REFUND_REVIEW case with the staff report and the existing decision entry', async ({
   page,
 }) => {

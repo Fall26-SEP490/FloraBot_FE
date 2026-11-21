@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import MaintenanceCodeForm from '@/shared/components/MaintenanceCodeForm';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import { ApiError, queryClient, request } from '@/shared/lib/api';
@@ -82,7 +83,7 @@ export default function StaffInventoryMaintenance({
       queryClient.invalidateQueries({ queryKey: ['staff-inventory-maintenance', taskId] }),
   });
   return (
-    <section className="staff-resolution" aria-label="Thao tác ô Walk-in có cảm biến">
+    <section className="staff-resolution" aria-label="Thao tác ô tủ có cảm biến">
       <h4>
         {actions[scope.action]} · Ô {scope.slotCode}
       </h4>
@@ -114,14 +115,20 @@ export default function StaffInventoryMaintenance({
       {issue.isSuccess &&
         scope.sessionStage !== 'Completed' &&
         (useKioskCode ? (
-          <p role="status">
-            Nhập mã <strong>{issue.data.code}</strong> vào mục “Nhập mã thao tác tủ” tại kiosk. Hạn
-            dùng:{' '}
-            {new Date(issue.data.expiresAt).toLocaleTimeString('vi-VN', {
-              timeZone: 'Asia/Ho_Chi_Minh',
-            })}
-            .
-          </p>
+          <div>
+            <p>
+              Mã thao tác: <strong>{issue.data.code}</strong>
+            </p>
+            <MaintenanceCodeForm
+              key={issue.data.id}
+              challenge={issue.data}
+              onConfirmed={() => {
+                void queryClient.invalidateQueries({
+                  queryKey: ['staff-inventory-maintenance', taskId],
+                });
+              }}
+            />
+          </div>
         ) : (
           <p role="status">Đã gửi yêu cầu mở ô. Chờ tủ phản hồi.</p>
         ))}
@@ -135,7 +142,7 @@ export default function StaffInventoryMaintenance({
           {issue.isPending
             ? 'Đang gửi yêu cầu…'
             : useKioskCode
-              ? 'Lấy mã mở ô tại kiosk'
+              ? 'Lấy mã mở ô'
               : operations[operation]}
         </Button>
       )}

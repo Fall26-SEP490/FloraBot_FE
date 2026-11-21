@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@florabot/ui';
 import type { components } from '../../../../../../packages/contracts/src/generated/api';
 import { ApiError, request } from '@/shared/lib/api';
+import MaintenanceCodeForm from '@/shared/components/MaintenanceCodeForm';
 
 type RepairAccess = components['schemas']['MaintenanceAccessIssued'];
 
@@ -42,7 +43,7 @@ export default function TechnicianRepairAccess({
         'POST',
       );
       if (!/^\d{6}$/.test(issued.code) || !(Date.parse(issued.expiresAt) > Date.now())) {
-        setError('Mã nhận được không còn hiệu lực. Lấy mã mới tại kiosk.');
+        setError('Mã nhận được không còn hiệu lực. Vui lòng lấy mã mới.');
         return;
       }
       setAccess(issued);
@@ -62,16 +63,19 @@ export default function TechnicianRepairAccess({
   return (
     <section className="staff-resolution" aria-label="Mã xác nhận sửa ô tủ">
       <h4>Mã xác nhận sửa ô tủ{slotCode ? ` · ${slotCode}` : ''}</h4>
-      <p>Xin chủ shop duyệt ca sửa. Khi đến đúng kiosk, lấy mã rồi nhập trên màn hình kiosk.</p>
+      <p>Chủ shop cần duyệt ca sửa. Đứng cạnh đúng ô tủ rồi nhập mã bên dưới để mở.</p>
       {access ? (
-        <p role="status">
-          Mã xác nhận <strong>{access.code}</strong> · Hết hạn lúc{' '}
-          <time dateTime={access.expiresAt}>
-            {new Date(access.expiresAt).toLocaleTimeString('vi-VN', {
-              timeZone: 'Asia/Ho_Chi_Minh',
-            })}
-          </time>
-        </p>
+        <div>
+          <p role="status">
+            Mã xác nhận <strong>{access.code}</strong> · Hết hạn lúc{' '}
+            <time dateTime={access.expiresAt}>
+              {new Date(access.expiresAt).toLocaleTimeString('vi-VN', {
+                timeZone: 'Asia/Ho_Chi_Minh',
+              })}
+            </time>
+          </p>
+          <MaintenanceCodeForm key={access.id} challenge={access} onConfirmed={() => {}} />
+        </div>
       ) : (
         <Button type="button" variant="outline" disabled={busy} onClick={() => void issue()}>
           {busy ? 'Đang lấy mã…' : expired ? 'Lấy mã mới' : 'Lấy mã sửa ô tủ'}

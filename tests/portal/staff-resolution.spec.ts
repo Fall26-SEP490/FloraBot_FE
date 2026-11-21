@@ -3,6 +3,9 @@ import AxeBuilder from '@axe-core/playwright';
 
 for (const width of [390, 1440])
   test(`Technician incident repair validation and recovery ${width}`, async ({ page }) => {
+    test.setTimeout(90_000);
+    await page.route('**/api/**', (route) => route.fulfill({ status: 501, json: {} }));
+    await page.route('**/hub/**', (route) => route.fulfill({ status: 503 }));
     await page.setViewportSize({ width, height: 1000 });
     await page.route('**/api/auth/me', (route) =>
       route.fulfill({ json: { id: 'actor', name: 'Thảo', role: 'TECHNICIAN' } }),
@@ -55,6 +58,14 @@ for (const width of [390, 1440])
         },
       });
     });
+    let verified = 0;
+    await page.route('**/api/me/maintenance-access/challenge/confirm', (route) => {
+      expect(route.request().postDataJSON()).toEqual({ code: '013582' });
+      verified++;
+      if (verified === 1)
+        return route.fulfill({ status: 400, json: { detail: 'Mã xác nhận không hợp lệ.' } });
+      return route.fulfill({ json: { status: 'ACCEPTED' } });
+    });
     await page.route('**/api/staff/tasks/task/resolve-incident', (route) => {
       calls++;
       if (calls === 1) {
@@ -81,6 +92,12 @@ for (const width of [390, 1440])
           .includes('013582');
       }),
     ).toBe(false);
+    await access.getByLabel('Mã OTP 6 số').fill('013582');
+    await access.getByRole('button', { name: 'Xác nhận mở ô', exact: true }).click();
+    await expect(access.getByRole('alert')).toContainText('Mã xác nhận không hợp lệ');
+    await access.getByRole('button', { name: 'Xác nhận mở ô', exact: true }).click();
+    await expect(access.getByText('Đã gửi lệnh mở ô. Chờ tủ phản hồi.')).toBeVisible();
+    expect(verified).toBe(2);
     const panel = page.locator('details.staff-resolution');
     await panel.locator('summary').click();
     await panel.getByRole('button', { name: 'Gửi báo cáo sửa ô tủ' }).click();
