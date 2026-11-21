@@ -2,7 +2,7 @@ import IconActionButton from '@/shared/components/IconActionButton';
 import { useEffect, useState } from 'react';
 import { CustomSelect } from '@/shared/components/CustomSelect';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Button } from '@florabot/ui';
+import { Button, CheckCircle2, CircleAlert, Clock } from '@florabot/ui';
 import { ApiError, queryClient, request } from '@/shared/lib/api';
 import { slotMaintenanceProgress, type SellerSlot } from './slot-state';
 
@@ -72,6 +72,7 @@ export default function SlotMaintenance({
   slot,
   products,
   canStock,
+  kioskOnline,
   loadSessionId,
   onLoadFinished,
 }: {
@@ -80,6 +81,7 @@ export default function SlotMaintenance({
   slot: SellerSlot;
   products: { id: string; name: string }[];
   canStock: boolean;
+  kioskOnline: boolean;
   loadSessionId?: string;
   onLoadFinished: () => void;
 }) {
@@ -147,7 +149,17 @@ export default function SlotMaintenance({
   }, [sessionClosed, sellerId, kioskId, slot.id]);
 
   const start = useMutation({
-    mutationFn: () => startMaintenance({ kioskId, slot, action, productId, reason }),
+    mutationFn: () => {
+      if (!kioskOnline)
+        throw new Error('Kiosk chưa trực tuyến. Chờ tủ kết nối lại trước khi mở ô.');
+      return startMaintenance({ kioskId, slot, action, productId, reason });
+    },
+    onError: (error) => {
+      if (error instanceof ApiError && error.status === 409) {
+        void queryClient.invalidateQueries({ queryKey: ['seller-kiosks', sellerId] });
+        void queryClient.invalidateQueries({ queryKey: ['seller-kiosk-slots', sellerId, kioskId] });
+      }
+    },
     onSuccess: (result) => {
       queryClient.setQueryData(['slot-maintenance', kioskId, slot.id, result.id], result);
       queryClient.setQueryData(activeQueryKey, result);
@@ -209,10 +221,14 @@ export default function SlotMaintenance({
   const hasStoredSession = !!sessionId;
   const active = current && !sessionClosed;
   const eligibleBouquet = !!slot.bouquetId && ['STOCKED', 'PENDING_REMOVAL'].includes(slot.status);
+  const orderHold = Boolean(
+    slot.orderId && ['AWAITING_PAYMENT', 'PAID', 'DISPENSING'].includes(slot.orderStatus || ''),
+  );
   const canStart =
     slot.zone === 'WALK_IN' &&
     slot.sensorReady &&
     eligibleBouquet &&
+    !orderHold &&
     !hasStoredSession &&
     !activeSession.isPending &&
     !activeSession.isError;
@@ -232,19 +248,23 @@ export default function SlotMaintenance({
       <div className="stock-maintenance-heading">
         <h4>{hasStoredSession ? 'Tiến độ thực hiện' : 'Thu hồi hoặc thay hoa'}</h4>
       </div>
+      {!kioskOnline && (
+        <p role="alert" className="error">
+          Kiosk chưa trực tuyến. Chờ tủ kết nối lại trước khi mở ô.
+        </p>
+      )}
+      {orderHold && !hasStoredSession && (
+        <p role="status">Ô đang giữ hoa cho đơn hàng. Chưa thể thu hồi hoặc thay hoa.</p>
+      )}
       {open.isSuccess && open.variables === 'RETRY' && (
         <p role="status">Đã gửi yêu cầu thử lại. Chờ tủ phản hồi.</p>
       )}
       {!slot.sensorReady && (
-        <p role="note">
-          Ô chưa được xác minh đủ cảm biến cửa và hoa. Liên hệ admin để kiểm tra trước khi thao tác.
+        <p role="note" className="error">
+          Ô chưa đủ cảm biến cửa và hoa. Liên hệ đội vận hành để kiểm tra.
         </p>
       )}
-      {slot.zone !== 'WALK_IN' && (
-        <p role="note">
-          Quy trình seller tự mở ô để nạp, lấy hoặc thay hoa chỉ áp dụng cho ô Walk-in.
-        </p>
-      )}
+      {slot.zone !== 'WALK_IN' && <p role="note">Ô đặt trước được xử lý theo đơn hàng.</p>}
       {!hasStoredSession && slot.sensorReady && !eligibleBouquet && (
         <p className="quiet">
           {slot.status === 'RENTED_EMPTY'
@@ -271,36 +291,45 @@ export default function SlotMaintenance({
       )}
       {hasStoredSession && session.isPending && <p role="status">Đang tải tiến độ…</p>}
       {current && (
-        <div className="stock-maintenance-progress" role="status">
-          <strong>
-            {actionLabels[current.action]} ·{' '}
-            {sessionExpired
-              ? 'Phiên đã hết hạn'
-              : (progress?.label ??
-                (waitingForDoor
-                  ? 'Đang chờ tủ xác nhận mở cửa'
-                  : stageLabels[current.stage] || current.stage))}
+        <div className="stock-maintenance-progress" role="status" data-stage={current.stage}>
+          <strong className="stock-maintenance-state">
+            {sessionClosed ? (
+              <CheckCircle2 size={20} aria-hidden="true" />
+            ) : current.stage === 'NeedsInspection' ? (
+              <CircleAlert size={20} aria-hidden="true" />
+            ) : (
+              <Clock size={20} aria-hidden="true" />
+            )}
+            <span>
+              {actionLabels[current.action]} ·{' '}
+              {sessionExpired
+                ? 'Phiên đã hết hạn'
+                : (progress?.label ??
+                  (waitingForDoor
+                    ? 'Đang chờ tủ xác nhận mở cửa'
+                    : stageLabels[current.stage] || current.stage))}
+            </span>
           </strong>
           <p>
             {current.stage === 'Recovered'
               ? 'Đội vận hành đã đối soát và cập nhật lại trạng thái ô.'
               : sessionExpired
-                ? 'Ô vẫn khóa trong hệ thống vì phiên đã hết hạn mà chưa xác nhận được kết quả. Liên hệ đội vận hành để kiểm tra cửa và tình trạng hoa trong ô.'
+                ? 'Phiên đã hết hạn, ô vẫn khóa. Liên hệ đội vận hành để kiểm tra cửa và hoa trong ô.'
                 : current.stage === 'Completed'
-                  ? 'Hệ thống đã xác nhận tín hiệu cửa và cảm biến, đồng thời cập nhật thông tin ô.'
+                  ? 'Đã xác nhận cảm biến và cập nhật ô tủ.'
                   : current.stage === 'NeedsInspection'
-                    ? `Chưa thể xác nhận kết quả. ${current.inspectionReason || 'Hãy kiểm tra ô và tín hiệu cảm biến.'}`
+                    ? 'Chưa thể xác nhận kết quả. Kiểm tra cửa và hoa trong ô; liên hệ đội vận hành nếu cần hỗ trợ.'
                     : current.action === 'REPLACE' &&
                         current.substate === 'RemovalClosedEmptyConfirmed'
                       ? 'Hoa cũ đã được lấy ra. Mở cửa lần nữa để đặt hoa mới vào.'
                       : (progress?.key === 'DOOR_OPEN' || slot.doorState === 'CLOSED') && progress
                         ? progress.hint
                         : waitingForDoor
-                          ? 'Hệ thống đã tiếp nhận yêu cầu mở ô. Chờ cửa mở thực tế. Nếu cửa vẫn đóng, chọn “Kiểm tra tiến độ”.'
+                          ? 'Chờ cửa mở thực tế. Nếu cửa vẫn đóng, chọn “Kiểm tra tiến độ”.'
                           : 'Thao tác với hoa thật, đóng cửa ô, rồi chờ tín hiệu cảm biến. Trạng thái sẽ tự cập nhật.'}
           </p>
           {active && (
-            <p className="quiet">
+            <p className="quiet stock-maintenance-expiry">
               Phiên hết hạn:{' '}
               {new Date(current.expiresAt).toLocaleString('vi-VN', {
                 timeZone: 'Asia/Ho_Chi_Minh',
@@ -310,6 +339,20 @@ export default function SlotMaintenance({
           )}
         </div>
       )}
+      {active &&
+        (current.availableActions.includes('report-issue') ||
+          current.availableActions.includes('open-for-check')) && (
+          <div className="stock-maintenance-issue">
+            <label htmlFor={`maintenance-issue-${slot.id}`}>Mô tả sự cố</label>
+            <textarea
+              id={`maintenance-issue-${slot.id}`}
+              value={issueReason}
+              maxLength={500}
+              onChange={(event) => setIssueReason(event.target.value)}
+              placeholder="Mô tả tình trạng cửa hoặc cảm biến"
+            />
+          </div>
+        )}
       {active && (
         <div className="stock-maintenance-controls">
           <Button
@@ -321,7 +364,11 @@ export default function SlotMaintenance({
             Kiểm tra tiến độ
           </Button>
           {current.availableActions.includes('open-next') && (
-            <Button type="button" disabled={busy} onClick={() => open.mutate('OPEN_NEXT')}>
+            <Button
+              type="button"
+              disabled={busy || !kioskOnline}
+              onClick={() => open.mutate('OPEN_NEXT')}
+            >
               Mở cửa nạp hoa mới
             </Button>
           )}
@@ -329,7 +376,7 @@ export default function SlotMaintenance({
             <Button
               type="button"
               variant="outline"
-              disabled={busy || issueReason.trim().length < 5}
+              disabled={busy || !kioskOnline || issueReason.trim().length < 5}
               onClick={() => open.mutate('OPEN_FOR_CHECK')}
             >
               Mở cửa kiểm tra
@@ -341,36 +388,23 @@ export default function SlotMaintenance({
               <Button
                 type="button"
                 variant="outline"
-                disabled={busy || (current.retryAfterSeconds ?? 0) > 0}
+                disabled={busy || !kioskOnline || (current.retryAfterSeconds ?? 0) > 0}
                 onClick={() => open.mutate('RETRY')}
               >
                 Thử lại lệnh mở cửa
               </Button>
             )}
-          {(current.availableActions.includes('report-issue') ||
-            current.availableActions.includes('open-for-check')) && (
-            <div className="stock-maintenance-issue">
-              <label htmlFor={`maintenance-issue-${slot.id}`}>Mô tả sự cố</label>
-              <textarea
-                id={`maintenance-issue-${slot.id}`}
-                value={issueReason}
-                maxLength={500}
-                onChange={(event) => setIssueReason(event.target.value)}
-                placeholder="Mô tả tình trạng cửa hoặc cảm biến"
-              />
-              {current.availableActions.includes('report-issue') && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={busy || issueReason.trim().length < 5}
-                  onClick={() =>
-                    advance.mutate({ step: 'report-issue', body: { reason: issueReason.trim() } })
-                  }
-                >
-                  Báo sự cố
-                </Button>
-              )}
-            </div>
+          {current.availableActions.includes('report-issue') && (
+            <Button
+              type="button"
+              variant="outline"
+              disabled={busy || issueReason.trim().length < 5}
+              onClick={() =>
+                advance.mutate({ step: 'report-issue', body: { reason: issueReason.trim() } })
+              }
+            >
+              Báo sự cố
+            </Button>
           )}
         </div>
       )}
@@ -378,6 +412,7 @@ export default function SlotMaintenance({
         <Button
           type="button"
           variant="outline"
+          className="stock-maintenance-done"
           onClick={() => {
             setSavedSessionId(null);
             open.reset();
@@ -390,7 +425,6 @@ export default function SlotMaintenance({
       )}
       {!hasStoredSession && canStart && (
         <div className="stock-maintenance-start">
-          <p>Chỉ gửi yêu cầu mở ô khi bạn đang ở tủ.</p>
           <label htmlFor={`maintenance-action-${slot.id}`}>Thao tác</label>
           <CustomSelect
             id={`maintenance-action-${slot.id}`}
@@ -425,7 +459,12 @@ export default function SlotMaintenance({
           />
           <Button
             type="button"
-            disabled={busy || reason.trim().length < 5 || (action === 'REPLACE' && !productId)}
+            disabled={
+              busy ||
+              !kioskOnline ||
+              reason.trim().length < 5 ||
+              (action === 'REPLACE' && !productId)
+            }
             onClick={() => start.mutate()}
           >
             {start.isPending
@@ -444,7 +483,6 @@ export default function SlotMaintenance({
       {maintenanceError && (
         <p role="alert" className="error">
           {maintenanceError.message}
-          {maintenanceError instanceof ApiError && ` (HTTP ${maintenanceError.status})`}
         </p>
       )}
     </section>

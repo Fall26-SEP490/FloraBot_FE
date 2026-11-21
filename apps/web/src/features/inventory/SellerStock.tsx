@@ -1,3 +1,4 @@
+import SellerPagination from '@/shared/components/SellerPagination';
 import RefreshRegion from '@/shared/components/RefreshRegion';
 import IconActionButton from '@/shared/components/IconActionButton';
 import Link from 'next/link';
@@ -8,7 +9,7 @@ import { useMutation, useQueries, useQuery } from '@tanstack/react-query';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button, Flower2 } from '@florabot/ui';
+import { Button, Flower2, MapPin, ArrowUpRight } from '@florabot/ui';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
 import { queryClient, request, type Session } from '@/shared/lib/api';
 import ReportFault from '../incidents/ReportFault';
@@ -20,7 +21,6 @@ import SlotMaintenance, {
   type MaintenanceSession,
 } from './SlotMaintenance';
 import AssignInventoryTask from './AssignInventoryTask';
-import KioskPickerMap from '../kiosk-location/components/KioskPickerMap';
 import { getKioskStatusLabel, isKioskActive } from '../kiosk-location/kiosk-location.utils';
 import { stockKioskOptions, selectedStockKiosk } from './seller-stock-kiosks';
 import { useStockKioskChoice } from './use-stock-kiosk-choice';
@@ -392,38 +392,13 @@ function KioskLayoutAndHistoryPanels({
               </>
             )}
             {history.data && (history.data.items.length > 0 || historyPage > 1) && (
-              <nav className="stock-history-pagination" aria-label="Phân trang lịch sử tồn kho">
-                <p role="status">
-                  {history.data.items.length > 0
-                    ? `Hiển thị ${(historyPage - 1) * 50 + 1}–${(historyPage - 1) * 50 + history.data.items.length}`
-                    : 'Không có bản ghi trong trang này'}
-                </p>
-                <div className="stock-history-pages">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={historyPage <= 1 || history.isFetching}
-                    onClick={() => setHistoryPage((p) => p - 1)}
-                  >
-                    Trước
-                  </Button>
-                  <span
-                    className="stock-history-current"
-                    aria-current="page"
-                    aria-label={`Trang ${historyPage}`}
-                  >
-                    {historyPage}
-                  </span>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={!history.data.hasMore || history.isFetching}
-                    onClick={() => setHistoryPage((p) => p + 1)}
-                  >
-                    Sau
-                  </Button>
-                </div>
-              </nav>
+              <SellerPagination
+                ariaLabel="Phân trang lịch sử tồn kho"
+                page={historyPage}
+                hasMore={history.data.hasMore}
+                busy={history.isFetching}
+                onPageChange={setHistoryPage}
+              />
             )}
           </div>
         )}
@@ -608,6 +583,10 @@ export default function SellerStock({ session }: { session: Session }) {
     !!detailSlot &&
     canStock &&
     detailSlot.sensorReady &&
+    !(
+      detailSlot.orderId &&
+      ['AWAITING_PAYMENT', 'PAID', 'DISPENSING'].includes(detailSlot.orderStatus || '')
+    ) &&
     slotZone(detailSlot) === 'WALK_IN' &&
     ((!detailSlot.bouquetId && detailSlot.status === 'RENTED_EMPTY') ||
       (!!detailSlot.bouquetId && ['STOCKED', 'PENDING_REMOVAL'].includes(detailSlot.status)));
@@ -742,34 +721,46 @@ export default function SellerStock({ session }: { session: Session }) {
                 />
                 <IconActionButton
                   action="location"
-                  label="Xem bản đồ và sửa vị trí"
+                  label="Xem vị trí kiosk"
                   className="stock-location-icon"
-                  aria-label="Xem bản đồ và sửa vị trí"
-                  title="Xem bản đồ và sửa vị trí"
+                  aria-label="Xem vị trí kiosk"
+                  title="Xem vị trí kiosk"
                   onClick={() => setMapOpen(true)}
                 />
               </div>
             </div>
           )}
         </div>
-        <Modal open={mapOpen} title="Vị trí kiosk" onClose={() => setMapOpen(false)} size="lg">
+        <Modal
+          open={mapOpen}
+          title="Vị trí kiosk"
+          onClose={() => setMapOpen(false)}
+          size="lg"
+          className="stock-location-modal"
+        >
           {mapOpen && selectedKiosk && (
-            <>
-              <p>{selectedKiosk.address || 'Chưa cập nhật địa chỉ'}</p>
-              <p>{selectedKiosk.region || 'Chưa cập nhật khu vực'}</p>
-              {selectedKiosk.latitude != null && selectedKiosk.longitude != null ? (
-                <KioskPickerMap
-                  latitude={Number(selectedKiosk.latitude)}
-                  longitude={Number(selectedKiosk.longitude)}
-                  interactive={false}
-                />
-              ) : (
-                <p>Kiosk chưa có tọa độ bản đồ.</p>
-              )}
-              <Link className="button button-outline" href="/seller/kiosks">
-                Sửa vị trí
-              </Link>
-            </>
+            <div className="stock-location-body">
+              <strong>{selectedKiosk.name || selectedKiosk.code}</strong>
+              <p className="stock-location-address">
+                <MapPin size={17} aria-hidden="true" />
+                <span>{selectedKiosk.address || 'Chưa cập nhật địa chỉ'}</span>
+              </p>
+              <div className="stock-location-actions">
+                <Link className="button button-outline" href="/seller/kiosks">
+                  Xem kiosk
+                </Link>
+                {selectedKiosk.address && (
+                  <a
+                    className="button button-primary"
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedKiosk.address)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Mở Google Maps <ArrowUpRight size={16} aria-hidden="true" />
+                  </a>
+                )}
+              </div>
+            </div>
           )}
         </Modal>
         {(kiosks.isPending || products.isPending || slotsLoading) && (
@@ -960,6 +951,19 @@ export default function SellerStock({ session }: { session: Session }) {
                         <SlotStatus slot={detailSlot} progress={detailProgress} />
                         <span>{zoneLabels[slotZone(detailSlot)]}</span>
                       </div>
+                      {detailSlot.status === 'HELD' && (
+                        <p role="status">
+                          Ô đang được giữ cho đơn hàng. Chờ đơn kết thúc trước khi thao tác.
+                        </p>
+                      )}
+                      {detailSlot.status === 'FAULT' && (
+                        <p role="status" className="error">
+                          Ô đang có sự cố. Báo sự cố để được kiểm tra trước khi nạp hoa.
+                        </p>
+                      )}
+                      {slotZone(detailSlot) === 'PREORDER' && !detailSlot.bouquetId && (
+                        <p role="status">Ô đặt trước được nạp theo đơn hàng.</p>
+                      )}
                       {(detailSlot.orderCode || detailSlot.orderId) && (
                         <p>
                           Đơn liên quan:{' '}
@@ -979,14 +983,6 @@ export default function SellerStock({ session }: { session: Session }) {
                             </strong>
                           </div>
                           <dl className="stock-slot-details">
-                            <div>
-                              <dt>Sản phẩm</dt>
-                              <dd>
-                                {products.data?.find(
-                                  (product) => product.id === detailSlot.productId,
-                                )?.name || 'Chưa tải được tên sản phẩm'}
-                              </dd>
-                            </div>
                             <div>
                               <dt>Mã bó hoa</dt>
                               <dd>{detailSlot.qrCode || 'Hệ thống chưa trả mã'}</dd>
@@ -1107,11 +1103,11 @@ export default function SellerStock({ session }: { session: Session }) {
                           >
                             {!slotsLoading && !slots.isError && !matchingEmpty.length && (
                               <div className="stock-empty-notice" role="note">
-                                <strong>Không có ô Walk-in trống để nạp hoa</strong>
+                                <strong>Không có ô bán sẵn trống để nạp hoa</strong>
                                 <p>
                                   {walkInSlots.length > 0
-                                    ? `${walkInSlots.length} ô đã chọn Walk-in, nhưng chưa ô nào trống để nạp bó mới.`
-                                    : 'Kiosk này chưa có ô nào được chọn làm Walk-in.'}
+                                    ? `${walkInSlots.length} ô bán sẵn, nhưng chưa ô nào trống để nạp bó mới.`
+                                    : 'Kiosk này chưa có ô bán sẵn.'}
                                 </p>
                                 <p>
                                   Loại ô được chốt theo hồ sơ thuê. Ô chưa phân loại không thể nạp
@@ -1285,6 +1281,7 @@ export default function SellerStock({ session }: { session: Session }) {
                             slot={detailSlot}
                             products={available}
                             canStock={canStock}
+                            kioskOnline={kioskOnline}
                             loadSessionId={
                               loadSession?.kioskId === selectedKioskId &&
                               loadSession.slotId === detailSlot.id
@@ -1318,15 +1315,20 @@ export default function SellerStock({ session }: { session: Session }) {
                           />
                         </div>
                       )}
-                      <details className="stock-slot-support" open={detailSlot.status === 'FAULT'}>
-                        <summary>Báo sự cố</summary>
-                        <ReportFault
-                          slot={detailSlot}
-                          sellerId={sellerId}
-                          compact
-                          onDone={closeSlotDetails}
-                        />
-                      </details>
+                      {detailSlot.maintenanceStage !== 'NeedsInspection' && (
+                        <details
+                          className="stock-slot-support"
+                          open={detailSlot.status === 'FAULT'}
+                        >
+                          <summary>Báo sự cố</summary>
+                          <ReportFault
+                            slot={detailSlot}
+                            sellerId={sellerId}
+                            compact
+                            onDone={closeSlotDetails}
+                          />
+                        </details>
+                      )}
                     </div>
                   )}
                 </Modal>

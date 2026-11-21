@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from 'react';
 import styles from './refresh-region.module.css';
+import { createPortal } from 'react-dom';
 
 const RefreshContext = createContext<((work: Promise<unknown>) => void) | null>(null);
 export function useRefreshRegion() {
@@ -54,12 +55,16 @@ export default function RefreshRegion({
         <div className={styles.content} inert={loading || undefined} data-loading={loading}>
           {children}
         </div>
-        {loading && (
-          <div className={styles.overlay} role="status">
-            <span className={styles.progress} aria-hidden="true" />
-            <span>Đang cập nhật dữ liệu…</span>
-          </div>
-        )}
+        {loading &&
+          createPortal(
+            <div className={styles.overlay} data-refresh-overlay="">
+              <div className={styles.indicator} role="status">
+                <span className={styles.progress} aria-hidden="true" />
+                <span>Đang cập nhật dữ liệu…</span>
+              </div>
+            </div>,
+            document.body,
+          )}
       </div>
     </RefreshContext.Provider>
   );

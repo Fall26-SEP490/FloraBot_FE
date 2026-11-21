@@ -78,7 +78,7 @@ export function ChatCustomerDetails({
       setNotes(updated);
       setNewNote('');
       setNoteError('');
-      setNoteNotice('Đã lưu ghi chú trên trình duyệt này.');
+      setNoteNotice('Đã lưu ghi chú.');
     } catch {
       setNoteNotice('');
       setNoteError(
@@ -93,7 +93,7 @@ export function ChatCustomerDetails({
       localStorage.setItem(storageKey, JSON.stringify(updated));
       setNotes(updated);
       setNoteError('');
-      setNoteNotice('Đã xóa ghi chú trên trình duyệt này.');
+      setNoteNotice('Đã xóa ghi chú.');
     } catch {
       setNoteNotice('');
       setNoteError('Chưa xóa được ghi chú khỏi trình duyệt. Bạn có thể thử lại.');
@@ -111,7 +111,7 @@ export function ChatCustomerDetails({
   return (
     <aside className="chat-details-panel" aria-label="Thông tin chi tiết khách hàng">
       <div className="chat-details-header">
-        <h3>Thông tin khách hàng</h3>
+        <h2>Thông tin khách hàng</h2>
         {onClose && (
           <button
             type="button"
@@ -130,35 +130,31 @@ export function ChatCustomerDetails({
           <div className="chat-details-avatar" aria-hidden="true">
             {firstLetter}
           </div>
-          <h4 className="chat-details-name">{chat.otherPartyName}</h4>
-          <div className="chat-details-profile-tags">
-            <span className="chat-details-date">Bắt đầu: {createdDate}</span>
+          <div className="chat-details-profile-info">
+            <p className="chat-details-name">{chat.otherPartyName}</p>
+            <span className="chat-details-date">Hội thoại từ {createdDate}</span>
           </div>
         </div>
 
         {chat.productContext && (
           <section className="chat-details-section">
-            <h5 className="chat-details-section-title">Mẫu hoa đang trao đổi</h5>
+            <h3 className="chat-details-section-title">Mẫu hoa đang trao đổi</h3>
             <div className="chat-details-product-card">
               <span className="chat-details-product-icon" aria-hidden="true">
                 <Flower2 size={18} />
               </span>
               <div className="chat-details-product-info">
                 <strong>{chat.productContext}</strong>
-                <small>Khách gửi tin từ gian hàng</small>
               </div>
             </div>
           </section>
         )}
 
         <section className="chat-details-section chat-details-notes-section">
-          <div className="chat-details-section-header">
-            <h5 className="chat-details-section-title">Ghi chú trên trình duyệt</h5>
-            <span className="chat-details-section-hint">Không gửi cho khách</span>
-          </div>
+          <h3 className="chat-details-section-title">Ghi chú riêng</h3>
 
           <p className="chat-note-storage-help">
-            Ghi chú chỉ lưu trên trình duyệt này, chưa đồng bộ với tài khoản hoặc thiết bị khác.
+            Chỉ lưu trên trình duyệt này, không gửi cho khách.
           </p>
           <div className="chat-note-input-box">
             <textarea
@@ -184,7 +180,7 @@ export function ChatCustomerDetails({
           <p role="status">{noteNotice}</p>
           <div className="chat-notes-list">
             {notes.length === 0 ? (
-              <p className="chat-notes-empty">Chưa có ghi chú nào cho khách hàng này.</p>
+              <p className="chat-notes-empty">Chưa có ghi chú.</p>
             ) : (
               notes.map((item) => (
                 <div key={item.id} className="chat-note-card">

@@ -9,6 +9,7 @@ import { sessionQuery } from '@/shared/lib/api';
 import { getCustomerUnreadCount } from '@/features/chat/api';
 import '../workspace-styles.css';
 import './customer-account-shell.css';
+import './customer-account-refinement.css';
 
 const MemberAccount = dynamic(() => import('../../customer-account/MemberAccount'), {
   loading: () => <p role="status">Đang tải thông tin tài khoản…</p>,

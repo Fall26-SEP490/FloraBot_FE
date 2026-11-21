@@ -28,6 +28,7 @@ export function ConversationView({
   showDetails = false,
   detailsLabel = 'khách hàng',
   customerMode = false,
+  staffRole,
 }: {
   chatId: string;
   otherPartyName: string;
@@ -42,6 +43,7 @@ export function ConversationView({
   showDetails?: boolean;
   detailsLabel?: string;
   customerMode?: boolean;
+  staffRole?: 'SELLER' | 'SELLER_STAFF';
   registerRealtimeHandlers?: (
     onMessage: (msg: ChatMessageReceivedEvent) => void,
     onRead: (event: ChatMessagesReadEvent) => void,
@@ -382,6 +384,7 @@ export function ConversationView({
           disabled={disabled || initialQuery.isPending || initialQuery.isError}
           transport={transport}
           customerMode={customerMode}
+          staffRole={staffRole}
         />
       </footer>
     </section>

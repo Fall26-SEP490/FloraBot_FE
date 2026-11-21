@@ -65,7 +65,7 @@ test('Staff sees work grouped ahead of history and can read why loading is block
     'false',
   );
   await expect(active.getByText(/Chưa thể thao tác:/)).toBeVisible();
-  await expect(active).toContainText('Không có ô Walk-in trống phù hợp.');
+  await expect(active).toContainText('Không có ô bán sẵn trống phù hợp.');
   await expect(active).toContainText('Không có đơn đặt trước đủ điều kiện nạp.');
   await expect(active).not.toContainText('Không có mẫu hoa');
   await expect(board.getByRole('article', { name: 'Giao hoa · Tủ cũ 1' })).toBeHidden();

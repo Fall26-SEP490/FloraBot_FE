@@ -1,0 +1,265 @@
+.workspace-portal-root .customer-account-shell {
+  gap: 20px;
+  background: #fff;
+  border: 1px solid #dce5dc;
+  border-radius: 12px;
+  margin: 24px auto 48px;
+  padding: 24px;
+  width: calc(100% - 48px);
+  box-sizing: border-box;
+  & .customer-account-sidebar {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+  & .customer-account-navigation {
+    gap: 0;
+  }
+  & .customer-account-navigation a,
+  & .customer-account-navigation a:hover {
+    padding: 10px 16px;
+    border: 0;
+    border-bottom: 2px solid #dce5dc;
+    border-radius: 0;
+    background: transparent;
+    color: #52665b;
+    font-weight: 400;
+  }
+  & .customer-account-navigation a[aria-current='page'] {
+    border-bottom-color: #245b3e;
+    color: #203e2d;
+    font-weight: 600;
+  }
+  & .member-page {
+    margin: 0;
+    padding: 0;
+    max-width: none;
+  }
+  & .customer-account-content .profile-refined:not(.profile-compact) .profile-quick-nav {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    padding: 0;
+    box-shadow: none;
+    margin: 0 0 16px;
+  }
+  & .customer-account-content .profile-refined:not(.profile-compact) .profile-quick-nav a {
+    border: 0;
+    border-bottom: 2px solid #dce5dc;
+    border-radius: 0;
+    background: transparent;
+    color: #52665b;
+    font-weight: 400;
+  }
+  &
+    .customer-account-content
+    .profile-refined:not(.profile-compact)
+    .profile-quick-nav
+    a[aria-current] {
+    border-bottom-color: #245b3e;
+    color: #203e2d;
+    font-weight: 600;
+  }
+  & .customer-account-content .profile-refined:not(.profile-compact) .profile-section {
+    border: 0;
+    border-radius: 0;
+    padding: 20px 0;
+    box-shadow: none;
+  }
+  & .customer-account-content .profile-refined:not(.profile-compact) .profile-content > section {
+    margin-top: 0;
+  }
+  & .customer-account-content .profile-refined:not(.profile-compact) .profile-loyalty-summary {
+    border: 0;
+    padding: 12px;
+    margin: 0 0 20px;
+    border-radius: 6px;
+    background: #f4f7f1;
+  }
+  & .customer-chat-section .chat-layout {
+    grid-template-columns: 300px minmax(0, 1fr);
+    height: clamp(460px, calc(100dvh - 295px), 780px);
+    min-height: 460px;
+    max-height: none;
+    margin: 0;
+    border: 1px solid #dce5dc;
+    border-radius: 12px;
+    box-shadow: none;
+  }
+  & .customer-chat-section .chat-layout.with-details {
+    grid-template-columns: 280px minmax(0, 1fr) 260px;
+  }
+  & .customer-chat-section .chat-list-toolbar {
+    padding: 16px 14px 10px;
+    background: #fff;
+    border: 0;
+  }
+  & .chat-list-search-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  & .chat-list-search-wrapper {
+    flex: 1;
+    min-width: 0;
+  }
+  & .customer-chat-section .chat-list-tabs {
+    gap: 18px;
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid #dce5dc;
+    border-radius: 0;
+    background: transparent;
+  }
+  & .customer-chat-section .chat-list-tab {
+    flex: 0 1 auto;
+    min-height: 40px;
+    padding: 8px 0;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  & .customer-chat-section .chat-list-tab.is-active {
+    border-bottom-color: #245b3e;
+    color: #245b3e;
+  }
+  & .customer-chat-section .chat-messages-scroll-area {
+    background: #f8faf7;
+    padding: 18px;
+  }
+  & .customer-chat-section .chat-composer-image-btn {
+    border: 0;
+    box-shadow: none;
+    background: transparent;
+  }
+  & .customer-chat-section .chat-conversation-footer {
+    padding: 12px 14px;
+  }
+  & .customer-chat-section .chat-composer-templates-label {
+    display: none;
+  }
+  & .customer-chat-section .chat-template-chip {
+    border: 0;
+    padding: 6px 10px;
+    border-radius: 6px;
+    background: #f0f5ed;
+    font-size: 12px;
+    font-weight: 400;
+  }
+  & .customer-chat-section .chat-list-scope {
+    font-size: 11px;
+    padding: 0 14px 10px;
+  }
+  & .customer-account-content .profile-refined.profile-compact .profile-quick-nav {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    overflow: visible;
+    gap: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    padding: 0;
+    box-shadow: none;
+    margin: 0 0 16px;
+  }
+  & .customer-account-content .profile-refined.profile-compact .profile-layout {
+    display: block;
+  }
+  & .customer-account-content .profile-refined.profile-compact .profile-quick-nav a,
+  & .customer-account-content .profile-refined.profile-compact .profile-quick-nav a:hover {
+    flex: 0 0 auto;
+    padding: 8px 14px;
+    min-height: 44px;
+    border: 0;
+    border-bottom: 2px solid #dce5dc;
+    border-radius: 0;
+    background: transparent;
+    color: #52665b;
+    font-weight: 400;
+    white-space: nowrap;
+  }
+  & .customer-account-content .profile-refined.profile-compact .profile-quick-nav a[aria-current] {
+    border: 0;
+    border-bottom: 2px solid #245b3e;
+    border-radius: 0;
+    background: transparent;
+    color: #203e2d;
+    font-weight: 600;
+  }
+  & .customer-account-content .profile-refined.profile-compact .profile-content {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  & .customer-account-content .profile-refined.profile-compact .profile-section {
+    padding: 20px 0;
+  }
+  & .customer-account-content .profile-refined.profile-compact .profile-loyalty-summary {
+    border: 0;
+    padding: 12px;
+    border-radius: 6px;
+    background: #f4f7f1;
+  }
+  & .customer-account-content .profile-refined.profile-compact .profile-save-row {
+    border: 0;
+    padding-top: 0;
+  }
+  & .customer-account-content .profile-refined.profile-compact .profile-disclaimer-card {
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: #617267;
+  }
+  & .customer-account-content .profile-refined.profile-compact .profile-actions button {
+    min-height: 44px;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+  }
+  & .customer-account-content .profile-refined.profile-compact .profile-status-error {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #b42318;
+  }
+  @media (min-width: 769px) and (max-width: 1100px) {
+    & .customer-chat-section .chat-layout.with-details {
+      grid-template-columns: 280px minmax(0, 1fr);
+    }
+  }
+  @media (max-width: 768px) {
+    & .customer-chat-section .chat-layout,
+    & .customer-chat-section .chat-layout.with-details {
+      grid-template-columns: minmax(0, 1fr);
+      height: calc(100dvh - 300px);
+      min-height: 440px;
+    }
+    & .customer-chat-section .chat-messages-scroll-area {
+      padding: 14px;
+    }
+    & .customer-account-content .profile-refined.profile-compact .profile-content {
+      padding: 0;
+    }
+  }
+  @media (max-width: 760px) {
+    width: calc(100% - 24px);
+    margin: 16px auto 32px;
+    padding: 16px;
+    & .customer-account-sidebar-heading > strong {
+      display: none;
+    }
+    & .account-navigation-toggle {
+      margin-left: auto;
+    }
+  }
+}

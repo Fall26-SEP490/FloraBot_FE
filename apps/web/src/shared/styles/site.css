@@ -691,7 +691,7 @@ html {
     justify-content: center;
   }
   .site-header .user-menu-caption {
-    display: none;
+    display: block;
   }
   .site-header .user-menu-trigger {
     gap: 5px;
@@ -758,7 +758,7 @@ html {
   }
 
   .site-header .user-menu-identity {
-    display: none !important;
+    display: grid !important;
   }
 
   .site-header .user-menu-trigger {

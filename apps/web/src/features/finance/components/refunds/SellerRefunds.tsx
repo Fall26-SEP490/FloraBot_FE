@@ -1,5 +1,6 @@
 'use client';
 
+import SellerPagination from '@/shared/components/SellerPagination';
 import IconActionButton from '@/shared/components/IconActionButton';
 import RefreshRegion from '@/shared/components/RefreshRegion';
 import { Modal } from '@/shared/components/Modal';
@@ -412,19 +413,12 @@ export default function SellerRefunds({ session }: { session: Session }) {
           <p>Chưa có khoản hoàn trực tiếp.</p>
         ) : null}
         {refunds.data && (page > 1 || refunds.data.hasMore) && (
-          <div className="business-pagination">
-            <Button variant="outline" disabled={page <= 1} onClick={() => setPage(page - 1)}>
-              Trước
-            </Button>
-            <span>Trang {page}</span>
-            <Button
-              variant="outline"
-              disabled={!refunds.data.hasMore}
-              onClick={() => setPage(page + 1)}
-            >
-              Sau
-            </Button>
-          </div>
+          <SellerPagination
+            page={page}
+            hasMore={refunds.data.hasMore}
+            busy={refunds.isFetching}
+            onPageChange={setPage}
+          />
         )}
       </section>
       {selectedId && (

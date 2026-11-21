@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import SellerPagination from './SellerPagination';
 import { clampPage, pageRange, totalPages } from '../pagination';
 
 export type DataTableColumn<T> = {
@@ -63,12 +64,14 @@ export function DataTable<T>({
 }
 
 export function TablePagination({
+  centered = false,
   page,
   pageSize,
   totalItems,
   onPageChange,
   ariaLabel = 'Phân trang danh sách',
 }: {
+  centered?: boolean;
   page: number;
   pageSize: number;
   totalItems: number;
@@ -78,6 +81,16 @@ export function TablePagination({
   const safePage = clampPage(page, totalItems, pageSize);
   const pages = totalPages(totalItems, pageSize);
   const range = pageRange(safePage, totalItems, pageSize);
+
+  if (centered)
+    return (
+      <SellerPagination
+        page={safePage}
+        totalPages={pages}
+        onPageChange={onPageChange}
+        ariaLabel={ariaLabel}
+      />
+    );
 
   return (
     <nav className="management-pagination" aria-label={ariaLabel}>

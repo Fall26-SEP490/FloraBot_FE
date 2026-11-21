@@ -1,5 +1,6 @@
 import IconActionButton from '@/shared/components/IconActionButton';
-import { useState } from 'react';
+import SellerPagination from '@/shared/components/SellerPagination';
+import { useState, type ReactNode } from 'react';
 import { Button, ImageIcon, Search, X } from '@florabot/ui';
 import type { CustomerSellerChatItem } from './types';
 import { formatChatError } from './api';
@@ -17,6 +18,7 @@ export function ChatList({
   onRetry,
   userRole,
   internal = false,
+  toolbarAction,
 }: {
   items: CustomerSellerChatItem[];
   activeChatId: string | null;
@@ -30,6 +32,7 @@ export function ChatList({
   onRetry: () => void;
   userRole: 'CUSTOMER' | 'SELLER';
   internal?: boolean;
+  toolbarAction?: ReactNode;
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterTab, setFilterTab] = useState<'all' | 'unread'>('all');
@@ -76,6 +79,7 @@ export function ChatList({
   if (isLoading) {
     return (
       <div className="chat-list-loading" role="status">
+        {toolbarAction}
         <p>Đang tải danh sách cuộc trò chuyện…</p>
       </div>
     );
@@ -84,6 +88,7 @@ export function ChatList({
   if (isError) {
     return (
       <div className="chat-list-error" role="alert">
+        {toolbarAction}
         <p>{formatChatError(error)}</p>
         <IconActionButton
           variant="outline"
@@ -99,7 +104,8 @@ export function ChatList({
   if (items.length === 0 && page === 1 && !hasMore) {
     return (
       <div className="chat-list-empty">
-        <h3>Chưa có cuộc trò chuyện nào</h3>
+        {toolbarAction}
+        <p className="chat-list-empty-title">Chưa có cuộc trò chuyện nào</p>
         <p>
           {internal
             ? 'Mở cuộc trò chuyện để trao đổi công việc trong shop. Tin nhắn sẽ được lưu tại đây.'
@@ -114,34 +120,37 @@ export function ChatList({
   return (
     <div className="chat-list-container">
       <div className="chat-list-toolbar">
-        <div className="chat-list-search-wrapper">
-          <Search size={15} className="chat-list-search-icon" aria-hidden="true" />
-          <input
-            type="search"
-            className="chat-list-search-input"
-            placeholder={
-              userRole === 'CUSTOMER'
-                ? 'Tìm shop hoặc mẫu hoa…'
-                : internal
-                  ? 'Tìm người hoặc nội dung tin…'
-                  : userRole === 'SELLER'
-                    ? 'Tên khách, mẫu hoa, tin nhắn…'
-                    : 'Tìm theo tên khách, mẫu hoa…'
-            }
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            aria-label="Tìm kiếm cuộc trò chuyện"
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              className="chat-list-search-clear"
-              onClick={() => setSearchQuery('')}
-              aria-label="Xóa từ khóa tìm kiếm"
-            >
-              <X size={14} aria-hidden="true" />
-            </button>
-          )}
+        <div className="chat-list-search-row">
+          <div className="chat-list-search-wrapper">
+            <Search size={15} className="chat-list-search-icon" aria-hidden="true" />
+            <input
+              type="search"
+              className="chat-list-search-input"
+              placeholder={
+                userRole === 'CUSTOMER'
+                  ? 'Tìm shop hoặc mẫu hoa…'
+                  : internal
+                    ? 'Tìm người hoặc nội dung tin…'
+                    : userRole === 'SELLER'
+                      ? 'Tên khách, mẫu hoa, tin nhắn…'
+                      : 'Tìm theo tên khách, mẫu hoa…'
+              }
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Tìm kiếm cuộc trò chuyện"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                className="chat-list-search-clear"
+                onClick={() => setSearchQuery('')}
+                aria-label="Xóa từ khóa tìm kiếm"
+              >
+                <X size={14} aria-hidden="true" />
+              </button>
+            )}
+          </div>
+          {toolbarAction}
         </div>
 
         <div className="chat-list-tabs" role="group" aria-label="Bộ lọc tin nhắn">
@@ -170,29 +179,34 @@ export function ChatList({
         </div>
       </div>
 
-      <p className="chat-list-scope" role="status">
-        {filteredItems.length}/{items.length} hội thoại · Trang {page}. Tìm kiếm và bộ lọc áp dụng
-        trong trang này.
-      </p>
+      {(hasMore || page > 1) && (
+        <p className="chat-list-scope" role="status">
+          {filteredItems.length}/{items.length} hội thoại · Trang {page}. Tìm kiếm và bộ lọc áp dụng
+          trong trang này.
+        </p>
+      )}
       {filteredItems.length === 0 ? (
         <div className="chat-list-empty-search">
-          <p className="chat-list-empty-title">Không tìm thấy cuộc trò chuyện nào</p>
-          <p className="quiet">
+          <p className="chat-list-empty-title">
             {normalizedQuery
-              ? 'Thử từ khóa khác hoặc xóa bộ lọc.'
+              ? 'Không tìm thấy cuộc trò chuyện nào'
               : filterTab === 'unread'
-                ? 'Trang này không có hội thoại chưa đọc.'
-                : 'Trang này chưa có hội thoại. Chọn trang trước để xem lại.'}
+                ? 'Không có tin nhắn chưa đọc'
+                : 'Chưa có hội thoại ở trang này'}
           </p>
-          <IconActionButton
-            variant="outline"
-            onClick={() => {
-              setSearchQuery('');
-              setFilterTab('all');
-            }}
-            action="clear"
-            label="Xóa bộ lọc hội thoại"
-          />
+          {!normalizedQuery && filterTab === 'all' && page > 1 && (
+            <p className="quiet">Chọn trang trước để xem lại.</p>
+          )}
+          {normalizedQuery && (
+            <IconActionButton
+              variant="outline"
+              onClick={() => {
+                setSearchQuery('');
+              }}
+              action="clear"
+              label="Xóa bộ lọc hội thoại"
+            />
+          )}
         </div>
       ) : (
         <ul className="chat-list" aria-label="Danh sách cuộc trò chuyện">
@@ -260,29 +274,37 @@ export function ChatList({
         </ul>
       )}
 
-      {(page > 1 || hasMore) && (
-        <nav className="chat-list-pagination" aria-label="Phân trang cuộc trò chuyện">
-          <Button
-            type="button"
-            variant="outline"
-            className="chat-list-page-btn"
-            disabled={page <= 1}
-            onClick={() => onPageChange(page - 1)}
-          >
-            Trang trước
-          </Button>
-          <span className="chat-list-page-info">Trang {page}</span>
-          <Button
-            type="button"
-            variant="outline"
-            className="chat-list-page-btn"
-            disabled={!hasMore}
-            onClick={() => onPageChange(page + 1)}
-          >
-            Trang sau
-          </Button>
-        </nav>
-      )}
+      {(page > 1 || hasMore) &&
+        (userRole === 'SELLER' ? (
+          <SellerPagination
+            page={page}
+            hasMore={hasMore}
+            onPageChange={onPageChange}
+            ariaLabel="Phân trang cuộc trò chuyện"
+          />
+        ) : (
+          <nav className="chat-list-pagination" aria-label="Phân trang cuộc trò chuyện">
+            <Button
+              type="button"
+              variant="outline"
+              className="chat-list-page-btn"
+              disabled={page <= 1}
+              onClick={() => onPageChange(page - 1)}
+            >
+              Trang trước
+            </Button>
+            <span className="chat-list-page-info">Trang {page}</span>
+            <Button
+              type="button"
+              variant="outline"
+              className="chat-list-page-btn"
+              disabled={!hasMore}
+              onClick={() => onPageChange(page + 1)}
+            >
+              Trang sau
+            </Button>
+          </nav>
+        ))}
     </div>
   );
 }

@@ -1082,17 +1082,17 @@ function ManagerLayoutRequestCard({ item }: { item: SlotLayoutRequestView }) {
   return (
     <article className="business-card">
       <h3>
-        Kiosk {item.kioskId} · {item.walkInSlots} Walk-in / {item.preorderSlots} Pre-order ·{' '}
+        Kiosk {item.kioskId} · {item.walkInSlots} ô bán sẵn / {item.preorderSlots} ô đặt trước ·{' '}
         {item.status}
       </h3>
       <p>Lý do của shop: {item.reason}</p>
       {item.status === 'PENDING' && (
         <div className="business-form">
           {item.preorderSlots === 0 ? (
-            <p>Tất cả ô sẽ chuyển sang Walk-in. Các ô đổi loại phải trống và không giữ đơn.</p>
+            <p>Tất cả ô sẽ chuyển sang bán sẵn. Các ô đổi loại phải trống và không giữ đơn.</p>
           ) : (
             <fieldset aria-describedby={`layout-slot-hint-${item.id}`}>
-              <legend>Chọn {item.preorderSlots} ô Pre-order</legend>
+              <legend>Chọn {item.preorderSlots} ô đặt trước</legend>
               <p id={`layout-slot-hint-${item.id}`}>
                 Đã chọn {preorderSlotIds.length}/{item.preorderSlots} ô. Các ô đổi loại phải trống
                 và không giữ đơn.

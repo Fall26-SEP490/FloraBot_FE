@@ -14,6 +14,7 @@ export default function EvidenceUpload({
   receiptToken,
   helpText,
   autoUpload = false,
+  showPreview = false,
   onFileChange,
 }: {
   id: string;
@@ -26,6 +27,7 @@ export default function EvidenceUpload({
   receiptToken?: string;
   helpText?: string;
   autoUpload?: boolean;
+  showPreview?: boolean;
   onFileChange?: (file: File | null) => void;
 }) {
   const [file, setFile] = useState<File | null>(null);
@@ -133,13 +135,13 @@ export default function EvidenceUpload({
         >
           {autoUpload && file ? 'Đổi ảnh' : 'Chọn ảnh'}
         </Button>
-        {(!onFileChange || !file) && (
+        {(!(onFileChange || showPreview) || !file) && (
           <span className="evidence-file-name" aria-live="polite" title={file?.name}>
             {file ? file.name : 'Chưa chọn tệp nào'}
           </span>
         )}
       </div>
-      {onFileChange &&
+      {(onFileChange || showPreview) &&
         file &&
         ['image/png', 'image/jpeg', 'image/webp'].includes(file.type) &&
         file.size > 0 &&

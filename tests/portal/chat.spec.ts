@@ -441,9 +441,8 @@ test('Seller views chat list strictly for their sellerId and sees unread badge i
   );
 
   // Verify navigation has unread badge
-  const chatsNavLink = page.getByRole('link', { name: /Tin nhắn/ }).first();
+  const chatsNavLink = page.getByRole('link', { name: /Tin nhắn, 2 tin nhắn chưa đọc/ });
   await expect(chatsNavLink).toBeVisible();
-  await expect(chatsNavLink.getByLabel('2 tin nhắn chưa đọc')).toBeVisible();
 
   await expect(
     page.locator('.chat-messages-list').getByText('Shop có giao hoa vào sáng mai được không?'),

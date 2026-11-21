@@ -1,14 +1,15 @@
 'use client';
 
 import IconActionButton from '@/shared/components/IconActionButton';
-import Select from '@/shared/components/Select';
+import RefreshRegion from '@/shared/components/RefreshRegion';
+import './styles/seller-messaging.css';
 import './chat.css';
 import Link from 'next/link';
 
 import { useCallback, useRef, useState, useSyncExternalStore } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Button, MessageSquare } from '@florabot/ui';
+import { Button, MessageSquare, Search } from '@florabot/ui';
 import { queryClient, request, type Session } from '@/shared/lib/api';
 import type { AccountDirectoryItem } from '@/features/account-management/account-management.types';
 import type { ChatMessageReceivedEvent, ChatMessagesReadEvent, SellerStaffChatItem } from './types';
@@ -44,8 +45,7 @@ export function StaffChatSection({ session }: { session: Session }) {
   const scope = staffChatScope(session);
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<SellerStaffChatItem | null>(null);
-  const [staffDraft, setStaffDraft] = useState<string>();
-  const staffId = staffDraft ?? params.get('staff') ?? '';
+  const [directorySearch, setDirectorySearch] = useState('');
   const [mode, setMode] = useState<'list' | 'conversation'>('list');
   const desktop = useSyncExternalStore(subscribeViewport, desktopSnapshot, serverSnapshot);
   const messageHandler = useRef<((event: ChatMessageReceivedEvent) => void) | null>(null);
@@ -70,19 +70,33 @@ export function StaffChatSection({ session }: { session: Session }) {
     enabled: authorized && seller,
   });
   const activeStaff = (directory.data ?? []).filter((item) => item.status === 'ACTIVE');
+  const matchingStaff = activeStaff.filter((person) =>
+    `${person.fullName} ${person.email}`
+      .toLocaleLowerCase('vi-VN')
+      .includes(directorySearch.trim().toLocaleLowerCase('vi-VN')),
+  );
   const items = chats.data?.items ?? [];
   const active = selected ? (items.find((item) => item.id === selected.id) ?? selected) : null;
   const visible = desktop || mode === 'conversation';
   const invalidateList = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: ['staff-chats', scope] });
   }, [scope]);
-  const refreshMessages = useCallback(() => {
-    invalidateList();
-    void queryClient.invalidateQueries({ queryKey: ['staff-chat-messages', scope] });
-  }, [invalidateList, scope]);
+  const refreshMessages = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['staff-chats', scope] }),
+      queryClient.invalidateQueries({ queryKey: ['staff-chat-messages', scope] }),
+      ...(seller
+        ? [
+            queryClient.invalidateQueries({
+              queryKey: ['account-directory', 'SELLER_STAFF', session.sellerId],
+            }),
+          ]
+        : []),
+    ]);
+  }, [scope, seller, session.sellerId]);
   const opening = useMutation({
-    mutationFn: () =>
-      seller ? openStaffChatForSeller(session.sellerId!, staffId) : openStaffChatForStaff(),
+    mutationFn: (personId?: string) =>
+      seller ? openStaffChatForSeller(session.sellerId!, personId!) : openStaffChatForStaff(),
     onSuccess: (chat) => {
       setSelected(chat);
       setMode('conversation');
@@ -107,147 +121,179 @@ export function StaffChatSection({ session }: { session: Session }) {
     );
 
   return (
-    <section className="staff-chat-section" aria-labelledby="staff-chat-title">
-      <div className="staff-chat-intro">
-        <div>
-          <h2 id="staff-chat-title">
-            {seller ? 'Trao đổi với đội ngũ của shop' : 'Trao đổi với chủ shop'}
-          </h2>
-          <p>Nhắn tin, gửi ảnh và theo dõi phản hồi trong cùng một cuộc trò chuyện.</p>
-        </div>
-        <IconActionButton
-          variant="outline"
-          disabled={chats.isFetching}
-          onClick={refreshMessages}
-          action="reload"
-          label="Làm mới hội thoại"
-        />
-      </div>
-      <div className={`chat-layout staff-chat-layout mode-${mode}`}>
-        <div className="chat-layout-sidebar">
-          <div className="chat-sidebar-header">
-            <h2 className="chat-sidebar-title">
-              {seller ? 'Tin nhắn nhân viên' : 'Tin nhắn với shop'}
-            </h2>
-            {seller ? (
-              <div className="staff-chat-start">
-                <label htmlFor="staff-chat-person">Chọn nhân viên đang hoạt động</label>
-                <Select
-                  id="staff-chat-person"
-                  value={staffId}
-                  onChange={(event) => {
-                    setStaffDraft(event.target.value);
-                    opening.reset();
-                  }}
-                  disabled={directory.isPending || opening.isPending}
-                >
-                  <option value="">Chọn nhân viên…</option>
-                  {activeStaff.map((person) => (
-                    <option key={person.id} value={person.id}>
-                      {person.fullName}
-                    </option>
-                  ))}
-                </Select>
-                {directory.isPending && <p role="status">Đang tải nhân viên…</p>}
-                {directory.isError && (
-                  <div role="alert">
-                    <p>{formatChatError(directory.error)}</p>
-                    <IconActionButton
-                      variant="outline"
-                      onClick={() => void directory.refetch()}
-                      action="reload"
-                      label="Tải lại nhân viên"
-                    />
-                  </div>
-                )}
-                {directory.isSuccess && activeStaff.length === 0 && (
-                  <p>
-                    Shop chưa có nhân viên đang hoạt động.{' '}
-                    <Link href="/seller/staff">Quản lý nhân viên shop</Link> để thêm hoặc mở lại tài
-                    khoản.
-                  </p>
-                )}
+    <section className="staff-chat-section seller-messaging" aria-labelledby="staff-chat-title">
+      <RefreshRegion>
+        <h2 id="staff-chat-title" className="sr-only">
+          {seller ? 'Trao đổi với đội ngũ của shop' : 'Trao đổi với chủ shop'}
+        </h2>
+        <div className={`chat-layout staff-chat-layout mode-${mode}`}>
+          <div className="chat-layout-sidebar">
+            {!seller && chats.isSuccess && items.length === 0 && (
+              <div className="chat-sidebar-header">
                 <Button
-                  disabled={
-                    opening.isPending || !activeStaff.some((person) => person.id === staffId)
-                  }
+                  className="staff-chat-open-shop"
+                  disabled={opening.isPending}
                   onClick={() => opening.mutate()}
                 >
                   <MessageSquare size={16} aria-hidden="true" />
-                  {opening.isPending ? 'Đang mở…' : 'Nhắn với nhân viên'}
+                  {opening.isPending ? 'Đang mở…' : 'Nhắn với chủ shop'}
                 </Button>
+                {opening.isError && <p role="alert">{formatChatError(opening.error)}</p>}
+              </div>
+            )}
+            {seller ? (
+              <div className="chat-list-container">
+                <div className="chat-list-toolbar">
+                  <div className="chat-list-search-row">
+                    <div className="chat-list-search-wrapper">
+                      <Search size={15} className="chat-list-search-icon" aria-hidden="true" />
+                      <input
+                        type="search"
+                        className="chat-list-search-input"
+                        aria-label="Tìm nhân viên"
+                        placeholder="Tìm nhân viên…"
+                        value={directorySearch}
+                        onChange={(event) => setDirectorySearch(event.target.value)}
+                      />
+                    </div>
+                    <IconActionButton
+                      action="reload"
+                      label="Làm mới hội thoại"
+                      disabled={directory.isFetching || chats.isFetching}
+                      onClick={refreshMessages}
+                    />
+                  </div>
+                </div>
+                {opening.isError && (
+                  <p className="chat-list-error" role="alert">
+                    {formatChatError(opening.error)}
+                  </p>
+                )}
+                {directory.isPending && (
+                  <p className="chat-list-empty" role="status">
+                    Đang tải nhân viên…
+                  </p>
+                )}
+                {directory.isError && (
+                  <div className="chat-list-error" role="alert">
+                    <p>{formatChatError(directory.error)}</p>
+                    <IconActionButton
+                      action="reload"
+                      label="Tải lại nhân viên"
+                      onClick={() => void directory.refetch()}
+                    />
+                  </div>
+                )}
+                {directory.isSuccess && matchingStaff.length === 0 && (
+                  <div className="chat-list-empty">
+                    <p>
+                      {activeStaff.length
+                        ? 'Không tìm thấy nhân viên.'
+                        : 'Chưa có nhân viên đang hoạt động.'}
+                    </p>
+                    {!activeStaff.length && <Link href="/seller/staff">Quản lý nhân viên</Link>}
+                  </div>
+                )}
+                <ul className="chat-list" aria-label="Danh sách nhân viên">
+                  {matchingStaff.map((person) => (
+                    <li key={person.id} className="chat-list-row">
+                      <button
+                        type="button"
+                        className="chat-list-item"
+                        aria-label={`Nhắn tin ${person.fullName}`}
+                        aria-current={
+                          opening.variables === person.id ||
+                          (!selected && params.get('staff') === person.id)
+                            ? 'true'
+                            : undefined
+                        }
+                        disabled={opening.isPending}
+                        onClick={() => opening.mutate(person.id)}
+                      >
+                        <span className="chat-list-item-avatar" aria-hidden="true">
+                          {person.fullName.slice(0, 1).toLocaleUpperCase('vi-VN')}
+                        </span>
+                        <span className="chat-list-item-content">
+                          <span className="chat-list-item-name">{person.fullName}</span>
+                          <span className="chat-list-item-preview">
+                            {opening.isPending && opening.variables === person.id
+                              ? 'Đang mở…'
+                              : person.email}
+                          </span>
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               </div>
             ) : (
-              <Button
-                className="staff-chat-open-shop"
-                disabled={opening.isPending}
-                onClick={() => opening.mutate()}
-              >
-                <MessageSquare size={16} aria-hidden="true" />
-                {opening.isPending ? 'Đang mở…' : 'Nhắn với chủ shop'}
-              </Button>
-            )}
-            {opening.isError && <p role="alert">{formatChatError(opening.error)}</p>}
-          </div>
-          <ChatList
-            internal
-            items={items.map((item) => ({ ...item, productContext: null }))}
-            activeChatId={active?.id ?? null}
-            onSelectChat={(item) => {
-              const chat = items.find((entry) => entry.id === item.id);
-              if (chat) {
-                setSelected(chat);
-                setMode('conversation');
-              }
-            }}
-            page={page}
-            hasMore={!!chats.data?.hasMore}
-            onPageChange={setPage}
-            isLoading={chats.isPending}
-            isError={chats.isError}
-            error={chats.error}
-            onRetry={() => void chats.refetch()}
-            userRole="SELLER"
-          />
-        </div>
-        <div className="chat-layout-main">
-          {active ? (
-            <div className="staff-chat-active">
-              {!active.otherPartyActive && (
-                <p role="status" className="staff-chat-readonly">
-                  Tài khoản {active.otherPartyName} hiện không hoạt động. Bạn có thể đọc lịch sử,
-                  chưa thể gửi thêm tin nhắn.
-                </p>
-              )}
-              <ConversationView
-                key={`${scope}:${active.id}`}
-                chatId={active.id}
-                otherPartyName={active.otherPartyName}
-                transport={staffChatTransport}
-                cacheScope={scope}
-                disabled={!active.otherPartyActive}
-                isActive={visible}
-                onBack={() => setMode('list')}
-                onMessagesReadLocally={invalidateList}
-                registerRealtimeHandlers={(onMessage, onRead) => {
-                  messageHandler.current = onMessage;
-                  readHandler.current = onRead;
+              <ChatList
+                internal
+                items={items.map((item) => ({ ...item, productContext: null }))}
+                activeChatId={active?.id ?? null}
+                onSelectChat={(item) => {
+                  const chat = items.find((entry) => entry.id === item.id);
+                  if (chat) {
+                    setSelected(chat);
+                    setMode('conversation');
+                  }
                 }}
+                page={page}
+                hasMore={!!chats.data?.hasMore}
+                onPageChange={setPage}
+                isLoading={chats.isPending}
+                isError={chats.isError}
+                error={chats.error}
+                onRetry={() => void chats.refetch()}
+                userRole="SELLER"
+                toolbarAction={
+                  <IconActionButton
+                    action="reload"
+                    label="Làm mới hội thoại"
+                    disabled={chats.isFetching}
+                    onClick={refreshMessages}
+                  />
+                }
               />
-            </div>
-          ) : (
-            <div className="chat-empty-selection">
-              <MessageSquare size={36} aria-hidden="true" />
-              <h3>Chọn người để bắt đầu trao đổi</h3>
-              <p className="quiet">
-                {seller
-                  ? 'Chọn nhân viên hoặc một cuộc trò chuyện đã có.'
-                  : 'Bấm Nhắn với chủ shop để mở cuộc trò chuyện của bạn.'}
-              </p>
-            </div>
-          )}
+            )}
+          </div>
+          <div className="chat-layout-main">
+            {active ? (
+              <div className="staff-chat-active">
+                {!active.otherPartyActive && (
+                  <p role="status" className="staff-chat-readonly">
+                    Tài khoản {active.otherPartyName} hiện không hoạt động. Bạn có thể đọc lịch sử,
+                    chưa thể gửi thêm tin nhắn.
+                  </p>
+                )}
+                <ConversationView
+                  key={`${scope}:${active.id}`}
+                  chatId={active.id}
+                  otherPartyName={active.otherPartyName}
+                  transport={staffChatTransport}
+                  staffRole={seller ? 'SELLER' : 'SELLER_STAFF'}
+                  cacheScope={scope}
+                  disabled={!active.otherPartyActive}
+                  isActive={visible}
+                  onBack={() => setMode('list')}
+                  onMessagesReadLocally={invalidateList}
+                  registerRealtimeHandlers={(onMessage, onRead) => {
+                    messageHandler.current = onMessage;
+                    readHandler.current = onRead;
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="chat-empty-selection">
+                <MessageSquare size={36} aria-hidden="true" />
+                <h2 className="chat-empty-selection-title">
+                  {seller ? 'Chọn nhân viên để nhắn tin' : 'Chọn cuộc trò chuyện'}
+                </h2>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </RefreshRegion>
     </section>
   );
 }

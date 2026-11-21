@@ -20972,6 +20972,8 @@ export interface components {
             quoteVersion: number | string;
             requestedAccessories: components["schemas"]["RequestedPreorderAccessory"][];
             quotedAccessories: components["schemas"]["QuotedPreorderAccessory"][];
+            /** Format: date-time */
+            createdAt?: null | string;
         };
         WithdrawalBankResponse: {
             bankName: string;

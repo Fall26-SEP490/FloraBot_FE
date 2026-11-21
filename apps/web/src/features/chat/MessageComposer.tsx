@@ -17,7 +17,7 @@ const CUSTOMER_TEMPLATES = [
   { label: 'Cảm ơn shop', text: 'Cảm ơn shop đã tư vấn nhé!' },
 ];
 
-const QUICK_TEMPLATES = [
+const SELLER_CUSTOMER_TEMPLATES = [
   { label: 'Chào bạn', text: 'Dạ chào bạn, shop có thể hỗ trợ gì cho bạn về mẫu hoa này ạ?' },
   {
     label: 'Kiểm tra mẫu hoa',
@@ -31,6 +31,26 @@ const QUICK_TEMPLATES = [
     label: 'Cảm ơn bạn',
     text: 'Dạ shop cảm ơn bạn đã quan tâm và ủng hộ cửa hàng, chúc bạn một ngày thật vui vẻ nhé!',
   },
+];
+
+const STAFF_TO_SELLER_TEMPLATES = [
+  { label: 'Đã nhận việc', text: 'Em đã nhận công việc được giao.' },
+  { label: 'Đã đến kiosk', text: 'Em đã đến kiosk được phân công.' },
+  { label: 'Cần hỗ trợ', text: 'Em cần hỗ trợ thêm để tiếp tục công việc tại kiosk.' },
+  {
+    label: 'Nhờ kiểm tra báo cáo',
+    text: 'Em đã cập nhật báo cáo công việc, nhờ anh/chị kiểm tra.',
+  },
+];
+
+const SELLER_TO_STAFF_TEMPLATES = [
+  { label: 'Hỏi tiến độ', text: 'Bạn cập nhật giúp mình tiến độ công việc tại kiosk nhé.' },
+  {
+    label: 'Kiểm tra ô tủ',
+    text: 'Bạn kiểm tra ô tủ được phân công và báo mình nếu có vấn đề nhé.',
+  },
+  { label: 'Yêu cầu ảnh', text: 'Bạn gửi ảnh minh chứng tình trạng tại kiosk giúp mình nhé.' },
+  { label: 'Đã nhận báo cáo', text: 'Mình đã nhận thông tin và sẽ kiểm tra báo cáo của bạn.' },
 ];
 
 async function compressChatImageIfNeeded(file: File): Promise<File> {
@@ -81,12 +101,14 @@ export function MessageComposer({
   disabled = false,
   transport = customerChatTransport,
   customerMode = false,
+  staffRole,
 }: {
   chatId: string;
   onMessageSent: (message: CustomerSellerChatMessage) => void;
   disabled?: boolean;
   transport?: ChatTransport;
   customerMode?: boolean;
+  staffRole?: 'SELLER' | 'SELLER_STAFF';
 }) {
   const [content, setContent] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -246,7 +268,16 @@ export function MessageComposer({
       <div className="chat-composer-templates" aria-label="Mẫu tin nhắn nhanh">
         <span className="chat-composer-templates-label">Gợi ý nhanh:</span>
         <div className="chat-composer-templates-list">
-          {(customerMode ? CUSTOMER_TEMPLATES : QUICK_TEMPLATES).map((tmpl) => (
+          {(transport.kind === 'staff'
+            ? staffRole === 'SELLER'
+              ? SELLER_TO_STAFF_TEMPLATES
+              : staffRole === 'SELLER_STAFF'
+                ? STAFF_TO_SELLER_TEMPLATES
+                : []
+            : customerMode
+              ? CUSTOMER_TEMPLATES
+              : SELLER_CUSTOMER_TEMPLATES
+          ).map((tmpl) => (
             <button
               key={tmpl.label}
               type="button"

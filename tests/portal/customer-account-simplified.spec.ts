@@ -28,6 +28,7 @@ async function fixture(page: Page) {
   };
   const quoted = {
     id: 'request-quoted',
+    createdAt: '2030-11-12T02:00:00Z',
     kind: 'CUSTOM',
     state: 'QUOTED',
     productId: 'p1',
@@ -61,6 +62,7 @@ async function fixture(page: Page) {
   const completed = {
     ...quoted,
     id: 'request-completed',
+    createdAt: '2030-11-10T02:00:00Z',
     state: 'ORDERED',
     orderId: 'purchase-preorder',
     orderCode: 'FB-PRE',
@@ -168,6 +170,24 @@ for (const width of [390, 1440]) {
     if (width === 390) await page.keyboard.press('Escape');
     const rows = page.locator('.customer-order-list > li');
     await expect(rows).toHaveCount(3);
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Đơn hàng', exact: true }),
+    ).toHaveClass('sr-only');
+    await expect(
+      page.getByRole('heading', { name: /^Cần bạn xử lý|^Đang theo dõi|^Đã kết thúc/ }),
+    ).toHaveCount(0);
+    await expect(rows.nth(0).locator(':scope > details')).toHaveAttribute(
+      'id',
+      'preorder-request-quoted',
+    );
+    await expect(rows.nth(1).locator(':scope > details')).toHaveAttribute(
+      'id',
+      'preorder-purchase-purchase-walkin',
+    );
+    await expect(rows.nth(2).locator(':scope > details')).toHaveAttribute(
+      'id',
+      'preorder-request-completed',
+    );
     await expect(page.getByLabel('Lọc yêu cầu trong trang')).toHaveCount(0);
     await page.locator('#preorder-request-quoted > summary').click();
     await expect(page.getByRole('list', { name: 'Tiến độ đơn đặt hoa' })).toHaveCount(0);
@@ -187,17 +207,14 @@ for (const width of [390, 1440]) {
       ).violations,
     ).toEqual([]);
     await page.screenshot({ path: test.info().outputPath(`orders-${width}.png`), fullPage: true });
-    const history = page.locator('details[data-order-history]');
-    await expect(history).not.toHaveAttribute('open');
-    await history.locator(':scope > summary').click();
-    await expect(history.locator('.customer-order-list > li')).toHaveCount(2);
+    await expect(page.locator('details[data-order-history]')).toHaveCount(0);
     await expect(page.getByText('FB-PRE', { exact: false })).toHaveCount(1);
-    await history.locator('#preorder-request-completed > summary').click();
+    await page.locator('#preorder-request-completed > summary').click();
     await expect(page.locator('#preorder-request-quoted')).not.toHaveAttribute('open');
-    await expect(history.locator('#preorder-request-completed')).toHaveAttribute('open', '');
+    await expect(page.locator('#preorder-request-completed')).toHaveAttribute('open', '');
     await page.goto('/ho-so');
     await expect(page.getByRole('heading', { level: 1, name: 'Hồ sơ', exact: true })).toBeVisible();
-    await expect(page.getByLabel('Họ và tên *')).toBeHidden();
+    await expect(page.getByLabel('Họ và tên *')).toBeVisible();
     const groups = page.getByRole('navigation', { name: 'Mục hồ sơ' });
     await expect(groups.getByRole('link')).toHaveCount(3);
     await expect(groups).toHaveCSS('flex-wrap', 'wrap');
@@ -210,17 +227,15 @@ for (const width of [390, 1440]) {
         bankBounds &&
         bankBounds.x + bankBounds.width <= groupBounds.x + groupBounds.width + 1,
     ).toBeTruthy();
-    await expect(page.getByRole('region', { name: 'Tài khoản ngân hàng cá nhân' })).toBeHidden();
+    await expect(page.getByRole('region', { name: 'Tài khoản ngân hàng cá nhân' })).toBeVisible();
     await page.screenshot({ path: test.info().outputPath(`profile-${width}.png`), fullPage: true });
-    await page.getByRole('button', { name: 'Chỉnh sửa thông tin', exact: true }).click();
     await page.getByLabel('Họ và tên *').fill('Trần Phong Mới');
     await page.getByRole('button', { name: 'Lưu thông tin cá nhân', exact: true }).click();
-    await expect(page.getByLabel('Họ và tên *')).toBeHidden();
-    await expect(page.locator('.profile-personal-summary')).toContainText('Trần Phong Mới');
+    await expect(page.getByLabel('Họ và tên *')).toHaveValue('Trần Phong Mới');
     expect(state.writes).toHaveLength(1);
     expect(state.writes[0].path).toBe('/api/account/profile');
-    await groups.getByRole('link', { name: 'Đăng nhập & bảo mật' }).click();
-    await expect(page.getByRole('region', { name: 'Thông tin cá nhân' })).toBeHidden();
+    await groups.getByRole('link', { name: 'Bảo mật' }).click();
+    await expect(page.getByRole('region', { name: 'Thông tin cá nhân' })).toBeVisible();
     await expect(page.getByRole('region', { name: 'Bảo mật tài khoản' })).toBeVisible();
     await page.screenshot({
       path: test.info().outputPath(`security-${width}.png`),

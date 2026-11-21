@@ -49,7 +49,9 @@ export default function StaffTaskDetails({
       onToggle={(event) => setOpen(event.currentTarget.open)}
     >
       <summary>
-        {role === 'SELLER' ? 'Thông tin tủ và lịch sử' : 'Thông tin tủ, sự cố và lịch sử công việc'}
+        {role === 'SELLER' || role === 'SELLER_STAFF'
+          ? 'Thông tin tủ và lịch sử'
+          : 'Thông tin tủ, sự cố và lịch sử công việc'}
       </summary>
       {open && role === 'TECHNICIAN' && (
         <TechnicianIoTHealth path={`/staff/tasks/${taskId}/iot-health`} actorId={actorId} />
@@ -92,7 +94,7 @@ export default function StaffTaskDetails({
           </dl>
           {details.data.slotObservation && (
             <section aria-label="Ghi nhận cửa và hoa của ô">
-              <h4>Ghi nhận cửa và hoa · {details.data.slotObservation.slotCode}</h4>
+              <h3>Ghi nhận cửa và hoa · {details.data.slotObservation.slotCode}</h3>
               <p>
                 Thời điểm bản đo:{' '}
                 {details.data.slotObservedAt
@@ -131,11 +133,11 @@ export default function StaffTaskDetails({
           )}
           {details.data.incident && (
             <section aria-label="Nội dung sự cố">
-              <h4>
+              <h3>
                 {details.data.incident.kind === 'DISPENSE_FAILED'
                   ? 'Nhận hoa không thành công'
                   : 'Sự cố thiết bị'}
-              </h4>
+              </h3>
               <p>
                 {TASK_DETAIL_STATES[details.data.incident.status] || details.data.incident.status} ·{' '}
                 {formatTaskDate(details.data.incident.createdAt)}
@@ -149,7 +151,7 @@ export default function StaffTaskDetails({
               )}
             </section>
           )}
-          <h4>Lịch sử công việc</h4>
+          <h3>Lịch sử công việc</h3>
           {details.data.history.length === 0 ? (
             <p>Chưa có lịch sử ở trang này.</p>
           ) : role === 'ADMIN' || role === 'TECHNICIAN' || role === 'OPERATIONS_MANAGER' ? (
@@ -226,7 +228,11 @@ export default function StaffTaskDetails({
               ))}
             </ol>
           )}
-          <div className="staff-history-pagination" aria-label="Phân trang lịch sử công việc">
+          <div
+            className="staff-history-pagination"
+            role="navigation"
+            aria-label="Phân trang lịch sử công việc"
+          >
             {(page > 1 || details.data.hasMore) && (
               <>
                 <Button

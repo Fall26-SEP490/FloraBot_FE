@@ -49,7 +49,7 @@ const prompts: Record<'customer' | 'seller', Prompt[]> = {
     },
     { label: 'Chuẩn bị mẫu hoa', question: 'Tôi nên chuẩn bị mẫu hoa gì cho dịp sắp tới?' },
     {
-      label: 'Walk-in và đặt trước',
+      label: 'Bán sẵn và đặt trước',
       question: 'Tôi nên phân biệt mẫu bán tại tủ và mẫu đặt trước như thế nào?',
     },
   ],

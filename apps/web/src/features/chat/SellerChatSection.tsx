@@ -1,8 +1,9 @@
 import { useCallback, useRef, useState, useSyncExternalStore } from 'react';
 import './chat.css';
 import { useQuery } from '@tanstack/react-query';
-import Link from 'next/link';
-import { RefreshCw } from '@florabot/ui';
+import IconActionButton from '@/shared/components/IconActionButton';
+import RefreshRegion from '@/shared/components/RefreshRegion';
+import './styles/seller-messaging.css';
 import { queryClient, type Session } from '@/shared/lib/api';
 import { getSellerChats } from './api';
 import { useChatRealtime } from './useChatRealtime';
@@ -122,107 +123,91 @@ export function SellerChatSection({ session }: { session: Session }) {
     setShowDetailsPanel(false);
   };
 
-  const handleRefreshAll = () => {
-    void chatsQuery.refetch();
-    if (activeChatId) {
-      void queryClient.invalidateQueries({ queryKey: ['chat-messages', activeChatId] });
-    }
+  const handleRefreshAll = async () => {
+    await Promise.all([
+      chatsQuery.refetch(),
+      activeChatId && queryClient.invalidateQueries({ queryKey: ['chat-messages', activeChatId] }),
+    ]);
   };
 
   return (
-    <section className="staff-chat-section" aria-label="Tin nhắn khách hàng">
-      <div className="seller-chat-actions">
-        <Link href="/seller/orders">Mở đơn đặt trước</Link>
-      </div>
-      <div
-        className={`chat-layout mode-${viewMode} ${
-          showDetailsPanel && activeChat ? 'with-details' : ''
-        }`}
-      >
-        <div className="chat-layout-sidebar">
-          <div className="chat-sidebar-header">
-            <div className="chat-sidebar-header-row">
-              <h2 className="chat-sidebar-title">Khách hàng nhắn tin</h2>
-              <button
-                type="button"
-                className="chat-sidebar-refresh-btn"
-                disabled={chatsQuery.isFetching}
-                onClick={handleRefreshAll}
-                title="Làm mới danh sách tin nhắn"
-                aria-label="Làm mới danh sách tin nhắn"
-              >
-                <RefreshCw
-                  size={15}
-                  aria-hidden="true"
-                  className={chatsQuery.isFetching ? 'is-spinning' : ''}
+    <section className="staff-chat-section seller-messaging" aria-label="Tin nhắn khách hàng">
+      <RefreshRegion>
+        <div
+          className={`chat-layout mode-${viewMode} ${
+            showDetailsPanel && activeChat ? 'with-details' : ''
+          }`}
+        >
+          <div className="chat-layout-sidebar">
+            <ChatList
+              toolbarAction={
+                <IconActionButton
+                  action="reload"
+                  label="Làm mới danh sách tin nhắn"
+                  disabled={chatsQuery.isFetching}
+                  onClick={handleRefreshAll}
                 />
-              </button>
-            </div>
+              }
+              items={items}
+              activeChatId={activeChatId}
+              onSelectChat={handleSelectChat}
+              page={page}
+              hasMore={hasMore}
+              onPageChange={(nextPage) => {
+                if (activeChat) setSelectedChat(activeChat);
+                setPage(nextPage);
+              }}
+              isLoading={chatsQuery.isPending}
+              isError={chatsQuery.isError}
+              error={chatsQuery.error}
+              onRetry={() => void chatsQuery.refetch()}
+              userRole="SELLER"
+            />
           </div>
 
-          <ChatList
-            items={items}
-            activeChatId={activeChatId}
-            onSelectChat={handleSelectChat}
-            page={page}
-            hasMore={hasMore}
-            onPageChange={(nextPage) => {
-              if (activeChat) setSelectedChat(activeChat);
-              setPage(nextPage);
+          <div
+            className="chat-layout-main"
+            onFocusCapture={() => {
+              if (!selectedChat && activeChat) setSelectedChat(activeChat);
             }}
-            isLoading={chatsQuery.isPending}
-            isError={chatsQuery.isError}
-            error={chatsQuery.error}
-            onRetry={() => void chatsQuery.refetch()}
-            userRole="SELLER"
-          />
-        </div>
+          >
+            {activeChat ? (
+              <ConversationView
+                key={`${session.id}:${activeChat.id}`}
+                isActive={conversationVisible}
+                chatId={activeChat.id}
+                otherPartyName={activeChat.otherPartyName}
+                productContext={activeChat.productContext}
+                onBack={handleBackToList}
+                onMessagesReadLocally={handleMessagesReadLocally}
+                registerRealtimeHandlers={(handleMessage, handleRead) => {
+                  onRealtimeMessageRef.current = handleMessage;
+                  onRealtimeReadRef.current = handleRead;
+                }}
+                onToggleDetails={() => setShowDetailsPanel((prev) => !prev)}
+                showDetails={showDetailsPanel}
+              />
+            ) : (
+              <div className="chat-empty-selection">
+                <p className="chat-empty-selection-title">Chưa chọn khách hàng</p>
+              </div>
+            )}
+          </div>
 
-        <div
-          className="chat-layout-main"
-          onFocusCapture={() => {
-            if (!selectedChat && activeChat) setSelectedChat(activeChat);
-          }}
-        >
-          {activeChat ? (
-            <ConversationView
-              key={`${session.id}:${activeChat.id}`}
-              isActive={conversationVisible}
-              chatId={activeChat.id}
-              otherPartyName={activeChat.otherPartyName}
-              productContext={activeChat.productContext}
-              onBack={handleBackToList}
-              onMessagesReadLocally={handleMessagesReadLocally}
-              registerRealtimeHandlers={(handleMessage, handleRead) => {
-                onRealtimeMessageRef.current = handleMessage;
-                onRealtimeReadRef.current = handleRead;
+          {activeChat && showDetailsPanel && (
+            <ChatCustomerDetails
+              key={activeChat.id}
+              chat={activeChat}
+              onClose={() => {
+                setShowDetailsPanel(false);
+                requestAnimationFrame(() =>
+                  document.querySelector<HTMLButtonElement>('.chat-details-toggle-btn')?.focus(),
+                );
               }}
-              onToggleDetails={() => setShowDetailsPanel((prev) => !prev)}
-              showDetails={showDetailsPanel}
             />
-          ) : (
-            <div className="chat-empty-selection">
-              <p className="chat-empty-selection-title">Chưa chọn khách hàng</p>
-              <p className="quiet">
-                Chọn khách hàng trong danh sách để xem lịch sử và gửi phản hồi.
-              </p>
-            </div>
           )}
         </div>
-
-        {activeChat && showDetailsPanel && (
-          <ChatCustomerDetails
-            key={activeChat.id}
-            chat={activeChat}
-            onClose={() => {
-              setShowDetailsPanel(false);
-              requestAnimationFrame(() =>
-                document.querySelector<HTMLButtonElement>('.chat-details-toggle-btn')?.focus(),
-              );
-            }}
-          />
-        )}
-      </div>
+      </RefreshRegion>
     </section>
   );
 }

@@ -1,7 +1,10 @@
 import IconActionButton from '@/shared/components/IconActionButton';
 import { useState } from 'react';
 import { useQueries } from '@tanstack/react-query';
-import { ArrowLeft, ArrowRight, Button } from '@florabot/ui';
+import { Search } from '@florabot/ui';
+import RefreshRegion from '@/shared/components/RefreshRegion';
+import SellerPagination from '@/shared/components/SellerPagination';
+import '../styles/staff-workspace.css';
 import { queryClient, request } from '@/shared/lib/api';
 import type { TaskPage } from '../task-management.types';
 import { TaskItem } from './TaskItem';
@@ -30,6 +33,7 @@ export default function StaffTaskBoard({
   const [pages, setPages] = useState<Partial<Record<Status, number>>>({});
   const [reload, setReload] = useState(0);
   const [openTaskId, setOpenTaskId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
   const scopeKey = sellerId ? `seller:${sellerId}` : apiBase;
   const queries = useQueries({
     queries: lanes.map(({ status }) => {
@@ -58,7 +62,12 @@ export default function StaffTaskBoard({
       page: pages[lane.status] ?? 1,
       tasks:
         query.data?.items.filter(
-          (task) => task.status === lane.status && task.version === latestVersions.get(task.id),
+          (task) =>
+            task.status === lane.status &&
+            task.version === latestVersions.get(task.id) &&
+            `${task.kioskName} ${task.address} ${task.instructions}`
+              .toLocaleLowerCase('vi-VN')
+              .includes(search.trim().toLocaleLowerCase('vi-VN')),
         ) ?? [],
     };
   });
@@ -72,8 +81,6 @@ export default function StaffTaskBoard({
   function renderGroup(group: (typeof groups)[number]) {
     if (!hasContent(group)) return null;
     const { status, title, query, page, tasks } = group;
-    const qualityTasks = tasks.filter((task) => task.workType === 'FLOWER_QUALITY');
-    const otherTasks = tasks.filter((task) => task.workType !== 'FLOWER_QUALITY');
     const renderTask = (task: (typeof tasks)[number]) => (
       <TaskItem
         key={`${task.id}-${task.version}-${reload}`}
@@ -92,38 +99,16 @@ export default function StaffTaskBoard({
     return (
       <section key={status} className="staff-task-group" aria-labelledby={`staff-group-${status}`}>
         <h3 id={`staff-group-${status}`}>{title}</h3>
-        {qualityTasks.length > 0 && (
-          <div role="group" aria-label="Xử lý chất lượng hoa">
-            <p>
-              <strong>Xử lý chất lượng hoa</strong>
-            </p>
-            {qualityTasks.map(renderTask)}
-          </div>
-        )}
-        {otherTasks.map(renderTask)}
+        {tasks.map(renderTask)}
         {!tasks.length && <p>Trang này không còn công việc.</p>}
         {(page > 1 || query.data?.hasMore) && (
-          <nav aria-label={`Phân trang: ${title}`} className="order-pagination">
-            <Button
-              variant="outline"
-              disabled={page === 1 || query.isFetching}
-              onClick={() => setPages((current) => ({ ...current, [status]: page - 1 }))}
-            >
-              <ArrowLeft size={16} aria-hidden="true" />
-              Trang trước
-            </Button>
-            <span className="order-pagination-indicator" aria-live="polite">
-              Trang {page}
-            </span>
-            <Button
-              variant="outline"
-              disabled={!query.data?.hasMore || query.isFetching}
-              onClick={() => setPages((current) => ({ ...current, [status]: page + 1 }))}
-            >
-              Trang sau
-              <ArrowRight size={16} aria-hidden="true" />
-            </Button>
-          </nav>
+          <SellerPagination
+            ariaLabel={`Phân trang: ${title}`}
+            page={page}
+            hasMore={query.data?.hasMore}
+            busy={query.isFetching}
+            onPageChange={(next) => setPages((current) => ({ ...current, [status]: next }))}
+          />
         )}
       </section>
     );
@@ -131,43 +116,59 @@ export default function StaffTaskBoard({
 
   return (
     <section id="staff-tasks" className="staff-task-board" aria-labelledby="staff-tasks-title">
-      <h2 id="staff-tasks-title" className="sr-only">
-        Danh sách công việc
-      </h2>
-      <div className="staff-task-toolbar">
-        <IconActionButton
-          variant="outline"
-          disabled={fetching}
-          onClick={async () => {
-            const results = await Promise.all(queries.map((query) => query.refetch()));
-            if (results.every((result) => !result.isError)) setReload((value) => value + 1);
-            await Promise.all(
-              [
-                'staff-inventory-maintenance',
-                'staff-stock',
-                'staff-preorders',
-                'staff-quality',
-              ].map((key) => queryClient.invalidateQueries({ queryKey: [key] })),
-            );
-          }}
-          action="reload"
-          label="Tải lại công việc"
-        />
-      </div>
-      {loading && <p role="status">Đang tải công việc…</p>}
-      {failed && (
-        <p role="alert">Chưa tải được một số công việc. Bấm “Tải lại công việc” để thử lại.</p>
-      )}
-      {!loading && !failed && !activeGroups.some(hasContent) && (
-        <p className="staff-board-empty">Chưa có công việc cần xử lý hoặc chờ duyệt.</p>
-      )}
-      {activeGroups.map(renderGroup)}
-      {history.some(hasContent) && (
-        <details className="staff-board-history">
-          <summary>Lịch sử công việc</summary>
-          {history.map(renderGroup)}
-        </details>
-      )}
+      <RefreshRegion>
+        <h2 id="staff-tasks-title" className="sr-only">
+          Danh sách công việc
+        </h2>
+        <div className="staff-task-toolbar">
+          <div className="staff-work-search">
+            <Search size={16} aria-hidden="true" />
+            <input
+              type="search"
+              aria-label="Tìm công việc trong danh sách"
+              placeholder="Tìm kiosk, địa chỉ hoặc ghi chú…"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </div>
+          <IconActionButton
+            variant="outline"
+            disabled={fetching}
+            onClick={async () => {
+              const results = await Promise.all(queries.map((query) => query.refetch()));
+              if (results.every((result) => !result.isError)) setReload((value) => value + 1);
+              await Promise.all(
+                [
+                  'staff-inventory-maintenance',
+                  'staff-stock',
+                  'staff-preorders',
+                  'staff-quality',
+                ].map((key) => queryClient.invalidateQueries({ queryKey: [key] })),
+              );
+            }}
+            action="reload"
+            label="Tải lại công việc"
+          />
+        </div>
+        {loading && <p role="status">Đang tải công việc…</p>}
+        {failed && (
+          <p role="alert">Chưa tải được một số công việc. Bấm “Tải lại công việc” để thử lại.</p>
+        )}
+        {!loading && !failed && !activeGroups.some(hasContent) && (
+          <p className="staff-board-empty">
+            {search.trim()
+              ? 'Không tìm thấy công việc phù hợp.'
+              : 'Chưa có công việc cần xử lý hoặc chờ duyệt.'}
+          </p>
+        )}
+        {activeGroups.map(renderGroup)}
+        {history.some(hasContent) && (
+          <details className="staff-board-history">
+            <summary>Lịch sử công việc</summary>
+            {history.map(renderGroup)}
+          </details>
+        )}
+      </RefreshRegion>
     </section>
   );
 }

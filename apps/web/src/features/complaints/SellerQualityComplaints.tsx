@@ -1,10 +1,11 @@
 'use client';
 
+import SellerPagination from '@/shared/components/SellerPagination';
 import RefreshRegion from '@/shared/components/RefreshRegion';
 import IconActionButton from '@/shared/components/IconActionButton';
 import { useId, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, ArrowRight, Button, Search } from '@florabot/ui';
+import { ArrowRight, Button, Search } from '@florabot/ui';
 import Select from '@/shared/components/Select';
 import SidePanel from '@/shared/components/SidePanel';
 import { queryClient, request } from '@/shared/lib/api';
@@ -247,25 +248,13 @@ export default function SellerQualityComplaints({
             </ul>
           )}
           {(page > 1 || queue.data?.hasMore) && (
-            <nav className={styles.pagination} aria-label="Phân trang phản ánh">
-              <Button
-                variant="outline"
-                disabled={page <= 1 || queue.isFetching}
-                onClick={() => setPage((value) => value - 1)}
-              >
-                <ArrowLeft size={15} aria-hidden="true" />
-                Trang trước
-              </Button>
-              <span>Trang {page}</span>
-              <Button
-                variant="outline"
-                disabled={!queue.data?.hasMore || queue.isFetching}
-                onClick={() => setPage((value) => value + 1)}
-              >
-                Trang sau
-                <ArrowRight size={15} aria-hidden="true" />
-              </Button>
-            </nav>
+            <SellerPagination
+              ariaLabel="Phân trang phản ánh"
+              page={page}
+              hasMore={queue.data?.hasMore}
+              busy={queue.isFetching}
+              onPageChange={setPage}
+            />
           )}
         </div>
       </RefreshRegion>

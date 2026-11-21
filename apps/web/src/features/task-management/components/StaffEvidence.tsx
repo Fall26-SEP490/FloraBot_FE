@@ -134,7 +134,7 @@ export default function StaffEvidence({
             <ol className="staff-evidence-grid">
               {evidence.data.items.map((item, index) => (
                 <li key={item.id}>
-                  {role === 'SELLER' ? (
+                  {role === 'SELLER' || role === 'SELLER_STAFF' ? (
                     <button
                       type="button"
                       className="task-evidence-photo"
@@ -226,7 +226,11 @@ export default function StaffEvidence({
               </Modal>,
               document.body,
             )}
-          <div className="staff-history-pagination" aria-label="Phân trang ảnh minh chứng">
+          <div
+            className="staff-history-pagination"
+            role="navigation"
+            aria-label="Phân trang ảnh minh chứng"
+          >
             {(page > 1 || evidence.data.hasMore) && (
               <>
                 <Button
@@ -261,16 +265,27 @@ export default function StaffEvidence({
         ) : active ? (
           <>
             <p className="staff-evidence-instruction">
-              Tải ảnh → <strong>Gắn ảnh vào công việc</strong>.
+              {role === 'SELLER_STAFF' ? (
+                'Chọn ảnh để tải lên và xem trước.'
+              ) : (
+                <>
+                  Tải ảnh → <strong>Gắn ảnh vào công việc</strong>.
+                </>
+              )}
             </p>
             <EvidenceUpload
               key={`${version}:${uploadKey}`}
               id={`task-evidence-${taskId}`}
               endpoint={`/api${path}/upload`}
               disabled={busy}
+              autoUpload={role === 'SELLER_STAFF'}
+              showPreview={role === 'SELLER_STAFF'}
+              helpText={role === 'SELLER_STAFF' ? 'PNG, JPEG hoặc WebP · tối đa 5 MB.' : undefined}
               onReference={setReference}
             />
-            {reference && <p role="status">Ảnh đã tải lên, chưa gắn vào công việc.</p>}
+            {reference && role !== 'SELLER_STAFF' && (
+              <p role="status">Ảnh đã tải lên, chưa gắn vào công việc.</p>
+            )}
             <Button
               disabled={busy || !reference}
               onClick={() => void send({ id: crypto.randomUUID(), version, reference }, false)}

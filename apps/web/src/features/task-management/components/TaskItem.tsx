@@ -1,4 +1,5 @@
 import IconActionButton from '@/shared/components/IconActionButton';
+import SidePanel from '@/shared/components/SidePanel';
 import Select from '@/shared/components/Select';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
@@ -612,7 +613,6 @@ export function TaskItem({
       )}
       {qualityTask && staffDelivery && (
         <div className="staff-stocking-section">
-          <h4>Xử lý chất lượng hoa</h4>
           {quality.isPending ? (
             <p role="status">Đang tải phản ánh liên quan…</p>
           ) : quality.isError ? (
@@ -629,6 +629,7 @@ export function TaskItem({
             <QualityComplaintDetails
               detail={quality.data}
               scope="staff"
+              hideTaskContext
               onPage={setQualityEvidencePage}
             />
           )}
@@ -637,7 +638,7 @@ export function TaskItem({
       {canWorkOnInventory && actorId && (!qualityTask || inventory.data || inventory.isError) && (
         <div className="staff-stocking-section">
           <div className="staff-stocking-header">
-            <h4>Thao tác tại tủ</h4>
+            <h3>Thao tác tại tủ</h3>
           </div>
           {inventory.isPending && <p role="status">Đang tải thao tác được giao…</p>}
           {inventory.data && (
@@ -703,16 +704,8 @@ export function TaskItem({
       {choices.length > 0 &&
         role !== 'SELLER' &&
         !needsRepairContext &&
-        (compactStaff && canWorkOnInventory ? (
-          <details className="staff-report-disclosure">
-            <summary>
-              Viết báo cáo <ChevronDown size={16} aria-hidden="true" />
-            </summary>
-            {transitionForm}
-          </details>
-        ) : (
-          transitionForm
-        ))}
+        !(compactStaff && canWorkOnInventory) &&
+        transitionForm}
       {task.report && (
         <div className="staff-latest-report">
           <strong>
@@ -743,6 +736,12 @@ export function TaskItem({
           taskStatus={task.status}
           active={isWorker && task.status === 'IN_PROGRESS'}
         />
+        {compactStaff && canWorkOnInventory && choices.length > 0 && !needsRepairContext && (
+          <details className="staff-report-disclosure">
+            <summary>Viết báo cáo</summary>
+            {transitionForm}
+          </details>
+        )}
         <StaffTaskDetails
           taskId={task.id}
           version={task.version}
@@ -889,9 +888,34 @@ export function TaskItem({
             {staffOpen ? 'Thu gọn' : startingDelivery ? 'Mở công việc' : nextLabel}
             <ChevronDown size={16} aria-hidden="true" />
           </Button>
-          <div id={`staff-body-${task.id}`} className="staff-task-body" hidden={!staffOpen}>
-            {taskContent}
-          </div>
+          {staffOpen && (
+            <SidePanel
+              title={`${qualityTask ? 'Xử lý chất lượng hoa' : 'Giao hoa'} · ${task.kioskName}`}
+              className="staff-work-panel"
+              onClose={() => onToggleStaff?.()}
+            >
+              <div id={`staff-body-${task.id}`} className="staff-task-body">
+                <div className="staff-work-panel-summary">
+                  <span className="staff-task-label" data-status={task.status}>
+                    {TASK_STATUS_LABELS[task.status] || task.status}
+                  </span>
+                  {taskDestination}
+                </div>
+                {taskContent}
+                {error && <p role="alert">{error}</p>}
+                {uncertain && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={busy}
+                    onClick={() => void refreshTask()}
+                  >
+                    Kiểm tra trạng thái mới nhất
+                  </Button>
+                )}
+              </div>
+            </SidePanel>
+          )}
         </>
       ) : isTechnician ? (
         <details

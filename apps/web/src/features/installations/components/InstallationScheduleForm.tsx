@@ -121,8 +121,8 @@ export function InstallationScheduleForm({
               )}
             {eligibleKiosks.map((k) => (
               <option key={k.id} value={k.id}>
-                {k.code} - {k.name} ({k.slotCount} ô: {k.walkInSlots} Walk-in · {k.preorderSlots}{' '}
-                Pre-order) [{k.status}]
+                {k.code} - {k.name} ({k.slotCount} ô: {k.walkInSlots} bán sẵn · {k.preorderSlots}{' '}
+                đặt trước) [{k.status}]
               </option>
             ))}
           </Select>

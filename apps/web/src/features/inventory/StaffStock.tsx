@@ -31,8 +31,8 @@ export function staffStockQuery(
 export function walkInBlocker(options: Options) {
   const hasSlot = options.slots.some((slot) => slot.zone === 'WALK_IN');
   const hasProduct = options.products.length > 0;
-  if (!hasSlot && !hasProduct) return 'Thiếu cả ô Walk-in trống và mẫu hoa có thể nạp.';
-  if (!hasSlot) return 'Không có ô Walk-in trống phù hợp.';
+  if (!hasSlot && !hasProduct) return 'Thiếu cả ô bán sẵn trống và mẫu hoa có thể nạp.';
+  if (!hasSlot) return 'Không có ô bán sẵn trống phù hợp.';
   if (!hasProduct) return 'Không có mẫu hoa có thể nạp.';
   return null;
 }
@@ -116,7 +116,10 @@ export default function StaffStock({
     }
   }
   return (
-    <details onToggle={(event) => setOpen(event.currentTarget.open)}>
+    <details
+      className="staff-stock-disclosure"
+      onToggle={(event) => setOpen(event.currentTarget.open)}
+    >
       <summary>Nạp hoa bán tại tủ</summary>
       {attempt ? (
         <>
@@ -141,7 +144,7 @@ export default function StaffStock({
           noValidate
           onSubmit={form.handleSubmit((values) => {
             if (!walkInSlots.some((slot) => slot.id === values.slotId)) {
-              form.setError('slotId', { message: 'Chọn ô Walk-in còn trống.' });
+              form.setError('slotId', { message: 'Chọn ô bán sẵn còn trống.' });
               return;
             }
             return send({
@@ -170,7 +173,7 @@ export default function StaffStock({
           <p id={`stock-product-error-${taskId}`} className="error">
             {form.formState.errors.productId?.message}
           </p>
-          <label htmlFor={`stock-slot-${taskId}`}>Ô Walk-in trống</label>
+          <label htmlFor={`stock-slot-${taskId}`}>Ô bán sẵn trống</label>
           <Select
             id={`stock-slot-${taskId}`}
             {...form.register('slotId', { required: 'Chọn ô tủ.' })}

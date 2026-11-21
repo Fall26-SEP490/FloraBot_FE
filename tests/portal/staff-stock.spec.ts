@@ -128,7 +128,7 @@ for (const width of [390, 1440])
     await expect(page.getByText('Chọn mẫu hoa.', { exact: true })).toBeVisible();
     expect(writes).toBe(0);
     await chooseOption(page.getByLabel('Mẫu hoa cần nạp'), 'product-1');
-    await chooseOption(page.getByLabel('Ô Walk-in trống'), 'slot-1');
+    await chooseOption(page.getByLabel('Ô bán sẵn trống'), 'slot-1');
     await page.getByLabel('Mã QR trên bó hoa').fill('FLOWER-001');
     await page.getByRole('button', { name: 'Ghi nhận đã nạp hoa' }).click();
     await expect(page.getByText('Xác nhận đã đặt hoa đúng ô.', { exact: true })).toBeVisible();

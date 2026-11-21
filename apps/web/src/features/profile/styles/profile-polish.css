@@ -1,0 +1,202 @@
+/* Keep the embedded customer account layout; refine the standalone role profile. */
+.workspace-portal-root .profile-page.profile-refined:not(.profile-compact) {
+  & .profile-header {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    padding: 8px 0 20px;
+  }
+  & .profile-avatar-large {
+    width: 48px;
+    height: 48px;
+    border: 0;
+  }
+  & .profile-header-titles h1 {
+    font-size: clamp(24px, 3vw, 32px);
+  }
+  & .profile-quick-nav {
+    position: static;
+    gap: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    margin-bottom: 20px;
+  }
+  & .profile-quick-nav a,
+  & .profile-quick-nav a:hover {
+    min-height: 44px;
+    padding: 8px 16px;
+    border: 0;
+    border-bottom: 2px solid #dce5dc;
+    border-radius: 0;
+    background: transparent;
+    color: #52665b;
+    font-weight: 400;
+  }
+  & .profile-quick-nav a[aria-current='location'] {
+    background: transparent;
+    color: #203e2d;
+    border-bottom-color: #245b3e;
+    font-weight: 600;
+  }
+  & .profile-section {
+    padding: 20px 24px;
+    box-shadow: none;
+  }
+  & .profile-login-info {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    margin-bottom: 20px;
+  }
+  & .profile-login-info dl {
+    margin: 0;
+  }
+  & .profile-login-info dt {
+    color: #617267;
+    font-size: 12px;
+    font-weight: 400;
+    margin-bottom: 4px;
+  }
+  & .profile-login-info dd {
+    font-size: 14px;
+    overflow-wrap: anywhere;
+  }
+  & .profile-basic-form {
+    row-gap: 16px;
+  }
+  & .profile-form-group {
+    margin-bottom: 0;
+  }
+  & .profile-form:not(.profile-basic-form) .profile-form-group {
+    margin-bottom: 16px;
+  }
+  & .profile-form-group :is(input, textarea, [role='combobox']) {
+    font-size: 14px;
+    border-radius: 6px;
+    background: #fff;
+  }
+  & .profile-form-group input,
+  & .profile-form-group [role='combobox'] {
+    min-height: 44px;
+    height: 44px;
+  }
+  & .profile-save-row {
+    padding-top: 0;
+    margin-top: 0;
+    border: 0;
+  }
+  & .profile-actions {
+    gap: 10px;
+  }
+  & .profile-actions button,
+  & .profile-form > button,
+  & .profile-bank-details button {
+    min-height: 44px;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+  }
+  & .profile-summary-grid {
+    padding: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+  }
+  & .profile-summary-grid dt {
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 12px;
+    color: #617267;
+  }
+  & .profile-summary-grid dd {
+    font-size: 14px;
+  }
+  & .profile-bank-details {
+    background: transparent;
+    border: 0;
+    padding: 0;
+  }
+  & [aria-labelledby='seller-shop-heading'] .profile-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 20px;
+  }
+  &
+    [aria-labelledby='seller-shop-heading']
+    .profile-form
+    > :is(:first-child, :nth-child(4), button, [role='alert'], [role='status']) {
+    grid-column: 1 / -1;
+  }
+  & [aria-labelledby='seller-shop-heading'] .profile-form > button {
+    justify-self: end;
+  }
+  & .profile-security-disclosure .profile-form {
+    max-width: 640px;
+  }
+  & .profile-disclaimer-card {
+    border: 0;
+    background: transparent;
+    padding: 0;
+    color: #617267;
+  }
+  & .profile-google-link-wrap {
+    border: 0;
+    padding-top: 20px;
+    margin-top: 20px;
+  }
+  & .profile-status-error {
+    border: 0;
+    background: transparent;
+    padding: 0;
+    color: #b42318;
+  }
+  @media (max-width: 600px) {
+    & [aria-labelledby='seller-shop-heading'] .profile-form {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    & .profile-section {
+      padding: 18px 16px;
+    }
+    & .profile-header {
+      gap: 12px;
+    }
+    & .profile-quick-nav a {
+      padding: 8px 12px;
+    }
+  }
+}
+.profile-required {
+  color: #b42318;
+}
+.workspace-portal-root .profile-refined .profile-password-disclosure > summary {
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid #cfdccf;
+  border-radius: 8px;
+  background: #f1f6ee;
+  color: #1b4d36;
+  font-size: 14px;
+  font-weight: 600;
+  gap: 12px;
+}
+.workspace-portal-root .profile-refined .profile-password-disclosure > summary > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.workspace-portal-root .profile-refined .profile-password-disclosure > summary::after {
+  content: none;
+}
+.workspace-portal-root .profile-refined .profile-password-disclosure > summary:focus-visible {
+  outline: 2px solid #245b3e;
+  outline-offset: 2px;
+}
+.profile-password-chevron {
+  flex-shrink: 0;
+}
+.profile-password-disclosure[open] .profile-password-chevron {
+  transform: rotate(180deg);
+}

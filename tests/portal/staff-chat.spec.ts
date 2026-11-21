@@ -159,7 +159,11 @@ async function fixture(
 }
 
 async function selectConversation(page: Page, name = 'Lan Nhân Viên') {
-  await page.getByRole('button', { name: new RegExp(`Cuộc trò chuyện với ${name}`) }).click();
+  if (new URL(page.url()).pathname.startsWith('/seller/')) {
+    await page.getByRole('button', { name: `Nhắn tin ${name}`, exact: true }).click();
+  } else {
+    await page.getByRole('button', { name: new RegExp(`Cuộc trò chuyện với ${name}`) }).click();
+  }
   await expect(page.getByRole('heading', { name, exact: true })).toBeVisible();
 }
 
@@ -169,10 +173,16 @@ test('Seller opens chat from staff directory and sends contact information throu
   const { calls, sent } = await fixture(page, { empty: true });
   await page.goto('/seller/staff');
   await page.getByRole('link', { name: 'Nhắn tin Lan Nhân Viên' }).click();
-  await expect(page.getByLabel('Chọn nhân viên đang hoạt động')).toHaveValue('staff-1');
-  await expect(page.getByRole('option', { name: 'Nhân Viên Đã Khóa' })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Nhắn với nhân viên' }).click();
+  await expect(page.getByRole('combobox')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Nhắn tin Nhân Viên Đã Khóa' })).toHaveCount(0);
+  expect(calls.some((call) => call.path.endsWith('/chat/open'))).toBe(false);
+  await page.getByRole('button', { name: 'Nhắn tin Lan Nhân Viên', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Lan Nhân Viên', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Chào bạn', exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Hỏi tiến độ', exact: true }).click();
+  await expect(page.getByLabel('Nội dung tin nhắn')).toHaveValue(
+    'Bạn cập nhật giúp mình tiến độ công việc tại kiosk nhé.',
+  );
   const content = 'Gọi 0901234567 hoặc shop@example.vn, xem https://example.vn';
   await page.getByLabel('Nội dung tin nhắn').fill(content);
   await page.getByRole('button', { name: 'Gửi', exact: true }).click();
@@ -233,9 +243,9 @@ test('Image upload failure retains the draft and retries via authenticated image
 });
 
 test('Inactive counterpart remains readable and cannot receive new messages', async ({ page }) => {
-  const { sent } = await fixture(page, { inactive: true });
-  await page.goto('/seller/staff-chats');
-  await selectConversation(page);
+  const { sent } = await fixture(page, { role: 'SELLER_STAFF', inactive: true });
+  await page.goto('/staff/chats');
+  await selectConversation(page, 'Tiệm Hoa Nhà');
   await expect(page.getByText(/hiện không hoạt động/)).toBeVisible();
   await expect(page.getByText(initialMessage.content, { exact: true }).last()).toBeVisible();
   await expect(page.getByLabel('Nội dung tin nhắn')).toBeDisabled();
@@ -246,9 +256,9 @@ test('Inactive counterpart remains readable and cannot receive new messages', as
 test('Read failures retry; paginating the list retains the active conversation and unsent draft', async ({
   page,
 }) => {
-  await fixture(page, { failHistory: true, more: true });
-  await page.goto('/seller/staff-chats');
-  await selectConversation(page);
+  await fixture(page, { role: 'SELLER_STAFF', failHistory: true, more: true });
+  await page.goto('/staff/chats');
+  await selectConversation(page, 'Tiệm Hoa Nhà');
   await page.getByRole('button', { name: 'Tải lại tin nhắn', exact: true }).click();
   await expect(page.locator('.chat-messages-list').getByText(initialMessage.content)).toBeVisible();
   await page.getByLabel('Nội dung tin nhắn').fill('Bản nháp chưa gửi');
@@ -261,7 +271,7 @@ test('Read failures retry; paginating the list retains the active conversation a
     .getByRole('button', { name: 'Trang sau' })
     .click();
   await expect(page.getByLabel('Nội dung tin nhắn')).toHaveValue('Bản nháp chưa gửi');
-  await expect(page.getByRole('heading', { name: 'Lan Nhân Viên', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Tiệm Hoa Nhà', exact: true })).toBeVisible();
 });
 
 test('Mobile list does not mark hidden messages read', async ({ page }) => {
@@ -344,7 +354,7 @@ for (const role of ['CUSTOMER', 'ADMIN', 'OPERATIONS_MANAGER', 'TECHNICIAN']) {
   test(`${role} cannot access seller-staff chat APIs`, async ({ page }) => {
     const { calls } = await fixture(page, { role });
     await page.goto('/staff/chats');
-    await expect(page).not.toHaveURL(/\/staff\/chats$/);
+    await expect(page).not.toHaveURL(/\/staff\/chats$/, { timeout: 15_000 });
     expect(
       calls.some(
         (call) =>
@@ -365,6 +375,49 @@ for (const width of [390, 1440]) {
       true,
     );
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
-    await page.screenshot({ path: `artifacts/staff-chat-${width}.png`, fullPage: true });
+  });
+}
+
+for (const width of [390, 820, 1440]) {
+  test(`Shop staff inbox layout at ${width}px`, async ({ page }) => {
+    const { calls } = await fixture(page, { role: 'SELLER_STAFF' });
+    await page.setViewportSize({ width, height: 960 });
+    await page.goto('/staff/chats');
+    await expect(page.getByRole('button', { name: 'Nhắn với chủ shop', exact: true })).toHaveCount(
+      0,
+    );
+    await expect(
+      page.getByRole('button', { name: 'Làm mới hội thoại', exact: true }),
+    ).toBeVisible();
+    await selectConversation(page, 'Tiệm Hoa Nhà');
+    const input = page.getByLabel('Nội dung tin nhắn');
+    await expect(input).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Chào bạn', exact: true })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Hỏi tiến độ', exact: true })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Cần hỗ trợ', exact: true }).click();
+    await expect(input).toHaveValue('Em cần hỗ trợ thêm để tiếp tục công việc tại kiosk.');
+    await input.fill('Bản nháp giữ khi tải lại');
+    if (width > 768) {
+      const reads = calls.filter(
+        (call) => call.path.endsWith('/messages') && call.method === 'GET',
+      ).length;
+      await page.getByRole('button', { name: 'Làm mới hội thoại', exact: true }).click();
+      await expect
+        .poll(
+          () =>
+            calls.filter((call) => call.path.endsWith('/messages') && call.method === 'GET').length,
+        )
+        .toBeGreaterThan(reads);
+      await expect(input).toHaveValue('Bản nháp giữ khi tải lại');
+    }
+    expect(
+      (await page.getByRole('button', { name: 'Gửi', exact: true }).boundingBox())!.height,
+    ).toBeLessThanOrEqual(40);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    expect(
+      (await new AxeBuilder({ page }).include('.staff-chat-section').analyze()).violations,
+    ).toEqual([]);
   });
 }

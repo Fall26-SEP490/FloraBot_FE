@@ -837,6 +837,7 @@ export default function AccountManagement({
             />
             {filtered.length > PAGE_SIZE && (
               <TablePagination
+                centered={actorRole === 'SELLER'}
                 page={page}
                 pageSize={PAGE_SIZE}
                 totalItems={filtered.length}

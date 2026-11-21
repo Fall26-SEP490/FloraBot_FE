@@ -772,10 +772,11 @@ test.describe('Personal Profile UI - Multi-Role, Verification, Bank & A11y', () 
     const phone = await page.getByLabel('Số điện thoại', { exact: true }).boundingBox();
     expect(name && phone && Math.abs(name.y - phone.y) < 2 && phone.x > name.x).toBeTruthy();
     const navigation = page.getByRole('navigation', { name: 'Mục hồ sơ' });
-    await navigation.getByRole('link', { name: 'Đăng nhập & bảo mật', exact: true }).click();
-    await expect(
-      navigation.getByRole('link', { name: 'Đăng nhập & bảo mật', exact: true }),
-    ).toHaveAttribute('aria-current', 'location');
+    await navigation.getByRole('link', { name: 'Bảo mật', exact: true }).click();
+    await expect(navigation.getByRole('link', { name: 'Bảo mật', exact: true })).toHaveAttribute(
+      'aria-current',
+      'location',
+    );
     const navBox = await navigation.boundingBox();
     expect(navBox && navBox.y >= 0 && navBox.y < 360).toBeTruthy();
     await page.setViewportSize({ width: 390, height: 850 });

@@ -51,7 +51,7 @@ function PricingForm({ pricing, onSaved }: { pricing: KioskSlotPricing; onSaved:
       }}
     >
       <p>
-        Đơn giá đồng nhất cho 1 ô (Walk-in hoặc Pre-order) trong 12 tháng. Bảng giá mới chỉ áp dụng
+        Đơn giá đồng nhất cho 1 ô bán sẵn hoặc đặt trước trong 12 tháng. Bảng giá mới chỉ áp dụng
         cho hồ sơ thuê mới và kỳ gia hạn tiếp theo.
       </p>
       <div className="slot-demand-inputs">

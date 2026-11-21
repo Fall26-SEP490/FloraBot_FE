@@ -3,13 +3,24 @@
 import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
 import './styles/profile.css';
+import './styles/profile-polish.css';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { useForm, useWatch } from 'react-hook-form';
 import VietnamDateInput from '@/shared/components/VietnamDateInput';
-import { Button, CircleAlert, Check, Eye, EyeOff, ArrowRight, RotateCcw } from '@florabot/ui';
+import {
+  Button,
+  CircleAlert,
+  Check,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  RotateCcw,
+  ShieldCheck,
+  ChevronDown,
+} from '@florabot/ui';
 import {
   ApiError,
   logoutSession,
@@ -108,8 +119,7 @@ function SellerShopProfileSection({ session }: { session: Session }) {
   return (
     <section aria-labelledby="seller-shop-heading" className="profile-section">
       <div className="profile-section-heading">
-        <h2 id="seller-shop-heading">Hồ sơ cửa hàng (Shop hoa)</h2>
-        <p>Quản lý tên hiển thị, số điện thoại kinh doanh và email liên hệ của shop.</p>
+        <h2 id="seller-shop-heading">Hồ sơ cửa hàng</h2>
         {session.sellerId && (
           <p>
             <Link id="shop-bank-heading" href="/seller/commerce#shop-bank-heading">
@@ -140,7 +150,9 @@ function SellerShopProfileSection({ session }: { session: Session }) {
             {shopQuery.data && (
               <form className="profile-form" onSubmit={(e) => void handleSaveShop(e)} noValidate>
                 <div className="profile-form-group">
-                  <label htmlFor="shop-profile-name">Tên cửa hàng *</label>
+                  <label htmlFor="shop-profile-name">
+                    Tên cửa hàng <span className="profile-required">*</span>
+                  </label>
                   <input
                     id="shop-profile-name"
                     type="text"
@@ -242,7 +254,9 @@ function CustomerCloseAccountSection({ onClosed }: { onClosed: () => void }) {
       )}
       <form className="profile-form" onSubmit={(e) => void handleCloseAccount(e)} noValidate>
         <div className="profile-form-group">
-          <label htmlFor="close-account-password">Nhập mật khẩu hiện tại để xác nhận đóng *</label>
+          <label htmlFor="close-account-password">
+            Nhập mật khẩu hiện tại để xác nhận đóng <span className="profile-required">*</span>
+          </label>
           <input
             id="close-account-password"
             type="password"
@@ -270,9 +284,14 @@ export default function PersonalProfile({ embedded = false }: { embedded?: boole
   return <PersonalProfileContent key={session.data?.id ?? 'signed-out'} embedded={embedded} />;
 }
 
-function PersonalProfileContent({ embedded }: { embedded: boolean }) {
+function PersonalProfileContent({
+  embedded,
+  compact = false,
+}: {
+  embedded: boolean;
+  compact?: boolean;
+}) {
   const session = useQuery(sessionQuery);
-  const compact = embedded && session.data?.role === 'CUSTOMER';
   const [profileGroup, setProfileGroup] = useState('basic-info-heading');
   const [basicEditing, setBasicEditing] = useState(false);
   useEffect(() => {
@@ -1004,8 +1023,10 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
 
         {/* Profile Header */}
         {embedded ? (
-          <header className="account-profile-heading">
-            <h1>{compact ? 'Hồ sơ' : 'Hồ sơ cá nhân'}</h1>
+          <header
+            className={session.data?.role === 'CUSTOMER' ? 'sr-only' : 'account-profile-heading'}
+          >
+            <h1>{session.data?.role === 'CUSTOMER' ? 'Hồ sơ' : 'Hồ sơ cá nhân'}</h1>
           </header>
         ) : (
           <header className="profile-header">
@@ -1029,7 +1050,7 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
               {(compact
                 ? [
                     ['basic-info-heading', 'Thông tin cá nhân'],
-                    ['security', 'Đăng nhập & bảo mật'],
+                    ['security', 'Bảo mật'],
                     ['personal-bank-heading', 'Ngân hàng'],
                   ]
                 : sections
@@ -1121,6 +1142,7 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
                   <CustomerLoyaltySummary />
                 </>
               )}
+              {!compact && role === 'CUSTOMER' && <CustomerLoyaltySummary />}
               <form
                 noValidate
                 onSubmit={(event) => void basicForm.handleSubmit(onSaveBasic)(event)}
@@ -1129,7 +1151,9 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
                 aria-busy={basicSaving}
               >
                 <div className="profile-form-group">
-                  <label htmlFor="profile-full-name">Họ và tên *</label>
+                  <label htmlFor="profile-full-name">
+                    Họ và tên <span className="profile-required">*</span>
+                  </label>
                   <input
                     id="profile-full-name"
                     type="text"
@@ -1138,11 +1162,7 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
                     disabled={profileSaving}
                     {...basicForm.register('fullName')}
                     aria-invalid={!!basicError && basicError.includes('Họ và tên')}
-                    aria-describedby="profile-full-name-hint"
                   />
-                  <p id="profile-full-name-hint" className="profile-form-hint">
-                    Từ 2–100 ký tự.
-                  </p>
                 </div>
 
                 <div className="profile-form-group">
@@ -1155,11 +1175,7 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
                     disabled={profileSaving}
                     {...basicForm.register('phone')}
                     aria-invalid={!!basicError && basicError.includes('Số điện thoại')}
-                    aria-describedby="profile-phone-hint"
                   />
-                  <p id="profile-phone-hint" className="profile-form-hint">
-                    Ví dụ: 0901234567 hoặc +84901234567.
-                  </p>
                 </div>
 
                 <div className="profile-form-group profile-field-wide">
@@ -1172,11 +1188,7 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
                     disabled={profileSaving}
                     {...basicForm.register('address')}
                     aria-invalid={!!basicError && basicError.includes('Địa chỉ')}
-                    aria-describedby="profile-address-hint"
                   />
-                  <p id="profile-address-hint" className="profile-form-hint">
-                    Địa chỉ tối đa 300 ký tự.
-                  </p>
                 </div>
 
                 <div className="profile-form-columns profile-field-wide">
@@ -1210,16 +1222,12 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
                         })
                       }
                       invalid={!!basicError && basicError.includes('Ngày sinh')}
-                      describedBy="profile-birth-hint"
                     />
-                    <p id="profile-birth-hint" className="profile-form-hint">
-                      Không bắt buộc. Có thể để trống.
-                    </p>
                   </div>
                 </div>
                 <div className="profile-actions profile-save-row profile-field-wide">
                   <span className="profile-draft-status" role="status">
-                    {basicForm.formState.isDirty ? 'Có thay đổi chưa lưu' : 'Chưa có thay đổi mới'}
+                    {basicForm.formState.isDirty ? 'Có thay đổi chưa lưu' : ''}
                   </span>
                   <Button type="submit" disabled={profileSaving}>
                     {basicSaving ? 'Đang lưu…' : 'Lưu thông tin cá nhân'}
@@ -1251,12 +1259,11 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
                 <h2 id="contact-email-heading">
                   {compact ? 'Email nhận thông báo' : 'Email liên hệ nhận thông báo'}
                 </h2>
-                {!compact && <p>Nhận thông báo đơn hàng và dịch vụ tại địa chỉ bạn thường dùng.</p>}
               </div>
 
               {(!compact || contactMode !== 'idle') && (
                 <p className="profile-form-hint">
-                  Đổi email liên hệ cần xác thực OTP và không làm thay đổi email đăng nhập.
+                  Xác thực email mới bằng OTP. Email đăng nhập giữ nguyên.
                 </p>
               )}
 
@@ -1332,7 +1339,9 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
               {contactMode === 'requesting' && (
                 <form onSubmit={handleRequestOtp} className="profile-form" noValidate>
                   <div className="profile-form-group">
-                    <label htmlFor="target-contact-email">Địa chỉ email liên hệ mới *</label>
+                    <label htmlFor="target-contact-email">
+                      Địa chỉ email liên hệ mới <span className="profile-required">*</span>
+                    </label>
                     <input
                       id="target-contact-email"
                       type="email"
@@ -1387,7 +1396,9 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
                       </p>
                     )}
                     <div className="profile-form-group">
-                      <label htmlFor="contact-otp-input">Mã xác thực OTP *</label>
+                      <label htmlFor="contact-otp-input">
+                        Mã xác thực OTP <span className="profile-required">*</span>
+                      </label>
                       <input
                         id="contact-otp-input"
                         type="text"
@@ -1454,13 +1465,12 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
             >
               <div className="profile-section-heading">
                 <h2 id="personal-bank-heading">Tài khoản ngân hàng cá nhân</h2>
-                <p>Thêm tài khoản để hỗ trợ hoàn tiền hoặc đối soát khi cần.</p>
               </div>
 
               {(!compact || bankMode !== 'idle' || currentProfile.bank?.hasAccount) && (
                 <div className="profile-disclaimer-card">
                   {role === 'SELLER'
-                    ? 'Tài khoản cá nhân này độc lập với Ngân hàng shop (dùng nhận hoàn phí thuê kiosk) và Kênh PayOS (dùng nhận tiền bán hoa). Sửa tài khoản tại đây không cập nhật ngân hàng shop.'
+                    ? 'Ngân hàng cá nhân dùng nhận hoàn tiền, độc lập với ngân hàng shop và kênh PayOS.'
                     : 'Thông tin được che khi hiển thị. Hãy kiểm tra chính xác trước khi lưu.'}
                 </div>
               )}
@@ -1586,7 +1596,9 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
               {bankMode === 'edit' && (
                 <form onSubmit={handleReviewBank} className="profile-form" noValidate>
                   <div className="profile-form-group">
-                    <label htmlFor="bank-name-input">Tên ngân hàng *</label>
+                    <label htmlFor="bank-name-input">
+                      Tên ngân hàng <span className="profile-required">*</span>
+                    </label>
                     <VietnamBankSelect
                       id="bank-name-input"
                       value={bankValues.bankName}
@@ -1606,7 +1618,9 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
                   </div>
 
                   <div className="profile-form-group">
-                    <label htmlFor="bank-holder-input">Tên chủ tài khoản *</label>
+                    <label htmlFor="bank-holder-input">
+                      Tên chủ tài khoản <span className="profile-required">*</span>
+                    </label>
                     <input
                       id="bank-holder-input"
                       type="text"
@@ -1628,7 +1642,9 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
                   </div>
 
                   <div className="profile-form-group">
-                    <label htmlFor="bank-number-input">Số tài khoản ngân hàng *</label>
+                    <label htmlFor="bank-number-input">
+                      Số tài khoản ngân hàng <span className="profile-required">*</span>
+                    </label>
                     <input
                       id="bank-number-input"
                       type="text"
@@ -1740,17 +1756,27 @@ function PersonalProfileContent({ embedded }: { embedded: boolean }) {
               >
                 <div className="profile-section-heading">
                   <h2 id="security-heading">Bảo mật tài khoản</h2>
-                  <p>Quản lý mật khẩu và phương thức đăng nhập.</p>
                 </div>
 
-                <details className="profile-security-disclosure" open={!embedded || undefined}>
-                  <summary>Đổi mật khẩu</summary>
+                <details
+                  className="profile-security-disclosure profile-password-disclosure"
+                  open={!embedded || undefined}
+                >
+                  <summary>
+                    <span>
+                      <ShieldCheck size={20} aria-hidden="true" />
+                      Đổi mật khẩu
+                    </span>
+                    <ChevronDown
+                      size={18}
+                      className="profile-password-chevron"
+                      aria-hidden="true"
+                    />
+                  </summary>
                   <div className="profile-disclaimer-card">
                     Đổi mật khẩu sẽ đăng xuất các phiên hiện tại.
                   </div>
-                  <p className="profile-form-hint">
-                    Mật khẩu mới cần ít nhất 12 ký tự và tối đa 72 byte UTF-8.
-                  </p>
+                  <p className="profile-form-hint">Dùng ít nhất 12 ký tự cho mật khẩu mới.</p>
 
                   {passwordError && (
                     <p role="alert" className="profile-status-message profile-status-error">

@@ -45,12 +45,9 @@ export function WorkspaceHeader({
   busy: boolean;
   onLogout: () => void;
 }) {
-  const roleLabel = workspaceRoleLabel(role);
-
   return (
     <header className="dashboard-header">
       <SiteBrand className="dashboard-brand" href="/" />
-      <span className="dashboard-role">{roleLabel}</span>
       <WorkspaceUserMenu role={role} name={name} busy={busy} onLogout={onLogout} />
     </header>
   );
@@ -245,19 +242,23 @@ export default function WorkspaceNavigation({
               onKeyDown={handleEscape}
               onClick={closeMenu}
               href="/staff"
+              aria-label="Công việc giao hoa"
+              title="Công việc giao hoa"
               aria-current={section !== 'chats' ? 'page' : undefined}
             >
               <ClipboardList size={19} aria-hidden="true" />
-              Công việc giao hoa
+              <span className="workspace-nav-label">Công việc giao hoa</span>
             </Link>
             <Link
               onKeyDown={handleEscape}
               onClick={closeMenu}
               href="/staff/chats"
+              aria-label="Nhắn với chủ shop"
+              title="Nhắn với chủ shop"
               aria-current={section === 'chats' ? 'page' : undefined}
             >
               <MessageSquare size={19} aria-hidden="true" />
-              Nhắn với chủ shop
+              <span className="workspace-nav-label">Nhắn với chủ shop</span>
             </Link>
           </>
         ) : role === 'OPERATIONS_MANAGER' ? (

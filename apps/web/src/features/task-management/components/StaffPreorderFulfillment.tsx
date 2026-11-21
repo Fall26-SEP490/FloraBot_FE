@@ -114,7 +114,10 @@ export default function StaffPreorderFulfillment({
   }
 
   return (
-    <details onToggle={(event) => setOpen(event.currentTarget.open)}>
+    <details
+      className="staff-stock-disclosure"
+      onToggle={(event) => setOpen(event.currentTarget.open)}
+    >
       <summary>Nạp hoa cho đơn đặt trước</summary>
       {!active ? (
         <p>Chuyển công việc sang “Đang thực hiện” trước khi nạp đơn đặt trước.</p>

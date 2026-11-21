@@ -77,15 +77,21 @@ for (const admin of [false, true])
     await panel.locator('summary').click();
     await expect(panel.getByRole('alert')).toContainText('Chưa tải được ảnh');
     await panel.getByRole('button', { name: 'Thử tải lại ảnh' }).click();
-    await expect(panel.getByRole('link', { name: 'Xem ảnh 1 (mở tab mới)' })).toHaveAttribute(
-      'href',
-      `${prefix}/task/evidence/old-photo`,
-    );
+    if (admin) {
+      await expect(panel.getByRole('link', { name: 'Xem ảnh 1 (mở tab mới)' })).toHaveAttribute(
+        'href',
+        `${prefix}/task/evidence/old-photo`,
+      );
+    } else {
+      await expect(panel.getByRole('button', { name: 'Xem lớn ảnh minh chứng 1' })).toBeVisible();
+    }
     await expect(panel.getByRole('button', { name: 'Ảnh trang trước' })).toHaveCount(0);
     await expect(panel.getByRole('button', { name: 'Ảnh trang tiếp' })).toHaveCount(0);
     showMultiplePages = true;
     await expect(panel.getByRole('button', { name: 'Tải lại ảnh', exact: true })).toHaveCount(0);
-    await panel.locator('summary').click();
+    await page.reload();
+    if (admin) await page.getByRole('button', { name: /^Xem công việc / }).click();
+    else await page.locator('.staff-task-open').click();
     await panel.locator('summary').click();
     await panel.getByRole('button', { name: 'Ảnh trang tiếp' }).click();
     await expect(panel.getByText('Chưa có ảnh minh chứng ở trang này.')).toBeVisible();
@@ -99,7 +105,15 @@ for (const admin of [false, true])
       await panel
         .getByLabel('Ảnh minh chứng', { exact: true })
         .setInputFiles({ name: 'door.png', mimeType: 'image/png', buffer: Buffer.from('fixture') });
-      await panel.getByRole('button', { name: 'Tải ảnh minh chứng', exact: true }).click();
+      await expect(
+        panel.getByRole('button', { name: 'Tải ảnh minh chứng', exact: true }),
+      ).toHaveCount(0);
+      await expect(panel.getByRole('button', { name: 'Phóng to ảnh minh chứng' })).toBeVisible();
+      await panel.getByRole('button', { name: 'Phóng to ảnh minh chứng' }).click();
+      const preview = page.getByRole('dialog', { name: 'Ảnh minh chứng', exact: true });
+      await expect(preview).toBeVisible();
+      await preview.getByRole('button', { name: 'Đóng ảnh', exact: true }).click();
+      await expect(panel.getByRole('button', { name: 'Gắn ảnh vào công việc' })).toBeEnabled();
       await panel.getByRole('button', { name: 'Gắn ảnh vào công việc' }).click();
       await expect(panel.getByRole('alert')).toContainText('Chưa xác nhận được ảnh');
       await page.reload();
@@ -121,7 +135,7 @@ for (const admin of [false, true])
         mimeType: 'image/png',
         buffer: Buffer.from('fixture'),
       });
-      await panel.getByRole('button', { name: 'Tải ảnh minh chứng', exact: true }).click();
+      await expect(panel.getByRole('button', { name: 'Gắn ảnh vào công việc' })).toBeEnabled();
       await panel.getByRole('button', { name: 'Gắn ảnh vào công việc' }).click();
       await expect(panel.getByRole('alert')).toContainText('Ảnh đã hết hạn.');
       await expect(panel.getByRole('button', { name: 'Gắn ảnh vào công việc' })).toBeDisabled();

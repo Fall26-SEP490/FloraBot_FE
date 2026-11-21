@@ -852,6 +852,7 @@ export default function SellerKiosks({ session }: SellerKiosksProps) {
 
         {filteredKiosks.length > PAGE_SIZE && (
           <TablePagination
+            centered
             page={safePage}
             pageSize={PAGE_SIZE}
             totalItems={filteredKiosks.length}

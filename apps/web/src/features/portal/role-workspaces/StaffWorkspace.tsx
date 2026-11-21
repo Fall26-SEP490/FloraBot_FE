@@ -13,6 +13,7 @@ import '../../dashboard/styles/dashboard-overview.css';
 import '../../account-management/styles/platform-workspace.css';
 import '../../account-management/styles/platform-refresh.css';
 import '../styles/workspace-role-parity.css';
+import '../styles/shop-sidebar.css';
 
 const StaffChatSection = dynamic(
   () => import('@/features/chat/StaffChatSection').then((mod) => mod.StaffChatSection),
@@ -69,11 +70,6 @@ export default function StaffWorkspace({ section = 'tasks' }: { section?: string
           <div className="dashboard-page-heading">
             <div>
               <h1>{section === 'chats' ? 'Nhắn với chủ shop' : 'Công việc giao hoa'}</h1>
-              <p>
-                {section === 'chats'
-                  ? 'Trao đổi yêu cầu công việc và chia sẻ ảnh trực tiếp với shop của bạn.'
-                  : 'Chọn công việc để xem nơi giao và thao tác tiếp theo.'}
-              </p>
             </div>
           </div>
           {section === 'chats' ? (
@@ -91,26 +87,6 @@ export default function StaffWorkspace({ section = 'tasks' }: { section?: string
                 apiBase="/staff/tasks"
                 allowedKinds={['DELIVERY']}
               />
-              <details id="staff-guide" className="dashboard-staff-guide" tabIndex={-1}>
-                <summary>Cách làm công việc giao hoa</summary>
-                <ol>
-                  <li>
-                    <strong>Kiểm tra yêu cầu</strong>
-                    <p>Xem đúng tủ, địa chỉ và nội dung được phân công.</p>
-                  </li>
-                  <li>
-                    <strong>Thao tác tại tủ</strong>
-                    <p>Làm theo yêu cầu trong công việc đã mở.</p>
-                  </li>
-                  <li>
-                    <strong>Gửi báo cáo</strong>
-                    <p>Cập nhật kết quả nạp hoa để chủ shop theo dõi.</p>
-                  </li>
-                </ol>
-                <p className="dashboard-data-note">
-                  Bạn chỉ thao tác trong phạm vi công việc được giao của shop phụ trách.
-                </p>
-              </details>
             </>
           )}
           {logout.isError && <p role="alert">Chưa đăng xuất được. Bạn thử lại nhé.</p>}

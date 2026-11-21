@@ -1,3 +1,4 @@
+import SellerPagination from '@/shared/components/SellerPagination';
 import WorkspaceTable from '@/features/portal/components/WorkspaceTable';
 import { Modal } from '@/shared/components/Modal';
 import { useCallback, useRef, useState } from 'react';
@@ -506,7 +507,7 @@ function FilteredTaskList(props: StaffTasksProps) {
               label="Làm mới"
             />
           )}
-          {role === 'SELLER' && (taskSearch || status || page > 1) && (
+          {role === 'SELLER' && (taskSearch.trim() || status) && (
             <IconActionButton
               action="clear"
               label="Xóa bộ lọc công việc"
@@ -708,29 +709,38 @@ function FilteredTaskList(props: StaffTasksProps) {
             {(page > 1 ||
               (role === 'SELLER_STAFF' || role === 'SELLER'
                 ? tasks.data.hasMore
-                : tasks.data.items.length > 0)) && (
-              <nav aria-label="Phân trang công việc" className="order-pagination">
-                <Button
-                  variant="outline"
-                  disabled={page === 1 || tasks.isFetching}
-                  onClick={() => setPage(page - 1)}
-                >
-                  <ArrowLeft size={16} aria-hidden="true" />
-                  <span>Trang trước</span>
-                </Button>
-                <span className="order-pagination-indicator" aria-live="polite">
-                  Trang {page}
-                </span>
-                <Button
-                  variant="outline"
-                  disabled={!tasks.data.hasMore || tasks.isFetching}
-                  onClick={() => setPage(page + 1)}
-                >
-                  <span>Trang sau</span>
-                  <ArrowRight size={16} aria-hidden="true" />
-                </Button>
-              </nav>
-            )}
+                : tasks.data.items.length > 0)) &&
+              (role === 'SELLER' ? (
+                <SellerPagination
+                  ariaLabel="Phân trang công việc"
+                  page={page}
+                  hasMore={tasks.data.hasMore}
+                  busy={tasks.isFetching}
+                  onPageChange={setPage}
+                />
+              ) : (
+                <nav aria-label="Phân trang công việc" className="order-pagination">
+                  <Button
+                    variant="outline"
+                    disabled={page === 1 || tasks.isFetching}
+                    onClick={() => setPage(page - 1)}
+                  >
+                    <ArrowLeft size={16} aria-hidden="true" />
+                    <span>Trang trước</span>
+                  </Button>
+                  <span className="order-pagination-indicator" aria-live="polite">
+                    Trang {page}
+                  </span>
+                  <Button
+                    variant="outline"
+                    disabled={!tasks.data.hasMore || tasks.isFetching}
+                    onClick={() => setPage(page + 1)}
+                  >
+                    <span>Trang sau</span>
+                    <ArrowRight size={16} aria-hidden="true" />
+                  </Button>
+                </nav>
+              ))}
           </>
         )}
       </div>

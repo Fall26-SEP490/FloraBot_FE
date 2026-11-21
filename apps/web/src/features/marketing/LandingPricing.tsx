@@ -29,7 +29,6 @@ export function LandingPricing() {
           <div className="pricing-card">
             <div className="pricing-card-header">
               <span className="pricing-card-type">Ô bán sẵn</span>
-              <span className="pricing-card-subtitle">(Walk-in)</span>
             </div>
             <p className="pricing-card-desc">Nạp hoa để khách ghé mua trực tiếp tại kiosk.</p>
             <div className="pricing-card-rate">
@@ -45,7 +44,6 @@ export function LandingPricing() {
           <div className="pricing-card featured">
             <div className="pricing-card-header">
               <span className="pricing-card-type">Ô đặt trước</span>
-              <span className="pricing-card-subtitle">(Pre-order)</span>
             </div>
             <p className="pricing-card-desc">
               Chuẩn bị hoa theo đơn đặt trước và lưu trữ cho khách lấy theo hẹn.

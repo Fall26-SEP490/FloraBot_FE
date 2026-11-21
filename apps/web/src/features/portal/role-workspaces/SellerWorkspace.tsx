@@ -30,6 +30,7 @@ import '../../account-management/styles/platform-workspace.css';
 import '../../account-management/styles/platform-refresh.css';
 import '../styles/workspace-role-parity.css';
 import '../styles/seller-usability.css';
+import '../styles/shop-sidebar.css';
 import '../styles/seller-flows.css';
 import '../styles/seller-detail-flows.css';
 
@@ -200,9 +201,15 @@ export default function SellerWorkspace({ section = 'overview' }: { section?: st
             section !== 'kiosks' &&
             section !== 'tasks' &&
             section !== 'staff' &&
-            !['commerce', 'refunds', 'seasonal', 'subscriptions', 'terminations'].includes(
-              section,
-            ) && (
+            ![
+              'commerce',
+              'refunds',
+              'seasonal',
+              'subscriptions',
+              'terminations',
+              'chats',
+              'staff-chats',
+            ].includes(section) && (
               <nav className="seller-breadcrumb" aria-label="Vị trí hiện tại">
                 <Link href="/seller">Tổng quan cửa hàng</Link>
               </nav>
@@ -219,15 +226,21 @@ export default function SellerWorkspace({ section = 'overview' }: { section?: st
                 section !== 'kiosks' &&
                 section !== 'tasks' &&
                 section !== 'staff' &&
-                !['commerce', 'refunds', 'seasonal', 'subscriptions', 'terminations'].includes(
-                  section,
-                ) &&
+                ![
+                  'commerce',
+                  'refunds',
+                  'seasonal',
+                  'subscriptions',
+                  'terminations',
+                  'chats',
+                  'staff-chats',
+                ].includes(section) &&
                 currentSection?.[2] && <p>{currentSection[2]}</p>}
             </div>
           </div>
           {activeHub?.tabs && (
             <nav
-              className={`seller-stage-tabs ${['products', 'accessories', 'tasks', 'staff', 'commerce', 'refunds', 'seasonal', 'subscriptions', 'terminations'].includes(section) ? catalogStyles.tabs : ''}`}
+              className={`seller-stage-tabs ${['products', 'accessories', 'tasks', 'staff', 'commerce', 'refunds', 'seasonal', 'subscriptions', 'terminations', 'chats', 'staff-chats'].includes(section) ? catalogStyles.tabs : ''}`}
               aria-label={`Phân mục ${activeHub.label}`}
             >
               {activeHub.tabs.map(([tabKey, tabLabel]) => (

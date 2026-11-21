@@ -32007,6 +32007,13 @@
             "items": {
               "$ref": "#/components/schemas/QuotedPreorderAccessory"
             }
+          },
+          "createdAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         },
         "additionalProperties": false

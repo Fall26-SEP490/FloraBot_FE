@@ -6,7 +6,7 @@ const workspaces = [
   { role: 'OPERATIONS_MANAGER', path: '/operations/technicians', compact: true },
   { role: 'TECHNICIAN', path: '/technician', compact: true },
   { role: 'SELLER', path: '/seller/orders', compact: true },
-  { role: 'SELLER_STAFF', path: '/staff', compact: false },
+  { role: 'SELLER_STAFF', path: '/staff', compact: true },
 ] as const;
 
 for (const { role, path, compact } of workspaces) {

@@ -56,7 +56,7 @@ export function AdminKioskSlotDetails({
             <h4>Các ô của kiosk {kioskCode}</h4>
             <FlowerPresencePanel kioskId={kioskId} />
             <p className="quiet">
-              Xác minh cảm biến cửa và cảm biến hoa tại ô trước khi bật giám sát. Ô Pre-order cần
+              Xác minh cảm biến cửa và cảm biến hoa tại ô trước khi bật giám sát. Ô đặt trước cần
               bật giám sát để shop nạp hoa.
             </p>
             {slots.isPending && <p role="status">Đang tải các ô tủ…</p>}

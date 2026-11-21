@@ -210,6 +210,7 @@ export default function ProductManagement({ session }: { session: Session }) {
           {filtered.length > 0 && (
             <div className={styles.pagination}>
               <TablePagination
+                centered
                 page={safePage}
                 pageSize={PAGE_SIZE}
                 totalItems={filtered.length}

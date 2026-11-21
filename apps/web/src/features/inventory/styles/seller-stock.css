@@ -1541,3 +1541,358 @@ div.management-modal.stock-slot-modal .management-modal-close {
     white-space: nowrap;
   }
 }
+/* Compact slot details across loading, maintenance and blocked states. */
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .seller-workspace
+  main.seller-content
+  .management-modal.stock-slot-modal.stock-slot-modal
+  .stock-slot-modal-bouquet {
+  padding: 12px;
+  background: #fafcf9;
+  border: 0;
+  border-radius: 8px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .seller-workspace
+  main.seller-content
+  .management-modal.stock-slot-modal.stock-slot-modal
+  .stock-slot-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 16px;
+  margin: 14px 0 0;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .seller-workspace
+  main.seller-content
+  .management-modal.stock-slot-modal.stock-slot-modal
+  .stock-slot-details
+  > div {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  min-width: 0;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .seller-workspace
+  main.seller-content
+  .management-modal.stock-slot-modal.stock-slot-modal
+  .stock-slot-details
+  > div:first-child {
+  grid-column: 1 / -1;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .seller-workspace
+  main.seller-content
+  .management-modal.stock-slot-modal.stock-slot-modal
+  .stock-slot-details
+  dt {
+  font-size: 12px;
+  font-weight: 400;
+  text-transform: none;
+  color: #617267;
+  margin-bottom: 4px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .seller-workspace
+  main.seller-content
+  .management-modal.stock-slot-modal.stock-slot-modal
+  .stock-slot-details
+  dd {
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .seller-workspace
+  main.seller-content
+  .management-modal.stock-slot-modal.stock-slot-modal
+  .stock-maintenance {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .seller-workspace
+  main.seller-content
+  .management-modal.stock-slot-modal.stock-slot-modal
+  .stock-maintenance-start {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  padding: 0;
+  margin-top: 14px;
+  border: 0;
+  background: transparent;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .seller-workspace
+  main.seller-content
+  .management-modal.stock-slot-modal.stock-slot-modal
+  .stock-maintenance-start
+  > p {
+  margin: 0;
+  font-size: 12px;
+  color: #617267;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .seller-workspace
+  main.seller-content
+  .management-modal.stock-slot-modal.stock-slot-modal
+  .stock-maintenance-start
+  label {
+  margin: 0;
+  font-size: 13px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .seller-workspace
+  main.seller-content
+  .management-modal.stock-slot-modal.stock-slot-modal
+  .stock-maintenance-start
+  textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 88px;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 14px;
+  border: 1px solid #cbdacf;
+  border-radius: 8px;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .seller-workspace
+  main.seller-content
+  .management-modal.stock-slot-modal.stock-slot-modal
+  .stock-maintenance-start
+  > button:last-child {
+  justify-self: end;
+  min-height: 44px;
+  margin: 4px 0 0;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .seller-workspace
+  main.seller-content
+  .management-modal.stock-slot-modal.stock-slot-modal
+  .error {
+  color: #b02e2e;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .seller-workspace
+  main.seller-content
+  .management-modal.stock-slot-modal.stock-slot-modal
+  .stock-maintenance-progress {
+  padding: 12px 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .seller-workspace
+  main.seller-content
+  .management-modal.stock-slot-modal.stock-slot-modal
+  .stock-maintenance-progress[data-stage='NeedsInspection'] {
+  color: #b02e2e;
+}
+/* Consistent form and progress layout for every slot modal state. */
+.workspace-portal-root.platform-workspace[data-platform-role='seller']
+  .seller-workspace
+  main.seller-content
+  .management-modal.stock-slot-modal.stock-slot-modal {
+  width: min(620px, calc(100vw - 32px));
+  & .stock-slot-modal-body {
+    display: grid;
+    gap: 18px;
+  }
+  & .stock-slot-modal-bouquet {
+    padding: 14px;
+  }
+  & .stock-slot-modal-bouquet-head {
+    gap: 10px;
+  }
+  & .stock-slot-modal-bouquet-head strong {
+    font-size: 14px;
+  }
+  & .stock-operation-tabs {
+    margin: 0 0 4px;
+  }
+  & .stock-operation-tabs button {
+    font-size: 13px;
+    padding: 10px 8px;
+  }
+  & .stock-maintenance,
+  & .stock-assignment {
+    display: grid;
+    gap: 14px;
+  }
+  & .stock-maintenance-heading h4 {
+    font-size: 16px;
+  }
+  & .stock-maintenance-progress {
+    padding: 0;
+    gap: 8px;
+  }
+  & .stock-maintenance-state {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  & .stock-maintenance-state svg {
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  & .stock-maintenance-progress[data-stage='Completed'],
+  & .stock-maintenance-progress[data-stage='Recovered'] {
+    color: #23723d;
+  }
+  & .stock-maintenance-expiry {
+    font-size: 12px;
+    color: #63746c;
+  }
+  & .stock-maintenance-controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+  & .stock-maintenance-controls > button,
+  & .stock-maintenance-done {
+    min-height: 44px;
+    margin: 0;
+    padding: 10px 14px;
+    width: auto;
+    font-size: 13px;
+  }
+  & .stock-maintenance-done {
+    justify-self: end;
+  }
+  & .stock-maintenance-issue {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  & .stock-maintenance-issue label {
+    font-size: 13px;
+    font-weight: 500;
+  }
+  & :is(.stock-maintenance-issue, .stock-assignment) textarea {
+    min-height: 88px;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    margin: 0;
+    border: 1px solid #cbdacf;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.6;
+    resize: vertical;
+  }
+  & textarea:focus-visible {
+    outline: 2px solid #245b3d;
+    outline-offset: 2px;
+  }
+  & .stock-maintenance-start {
+    margin: 0;
+    gap: 8px;
+  }
+  & .stock-maintenance-start > button:last-child {
+    margin-top: 8px;
+    padding: 10px 16px;
+  }
+  & .stock-maintenance-start > label:not(:first-child) {
+    margin-top: 6px;
+  }
+  & .stock-assignment .stock-maintenance-start {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 14px;
+  }
+  & .stock-assignment .stock-maintenance-start > .stock-assignment-field {
+    display: grid;
+    gap: 8px;
+  }
+  & .stock-operation-note {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #63746c;
+  }
+  & .stock-slot-support {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  & .stock-slot-support > summary {
+    font-size: 12px;
+  }
+  & [role='alert'] {
+    color: #b02e2e;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  @media (max-width: 480px) {
+    & .stock-assignment .stock-maintenance-start {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    & .stock-maintenance-controls > button {
+      flex: 1 1 auto;
+    }
+  }
+}
+.stock-location-modal.stock-location-modal {
+  width: min(620px, calc(100vw - 32px));
+  padding: 0;
+  & > .management-modal-header {
+    margin: 0;
+    padding: 18px 20px;
+  }
+  & .stock-location-body {
+    display: grid;
+    gap: 14px;
+    margin: 0;
+    padding: 20px;
+    font-size: 14px;
+  }
+  & .stock-location-address {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 0;
+    line-height: 1.6;
+  }
+  & .stock-location-address svg {
+    flex-shrink: 0;
+    margin-top: 3px;
+  }
+  & .stock-location-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 6px;
+  }
+  & .stock-location-actions a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    margin: 0;
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+}

@@ -92,10 +92,11 @@ function EvidencePhoto({
     };
   }, [attempt, complaintId, photo.id, photo.url, scope, orderId, trackingToken]);
   const label = photo.source === 'STAFF_TASK' ? 'Ảnh xử lý của nhân viên' : 'Ảnh khách gửi';
+  const visual = scope === 'seller' || scope === 'staff';
   return (
-    <li className={scope === 'seller' ? sellerStyles.evidenceCard : undefined}>
+    <li className={visual ? sellerStyles.evidenceCard : undefined}>
       <p>
-        {scope === 'seller' ? (
+        {visual ? (
           <>
             <strong>{label}</strong>
             <time dateTime={photo.createdAt}>{sellerDate(photo.createdAt)}</time>
@@ -107,7 +108,7 @@ function EvidencePhoto({
         )}
       </p>
       {src ? (
-        scope === 'seller' ? (
+        visual ? (
           <button
             type="button"
             className={sellerStyles.imageButton}
@@ -127,7 +128,7 @@ function EvidencePhoto({
             type="button"
             variant="outline"
             aria-label={
-              scope === 'seller'
+              visual
                 ? `${failed ? 'Thử tải lại' : 'Xem'} ${label.toLocaleLowerCase('vi')}`
                 : undefined
             }
@@ -141,7 +142,7 @@ function EvidencePhoto({
           </Button>
         </>
       )}
-      {scope === 'seller' && (
+      {visual && (
         <dialog ref={preview} className={sellerStyles.photoDialog} aria-label={label}>
           <header>
             <strong>{label}</strong>
@@ -162,9 +163,11 @@ export default function QualityComplaintDetails({
   capability,
   onPage,
   actions,
+  hideTaskContext = false,
 }: {
   detail: QualityComplaint;
   scope: Scope;
+  hideTaskContext?: boolean;
   capability?: ReceiptCapability;
   onPage: (page: number) => void;
   actions?: ReactNode;
@@ -322,7 +325,7 @@ export default function QualityComplaintDetails({
           </ul>
         </div>
       )}
-      {scope !== 'customer' && task && (
+      {scope !== 'customer' && task && !hideTaskContext && (
         <div className={styles.flow}>
           <p className={styles.text}>
             <strong>Việc được giao: </strong>
@@ -340,9 +343,6 @@ export default function QualityComplaintDetails({
         <div className={styles.flow}>
           <strong>{qualityLabels[replacement.state] || replacement.state}</strong>
           {scope !== 'customer' && <p>Ô {replacement.slotCode}</p>}
-          {scope === 'staff' && (
-            <p className={styles.text}>Mã mẫu hoa đã giao: {replacement.productId}</p>
-          )}
           {replacement.state === 'READY' && (
             <p>
               Đến đúng kiosk của đơn gốc, chọn “Nhận hoa thay” và dùng biên nhận gốc. Không cần
@@ -354,42 +354,47 @@ export default function QualityComplaintDetails({
           )}
         </div>
       )}
-      <details>
-        <summary>Ảnh minh chứng</summary>
-        {!evidence.items.length && <p>Không có ảnh ở trang này.</p>}
-        <ul>
-          {evidence.items.map((photo) => (
-            <EvidencePhoto
-              key={photo.id}
-              photo={photo}
-              complaintId={detail.id}
-              scope={scope}
-              capability={capability}
-            />
-          ))}
-        </ul>
-        {(Number(evidence.page) > 1 || evidence.hasMore) && (
-          <div className={styles.actions}>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={Number(evidence.page) <= 1}
-              onClick={() => onPage(Number(evidence.page) - 1)}
-            >
-              Trang ảnh trước
-            </Button>
-            <span>Trang {evidence.page}</span>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={!evidence.hasMore}
-              onClick={() => onPage(Number(evidence.page) + 1)}
-            >
-              Trang ảnh tiếp
-            </Button>
-          </div>
-        )}
-      </details>
+      {(scope !== 'staff' ||
+        evidence.items.length > 0 ||
+        evidence.hasMore ||
+        Number(evidence.page) > 1) && (
+        <details className={scope === 'staff' ? 'staff-quality-evidence' : undefined}>
+          <summary>Ảnh minh chứng</summary>
+          {!evidence.items.length && <p>Không có ảnh ở trang này.</p>}
+          <ul>
+            {evidence.items.map((photo) => (
+              <EvidencePhoto
+                key={photo.id}
+                photo={photo}
+                complaintId={detail.id}
+                scope={scope}
+                capability={capability}
+              />
+            ))}
+          </ul>
+          {(Number(evidence.page) > 1 || evidence.hasMore) && (
+            <div className={styles.actions}>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={Number(evidence.page) <= 1}
+                onClick={() => onPage(Number(evidence.page) - 1)}
+              >
+                Trang ảnh trước
+              </Button>
+              <span>Trang {evidence.page}</span>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={!evidence.hasMore}
+                onClick={() => onPage(Number(evidence.page) + 1)}
+              >
+                Trang ảnh tiếp
+              </Button>
+            </div>
+          )}
+        </details>
+      )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import SellerPagination from '@/shared/components/SellerPagination';
 import RefreshRegion from '@/shared/components/RefreshRegion';
 import WorkspaceTable from '@/features/portal/components/WorkspaceTable';
 import { Modal } from '@/shared/components/Modal';
@@ -851,7 +852,7 @@ function OrderActions({
               (fulfillStep !== 2 || !fulfillSlots.some((item) => item.id === slot) || !qr.trim())
             ) {
               setError(
-                'Chọn ô Pre-order có cảm biến sẵn sàng và nhập mã bó hoa trước khi xác nhận.',
+                'Chọn ô đặt trước có cảm biến sẵn sàng và nhập mã bó hoa trước khi xác nhận.',
               );
               setFulfillStep(1);
               return;
@@ -1193,7 +1194,7 @@ function OrderActions({
                     setLoadingAccess(null);
                   }}
                 >
-                  <option value="">Chọn ô Pre-order trống</option>
+                  <option value="">Chọn ô đặt trước trống</option>
                   {emptyPreorderSlots.map((item) => (
                     <option key={item.id} value={item.id} disabled={!item.sensorReady}>
                       {item.slotCode}
@@ -1221,7 +1222,7 @@ function OrderActions({
                   ) : slots.isError ? (
                     <p role="alert">Chưa tải được các ô tại tủ nhận.</p>
                   ) : emptyPreorderSlots.length === 0 ? (
-                    <p className="quiet">Tủ nhận của đơn hiện chưa có ô Pre-order trống.</p>
+                    <p className="quiet">Tủ nhận của đơn hiện chưa có ô đặt trước trống.</p>
                   ) : fulfillSlots.length < emptyPreorderSlots.length ? (
                     <p className="quiet">
                       Ô có cảm biến chưa sẵn sàng cần Admin xác minh cảm biến cửa, cảm biến hoa và
@@ -1278,7 +1279,7 @@ function OrderActions({
                     <dd>{row.kioskName || row.kioskId}</dd>
                   </div>
                   <div>
-                    <dt>Ô Pre-order</dt>
+                    <dt>Ô đặt trước</dt>
                     <dd>
                       {fulfillSlots.find((item) => item.id === slot)?.slotCode ||
                         'Không còn phù hợp'}
@@ -1559,6 +1560,7 @@ export default function WebRequests({
   const purchaseRows: (WebOrder & { purchase: CustomerHistoryItem })[] = historyItems.map(
     (order) => ({
       id: `purchase-${order.id}`,
+      createdAt: order.createdAt,
       kind: 'STOCK',
       state: order.status,
       orderStatus: order.status,
@@ -1661,9 +1663,7 @@ export default function WebRequests({
       ? filtered.slice((displayPage - 1) * SELLER_RESULT_SIZE, displayPage * SELLER_RESULT_SIZE)
       : mode === 'member'
         ? [...filtered].sort(
-            (a, b) =>
-              Number(matchesOrderFilter(b, 'attention', 'member')) -
-              Number(matchesOrderFilter(a, 'attention', 'member')),
+            (a, b) => (Date.parse(b.createdAt ?? '') || 0) - (Date.parse(a.createdAt ?? '') || 0),
           )
         : filtered;
   const interventionCount =
@@ -1681,26 +1681,6 @@ export default function WebRequests({
       };
     })
     .filter(({ count }) => !query.isSuccess || count > 0);
-  const memberGroups = [
-    {
-      id: 'attention',
-      title: 'Cần bạn xử lý',
-      rows: displayItems.filter((row) => matchesOrderFilter(row, 'attention', 'member')),
-    },
-    {
-      id: 'tracking',
-      title: 'Đang theo dõi',
-      rows: displayItems
-        .filter((row) => !orderClosed(row) && !matchesOrderFilter(row, 'attention', 'member'))
-        .sort((a, b) => Number(b.ready) - Number(a.ready)),
-    },
-    { id: 'history', title: 'Đã kết thúc', rows: displayItems.filter(orderClosed) },
-  ];
-  const openMemberHistory =
-    Boolean(returnedRequest && memberGroups[2].rows.some((row) => row.id === returnedRequest)) ||
-    filter === 'closed' ||
-    Boolean(searchNeedle) ||
-    (typeof window !== 'undefined' && window.location.hash === '#member-orders');
   function rememberMemberAction(
     event: { target: EventTarget | null; currentTarget: HTMLDetailsElement },
     requestId: string,
@@ -1980,49 +1960,59 @@ export default function WebRequests({
         </p>
       )}
       {mode === 'member' && (
-        <div className={customerStyles.memberToolbar}>
-          <div className={customerStyles.memberSearch}>
-            <label>
-              <span className="sr-only">Tìm đơn hàng trong trang</span>
-              <input
-                type="search"
-                placeholder="Tìm hoa, shop hoặc mã đơn"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-              />
-            </label>
-            {search && (
-              <button
-                type="button"
-                className={customerStyles.memberSearchClear}
-                aria-label="Xóa từ khóa tìm kiếm"
-                onClick={() => setSearch('')}
-              >
-                <X size={15} aria-hidden="true" />
-              </button>
-            )}
-          </div>
-          <label className={customerStyles.memberFilter}>
-            <span className="sr-only">Lọc đơn hàng</span>
-            <Select
-              value={filter}
-              onChange={(event) => {
-                const value = event.currentTarget.value as OrderFilter;
-                setFilter(value);
-                if (value !== 'all') setOpenMemberOrder(null);
-              }}
-            >
-              {!memberFilters.some(({ value }) => value === filter) && (
-                <option value={filter}>{filterName}</option>
+        <RefreshRegion>
+          <div className={customerStyles.memberToolbar}>
+            <div className={customerStyles.memberSearch}>
+              <label>
+                <span className="sr-only">Tìm đơn hàng trong trang</span>
+                <input
+                  type="search"
+                  placeholder="Tìm hoa, shop hoặc mã đơn"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                />
+              </label>
+              {search && (
+                <button
+                  type="button"
+                  className={customerStyles.memberSearchClear}
+                  aria-label="Xóa từ khóa tìm kiếm"
+                  onClick={() => setSearch('')}
+                >
+                  <X size={15} aria-hidden="true" />
+                </button>
               )}
-              {memberFilters.map(({ value, label }) => (
-                <option key={value} value={value}>
-                  {value === 'all' ? 'Tất cả trạng thái' : label}
-                </option>
-              ))}
-            </Select>
-          </label>
-        </div>
+            </div>
+            <label className={customerStyles.memberFilter}>
+              <span className="sr-only">Lọc đơn hàng</span>
+              <Select
+                value={filter}
+                onChange={(event) => {
+                  const value = event.currentTarget.value as OrderFilter;
+                  setFilter(value);
+                  if (value !== 'all') setOpenMemberOrder(null);
+                }}
+              >
+                {!memberFilters.some(({ value }) => value === filter) && (
+                  <option value={filter}>{filterName}</option>
+                )}
+                {memberFilters.map(({ value, label }) => (
+                  <option key={value} value={value}>
+                    {value === 'all' ? 'Tất cả trạng thái' : label}
+                  </option>
+                ))}
+              </Select>
+            </label>
+            <IconActionButton
+              action="reload"
+              label="Tải lại đơn hàng"
+              disabled={query.isFetching || history.isFetching}
+              onClick={async () => {
+                await Promise.all([query.refetch(), history.refetch()]);
+              }}
+            />
+          </div>
+        </RefreshRegion>
       )}
       {mode === 'admin' && (
         <>
@@ -2260,39 +2250,9 @@ export default function WebRequests({
               )}
               {mode === 'member' ? (
                 <div className={customerStyles.orderGroups}>
-                  {memberGroups.map(
-                    ({ id, title, rows }) =>
-                      rows.length > 0 &&
-                      (id === 'history' ? (
-                        <details
-                          key={id}
-                          data-order-history
-                          className={customerStyles.orderHistory}
-                          open={openMemberHistory || undefined}
-                        >
-                          <summary>
-                            {title} <span className={customerStyles.groupCount}>{rows.length}</span>
-                            <ChevronDown size={16} aria-hidden="true" />
-                          </summary>
-                          <ul className="member-orders customer-order-list">
-                            {rows.map(renderOrder)}
-                          </ul>
-                        </details>
-                      ) : (
-                        <section
-                          key={id}
-                          className={customerStyles.orderGroup}
-                          aria-labelledby={`order-group-${id}`}
-                        >
-                          <h2 id={`order-group-${id}`}>
-                            {title} <span className={customerStyles.groupCount}>{rows.length}</span>
-                          </h2>
-                          <ul className="member-orders customer-order-list">
-                            {rows.map(renderOrder)}
-                          </ul>
-                        </section>
-                      )),
-                  )}
+                  <ul className="member-orders customer-order-list">
+                    {displayItems.map(renderOrder)}
+                  </ul>
                 </div>
               ) : mode === 'seller' ? (
                 <div className={styles.orderSheet}>
@@ -2433,40 +2393,40 @@ export default function WebRequests({
                 ? totalResultPages > 1
                 : page > 1 ||
                   query.data?.hasMore ||
-                  (mode === 'member' && history.data?.hasMore)) && (
-                <nav className="order-pagination" aria-label="Phân trang đơn đặt trước">
-                  <Button
-                    variant="outline"
-                    disabled={displayPage === 1 || query.isFetching}
-                    onClick={() =>
-                      mode === 'seller' ? setResultPage(displayPage - 1) : changePage(page - 1)
-                    }
-                  >
-                    <ArrowLeft size={15} aria-hidden="true" />
-                    <span>Trang trước</span>
-                  </Button>
-                  <span className="order-page-indicator">
-                    Trang {displayPage}
-                    {mode === 'seller' ? ` / ${totalResultPages}` : ''}
-                  </span>
-                  <Button
-                    variant="outline"
-                    disabled={
-                      (mode === 'seller'
-                        ? displayPage >= totalResultPages
-                        : !(query.data?.hasMore || (mode === 'member' && history.data?.hasMore))) ||
-                      query.isFetching ||
-                      (mode === 'member' && history.isFetching)
-                    }
-                    onClick={() =>
-                      mode === 'seller' ? setResultPage(displayPage + 1) : changePage(page + 1)
-                    }
-                  >
-                    <span>Trang sau</span>
-                    <ArrowRight size={15} aria-hidden="true" />
-                  </Button>
-                </nav>
-              )}
+                  (mode === 'member' && history.data?.hasMore)) &&
+                (mode === 'seller' ? (
+                  <SellerPagination
+                    ariaLabel="Phân trang đơn đặt trước"
+                    page={displayPage}
+                    totalPages={totalResultPages}
+                    busy={query.isFetching}
+                    onPageChange={setResultPage}
+                  />
+                ) : (
+                  <nav className="order-pagination" aria-label="Phân trang đơn đặt trước">
+                    <Button
+                      variant="outline"
+                      disabled={displayPage === 1 || query.isFetching}
+                      onClick={() => changePage(page - 1)}
+                    >
+                      <ArrowLeft size={15} aria-hidden="true" />
+                      <span>Trang trước</span>
+                    </Button>
+                    <span className="order-page-indicator">Trang {displayPage}</span>
+                    <Button
+                      variant="outline"
+                      disabled={
+                        !(query.data?.hasMore || (mode === 'member' && history.data?.hasMore)) ||
+                        query.isFetching ||
+                        (mode === 'member' && history.isFetching)
+                      }
+                      onClick={() => changePage(page + 1)}
+                    >
+                      <span>Trang sau</span>
+                      <ArrowRight size={15} aria-hidden="true" />
+                    </Button>
+                  </nav>
+                ))}
             </>
           )}
         </Panel>

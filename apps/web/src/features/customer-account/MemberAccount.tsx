@@ -126,7 +126,7 @@ export default function MemberAccount() {
     <main id="main" className="member-page">
       {visibleTab === 'chats' ? (
         <section id="member-chats">
-          <header className="account-section-heading">
+          <header className="sr-only">
             <h1>Tin nhắn</h1>
           </header>
           <CustomerChatSection key={initialChatId ?? 'inbox'} initialChatId={initialChatId} />

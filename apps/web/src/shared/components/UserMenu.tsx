@@ -6,8 +6,8 @@ import { usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { getCustomerUnreadCount } from '@/features/chat/api';
 import { sessionQuery } from '@/shared/lib/api';
+import { getAccountProfile } from '@/features/profile/profile.api';
 import {
-  ChevronDown,
   Flower2,
   LayoutDashboard,
   LogOut,
@@ -60,6 +60,14 @@ export function UserMenu({
 }) {
   const pathname = usePathname();
   const session = useQuery(sessionQuery);
+  const profile = useQuery({
+    queryKey: ['account-profile', session.data?.id],
+    queryFn: getAccountProfile,
+    enabled: open && !!session.data?.id,
+    staleTime: 60_000,
+  });
+  const accountName = profile.data?.fullName || session.data?.name || name;
+  const accountEmail = profile.data?.loginEmail || profile.data?.contactEmail;
   const unread = useQuery({
     queryKey: ['member-chats-unread-count', session.data?.id],
     queryFn: ({ signal }) => getCustomerUnreadCount(signal),
@@ -106,13 +114,22 @@ export function UserMenu({
           {name.trim().slice(0, 1).toLocaleUpperCase('vi-VN') || 'F'}
         </span>
         <span className="user-menu-identity">
-          <span className="user-menu-caption">{roleLabel}</span>
           <span className="user-menu-name">{name}</span>
+          <span className="user-menu-caption">{roleLabel}</span>
         </span>
-        <ChevronDown size={16} aria-hidden="true" />
       </button>
       {open && (
         <div id={menuId} className="user-menu-popover" aria-label="Menu người dùng">
+          <div className="user-menu-profile">
+            <span className="user-menu-avatar" aria-hidden="true">
+              {accountName.trim().slice(0, 1).toLocaleUpperCase('vi-VN') || 'F'}
+            </span>
+            <div className="user-menu-profile-identity">
+              <strong>{accountName}</strong>
+              {accountEmail && <span>{accountEmail}</span>}
+            </div>
+          </div>
+          <div className="user-menu-divider" role="separator" aria-hidden="true" />
           <div className="user-menu-links">
             {links.map((item) => {
               const Icon = icons[item.icon];

@@ -132,7 +132,7 @@ export function AvailableKiosksModal({ open, onClose, session }: AvailableKiosks
             <h3>
               {allKiosks.length === 0 ? 'Chưa có tủ trống trong kho' : 'Không tìm thấy tủ phù hợp'}
             </h3>
-            {allKiosks.length > 0 && (
+            {(searchTerm.trim() || slotFilter !== 'ALL') && (
               <IconActionButton
                 variant="outline"
                 onClick={() => {

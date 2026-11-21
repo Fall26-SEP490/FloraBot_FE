@@ -5,6 +5,7 @@ export type QuotedPreorderAccessory = components['schemas']['QuotedPreorderAcces
 
 export type WebOrder = {
   id: string;
+  createdAt?: string | null;
   kind: 'CUSTOM' | 'STOCK';
   state: string;
   productId: string;

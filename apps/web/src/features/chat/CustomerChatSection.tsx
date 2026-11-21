@@ -6,7 +6,9 @@ import {
   customerConversationHref,
   rememberOpenedCustomerChat,
 } from './customer-chat.navigation';
-import { Flower2, MessageSquare, RefreshCw, X } from '@florabot/ui';
+import { Flower2, MessageSquare, X } from '@florabot/ui';
+import IconActionButton from '@/shared/components/IconActionButton';
+import RefreshRegion from '@/shared/components/RefreshRegion';
 import './chat.css';
 import './styles/customer-chat.css';
 import { useQuery } from '@tanstack/react-query';
@@ -151,12 +153,14 @@ export function CustomerChatSection({ initialChatId }: { initialChatId?: string 
     setShowDetailsPanel(false);
   };
 
-  const handleRefreshAll = () => {
-    void chatsQuery.refetch();
-    void queryClient.invalidateQueries({ queryKey: ['member-chats-unread-count'] });
-    if (activeChatId) {
-      void queryClient.invalidateQueries({ queryKey: ['chat-messages', activeChatId] });
-    }
+  const handleRefreshAll = async () => {
+    await Promise.all([
+      chatsQuery.refetch(),
+      queryClient.invalidateQueries({ queryKey: ['member-chats-unread-count'] }),
+      ...(activeChatId
+        ? [queryClient.invalidateQueries({ queryKey: ['chat-messages', activeChatId] })]
+        : []),
+    ]);
   };
 
   const handleMessagesReadLocally = useCallback(() => {
@@ -181,115 +185,105 @@ export function CustomerChatSection({ initialChatId }: { initialChatId?: string 
 
   return (
     <section className="staff-chat-section customer-chat-section" aria-label="Tin nhắn với shop">
-      {origin && (
-        <div className="customer-chat-origin">
-          <Link href={origin.href}>{origin.label}</Link>
-          {origin.kind === 'order' && <p>Xác nhận báo giá và thanh toán tại đơn đặt trước.</p>}
-        </div>
-      )}
-      <div
-        className={`chat-layout mode-${viewMode} ${showDetailsPanel && activeChat ? 'with-details' : ''}`}
-      >
-        <div className="chat-layout-sidebar">
-          <div className="chat-sidebar-header">
-            <div className="chat-sidebar-header-row">
-              <h2 className="chat-sidebar-title">Shop đang trao đổi</h2>
-              <button
-                type="button"
-                className="chat-sidebar-refresh-btn"
-                disabled={chatsQuery.isFetching}
-                onClick={handleRefreshAll}
-                title="Làm mới danh sách tin nhắn"
-                aria-label="Làm mới danh sách tin nhắn"
-              >
-                <RefreshCw
-                  size={15}
-                  aria-hidden="true"
-                  className={chatsQuery.isFetching ? 'is-spinning' : ''}
+      <RefreshRegion>
+        {origin && (
+          <div className="customer-chat-origin">
+            <Link href={origin.href}>{origin.label}</Link>
+            {origin.kind === 'order' && <p>Xác nhận báo giá và thanh toán tại đơn đặt trước.</p>}
+          </div>
+        )}
+        <div
+          className={`chat-layout mode-${viewMode} ${showDetailsPanel && activeChat ? 'with-details' : ''}`}
+        >
+          <div className="chat-layout-sidebar">
+            <ChatList
+              toolbarAction={
+                <IconActionButton
+                  action="reload"
+                  label="Làm mới danh sách tin nhắn"
+                  disabled={chatsQuery.isFetching}
+                  onClick={handleRefreshAll}
                 />
-              </button>
-            </div>
+              }
+              items={displayedItems}
+              activeChatId={activeChatId}
+              onSelectChat={handleSelectChat}
+              page={page}
+              hasMore={hasMore}
+              onPageChange={setPage}
+              isLoading={chatsQuery.isPending}
+              isError={chatsQuery.isError}
+              error={chatsQuery.error}
+              onRetry={() => void chatsQuery.refetch()}
+              userRole="CUSTOMER"
+            />
           </div>
 
-          <ChatList
-            items={displayedItems}
-            activeChatId={activeChatId}
-            onSelectChat={handleSelectChat}
-            page={page}
-            hasMore={hasMore}
-            onPageChange={setPage}
-            isLoading={chatsQuery.isPending}
-            isError={chatsQuery.isError}
-            error={chatsQuery.error}
-            onRetry={() => void chatsQuery.refetch()}
-            userRole="CUSTOMER"
-          />
-        </div>
-
-        <div className="chat-layout-main">
-          {activeChat ? (
-            <ConversationView
-              key={activeChat.id}
-              chatId={activeChat.id}
-              otherPartyName={activeChat.otherPartyName}
-              productContext={activeChat.productContext}
-              onBack={handleBackToList}
-              onMessagesReadLocally={handleMessagesReadLocally}
-              onToggleDetails={() => setShowDetailsPanel((value) => !value)}
-              showDetails={showDetailsPanel}
-              detailsLabel="shop"
-              customerMode
-              registerRealtimeHandlers={(handleMessage, handleRead) => {
-                onRealtimeMessageRef.current = handleMessage;
-                onRealtimeReadRef.current = handleRead;
-              }}
-            />
-          ) : (
-            <div className="chat-empty-selection">
-              <p className="chat-empty-selection-title">Chưa chọn cuộc trò chuyện</p>
-              <p className="quiet">
-                Chọn một cuộc trò chuyện từ danh sách bên trái để xem lịch sử và gửi tin nhắn.
-              </p>
-            </div>
+          <div className="chat-layout-main">
+            {activeChat ? (
+              <ConversationView
+                key={activeChat.id}
+                chatId={activeChat.id}
+                otherPartyName={activeChat.otherPartyName}
+                productContext={activeChat.productContext}
+                onBack={handleBackToList}
+                onMessagesReadLocally={handleMessagesReadLocally}
+                onToggleDetails={() => setShowDetailsPanel((value) => !value)}
+                showDetails={showDetailsPanel}
+                detailsLabel="shop"
+                customerMode
+                registerRealtimeHandlers={(handleMessage, handleRead) => {
+                  onRealtimeMessageRef.current = handleMessage;
+                  onRealtimeReadRef.current = handleRead;
+                }}
+              />
+            ) : (
+              <div className="chat-empty-selection">
+                <p className="chat-empty-selection-title">Chưa chọn cuộc trò chuyện</p>
+                <p className="quiet">
+                  Chọn một cuộc trò chuyện từ danh sách bên trái để xem lịch sử và gửi tin nhắn.
+                </p>
+              </div>
+            )}
+          </div>
+          {activeChat && showDetailsPanel && (
+            <aside className="chat-details-panel" aria-label="Thông tin shop">
+              <div className="chat-details-header">
+                <h3>Thông tin shop</h3>
+                <button
+                  type="button"
+                  className="chat-details-close-btn"
+                  aria-label="Thu gọn bảng thông tin"
+                  onClick={() => setShowDetailsPanel(false)}
+                >
+                  <X size={18} aria-hidden="true" />
+                </button>
+              </div>
+              <div className="chat-details-scroll">
+                <div className="chat-details-profile">
+                  <div className="chat-details-avatar" aria-hidden="true">
+                    {activeChat.otherPartyName.slice(0, 1).toLocaleUpperCase('vi-VN')}
+                  </div>
+                  <h4 className="chat-details-name">{activeChat.otherPartyName}</h4>
+                </div>
+                {activeChat.productContext && (
+                  <section className="chat-details-section">
+                    <h5 className="chat-details-section-title">MẪU HOA ĐANG TRAO ĐỔI</h5>
+                    <div className="chat-details-product-card">
+                      <span className="chat-details-product-icon">
+                        <Flower2 size={18} aria-hidden="true" />
+                      </span>
+                      <div className="chat-details-product-info">
+                        <strong>{activeChat.productContext}</strong>
+                      </div>
+                    </div>
+                  </section>
+                )}
+              </div>
+            </aside>
           )}
         </div>
-        {activeChat && showDetailsPanel && (
-          <aside className="chat-details-panel" aria-label="Thông tin shop">
-            <div className="chat-details-header">
-              <h3>Thông tin shop</h3>
-              <button
-                type="button"
-                className="chat-details-close-btn"
-                aria-label="Thu gọn bảng thông tin"
-                onClick={() => setShowDetailsPanel(false)}
-              >
-                <X size={18} aria-hidden="true" />
-              </button>
-            </div>
-            <div className="chat-details-scroll">
-              <div className="chat-details-profile">
-                <div className="chat-details-avatar" aria-hidden="true">
-                  {activeChat.otherPartyName.slice(0, 1).toLocaleUpperCase('vi-VN')}
-                </div>
-                <h4 className="chat-details-name">{activeChat.otherPartyName}</h4>
-              </div>
-              {activeChat.productContext && (
-                <section className="chat-details-section">
-                  <h5 className="chat-details-section-title">MẪU HOA ĐANG TRAO ĐỔI</h5>
-                  <div className="chat-details-product-card">
-                    <span className="chat-details-product-icon">
-                      <Flower2 size={18} aria-hidden="true" />
-                    </span>
-                    <div className="chat-details-product-info">
-                      <strong>{activeChat.productContext}</strong>
-                    </div>
-                  </div>
-                </section>
-              )}
-            </div>
-          </aside>
-        )}
-      </div>
+      </RefreshRegion>
     </section>
   );
 }

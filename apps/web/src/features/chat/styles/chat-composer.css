@@ -207,7 +207,7 @@
 .chat-composer-counter {
   position: absolute;
   right: 10px;
-  bottom: -18px;
+  bottom: 8px;
   font-size: 0.72rem;
   color: #64735f;
   text-align: right;

@@ -1,10 +1,13 @@
 .memberToolbar {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(12rem, 16rem);
+  grid-template-columns: minmax(0, 1fr) minmax(12rem, 15rem) auto;
   align-items: center;
   gap: 0.75rem;
   min-width: 0;
-  margin-bottom: 1.25rem;
+  margin-bottom: 20px;
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
 .memberSearch {
   position: relative;
@@ -19,9 +22,9 @@
 :global(.workspace-portal-root .member-page #web-orders) .memberSearch input,
 :global(.workspace-portal-root .member-page #web-orders) .memberFilter select {
   width: 100%;
-  min-height: 46px;
+  min-height: 44px;
   border: 1px solid var(--color-workspace-line);
-  border-radius: var(--radius-workspace-control);
+  border-radius: 6px;
   background: var(--color-workspace-surface);
   font: 400 0.875rem/1.5 var(--font-body);
   color: var(--color-workspace-ink);
@@ -118,7 +121,7 @@
 }
 .summary {
   list-style: none;
-  padding: 1.5rem;
+  padding: 20px;
   cursor: pointer;
   color: var(--color-workspace-ink);
   border-radius: var(--radius-workspace-panel);
@@ -948,8 +951,12 @@
 }
 @media (max-width: 580px) {
   .memberToolbar {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) auto;
     gap: 0.5rem;
+    padding: 0;
+  }
+  .memberSearch {
+    grid-column: 1 / -1;
   }
   .summary {
     padding: 1rem;

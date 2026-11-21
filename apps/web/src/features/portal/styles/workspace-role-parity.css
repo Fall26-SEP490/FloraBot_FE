@@ -21,7 +21,8 @@
 .workspace-portal-root.platform-workspace[data-platform-role='staff']
   .dashboard-page-heading
   > div:first-child::before {
-  content: 'FLORABOT / NHÂN VIÊN SHOP';
+  content: none;
+  display: none;
 }
 
 .workspace-portal-root.platform-workspace:is(

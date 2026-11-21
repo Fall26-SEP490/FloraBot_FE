@@ -10,17 +10,26 @@
   pointer-events: none;
 }
 .overlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  z-index: 30;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(255 255 255 / 35%);
+}
+.indicator {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  min-height: 64px;
-  background: rgb(255 255 255 / 35%);
-  border-radius: inherit;
+  padding: 20px 24px;
+  max-width: calc(100vw - 32px);
+  box-sizing: border-box;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 4px 24px rgb(25 61 45 / 10%);
   color: #245b3d;
   font-size: 14px;
   font-weight: 600;

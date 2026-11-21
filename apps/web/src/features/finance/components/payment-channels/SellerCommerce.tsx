@@ -1,5 +1,6 @@
 'use client';
 
+import SellerPagination from '@/shared/components/SellerPagination';
 import IconActionButton from '@/shared/components/IconActionButton';
 import RefreshRegion from '@/shared/components/RefreshRegion';
 import { useState } from 'react';
@@ -290,23 +291,12 @@ export default function SellerCommerce({ session }: { session: Session }) {
                   </table>
                 </div>
                 {(page > 1 || Number(payments.data.totalCount) > 10) && (
-                  <div className="business-pagination">
-                    <Button
-                      variant="outline"
-                      disabled={page <= 1}
-                      onClick={() => setPage(page - 1)}
-                    >
-                      Trước
-                    </Button>
-                    <span>Trang {page}</span>
-                    <Button
-                      variant="outline"
-                      disabled={page * 10 >= Number(payments.data.totalCount)}
-                      onClick={() => setPage(page + 1)}
-                    >
-                      Sau
-                    </Button>
-                  </div>
+                  <SellerPagination
+                    page={page}
+                    totalPages={Math.max(1, Math.ceil(Number(payments.data.totalCount) / 10))}
+                    busy={payments.isFetching}
+                    onPageChange={setPage}
+                  />
                 )}
               </>
             ) : (
