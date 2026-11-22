@@ -1,5 +1,18 @@
 # FloraBot design system
 
+## Seasonal welcome — November 22
+
+The customer home greeting uses a split photograph/invitation composition:
+occasion photography on the left, seasonal copy and a forest-green catalog action on the
+right. Phones stack the photograph above the invitation. Reuse the shared modal
+for focus, Escape and scroll locking. The entrance unfolds once, the photograph
+settles from a gentle zoom, and soft snowfall remains inside the photograph while open.
+Date-based campaigns cover Christmas, New Year, Tet, Valentine and Women's Day;
+each has its own image, copy, date label and once-per-browser storage key.
+Christmas explicitly shows December 24–25 and ends on December 26.
+Reduced motion shows the static composition. Preserve the campaign window,
+once-per-browser display and development-only preview URL; no discount claims.
+
 ## Product detail — November 18
 
 Use the existing botanical pattern under a pale overlay and white content surfaces.

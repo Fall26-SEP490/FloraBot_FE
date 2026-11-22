@@ -2,6 +2,8 @@ import Layout from '@/features/marketing/MarketingLayout';
 import { LandingPricing } from '@/features/marketing/LandingPricing';
 import StorefrontFlowers from '@/features/marketing/StorefrontFlowers';
 import FlowerTypesCarousel from '@/features/marketing/FlowerTypesCarousel';
+import SeasonalWelcome from '@/features/marketing/SeasonalWelcome';
+import { Suspense } from 'react';
 import '@/features/marketing/styles/home-storefront.css';
 
 export const metadata = { title: 'FloraBot - Đặt hoa theo ý bạn, nhận tại tủ' };
@@ -10,6 +12,9 @@ export const dynamic = 'force-dynamic';
 export default function Page() {
   return (
     <Layout>
+      <Suspense fallback={null}>
+        <SeasonalWelcome />
+      </Suspense>
       <main id="main" className="home-storefront" tabIndex={-1}>
         {/* Hero Banner: 1 bên ảnh tủ Kiosk thông minh, 1 bên khối nội dung */}
         <section className="home-hero" aria-labelledby="hero-title">
