@@ -30519,7 +30519,9 @@
           "kioskName",
           "slotCode",
           "reason",
-          "expiresAt"
+          "expiresAt",
+          "kioskId",
+          "slotId"
         ],
         "type": "object",
         "properties": {
@@ -30542,6 +30544,14 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "kioskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slotId": {
+            "type": "string",
+            "format": "uuid"
           }
         },
         "additionalProperties": false

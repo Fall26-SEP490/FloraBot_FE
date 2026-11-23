@@ -20643,6 +20643,10 @@ export interface components {
             reason: string;
             /** Format: date-time */
             expiresAt: null | string;
+            /** Format: uuid */
+            kioskId: string;
+            /** Format: uuid */
+            slotId: string;
         };
         TechnicianInstallationDetail: {
             /** Format: uuid */

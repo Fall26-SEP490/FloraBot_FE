@@ -9,6 +9,8 @@ test('Seller can assign a monitored Walk-in slot and approve a separate repair',
   const slotId = 'slot-1';
   const repair = {
     id: 'repair-1',
+    kioskId,
+    slotId: 'repair-slot',
     kioskName: 'Tủ FPT',
     slotCode: 'A02',
     reason: 'Kiểm tra cửa kẹt',
@@ -21,7 +23,9 @@ test('Seller can assign a monitored Walk-in slot and approve a separate repair',
           json: { id: 'seller', name: 'Shop', role: 'SELLER', sellerId, sellerStatus: 'ACTIVE' },
         });
       case `/api/sellers/${sellerId}/kiosks`:
-        return route.fulfill({ json: [{ id: kioskId, code: 'K01', name: 'Tủ FPT' }] });
+        return route.fulfill({
+          json: [{ id: kioskId, code: 'K01', name: 'Tủ FPT', status: 'ONLINE' }],
+        });
       case `/api/me/kiosks/${kioskId}/slots`:
         return route.fulfill({
           json: [
@@ -30,6 +34,17 @@ test('Seller can assign a monitored Walk-in slot and approve a separate repair',
               kioskId,
               slotCode: 'A01',
               status: 'RENTED_EMPTY',
+              zone: 'WALK_IN',
+              bouquetId: null,
+              sensorEnabled: true,
+              sensorReady: true,
+            },
+            {
+              id: 'repair-slot',
+              kioskId,
+              kioskName: 'Tủ FPT',
+              slotCode: 'A02',
+              status: 'FAULT',
               zone: 'WALK_IN',
               bouquetId: null,
               sensorEnabled: true,
@@ -62,7 +77,18 @@ test('Seller can assign a monitored Walk-in slot and approve a separate repair',
         return route.fulfill({ json: { id } });
       }
       case '/api/me/technical-repairs':
-        return route.fulfill({ json: [repair] });
+        return route.fulfill({
+          json: [
+            repair,
+            {
+              ...repair,
+              id: 'wrong-repair',
+              kioskId: 'other-kiosk',
+              slotId: 'other-slot',
+              reason: 'Ca sửa của kiosk trùng tên',
+            },
+          ],
+        });
       case '/api/me/technical-repairs/repair-1/approve':
         expect(route.request().method()).toBe('POST');
         repair.expiresAt = new Date(Date.now() + 600_000).toISOString();
@@ -72,17 +98,22 @@ test('Seller can assign a monitored Walk-in slot and approve a separate repair',
     }
   });
   await page.goto('/seller/stock');
-  await page.getByText('Duyệt quyền mở ô để sửa tủ', { exact: true }).click();
+  await page.getByRole('button', { name: 'Xem chi tiết ô A02' }).click();
   await expect(page.getByText('Kiểm tra cửa kẹt')).toBeVisible();
   await page.getByRole('button', { name: 'Duyệt quyền mở ô', exact: true }).click();
-  await expect(page.getByText(/Đã duyệt đến/)).toBeVisible();
+  await expect(page.getByText(/Đã duyệt quyền mở ô đến/)).toBeVisible();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Đóng hộp thoại', exact: true })
+    .click();
   await page.getByRole('button', { name: 'Xem chi tiết ô A01' }).click();
-  const modal = page.getByRole('dialog', { name: 'Chi tiết ô A01' });
+  const modal = page.getByRole('dialog');
   await modal.getByRole('tab', { name: 'Giao nhân viên', exact: true }).click();
-  await chooseOption(modal.getByLabel('Nhân viên', { exact: true }), 'staff-1');
-  await chooseOption(modal.getByLabel('Mẫu hoa', { exact: true }), 'product-1');
-  await modal.getByLabel(/Hướng dẫn/).fill('Nạp hoa đúng ô A01.');
-  await modal.getByRole('button', { name: 'Giao việc', exact: true }).click();
+  const assignment = modal.getByRole('tabpanel', { name: 'Giao nhân viên', exact: true });
+  await chooseOption(assignment.getByLabel('Nhân viên', { exact: true }), 'staff-1');
+  await chooseOption(assignment.getByLabel('Mẫu hoa', { exact: true }), 'product-1');
+  await assignment.getByLabel(/Hướng dẫn/).fill('Nạp hoa đúng ô A01.');
+  await assignment.getByRole('button', { name: 'Giao việc', exact: true }).click();
   await expect(modal.getByText('Đã giao công việc cho nhân viên.')).toBeVisible();
 });
 import AxeBuilder from '@axe-core/playwright';
@@ -661,3 +692,76 @@ for (const expireOnCheck of [false, true])
     await expect(modal).toContainText('Đã hoàn tất');
     await expect(card).toContainText('Đã nạp hoa');
   });
+
+test('Seller approves technical repair directly inside FAULT slot detail', async ({ page }) => {
+  const sellerId = 'shop-1';
+  const kioskId = 'kiosk-1';
+  const slotId = 'slot-1';
+  const repair = {
+    id: 'repair-1',
+    kioskId,
+    slotId,
+    kioskName: 'Tủ FPT',
+    slotCode: 'A01',
+    reason: 'Kiểm tra cửa kẹt',
+    expiresAt: null as string | null,
+  };
+  await page.route('**/api/**', (route) => {
+    switch (new URL(route.request().url()).pathname) {
+      case '/api/auth/me':
+        return route.fulfill({
+          json: { id: 'seller', name: 'Shop', role: 'SELLER', sellerId, sellerStatus: 'ACTIVE' },
+        });
+      case `/api/sellers/${sellerId}/kiosks`:
+        return route.fulfill({
+          json: [{ id: kioskId, code: 'K01', name: 'Tủ FPT', status: 'ONLINE' }],
+        });
+      case `/api/me/kiosks/${kioskId}/slots`:
+        return route.fulfill({
+          json: [
+            {
+              id: slotId,
+              kioskId,
+              kioskCode: 'K01',
+              kioskName: 'Tủ FPT',
+              slotCode: 'A01',
+              status: 'FAULT',
+              zone: 'WALK_IN',
+              bouquetId: null,
+              sensorEnabled: true,
+              sensorReady: false,
+            },
+          ],
+        });
+      case '/api/me/products':
+        return route.fulfill({ json: [] });
+      case '/api/me/technical-repairs':
+        return route.fulfill({
+          json: [
+            repair,
+            {
+              ...repair,
+              id: 'wrong-repair',
+              kioskId: 'other-kiosk',
+              slotId: 'other-slot',
+              reason: 'Ca sửa của kiosk trùng tên',
+            },
+          ],
+        });
+      case '/api/me/technical-repairs/repair-1/approve':
+        expect(route.request().method()).toBe('POST');
+        repair.expiresAt = new Date(Date.now() + 600_000).toISOString();
+        return route.fulfill({ json: { expiresAt: repair.expiresAt } });
+      default:
+        return route.fulfill({ json: { items: [] } });
+    }
+  });
+  await page.goto('/seller/stock');
+  await page.getByRole('button', { name: 'Xem chi tiết ô A01' }).click();
+  const modal = page.getByRole('dialog', { name: 'Chi tiết ô A01' });
+  await expect(modal.getByText('Sự cố & duyệt mở ô')).toBeVisible();
+  await expect(modal.getByText('Kiểm tra cửa kẹt')).toBeVisible();
+  await expect(modal.getByText('Ca sửa của kiosk trùng tên')).toHaveCount(0);
+  await modal.getByRole('button', { name: 'Duyệt quyền mở ô', exact: true }).click();
+  await expect(modal.getByText(/Đã duyệt quyền mở ô đến/)).toBeVisible();
+});

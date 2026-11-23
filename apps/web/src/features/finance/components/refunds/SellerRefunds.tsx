@@ -38,6 +38,21 @@ const refundStatusLabels: Record<string, string> = {
   CANCELLED: 'Đã hủy',
 };
 
+function refundStatusLabel(item: {
+  status: string;
+  isApproved: boolean;
+  submissionStatus?: string | null;
+  submission?: { status: string } | null;
+}) {
+  if (item.status === 'PENDING') {
+    if ((item.submission?.status ?? item.submissionStatus) === 'PENDING_REVIEW') {
+      return 'Chờ đối chiếu';
+    }
+    return item.isApproved ? 'Chờ chuyển tiền' : 'Chờ duyệt';
+  }
+  return refundStatusLabels[item.status] || item.status;
+}
+
 const refundStatusStyles: Record<string, { bg: string; color: string; border: string }> = {
   PENDING: { bg: '#fffbeb', color: '#92400e', border: '#fde68a' },
   APPROVED: { bg: '#edf5ea', color: '#1b5e20', border: '#c8dec4' },
@@ -158,7 +173,7 @@ function RefundCard({ id, sellerId }: { id: string; sellerId: string }) {
               : undefined
           }
         >
-          {refundStatusLabels[item.status] || item.status}
+          {refundStatusLabel(item)}
         </span>
       </div>
       <div className="refund-detail-amount">
@@ -194,7 +209,7 @@ function RefundCard({ id, sellerId }: { id: string; sellerId: string }) {
               } as Record<string, string>
             )[item.submission.status] || item.submission.status}
             {item.submission.attemptCount != null
-              ? ` · Lần gửi ${item.submission.attemptCount}/4`
+              ? ` · Chứng từ lần ${item.submission.attemptCount}`
               : ''}
           </p>
           {item.submission.reviewReason && (
@@ -392,7 +407,7 @@ export default function SellerRefunds({ session }: { session: Session }) {
                     <td className="finance-money">{money(item.amount)}</td>
                     <td>
                       <span className="finance-status" data-finance-state={item.status}>
-                        {refundStatusLabels[item.status] || item.status}
+                        {refundStatusLabel(item)}
                       </span>
                     </td>
                     <td>

@@ -613,7 +613,7 @@ export default function SellerStock({ session }: { session: Session }) {
       !kioskOnline &&
       (selectedKiosk.status === 'OFFLINE'
         ? 'Kiosk đang ngoại tuyến. Chờ tủ kết nối lại để nạp hoa.'
-        : `Kiosk đang ${getKioskStatusLabel(selectedKiosk.status).toLowerCase()}. Chưa thể nạp hoa.`),
+        : `Kiosk đang ${(getKioskStatusLabel(selectedKiosk.status) || 'chưa rõ trạng thái').toLowerCase()}. Chưa thể nạp hoa.`),
     slotsLoading && 'Đang tải dữ liệu ô tủ…',
     slots.isError && 'Chưa tải được trạng thái ô. Hệ thống sẽ thử lại.',
     products.isError && 'Chưa tải được mẫu hoa. Hệ thống sẽ thử lại.',
@@ -1320,9 +1320,14 @@ export default function SellerStock({ session }: { session: Session }) {
                           className="stock-slot-support"
                           open={detailSlot.status === 'FAULT'}
                         >
-                          <summary>Báo sự cố</summary>
+                          <summary>
+                            {detailSlot.status === 'FAULT' ? 'Sự cố & duyệt mở ô' : 'Báo sự cố'}
+                          </summary>
                           <ReportFault
-                            slot={detailSlot}
+                            slot={{
+                              ...detailSlot,
+                              kioskName: detailSlot.kioskName || selectedKiosk?.name || '',
+                            }}
                             sellerId={sellerId}
                             compact
                             onDone={closeSlotDetails}

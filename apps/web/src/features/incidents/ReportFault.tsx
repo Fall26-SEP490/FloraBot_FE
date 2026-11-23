@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -15,6 +15,22 @@ import type {
 } from './incidents.types';
 
 export type { ReportFaultProps };
+
+type TechnicalRepair = {
+  id: string;
+  kioskId: string;
+  slotId: string;
+  kioskName: string;
+  slotCode: string;
+  reason: string;
+  expiresAt: string | null;
+};
+
+function isRepairApprovalActive(expiresAt: string | null, nowMs: number) {
+  if (!expiresAt) return false;
+  const time = Date.parse(expiresAt);
+  return Number.isFinite(time) && time > nowMs;
+}
 
 const schema = z.object({
   description: z
@@ -100,6 +116,37 @@ export default function ReportFault({
     },
   });
   const unavailable = ['FAULT', 'LOCKED'].includes(slot.status);
+  const isFault = slot.status === 'FAULT';
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  const repairsQueryKey = ['seller-technical-repairs', sellerId] as const;
+  const repairs = useQuery({
+    queryKey: repairsQueryKey,
+    queryFn: () => request<TechnicalRepair[]>('/me/technical-repairs'),
+    enabled: isFault,
+    refetchInterval: isFault ? 15_000 : false,
+    retry: false,
+  });
+  useEffect(() => {
+    if (!isFault) return;
+    const timer = window.setInterval(() => setNowMs(Date.now()), 15_000);
+    return () => window.clearInterval(timer);
+  }, [isFault]);
+  const approveRepair = useMutation({
+    mutationFn: (id: string) =>
+      request<{ expiresAt: string }>(`/me/technical-repairs/${id}/approve`, {}),
+    onSuccess: (result, id) => {
+      setNowMs(Date.now());
+      queryClient.setQueryData<TechnicalRepair[]>(repairsQueryKey, (rows) =>
+        rows?.map((row) => (row.id === id ? { ...row, expiresAt: result.expiresAt } : row)),
+      );
+      void queryClient.invalidateQueries({ queryKey: repairsQueryKey });
+    },
+  });
+  const matchingRepairs = isFault
+    ? (repairs.data ?? []).filter((row) => row.slotId === slot.id && row.kioskId === slot.kioskId)
+    : [];
+  const repairForbidden =
+    repairs.isError && repairs.error instanceof ApiError && repairs.error.status === 403;
   const close = () => {
     setEditing(false);
     setReview(null);
@@ -117,8 +164,8 @@ export default function ReportFault({
   const prefix = `fault-${slot.id}`;
   return (
     <div className="fault-report">
-      {!compact && !report.isSuccess && <h4>Cần hỗ trợ ô tủ này?</h4>}
-      {!review && !report.isSuccess && (
+      {!compact && !report.isSuccess && !isFault && <h4>Cần hỗ trợ ô tủ này?</h4>}
+      {!review && !report.isSuccess && !(isFault && matchingRepairs.length > 0) && (
         <p>
           {compact
             ? 'Nếu cửa đang mở, chờ cửa đóng và không tác động vào khóa.'
@@ -154,8 +201,72 @@ export default function ReportFault({
             Đã đối chiếu với đội ngũ
           </Button>
         </div>
+      ) : isFault ? (
+        <div className="fault-repair-approval">
+          {repairs.isPending && <p role="status">Đang kiểm tra yêu cầu mở ô sửa chữa…</p>}
+          {repairs.isError && !repairForbidden && (
+            <div role="alert" className="error">
+              <p>{repairs.error.message}</p>
+              <Button variant="outline" type="button" onClick={() => void repairs.refetch()}>
+                Tải lại yêu cầu
+              </Button>
+            </div>
+          )}
+          {repairForbidden && (
+            <p>
+              Ô đang có sự cố. Chủ shop sẽ duyệt quyền mở ô ngay tại đây khi kỹ thuật viên nhận
+              việc.
+            </p>
+          )}
+          {!repairs.isPending && !repairs.isError && matchingRepairs.length === 0 && (
+            <p>
+              Ô đang có sự cố. Sau khi kỹ thuật viên nhận việc và gửi yêu cầu, nút duyệt quyền mở ô
+              sẽ hiển thị ngay tại đây.
+            </p>
+          )}
+          {matchingRepairs.map((repair) => {
+            const approved = isRepairApprovalActive(repair.expiresAt, nowMs);
+            return (
+              <div key={repair.id} className="stock-maintenance-progress">
+                <strong>Yêu cầu mở ô sửa chữa · Ô {repair.slotCode}</strong>
+                <p>{repair.reason}</p>
+                {approved && repair.expiresAt ? (
+                  <p role="status">
+                    Đã duyệt quyền mở ô đến{' '}
+                    {new Date(repair.expiresAt).toLocaleString('vi-VN', {
+                      timeZone: 'Asia/Ho_Chi_Minh',
+                      hour12: false,
+                    })}
+                    . Kỹ thuật viên có thể lấy OTP để mở ô.
+                  </p>
+                ) : (
+                  <>
+                    <p>
+                      Kỹ thuật viên đã nhận việc sửa ô này. Duyệt quyền mở ô để kỹ thuật viên lấy
+                      OTP kiểm tra và sửa chữa.
+                    </p>
+                    <Button
+                      type="button"
+                      disabled={approveRepair.isPending}
+                      onClick={() => approveRepair.mutate(repair.id)}
+                    >
+                      {approveRepair.isPending && approveRepair.variables === repair.id
+                        ? 'Đang duyệt…'
+                        : 'Duyệt quyền mở ô'}
+                    </Button>
+                  </>
+                )}
+                {approveRepair.isError && approveRepair.variables === repair.id && (
+                  <p role="alert" className="error">
+                    {approveRepair.error.message}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
       ) : unavailable ? (
-        <p>Ô đang có sự cố hoặc đang khóa. Liên hệ đội ngũ để theo dõi xử lý.</p>
+        <p>Ô đang khóa hoặc đang trong phiên thao tác. Liên hệ đội ngũ để theo dõi xử lý.</p>
       ) : !editing ? (
         <Button
           ref={startRef}
