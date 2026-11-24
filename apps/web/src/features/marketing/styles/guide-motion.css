@@ -1,0 +1,114 @@
+.guide-hero-section {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+}
+
+.guide-hero-section::before,
+.guide-hero-section::after {
+  position: absolute;
+  z-index: -1;
+  bottom: -10px;
+  width: clamp(110px, 16vw, 220px);
+  height: 94%;
+  background: url('/images/generated/florabot-hero-vine.webp') left bottom / contain no-repeat;
+  opacity: 0.38;
+  pointer-events: none;
+  content: '';
+}
+
+.guide-hero-section::before {
+  left: clamp(0px, 3vw, 64px);
+}
+
+.guide-hero-section::after {
+  right: clamp(0px, 3vw, 64px);
+  scale: -1 1;
+  opacity: 0.32;
+}
+
+@media (max-width: 720px) {
+  .guide-hero-section::before {
+    display: none;
+  }
+
+  .guide-hero-section::after {
+    right: 0;
+    width: 105px;
+    opacity: 0.24;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .guide-hero-section::before,
+  .guide-hero-section::after {
+    animation: guide-vine-grow 1.15s ease-out backwards;
+  }
+
+  .guide-hero-section::after {
+    animation-delay: 160ms;
+  }
+
+  .guide-hero-copy > * {
+    animation: guide-reveal 520ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  }
+
+  .guide-hero-lead {
+    animation-delay: 95ms;
+  }
+
+  .guide-hero-actions {
+    animation-delay: 180ms;
+  }
+
+  .guide-flow-panel:not([hidden]) {
+    animation: guide-reveal 300ms ease-out;
+  }
+
+  @supports (animation-timeline: view()) and (animation-range: entry 0% entry 60%) {
+    .guide-fullwidth-page
+      :is(
+        .guide-methods-section h2,
+        .guide-comparison-card,
+        .guide-process-heading-wrap,
+        .guide-step-card,
+        .guide-support-section h2,
+        .guide-support-lead,
+        .guide-support-card
+      ) {
+      animation: guide-reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry var(--guide-reveal-end, 48%);
+    }
+
+    .guide-fullwidth-page
+      :is(.guide-comparison-card, .guide-step-card, .guide-support-card):nth-child(2) {
+      --guide-reveal-end: 56%;
+    }
+
+    .guide-fullwidth-page :is(.guide-step-card, .guide-support-card):nth-child(n + 3) {
+      --guide-reveal-end: 64%;
+    }
+  }
+
+  @keyframes guide-reveal {
+    from {
+      translate: 0 16px;
+    }
+
+    to {
+      translate: 0 0;
+    }
+  }
+
+  @keyframes guide-vine-grow {
+    from {
+      clip-path: inset(100% 0 0);
+      opacity: 0;
+    }
+
+    to {
+      clip-path: inset(0);
+    }
+  }
+}

@@ -10,6 +10,7 @@ import {
   RotateCcw,
   ShieldCheck,
 } from '@florabot/ui';
+import '@/features/marketing/styles/guide-motion.css';
 
 export const metadata = {
   title: 'Hướng dẫn đặt & nhận hoa — FloraBot',
