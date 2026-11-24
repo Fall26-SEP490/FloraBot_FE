@@ -1,5 +1,6 @@
 'use client';
 
+import { FlowerDetailSkeleton } from '@/shared/components/PageSkeleton';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -141,11 +142,7 @@ export default function FlowerDetail({
         )}
       </nav>
 
-      {query.isPending && (
-        <div className="flower-detail-feedback" role="status">
-          <p>Đang tải thông tin mẫu hoa…</p>
-        </div>
-      )}
+      {query.isPending && <FlowerDetailSkeleton />}
       {query.isError && (
         <div className="flower-detail-feedback flower-detail-error" role="alert">
           <p>Không thể tải thông tin mẫu hoa.</p>

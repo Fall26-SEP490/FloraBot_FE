@@ -1,3 +1,4 @@
+import { FlowerGridSkeleton } from '@/shared/components/PageSkeleton';
 import IconActionButton from '@/shared/components/IconActionButton';
 import { Flower2 } from '@florabot/ui';
 
@@ -21,11 +22,7 @@ export function CatalogEmptyState({
   onResetFilters,
 }: CatalogEmptyStateProps) {
   if (isPending) {
-    return (
-      <div className="catalog-loading-state">
-        <p role="status">Đang tìm những bó hoa dành cho bạn…</p>
-      </div>
-    );
+    return <FlowerGridSkeleton gridClassName="flower-catalog-grid flower-catalog" />;
   }
 
   if (isError && !hasItems) {

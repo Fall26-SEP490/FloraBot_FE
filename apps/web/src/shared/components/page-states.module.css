@@ -1,0 +1,204 @@
+.missing {
+  min-height: min(660px, 75vh);
+  display: grid;
+  place-items: center;
+  padding: clamp(40px, 9vw, 112px) 20px;
+  color: #173e2b;
+  background:
+    linear-gradient(135deg, #f5f8eeed, #fcfaf3e8),
+    url('/images/generated/florabot-pattern.webp') center / 460px repeat;
+}
+.missingContent {
+  width: min(100%, 540px);
+  text-align: center;
+}
+.missing .errorCode {
+  margin: 0 0 18px;
+  color: #246047;
+  font:
+    600 clamp(5rem, 15vw, 10rem) / 0.86 Georgia,
+    serif;
+  letter-spacing: -0.07em;
+}
+.missing h1 {
+  margin: 0 0 12px;
+  font-size: clamp(1.65rem, 5vw, 2.75rem);
+}
+.missingContent > p:last-of-type {
+  max-width: 42ch;
+  margin: 0 auto 24px;
+  line-height: 1.75;
+  color: #455e50;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.pageLoading {
+  width: min(100% - 32px, 1360px);
+  min-height: 62vh;
+  margin: 0 auto;
+  padding-block: 36px 48px;
+}
+.loadingHeading,
+.loadingPanel {
+  display: grid;
+  gap: 12px;
+  padding: clamp(20px, 4vw, 40px);
+  margin-bottom: 24px;
+  border: 1px solid #dce7da;
+  border-radius: 16px;
+  background: #f8faf5;
+}
+.loadingHeading .heading {
+  width: min(55%, 350px);
+}
+.loadingHeading .line {
+  width: min(80%, 420px);
+}
+.routeGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(12px, 2vw, 24px);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.flowerCard,
+.detailText {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
+}
+.photo,
+.detailPhoto,
+.heading,
+.line,
+.shortLine,
+.shopLine {
+  display: block;
+  border-radius: 7px;
+  background: #e5eee2;
+}
+.photo {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  margin-bottom: 3px;
+  border-radius: 11px;
+}
+.heading {
+  height: 32px;
+  width: 92%;
+}
+.line {
+  height: 15px;
+  width: 86%;
+}
+.shortLine {
+  height: 15px;
+  width: 35%;
+}
+.shopLine {
+  height: 12px;
+  width: 60%;
+}
+.detail {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(20px, 5vw, 60px);
+}
+.detailPhoto {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 14px;
+}
+.detailText {
+  gap: 17px;
+  padding-block: 12px;
+}
+
+@media (max-width: 680px) {
+  .routeGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .detail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .photo,
+  .detailPhoto,
+  .heading,
+  .line,
+  .shortLine,
+  .shopLine {
+    background-image: linear-gradient(105deg, transparent 30%, #f8fbf89c 48%, transparent 66%);
+    background-size: 220% 100%;
+    animation: shimmer 1.5s linear infinite;
+  }
+  @keyframes shimmer {
+    from {
+      background-position: 100% 0;
+    }
+    to {
+      background-position: -100% 0;
+    }
+  }
+}
+
+.sessionLoading {
+  display: grid;
+  min-height: 65vh;
+  padding: 24px;
+  place-items: center;
+  background: radial-gradient(ellipse at center, #f0f6ed, transparent 68%);
+}
+.sessionStatus {
+  display: grid;
+  justify-items: center;
+  gap: 22px;
+  padding: 24px;
+  color: #174b35;
+  text-align: center;
+  font-weight: 600;
+}
+.sessionStatus p {
+  margin: 0;
+}
+.sessionSignal {
+  position: relative;
+  display: grid;
+  width: 62px;
+  height: 62px;
+  place-items: center;
+  border: 1px solid #cadece;
+  border-radius: 50%;
+  background: #e5f0e5;
+}
+.sessionSignal::after {
+  position: absolute;
+  inset: -7px;
+  border: 1px solid #a6c7ae;
+  border-radius: inherit;
+  content: '';
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sessionSignal::after {
+    animation: session-signal 1.7s ease-out infinite;
+  }
+  @keyframes session-signal {
+    from {
+      transform: scale(0.88);
+      opacity: 1;
+    }
+    to {
+      transform: scale(1.23);
+      opacity: 0;
+    }
+  }
+}

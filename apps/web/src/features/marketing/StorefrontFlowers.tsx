@@ -1,5 +1,6 @@
 'use client';
 
+import { FlowerGridSkeleton } from '@/shared/components/PageSkeleton';
 import IconActionButton from '@/shared/components/IconActionButton';
 import { useState } from 'react';
 import Link from 'next/link';
@@ -48,14 +49,7 @@ export default function StorefrontFlowers() {
       </div>
       <div className="storefront-results" aria-busy={catalog.isFetching}>
         {catalog.isPending && (
-          <div className="storefront-feedback" role="status">
-            <p>Đang tải mẫu hoa từ các shop…</p>
-            <div className="storefront-placeholder-row" aria-hidden="true">
-              <span />
-              <span />
-              <span />
-            </div>
-          </div>
+          <FlowerGridSkeleton gridClassName="storefront-flower-grid" count={4} />
         )}
         {catalog.isError && !catalog.data && (
           <div className="storefront-feedback" role="alert">

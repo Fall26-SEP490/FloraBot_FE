@@ -4,7 +4,8 @@ import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { Button } from '@florabot/ui';
+import { Button, ShieldCheck } from '@florabot/ui';
+import styles from '@/shared/components/page-states.module.css';
 import { ApiError, isTransientSessionError, sessionQuery } from '@/shared/lib/api';
 import { accountPath } from '@/features/portal/config/roleRoutes';
 
@@ -48,8 +49,13 @@ export function PortalGuard({
   }, [target, router]);
   if (session.isPending || target)
     return (
-      <main id="main">
-        <p role="status">Đang kiểm tra phiên làm việc…</p>
+      <main id="main" className={styles.sessionLoading} tabIndex={-1}>
+        <div className={styles.sessionStatus} role="status">
+          <span className={styles.sessionSignal} aria-hidden="true">
+            <ShieldCheck size={28} />
+          </span>
+          <p>Đang kiểm tra phiên làm việc…</p>
+        </div>
       </main>
     );
   if (session.isError && (!allowed || !isTransientSessionError(session.error)))
