@@ -3,12 +3,14 @@ import styles from './page-states.module.css';
 export function FlowerGridSkeleton({
   gridClassName,
   count = 8,
+  label = 'Đang tải danh mục hoa',
 }: {
   gridClassName: string;
   count?: number;
+  label?: string;
 }) {
   return (
-    <div role="status" aria-label="Đang tải danh mục hoa">
+    <div role="status" aria-label={label}>
       <ul className={gridClassName} aria-hidden="true">
         {Array.from({ length: count }, (_, index) => (
           <li className={styles.flowerCard} key={index}>

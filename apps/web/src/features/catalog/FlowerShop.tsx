@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import './styles/catalog.css';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { catalogReturnPath } from './catalog.navigation';
+import { catalogReturnPath, shopCatalogPath } from './catalog.navigation';
 import { useQuery } from '@tanstack/react-query';
 import { request, sessionQuery } from '@/shared/lib/api';
 import { MOCK_CATALOG_ITEMS } from '@/features/catalog/mocks/mockCatalog';
@@ -121,6 +121,12 @@ export default function FlowerShop({ storefrontSellerId }: { storefrontSellerId?
   );
   const page = Math.min(filters.page, Math.max(1, Math.ceil(filters.displayedItems.length / 12)));
   const catalogHref = catalogReturnPath(pathname + '?' + searchParams.toString());
+  const shopPath = storefrontSellerId ? shopCatalogPath(storefrontSellerId) : null;
+  const reviewsHref =
+    shopPath &&
+    shopPath +
+      '/danh-gia' +
+      (catalogHref === shopPath ? '' : '?' + new URLSearchParams({ from: catalogHref }));
   const pageItems = filters.displayedItems.slice((page - 1) * 12, page * 12);
 
   const locationStatusMessage = useMemo(() => {
@@ -273,13 +279,26 @@ export default function FlowerShop({ storefrontSellerId }: { storefrontSellerId?
               {shopProduct && (
                 <div className="catalog-store-stats">
                   <span>{filters.totalCards.toLocaleString('vi-VN')} mẫu hoa</span>
-                  {shopRating && (
-                    <span className="catalog-store-rating">
-                      <RatingStars value={shopRating.average} />
-                      <span>{shopRating.count.toLocaleString('vi-VN')} đánh giá</span>
-                    </span>
+                  {reviewsHref && (
+                    <Link
+                      className="catalog-store-rating catalog-store-rating-link"
+                      href={reviewsHref}
+                      aria-label={
+                        shopRating
+                          ? `Xem ${shopRating.count.toLocaleString('vi-VN')} đánh giá của cửa hàng`
+                          : 'Xem đánh giá của cửa hàng'
+                      }
+                    >
+                      {shopRating && <RatingStars value={shopRating.average} />}
+                      <span>
+                        {shopRating
+                          ? `${shopRating.count.toLocaleString('vi-VN')} đánh giá`
+                          : shopReviews.isSuccess
+                            ? 'Chưa có đánh giá'
+                            : 'Xem đánh giá'}
+                      </span>
+                    </Link>
                   )}
-                  {shopReviews.isSuccess && !shopRating && <span>Chưa có đánh giá</span>}
                 </div>
               )}
             </div>

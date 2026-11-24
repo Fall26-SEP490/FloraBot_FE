@@ -19,7 +19,10 @@ export type ProductReviewPage = {
 
 export const PRODUCT_REVIEWS_STALE_TIME = 5 * 60_000;
 
-export function readReviewRating(average: number | null | undefined, count: number | undefined) {
+export function readReviewRating(
+  average: number | string | null | undefined,
+  count: number | string | undefined,
+) {
   const score = Number(average);
   const total = Number(count);
   return Number.isInteger(total) && total > 0 && score >= 1 && score <= 5

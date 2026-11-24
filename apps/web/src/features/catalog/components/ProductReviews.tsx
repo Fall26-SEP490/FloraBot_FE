@@ -89,6 +89,7 @@ export function ProductReviews({
       setPage(1);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['flower-reviews'] }),
+        queryClient.invalidateQueries({ queryKey: ['shop-flower-reviews'] }),
         queryClient.invalidateQueries({ queryKey: eligibilityKey }),
       ]);
     },

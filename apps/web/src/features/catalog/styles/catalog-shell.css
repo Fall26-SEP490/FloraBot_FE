@@ -122,6 +122,20 @@ body:has(.flower-shop-page:not(.flower-detail-page)) {
 .catalog-store-rating {
   gap: 0.3rem 0.45rem;
 }
+.catalog-store-rating-link {
+  min-height: 44px;
+  padding: 0 0.55rem;
+  border: 1px solid #ceddcd;
+  border-radius: 8px;
+  background: #fffdeffd;
+  color: #214b37;
+  text-decoration: none;
+}
+.catalog-store-rating-link:is(:hover, :focus-visible) {
+  background: #f5faef;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .catalog-store-products-title {
   margin: 0 0 0.75rem;
   color: #183e2b;
