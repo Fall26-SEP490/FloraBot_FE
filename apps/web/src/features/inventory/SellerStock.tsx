@@ -21,6 +21,7 @@ import SlotMaintenance, {
   type MaintenanceSession,
 } from './SlotMaintenance';
 import AssignInventoryTask from './AssignInventoryTask';
+import SellerSlotSensors from './SellerSlotSensors';
 import { getKioskStatusLabel, isKioskActive } from '../kiosk-location/kiosk-location.utils';
 import { stockKioskOptions, selectedStockKiosk } from './seller-stock-kiosks';
 import { useStockKioskChoice } from './use-stock-kiosk-choice';
@@ -951,6 +952,13 @@ export default function SellerStock({ session }: { session: Session }) {
                         <SlotStatus slot={detailSlot} progress={detailProgress} />
                         <span>{zoneLabels[slotZone(detailSlot)]}</span>
                       </div>
+                      {session.role === 'SELLER' && selectedKioskId && (
+                        <SellerSlotSensors
+                          key={`${selectedKioskId}:${detailSlot.id}`}
+                          kioskId={selectedKioskId}
+                          slot={detailSlot}
+                        />
+                      )}
                       {detailSlot.status === 'HELD' && (
                         <p role="status">
                           Ô đang được giữ cho đơn hàng. Chờ đơn kết thúc trước khi thao tác.
