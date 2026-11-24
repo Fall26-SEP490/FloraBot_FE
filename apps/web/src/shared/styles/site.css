@@ -1567,8 +1567,8 @@ html {
 .site-frame:has(.site-nav-dock) .site-support {
   --site-support-bottom: calc(88px + env(safe-area-inset-bottom));
 }
-.site-frame:has(.site-nav-dock) {
-  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+.site-frame:has(.site-nav-dock) > .site-footer.florabot-footer {
+  padding-bottom: calc(28px + 80px + env(safe-area-inset-bottom));
 }
 
 .florabot-header.site-header .site-account-link {
