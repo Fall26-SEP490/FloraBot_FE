@@ -14,7 +14,11 @@ type InventoryScope = {
   sessionStage: string | null;
   sessionSubstate: string | null;
 };
-const actions = { LOAD: 'Nạp hoa', REMOVE: 'Thu hồi hoa', REPLACE: 'Thay hoa' };
+export const inventoryActionLabels = {
+  LOAD: 'Nạp hoa',
+  REMOVE: 'Thu hồi hoa',
+  REPLACE: 'Thay hoa',
+};
 const operations = {
   START: 'Mở ô',
   OPEN_NEXT: 'Mở ô để nạp hoa mới',
@@ -83,10 +87,21 @@ export default function StaffInventoryMaintenance({
       queryClient.invalidateQueries({ queryKey: ['staff-inventory-maintenance', taskId] }),
   });
   return (
-    <section className="staff-resolution" aria-label="Thao tác ô tủ có cảm biến">
-      <h4>
-        {actions[scope.action]} · Ô {scope.slotCode}
-      </h4>
+    <section
+      className="staff-resolution staff-slot-operation"
+      aria-label="Thao tác ô tủ có cảm biến"
+    >
+      <div className="staff-slot-operation-heading">
+        <span className="staff-slot-operation-code" aria-hidden="true">
+          {scope.slotCode}
+        </span>
+        <div>
+          <span className="staff-slot-operation-caption">Ô tủ được giao</span>
+          <h4>
+            {inventoryActionLabels[scope.action]} · Ô {scope.slotCode}
+          </h4>
+        </div>
+      </div>
       <p role="status">
         {scope.sessionStage === 'Completed'
           ? 'Tủ đã xác nhận thao tác hoàn tất. Bạn có thể gửi báo cáo công việc.'
@@ -100,7 +115,11 @@ export default function StaffInventoryMaintenance({
                   ? 'Đã lấy hoa cũ. Mở ô lần nữa để đặt hoa mới vào.'
                   : scope.sessionStage
                     ? 'Đóng cửa sau khi thao tác rồi chờ tủ xác nhận qua cảm biến.'
-                    : 'Đến đúng kiosk trước khi mở ô được giao.'}
+                    : scope.action === 'REMOVE'
+                      ? 'Mở ô, lấy hoa về shop rồi đóng cửa. Chờ tủ xác nhận đã thu hồi.'
+                      : scope.action === 'REPLACE'
+                        ? 'Mở ô để lấy hoa cũ, đóng cửa rồi chờ xác nhận trước khi nạp hoa mới.'
+                        : 'Mở ô, đặt hoa vào rồi đóng cửa. Chờ tủ xác nhận đã nạp hoa.'}
       </p>
       {operation === 'OPEN_FOR_CHECK' && (
         <label>
@@ -133,9 +152,13 @@ export default function StaffInventoryMaintenance({
           <p role="status">Đã gửi yêu cầu mở ô. Chờ tủ phản hồi.</p>
         ))}
       {operation && (
+        <p className="staff-slot-operation-location">Chỉ mở ô khi đang ở đúng kiosk được giao.</p>
+      )}
+      {operation && (
         <Button
           type="button"
-          variant="outline"
+          variant="default"
+          className="staff-slot-operation-button"
           disabled={issue.isPending || (operation === 'OPEN_FOR_CHECK' && reason.trim().length < 5)}
           onClick={() => issue.mutate(operation)}
         >
@@ -143,7 +166,9 @@ export default function StaffInventoryMaintenance({
             ? 'Đang gửi yêu cầu…'
             : useKioskCode
               ? 'Lấy mã mở ô'
-              : operations[operation]}
+              : operation === 'START'
+                ? `Mở ô ${scope.slotCode}`
+                : operations[operation]}
         </Button>
       )}
       {issue.error && <p role="alert">{issue.error.message}</p>}

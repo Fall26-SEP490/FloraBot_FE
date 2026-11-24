@@ -125,7 +125,7 @@ for (const width of [390, 1440]) {
       return route.fulfill({ json: { id: 'task-delivery-1', version } });
     });
     await page.goto('/staff');
-    await expect(page.getByRole('heading', { name: 'Giao hoa · Tủ FPT' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Thao tác hoa tại tủ · Tủ FPT' })).toBeVisible();
     await expect(page.locator('.staff-task-label')).toHaveText('Chờ bắt đầu');
     await expect(page.getByLabel('Ghi chú khi bắt đầu')).toBeHidden();
     await page.getByRole('button', { name: 'Mở công việc' }).click();
@@ -134,7 +134,7 @@ for (const width of [390, 1440]) {
     await start.click();
     await expect(page.getByText('Mô tả ít nhất 10 ký tự.')).toBeVisible();
     expect(writes).toBe(0);
-    await page.getByRole('button', { name: 'Bắt đầu giao hoa đến tủ', exact: true }).click();
+    await page.getByRole('button', { name: 'Bắt đầu thao tác hoa tại tủ', exact: true }).click();
     await expect(page.locator('#report-error-task-delivery-1')).toHaveCount(0);
     await start.click();
     await expect(page.getByText(/Chưa xác nhận được trạng thái mới/)).toBeVisible();
@@ -146,7 +146,7 @@ for (const width of [390, 1440]) {
     await page.getByRole('button', { name: 'Gửi báo cáo', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Gửi báo cáo', exact: true })).toHaveCount(0);
     expect(writes).toBe(2);
-    expect(inventoryReadsBeforeStart).toBe(0);
+    expect(inventoryReadsBeforeStart).toBeGreaterThan(0);
   });
 }
 

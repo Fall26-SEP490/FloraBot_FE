@@ -9,6 +9,7 @@ import { ApiError, queryClient, request } from '@/shared/lib/api';
 import StaffIncidentResolution from '../../incidents/StaffIncidentResolution';
 import StaffStock, { staffStockQuery, walkInBlocker } from '../../inventory/StaffStock';
 import StaffInventoryMaintenance, {
+  inventoryActionLabels,
   useStaffInventoryMaintenance,
 } from '../../inventory/StaffInventoryMaintenance';
 import { TASK_DETAIL_STATES, TASK_STATUS_LABELS } from '../task-management.constants';
@@ -88,14 +89,13 @@ export function TaskItem({
     if (focused) cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [focused]);
   useEffect(() => {
-    if (!canWorkOnInventory || !cardRef.current || typeof IntersectionObserver === 'undefined')
-      return;
+    if (!staffDelivery || !cardRef.current || typeof IntersectionObserver === 'undefined') return;
     const observer = new IntersectionObserver(([entry]) => setNearViewport(entry.isIntersecting), {
       rootMargin: '160px',
     });
     observer.observe(cardRef.current);
     return () => observer.disconnect();
-  }, [canWorkOnInventory]);
+  }, [staffDelivery]);
   const checkInventory =
     canWorkOnInventory &&
     (staffOpen || nearViewport || typeof IntersectionObserver === 'undefined');
@@ -114,12 +114,20 @@ export function TaskItem({
   const inventory = useStaffInventoryMaintenance(
     task.id,
     actorId,
-    checkInventory && (!qualityTask || Boolean(assignedReplacement)),
+    (checkInventory ||
+      (startingDelivery &&
+        (staffOpen || nearViewport || typeof IntersectionObserver === 'undefined'))) &&
+      (!qualityTask || Boolean(assignedReplacement)),
     staffOpen,
     qualityTask && qualityReplacement
       ? `${qualityReplacement.taskId}:${qualityReplacement.state}`
       : undefined,
   );
+  const deliveryTitle = qualityTask
+    ? 'Xử lý chất lượng hoa'
+    : inventory.data
+      ? inventoryActionLabels[inventory.data.action]
+      : 'Thao tác hoa tại tủ';
   const checkGeneralOptions =
     !qualityTask && checkInventory && inventory.isSuccess && inventory.data === null;
   const stockPreview = useQuery({
@@ -386,7 +394,10 @@ export function TaskItem({
       ? []
       : task.status === 'ASSIGNED'
         ? [
-            { label: 'Bắt đầu giao hoa đến tủ', value: 'Bắt đầu giao hoa đến tủ' },
+            {
+              label: `Bắt đầu ${deliveryTitle.toLocaleLowerCase('vi-VN')}`,
+              value: `Bắt đầu ${deliveryTitle.toLocaleLowerCase('vi-VN')}`,
+            },
             { label: 'Đã có mặt tại kiosk', value: 'Đã có mặt tại kiosk' },
           ]
         : task.status === 'IN_PROGRESS'
@@ -890,7 +901,7 @@ export function TaskItem({
           </Button>
           {staffOpen && (
             <SidePanel
-              title={`${qualityTask ? 'Xử lý chất lượng hoa' : 'Giao hoa'} · ${task.kioskName}`}
+              title={`${deliveryTitle} · ${task.kioskName}`}
               className="staff-work-panel"
               onClose={() => onToggleStaff?.()}
             >
@@ -965,9 +976,7 @@ export function TaskItem({
               ? 'Kiểm tra sự cố'
               : task.kind === 'KIOSK_REMOVAL'
                 ? 'Tháo dỡ kiosk'
-                : qualityTask
-                  ? 'Xử lý chất lượng hoa'
-                  : 'Giao hoa'}{' '}
+                : deliveryTitle}{' '}
             {!(role === 'SELLER' && initiallyOpen) && <>· {task.kioskName}</>}
           </CardTitle>
           {!isTechnician && !compactStaff && (

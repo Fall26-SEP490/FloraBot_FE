@@ -242,12 +242,12 @@ export default function WorkspaceNavigation({
               onKeyDown={handleEscape}
               onClick={closeMenu}
               href="/staff"
-              aria-label="Công việc giao hoa"
-              title="Công việc giao hoa"
+              aria-label="Công việc tại tủ"
+              title="Công việc tại tủ"
               aria-current={section !== 'chats' ? 'page' : undefined}
             >
               <ClipboardList size={19} aria-hidden="true" />
-              <span className="workspace-nav-label">Công việc giao hoa</span>
+              <span className="workspace-nav-label">Công việc tại tủ</span>
             </Link>
             <Link
               onKeyDown={handleEscape}

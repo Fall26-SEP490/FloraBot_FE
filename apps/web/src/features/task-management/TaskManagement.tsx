@@ -166,7 +166,7 @@ function FilteredTaskList(props: StaffTasksProps) {
           ? 'Theo dõi công việc'
           : role === 'TECHNICIAN'
             ? 'Công việc kỹ thuật'
-            : 'Công việc giao hoa';
+            : 'Công việc tại tủ';
 
   const sectionDescription =
     role === 'OPERATIONS_MANAGER'

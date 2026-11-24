@@ -59,7 +59,7 @@ test('Staff sees work grouped ahead of history and can read why loading is block
     'Chờ bắt đầu',
     'Chờ chủ shop duyệt',
   ]);
-  const active = board.getByRole('article', { name: 'Giao hoa · Tủ đang làm' });
+  const active = board.getByRole('article', { name: 'Thao tác hoa tại tủ · Tủ đang làm' });
   await expect(active.getByRole('button', { name: 'Tiếp tục xử lý' })).toHaveAttribute(
     'aria-expanded',
     'false',
@@ -68,18 +68,20 @@ test('Staff sees work grouped ahead of history and can read why loading is block
   await expect(active).toContainText('Không có ô bán sẵn trống phù hợp.');
   await expect(active).toContainText('Không có đơn đặt trước đủ điều kiện nạp.');
   await expect(active).not.toContainText('Không có mẫu hoa');
-  await expect(board.getByRole('article', { name: 'Giao hoa · Tủ cũ 1' })).toBeHidden();
+  await expect(board.getByRole('article', { name: 'Thao tác hoa tại tủ · Tủ cũ 1' })).toBeHidden();
 
   await board.getByText('Lịch sử công việc', { exact: true }).click();
-  await expect(board.getByRole('article', { name: 'Giao hoa · Tủ cũ 1' })).toBeVisible();
+  await expect(board.getByRole('article', { name: 'Thao tác hoa tại tủ · Tủ cũ 1' })).toBeVisible();
   await board
     .getByRole('navigation', { name: 'Phân trang: Đã hoàn thành' })
     .getByRole('button', {
       name: 'Trang sau',
     })
     .click();
-  await expect(board.getByRole('article', { name: 'Giao hoa · Tủ cũ 2' })).toBeVisible();
-  await expect(board.getByRole('article', { name: 'Giao hoa · Tủ mới giao' })).toBeVisible();
+  await expect(board.getByRole('article', { name: 'Thao tác hoa tại tủ · Tủ cũ 2' })).toBeVisible();
+  await expect(
+    board.getByRole('article', { name: 'Thao tác hoa tại tủ · Tủ mới giao' }),
+  ).toBeVisible();
   expect(statuses).not.toContain(null);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

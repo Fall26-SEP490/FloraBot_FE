@@ -108,7 +108,7 @@ for (const role of ['ADMIN', 'SELLER', 'SELLER_STAFF'] as const) {
       } else if (role === 'ADMIN') {
         await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tổng quan quản trị');
       } else {
-        await expect(page.getByRole('heading', { level: 1 })).toHaveText('Công việc giao hoa');
+        await expect(page.getByRole('heading', { level: 1 })).toHaveText('Công việc tại tủ');
       }
       if (role === 'ADMIN')
         await expect(page.getByText('Cửa ô A02 chưa đóng sau lượt nhận hoa')).toBeVisible();
