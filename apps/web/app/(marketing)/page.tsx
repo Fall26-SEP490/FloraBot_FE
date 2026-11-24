@@ -18,6 +18,15 @@ export default function Page() {
       <main id="main" className="home-storefront" tabIndex={-1}>
         {/* Hero Banner: 1 bên ảnh tủ Kiosk thông minh, 1 bên khối nội dung */}
         <section className="home-hero" aria-labelledby="hero-title">
+          <div className="home-hero-botanicals" aria-hidden="true">
+            <span className="home-hero-vine home-hero-vine--left" />
+            <span className="home-hero-vine home-hero-vine--right" />
+            <div className="home-hero-petals">
+              {Array.from({ length: 12 }, (_, index) => (
+                <span key={index} />
+              ))}
+            </div>
+          </div>
           <div className="home-hero-inner">
             <div className="home-hero-copy">
               <p className="home-hero-eyebrow">BỘ SƯU TẬP HOA CAO CẤP</p>

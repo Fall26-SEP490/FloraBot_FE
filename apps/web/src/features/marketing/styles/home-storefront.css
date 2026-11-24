@@ -33,9 +33,136 @@ body:has(.home-storefront) {
   border-radius: 8px;
 }
 .home-hero {
+  position: relative;
+  isolation: isolate;
   background: #faf8f5;
   border-bottom: 1px solid #eae7e1;
   overflow: hidden;
+}
+.home-hero-botanicals {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+}
+.home-hero-vine {
+  position: absolute;
+  bottom: -14px;
+  width: clamp(178px, 14vw, 360px);
+  height: 93%;
+  background: url('/images/generated/florabot-hero-vine.webp') left bottom / contain no-repeat;
+  opacity: 0.76;
+}
+.home-hero-vine--left {
+  left: clamp(0px, calc((100vw - 1600px) / 6), 56px);
+}
+.home-hero-vine--right {
+  right: clamp(0px, calc((100vw - 1600px) / 6), 48px);
+  height: 84%;
+  scale: -1 1;
+  opacity: 0.66;
+}
+.home-hero-petals {
+  display: none;
+}
+@media (max-width: 1500px) {
+  .home-hero-vine {
+    mask-image: linear-gradient(to right, #000 26%, rgba(0, 0, 0, 0.65) 66%, transparent);
+  }
+  .home-hero-vine--right {
+    top: -12px;
+    bottom: auto;
+    scale: -1 -1;
+  }
+}
+@media (max-width: 800px) {
+  .home-hero-vine {
+    width: clamp(106px, 25vw, 170px);
+    opacity: 0.67;
+  }
+  .home-hero-vine--right {
+    top: auto;
+    bottom: -14px;
+    scale: -1 1;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .home-hero-vine {
+    animation: hero-vine-grow 1.65s cubic-bezier(0.2, 0.65, 0.35, 1) both;
+  }
+  .home-hero-vine--right {
+    animation-delay: 180ms;
+  }
+  .home-hero-petals {
+    --petal-fall-distance: clamp(185px, 24vw, 420px);
+    position: absolute;
+    inset: 6% 3% auto;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    justify-items: center;
+  }
+  .home-hero-petals > span {
+    --petal-drift: 30px;
+    width: 15px;
+    height: 10px;
+    border-radius: 76% 26% 64% 37%;
+    background: linear-gradient(135deg, #f5cfbf, #d98670);
+    animation: hero-petal-fall 5.6s ease-in-out infinite;
+  }
+  .home-hero-petals > span:nth-child(even) {
+    --petal-drift: -23px;
+    margin-top: 26px;
+  }
+  .home-hero-petals > span:nth-child(3n) {
+    width: 18px;
+    height: 9px;
+    border-radius: 80% 6%;
+    background: linear-gradient(168deg, #cad5a6 48%, #93aa82 52%);
+  }
+  .home-hero-petals > span:nth-child(3n + 2) {
+    width: 10px;
+    height: 8px;
+    background: linear-gradient(135deg, #f5e6af, #dbb876);
+  }
+  .home-hero-petals > span:nth-child(4n + 2) {
+    animation-delay: -1.4s;
+  }
+  .home-hero-petals > span:nth-child(4n + 3) {
+    animation-delay: -2.8s;
+  }
+  .home-hero-petals > span:nth-child(4n) {
+    animation-delay: -4.2s;
+  }
+  @keyframes hero-vine-grow {
+    from {
+      clip-path: inset(100% 0 0);
+    }
+    to {
+      clip-path: inset(0);
+    }
+  }
+  @keyframes hero-petal-fall {
+    0% {
+      opacity: 0;
+      transform: translate3d(0, -12px, 0) rotate(-22deg);
+    }
+    20% {
+      opacity: 0.75;
+    }
+    54% {
+      transform: translate3d(var(--petal-drift), calc(var(--petal-fall-distance) * 0.48), 0)
+        rotate(78deg);
+    }
+    82% {
+      opacity: 0.58;
+    }
+    100% {
+      opacity: 0;
+      transform: translate3d(calc(var(--petal-drift) * -0.45), var(--petal-fall-distance), 0)
+        rotate(178deg);
+    }
+  }
 }
 .home-hero-inner {
   display: grid;
