@@ -252,6 +252,10 @@
   }
   .flower-shop-page:not(.flower-detail-page) .flower-card-body {
     order: 2;
+    flex: 1;
+  }
+  .flower-shop-page:not(.flower-detail-page) .flower-card-seller-row {
+    flex-wrap: wrap;
   }
   .flower-shop-page:not(.flower-detail-page) .flower-card-actions {
     position: static;
@@ -259,12 +263,14 @@
     opacity: 1;
     transform: none;
     pointer-events: auto;
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: nowrap;
     margin-top: 0.4rem;
     gap: 0.35rem;
   }
-  .flower-shop-page:not(.flower-detail-page) .flower-card-chat-btn.button {
-    width: 100% !important;
+  .flower-shop-page:not(.flower-detail-page) .flower-card-select-btn.button {
+    flex: 1;
+    min-width: 0;
   }
   .flower-shop-page:not(.flower-detail-page) .flower-card-media::after {
     display: none;

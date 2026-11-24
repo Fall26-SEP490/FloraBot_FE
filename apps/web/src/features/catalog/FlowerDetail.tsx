@@ -249,14 +249,21 @@ export default function FlowerDetail({
               )}
 
               <div className="flower-detail-actions">
-                {isPreorder(item) ? (
+                {canOrderOnWeb(item) ? (
                   <Button
                     className="flower-detail-cta-btn button-primary"
-                    disabled={!canOrderOnWeb(item)}
                     onClick={() => selectItem(item)}
                   >
                     Yêu cầu báo giá
                   </Button>
+                ) : isPreorderSoldOut(item) ? (
+                  <Link
+                    className="button button-primary flower-detail-cta-btn"
+                    href={`${shopHref ?? '/dat-hoa'}?preorder=1`}
+                    aria-label={shopHref ? 'Xem mẫu còn nhận đặt của shop' : 'Xem mẫu còn nhận đặt'}
+                  >
+                    Xem mẫu còn nhận đặt
+                  </Link>
                 ) : isWalkIn(item) ? (
                   <Link
                     className="button button-primary flower-detail-cta-btn"

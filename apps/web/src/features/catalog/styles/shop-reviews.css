@@ -165,7 +165,6 @@
   }
   .shop-review-card {
     aspect-ratio: auto;
-    min-block-size: 13rem;
   }
 }
 

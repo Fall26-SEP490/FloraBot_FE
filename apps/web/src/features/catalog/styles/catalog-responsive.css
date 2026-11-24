@@ -249,17 +249,19 @@
   }
 
   .catalog-header-minimal {
+    gap: 0.75rem;
+    padding: 0.85rem;
     margin-bottom: 0.85rem;
   }
 
-  .catalog-hero-title {
-    font-size: 1.2rem;
+  .catalog-header-minimal .catalog-hero-title {
+    font-size: 1.45rem;
     line-height: 1.25;
     margin-bottom: 0.25rem;
     overflow-wrap: break-word;
   }
 
-  .catalog-hero-desc {
+  .catalog-header-minimal .catalog-hero-desc {
     font-size: 0.82rem;
     line-height: 1.4;
   }
@@ -305,7 +307,7 @@
   }
 
   .catalog-search-bar-wrap {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) auto;
     gap: 0.5rem;
     margin-bottom: 0.75rem;
   }
@@ -316,51 +318,52 @@
   }
 
   .catalog-search-submit-btn.button {
-    width: 100% !important;
+    width: 44px;
     min-height: 44px !important;
     height: 44px !important;
-    padding: 0 0.85rem !important;
-    font-size: 0.84rem !important;
+    padding: 0 !important;
+  }
+
+  .catalog-search-submit-btn > span {
+    display: none;
+  }
+
+  .catalog-search-submit-icon {
+    display: block;
   }
 
   .catalog-content-toolbar {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) 44px;
+    grid-template-areas:
+      'filters sort nearby'
+      'count count count';
+    align-items: center;
     gap: 0.5rem;
     margin-bottom: 0.75rem;
     padding-bottom: 0.45rem;
   }
 
-  .catalog-toolbar-left {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    gap: 0.45rem;
+  .catalog-toolbar-left,
+  .catalog-toolbar-right {
+    display: contents;
   }
 
   .catalog-results-count {
-    display: block;
+    grid-area: count;
     font-size: 0.78rem;
   }
 
   .catalog-mobile-filter-btn {
+    grid-area: filters;
     height: 44px !important;
     min-height: 44px !important;
     padding: 0.2rem 0.65rem !important;
     font-size: 0.8rem !important;
   }
 
-  .catalog-toolbar-right {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    width: 100%;
-  }
-
   .catalog-locate-btn {
-    flex: 1 1 0;
+    grid-area: nearby;
     min-width: 0;
     justify-content: center;
     height: 44px !important;
@@ -369,8 +372,12 @@
     font-size: 0.78rem !important;
   }
 
+  .catalog-locate-btn > span {
+    display: none;
+  }
+
   .catalog-sort-wrapper {
-    flex: 1 1 0;
+    grid-area: sort;
     min-width: 0;
   }
 
@@ -393,7 +400,7 @@
   }
 }
 
-@media (max-width: 390px) {
+@media (max-width: 359px) {
   .flower-catalog-grid {
     grid-template-columns: minmax(0, 1fr);
   }

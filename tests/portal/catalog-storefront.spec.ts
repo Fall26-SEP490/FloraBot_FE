@@ -73,6 +73,22 @@ for (const width of [390, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await mockCatalog(page);
     await page.goto(`/dat-hoa/${flowers[0].productId}/${kioskId}?zone=PREORDER`);
+    const alternate = page.getByRole('link', { name: 'Xem mẫu còn nhận đặt của shop' });
+    await expect(alternate).toHaveAttribute('href', shopPath + '?preorder=1');
+    await expect(page.getByRole('button', { name: 'Chat với shop', exact: true })).toBeVisible();
+    if (width === 390) {
+      await expect(
+        page.locator('.site-support-label').filter({ hasText: 'Tư vấn FloraBot' }),
+      ).toBeHidden();
+      await expect(
+        page.getByRole('button', { name: 'Tư vấn FloraBot', exact: true }),
+      ).toBeVisible();
+    }
+    await alternate.click();
+    await expect(page).toHaveURL(shopPath + '?preorder=1', { timeout: 20_000 });
+    await expect(page.locator('.flower-card').first()).toContainText('Mẫu hoa 02');
+    await expect(page.getByText('Hết hàng', { exact: true })).toHaveCount(0);
+    await page.goBack();
     await page.getByRole('link', { name: 'Xem cửa hàng Tiệm Hoa An Nhiên' }).click();
     await expect(page).toHaveURL(shopPath, { timeout: 20_000 });
     const header = page.locator('.catalog-store-header');
@@ -84,13 +100,25 @@ for (const width of [390, 1440]) {
     await expect(header.getByText('8 đánh giá')).toBeVisible();
     const cards = page.locator('.flower-card');
     await expect(cards).toHaveCount(12);
-    await expect(cards.first()).toContainText('Hết hàng');
+    await expect(cards.first()).toContainText('Mẫu hoa 02');
+    if (width === 390) {
+      const filter = (await page
+        .getByRole('button', { name: 'Bộ lọc', exact: true })
+        .boundingBox())!;
+      const sort = (await page.getByRole('combobox', { name: 'Sắp xếp sản phẩm' }).boundingBox())!;
+      expect(Math.abs(filter.y - sort.y)).toBeLessThan(4);
+      const first = (await cards.first().boundingBox())!;
+      const second = (await cards.nth(1).boundingBox())!;
+      expect(first.y).toBe(second.y);
+      expect(second.x).toBeGreaterThan(first.x);
+    }
     await expect(page.getByText('Sản phẩm shop trùng tên')).toHaveCount(0);
 
     await page.getByRole('button', { name: 'Trang sau' }).click();
     await expect(page).toHaveURL(shopPath + '?page=2');
     await expect(cards).toHaveCount(2);
-    await expect(cards.last()).toContainText('Mẫu hoa 14');
+    await expect(cards.first()).toContainText('Mẫu hoa 14');
+    await expect(cards.last()).toContainText('Hết hàng');
 
     const search = page.getByRole('searchbox', { name: 'Tìm mẫu hoa trong shop' });
     await search.fill('Mẫu hoa 13');

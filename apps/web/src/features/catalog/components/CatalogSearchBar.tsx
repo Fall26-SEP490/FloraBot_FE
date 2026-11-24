@@ -49,8 +49,9 @@ export function CatalogSearchBar({
           </button>
         )}
       </div>
-      <Button type="submit" className="catalog-search-submit-btn">
-        Tìm hoa
+      <Button type="submit" className="catalog-search-submit-btn" aria-label="Tìm hoa">
+        <span>Tìm hoa</span>
+        <Search size={18} className="catalog-search-submit-icon" aria-hidden="true" />
       </Button>
     </form>
   );

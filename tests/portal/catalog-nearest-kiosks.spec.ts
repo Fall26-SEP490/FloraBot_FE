@@ -156,6 +156,8 @@ test('catalog shows product reviews for preorder and keeps only a chip for a kio
 
   await page.getByRole('button', { name: 'Bỏ lọc theo tủ Tủ gần', exact: true }).click();
   await expect(cards).toHaveCount(3);
-  await expect(cards.last().locator('.flower-card-rating')).toHaveText('Chưa có đánh giá');
+  await expect(cards.filter({ hasText: noReviews.name }).locator('.flower-card-rating')).toHaveText(
+    'Chưa có đánh giá',
+  );
   expect(reviewRequests).toEqual([reviewed.productId, noReviews.productId]);
 });

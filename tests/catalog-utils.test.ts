@@ -146,6 +146,22 @@ describe('Catalog Utilities - Sorting', () => {
     sampleItem({ name: 'Hoa Lan', price: 100000 }),
   ];
 
+  it('puts orderable templates first by default and retains price order when selected', () => {
+    const soldOut = sampleItem({ price: 90000, preorderAvailable: false });
+    const available = sampleItem({ price: 100000, preorderAvailable: true });
+    const walkIn = sampleItem({ price: 120000, zone: 'WALK_IN' });
+    expect(sortCatalogItems([soldOut, walkIn, available], 'default')).toEqual([
+      available,
+      soldOut,
+      walkIn,
+    ]);
+    expect(sortCatalogItems([soldOut, walkIn, available], 'price-asc')).toEqual([
+      soldOut,
+      available,
+      walkIn,
+    ]);
+  });
+
   it('sorts by price-asc', () => {
     const sorted = sortCatalogItems(items, 'price-asc');
     expect(sorted.map((i) => i.price)).toEqual([100000, 200000, 500000]);

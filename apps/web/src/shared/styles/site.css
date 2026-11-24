@@ -118,6 +118,9 @@
   body:has(.flower-detail-page) .site-support {
     --site-support-bottom: calc(max(20px, env(safe-area-inset-bottom)) + 96px);
   }
+  body:has(.flower-shop-page) .site-support .site-support-label {
+    display: none;
+  }
   body:has(.staff-chat-section) .site-support {
     --site-support-bottom: calc(max(20px, env(safe-area-inset-bottom)) + 160px);
   }

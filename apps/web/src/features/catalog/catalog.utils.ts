@@ -138,7 +138,7 @@ export function sortCatalogItems(
     if (sortBy === 'price-asc') return a.price - b.price;
     if (sortBy === 'price-desc') return b.price - a.price;
     if (sortBy === 'name-asc') return a.name.localeCompare(b.name, 'vi');
-    return 0;
+    return Number(canOrderOnWeb(b)) - Number(canOrderOnWeb(a));
   });
 }
 

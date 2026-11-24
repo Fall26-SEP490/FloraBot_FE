@@ -11,7 +11,12 @@ const reviews = Array.from({ length: 13 }, (_, index) => ({
   productId,
   productName: index === 12 ? 'Mẫu hoa trước đây' : 'Bó hồng lụa',
   stars: 5,
-  comment: index === 12 ? 'Mình đã đặt mẫu này hồi tháng trước.' : 'Hoa đẹp và được gói kỹ.',
+  comment:
+    index === 1
+      ? null
+      : index === 12
+        ? 'Mình đã đặt mẫu này hồi tháng trước.'
+        : 'Hoa đẹp và được gói kỹ.',
   photoUrl: index === 0 ? productPhoto : null,
   createdAt: '2026-11-20T08:00:00Z',
   reviewerName: index === 0 ? 'Nguyễn Minh Anh' : `Khách hàng ${index + 1}`,
@@ -102,6 +107,9 @@ for (const width of [390, 1440]) {
     if (width === 1440) {
       const card = (await cards.first().boundingBox())!;
       expect(Math.abs(card.width - card.height)).toBeLessThan(6);
+    } else {
+      const shortCard = (await cards.nth(1).boundingBox())!;
+      expect(shortCard.height).toBeLessThan(200);
     }
     const axe = await new AxeBuilder({ page }).include('.shop-reviews-page').analyze();
     expect(axe.violations).toEqual([]);

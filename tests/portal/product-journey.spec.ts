@@ -263,7 +263,7 @@ test('A preorder that sells out during quotation refreshes the catalog and block
   await expect(submit).toBeDisabled();
   await expect(brief).toHaveValue('Hoa hồng tông pastel, ngân sách 400.000 đồng');
   await expect.poll(() => state.catalogReads).toBeGreaterThan(readsBeforeSubmit);
-  await expect(page.getByRole('button', { name: 'Yêu cầu báo giá', exact: true })).toBeDisabled();
+  await expect(page.getByRole('link', { name: 'Xem mẫu còn nhận đặt của shop' })).toBeVisible();
   expect(state.writes).toHaveLength(1);
 });
 
@@ -273,11 +273,12 @@ test('Sold-out preorder stays visible on home and catalog while Walk-in still li
   const state = await fixture(page, { available: false });
   await page.goto('/');
   const preorder = page.getByRole('link', {
-    name: `${flower.name} · Hết hàng · ${flower.kioskName}`,
+    name: `${flower.name} · Hết hàng`,
+    exact: true,
   });
   await expect(preorder.getByText('Hết hàng', { exact: true })).toBeVisible();
   await page.goto('/dat-hoa?mode=custom');
-  const preorderCard = page.locator('.flower-card').filter({ hasText: flower.kioskName });
+  const preorderCard = page.locator('.flower-card').filter({ hasText: flower.name });
   await expect(preorderCard.getByText('Hết hàng', { exact: true })).toBeVisible();
   await expect(preorderCard.getByRole('button', { name: 'Yêu cầu báo giá' })).toHaveCount(0);
   await page.goto('/dat-hoa?mode=stock');

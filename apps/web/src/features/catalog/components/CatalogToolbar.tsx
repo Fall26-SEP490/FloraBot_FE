@@ -61,20 +61,6 @@ export function CatalogToolbar({
       </div>
 
       <div className="catalog-toolbar-right">
-        {onLocate && (
-          <button
-            type="button"
-            className={`catalog-locate-btn ${sortBy === 'nearest' ? 'is-active' : ''}`}
-            disabled={locating}
-            onClick={onLocate}
-            title="Sắp xếp mẫu hoa theo khoảng cách từ kiosk gần bạn nhất"
-            aria-pressed={sortBy === 'nearest'}
-          >
-            <MapPin size={15} aria-hidden="true" />
-            <span>{locating ? 'Đang lấy vị trí…' : 'Xếp hoa gần tôi'}</span>
-          </button>
-        )}
-
         <div className="catalog-sort-wrapper">
           <Select
             className="catalog-sort-select"
@@ -82,13 +68,28 @@ export function CatalogToolbar({
             value={sortBy}
             onChange={(e) => onSortChange(e.target.value as SortOption)}
           >
-            <option value="default">Sắp xếp: Mặc định</option>
+            <option value="default">Mặc định</option>
             <option value="nearest">Khoảng cách: Gần nhất</option>
             <option value="price-asc">Giá: Thấp đến cao</option>
             <option value="price-desc">Giá: Cao đến thấp</option>
             <option value="name-asc">Tên: A – Z</option>
           </Select>
         </div>
+
+        {onLocate && (
+          <button
+            type="button"
+            className={`catalog-locate-btn ${sortBy === 'nearest' ? 'is-active' : ''}`}
+            disabled={locating}
+            onClick={onLocate}
+            aria-label={locating ? 'Đang lấy vị trí' : 'Xếp hoa gần tôi'}
+            title="Xếp hoa gần tôi"
+            aria-pressed={sortBy === 'nearest'}
+          >
+            <MapPin size={15} aria-hidden="true" />
+            <span>{locating ? 'Đang lấy vị trí…' : 'Xếp hoa gần tôi'}</span>
+          </button>
+        )}
       </div>
     </div>
   );

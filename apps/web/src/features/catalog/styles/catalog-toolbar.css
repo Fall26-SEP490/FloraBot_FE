@@ -80,6 +80,10 @@
   background-color: #eaf3e8;
 }
 
+.catalog-search-input-box:not(:has(.catalog-search-clear-btn)) .catalog-search-input {
+  padding-right: 0.75rem !important;
+}
+
 .catalog-search-submit-btn.button {
   height: 44px !important;
   min-height: 44px !important;
@@ -89,6 +93,10 @@
   border-radius: 8px !important;
   white-space: nowrap !important;
   flex-shrink: 0 !important;
+}
+
+.catalog-search-submit-icon {
+  display: none;
 }
 
 /* Results Count & Sort Toolbar */
