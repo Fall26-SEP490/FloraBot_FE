@@ -16,6 +16,7 @@ const flower = {
   zone: 'PREORDER',
 };
 async function setup(page: Page) {
+  await page.clock.setFixedTime(new Date('2026-11-20T05:00:00Z'));
   const state = { status: 200, empty: false, pages: [] as number[], writes: [] as string[] };
   await page.route('**/hub/**', (route) => route.abort());
   await page.route('**/api/**', (route) => {
@@ -77,14 +78,13 @@ for (const width of [390, 1440]) {
     await page.setViewportSize({ width, height: 1000 });
     const state = await setup(page);
     await page.goto('/');
-    const preview = page.getByRole('region', { name: 'Mẫu hoa từ các shop', exact: true });
-    await expect(preview.locator('.storefront-flower')).toHaveCount(3);
+    const preview = page.getByRole('region', { name: 'Mẫu hoa từ các tiệm', exact: true });
+    await expect(preview.locator('.storefront-flower')).toHaveCount(2);
     await expect(page.locator('.gift-tool, .gift-demo')).toHaveCount(0);
     await expect(preview).toContainText(flower.name);
     await expect(preview).toContainText('245.000');
     await expect(preview).toContainText(flower.shopName);
     await expect(preview).toContainText('Giá mẫu');
-    await expect(preview).toContainText('Giá tại tủ');
     await expect(preview.locator('.storefront-flower-illustration')).toHaveText('Ảnh minh họa');
     await expect(preview.getByAltText('Ảnh hoa minh họa, chưa có ảnh sản phẩm')).toHaveAttribute(
       'src',
@@ -104,6 +104,9 @@ for (const width of [390, 1440]) {
     );
     await expect(preorderCard).not.toContainText(flower.kioskName);
     await expect(preview).not.toContainText('Tủ Pre-order thứ hai');
+    await preview.getByRole('button', { name: 'Mua tại kiosk', exact: true }).click();
+    await expect(preview.locator('.storefront-flower')).toHaveCount(1);
+    await expect(preview).toContainText('Giá tại tủ');
     const walkInCard = preview.getByRole('link', {
       name: `${flower.name} · Chỉ mua tại kiosk · ${flower.kioskName}`,
       exact: true,
@@ -180,7 +183,7 @@ test('Homepage catalog failure can be retried without losing the rest of the pag
   const state = await setup(page);
   state.status = 503;
   await page.goto('/');
-  const preview = page.getByRole('region', { name: 'Mẫu hoa từ các shop', exact: true });
+  const preview = page.getByRole('region', { name: 'Mẫu hoa từ các tiệm', exact: true });
   await expect(preview.getByRole('alert')).toContainText('Chưa tải được mẫu hoa');
   await expect(preview.locator('.storefront-flower')).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Tìm kiosk nhận hoa', exact: true })).toBeVisible();
@@ -188,7 +191,7 @@ test('Homepage catalog failure can be retried without losing the rest of the pag
   await preview
     .getByRole('button', { name: 'Tải lại mẫu hoa trên trang chủ', exact: true })
     .click();
-  await expect(preview.locator('.storefront-flower')).toHaveCount(3);
+  await expect(preview.locator('.storefront-flower')).toHaveCount(2);
   expect(state.writes).toEqual([]);
 });
 test('Empty catalog never falls back to inspiration photos or fabricated products', async ({
@@ -197,7 +200,7 @@ test('Empty catalog never falls back to inspiration photos or fabricated product
   const state = await setup(page);
   state.empty = true;
   await page.goto('/');
-  const preview = page.getByRole('region', { name: 'Mẫu hoa từ các shop', exact: true });
+  const preview = page.getByRole('region', { name: 'Mẫu hoa từ các tiệm', exact: true });
   await expect(preview.getByRole('status')).toContainText('Hiện chưa có mẫu hoa');
   await expect(preview.locator('.storefront-flower')).toHaveCount(0);
   await expect(preview.locator('img')).toHaveCount(0);
@@ -223,8 +226,8 @@ test('Loading and broken images are explicit without blocking navigation', async
     route.fulfill({ status: 404, body: '' }),
   );
   await page.goto('/');
-  const preview = page.getByRole('region', { name: 'Mẫu hoa từ các shop', exact: true });
-  await expect(preview.getByRole('status')).toContainText('Đang tải mẫu hoa');
+  const preview = page.getByRole('region', { name: 'Mẫu hoa từ các tiệm', exact: true });
+  await expect(preview.getByRole('status', { name: 'Đang tải danh mục hoa' })).toBeVisible();
   await expect(preview.getByRole('link', { name: 'Xem tất cả mẫu', exact: true })).toBeVisible();
   release();
   await expect(preview.locator('.storefront-flower-illustration')).toHaveText('Ảnh minh họa');
@@ -268,7 +271,7 @@ for (const status of [200, 503]) {
       }),
     );
     await page.goto('/');
-    await expect(page.locator('#mau-hoa .storefront-flower')).toHaveCount(3);
+    await expect(page.locator('#mau-hoa .storefront-flower')).toHaveCount(2);
     await expect(page.locator('#goi-thue')).toContainText(
       status === 200 ? 'Chưa có bảng giá' : 'Chưa tải được bảng giá',
     );

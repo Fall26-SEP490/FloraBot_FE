@@ -3,11 +3,56 @@ import { LandingPricing } from '@/features/marketing/LandingPricing';
 import StorefrontFlowers from '@/features/marketing/StorefrontFlowers';
 import FlowerTypesCarousel from '@/features/marketing/FlowerTypesCarousel';
 import SeasonalWelcome from '@/features/marketing/SeasonalWelcome';
-import { Suspense } from 'react';
+import { Fragment, Suspense } from 'react';
 import '@/features/marketing/styles/home-storefront.css';
 
 export const metadata = { title: 'FloraBot - Đặt hoa theo ý bạn, nhận tại tủ' };
 export const dynamic = 'force-dynamic';
+
+const heroTitle = { text: 'Một bó hoa,', start: 160, duration: 710 };
+const heroAccent = {
+  text: 'nhiều yêu thương.',
+  start: heroTitle.start + heroTitle.duration,
+  duration: 1120,
+};
+const heroSubtitle = {
+  text: 'Khám phá những mẫu hoa giả từ các tiệm và chọn bó phù hợp với dịp của bạn.',
+  start: heroAccent.start + heroAccent.duration,
+  duration: 1720,
+};
+
+function writeHeroWords({
+  text,
+  start,
+  duration,
+}: {
+  text: string;
+  start: number;
+  duration: number;
+}) {
+  const timePerCharacter = duration / text.length;
+  let offset = 0;
+
+  return text.split(' ').map((word, index) => {
+    const delay = start + offset * timePerCharacter;
+    offset += word.length + 1;
+
+    return (
+      <Fragment key={index}>
+        {index > 0 && ' '}
+        <span
+          className="home-hero-written-word"
+          style={{
+            animationDelay: `${delay}ms`,
+            animationDuration: `${word.length * timePerCharacter}ms`,
+          }}
+        >
+          {word}
+        </span>
+      </Fragment>
+    );
+  });
+}
 
 export default function Page() {
   return (
@@ -29,18 +74,18 @@ export default function Page() {
           </div>
           <div className="home-hero-inner">
             <div className="home-hero-copy">
-              <p className="home-hero-eyebrow">BỘ SƯU TẬP HOA CAO CẤP</p>
               <h1 id="hero-title" className="home-hero-title">
-                Một bó hoa,
+                {writeHeroWords(heroTitle)}
                 <br />
-                nhiều yêu thương.
+                <span className="home-hero-title-accent">{writeHeroWords(heroAccent)}</span>
               </h1>
-              <p className="home-hero-subtitle">
-                Chọn mẫu hoa từ các shop, nhận báo giá và hẹn lấy hoa tại kiosk FloraBot.
-              </p>
-              <div className="home-hero-actions">
+              <p className="home-hero-subtitle">{writeHeroWords(heroSubtitle)}</p>
+              <div
+                className="home-hero-actions"
+                style={{ animationDelay: `${heroSubtitle.start + heroSubtitle.duration}ms` }}
+              >
                 <a className="home-hero-cta" href="#mau-hoa">
-                  KHÁM PHÁ NGAY
+                  Xem mẫu hoa
                 </a>
                 <a className="home-hero-location" href="/tim-kiosk">
                   Tìm kiosk nhận hoa <span aria-hidden="true">→</span>
@@ -65,12 +110,11 @@ export default function Page() {
         <section className="home-brand-intro" aria-labelledby="brand-intro-title">
           <div className="brand-intro-content">
             <h2 id="brand-intro-title" className="brand-intro-title">
-              Đặt hoa từ shop, nhận tại kiosk — FloraBot
+              Đặt hoa online, nhận tại kiosk
             </h2>
             <p className="brand-intro-text">
-              FloraBot kết nối các shop hoa với hệ thống kiosk tự phục vụ. Bạn chọn mẫu, gửi yêu cầu
-              và xác nhận báo giá từ shop trước khi thanh toán. Khi hoa sẵn sàng, hãy đến đúng kiosk
-              trong thời gian nhận của đơn và dùng mã nhận hoa để lấy hoa.
+              Gửi yêu cầu cho tiệm, xác nhận báo giá rồi thanh toán. Khi hoa sẵn sàng, dùng mã nhận
+              hoa tại kiosk đã chọn.
             </p>
           </div>
         </section>

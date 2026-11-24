@@ -44,7 +44,7 @@ export default function StorefrontFlowers() {
       aria-labelledby="storefront-flowers-title"
     >
       <div className="storefront-section-heading">
-        <h2 id="storefront-flowers-title">Mẫu hoa từ các shop</h2>
+        <h2 id="storefront-flowers-title">Mẫu hoa từ các tiệm</h2>
         <Link href="/dat-hoa" className="collection-view-all-btn">
           Xem tất cả mẫu <span aria-hidden="true">→</span>
         </Link>
