@@ -1,0 +1,256 @@
+/* Read-only status presentation for Admin, Operations and Technician. */
+.workspace-portal-root.platform-workspace:is(
+    [data-platform-role='admin'],
+    [data-platform-role='operations'],
+    [data-platform-role='technician']
+  )
+  :is(
+    .table-badge,
+    .management-status,
+    .kiosk-status-pill,
+    .staff-task-label,
+    .termination-status-pill,
+    .sheet-status,
+    .dashboard-status,
+    .admin-disclosure-status,
+    .admin-channel-state
+  ) {
+  --role-status-bg: #f0f2f1;
+  --role-status-ink: #53645b;
+  --role-status-line: #d8e0db;
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 5px 9px;
+  border: 1px solid var(--role-status-line) !important;
+  border-radius: 999px;
+  background: var(--role-status-bg) !important;
+  color: var(--role-status-ink) !important;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.workspace-portal-root.platform-workspace:is(
+    [data-platform-role='admin'],
+    [data-platform-role='operations'],
+    [data-platform-role='technician']
+  )
+  :is(
+    .table-badge,
+    .management-status,
+    .kiosk-status-pill,
+    .staff-task-label,
+    .termination-status-pill,
+    .sheet-status,
+    .dashboard-status,
+    .admin-disclosure-status,
+    .admin-channel-state
+  ):is(
+    [data-state='ACTIVE'],
+    [data-status='ACTIVE'],
+    [data-state='ONLINE'],
+    [data-status='ONLINE'],
+    [data-state='APPROVED'],
+    [data-status='APPROVED'],
+    [data-state='SUCCEEDED'],
+    [data-status='SUCCEEDED'],
+    [data-state='COMPLETED'],
+    [data-status='COMPLETED'],
+    [data-state='RESOLVED_FIXED'],
+    [data-status='RESOLVED_FIXED'],
+    [data-state='REFUNDED'],
+    [data-status='REFUNDED'],
+    [data-state='ACCEPTED_COMPLETE'],
+    [data-status='ACCEPTED_COMPLETE'],
+    [data-state='FULFILLED'],
+    [data-status='FULFILLED'],
+    [data-state='DISPENSED'],
+    [data-status='DISPENSED'],
+    [data-state='Đã hoàn thành'],
+    [data-status='Đã hoàn thành'],
+    [data-state='Đã giải quyết'],
+    [data-status='Đã giải quyết'],
+    [data-state='Đã bàn giao'],
+    [data-status='Đã bàn giao'],
+    [data-state='Đã nhận hoa'],
+    [data-status='Đã nhận hoa']
+  ) {
+  --role-status-bg: #e6f5eb;
+  --role-status-ink: #23653c;
+  --role-status-line: #bce0c9;
+}
+
+.workspace-portal-root.platform-workspace:is(
+    [data-platform-role='admin'],
+    [data-platform-role='operations'],
+    [data-platform-role='technician']
+  )
+  :is(
+    .table-badge,
+    .management-status,
+    .kiosk-status-pill,
+    .staff-task-label,
+    .termination-status-pill,
+    .sheet-status,
+    .dashboard-status,
+    .admin-disclosure-status,
+    .admin-channel-state
+  ):is(
+    [data-state='ASSIGNED'],
+    [data-status='ASSIGNED'],
+    [data-state='SCHEDULED'],
+    [data-status='SCHEDULED'],
+    [data-state='CONFIRMED'],
+    [data-status='CONFIRMED'],
+    [data-state='INSTALLING'],
+    [data-status='INSTALLING'],
+    [data-state='IN_PROGRESS'],
+    [data-status='IN_PROGRESS'],
+    [data-state='PROCESSING'],
+    [data-status='PROCESSING'],
+    [data-state='ACCEPTED'],
+    [data-status='ACCEPTED'],
+    [data-state='PAID'],
+    [data-status='PAID'],
+    [data-state='READY'],
+    [data-status='READY'],
+    [data-state='PICKUP_READY'],
+    [data-status='PICKUP_READY'],
+    [data-state='Đang xử lý'],
+    [data-status='Đang xử lý'],
+    [data-state='Đang thực hiện'],
+    [data-status='Đang thực hiện'],
+    [data-state='Đã phân công'],
+    [data-status='Đã phân công'],
+    [data-state='Đã xếp lịch'],
+    [data-status='Đã xếp lịch']
+  ) {
+  --role-status-bg: #eaf3ff;
+  --role-status-ink: #205a96;
+  --role-status-line: #c8ddf4;
+}
+
+.workspace-portal-root.platform-workspace:is(
+    [data-platform-role='admin'],
+    [data-platform-role='operations'],
+    [data-platform-role='technician']
+  )
+  :is(
+    .table-badge,
+    .management-status,
+    .kiosk-status-pill,
+    .staff-task-label,
+    .termination-status-pill,
+    .sheet-status,
+    .dashboard-status,
+    .admin-disclosure-status,
+    .admin-channel-state
+  ):is(
+    [data-state='SUBMITTED'],
+    [data-status='SUBMITTED'],
+    [data-state='AWAITING_REVIEW'],
+    [data-status='AWAITING_REVIEW'],
+    [data-state='AWAITING_HANDOVER'],
+    [data-status='AWAITING_HANDOVER'],
+    [data-state='REVIEWING'],
+    [data-status='REVIEWING'],
+    [data-state='PAID_REVIEW'],
+    [data-status='PAID_REVIEW'],
+    [data-state='Chờ duyệt báo cáo'],
+    [data-status='Chờ duyệt báo cáo'],
+    [data-state='Chờ nghiệm thu'],
+    [data-status='Chờ nghiệm thu'],
+    [data-state='Đã gửi báo cáo'],
+    [data-status='Đã gửi báo cáo']
+  ) {
+  --role-status-bg: #f2edff;
+  --role-status-ink: #69429a;
+  --role-status-line: #ddcff1;
+}
+
+.workspace-portal-root.platform-workspace:is(
+    [data-platform-role='admin'],
+    [data-platform-role='operations'],
+    [data-platform-role='technician']
+  )
+  :is(
+    .table-badge,
+    .management-status,
+    .kiosk-status-pill,
+    .staff-task-label,
+    .termination-status-pill,
+    .sheet-status,
+    .dashboard-status,
+    .admin-disclosure-status,
+    .admin-channel-state
+  ):is(
+    [data-state='OPEN'],
+    [data-status='OPEN'],
+    [data-state='PENDING'],
+    [data-status='PENDING'],
+    [data-state='UNASSIGNED'],
+    [data-status='UNASSIGNED'],
+    [data-state='REQUESTED'],
+    [data-status='REQUESTED'],
+    [data-state='REFUND_PENDING'],
+    [data-status='REFUND_PENDING'],
+    [data-state='PENDING_PAYMENT'],
+    [data-status='PENDING_PAYMENT'],
+    [data-state='PAST_DUE'],
+    [data-status='PAST_DUE'],
+    [data-state='Đang mở'],
+    [data-status='Đang mở'],
+    [data-state='Chưa phân công'],
+    [data-status='Chưa phân công'],
+    [data-state='Chờ xử lý'],
+    [data-status='Chờ xử lý'],
+    [data-state='Chờ thanh toán'],
+    [data-status='Chờ thanh toán']
+  ) {
+  --role-status-bg: #fff3d9;
+  --role-status-ink: #79520f;
+  --role-status-line: #efdbab;
+}
+
+.workspace-portal-root.platform-workspace:is(
+    [data-platform-role='admin'],
+    [data-platform-role='operations'],
+    [data-platform-role='technician']
+  )
+  :is(
+    .table-badge,
+    .management-status,
+    .kiosk-status-pill,
+    .staff-task-label,
+    .termination-status-pill,
+    .sheet-status,
+    .dashboard-status,
+    .admin-disclosure-status,
+    .admin-channel-state
+  ):is(
+    [data-state='FAILED'],
+    [data-status='FAILED'],
+    [data-state='FAULT'],
+    [data-status='FAULT'],
+    [data-state='LOCKED'],
+    [data-status='LOCKED'],
+    [data-state='SUSPENDED'],
+    [data-status='SUSPENDED'],
+    [data-state='REJECTED'],
+    [data-status='REJECTED'],
+    [data-state='DISPENSE_FAILED'],
+    [data-status='DISPENSE_FAILED'],
+    [data-state='PAYMENT_FAILED'],
+    [data-status='PAYMENT_FAILED'],
+    [data-state='Lỗi'],
+    [data-status='Lỗi'],
+    [data-state='Tạm khóa'],
+    [data-status='Tạm khóa'],
+    [data-state='Giao hoa thất bại'],
+    [data-status='Giao hoa thất bại']
+  ) {
+  --role-status-bg: #fceceb;
+  --role-status-ink: #953b34;
+  --role-status-line: #efc7c3;
+}

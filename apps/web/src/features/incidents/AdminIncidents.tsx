@@ -1,4 +1,6 @@
 import Select from '@/shared/components/Select';
+import IncidentOverview from './IncidentOverview';
+import styles from './incident-overview.module.css';
 import { liveListOptions } from '@/shared/lib/live-list';
 import WorkspaceTable from '@/features/portal/components/WorkspaceTable';
 import { Modal } from '@/shared/components/Modal';
@@ -35,6 +37,15 @@ function IncidentItem({ row, hidden = false }: { row: Incident; hidden?: boolean
     enabled: open,
   });
   const incident = detail.data?.incident ?? row;
+  const progressLabel = incidentProgressLabel(incident);
+  const progressTone =
+    incident.status === 'RESOLVED_FIXED'
+      ? 'resolved'
+      : progressLabel === 'Chờ nghiệm thu'
+        ? 'review'
+        : progressLabel === 'Đã phân công' || progressLabel === 'Đang xử lý'
+          ? 'active'
+          : 'pending';
   return (
     <tr hidden={hidden}>
       <td>
@@ -52,8 +63,9 @@ function IncidentItem({ row, hidden = false }: { row: Incident; hidden?: boolean
         </span>
       </td>
       <td>
-        <span className="table-badge" data-state={incident.status}>
-          {incidentProgressLabel(incident)}
+        <span className={styles.progress} data-tone={progressTone}>
+          <span className={styles.dot} aria-hidden="true" />
+          {progressLabel}
         </span>
       </td>
       <td>
@@ -70,7 +82,7 @@ function IncidentItem({ row, hidden = false }: { row: Incident; hidden?: boolean
           onClose={() => setOpen(false)}
           title={formatIncidentLabel(row)}
           size="lg"
-          className="admin-monitor-dialog"
+          className={`admin-monitor-dialog ${styles.dialog}`}
         >
           {open && (
             <div className="incident-detail">
@@ -87,27 +99,12 @@ function IncidentItem({ row, hidden = false }: { row: Incident; hidden?: boolean
                 </>
               ) : (
                 <>
-                  <p>{detail.data.incident.location?.address}</p>
-                  <p className="incident-text">{detail.data.incident.reason}</p>
-                  <p className="quiet">Mã sự cố: {row.id}</p>
-                  {detail.data.incident.task && (
-                    <p>
-                      Người phụ trách: <strong>{detail.data.incident.task.assigneeName}</strong> ·{' '}
-                      {incidentProgressLabel(detail.data.incident)}
-                      <br />
-                      Mã công việc: {detail.data.incident.task.id}
-                    </p>
-                  )}
+                  <IncidentOverview incident={detail.data.incident} />
                   <h3>Ảnh minh chứng</h3>
-                  {detail.data.evidence.items.length > 0 && (
-                    <p className="quiet">
-                      Gồm ảnh báo sự cố và ảnh công việc đã liên kết. Chọn ảnh để mở ở tab mới.
-                    </p>
-                  )}
                   {detail.data.evidence.items.length === 0 ? (
                     <p>Phiếu chưa có ảnh báo sự cố hoặc ảnh công việc được liên kết.</p>
                   ) : (
-                    <ul className="incident-evidence">
+                    <ul className={styles.photos}>
                       {detail.data.evidence.items.map((photo, index) => {
                         const url = safeUrl(photo.url);
                         const photoIndex = (evidencePage - 1) * 20 + index + 1;
@@ -121,10 +118,30 @@ function IncidentItem({ row, hidden = false }: { row: Incident; hidden?: boolean
                           <li key={photo.id}>
                             {url ? (
                               <>
-                                <a href={url} target="_blank" rel="noopener noreferrer">
-                                  Mở ảnh minh chứng {photoIndex}
+                                <a
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={styles.photo}
+                                  aria-label={`Mở ảnh minh chứng ${photoIndex}`}
+                                >
+                                  {url.startsWith('/api/') ? (
+                                    <img
+                                      src={url}
+                                      alt={`Ảnh minh chứng ${photoIndex}`}
+                                      loading="lazy"
+                                      onError={(event) => {
+                                        event.currentTarget.hidden = true;
+                                      }}
+                                    />
+                                  ) : (
+                                    <span className={styles.external}>Ảnh đính kèm</span>
+                                  )}
+                                  <span className={styles.photoCaption}>
+                                    <strong>Mở ảnh minh chứng {photoIndex}</strong>
+                                    {sourceLabel && <span>{sourceLabel.replace(' · ', '')}</span>}
+                                  </span>
                                 </a>
-                                {sourceLabel && <span className="quiet">{sourceLabel}</span>}
                               </>
                             ) : (
                               <span>Ảnh {photoIndex}: đường dẫn không hợp lệ để mở an toàn.</span>
@@ -160,19 +177,6 @@ function IncidentItem({ row, hidden = false }: { row: Incident; hidden?: boolean
                         Ảnh trang sau
                       </Button>
                     </nav>
-                  )}
-                  {detail.data.incident.status === 'OPEN' ? (
-                    <p className="quiet">Phiếu đang được Quản lý vận hành xử lý.</p>
-                  ) : (
-                    <>
-                      <h3>Đã xử lý</h3>
-                      <p className="incident-text">
-                        {detail.data.incident.decision || 'Chưa có ghi chú.'}
-                      </p>
-                      {detail.data.incident.resolvedAt && (
-                        <p>{formatIncidentDate(detail.data.incident.resolvedAt)}</p>
-                      )}
-                    </>
                   )}
                 </>
               )}

@@ -79,7 +79,7 @@ for (const width of [390, 1440]) {
     );
     await expect(section.locator('a[href^="javascript:"]')).toHaveCount(0);
     await expect(
-      section.getByText('Phiếu đang được Quản lý vận hành xử lý.', { exact: true }),
+      section.getByText('Quản lý vận hành phụ trách xử lý.', { exact: true }),
     ).toBeVisible();
     await expect(section.getByLabel('Kết quả kiểm tra và xử lý')).toHaveCount(0);
     await expect(section.getByRole('button', { name: 'Xác nhận đóng sự cố' })).toHaveCount(0);
@@ -205,7 +205,7 @@ test('Admin opens staff task evidence URL and paginates incident evidence', asyn
     'href',
     `/api/admin/incidents/${incidentId}/evidence/${taskAttachmentId}`,
   );
-  await expect(section.getByText('· Ảnh kiểm tra kỹ thuật')).toBeVisible();
+  await expect(section.getByText('Ảnh kiểm tra kỹ thuật')).toBeVisible();
   await section.getByRole('button', { name: 'Ảnh trang sau' }).click();
   await expect(section.getByText('Trang ảnh 2', { exact: true })).toBeVisible();
   const link21 = section.getByRole('link', { name: 'Mở ảnh minh chứng 21' });
