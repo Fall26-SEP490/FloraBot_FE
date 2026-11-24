@@ -383,7 +383,7 @@ body:has(.home-storefront) {
   scroll-margin-top: 100px;
 }
 .marketing-site .home-storefront .storefront-section-heading {
-  margin-bottom: 24px;
+  margin-bottom: 12px;
 }
 .marketing-site .home-storefront .storefront-section-heading h2 {
   font-family: 'Playfair Display', 'Palatino Linotype', 'Palatino', Georgia, serif;
@@ -422,58 +422,57 @@ body:has(.home-storefront) {
   text-align: center;
   padding-top: 10px;
 }
-.storefront-collection + .storefront-collection {
-  margin-top: 3.5rem;
-}
-.collection-heading {
+.storefront-mode-switch {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
-  padding-bottom: 14px;
-  border-bottom: 1px solid #eae7e0;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
 }
-.collection-kicker {
-  display: block;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: #718274;
-  margin-bottom: 4px;
-}
-.collection-heading h3 {
-  margin: 0;
-  font-family: 'Playfair Display', 'Palatino Linotype', Georgia, serif;
-  font-size: clamp(1.35rem, 2vw, 1.75rem);
-  font-weight: 700;
+.storefront-mode-switch button,
+.storefront-mode-label {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
   color: #183e2b;
-  letter-spacing: 0.01em;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 650;
+}
+.storefront-mode-switch button {
+  min-height: 44px;
+  padding: 6px 15px;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+}
+.storefront-mode-switch button:hover,
+.storefront-mode-switch button[aria-pressed='true'],
+.storefront-mode-label {
+  border-color: #dbe8da;
+  background: #edf5eb;
+}
+.storefront-mode-label {
+  margin: 0 0 14px;
+  padding: 5px 12px;
 }
 .collection-view-all-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  min-height: 36px;
-  padding: 8px 18px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  min-height: 44px;
+  padding: 6px 12px;
+  border: 1px solid #183e2b;
+  border-radius: 10px;
+  background: #fff;
   color: #183e2b;
-  border: 1.5px solid #183e2b;
-  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 650;
   text-decoration: none;
-  background: transparent;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   white-space: nowrap;
 }
 .collection-view-all-btn:hover {
-  background: #183e2b;
-  color: #ffffff;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(24, 62, 43, 0.18);
+  background: #edf5eb;
 }
 .marketing-site .home-storefront .storefront-flower-copy h4 {
   font-family: 'Playfair Display', 'Palatino Linotype', Georgia, serif;
