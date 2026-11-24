@@ -218,3 +218,115 @@ test('Whole-kiosk incident reports call resolution instead of a generic task tra
   await expect.poll(() => writes).toEqual(['/api/staff/tasks/whole-kiosk/resolve-incident']);
   await expect(page.getByText('Chờ duyệt báo cáo', { exact: true }).last()).toBeVisible();
 });
+
+test('Incident resolution requires at least one attached evidence photo before submitting', async ({
+  page,
+}) => {
+  let hasEvidence = false;
+  let submitted = false;
+  await page.route('**/api/**', (route) => {
+    const req = route.request();
+    const path = new URL(req.url()).pathname;
+    if (path === '/api/auth/me')
+      return route.fulfill({ json: { id: 'tech', name: 'Kỹ thuật viên', role: 'TECHNICIAN' } });
+    if (path === '/api/staff/tasks')
+      return route.fulfill({
+        json: {
+          page: 1,
+          hasMore: false,
+          items: [
+            {
+              id: 'inc-ev',
+              kind: 'INCIDENT',
+              status: submitted ? 'SUBMITTED' : 'IN_PROGRESS',
+              version: submitted ? 2 : 1,
+              assigneeId: 'tech',
+              assigneeName: 'Kỹ thuật viên',
+              kioskName: 'Kiosk minh chứng',
+              address: 'Địa điểm thử nghiệm',
+              instructions: 'Chụp ảnh minh chứng trước khi gửi báo cáo',
+              report: null,
+            },
+          ],
+        },
+      });
+    if (path === '/api/staff/tasks/inc-ev')
+      return route.fulfill({
+        json: {
+          kioskStatus: 'ONLINE',
+          slotCode: null,
+          slotStatus: null,
+          history: [],
+          incident: {
+            kind: 'DEVICE_FAULT',
+            status: 'OPEN',
+            slotId: null,
+            reason: 'Lỗi cảm biến',
+            createdAt: '2026-11-18T01:00:00Z',
+          },
+        },
+      });
+    if (path === '/api/staff/tasks/inc-ev/evidence/upload')
+      return route.fulfill({ json: { reference: 'uploads/evidence-1.png' } });
+    if (path === '/api/staff/tasks/inc-ev/evidence') {
+      if (req.method() === 'POST') {
+        hasEvidence = true;
+        return route.fulfill({ json: { id: 'ev-1' } });
+      }
+      return route.fulfill({
+        json: {
+          items: hasEvidence
+            ? [
+                {
+                  id: 'ev-1',
+                  url: '/api/staff/tasks/inc-ev/evidence/ev-1',
+                  createdAt: '2026-11-18T01:05:00Z',
+                },
+              ]
+            : [],
+          page: 1,
+          hasMore: false,
+        },
+      });
+    }
+    if (path === '/api/staff/tasks/inc-ev/resolve-incident') {
+      submitted = true;
+      return route.fulfill({ json: { id: 'op-1', version: 2 } });
+    }
+    return route.fulfill({ json: [] });
+  });
+  await page.goto('/technician');
+  await page.locator('.technician-task-body > summary').click();
+  const panel = page.locator('details.staff-resolution');
+  await panel.locator('summary').click();
+  await expect(
+    panel.getByText(
+      'Cần tải ảnh và bấm Gắn ảnh vào công việc ở mục Ảnh minh chứng công việc trước khi gửi báo cáo.',
+    ),
+  ).toBeVisible();
+  const submitButton = panel.getByRole('button', { name: 'Ghi nhận và gửi báo cáo', exact: true });
+  await expect(submitButton).toBeDisabled();
+
+  const evidenceSection = page.locator('details.staff-evidence');
+  await evidenceSection.locator('summary').click();
+  await evidenceSection.getByLabel('Ảnh minh chứng', { exact: true }).setInputFiles({
+    name: 'evidence.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aW1sAAAAASUVORK5CYII=',
+      'base64',
+    ),
+  });
+  await evidenceSection.getByRole('button', { name: 'Tải ảnh minh chứng', exact: true }).click();
+  await expect(evidenceSection.getByText('Ảnh đã tải lên, chưa gắn vào công việc.')).toBeVisible();
+  await evidenceSection.getByRole('button', { name: 'Gắn ảnh vào công việc', exact: true }).click();
+  await expect(evidenceSection.getByText('Đã gắn ảnh vào công việc.')).toBeVisible();
+
+  await expect(submitButton).toBeEnabled();
+  await panel
+    .getByLabel('Kết quả sửa chữa và kiểm tra')
+    .fill('Đã kiểm tra và gắn ảnh minh chứng đầy đủ.');
+  await panel.getByRole('checkbox').check();
+  await submitButton.click();
+  await expect(page.getByText('Chờ duyệt báo cáo', { exact: true }).last()).toBeVisible();
+});

@@ -71,7 +71,9 @@ export function TaskItem({
           ? 'Xem báo cáo'
           : 'Xem chi tiết';
   const isManager = mode === 'manager';
-  const [taskOpen, setTaskOpen] = useState(initiallyOpen);
+  const [taskOpen, setTaskOpen] = useState(
+    initiallyOpen || (isManager && role === 'OPERATIONS_MANAGER'),
+  );
   useEffect(() => () => onOpenChange?.(task.id, false), [task.id, onOpenChange]);
   const [showCancellation, setShowCancellation] = useState(false);
   const qualityTask = task.workType === 'FLOWER_QUALITY';
@@ -350,6 +352,9 @@ export function TaskItem({
             ? cause.message
             : 'Chưa duyệt được báo cáo. Tải lại công việc và kiểm tra kết quả xác minh tại tủ trước khi duyệt lại.',
         );
+        void queryClient.invalidateQueries({
+          queryKey: ['repair-readiness', actorId, apiBase, task.id],
+        });
         return;
       }
       const ambiguous = !(cause instanceof ApiError) || cause.status >= 500 || cause.status === 409;

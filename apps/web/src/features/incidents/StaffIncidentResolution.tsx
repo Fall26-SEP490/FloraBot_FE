@@ -1,8 +1,10 @@
 import IconActionButton from '@/shared/components/IconActionButton';
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { Button } from '@florabot/ui';
 import { ApiError, queryClient, request } from '@/shared/lib/api';
+import type { TaskEvidencePage } from '../task-management/task-management.types';
 import type {
   StaffIncidentResolutionAttempt,
   StaffIncidentResolutionProps,
@@ -30,6 +32,15 @@ export default function StaffIncidentResolution({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const form = useForm<{ report: string; confirm: boolean }>();
+  const evidenceCheck = useQuery({
+    queryKey: ['staff-evidence', taskId, actorId, scopeKey, version, 'check'],
+    queryFn: () => request<TaskEvidencePage>(`${apiBase}/${taskId}/evidence?page=1`),
+    enabled: active,
+  });
+  const missingEvidence =
+    evidenceCheck.isSuccess &&
+    Array.isArray(evidenceCheck.data?.items) &&
+    evidenceCheck.data.items.length === 0;
   async function send(payload: StaffIncidentResolutionAttempt) {
     if (busy) return;
     setBusy(true);
@@ -110,10 +121,10 @@ export default function StaffIncidentResolution({
       ) : (
         <form
           noValidate
-          onSubmit={form.handleSubmit(
-            (values) =>
-              void send({ id: crypto.randomUUID(), version, report: values.report.trim() }),
-          )}
+          onSubmit={form.handleSubmit((values) => {
+            if (missingEvidence) return;
+            void send({ id: crypto.randomUUID(), version, report: values.report.trim() });
+          })}
         >
           <label htmlFor={`resolution-report-${taskId}`}>Kết quả sửa chữa và kiểm tra</label>
           <textarea
@@ -151,7 +162,13 @@ export default function StaffIncidentResolution({
               {form.formState.errors.confirm.message}
             </p>
           )}
-          <Button disabled={busy} type="submit">
+          {missingEvidence && (
+            <p role="status">
+              Cần tải ảnh và bấm <strong>Gắn ảnh vào công việc</strong> ở mục Ảnh minh chứng công
+              việc trước khi gửi báo cáo.
+            </p>
+          )}
+          <Button disabled={busy || missingEvidence} type="submit">
             {slotRepair ? 'Gửi báo cáo sửa ô tủ' : 'Ghi nhận và gửi báo cáo'}
           </Button>
         </form>
