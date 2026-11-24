@@ -1,6 +1,6 @@
 'use client';
 
-import { catalogReturnPath } from '../catalog.navigation';
+import { catalogOriginPath } from '../catalog.navigation';
 import { useCallback, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
@@ -33,13 +33,8 @@ export function useCustomerChat(onBeforeOpen: (item: CatalogItem | null) => void
       }
       onBeforeOpen(null);
       if (!session.data) {
-        const current = new URL(window.location.href);
-        const from = catalogReturnPath(
-          current.pathname === '/dat-hoa'
-            ? current.pathname + current.search
-            : current.searchParams.get('from'),
-        );
-        const params = new URLSearchParams(from.split('?')[1]);
+        const [pathname, query] = catalogOriginPath(new URL(window.location.href)).split('?');
+        const params = new URLSearchParams(query);
         const chatParams = {
           action: 'chat',
           sellerId: item.sellerId,
@@ -48,7 +43,7 @@ export function useCustomerChat(onBeforeOpen: (item: CatalogItem | null) => void
           name: item.name,
         };
         for (const [key, value] of Object.entries(chatParams)) params.set(key, value);
-        setChatNotice({ kind: 'login', returnUrl: `/dat-hoa?${params}` });
+        setChatNotice({ kind: 'login', returnUrl: `${pathname}?${params}` });
         return;
       }
       if (session.data.role !== 'CUSTOMER') {

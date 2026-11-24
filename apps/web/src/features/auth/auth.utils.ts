@@ -1,4 +1,9 @@
-import { catalogQueryKeys, catalogReturnPath } from '@/features/catalog/catalog.navigation';
+import {
+  catalogQueryKeys,
+  catalogReturnPath,
+  isCatalogListingPath,
+  shopCatalogSellerId,
+} from '@/features/catalog/catalog.navigation';
 import { accountPath } from '@/features/portal/config/roleRoutes';
 import { validPaymentCode } from '@/features/orders/payment-return';
 
@@ -60,8 +65,10 @@ export function postLoginPath(role: string, search: string): string {
       )
         return target;
     }
-    if (target.startsWith('/dat-hoa?')) {
-      const params = new URLSearchParams(target.slice('/dat-hoa?'.length));
+    const separator = target.indexOf('?');
+    const pathname = target.slice(0, separator);
+    if (separator !== -1 && isCatalogListingPath(pathname) && !target.includes('#')) {
+      const params = new URLSearchParams(target.slice(separator + 1));
       const allowed: readonly string[] = [
         'action',
         'sellerId',
@@ -71,11 +78,16 @@ export function postLoginPath(role: string, search: string): string {
         ...catalogQueryKeys,
       ];
       const idPattern = new RegExp(`^${uuid}$`, 'i');
+      const sellerId = params.get('sellerId') ?? '';
+      const storefrontSellerId = shopCatalogSellerId(pathname);
       if (
         params.get('action') === 'chat' &&
-        idPattern.test(params.get('sellerId') ?? '') &&
+        idPattern.test(sellerId) &&
         idPattern.test(params.get('productId') ?? '') &&
-        [...params.keys()].every((key) => allowed.includes(key) && params.getAll(key).length === 1)
+        (!storefrontSellerId || storefrontSellerId === sellerId.toLowerCase()) &&
+        [...params.keys()].every(
+          (key) => allowed.includes(key) && (key === 'tag' || params.getAll(key).length === 1),
+        )
       )
         return target;
     }

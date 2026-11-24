@@ -1,4 +1,5 @@
 import { Star } from '@florabot/ui';
+import '../styles/product-reviews.css';
 
 const number = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 2 });
 

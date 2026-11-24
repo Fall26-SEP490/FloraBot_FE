@@ -81,21 +81,81 @@ for (const denied of [false, true]) {
     await expect(cards).toHaveCount(12);
     expect(pages).toContain(2);
     await expect(cards.first()).toContainText('Hoa 00');
+    await expect(cards.locator('.flower-card-distance')).toHaveCount(0);
+    const sort = page.getByRole('combobox', { name: 'Sắp xếp sản phẩm' });
     await page.getByRole('button', { name: 'Xếp hoa gần tôi', exact: true }).click();
     if (denied) {
       await expect(page.getByText(/Chưa lấy được vị trí hoặc tọa độ kiosk/)).toBeVisible();
       await expect(cards.first()).toContainText('Hoa 00');
-      await chooseOption(page.getByLabel('Sắp xếp sản phẩm'), 'price-desc');
+      await expect(cards.locator('.flower-card-distance')).toHaveCount(0);
+      await chooseOption(sort, 'price-desc');
       await expect(cards.first()).toContainText('Hoa 14');
     } else {
-      await expect(page.getByLabel('Sắp xếp sản phẩm')).toHaveValue('nearest');
+      await expect(sort).toContainText('Khoảng cách: Gần nhất');
       await expect(cards.nth(0)).toContainText('Shop gần');
       await expect(cards.nth(1)).toContainText('Shop gần');
       await expect(cards.nth(2)).toContainText('Shop xa');
+      await expect(cards.first().locator('.flower-card-distance')).toContainText('156 m');
+      await expect(cards.nth(2).locator('.flower-card-distance')).toContainText(/\d+(,\d+)? km/);
       await expect(page.getByText('Tủ đầy', { exact: true })).toHaveCount(0);
       await page.getByRole('button', { name: 'Trang sau', exact: true }).click();
       await expect(cards).toHaveCount(3);
       await expect(cards.last()).toContainText('Hoa 14');
+      await expect(cards.last().locator('.flower-card-distance')).toHaveCount(0);
+      await chooseOption(sort, 'price-desc');
+      await expect(cards.locator('.flower-card-distance')).toHaveCount(0);
     }
   });
 }
+
+test('catalog shows product reviews for preorder and keeps only a chip for a kiosk deep link', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 950 });
+  const reviewed = { ...product(1, nearKiosk), kioskName: 'Tủ gần' };
+  const walkIn = { ...reviewed, name: 'Mẫu bán tại tủ', zone: 'WALK_IN' };
+  const noReviews = { ...product(2), kioskName: 'Tủ xa' };
+  const reviewRequests: string[] = [];
+  await page.route('**/api/**', (route) => {
+    const url = new URL(route.request().url());
+    if (url.pathname === '/api/shop/catalog') {
+      return route.fulfill({
+        json: { items: [reviewed, walkIn, noReviews], page: 1, hasMore: false },
+      });
+    }
+    if (url.pathname.endsWith('/reviews')) {
+      const productId = url.pathname.split('/').at(-2)!;
+      reviewRequests.push(productId);
+      return route.fulfill({
+        json: {
+          productAverage: productId === reviewed.productId ? '4.25' : null,
+          productCount: productId === reviewed.productId ? '7' : 0,
+          shopAverage: 5,
+          shopCount: 45,
+          items: [],
+          hasMore: false,
+        },
+      });
+    }
+    return route.fulfill({ json: null });
+  });
+
+  await page.goto('/dat-hoa?kiosk=T%E1%BB%A7+g%E1%BA%A7n');
+  const cards = page.locator('.flower-card');
+  await expect(cards).toHaveCount(2);
+  await expect(page.getByRole('group', { name: 'Tủ nhận hoa', exact: true })).toHaveCount(0);
+  const fulfillment = page.getByRole('group', { name: 'Hình thức nhận hoa', exact: true });
+  await expect(fulfillment.getByRole('radio', { name: /Mua trực tiếp tại tủ/ })).toBeVisible();
+  await expect(fulfillment.getByRole('radio', { name: /Đặt trước qua web/ })).toBeVisible();
+  const score = cards.first().locator('.flower-card-rating');
+  await expect(score).toHaveText(/4,25\/5\s*\(7 đánh giá\)/);
+  await expect(
+    cards.filter({ hasText: 'Mẫu bán tại tủ' }).locator('.flower-card-rating'),
+  ).toHaveCount(0);
+  expect(reviewRequests).toEqual([reviewed.productId]);
+
+  await page.getByRole('button', { name: 'Bỏ lọc theo tủ Tủ gần', exact: true }).click();
+  await expect(cards).toHaveCount(3);
+  await expect(cards.last().locator('.flower-card-rating')).toHaveText('Chưa có đánh giá');
+  expect(reviewRequests).toEqual([reviewed.productId, noReviews.productId]);
+});

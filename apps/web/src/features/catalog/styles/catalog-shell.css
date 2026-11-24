@@ -75,6 +75,59 @@ body:has(.flower-shop-page:not(.flower-detail-page)) {
   outline: 2px solid #28563d;
   outline-offset: 3px;
 }
+
+.catalog-store-breadcrumb {
+  margin-bottom: 0.4rem;
+  color: #315645;
+  font-size: 0.9rem;
+}
+.catalog-store-header {
+  background:
+    linear-gradient(105deg, #eaf3e5f2, #fdfbf4ed),
+    url('/images/generated/florabot-pattern.webp') center / 420px repeat;
+  border-color: #dce6d7;
+}
+.catalog-store-identity {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.75rem, 2vw, 1.1rem);
+  min-width: 0;
+}
+.catalog-store-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: clamp(2.75rem, 5vw, 3.65rem);
+  aspect-ratio: 1;
+  border-radius: 14px;
+  background: #174b35;
+  color: #fff;
+}
+.catalog-store-identity .catalog-hero-title {
+  font-size: clamp(1.4rem, 2.6vw, 2.15rem);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.catalog-store-stats,
+.catalog-store-rating {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.catalog-store-stats {
+  gap: 0.35rem 0.9rem;
+  color: #365445;
+  font-size: 0.84rem;
+}
+.catalog-store-rating {
+  gap: 0.3rem 0.45rem;
+}
+.catalog-store-products-title {
+  margin: 0 0 0.75rem;
+  color: #183e2b;
+  font-size: clamp(1.15rem, 2vw, 1.5rem);
+}
+
 @media (max-width: 960px) {
   .catalog-header-minimal {
     grid-template-columns: minmax(0, 1fr);

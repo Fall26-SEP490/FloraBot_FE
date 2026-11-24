@@ -1,6 +1,13 @@
 import Select from '@/shared/components/Select';
 import { RotateCcw, SlidersHorizontal, X } from '@florabot/ui';
-import { PRICE_TIERS } from '../catalog.constants';
+import {
+  DEFAULT_PRICE_FILTERS,
+  PREORDER_FILTER_LABEL,
+  PRICE_FILTERS,
+  RATING_FILTERS,
+  RATING_FILTER_IDS,
+  type RatingFilter,
+} from '../catalog.constants';
 import type { CatalogFiltersController } from '../hooks/useCatalogFilters';
 import { CatalogFilterGroup, type FilterOption } from './CatalogFilterGroup';
 import { flowerTags } from '@/shared/lib/flower-tags';
@@ -19,43 +26,57 @@ export function CatalogSidebar({
   totalRawItems,
 }: CatalogSidebarProps) {
   const {
+    advancedTags,
+    applyAdvancedTags,
     availabilityFilter,
     hasActiveFilters,
-    kioskFilter,
     priceFilter,
+    preorderOnly,
     resetFilters,
     setAvailabilityFilter,
-    setKioskFilter,
     setPriceFilter,
+    setPreorderOnly,
     setShopFilter,
     shopFilter,
     counts: {
       availabilityCounts,
-      availableKiosks,
       availableShops,
-      kioskCounts,
       flowerCounts,
+      occasions,
+      preorderAvailableCount,
       priceCounts,
       shopCounts,
     },
   } = filters;
 
-  // Price filter options
-  const priceOptions: FilterOption[] = PRICE_TIERS.map((tier) => {
-    let count = totalRawItems;
-    if (tier.id === 'under300') count = priceCounts.under300;
-    else if (tier.id === '300to600') count = priceCounts.range300to600;
-    else if (tier.id === '600to1000') count = priceCounts.range600to1000;
-    else if (tier.id === 'over1000') count = priceCounts.over1000;
-
+  const visiblePriceFilters = DEFAULT_PRICE_FILTERS.includes(priceFilter)
+    ? DEFAULT_PRICE_FILTERS
+    : [...DEFAULT_PRICE_FILTERS, priceFilter];
+  const priceOptions: FilterOption[] = visiblePriceFilters.map((id) => {
+    const count = priceCounts[id];
     return {
-      id: tier.id,
-      label: tier.label,
+      id,
+      label: PRICE_FILTERS[id].label,
       count,
-      isSelected: priceFilter === tier.id,
-      isEmpty: tier.id !== 'all' && count === 0,
+      isSelected: priceFilter === id,
+      isEmpty: id !== 'all' && count === 0,
+      onSelect: () => setPriceFilter(id),
+    };
+  });
+
+  const occasionOptions: FilterOption[] = occasions.slice(0, 3).map((option) => {
+    const isSelected = advancedTags.includes(option.id);
+    return {
+      ...option,
+      isSelected,
+      isEmpty: false,
       onSelect: () =>
-        setPriceFilter(priceFilter === tier.id && tier.id !== 'all' ? 'all' : tier.id),
+        applyAdvancedTags(
+          isSelected
+            ? advancedTags.filter((tag) => tag !== option.id)
+            : [...advancedTags, option.id],
+          false,
+        ),
     };
   });
 
@@ -86,6 +107,10 @@ export function CatalogSidebar({
       onSelect: () => setAvailabilityFilter(availabilityFilter === 'custom' ? 'all' : 'custom'),
     },
   ];
+  const showAvailabilityFilter = availabilityOptions.some(
+    ({ id, count, isSelected }) =>
+      id !== 'all' && count < totalRawItems && (count > 0 || isSelected),
+  );
 
   // Shop filter options
   const shopOptions: FilterOption[] = [
@@ -106,29 +131,6 @@ export function CatalogSidebar({
         isSelected: shopFilter === shop,
         isEmpty: count === 0,
         onSelect: () => setShopFilter(shopFilter === shop ? 'all' : shop),
-      };
-    }),
-  ];
-
-  // Kiosk filter options
-  const kioskOptions: FilterOption[] = [
-    {
-      id: 'all',
-      label: 'Tất cả tủ kiosk',
-      count: totalRawItems,
-      isSelected: kioskFilter === 'all',
-      isEmpty: false,
-      onSelect: () => setKioskFilter('all'),
-    },
-    ...availableKiosks.map((kiosk) => {
-      const count = kioskCounts[kiosk] || 0;
-      return {
-        id: kiosk,
-        label: kiosk,
-        count,
-        isSelected: kioskFilter === kiosk,
-        isEmpty: count === 0,
-        onSelect: () => setKioskFilter(kioskFilter === kiosk ? 'all' : kiosk),
       };
     }),
   ];
@@ -169,6 +171,19 @@ export function CatalogSidebar({
       </div>
 
       <div className="catalog-sidebar-scroll-body">
+        {(availabilityCounts.custom > 0 || preorderOnly) && (
+          <label className="catalog-filter-option catalog-preorder-filter">
+            <input
+              type="checkbox"
+              checked={preorderOnly}
+              onChange={(event) => setPreorderOnly(event.target.checked)}
+            />
+            <span className="catalog-option-text">{PREORDER_FILTER_LABEL}</span>
+            <span className="catalog-option-count" aria-hidden="true">
+              {preorderAvailableCount}
+            </span>
+          </label>
+        )}
         <label className="catalog-filter-field">
           Loại hoa
           <Select
@@ -194,10 +209,29 @@ export function CatalogSidebar({
               ))}
           </Select>
         </label>
-        <CatalogFilterGroup title="Hình thức nhận hoa" options={availabilityOptions} />
+        {showAvailabilityFilter && (
+          <CatalogFilterGroup title="Hình thức nhận hoa" options={availabilityOptions} />
+        )}
         <CatalogFilterGroup title="Khoảng giá" options={priceOptions} />
-        {(availableKiosks.length > 1 || kioskFilter !== 'all') && (
-          <CatalogFilterGroup title="Tủ nhận hoa" options={kioskOptions} />
+        {(
+          [
+            ['Đánh giá sản phẩm', filters.productRating, filters.setProductRating],
+            ['Đánh giá shop', filters.shopRating, filters.setShopRating],
+          ] as const
+        ).map(([label, value, select]) => (
+          <label key={label} className="catalog-filter-field">
+            {label}
+            <Select value={value} onChange={(event) => select(event.target.value as RatingFilter)}>
+              {RATING_FILTER_IDS.map((id) => (
+                <option key={id} value={id}>
+                  {RATING_FILTERS[id]}
+                </option>
+              ))}
+            </Select>
+          </label>
+        ))}
+        {occasionOptions.length > 0 && (
+          <CatalogFilterGroup title="Dịp tặng" options={occasionOptions} multiple />
         )}
         {(availableShops.length > 1 || shopFilter !== 'all') && (
           <details className="catalog-more-filters" open={shopFilter !== 'all' || undefined}>
@@ -220,7 +254,9 @@ export function CatalogSidebar({
           onClick={onClose}
           aria-label="Áp dụng bộ lọc"
         >
-          Xem {filters.displayedItems.length} mẫu hoa
+          {filters.ratingsLoading || filters.ratingsError
+            ? 'Xem kết quả'
+            : `Xem ${filters.displayedItems.length} mẫu hoa`}
         </button>
       </div>
     </aside>

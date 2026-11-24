@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   readCatalogQuery,
   catalogReturnPath,
+  shopCatalogPath,
 } from '../apps/web/src/features/catalog/catalog.navigation';
 import { customerOrderActionLabel } from '../apps/web/src/features/orders/orders.utils';
 import { postLoginPath } from '../apps/web/src/features/auth/auth.utils';
@@ -41,6 +42,33 @@ describe('catalog navigation state', () => {
     });
     expect(readCatalogQuery(new URLSearchParams('page=-1')).page).toBe(1);
     expect(readCatalogQuery(new URLSearchParams('page=2.5')).page).toBe(1);
+  });
+  it('keeps preorder status, budget and occasion in the product return path', () => {
+    const path = '/dat-hoa?price=100to200&preorder=1&tag=occasion%3Abirthday';
+    expect(catalogReturnPath(path)).toBe(path);
+    expect(readCatalogQuery(new URLSearchParams(path.split('?')[1]))).toMatchObject({
+      priceFilter: '100to200',
+      preorderOnly: true,
+      tags: ['occasion:birthday'],
+    });
+    expect(catalogReturnPath('/dat-hoa?preorder=1&preorder=0')).toBe('/dat-hoa');
+  });
+  it('keeps rating thresholds in the return path and ignores unsupported scores', () => {
+    const path = '/dat-hoa?productRating=4&shopRating=5&page=2';
+    expect(catalogReturnPath(path)).toBe(path);
+    expect(readCatalogQuery(new URLSearchParams(path.split('?')[1]))).toMatchObject({
+      productRating: '4',
+      shopRating: '5',
+    });
+    expect(catalogReturnPath('/dat-hoa?productRating=4.5&shopRating=6')).toBe('/dat-hoa');
+  });
+  it('preserves filters on a storefront but rejects invalid shop paths', () => {
+    const path = shopCatalogPath('20000000-0000-0000-0000-000000000001');
+    expect(path).toBe('/dat-hoa/cua-hang/20000000-0000-0000-0000-000000000001');
+    expect(catalogReturnPath(path + '?search=Hoa+hong&page=2')).toBe(
+      path + '?search=Hoa+hong&page=2',
+    );
+    expect(catalogReturnPath('/dat-hoa/cua-hang/../../../admin')).toBe('/dat-hoa');
   });
   it.each([
     'https://evil.test',
@@ -106,4 +134,27 @@ it('keeps the filtered catalog through quotation sign-in without accepting arbit
       '?returnUrl=' + encodeURIComponent(product + '?order=1&from=https://evil.test'),
     ),
   ).toBe('/tai-khoan');
+});
+
+it('resumes a quote or shop chat at the storefront that originated it', () => {
+  const sellerId = '20000000-0000-0000-0000-000000000001';
+  const productId = '30000000-0000-0000-0000-000000000001';
+  const storefront = shopCatalogPath(sellerId);
+  const from = storefront + '?price=under100';
+  const quote =
+    `/dat-hoa/${productId}/40000000-0000-0000-0000-000000000001?order=1&from=` +
+    encodeURIComponent(from);
+  const chat = `${from}&action=chat&sellerId=${sellerId}&productId=${productId}`;
+  for (const returning of [quote, chat]) {
+    expect(postLoginPath('CUSTOMER', '?returnUrl=' + encodeURIComponent(returning))).toBe(
+      returning,
+    );
+  }
+  const otherSeller = chat.replace(
+    'sellerId=' + sellerId,
+    'sellerId=20000000-0000-0000-0000-000000000002',
+  );
+  expect(postLoginPath('CUSTOMER', '?returnUrl=' + encodeURIComponent(otherSeller))).toBe(
+    '/tai-khoan',
+  );
 });

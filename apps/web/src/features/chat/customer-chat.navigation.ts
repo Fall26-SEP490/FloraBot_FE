@@ -1,4 +1,4 @@
-import { catalogReturnPath } from '../catalog/catalog.navigation';
+import { catalogReturnPath, isCatalogListingPath } from '../catalog/catalog.navigation';
 import type { CustomerSellerChatItem } from './types';
 import { orderReturnPath } from '../orders/order-navigation';
 
@@ -15,8 +15,12 @@ export function customerChatReturn(
     return null;
   const url = new URL(value, 'https://florabot.invalid');
   if (url.origin !== 'https://florabot.invalid') return null;
-  if (url.pathname === '/dat-hoa')
-    return { href: catalogReturnPath(value), label: 'Quay lại danh mục hoa', kind: 'catalog' };
+  if (isCatalogListingPath(url.pathname))
+    return {
+      href: catalogReturnPath(value),
+      label: url.pathname === '/dat-hoa' ? 'Quay lại danh mục hoa' : 'Quay lại cửa hàng',
+      kind: 'catalog',
+    };
   if (/^\/dat-hoa\/[a-zA-Z0-9-]+\/[a-zA-Z0-9-]+$/.test(url.pathname)) {
     const params = new URLSearchParams();
     const from = url.searchParams.get('from');

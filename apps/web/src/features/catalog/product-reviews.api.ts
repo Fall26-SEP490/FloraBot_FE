@@ -17,6 +17,16 @@ export type ProductReviewPage = {
   hasMore: boolean;
 };
 
+export const PRODUCT_REVIEWS_STALE_TIME = 5 * 60_000;
+
+export function readReviewRating(average: number | null | undefined, count: number | undefined) {
+  const score = Number(average);
+  const total = Number(count);
+  return Number.isInteger(total) && total > 0 && score >= 1 && score <= 5
+    ? { average: score, count: total }
+    : null;
+}
+
 export function productReviewsQuery(productId: string, page = 1) {
   return {
     queryKey: ['flower-reviews', productId, page],

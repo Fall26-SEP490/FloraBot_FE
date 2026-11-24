@@ -2,7 +2,7 @@
 
 import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
-import { catalogReturnPath } from '../catalog.navigation';
+import { catalogOriginPath } from '../catalog.navigation';
 import VietnamDateInput from '@/shared/components/VietnamDateInput';
 import { vietnamDate } from '@/shared/lib/vietnam-date';
 import { useEffect, useRef, useState } from 'react';
@@ -474,12 +474,7 @@ export function FlowerRequestForm({
 
   if (!session.data) {
     const params = new URLSearchParams({ order: '1' });
-    const current = new URL(window.location.href);
-    const from = catalogReturnPath(
-      current.pathname === '/dat-hoa'
-        ? current.pathname + current.search
-        : current.searchParams.get('from'),
-    );
+    const from = catalogOriginPath(new URL(window.location.href));
     if (from !== '/dat-hoa') params.set('from', from);
     if (item.zone) params.set('zone', item.zone);
     const returnUrl = `/dat-hoa/${encodeURIComponent(item.productId)}/${encodeURIComponent(item.kioskId)}?${params}`;

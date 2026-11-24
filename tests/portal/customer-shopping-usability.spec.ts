@@ -181,7 +181,9 @@ for (const width of [390, 1440]) {
       ).toBeGreaterThanOrEqual(44);
       await page.getByRole('button', { name: 'Bộ lọc', exact: true }).click();
     }
-    await expect(page.getByRole('radio', { name: /Mua trực tiếp tại tủ/ })).toBeDisabled();
+    await expect(page.getByRole('group', { name: 'Hình thức nhận hoa', exact: true })).toHaveCount(
+      0,
+    );
     if (width === 390) await page.getByRole('button', { name: 'Áp dụng bộ lọc' }).click();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,

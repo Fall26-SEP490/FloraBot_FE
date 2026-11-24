@@ -6,7 +6,6 @@ import { ImageIcon, Star, X } from '@florabot/ui';
 import { request } from '@/shared/lib/api';
 import { productReviewsQuery } from '../product-reviews.api';
 import { RatingStars } from './RatingStars';
-import '../styles/product-reviews.css';
 
 const scores = [1, 2, 3, 4, 5];
 const scoreLabels = [

@@ -10,6 +10,7 @@ interface CatalogToolbarProps {
   activeFiltersCount: number;
   displayedCount: number;
   searchQuery: string;
+  ratingStatus?: string;
   sortBy: SortOption;
   onSortChange: (sort: SortOption) => void;
   locating?: boolean;
@@ -23,6 +24,7 @@ export function CatalogToolbar({
   activeFiltersCount,
   displayedCount,
   searchQuery,
+  ratingStatus,
   sortBy,
   onSortChange,
   locating,
@@ -44,12 +46,17 @@ export function CatalogToolbar({
         </button>
 
         <div className="catalog-results-count" role="status" aria-live="polite">
-          <span>
-            Hiển thị <strong>{displayedCount}</strong> mẫu hoa phù hợp
-            {searchQuery.trim() && (
-              <span className="catalog-results-query"> cho &ldquo;{searchQuery.trim()}&rdquo;</span>
-            )}
-          </span>
+          {ratingStatus || (
+            <span>
+              Hiển thị <strong>{displayedCount}</strong> mẫu hoa phù hợp
+              {searchQuery.trim() && (
+                <span className="catalog-results-query">
+                  {' '}
+                  cho &ldquo;{searchQuery.trim()}&rdquo;
+                </span>
+              )}
+            </span>
+          )}
         </div>
       </div>
 

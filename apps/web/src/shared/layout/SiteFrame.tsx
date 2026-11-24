@@ -372,7 +372,9 @@ function Frame({ children }: { children: ReactNode }) {
     'site-frame',
     workspace ? 'site-frame-workspace' : '',
     customerSurface ? 'site-frame-customer' : '',
-    ['/', '/dat-hoa', '/tim-kiosk'].includes(pathname) ? 'site-frame-botanical' : '',
+    ['/', '/dat-hoa', '/tim-kiosk'].includes(pathname) || pathname.startsWith('/dat-hoa/cua-hang/')
+      ? 'site-frame-botanical'
+      : '',
   ]
     .filter(Boolean)
     .join(' ');

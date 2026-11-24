@@ -251,6 +251,42 @@
   margin-top: 0.25em;
 }
 
+:is(.flower-card-rating, .flower-card-shop-rating) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.15rem 0.3rem;
+  min-height: 1.2rem;
+  color: #49634e;
+  font-size: 0.75rem;
+}
+
+:is(.flower-card-rating, .flower-card-shop-rating) svg {
+  flex-shrink: 0;
+  fill: #a45a0d;
+  color: #a45a0d;
+}
+
+:is(.flower-card-rating, .flower-card-shop-rating) strong {
+  color: #183e2b;
+}
+
+.flower-card-seller-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.3rem 0.45rem;
+}
+
+.flower-card-seller-row > :first-child {
+  min-width: 0;
+}
+
+.flower-card-distance {
+  flex-shrink: 0;
+  color: #315645;
+  font-variant-numeric: tabular-nums;
+}
+
 .flower-card-price-row {
   display: flex;
   align-items: baseline;

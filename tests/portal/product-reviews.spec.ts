@@ -168,10 +168,13 @@ for (const zone of ['WALK_IN', 'PREORDER']) {
     await button.click();
     await expect(section.getByRole('status')).toContainText('Đã gửi đánh giá');
     await expect(thankYou).toHaveCount(0);
-    await expect(section.getByText('2 đánh giá', { exact: true })).toBeVisible();
+    await expect(page.locator('.flower-detail-rating')).toContainText('1 đánh giá');
     await expect(
-      section.locator('.flower-review-summary').getByRole('img', { name: '4 trên 5 sao' }),
+      page.locator('.flower-detail-rating').getByRole('img', { name: '5 trên 5 sao' }),
     ).toBeVisible();
+    await expect(page.locator('.flower-detail-shop-rating')).toHaveAccessibleName(
+      'Điểm shop: 4 trên 5 sao, 2 lượt',
+    );
     await expect(section.getByText('Màu đẹp.')).toBeVisible();
     await expect(section.locator('.flower-review-author')).toHaveText('Nguyễn Minh Anh');
     await expect(

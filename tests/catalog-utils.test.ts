@@ -49,6 +49,16 @@ it('shows one preorder card per shop product and keeps walk-in cards by kiosk', 
 });
 
 describe('Catalog Utilities - Price boundaries', () => {
+  it.each([
+    [99999, 'under100'],
+    [100000, '100to200'],
+    [200000, '100to200'],
+    [200001, 'over200'],
+  ])('puts %i đ in exactly one current range', (price, expected) => {
+    const ranges = ['under100', '100to200', 'over200'] as const;
+    expect(ranges.filter((range) => matchesPrice(price, range))).toEqual([expected]);
+  });
+
   it('correctly handles under300 tier (< 300.000đ)', () => {
     expect(matchesPrice(299999, 'under300')).toBe(true);
     expect(matchesPrice(300000, 'under300')).toBe(false);
@@ -170,6 +180,36 @@ describe('Catalog Utilities - Combined filtering and counts', () => {
     }),
   ];
 
+  it('counts each orderable template once when another kiosk is sold out', () => {
+    const orderable = sampleItem({
+      zone: 'PREORDER',
+      preorderAvailable: true,
+      tags: ['occasion:birthday', 'Sinh nhật'],
+      kioskId: 'kiosk-2',
+    });
+    const catalog = [
+      { ...orderable, kioskId: 'kiosk-1', preorderAvailable: false },
+      orderable,
+      { ...orderable, kioskId: 'kiosk-3' },
+      sampleItem({ zone: 'WALK_IN' }),
+    ];
+    expect(computeFilterCounts(catalog)).toMatchObject({
+      preorderAvailableCount: 1,
+      occasions: [{ id: 'occasion:birthday', label: 'Sinh nhật', count: 1 }],
+    });
+    expect(
+      filterCatalogItems(catalog, {
+        search: '',
+        priceFilter: 'over200',
+        preorderOnly: true,
+        tags: ['occasion:birthday'],
+        shopFilter: 'all',
+        kioskFilter: 'all',
+        availabilityFilter: 'all',
+      }),
+    ).toEqual(catalog.slice(1, 3));
+  });
+
   it('filters by flower type and price simultaneously', () => {
     const filtered = filterCatalogItems(items, {
       search: '',
@@ -188,8 +228,8 @@ describe('Catalog Utilities - Combined filtering and counts', () => {
     expect(counts.flowerCounts.rose).toBe(2);
     expect(counts.flowerCounts.sunflower).toBe(1);
     expect(counts.priceCounts.under300).toBe(1);
-    expect(counts.priceCounts.range300to600).toBe(1);
-    expect(counts.priceCounts.range600to1000).toBe(1);
+    expect(counts.priceCounts['300to600']).toBe(1);
+    expect(counts.priceCounts['600to1000']).toBe(1);
     expect(counts.availabilityCounts.stock).toBe(0);
     expect(counts.availabilityCounts.custom).toBe(3);
   });

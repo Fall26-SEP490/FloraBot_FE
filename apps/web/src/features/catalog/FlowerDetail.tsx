@@ -4,9 +4,9 @@ import { FlowerDetailSkeleton } from '@/shared/components/PageSkeleton';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { catalogReturnPath } from './catalog.navigation';
+import { catalogReturnPath, shopCatalogPath, shopCatalogSellerId } from './catalog.navigation';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Button, MapPin, MessageSquare, Store } from '@florabot/ui';
+import { ArrowLeft, ArrowRight, Button, MapPin, MessageSquare, Store } from '@florabot/ui';
 import { request, sessionQuery } from '@/shared/lib/api';
 import { flowerTagLabel } from '@/shared/lib/flower-tags';
 import { MOCK_CATALOG_ITEMS } from './mocks/mockCatalog';
@@ -93,6 +93,8 @@ export default function FlowerDetail({
         : findItem(productId, kioskId, zone),
   });
   const item = query.data;
+  const shopHref = item && !item.isDemoSample ? shopCatalogPath(item.sellerId) : null;
+  const shopName = item?.shopName || 'Cửa hàng hoa';
   const showReviews = Boolean(item && isPreorder(item) && !item.isDemoSample);
   const reviews = useQuery({ ...productReviewsQuery(productId), enabled: showReviews });
   const tags = [
@@ -122,13 +124,33 @@ export default function FlowerDetail({
     chatNotice,
     setChatNotice,
   } = useCustomerChat(selectItem);
+  const shopIdentity = (
+    <>
+      <Store size={16} aria-hidden="true" />
+      <strong>{shopName}</strong>
+      {showReviews && reviews.data?.shopAverage != null && (
+        <span
+          className="flower-detail-shop-rating"
+          role="group"
+          aria-label={`Điểm shop: ${rating.format(reviews.data.shopAverage)} trên 5 sao, ${reviews.data.shopCount} lượt`}
+        >
+          <RatingStars value={reviews.data.shopAverage} />
+          <span>({reviews.data.shopCount})</span>
+        </span>
+      )}
+    </>
+  );
 
   return (
     <main id="main" className="flower-shop-page flower-detail-page">
       <nav className="flower-detail-breadcrumb" aria-label="Đường dẫn trang">
         <Link className="flower-detail-back" href={backHref}>
           <ArrowLeft size={16} aria-hidden="true" />
-          <span>Quay lại danh mục</span>
+          <span>
+            {shopCatalogSellerId(backHref.split('?')[0])
+              ? 'Quay lại cửa hàng'
+              : 'Quay lại danh mục'}
+          </span>
         </Link>
         {item && (
           <>
@@ -189,17 +211,17 @@ export default function FlowerDetail({
               )}
 
               <div className="flower-detail-shop">
-                <Store size={16} aria-hidden="true" />
-                <strong>{item.shopName || 'Shop chưa cập nhật tên'}</strong>
-                {showReviews && reviews.data?.shopAverage != null && (
-                  <a
-                    className="flower-detail-shop-rating"
-                    href="#flower-reviews-title"
-                    aria-label={`Điểm shop: ${rating.format(reviews.data.shopAverage)} trên 5 sao, ${reviews.data.shopCount} lượt`}
+                {shopHref ? (
+                  <Link
+                    className="flower-detail-shop-link"
+                    href={shopHref}
+                    aria-label={`Xem cửa hàng ${shopName}`}
                   >
-                    <RatingStars value={reviews.data.shopAverage} />
-                    <span>({reviews.data.shopCount})</span>
-                  </a>
+                    {shopIdentity}
+                    <ArrowRight size={15} aria-hidden="true" />
+                  </Link>
+                ) : (
+                  shopIdentity
                 )}
               </div>
 

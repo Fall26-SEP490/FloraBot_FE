@@ -25,6 +25,14 @@ describe('Customer chat return navigation', () => {
       )?.href,
     ).toBe('/dat-hoa/p-1/k-1?from=' + encodeURIComponent(from) + '&zone=PREORDER');
   });
+  it('returns from a conversation to a filtered storefront', () => {
+    const from = '/dat-hoa/cua-hang/20000000-0000-0000-0000-000000000001?price=under100';
+    expect(customerChatReturn(from)).toEqual({
+      href: from,
+      label: 'Quay lại cửa hàng',
+      kind: 'catalog',
+    });
+  });
   it.each([
     null,
     'https://evil.test/',

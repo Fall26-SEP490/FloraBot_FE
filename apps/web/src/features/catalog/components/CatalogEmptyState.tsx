@@ -4,7 +4,7 @@ import { Flower2 } from '@florabot/ui';
 
 interface CatalogEmptyStateProps {
   isPending: boolean;
-  isError: boolean;
+  error: 'catalog' | 'ratings' | null;
   hasItems: boolean;
   search: string;
   hasActiveFilters: boolean;
@@ -14,7 +14,7 @@ interface CatalogEmptyStateProps {
 
 export function CatalogEmptyState({
   isPending,
-  isError,
+  error,
   hasItems,
   search,
   hasActiveFilters,
@@ -25,17 +25,26 @@ export function CatalogEmptyState({
     return <FlowerGridSkeleton gridClassName="flower-catalog-grid flower-catalog" />;
   }
 
-  if (isError && !hasItems) {
+  if (error && !hasItems) {
+    const ratingError = error === 'ratings';
     return (
       <div className="catalog-empty-card">
         <div className="catalog-empty-icon-wrap is-error">
           <Flower2 size={38} strokeWidth={1.5} aria-hidden="true" />
         </div>
-        <h2 className="catalog-empty-title">Chưa tải được danh mục hoa</h2>
+        <h2 className="catalog-empty-title">
+          {ratingError ? 'Chưa tải được đánh giá' : 'Chưa tải được danh mục hoa'}
+        </h2>
         <p className="catalog-empty-desc">
-          Hệ thống tạm thời chưa kết nối được máy chủ danh mục. Bạn thử tải lại nhé.
+          {ratingError
+            ? 'Bạn thử tải lại điểm đánh giá để lọc mẫu hoa nhé.'
+            : 'Hệ thống tạm thời chưa kết nối được máy chủ danh mục. Bạn thử tải lại nhé.'}
         </p>
-        <IconActionButton onClick={onRefetch} action="reload" label="Tải lại mẫu hoa" />
+        <IconActionButton
+          onClick={onRefetch}
+          action="reload"
+          label={ratingError ? 'Tải lại đánh giá' : 'Tải lại mẫu hoa'}
+        />
       </div>
     );
   }
@@ -55,9 +64,11 @@ export function CatalogEmptyState({
               : 'Hiện chưa có mẫu hoa nào đang mở bán'}
         </h2>
         <p className="catalog-empty-desc">
-          {trimmedSearch || hasActiveFilters
-            ? 'Bạn thử kiểm tra lại chính tả từ khóa, hoặc đặt lại bộ lọc dịp tặng và khoảng giá để xem toàn bộ danh mục hoa có sẵn nhé.'
-            : 'Các cửa hàng hoa đang chuẩn bị và cập nhật thêm sản phẩm tại tủ kiosk. Bạn vui lòng quay lại sau nhé!'}
+          {trimmedSearch
+            ? 'Thử từ khóa khác hoặc chọn tag để tìm mẫu hoa phù hợp.'
+            : hasActiveFilters
+              ? 'Thử thay đổi hoặc xóa bộ lọc để xem thêm mẫu hoa.'
+              : 'Các cửa hàng hoa đang chuẩn bị mẫu mới. Bạn vui lòng quay lại sau nhé!'}
         </p>
         {hasActiveFilters && (
           <div className="catalog-empty-actions">

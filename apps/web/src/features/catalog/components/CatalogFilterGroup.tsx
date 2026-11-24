@@ -12,16 +12,17 @@ export interface FilterOption {
 interface CatalogFilterGroupProps {
   title: string;
   options: FilterOption[];
+  multiple?: boolean;
 }
 
-export function CatalogFilterGroup({ title, options }: CatalogFilterGroupProps) {
+export function CatalogFilterGroup({ title, options, multiple = false }: CatalogFilterGroupProps) {
   const groupId = useId();
   return (
     <fieldset className="catalog-filter-group">
       <legend className="catalog-filter-title">{title}</legend>
       <ul className="catalog-filter-list">
         {options
-          .filter((option) => option.id === 'all' || option.count > 0)
+          .filter((option) => option.id === 'all' || option.count > 0 || option.isSelected)
           .map((option) => (
             <li key={option.id}>
               <label
@@ -30,7 +31,7 @@ export function CatalogFilterGroup({ title, options }: CatalogFilterGroupProps) 
                 }`}
               >
                 <input
-                  type="radio"
+                  type={multiple ? 'checkbox' : 'radio'}
                   name={groupId}
                   value={option.id}
                   checked={option.isSelected}

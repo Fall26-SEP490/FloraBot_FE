@@ -6,6 +6,7 @@ import { FlowerCard } from './FlowerCard';
 interface CatalogGridProps {
   catalogHref?: string;
   items: CatalogItem[];
+  distances?: ReadonlyMap<string, number>;
   page: number;
   hasMore: boolean;
   isFetching: boolean;
@@ -20,6 +21,7 @@ interface CatalogGridProps {
 export function CatalogGrid({
   catalogHref,
   items,
+  distances,
   page,
   hasMore,
   isFetching,
@@ -37,6 +39,7 @@ export function CatalogGrid({
           <FlowerCard
             key={catalogCardKey(item)}
             item={item}
+            distanceKm={distances?.get(item.kioskId)}
             catalogHref={catalogHref}
             openingChatId={openingChatId}
             onSelect={onSelect}

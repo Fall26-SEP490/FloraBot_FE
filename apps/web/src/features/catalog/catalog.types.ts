@@ -1,3 +1,5 @@
+import type { PRICE_FILTERS } from './catalog.constants';
+
 export type CatalogItem = {
   productId: string;
   sellerId: string;
@@ -24,7 +26,7 @@ export type CatalogResponse = {
   hasMore: boolean;
 };
 
-export type PriceFilter = 'all' | 'under300' | '300to600' | '600to1000' | 'over1000';
+export type PriceFilter = keyof typeof PRICE_FILTERS;
 export type AvailabilityFilter = 'all' | 'stock' | 'custom';
 export type SortOption = 'default' | 'price-asc' | 'price-desc' | 'name-asc' | 'nearest';
 
@@ -42,13 +44,6 @@ export interface ActiveFilterItem {
   id: string;
   label: string;
   onClear: () => void;
-}
-
-export interface PriceCounts {
-  under300: number;
-  range300to600: number;
-  range600to1000: number;
-  over1000: number;
 }
 
 export interface AvailabilityCounts {

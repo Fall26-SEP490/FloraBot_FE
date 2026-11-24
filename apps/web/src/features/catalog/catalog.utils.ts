@@ -1,9 +1,10 @@
 import { getFlowerTypeCodes } from '@/shared/lib/flower-tags';
+import { getCatalogItemTags, getCatalogTagGroup, readCatalogTags } from './catalog.tags';
+import { PRICE_FILTERS, PRICE_FILTER_IDS } from './catalog.constants';
 import type {
   AvailabilityCounts,
   AvailabilityFilter,
   CatalogItem,
-  PriceCounts,
   PriceFilter,
   SortOption,
 } from './catalog.types';
@@ -63,11 +64,7 @@ export function matchesSearch(item: CatalogItem, query: string): boolean {
 }
 
 export function matchesPrice(price: number, filter: PriceFilter): boolean {
-  if (filter === 'under300') return price < 300000;
-  if (filter === '300to600') return price >= 300000 && price <= 600000;
-  if (filter === '600to1000') return price > 600000 && price <= 1000000;
-  if (filter === 'over1000') return price > 1000000;
-  return true;
+  return PRICE_FILTERS[filter].matches(price);
 }
 
 export function matchesAvailability(item: CatalogItem, filter: AvailabilityFilter): boolean {
@@ -79,14 +76,24 @@ export function matchesAvailability(item: CatalogItem, filter: AvailabilityFilte
 export interface FilterCriteria {
   search: string;
   priceFilter: PriceFilter;
+  preorderOnly?: boolean;
   flowerFilter?: string;
+  tags?: readonly string[];
   shopFilter: string;
   kioskFilter: string;
   availabilityFilter: AvailabilityFilter;
 }
 
 export function filterCatalogItems(items: CatalogItem[], criteria: FilterCriteria): CatalogItem[] {
+  const tagsByGroup = new Map<string, string[]>();
+  for (const tag of criteria.tags ?? []) {
+    const group = getCatalogTagGroup(tag);
+    const options = tagsByGroup.get(group) ?? [];
+    options.push(tag);
+    tagsByGroup.set(group, options);
+  }
   return items.filter((item) => {
+    if (criteria.preorderOnly && !canOrderOnWeb(item)) return false;
     if (!matchesSearch(item, criteria.search)) return false;
     if (!matchesPrice(item.price, criteria.priceFilter)) return false;
     if (
@@ -98,6 +105,12 @@ export function filterCatalogItems(items: CatalogItem[], criteria: FilterCriteri
     if (criteria.shopFilter !== 'all' && item.shopName !== criteria.shopFilter) return false;
     if (criteria.kioskFilter !== 'all' && item.kioskName !== criteria.kioskFilter) return false;
     if (!matchesAvailability(item, criteria.availabilityFilter)) return false;
+    if (tagsByGroup.size > 0) {
+      const tags = getCatalogItemTags(item);
+      for (const options of tagsByGroup.values()) {
+        if (!options.some((option) => tags.has(option))) return false;
+      }
+    }
     return true;
   });
 }
@@ -132,23 +145,26 @@ export function sortCatalogItems(
 export function computeFilterCounts(items: CatalogItem[]) {
   const cards = uniqueCatalogCards(items);
   const flowerCounts: Record<string, number> = {};
+  const occasionCounts = new Map<string, { id: string; label: string; count: number }>();
   cards.forEach((item) => {
     for (const code of getFlowerTypeCodes(item.tags)) {
       flowerCounts[code] = (flowerCounts[code] ?? 0) + 1;
     }
+    for (const [id, label] of getCatalogItemTags(item)) {
+      if (getCatalogTagGroup(id) !== 'occasion' || !readCatalogTags([id]).length) continue;
+      const entry = occasionCounts.get(id);
+      if (entry) entry.count += 1;
+      else occasionCounts.set(id, { id, label, count: 1 });
+    }
   });
 
-  let under300 = 0;
-  let range300to600 = 0;
-  let range600to1000 = 0;
-  let over1000 = 0;
-  cards.forEach((item) => {
-    if (item.price < 300000) under300++;
-    else if (item.price <= 600000) range300to600++;
-    else if (item.price <= 1000000) range600to1000++;
-    else over1000++;
-  });
-  const priceCounts: PriceCounts = { under300, range300to600, range600to1000, over1000 };
+  const priceCounts = Object.fromEntries(
+    PRICE_FILTER_IDS.map((id) => [id, cards.filter((item) => matchesPrice(item.price, id)).length]),
+  );
+  const preorderAvailableCount = uniqueCatalogCards(items.filter(canOrderOnWeb)).length;
+  const occasions = [...occasionCounts.values()].sort(
+    (a, b) => b.count - a.count || a.label.localeCompare(b.label, 'vi'),
+  );
 
   let stock = 0;
   let custom = 0;
@@ -163,22 +179,16 @@ export function computeFilterCounts(items: CatalogItem[]) {
     if (item.shopName) shopCounts[item.shopName] = (shopCounts[item.shopName] || 0) + 1;
   });
 
-  const kioskCounts: Record<string, number> = {};
-  items.forEach((item) => {
-    if (item.kioskName) kioskCounts[item.kioskName] = (kioskCounts[item.kioskName] || 0) + 1;
-  });
-
   const availableShops = Array.from(new Set(items.map((i) => i.shopName))).filter(Boolean);
-  const availableKiosks = Array.from(new Set(items.map((i) => i.kioskName))).filter(Boolean);
 
   return {
     flowerCounts,
     priceCounts,
+    preorderAvailableCount,
+    occasions,
     availabilityCounts,
     shopCounts,
-    kioskCounts,
     availableShops,
-    availableKiosks,
   };
 }
 

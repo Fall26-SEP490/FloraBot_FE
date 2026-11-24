@@ -5,9 +5,16 @@ interface CatalogSearchBarProps {
   setDraft: (value: string) => void;
   onSubmit: (query: string) => void;
   onClear: () => void;
+  shopOnly?: boolean;
 }
 
-export function CatalogSearchBar({ draft, setDraft, onSubmit, onClear }: CatalogSearchBarProps) {
+export function CatalogSearchBar({
+  draft,
+  setDraft,
+  onSubmit,
+  onClear,
+  shopOnly = false,
+}: CatalogSearchBarProps) {
   return (
     <form
       className="catalog-search-bar-wrap"
@@ -20,14 +27,14 @@ export function CatalogSearchBar({ draft, setDraft, onSubmit, onClear }: Catalog
       <div className="catalog-search-input-box">
         <Search size={18} className="catalog-search-icon" aria-hidden="true" />
         <label htmlFor="flower-search" className="sr-only">
-          Tìm mẫu hoa, shop hoặc tủ nhận
+          {shopOnly ? 'Tìm mẫu hoa trong shop' : 'Tìm mẫu hoa, shop hoặc tủ nhận'}
         </label>
         <input
           id="flower-search"
           className="catalog-search-input"
           type="search"
           maxLength={100}
-          placeholder="Tìm hoa, shop hoặc tủ nhận…"
+          placeholder={shopOnly ? 'Tìm hoa trong shop…' : 'Tìm hoa, shop hoặc tủ nhận…'}
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
         />

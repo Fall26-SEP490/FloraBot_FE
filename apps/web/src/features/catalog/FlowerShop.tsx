@@ -1,15 +1,19 @@
+'use client';
+
 import { useEffect, useMemo, useState } from 'react';
 import './styles/catalog.css';
-import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { catalogReturnPath } from './catalog.navigation';
 import { useQuery } from '@tanstack/react-query';
 import { request, sessionQuery } from '@/shared/lib/api';
 import { MOCK_CATALOG_ITEMS } from '@/features/catalog/mocks/mockCatalog';
 import type { CatalogItem, CatalogResponse } from './catalog.types';
-import { canOrderOnWeb } from './catalog.utils';
-import { MapPin } from '@florabot/ui';
+import { canOrderOnWeb, matchesSearch } from './catalog.utils';
+import { ArrowLeft, MapPin, Store, X } from '@florabot/ui';
 import { fetchPublicKiosks } from '../kiosk-location/kiosk-location.api';
 import { isValidLatitude, isValidLongitude } from '../kiosk-location/kiosk-location.utils';
+import { CatalogAdvancedSearch } from './components/CatalogAdvancedSearch';
 import { CatalogEmptyState } from './components/CatalogEmptyState';
 import { CatalogGrid } from './components/CatalogGrid';
 import { CatalogSearchBar } from './components/CatalogSearchBar';
@@ -17,18 +21,27 @@ import { CatalogSidebar } from './components/CatalogSidebar';
 import { CatalogToolbar } from './components/CatalogToolbar';
 import { ChatNoticeDialog } from './components/ChatNoticeDialog';
 import { FlowerRequestPanel } from './components/FlowerRequestPanel';
+import { RatingStars } from './components/RatingStars';
 import { useCatalogDialog } from './hooks/useCatalogDialog';
 import { useCatalogFilters } from './hooks/useCatalogFilters';
 import { useCustomerChat } from './hooks/useCustomerChat';
 import { loadCatalog } from './catalog.data';
+import { getCatalogTagGroups } from './catalog.tags';
+import { PREORDER_FILTER_LABEL } from './catalog.constants';
+import {
+  PRODUCT_REVIEWS_STALE_TIME,
+  productReviewsQuery,
+  readReviewRating,
+} from './product-reviews.api';
 
-export default function FlowerShop() {
+export default function FlowerShop({ storefrontSellerId }: { storefrontSellerId?: string }) {
   const router = useRouter();
+  const pathname = usePathname();
   const session = useQuery(sessionQuery);
 
   const searchParams = useSearchParams();
   const [demoEnabled] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
+    if (storefrontSellerId || typeof window === 'undefined') return false;
     const params = new URLSearchParams(window.location.search);
     return params.get('demo') === '1' || params.get('demo') === 'true';
   });
@@ -47,17 +60,29 @@ export default function FlowerShop() {
   });
 
   // Prefer backend data. Demo data is opt-in via ?demo=1 and never creates real writes.
-  const hasLiveItems = !demoEnabled && (catalog.data?.length ?? 0) > 0;
   const rawItems: CatalogItem[] = useMemo(() => {
     if (demoEnabled) {
       return MOCK_CATALOG_ITEMS.map((item) => ({ ...item, isDemoSample: true }));
     }
-    return catalog.data ?? [];
-  }, [catalog.data, demoEnabled]);
+    if (!catalog.data) return [];
+    return storefrontSellerId
+      ? catalog.data.filter((item) => item.sellerId === storefrontSellerId)
+      : catalog.data;
+  }, [catalog.data, demoEnabled, storefrontSellerId]);
+  const hasLiveItems = !demoEnabled && rawItems.length > 0;
+  const shopProduct = storefrontSellerId ? rawItems[0] : undefined;
+  const shopReviews = useQuery({
+    ...productReviewsQuery(shopProduct?.productId ?? ''),
+    enabled: Boolean(shopProduct),
+    staleTime: PRODUCT_REVIEWS_STALE_TIME,
+    refetchOnWindowFocus: false,
+  });
+  const shopRating = readReviewRating(shopReviews.data?.shopAverage, shopReviews.data?.shopCount);
 
   const [origin, setOrigin] = useState<GeolocationCoordinates | null>(null);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState(false);
+  const [advancedSearchOpen, setAdvancedSearchOpen] = useState(false);
   const directory = useQuery({
     queryKey: ['public-kiosks'],
     queryFn: fetchPublicKiosks,
@@ -72,22 +97,30 @@ export default function FlowerShop() {
       if (!isValidLatitude(kiosk.latitude) || !isValidLongitude(kiosk.longitude)) continue;
       const latitudeDelta = (kiosk.latitude - origin.latitude) * radians;
       const longitudeDelta = (kiosk.longitude - origin.longitude) * radians;
-      // Haversine's central-angle score preserves distance order without rounding.
-      result.set(
-        kiosk.id,
+      const haversine =
         Math.sin(latitudeDelta / 2) ** 2 +
-          Math.cos(kiosk.latitude * radians) *
-            Math.cos(origin.latitude * radians) *
-            Math.sin(longitudeDelta / 2) ** 2,
-      );
+        Math.cos(kiosk.latitude * radians) *
+          Math.cos(origin.latitude * radians) *
+          Math.sin(longitudeDelta / 2) ** 2;
+      const earthRadiusKm = 6371;
+      result.set(kiosk.id, 2 * earthRadiusKm * Math.asin(Math.sqrt(Math.min(1, haversine))));
     }
     return result;
   }, [directory.data, origin]);
 
   const filters = useCatalogFilters(rawItems, distances);
-  const { search, setSearch, draft, setDraft } = filters;
+  const { search, setSearch, draft, setDraft, advancedTags, applyAdvancedTags } = filters;
+  const hasKeyword = Boolean(search.trim());
+  const replaceUnmatchedKeyword =
+    hasKeyword &&
+    (demoEnabled || catalog.isSuccess) &&
+    !rawItems.some((item) => matchesSearch(item, search));
+  const tagGroups = useMemo(() => getCatalogTagGroups(rawItems), [rawItems]);
+  const tagLabels = new Map(
+    tagGroups.flatMap(({ options }) => options.map(({ id, label }) => [id, label])),
+  );
   const page = Math.min(filters.page, Math.max(1, Math.ceil(filters.displayedItems.length / 12)));
-  const catalogHref = catalogReturnPath('/dat-hoa?' + searchParams.toString());
+  const catalogHref = catalogReturnPath(pathname + '?' + searchParams.toString());
   const pageItems = filters.displayedItems.slice((page - 1) * 12, page * 12);
 
   const locationStatusMessage = useMemo(() => {
@@ -148,7 +181,12 @@ export default function FlowerShop() {
     const shopName = params.get('shopName') || 'Shop hoa';
     const name = params.get('name') || 'Sản phẩm đã chọn';
 
-    if (action === 'chat' && sellerId && productId) {
+    if (
+      action === 'chat' &&
+      sellerId &&
+      productId &&
+      (!storefrontSellerId || storefrontSellerId === sellerId.toLowerCase())
+    ) {
       const url = new URL(window.location.href);
       url.searchParams.delete('action');
       url.searchParams.delete('sellerId');
@@ -157,7 +195,7 @@ export default function FlowerShop() {
       url.searchParams.delete('name');
       window.history.replaceState(null, '', url.pathname + (url.search || '') + url.hash);
 
-      const existing = rawItems.find((i) => i.productId === productId);
+      const existing = rawItems.find((i) => i.productId === productId && i.sellerId === sellerId);
       const targetItem: CatalogItem = existing || {
         productId,
         sellerId,
@@ -174,35 +212,94 @@ export default function FlowerShop() {
 
       void handleOpenChat(targetItem);
     }
-  }, [session.data, rawItems, handleOpenChat]);
+  }, [session.data, rawItems, storefrontSellerId, handleOpenChat]);
 
   const handleSearchSubmit = (draftText: string) => {
-    setSearch(draftText.trim());
+    const keyword = draftText.trim();
+    setAdvancedSearchOpen(false);
+    if (!keyword) setDraft('');
+    if (keyword !== search || filters.page !== 1) setSearch(keyword);
   };
 
   const handleSearchClear = () => {
+    setAdvancedSearchOpen(false);
     setDraft('');
     if (search) {
       setSearch('');
     }
   };
 
+  if (storefrontSellerId && catalog.isSuccess && !shopProduct) {
+    return (
+      <main id="main" className="flower-shop-page">
+        <div className="flower-detail-feedback">
+          <h1>Chưa có mẫu hoa công khai</h1>
+          <p>Cửa hàng hiện không có sản phẩm để xem trong danh mục FloraBot.</p>
+          <Link href="/dat-hoa" className="button button-outline">
+            Xem danh mục hoa
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main id="main" className="flower-shop-page">
-      <header className="catalog-header-minimal" aria-labelledby="catalog-hero-title">
-        <div className="catalog-header-left">
-          <h1 id="catalog-hero-title" className="catalog-hero-title">
-            Sản phẩm hoa
-          </h1>
-          <p className="catalog-hero-desc">
-            Khám phá hoa đặt trước và những bó hoa có sẵn tại kiosk.
-          </p>
-        </div>
+      {storefrontSellerId && (
+        <nav className="catalog-store-breadcrumb" aria-label="Đường dẫn cửa hàng">
+          <Link className="flower-detail-back" href="/dat-hoa">
+            <ArrowLeft size={16} aria-hidden="true" />
+            Danh mục hoa
+          </Link>
+        </nav>
+      )}
+      <header
+        className={
+          storefrontSellerId
+            ? 'catalog-header-minimal catalog-store-header'
+            : 'catalog-header-minimal'
+        }
+        aria-labelledby="catalog-hero-title"
+      >
+        {storefrontSellerId ? (
+          <div className="catalog-store-identity">
+            <div className="catalog-store-icon" aria-hidden="true">
+              <Store size={26} />
+            </div>
+            <div>
+              <h1 id="catalog-hero-title" className="catalog-hero-title">
+                {shopProduct?.shopName || 'Cửa hàng hoa'}
+              </h1>
+              {shopProduct && (
+                <div className="catalog-store-stats">
+                  <span>{filters.totalCards.toLocaleString('vi-VN')} mẫu hoa</span>
+                  {shopRating && (
+                    <span className="catalog-store-rating">
+                      <RatingStars value={shopRating.average} />
+                      <span>{shopRating.count.toLocaleString('vi-VN')} đánh giá</span>
+                    </span>
+                  )}
+                  {shopReviews.isSuccess && !shopRating && <span>Chưa có đánh giá</span>}
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="catalog-header-left">
+            <h1 id="catalog-hero-title" className="catalog-hero-title">
+              Sản phẩm hoa
+            </h1>
+            <p className="catalog-hero-desc">
+              Khám phá hoa đặt trước và những bó hoa có sẵn tại kiosk.
+            </p>
+          </div>
+        )}
         <CatalogSearchBar
           draft={draft}
           setDraft={setDraft}
           onSubmit={handleSearchSubmit}
           onClear={handleSearchClear}
+          shopOnly={Boolean(storefrontSellerId)}
         />
       </header>
 
@@ -241,14 +338,24 @@ export default function FlowerShop() {
         />
 
         <section className="catalog-main-content" aria-label="Danh sách sản phẩm">
+          {storefrontSellerId && (
+            <h2 className="catalog-store-products-title">Sản phẩm của shop</h2>
+          )}
           {(filters.displayedItems.length > 0 || filters.hasActiveFilters) && (
             <CatalogToolbar
               filterToggleRef={dialog.filterToggleRef}
               mobileFiltersOpen={dialog.mobileFiltersOpen}
               onToggleMobileFilters={() => dialog.setMobileFiltersOpen((prev) => !prev)}
-              activeFiltersCount={filters.activeFilters.length}
+              activeFiltersCount={filters.activeFilters.length + advancedTags.length}
               displayedCount={filters.displayedItems.length}
               searchQuery={search}
+              ratingStatus={
+                filters.ratingsLoading
+                  ? 'Đang lọc theo đánh giá…'
+                  : filters.ratingsError
+                    ? 'Chưa tải được đánh giá'
+                    : undefined
+              }
               sortBy={filters.sortBy}
               onSortChange={(value) => {
                 if (value === 'nearest' && !origin) locate();
@@ -269,13 +376,89 @@ export default function FlowerShop() {
             </div>
           )}
 
+          <CatalogAdvancedSearch
+            key={JSON.stringify([search, advancedTags])}
+            groups={tagGroups}
+            tags={advancedTags}
+            open={advancedSearchOpen}
+            onOpenChange={setAdvancedSearchOpen}
+            onSearch={(tags) => {
+              setAdvancedSearchOpen(false);
+              applyAdvancedTags(tags, replaceUnmatchedKeyword);
+            }}
+          />
+
+          {(advancedTags.length > 0 ||
+            filters.preorderOnly ||
+            filters.ratingActiveFilters.length > 0 ||
+            filters.kioskFilter !== 'all') && (
+            <div className="catalog-applied-tags" aria-label="Bộ lọc đang dùng">
+              {filters.ratingActiveFilters.map(({ id, label, onClear }) => (
+                <button
+                  type="button"
+                  key={id}
+                  className="catalog-active-tag"
+                  aria-label={`Bỏ lọc ${label}`}
+                  onClick={onClear}
+                >
+                  {label}
+                  <X size={14} aria-hidden="true" />
+                </button>
+              ))}
+              {filters.preorderOnly && (
+                <button
+                  type="button"
+                  className="catalog-active-tag"
+                  aria-label="Bỏ lọc còn nhận đặt trước"
+                  onClick={() => filters.setPreorderOnly(false)}
+                >
+                  {PREORDER_FILTER_LABEL}
+                  <X size={14} aria-hidden="true" />
+                </button>
+              )}
+              {filters.kioskFilter !== 'all' && (
+                <button
+                  type="button"
+                  className="catalog-active-tag"
+                  aria-label={`Bỏ lọc theo tủ ${filters.kioskFilter}`}
+                  onClick={() => filters.setKioskFilter('all')}
+                >
+                  {filters.kioskFilter}
+                  <X size={14} aria-hidden="true" />
+                </button>
+              )}
+              {advancedTags.map((tag) => {
+                const label = tagLabels.get(tag) ?? tag.slice(tag.indexOf(':') + 1);
+                return (
+                  <button
+                    type="button"
+                    key={tag}
+                    className="catalog-active-tag"
+                    aria-label={`Bỏ tag ${label}`}
+                    onClick={() =>
+                      applyAdvancedTags(
+                        advancedTags.filter((value) => value !== tag),
+                        false,
+                      )
+                    }
+                  >
+                    {label}
+                    <X size={14} aria-hidden="true" />
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           <CatalogEmptyState
-            isPending={!demoEnabled && catalog.isPending}
-            isError={catalog.isError}
+            isPending={(!demoEnabled && catalog.isPending) || filters.ratingsLoading}
+            error={filters.ratingsError ? 'ratings' : catalog.isError ? 'catalog' : null}
             hasItems={filters.displayedItems.length > 0}
             search={search}
             hasActiveFilters={filters.hasActiveFilters}
-            onRefetch={() => void catalog.refetch()}
+            onRefetch={() =>
+              void (filters.ratingsError ? filters.refetchRatings() : catalog.refetch())
+            }
             onResetFilters={filters.resetFilters}
           />
 
@@ -285,6 +468,9 @@ export default function FlowerShop() {
               <CatalogGrid
                 catalogHref={catalogHref}
                 items={pageItems}
+                distances={
+                  filters.sortBy === 'nearest' && directory.isSuccess ? distances : undefined
+                }
                 page={page}
                 hasMore={page * 12 < filters.displayedItems.length}
                 isFetching={catalog.isFetching}

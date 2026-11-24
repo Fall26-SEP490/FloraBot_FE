@@ -180,18 +180,39 @@
   color: var(--color-workspace-muted, #476451);
   font-size: 13px;
 }
-.flower-detail-shop > svg {
+.flower-detail-shop :is(.flower-detail-shop-link, svg) {
   flex: none;
 }
-.flower-detail-shop > strong {
-  font-weight: 500;
+.flower-detail-shop strong {
+  font-weight: 600;
   overflow-wrap: anywhere;
+}
+.flower-detail-shop-link {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  min-height: 44px;
+  max-width: 100%;
+  padding: 4px 9px;
+  border: 1px solid #dce6d7;
+  border-radius: 9px;
+  background: #f5f8f2;
+  color: #174b35;
+  text-decoration: none;
+}
+.flower-detail-shop-link:hover,
+.flower-detail-shop-link:focus-visible {
+  background: #eaf3e5;
+}
+.flower-detail-shop-link:hover strong {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .flower-detail-shop-rating {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  min-height: 32px;
   color: var(--color-workspace-muted, #476451);
   font-size: 12px;
   text-decoration: none;
