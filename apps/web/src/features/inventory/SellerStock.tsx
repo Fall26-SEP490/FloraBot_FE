@@ -419,6 +419,7 @@ export default function SellerStock({ session }: { session: Session }) {
   const [productSearch, setProductSearch] = useState('');
   const [stockReason, setStockReason] = useState('Nạp hoa bán trực tiếp');
   const [detailSlotId, setDetailSlotId] = useState<string | null>(null);
+  const [sensorSettingsOpen, setSensorSettingsOpen] = useState(false);
   const [assignmentBusy, setAssignmentBusy] = useState(false);
   const [operationChoice, setOperationChoice] = useState<{
     slotId: string;
@@ -429,7 +430,10 @@ export default function SellerStock({ session }: { session: Session }) {
     slotId: string;
     sessionId: string;
   }>();
-  const closeSlotDetails = useCallback(() => setDetailSlotId(null), []);
+  const closeSlotDetails = useCallback(() => {
+    setSensorSettingsOpen(false);
+    setDetailSlotId(null);
+  }, []);
   const notice = useRef<HTMLParagraphElement>(null);
   useEffect(() => {
     if (message) notice.current?.focus();
@@ -938,7 +942,7 @@ export default function SellerStock({ session }: { session: Session }) {
                   </table>
                 </div>
                 <Modal
-                  open={!!detailSlot}
+                  open={!!detailSlot && !sensorSettingsOpen}
                   title={`${detailSlot && detailSlot.status === 'RENTED_EMPTY' && slotZone(detailSlot) === 'WALK_IN' ? 'Nạp hoa vào ô' : 'Chi tiết ô'} ${detailSlot?.slotCode || ''}`}
                   description={selectedKiosk?.name}
                   onClose={closeSlotDetails}
@@ -953,11 +957,9 @@ export default function SellerStock({ session }: { session: Session }) {
                         <span>{zoneLabels[slotZone(detailSlot)]}</span>
                       </div>
                       {session.role === 'SELLER' && selectedKioskId && (
-                        <SellerSlotSensors
-                          key={`${selectedKioskId}:${detailSlot.id}`}
-                          kioskId={selectedKioskId}
-                          slot={detailSlot}
-                        />
+                        <Button variant="outline" onClick={() => setSensorSettingsOpen(true)}>
+                          Cấu hình cảm biến
+                        </Button>
                       )}
                       {detailSlot.status === 'HELD' && (
                         <p role="status">
@@ -1345,6 +1347,14 @@ export default function SellerStock({ session }: { session: Session }) {
                     </div>
                   )}
                 </Modal>
+                {sensorSettingsOpen && detailSlot && selectedKioskId && (
+                  <SellerSlotSensors
+                    key={`${selectedKioskId}:${detailSlot.id}`}
+                    kioskId={selectedKioskId}
+                    slot={detailSlot}
+                    onClose={() => setSensorSettingsOpen(false)}
+                  />
+                )}
               </section>
             )}
           </div>
