@@ -72,9 +72,7 @@ export default function StorefrontFlowers() {
         )}
         {activeGroup && (
           <section className="storefront-collection" aria-label={activeGroup.title}>
-            {groups.length === 1 ? (
-              <h3 className="storefront-mode-label">{activeGroup.title}</h3>
-            ) : (
+            {groups.length > 1 && (
               <div className="storefront-mode-switch" role="group" aria-label="Hình thức mua hoa">
                 {groups.map((group) => (
                   <button

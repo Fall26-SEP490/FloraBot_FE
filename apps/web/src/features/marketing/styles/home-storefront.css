@@ -374,23 +374,28 @@ body:has(.home-storefront) {
 }
 
 .marketing-site .home-storefront .storefront-flowers {
-  position: relative;
-  isolation: isolate;
   padding: 40px 0;
   background: transparent;
   scroll-margin-top: 100px;
 }
-.home-storefront .storefront-flowers::before {
-  position: absolute;
-  z-index: -1;
-  inset: 0 -100vmax;
-  background: linear-gradient(180deg, #edf4ef, #f5f8f2);
-  border-block: 1px solid #dfeae1;
-  pointer-events: none;
-  content: '';
-}
 .marketing-site .home-storefront .storefront-section-heading {
-  margin-bottom: 12px;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px 16px;
+  margin-bottom: clamp(18px, 2.5vw, 30px);
+  text-align: center;
+}
+@media (min-width: 721px) {
+  .marketing-site .home-storefront .storefront-section-heading {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+  .home-storefront .storefront-section-heading h2 {
+    grid-column: 2;
+  }
+  .home-storefront .storefront-section-heading .collection-view-all-btn {
+    justify-self: end;
+  }
 }
 .marketing-site .home-storefront .storefront-section-heading h2 {
   font-family: 'Playfair Display', 'Palatino Linotype', 'Palatino', Georgia, serif;
@@ -432,11 +437,11 @@ body:has(.home-storefront) {
 .storefront-mode-switch {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 6px;
   margin-bottom: 16px;
 }
-.storefront-mode-switch button,
-.storefront-mode-label {
+.storefront-mode-switch button {
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
@@ -444,8 +449,6 @@ body:has(.home-storefront) {
   font-family: var(--font-body);
   font-size: 13px;
   font-weight: 650;
-}
-.storefront-mode-switch button {
   min-height: 44px;
   padding: 6px 15px;
   border: 1px solid transparent;
@@ -453,14 +456,9 @@ body:has(.home-storefront) {
   cursor: pointer;
 }
 .storefront-mode-switch button:hover,
-.storefront-mode-switch button[aria-pressed='true'],
-.storefront-mode-label {
+.storefront-mode-switch button[aria-pressed='true'] {
   border-color: #dbe8da;
   background: #edf5eb;
-}
-.storefront-mode-label {
-  margin: 0 0 14px;
-  padding: 5px 12px;
 }
 .collection-view-all-btn {
   display: inline-flex;
