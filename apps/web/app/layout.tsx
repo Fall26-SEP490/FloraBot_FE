@@ -9,7 +9,6 @@ import '../src/shared/styles/interactions.css';
 export const metadata: Metadata = {
   title: 'FloraBot - Đặt hoa và quản lý cửa hàng',
   description: 'Đặt hoa, theo dõi đơn hàng và quản lý cửa hàng FloraBot.',
-  icons: { icon: { url: '/favicon.svg', type: 'image/svg+xml' } },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
