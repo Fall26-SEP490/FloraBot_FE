@@ -170,7 +170,7 @@ test('Staff workspace renders real assigned tasks without fake mock management t
   await page.goto('/staff');
 
   // Verify real staff tasks heading and guide are present
-  await expect(page.getByRole('heading', { level: 1, name: 'Công việc giao hoa' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Công việc tại tủ' })).toBeVisible();
   await expect(page.getByText('Cách làm công việc giao hoa', { exact: true })).toBeVisible();
 
   // Verify fake mock management table is NOT present

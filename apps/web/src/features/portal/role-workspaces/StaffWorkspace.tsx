@@ -69,7 +69,7 @@ export default function StaffWorkspace({ section = 'tasks' }: { section?: string
         <main id="main" className="workspace dashboard-content">
           <div className="dashboard-page-heading">
             <div>
-              <h1>{section === 'chats' ? 'Nhắn với chủ shop' : 'Công việc giao hoa'}</h1>
+              <h1>{section === 'chats' ? 'Nhắn với chủ shop' : 'Công việc tại tủ'}</h1>
             </div>
           </div>
           {section === 'chats' ? (

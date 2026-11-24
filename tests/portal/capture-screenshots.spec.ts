@@ -221,7 +221,7 @@ test.describe('Capture workspace UI repair inspection screenshots', () => {
       'data-platform-role',
       'staff',
     );
-    await expect(page.getByRole('heading', { level: 1, name: 'Công việc giao hoa' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Công việc tại tủ' })).toBeVisible();
     await expect(page.getByText('Công việc tại shop')).toBeAttached();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,

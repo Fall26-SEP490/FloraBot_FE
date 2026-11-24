@@ -53,7 +53,7 @@ test('Staff opens the assigned Walk-in slot on the web and waits for the sensor 
   await expect(page.getByRole('heading', { name: 'Nạp hoa · Ô A01' })).toBeVisible();
   await expect(page.getByText('Viết báo cáo', { exact: true })).toHaveCount(0);
   await expect(page.getByText('Nạp hoa bán tại tủ')).toHaveCount(0);
-  await page.getByRole('button', { name: 'Mở ô', exact: true }).click();
+  await page.getByRole('button', { name: 'Mở ô A01', exact: true }).click();
   await expect(page.getByText('Đã gửi yêu cầu mở ô. Chờ tủ phản hồi.')).toBeVisible();
   stage = 'Completed';
   await expect(page.getByText(/Tủ đã xác nhận thao tác hoàn tất/)).toBeVisible();

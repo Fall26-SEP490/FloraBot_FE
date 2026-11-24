@@ -2,9 +2,10 @@
 
 import { memo, useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { QueryClientProvider, useQuery } from '@tanstack/react-query';
-import { Flower2, LogIn, Menu, X } from '@florabot/ui';
+import { LogIn, Menu, X } from '@florabot/ui';
 import { SiteSupport } from './SiteSupport';
 import FormFeedback from '@/shared/components/FormFeedback';
 import { workspaceBase } from '@/features/portal/config/workspaceSections';
@@ -34,8 +35,7 @@ const workspaceLabels: Record<string, string> = {
 export function SiteBrand({ className = 'site-brand', href = '/' }) {
   return (
     <Link className={className} href={href} aria-label="FloraBot — trang chủ">
-      <Flower2 size={22} aria-hidden="true" />
-      <span>FloraBot</span>
+      <Image src="/flora-rose-logo.webp" alt="" width={54} height={64} unoptimized />
     </Link>
   );
 }

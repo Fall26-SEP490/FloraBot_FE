@@ -192,7 +192,7 @@ test.describe('Seller Kiosks Management (/seller/kiosks)', () => {
 
     // Role guard in Workspace redirects non-SELLER to their assigned workspace (/staff)
     await expect(page).toHaveURL('/staff');
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Công việc giao hoa');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Công việc tại tủ');
     // Staff navigation does not expose /seller/kiosks
     await expect(page.getByRole('link', { name: 'Vị trí kiosk' })).toBeHidden();
   });
