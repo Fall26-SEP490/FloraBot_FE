@@ -1633,3 +1633,47 @@ html {
     transition: none;
   }
 }
+
+.site-frame-botanical > .site-content {
+  position: relative;
+  isolation: isolate;
+}
+
+.site-frame-botanical > .site-content::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  content: '';
+  background:
+    linear-gradient(90deg, #f1f6eddb, #fcfdf8f5 25%, #fcfdf8f5 75%, #f5f2e9e0),
+    url('/images/generated/florabot-pattern.webp') center 0 / 510px repeat;
+}
+
+@media (max-width: 720px) {
+  .site-frame-botanical > .site-content::before {
+    background-image:
+      linear-gradient(#fbfcf7ee, #f6f8f1f2), url('/images/generated/florabot-pattern.webp');
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll(root block)) {
+    .site-frame-botanical > .site-content::before {
+      animation: botanical-drift linear both;
+      animation-timeline: scroll(root block);
+    }
+    @keyframes botanical-drift {
+      from {
+        background-position:
+          center,
+          center 0;
+      }
+      to {
+        background-position:
+          center,
+          calc(50% + 36px) 165px;
+      }
+    }
+  }
+}

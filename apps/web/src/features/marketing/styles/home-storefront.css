@@ -228,10 +228,6 @@ body:has(.home-storefront) {
 /* Section: Chọn hoa theo dịp (Shop by collections / Occasions) */
 .home-occasions {
   padding: 44px 0 28px;
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.94)),
-    url('/images/generated/florabot-pattern.webp') center / 460px repeat;
-  border-bottom: 1px solid #f0eee8;
 }
 .home-occasions-header {
   text-align: center;
@@ -378,9 +374,20 @@ body:has(.home-storefront) {
 }
 
 .marketing-site .home-storefront .storefront-flowers {
+  position: relative;
+  isolation: isolate;
   padding: 40px 0;
-  background: #fff;
+  background: transparent;
   scroll-margin-top: 100px;
+}
+.home-storefront .storefront-flowers::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0 -100vmax;
+  background: linear-gradient(180deg, #edf4ef, #f5f8f2);
+  border-block: 1px solid #dfeae1;
+  pointer-events: none;
+  content: '';
 }
 .marketing-site .home-storefront .storefront-section-heading {
   margin-bottom: 12px;
@@ -410,12 +417,12 @@ body:has(.home-storefront) {
   aspect-ratio: 3 / 4;
   overflow: hidden;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
-  transition:
-    transform 0.3s ease,
-    box-shadow 0.3s ease;
+  transition: box-shadow 0.3s ease;
+}
+.home-storefront .storefront-flower:is(:hover, :focus-visible) {
+  transform: none;
 }
 .home-storefront .storefront-flower:hover .storefront-flower-photo {
-  transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(24, 62, 43, 0.14);
 }
 .home-storefront .storefront-flower-copy {
