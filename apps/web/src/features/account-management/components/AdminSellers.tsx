@@ -41,7 +41,9 @@ export default function AdminSellers() {
   const pageItems = paginate(visible ?? [], safePage, PAGE_SIZE);
   return (
     <section className="admin-sellers" aria-labelledby="admin-sellers-title">
-      <h2 id="admin-sellers-title">Hồ sơ các shop hoa</h2>
+      <h2 id="admin-sellers-title" className="sr-only">
+        Hồ sơ các shop hoa
+      </h2>
       <AdminFilterBar
         actions={
           <>
@@ -61,11 +63,11 @@ export default function AdminSellers() {
         }
       >
         <div>
-          <label htmlFor="shop-search">Tìm tên shop hoặc số điện thoại</label>
+          <label htmlFor="shop-search">Tìm kiếm</label>
           <input
             id="shop-search"
             type="search"
-            placeholder="Nhập tên shop hoặc số điện thoại…"
+            placeholder="Tên shop hoặc số điện thoại…"
             value={search}
             onChange={(event) => {
               setSearch(event.target.value);
@@ -74,7 +76,7 @@ export default function AdminSellers() {
           />
         </div>
         <div>
-          <label htmlFor="shop-status">Lọc trạng thái shop</label>
+          <label htmlFor="shop-status">Trạng thái</label>
           <Select
             id="shop-status"
             value={status}

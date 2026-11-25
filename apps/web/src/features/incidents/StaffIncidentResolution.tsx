@@ -87,27 +87,18 @@ export default function StaffIncidentResolution({
   if (blockedReason && !attempt)
     return (
       <section className="staff-resolution" aria-label="Điều kiện gửi báo cáo sửa ô">
-        <h4>Cần kiểm tra trạng thái ô trước khi hoàn tất</h4>
+        <h4>Chưa thể gửi báo cáo sửa ô</h4>
         <p role="status">{blockedReason}</p>
-        <p>
-          Bạn vẫn có thể bổ sung ảnh minh chứng cho công việc. Ghi nhận đã đến tủ hoặc tải ảnh chưa
-          xác nhận ô đã được sửa.
-        </p>
         {onRefresh && (
           <Button type="button" variant="outline" onClick={() => void onRefresh()}>
-            Cập nhật trạng thái công việc
+            Cập nhật trạng thái
           </Button>
         )}
       </section>
     );
   return (
     <details className="staff-resolution">
-      <summary>{slotRepair ? 'Báo cáo kết quả sửa ô tủ' : 'Ghi nhận đã sửa sự cố'}</summary>
-      <p>
-        {slotRepair
-          ? 'Gửi kết quả kiểm tra thực tế để Manager nghiệm thu. Điều kiện cửa, cảm biến và phiên phục hồi được kiểm tra tại thời điểm gửi.'
-          : 'Chỉ xác nhận sau khi kiểm tra tại tủ. Gửi kết quả để ghi nhận sự cố đã được xử lý và chuyển báo cáo cho Quản lý vận hành nghiệm thu công việc.'}
-      </p>
+      <summary>{slotRepair ? 'Báo cáo sửa ô tủ' : 'Báo cáo sửa sự cố'}</summary>
       {attempt ? (
         <>
           <p>
@@ -126,7 +117,7 @@ export default function StaffIncidentResolution({
             void send({ id: crypto.randomUUID(), version, report: values.report.trim() });
           })}
         >
-          <label htmlFor={`resolution-report-${taskId}`}>Kết quả sửa chữa và kiểm tra</label>
+          <label htmlFor={`resolution-report-${taskId}`}>Kết quả kiểm tra</label>
           <textarea
             id={`resolution-report-${taskId}`}
             rows={4}
@@ -155,7 +146,7 @@ export default function StaffIncidentResolution({
                 form.formState.errors.confirm ? `resolution-confirm-error-${taskId}` : undefined
               }
             />{' '}
-            Tôi đã kiểm tra thực tế và xác nhận sự cố đã được sửa.
+            Đã kiểm tra tại tủ và xác nhận đã sửa.
           </label>
           {form.formState.errors.confirm?.message && (
             <p id={`resolution-confirm-error-${taskId}`} className="error">

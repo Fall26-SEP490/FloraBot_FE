@@ -51,7 +51,7 @@ export default function StaffTaskDetails({
       <summary>
         {role === 'SELLER' || role === 'SELLER_STAFF'
           ? 'Thông tin tủ và lịch sử'
-          : 'Thông tin tủ, sự cố và lịch sử công việc'}
+          : 'Chi tiết tủ & lịch sử'}
       </summary>
       {open && role === 'TECHNICIAN' && (
         <TechnicianIoTHealth path={`/staff/tasks/${taskId}/iot-health`} actorId={actorId} />

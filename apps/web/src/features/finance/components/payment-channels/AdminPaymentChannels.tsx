@@ -50,7 +50,7 @@ export default function AdminPaymentChannels() {
         <div className="admin-section-heading">
           <div>
             <h2 id="bind-channel-title">Gắn cấu hình PayOS</h2>
-            <p>Dùng mã tham chiếu đã tạo trên máy chủ. Giữ API key và checksum key trên máy chủ.</p>
+            <p>Nhập mã tham chiếu cấu hình đã tạo trên máy chủ.</p>
           </div>
         </div>
         <form
@@ -101,7 +101,6 @@ export default function AdminPaymentChannels() {
         <div className="admin-section-heading">
           <div>
             <h2 id="channel-list-title">Kênh đã cấu hình</h2>
-            <p>Kiểm tra tài khoản nhận tiền và xác thực các kênh đang chờ.</p>
           </div>
           {channels.isError && (
             <Button

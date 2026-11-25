@@ -103,13 +103,9 @@ export default function OperationsWorkspace({ section = 'overview' }: { section?
           section={section}
         />
         <main id="main" className="workspace dashboard-content">
-          {session.data.role === 'OPERATIONS_MANAGER' && (
+          {session.data.role === 'OPERATIONS_MANAGER' && section !== 'overview' && (
             <nav className="manager-breadcrumb" aria-label="Vị trí hiện tại">
-              {section === 'overview' ? (
-                <span>Điều phối vận hành</span>
-              ) : (
-                <Link href="/operations">Tổng quan vận hành</Link>
-              )}
+              <Link href="/operations">Tổng quan vận hành</Link>
             </nav>
           )}
           <div className="dashboard-page-heading">

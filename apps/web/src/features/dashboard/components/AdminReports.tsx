@@ -21,7 +21,7 @@ import AdminRevenueReport from './AdminRevenueReport';
 const reports = {
   v_admin_queue: {
     title: 'Hàng đợi vận hành',
-    description: 'Các yêu cầu đang chờ xử lý được tổng hợp từ dữ liệu hiện tại.',
+    description: 'Tổng hợp các yêu cầu đang chờ xử lý.',
     columns: [
       ['hang_cho', 'Hàng đợi'],
       ['so_luong', 'Số lượng'],
@@ -29,8 +29,7 @@ const reports = {
   },
   v_revenue_daily: {
     title: 'Thu và hoàn tiền bán hoa',
-    description:
-      'Tổng giá trị đơn đã thu tiền theo ngày và kiosk; không phải lợi nhuận hay phí nền tảng.',
+    description: 'Tổng giá trị đơn đã thu theo ngày và kiosk.',
     columns: [
       ['ngay', 'Ngày'],
       ['kiosk', 'Kiosk'],
@@ -41,8 +40,7 @@ const reports = {
   },
   v_platform_revenue: {
     title: 'Doanh thu phí thuê',
-    description:
-      'Phí thuê ghi nhận trong sổ cái nền tảng theo tháng. Tách biệt với tiền bán hoa của shop.',
+    description: 'Doanh thu phí thuê theo tháng (tách biệt tiền bán hoa).',
     columns: [
       ['thang', 'Tháng'],
       ['doanh_thu_phi_goi', 'Phí thuê (VND)'],
@@ -50,7 +48,7 @@ const reports = {
   },
   v_ai_effectiveness: {
     title: 'Hiệu quả tư vấn',
-    description: 'Kết quả khảo sát, mua hàng và thời gian phản hồi được hệ thống ghi nhận.',
+    description: 'Kết quả khảo sát, mua hàng và thời gian phản hồi.',
     columns: [
       ['kiosk_id', 'Kiosk'],
       ['source', 'Nguồn'],

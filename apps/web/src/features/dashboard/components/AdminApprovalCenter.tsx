@@ -8,7 +8,6 @@ export default function AdminApprovalCenter({ actorId }: { actorId: string }) {
   const [onlyWithItems, setOnlyWithItems] = useState(false);
   const rows = useAdminQueues(actorId);
   const busy = rows.some(({ query }) => query.isFetching);
-  const hasMore = rows.some(({ query }) => query.data?.hasMore);
   const reviewRows = rows.filter(({ queue }) => queue.group === 'review');
   const visibleReviewRows = reviewRows.filter(
     ({ query }) => !onlyWithItems || !query.isSuccess || query.data.count > 0,
@@ -81,7 +80,6 @@ export default function AdminApprovalCenter({ actorId }: { actorId: string }) {
             ))}
         </div>
       </section>
-      {hasMore && <p className="admin-scope-note">Dấu + cho biết còn hồ sơ ở trang tiếp theo.</p>}
     </section>
   );
 }
