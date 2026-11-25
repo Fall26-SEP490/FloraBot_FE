@@ -12,7 +12,11 @@ import StaffInventoryMaintenance, {
   inventoryActionLabels,
   useStaffInventoryMaintenance,
 } from '../../inventory/StaffInventoryMaintenance';
-import { TASK_DETAIL_STATES, TASK_STATUS_LABELS } from '../task-management.constants';
+import {
+  TASK_DETAIL_STATES,
+  TASK_STATUS_LABELS,
+  TASK_WORKER_NEXT_STEPS,
+} from '../task-management.constants';
 import type { ActiveTaskRole, Task } from '../task-management.types';
 import StaffEvidence from './StaffEvidence';
 import QualityComplaintDetails from '../../complaints/QualityComplaintDetails';
@@ -21,7 +25,7 @@ import StaffReassignment from './StaffReassignment';
 import StaffTaskDetails, { staffTaskDetailsQuery } from './StaffTaskDetails';
 import TechnicianRepairAccess from './TechnicianRepairAccess';
 import RepairReadinessPanel from './RepairReadinessPanel';
-import reviewStyles from './manager-review.module.css';
+import ManagerTaskReview from './ManagerTaskReview';
 import StaffPreorderFulfillment, {
   preorderBlocker,
   staffPreordersQuery,
@@ -840,7 +844,6 @@ export function TaskItem({
         ) : (
           <p role="status">Đã tải công việc mới nhất. Kiểm tra hướng dẫn trước khi gửi lại.</p>
         ))}
-      {reviewingIncident && <p>Kiểm tra ảnh, báo cáo và tín hiệu tại tủ trước khi duyệt.</p>}
       {reviewingRemoval && (
         <p>
           Chờ xác nhận bàn giao tại <a href="/operations/terminations">Chấm dứt thuê kiosk</a>.
@@ -892,44 +895,18 @@ export function TaskItem({
     </div>
   );
   const taskDetails = reviewingIncident ? (
-    <div className={reviewStyles.review}>
-      <div className={reviewStyles.overview}>
-        <section className={reviewStyles.report} aria-label="Báo cáo kỹ thuật viên">
-          <h4>Kết quả kiểm tra</h4>
-          <p>{task.report || 'Chưa có nội dung báo cáo.'}</p>
-        </section>
-        <div className={reviewStyles.evidence}>{taskEvidence}</div>
-        <details className={reviewStyles.context}>
-          <summary>Địa điểm & hướng dẫn</summary>
-          {taskDestination}
-        </details>
-        <div className={reviewStyles.history}>
-          <StaffTaskDetails
-            taskId={task.id}
-            version={task.version}
-            apiBase={apiBase}
-            admin
-            readOnly={readOnly}
-            actorId={actorId}
-            sellerId={sellerId}
-            role={role}
-          />
-        </div>
-      </div>
-      <div className={reviewStyles.decision}>
-        <h4 className={reviewStyles.decisionTitle}>Kết quả nghiệm thu</h4>
-        {choices.length > 0 && transitionForm}
-        {taskOpen && repairDetails.data?.slotCode && (
-          <RepairReadinessPanel
-            taskId={task.id}
-            apiBase={apiBase}
-            actorId={actorId}
-            version={task.version}
-            compact
-          />
-        )}
-      </div>
-    </div>
+    <ManagerTaskReview
+      task={task}
+      apiBase={apiBase}
+      actorId={actorId}
+      sellerId={sellerId}
+      role={role}
+      readOnly={readOnly}
+      evidence={taskEvidence}
+      location={taskDestination}
+      decision={choices.length > 0 ? transitionForm : null}
+      showReadiness={taskOpen && Boolean(repairDetails.data?.slotCode)}
+    />
   ) : (
     <>
       {!isTechnician && taskDestination}
@@ -992,15 +969,7 @@ export function TaskItem({
             <span className="sr-only"> · {task.kioskName}</span>
           </summary>
           <p className="technician-next-step">
-            {task.status === 'ASSIGNED'
-              ? 'Bắt đầu xử lý để cập nhật tiến độ và gửi minh chứng.'
-              : task.status === 'IN_PROGRESS'
-                ? 'Kiểm tra tại tủ, lưu minh chứng rồi gửi báo cáo.'
-                : task.status === 'SUBMITTED'
-                  ? 'Đã gửi báo cáo. Chờ Manager kiểm tra kết quả.'
-                  : task.status === 'COMPLETED'
-                    ? 'Manager đã xác nhận hoàn thành công việc.'
-                    : 'Công việc đã được hủy.'}
+            {TASK_WORKER_NEXT_STEPS[task.status] || 'Kiểm tra trạng thái công việc.'}
           </p>
           {taskDestination}
           {taskContent}
@@ -1063,10 +1032,10 @@ export function TaskItem({
         >
           <summary>
             {role === 'ADMIN'
-              ? 'Xem báo cáo & tiến độ'
+              ? 'Xem báo cáo'
               : task.status === 'SUBMITTED'
                 ? 'Kiểm tra báo cáo'
-                : 'Xem chi tiết công việc'}
+                : 'Xem chi tiết'}
             <ChevronDown size={16} aria-hidden="true" />
           </summary>
           {taskDetails}

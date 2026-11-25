@@ -37,3 +37,11 @@ export const TASK_DETAIL_ACTIONS: Record<string, string> = {
   STAFF_TASK_EVIDENCE_ADDED: 'Thêm ảnh minh chứng',
   STAFF_INCIDENT_RESOLVED: 'Ghi nhận sửa sự cố và gửi báo cáo',
 };
+
+export const TASK_WORKER_NEXT_STEPS: Record<string, string> = {
+  ASSIGNED: 'Bắt đầu xử lý để cập nhật tiến độ.',
+  IN_PROGRESS: 'Lưu ảnh và gửi báo cáo.',
+  SUBMITTED: 'Đã gửi, chờ duyệt.',
+  COMPLETED: 'Đã hoàn thành.',
+  CANCELLED: 'Đã hủy.',
+};
