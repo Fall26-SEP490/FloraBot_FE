@@ -22,6 +22,7 @@ test('shared feedback applies on public pages and body portals without a seller 
     document.body.append(form);
   });
   const form = page.locator('#public-form-check');
+  await expect(form).not.toHaveAttribute('novalidate');
   await form.getByRole('button').click();
   await expect(form.locator('.form-field-error')).toHaveText(
     'Vui lòng nhập hoặc chọn thông tin này.',

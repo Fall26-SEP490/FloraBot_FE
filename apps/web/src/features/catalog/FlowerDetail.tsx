@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { catalogReturnPath, shopCatalogPath, shopCatalogSellerId } from './catalog.navigation';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, ArrowRight, Button, MapPin, MessageSquare, Store } from '@florabot/ui';
+import { ArrowLeft, Button, MapPin, MessageSquare, Star, Store } from '@florabot/ui';
 import { request, sessionQuery } from '@/shared/lib/api';
 import { flowerTagLabel } from '@/shared/lib/flower-tags';
 import { MOCK_CATALOG_ITEMS } from './mocks/mockCatalog';
@@ -128,16 +128,6 @@ export default function FlowerDetail({
     <>
       <Store size={16} aria-hidden="true" />
       <strong>{shopName}</strong>
-      {showReviews && reviews.data?.shopAverage != null && (
-        <span
-          className="flower-detail-shop-rating"
-          role="group"
-          aria-label={`Điểm shop: ${rating.format(reviews.data.shopAverage)} trên 5 sao, ${reviews.data.shopCount} lượt`}
-        >
-          <RatingStars value={reviews.data.shopAverage} />
-          <span>({reviews.data.shopCount})</span>
-        </span>
-      )}
     </>
   );
 
@@ -187,9 +177,11 @@ export default function FlowerDetail({
             />
 
             <div className="flower-detail-content">
-              <div className="flower-detail-header-meta">
-                <span className="flower-detail-badge">{purchaseLabel(item)}</span>
-              </div>
+              {(!isPreorder(item) || isPreorderSoldOut(item)) && (
+                <div className="flower-detail-header-meta">
+                  <span className="flower-detail-badge">{purchaseLabel(item)}</span>
+                </div>
+              )}
 
               <h1 className="flower-detail-title">{item.name}</h1>
 
@@ -218,10 +210,20 @@ export default function FlowerDetail({
                     aria-label={`Xem cửa hàng ${shopName}`}
                   >
                     {shopIdentity}
-                    <ArrowRight size={15} aria-hidden="true" />
                   </Link>
                 ) : (
                   shopIdentity
+                )}
+                {showReviews && reviews.data?.shopAverage != null && (
+                  <span
+                    className="flower-detail-shop-rating"
+                    role="group"
+                    aria-label={`Điểm shop: ${rating.format(reviews.data.shopAverage)} trên 5 sao, ${reviews.data.shopCount} lượt`}
+                  >
+                    <Star size={14} aria-hidden="true" />
+                    <strong>{rating.format(reviews.data.shopAverage)}/5</strong>
+                    <span>({reviews.data.shopCount} đánh giá)</span>
+                  </span>
                 )}
               </div>
 
@@ -254,7 +256,7 @@ export default function FlowerDetail({
                     className="flower-detail-cta-btn button-primary"
                     onClick={() => selectItem(item)}
                   >
-                    Yêu cầu báo giá
+                    Đặt trước
                   </Button>
                 ) : isPreorderSoldOut(item) ? (
                   <Link

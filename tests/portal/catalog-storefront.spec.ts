@@ -65,10 +65,34 @@ async function mockCatalog(page: Page) {
   });
 }
 
+test('sold out flowers are hidden on home and general catalog but kept in their shop', async ({
+  page,
+}) => {
+  await mockCatalog(page);
+  await page.goto('/');
+  const home = page.locator('.storefront-flowers');
+  await expect(home.locator('.storefront-flower').first()).toBeVisible();
+  await expect(home.getByRole('heading', { name: 'Mẫu hoa 01', exact: true })).toHaveCount(0);
+  await expect(home.getByRole('heading', { name: 'Mẫu hoa 02', exact: true })).toBeVisible();
+  await page.goto('/dat-hoa');
+  await expect(page.locator('.flower-card').first()).toBeVisible();
+  await expect(page.locator('.flower-card').filter({ hasText: 'Hết hàng' })).toHaveCount(0);
+  await expect(page.locator('.flower-card').filter({ hasText: 'Mẫu hoa 01' })).toHaveCount(0);
+  await page.goto(shopPath + '?page=2');
+  await expect(page.locator('.flower-card').filter({ hasText: 'Mẫu hoa 01' })).toContainText(
+    'Hết hàng',
+  );
+});
+
 for (const width of [390, 1440]) {
   test(`guests can open a shop from a product and browse only that seller at ${width}px`, async ({
     page,
   }) => {
+    const hydrationErrors: string[] = [];
+    page.on('console', (message) => {
+      if (message.type() === 'error' && /hydrat|server rendered HTML/i.test(message.text()))
+        hydrationErrors.push(message.text());
+    });
     test.setTimeout(60_000);
     await page.setViewportSize({ width, height: 900 });
     await mockCatalog(page);
@@ -98,7 +122,16 @@ for (const width of [390, 1440]) {
     await expect(header.getByText('14 mẫu hoa')).toBeVisible();
     await expect(header.getByRole('img', { name: '5 trên 5 sao' })).toBeVisible();
     await expect(header.getByText('8 đánh giá')).toBeVisible();
+    await expect(page.locator('form.catalog-search-bar-wrap')).not.toHaveAttribute('novalidate');
+    await expect(page.locator('.catalog-shop-page')).toHaveCSS(
+      'background-color',
+      'rgb(255, 255, 255)',
+    );
+    await expect(page.getByRole('combobox', { name: 'Đánh giá shop', exact: true })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Xếp hoa gần tôi', exact: true })).toHaveCount(0);
     const cards = page.locator('.flower-card');
+    await expect(cards.locator('.flower-card-shop-rating')).toHaveCount(0);
+    await expect(cards.locator('.flower-meta-item[title="Tiệm Hoa An Nhiên"]')).toHaveCount(0);
     await expect(cards).toHaveCount(12);
     await expect(cards.first()).toContainText('Mẫu hoa 02');
     if (width === 390) {
@@ -133,6 +166,7 @@ for (const width of [390, 1440]) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
+    expect(hydrationErrors).toEqual([]);
   });
 }
 

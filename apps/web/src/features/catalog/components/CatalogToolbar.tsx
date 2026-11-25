@@ -1,6 +1,6 @@
 import Select from '@/shared/components/Select';
 import type { RefObject } from 'react';
-import { MapPin, SlidersHorizontal } from '@florabot/ui';
+import { ChevronDown, MapPin, SlidersHorizontal } from '@florabot/ui';
 import type { SortOption } from '../catalog.types';
 
 interface CatalogToolbarProps {
@@ -15,6 +15,8 @@ interface CatalogToolbarProps {
   onSortChange: (sort: SortOption) => void;
   locating?: boolean;
   onLocate?: () => void;
+  advancedSearchOpen: boolean;
+  onToggleAdvancedSearch: () => void;
 }
 
 export function CatalogToolbar({
@@ -29,6 +31,8 @@ export function CatalogToolbar({
   onSortChange,
   locating,
   onLocate,
+  advancedSearchOpen,
+  onToggleAdvancedSearch,
 }: CatalogToolbarProps) {
   return (
     <div className="catalog-content-toolbar">
@@ -61,9 +65,21 @@ export function CatalogToolbar({
       </div>
 
       <div className="catalog-toolbar-right">
+        <button
+          type="button"
+          className="catalog-advanced-toggle catalog-locate-btn"
+          aria-expanded={advancedSearchOpen}
+          aria-controls="catalog-advanced-search"
+          onClick={onToggleAdvancedSearch}
+        >
+          <SlidersHorizontal size={16} aria-hidden="true" />
+          <span>Tìm kiếm nâng cao</span>
+          <ChevronDown size={16} aria-hidden="true" />
+        </button>
         <div className="catalog-sort-wrapper">
           <Select
             className="catalog-sort-select"
+            popupMinWidth={240}
             aria-label="Sắp xếp sản phẩm"
             value={sortBy}
             onChange={(e) => onSortChange(e.target.value as SortOption)}

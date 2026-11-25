@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState, useSyncExternalStore } from 'react';
 import './chat.css';
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'next/navigation';
 import IconActionButton from '@/shared/components/IconActionButton';
 import RefreshRegion from '@/shared/components/RefreshRegion';
 import './styles/seller-messaging.css';
@@ -31,7 +32,37 @@ function subscribeInfoLayout(callback: () => void) {
 const compactInfoSnapshot = () => window.matchMedia('(max-width: 1400px)').matches;
 
 export function SellerChatSection({ session }: { session: Session }) {
+  const requestedChat = useSearchParams().get('chat');
+  return (
+    <SellerChatContent
+      key={`${session.id}:${requestedChat ?? ''}`}
+      session={session}
+      requestedChat={requestedChat}
+    />
+  );
+}
+
+function SellerChatContent({
+  session,
+  requestedChat,
+}: {
+  session: Session;
+  requestedChat: string | null;
+}) {
   const sellerId = session.sellerId;
+  const openedChat = useQuery({
+    queryKey: ['seller-opened-chat', sellerId, requestedChat],
+    enabled: Boolean(sellerId && requestedChat),
+    queryFn: async () => {
+      for (let number = 1; number <= 100000; number++) {
+        const result = await getSellerChats(sellerId!, number);
+        const match = result.items.find((chat) => chat.id === requestedChat);
+        if (match) return match;
+        if (!result.hasMore || !result.items.length) break;
+      }
+      throw new Error('Không tìm thấy hội thoại của đơn.');
+    },
+  });
 
   const [page, setPage] = useState(1);
   const [selectedChat, setSelectedChat] = useState<CustomerSellerChatItem | null>(null);
@@ -41,7 +72,9 @@ export function SellerChatSection({ session }: { session: Session }) {
     compactInfoSnapshot,
     serverSnapshot,
   );
-  const [viewMode, setViewMode] = useState<'list' | 'conversation'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'conversation'>(
+    requestedChat ? 'conversation' : 'list',
+  );
   const [showDetailsPanel, setShowDetailsPanel] = useState(false);
 
   const onRealtimeMessageRef = useRef<((msg: ChatMessageReceivedEvent) => void) | null>(null);
@@ -61,9 +94,11 @@ export function SellerChatSection({ session }: { session: Session }) {
 
   const activeChat = selectedChat
     ? (items.find((item) => item.id === selectedChat.id) ?? selectedChat)
-    : desktop
-      ? (items[0] ?? null)
-      : null;
+    : requestedChat
+      ? (openedChat.data ?? null)
+      : desktop
+        ? (items[0] ?? null)
+        : null;
   const activeChatId = activeChat?.id ?? null;
   const conversationVisible =
     (desktop || viewMode === 'conversation') && (!showDetailsPanel || !infoReplacesConversation);
@@ -171,7 +206,16 @@ export function SellerChatSection({ session }: { session: Session }) {
               if (!selectedChat && activeChat) setSelectedChat(activeChat);
             }}
           >
-            {activeChat ? (
+            {requestedChat && !activeChat && openedChat.isError ? (
+              <p role="alert">
+                Không mở được hội thoại.{' '}
+                <button type="button" onClick={() => void openedChat.refetch()}>
+                  Thử lại
+                </button>
+              </p>
+            ) : requestedChat && !activeChat && openedChat.isPending ? (
+              <p role="status">Đang mở hội thoại…</p>
+            ) : activeChat ? (
               <ConversationView
                 key={`${session.id}:${activeChat.id}`}
                 isActive={conversationVisible}

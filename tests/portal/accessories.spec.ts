@@ -93,7 +93,7 @@ for (const width of [390, 1440]) {
     await section.screenshot({ path: `.impeccable/review/seller-accessories-${width}.png` });
     await section.getByRole('button', { name: 'Xác nhận bổ sung' }).click();
     await expect(section.getByRole('status').filter({ hasText: 'Đã bổ sung 7' })).toBeFocused();
-    await expect(section.getByText('Tồn hiện tại:', { exact: false })).toContainText('7');
+    await expect(section.getByText('Số lượng trong kho:', { exact: false })).toContainText('7');
     await section.getByLabel('Số lượng bổ sung cho Thiệp hoa').fill('7');
     await section.getByRole('button', { name: 'Kiểm tra số lượng' }).click();
     await section.getByRole('button', { name: 'Xác nhận bổ sung' }).click();
@@ -103,7 +103,7 @@ for (const width of [390, 1440]) {
     await expect(section).toBeHidden();
     await page.getByRole('button', { name: 'Xem phụ kiện Thiệp hoa', exact: true }).click();
     await expect(section.getByRole('button', { name: 'Kiểm tra số lượng' })).toBeDisabled();
-    await expect(section.getByText('Tồn hiện tại:', { exact: false })).toContainText('14');
+    await expect(section.getByText('Số lượng trong kho:', { exact: false })).toContainText('14');
     expect(writes).toBe(2);
   });
 }

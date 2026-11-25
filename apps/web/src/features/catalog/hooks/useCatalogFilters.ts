@@ -62,7 +62,19 @@ export function useCatalogFilters(
   const setPreorderOnly = (value: boolean) => update('preorder', value ? '1' : '');
   const setProductRating = (value: RatingFilter) => update('productRating', value);
   const setShopRating = (value: RatingFilter) => update('shopRating', value);
-  const setFlowerFilter = (value: string) => update('flower', value);
+  const setFlowerFilter = (value: string) => {
+    const params = new URLSearchParams(window.location.search);
+    const tags = readCatalogTags(params.getAll('tag')).filter(
+      (tag) => getCatalogTagGroup(tag) !== 'flower',
+    );
+    params.delete('tag');
+    params.delete('page');
+    params.delete('occasion');
+    tags.forEach((tag) => params.append('tag', tag));
+    if (value === 'all') params.delete('flower');
+    else params.set('flower', value);
+    window.history.pushState(null, '', pathname + (params.size ? '?' + params.toString() : ''));
+  };
   const setShopFilter = (value: string) => update('shop', value);
   const setKioskFilter = (value: string) => update('kiosk', value);
   const setAvailabilityFilter = (value: AvailabilityFilter) => update('mode', value);
@@ -73,6 +85,7 @@ export function useCatalogFilters(
     params.delete('tag');
     params.delete('page');
     const selected = readCatalogTags(tags);
+    if (selected.some((tag) => getCatalogTagGroup(tag) === 'flower')) params.delete('flower');
     if (replaceSearch) {
       params.delete('search');
       setDraftState({ search: '', value: '' });

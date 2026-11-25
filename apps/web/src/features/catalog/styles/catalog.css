@@ -8,14 +8,15 @@
 @import './customer-journey.css';
 
 @import './product-journey.css';
+@import './shop-storefront.css';
 
 /* Image-led catalog, while keeping purchase actions reachable on every device. */
 .flower-shop-page:not(.flower-detail-page) .flower-card {
   position: relative;
-  border: 0;
-  border-radius: 0;
-  overflow: visible;
-  background: transparent;
+  border: 1px solid #e3eae1;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
   box-shadow: none;
 }
 .flower-shop-page:not(.flower-detail-page) .flower-card:hover,
@@ -26,9 +27,9 @@
 .flower-shop-page:not(.flower-detail-page) .flower-card-media-wrap {
   position: relative;
   aspect-ratio: 3 / 4;
-  border-radius: 10px;
+  border-radius: 0;
   background: #f7f8f6;
-  border: 1px solid #eaf0e8;
+  border: 0;
   overflow: hidden;
   transition:
     box-shadow 0.25s ease,
@@ -38,7 +39,7 @@
 .flower-shop-page:not(.flower-detail-page)
   .flower-card:has(:focus-visible)
   .flower-card-media-wrap {
-  box-shadow: 0 10px 28px -6px rgba(24, 62, 43, 0.16);
+  box-shadow: none;
 }
 .flower-shop-page:not(.flower-detail-page) .flower-card-media {
   aspect-ratio: 3 / 4;
@@ -69,7 +70,7 @@
   opacity: 1;
 }
 .flower-shop-page:not(.flower-detail-page) .flower-card-body {
-  padding: 0.75rem 0 0;
+  padding: 14px;
 }
 .flower-shop-page:not(.flower-detail-page) .flower-card-title {
   font-family:
@@ -244,8 +245,8 @@
     display: contents;
   }
   .flower-shop-page:not(.flower-detail-page) .flower-card-media {
-    border-radius: 10px;
-    border: 1px solid #eaf0e8;
+    border-radius: 0;
+    border: 0;
     background: #f7f8f6;
     aspect-ratio: 3 / 4;
     order: 1;
@@ -253,6 +254,7 @@
   .flower-shop-page:not(.flower-detail-page) .flower-card-body {
     order: 2;
     flex: 1;
+    padding: 12px;
   }
   .flower-shop-page:not(.flower-detail-page) .flower-card-seller-row {
     flex-wrap: wrap;
@@ -265,7 +267,8 @@
     pointer-events: auto;
     flex-direction: row;
     flex-wrap: nowrap;
-    margin-top: 0.4rem;
+    margin: 0;
+    padding: 0 12px 12px;
     gap: 0.35rem;
   }
   .flower-shop-page:not(.flower-detail-page) .flower-card-select-btn.button {

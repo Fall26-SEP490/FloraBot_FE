@@ -23,7 +23,10 @@ export default function StorefrontFlowers() {
   const [failedPhotos, setFailedPhotos] = useState<Set<string>>(() => new Set());
   const catalog = useQuery({
     queryKey: ['landing-catalog-preview'],
-    queryFn: async () => uniqueCatalogCards(await loadCatalog(fetchLandingCatalog)),
+    queryFn: async () =>
+      uniqueCatalogCards(
+        (await loadCatalog(fetchLandingCatalog)).filter((item) => !isPreorderSoldOut(item)),
+      ),
   });
   const items = catalog.data ?? [];
   const groups = [

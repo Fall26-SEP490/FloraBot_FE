@@ -19,7 +19,7 @@ import { logoutSession, queryClient, sessionQuery } from '@/shared/lib/api';
 
 const navigation = [
   ['/', 'Trang chủ', 'Trang chủ', Store],
-  ['/dat-hoa', 'Sản phẩm hoa', 'Sản phẩm', Flower2],
+  ['/dat-hoa', 'Hoa đặt trước', 'Hoa đặt trước', Flower2],
   ['/huong-dan-dat-hoa', 'Cách đặt & nhận hoa', 'Hướng dẫn', ClipboardList],
   ['/tim-kiosk', 'Vị trí tủ', 'Vị trí tủ', MapPin],
 ] as const;
@@ -317,7 +317,7 @@ const SiteFooter = memo(function SiteFooter() {
               Về FloraBot
             </Link>
             <Link href="/dat-hoa" prefetch={false}>
-              Sản phẩm hoa
+              Hoa đặt trước
             </Link>
             <Link href="/tim-kiosk" prefetch={false}>
               Vị trí tủ

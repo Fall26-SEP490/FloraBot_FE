@@ -2,7 +2,6 @@ import Select from '@/shared/components/Select';
 import { RotateCcw, SlidersHorizontal, X } from '@florabot/ui';
 import {
   DEFAULT_PRICE_FILTERS,
-  PREORDER_FILTER_LABEL,
   PRICE_FILTERS,
   RATING_FILTERS,
   RATING_FILTER_IDS,
@@ -17,6 +16,7 @@ interface CatalogSidebarProps {
   mobileFiltersOpen: boolean;
   onClose: () => void;
   totalRawItems: number;
+  shopOnly?: boolean;
 }
 
 export function CatalogSidebar({
@@ -24,6 +24,7 @@ export function CatalogSidebar({
   mobileFiltersOpen,
   onClose,
   totalRawItems,
+  shopOnly = false,
 }: CatalogSidebarProps) {
   const {
     advancedTags,
@@ -31,11 +32,9 @@ export function CatalogSidebar({
     availabilityFilter,
     hasActiveFilters,
     priceFilter,
-    preorderOnly,
     resetFilters,
     setAvailabilityFilter,
     setPriceFilter,
-    setPreorderOnly,
     setShopFilter,
     shopFilter,
     counts: {
@@ -43,11 +42,15 @@ export function CatalogSidebar({
       availableShops,
       flowerCounts,
       occasions,
-      preorderAvailableCount,
       priceCounts,
       shopCounts,
     },
   } = filters;
+  const selectedFlowerTags = advancedTags.filter((tag) => tag.startsWith('flower:'));
+  const selectedFlower =
+    selectedFlowerTags.length > 1
+      ? 'multiple'
+      : (selectedFlowerTags[0]?.slice('flower:'.length) ?? filters.flowerFilter);
 
   const visiblePriceFilters = DEFAULT_PRICE_FILTERS.includes(priceFilter)
     ? DEFAULT_PRICE_FILTERS
@@ -171,31 +174,25 @@ export function CatalogSidebar({
       </div>
 
       <div className="catalog-sidebar-scroll-body">
-        {(availabilityCounts.custom > 0 || preorderOnly) && (
-          <label className="catalog-filter-option catalog-preorder-filter">
-            <input
-              type="checkbox"
-              checked={preorderOnly}
-              onChange={(event) => setPreorderOnly(event.target.checked)}
-            />
-            <span className="catalog-option-text">{PREORDER_FILTER_LABEL}</span>
-            <span className="catalog-option-count" aria-hidden="true">
-              {preorderAvailableCount}
-            </span>
-          </label>
-        )}
         <label className="catalog-filter-field">
           Loại hoa
           <Select
-            value={filters.flowerFilter}
+            value={selectedFlower}
             onChange={(event) => filters.setFlowerFilter(event.target.value)}
           >
             <option value="all">Tất cả loại hoa</option>
-            {filters.flowerFilter !== 'all' && !flowerCounts[filters.flowerFilter] && (
-              <option value={filters.flowerFilter} hidden>
-                {flowerTags[filters.flowerFilter as keyof typeof flowerTags]}
+            {selectedFlower === 'multiple' && (
+              <option value="multiple" disabled>
+                {selectedFlowerTags.length} loại hoa đã chọn
               </option>
             )}
+            {selectedFlower !== 'all' &&
+              selectedFlower !== 'multiple' &&
+              !flowerCounts[selectedFlower] && (
+                <option value={selectedFlower}>
+                  {flowerTags[selectedFlower as keyof typeof flowerTags]} · 0 mẫu
+                </option>
+              )}
             {Object.entries(flowerTags)
               .filter(([code]) => (flowerCounts[code] ?? 0) > 0)
               .map(([code, label]) => (
@@ -218,18 +215,23 @@ export function CatalogSidebar({
             ['Đánh giá sản phẩm', filters.productRating, filters.setProductRating],
             ['Đánh giá shop', filters.shopRating, filters.setShopRating],
           ] as const
-        ).map(([label, value, select]) => (
-          <label key={label} className="catalog-filter-field">
-            {label}
-            <Select value={value} onChange={(event) => select(event.target.value as RatingFilter)}>
-              {RATING_FILTER_IDS.map((id) => (
-                <option key={id} value={id}>
-                  {RATING_FILTERS[id]}
-                </option>
-              ))}
-            </Select>
-          </label>
-        ))}
+        )
+          .filter(([label]) => !shopOnly || label !== 'Đánh giá shop')
+          .map(([label, value, select]) => (
+            <label key={label} className="catalog-filter-field">
+              {label}
+              <Select
+                value={value}
+                onChange={(event) => select(event.target.value as RatingFilter)}
+              >
+                {RATING_FILTER_IDS.map((id) => (
+                  <option key={id} value={id}>
+                    {RATING_FILTERS[id]}
+                  </option>
+                ))}
+              </Select>
+            </label>
+          ))}
         {occasionOptions.length > 0 && (
           <CatalogFilterGroup title="Dịp tặng" options={occasionOptions} multiple />
         )}

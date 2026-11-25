@@ -1,4 +1,3 @@
-import { ChevronDown, SlidersHorizontal } from '@florabot/ui';
 import { useState } from 'react';
 import type { getCatalogTagGroups } from '../catalog.tags';
 
@@ -22,14 +21,11 @@ export function CatalogAdvancedSearch({
   return (
     <details
       className="catalog-advanced-search"
+      id="catalog-advanced-search"
       open={open}
       onToggle={(event) => onOpenChange(event.currentTarget.open)}
     >
-      <summary>
-        <SlidersHorizontal size={16} aria-hidden="true" />
-        Tìm kiếm nâng cao
-        <ChevronDown size={16} aria-hidden="true" />
-      </summary>
+      <summary style={{ display: 'none' }}>Tìm kiếm nâng cao</summary>
       <form
         className="catalog-advanced-form"
         onSubmit={(event) => {

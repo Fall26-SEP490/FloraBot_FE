@@ -738,11 +738,32 @@ body:has(.customer-kiosk-page) {
 .customer-kiosk-page .customer-filter-chips,
 .customer-kiosk-page .customer-quick-areas {
   display: flex;
-  flex-wrap: nowrap;
-  overflow-x: auto;
+  flex-wrap: wrap;
   gap: 0.45rem;
-  padding: 2px 0.75rem 4px 2px;
+  padding: 2px 0;
   scrollbar-width: none;
+}
+
+.customer-kiosk-page .customer-filter-chips {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.customer-kiosk-page .customer-filter-drawer-header {
+  justify-content: flex-end;
+}
+
+.customer-kiosk-page .customer-filter-drawer .customer-btn-reset-filters {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid #f3b7b2;
+  border-radius: 8px;
+  color: #b42318;
+  background: #fff;
 }
 
 .customer-kiosk-page .customer-filter-chips::-webkit-scrollbar,
@@ -753,22 +774,23 @@ body:has(.customer-kiosk-page) {
 .customer-kiosk-page .customer-chip-btn,
 .customer-kiosk-page .customer-area-pill {
   min-height: 32px;
-  height: 32px;
-  padding: 0 0.85rem;
+  height: auto;
+  padding: 0.45rem 0.7rem;
   font-size: 0.78rem;
   font-weight: 600;
-  border-radius: 999px;
+  border-radius: 8px;
   border: 1px solid #e2ece5;
   background: #f8faf8;
   color: #334155;
   cursor: pointer;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
-  line-height: 1;
+  line-height: 1.4;
   box-sizing: border-box;
   transition: all 0.15s ease;
 }
@@ -785,7 +807,7 @@ body:has(.customer-kiosk-page) {
   background: #3d7a47;
   border-color: #3d7a47;
   color: #ffffff;
-  box-shadow: 0 2px 6px rgba(61, 122, 71, 0.22);
+  box-shadow: none;
 }
 
 /* Kept in DOM for tests, visually hidden to avoid redundancy */

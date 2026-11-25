@@ -57,21 +57,11 @@ export function fieldValidationMessage(field: Field): string {
 
 /** Shared native constraint feedback; business validators keep handling their own rules. */
 export function installFormValidation(root: HTMLElement): () => void {
-  const forms = new Map<HTMLFormElement, boolean>();
-  function prepareForms() {
-    for (const form of root.querySelectorAll('form')) {
-      if (!forms.has(form)) forms.set(form, form.noValidate);
-      form.noValidate = true;
-    }
-  }
-  prepareForms();
+  // Forms may still be hydrating inside streamed route boundaries. Do not mutate
+  // their validation attributes; handle native invalid events and submit instead.
   const observer = new MutationObserver(() => {
-    prepareForms();
     for (const field of messages.keys()) {
       if (!root.contains(field)) clear(field);
-    }
-    for (const form of forms.keys()) {
-      if (!root.contains(form)) forms.delete(form);
     }
   });
   observer.observe(root, { childList: true, subtree: true });
@@ -142,6 +132,20 @@ export function installFormValidation(root: HTMLElement): () => void {
     if (!isField(event.target)) return;
     event.preventDefault();
     show(event.target, fieldValidationMessage(event.target));
+    if (!firstInvalid) firstInvalid = event.target;
+    if (!invalidFrame)
+      invalidFrame = requestAnimationFrame(() => {
+        const field = firstInvalid;
+        firstInvalid = undefined;
+        invalidFrame = 0;
+        if (!field || !root.contains(field)) return;
+        const focus =
+          field
+            .closest('[data-vietnam-date], [data-custom-select]')
+            ?.querySelector<HTMLElement>('button') ?? field;
+        focus.focus({ preventScroll: true });
+        focus.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      });
   }
   function submit(event: Event) {
     if (!(event.target instanceof HTMLFormElement)) return;
@@ -173,13 +177,15 @@ export function installFormValidation(root: HTMLElement): () => void {
   function edit(event: Event) {
     if (isField(event.target)) clear(event.target);
   }
+  let firstInvalid: Field | undefined;
+  let invalidFrame = 0;
   root.addEventListener('invalid', invalid, true);
   root.addEventListener('submit', submit, true);
   root.addEventListener('input', edit, true);
   root.addEventListener('change', edit, true);
   return () => {
     observer.disconnect();
-    for (const [form, previous] of forms) form.noValidate = previous;
+    cancelAnimationFrame(invalidFrame);
     root.removeEventListener('invalid', invalid, true);
     root.removeEventListener('submit', submit, true);
     root.removeEventListener('input', edit, true);

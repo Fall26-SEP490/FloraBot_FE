@@ -174,81 +174,71 @@ function Restock({
           closeDisabled={pending || crudBusy}
         >
           <div className={styles.editor}>
-            <div className="accessory-card-header">
-              <h3>{item.name}</h3>
-              <div className="accessory-meta-pills">
-                <span
-                  className="accessory-stock-pill"
-                  data-empty={Number(item.stockQuantity) === 0}
-                >
-                  Tồn hiện tại: <strong>{item.stockQuantity}</strong>
+            <div className={styles.accessorySummary}>
+              <p className={styles.stockQuantityField}>
+                Số lượng trong kho: <strong>{item.stockQuantity}</strong>
+              </p>
+
+              <p className="accessory-status-strip">
+                <span className="accessory-pill" data-active={item.status === 'ACTIVE'}>
+                  {item.status === 'ACTIVE' ? 'Phụ kiện đang bật bán' : 'Phụ kiện đang tắt bán'}
                 </span>
-                <span className="accessory-price-pill">
-                  {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(
-                    Number(item.price),
-                  )}
-                </span>
-              </div>
+              </p>
             </div>
 
-            <p className="accessory-status-strip">
-              <span className="accessory-pill" data-active={item.status === 'ACTIVE'}>
-                {item.status === 'ACTIVE' ? 'Phụ kiện đang bật bán' : 'Phụ kiện đang tắt bán'}
-              </span>
-            </p>
-
-            <div className="accessory-edit-disclosure">
-              <form className="accessory-restock-box" onSubmit={(e) => void saveMetadata(e)}>
-                <div className="accessory-restock-row">
-                  <label htmlFor={`accessory-name-${item.id}`}>
-                    Tên phụ kiện
-                    <input
-                      id={`accessory-name-${item.id}`}
-                      value={editName}
-                      maxLength={120}
-                      disabled={crudBusy}
-                      onChange={(e) => setEditName(e.target.value)}
-                    />
-                  </label>
-                  <label htmlFor={`accessory-price-${item.id}`}>
-                    Giá bán (VND)
-                    <input
-                      id={`accessory-price-${item.id}`}
-                      type="number"
-                      min={1}
-                      step={1}
-                      value={editPrice}
-                      disabled={crudBusy}
-                      onChange={(e) => setEditPrice(e.target.value)}
-                    />
-                  </label>
-                </div>
-                <div className="stock-actions" style={{ marginTop: '0.5rem' }}>
-                  <Button type="submit" disabled={crudBusy}>
-                    {crudBusy ? 'Đang lưu…' : 'Lưu phụ kiện'}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
+            <form className="accessory-restock-box" onSubmit={(e) => void saveMetadata(e)}>
+              <h3 className={styles.accessorySectionTitle}>Thông tin phụ kiện</h3>
+              <div className="accessory-restock-row">
+                <label htmlFor={`accessory-name-${item.id}`}>
+                  Tên phụ kiện
+                  <input
+                    id={`accessory-name-${item.id}`}
+                    value={editName}
+                    maxLength={120}
                     disabled={crudBusy}
-                    onClick={() => void toggleStatus()}
-                  >
-                    {item.status === 'ACTIVE' ? 'Tắt bán phụ kiện' : 'Bật bán phụ kiện'}
-                  </Button>
-                </div>
-                {(crudError || crudNotice) && (
-                  <p
-                    role={crudError ? 'alert' : 'status'}
-                    className={crudError ? 'error' : undefined}
-                  >
-                    {crudError || crudNotice}
-                  </p>
-                )}
-              </form>
-            </div>
+                    onChange={(e) => setEditName(e.target.value)}
+                  />
+                </label>
+                <label htmlFor={`accessory-price-${item.id}`}>
+                  Giá bán (VND)
+                  <input
+                    id={`accessory-price-${item.id}`}
+                    type="number"
+                    min={1}
+                    step={1}
+                    value={editPrice}
+                    disabled={crudBusy}
+                    onChange={(e) => setEditPrice(e.target.value)}
+                  />
+                </label>
+              </div>
+              <div className="stock-actions">
+                <Button type="submit" disabled={crudBusy}>
+                  {crudBusy ? 'Đang lưu…' : 'Lưu phụ kiện'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={crudBusy}
+                  onClick={() => void toggleStatus()}
+                >
+                  {item.status === 'ACTIVE' ? 'Tắt bán phụ kiện' : 'Bật bán phụ kiện'}
+                </Button>
+              </div>
+              {(crudError || crudNotice) && (
+                <p
+                  role={crudError ? 'alert' : 'status'}
+                  className={crudError ? 'error' : undefined}
+                >
+                  {crudError || crudNotice}
+                </p>
+              )}
+            </form>
+
+            <div className="accessory-edit-disclosure"></div>
 
             <form
-              className="accessory-restock-box"
+              className={`accessory-restock-box ${styles.stockSection}`}
               noValidate
               onSubmit={(event) => {
                 event.preventDefault();
@@ -270,6 +260,10 @@ function Restock({
                   <input
                     id={`accessory-${item.id}`}
                     ref={input}
+                    type="number"
+                    min={1}
+                    max={2147483647}
+                    step={1}
                     inputMode="numeric"
                     autoComplete="off"
                     placeholder="Nhập số lượng..."
@@ -283,6 +277,11 @@ function Restock({
                     Kiểm tra số lượng
                   </Button>
                 </div>
+              )}
+              {review === undefined && valid && (
+                <p className={styles.stockPreview}>
+                  Tồn sau khi nhập: <strong>{Number(item.stockQuantity) + qty}</strong>
+                </p>
               )}
               {review !== undefined && (
                 <div ref={reviewPanel} tabIndex={-1} className="accessory-review-panel">

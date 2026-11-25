@@ -3,7 +3,14 @@ import { Button, MapPin, MessageSquare, Star, Store } from '@florabot/ui';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import type { CatalogItem } from '../catalog.types';
-import { canOrderOnWeb, formatPrice, isPreorder, isWalkIn, purchaseLabel } from '../catalog.utils';
+import {
+  canOrderOnWeb,
+  formatPrice,
+  isPreorder,
+  isPreorderSoldOut,
+  isWalkIn,
+  purchaseLabel,
+} from '../catalog.utils';
 import {
   PRODUCT_REVIEWS_STALE_TIME,
   productReviewsQuery,
@@ -15,6 +22,7 @@ const distanceNumber = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 1
 
 interface FlowerCardProps {
   catalogHref?: string;
+  hideShopIdentity?: boolean;
   item: CatalogItem;
   distanceKm?: number;
   openingChatId: string | null;
@@ -29,6 +37,7 @@ export function FlowerCard({
   onSelect,
   onOpenChat,
   catalogHref,
+  hideShopIdentity = false,
 }: FlowerCardProps) {
   const [failedPhoto, setFailedPhoto] = useState<string | null>(null);
   const illustrative = !item.photo || failedPhoto === item.photo;
@@ -80,23 +89,25 @@ export function FlowerCard({
             }}
           />
           {illustrative && <span className="flower-card-illustration">Ảnh minh họa</span>}
-          <div className="flower-card-badges">
-            <span
-              className={`flower-badge ${walkIn ? 'flower-badge-stock' : 'flower-badge-custom'}`}
-            >
-              {purchaseLabel(item)}
-            </span>
-          </div>
+          {(!preorder || isPreorderSoldOut(item)) && (
+            <div className="flower-card-badges">
+              <span
+                className={`flower-badge ${walkIn ? 'flower-badge-stock' : 'flower-badge-custom'}`}
+              >
+                {purchaseLabel(item)}
+              </span>
+            </div>
+          )}
         </Link>
 
         <div className="flower-card-actions">
           {canOrderOnWeb(item) && (
             <Button
               className="flower-card-select-btn"
-              aria-label="Yêu cầu báo giá"
+              aria-label="Đặt trước"
               onClick={() => onSelect(item)}
             >
-              Báo giá
+              Đặt trước
             </Button>
           )}
           {walkIn && (
@@ -144,39 +155,43 @@ export function FlowerCard({
           </div>
         </div>
 
-        <div className="flower-card-meta">
-          <div className="flower-card-seller-row">
-            <span className="flower-meta-item" title={item.shopName}>
-              <Store size={14} aria-hidden="true" />
-              <span>{item.shopName}</span>
-            </span>
-            {distance !== null && (
-              <span
-                className="flower-meta-item flower-card-distance"
-                title="Khoảng cách đường chim bay đến kiosk nhận hoa"
-              >
-                <MapPin size={13} aria-hidden="true" />
-                <span className="sr-only">Cách kiosk khoảng </span>
-                <span>{distance}</span>
+        {(!hideShopIdentity || distance !== null || !preorder) && (
+          <div className="flower-card-meta">
+            <div className="flower-card-seller-row">
+              {!hideShopIdentity && (
+                <span className="flower-meta-item" title={item.shopName}>
+                  <Store size={14} aria-hidden="true" />
+                  <span>{item.shopName}</span>
+                </span>
+              )}
+              {distance !== null && (
+                <span
+                  className="flower-meta-item flower-card-distance"
+                  title="Khoảng cách đường chim bay đến kiosk nhận hoa"
+                >
+                  <MapPin size={13} aria-hidden="true" />
+                  <span className="sr-only">Cách kiosk khoảng </span>
+                  <span>{distance}</span>
+                </span>
+              )}
+            </div>
+            {!hideShopIdentity && shopRating && (
+              <div className="flower-card-shop-rating">
+                <Star size={14} aria-hidden="true" />
+                <span>Điểm shop</span>
+                <strong>{ratingNumber.format(shopRating.average)}/5</strong>
+                <span>({shopRating.count.toLocaleString('vi-VN')} đánh giá)</span>
+              </div>
+            )}
+            {!preorder && item.kioskName && (
+              <span className="flower-meta-item" title={item.kioskName}>
+                <MapPin size={14} aria-hidden="true" />
+                <span>{item.kioskName}</span>
               </span>
             )}
+            {walkIn && item.address && <span className="flower-meta-item">{item.address}</span>}
           </div>
-          {shopRating && (
-            <div className="flower-card-shop-rating">
-              <Star size={14} aria-hidden="true" />
-              <span>Điểm shop</span>
-              <strong>{ratingNumber.format(shopRating.average)}/5</strong>
-              <span>({shopRating.count.toLocaleString('vi-VN')} đánh giá)</span>
-            </div>
-          )}
-          {!preorder && item.kioskName && (
-            <span className="flower-meta-item" title={item.kioskName}>
-              <MapPin size={14} aria-hidden="true" />
-              <span>{item.kioskName}</span>
-            </span>
-          )}
-          {walkIn && item.address && <span className="flower-meta-item">{item.address}</span>}
-        </div>
+        )}
       </div>
     </li>
   );

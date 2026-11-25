@@ -137,10 +137,6 @@ export function ProductCreateForm({
       aria-label="Thêm mẫu hoa mới"
     >
       <h3 className="sr-only">Thêm mẫu hoa mới</h3>
-      <div className="product-form-badge-strip">
-        <span className="product-badge-pill">Bản mẫu</span>
-        <span className="product-badge-note">Thêm ảnh và bật bán sau khi tạo.</span>
-      </div>
 
       <div>
         <div className="form-field">

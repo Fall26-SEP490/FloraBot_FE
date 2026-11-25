@@ -1,6 +1,5 @@
 'use client';
 
-import Select from '@/shared/components/Select';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import detailStyles from '../styles/product-detail.module.css';
@@ -10,11 +9,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import type { z } from 'zod';
 import { Button } from '@florabot/ui';
 import { queryClient } from '@/shared/lib/api';
-import { Modal } from '../../../shared/components/Modal';
+import { Modal, ConfirmDialog } from '../../../shared/components/Modal';
 import { updateProductPrice, setProductStatus } from '../product.api';
 import { priceSchema } from '../product.schemas';
 import type { Product } from '../product.types';
-import { statusNames } from '../product.types';
 import { errorText } from '../product.utils';
 import ProductPhotos from './ProductPhotos';
 import { ProductMetadataEditor } from './ProductCatalogForm';
@@ -32,7 +30,9 @@ export default function ProductEditor({
     resolver: zodResolver(priceSchema),
     defaultValues: { price: Number(product.price) },
   });
-  const [status, setStatus] = useState(product.status);
+  const [confirmStatus, setConfirmStatus] = useState(false);
+  const nextStatus = product.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+  const statusAction = product.status === 'ACTIVE' ? 'Ngừng bán mẫu hoa' : 'Bật bán mẫu hoa';
   const [showMetadataEditor, setShowMetadataEditor] = useState(false);
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['products', sellerId] });
 
@@ -42,7 +42,7 @@ export default function ProductEditor({
   });
 
   const availability = useMutation({
-    mutationFn: () => setProductStatus(product.id, status),
+    mutationFn: (status: string) => setProductStatus(product.id, status),
     onSuccess: refresh,
   });
 
@@ -167,33 +167,43 @@ export default function ProductEditor({
             <form
               onSubmit={(event) => {
                 event.preventDefault();
-                availability.mutate();
+                setConfirmStatus(true);
               }}
               aria-label={`Trạng thái ${product.name}`}
               className="product-inline-form"
             >
-              <label htmlFor={`status-${product.id}`}>Trạng thái kinh doanh</label>
               <div className="field-action">
-                <Select
-                  id={`status-${product.id}`}
-                  value={status}
-                  onChange={(event) => setStatus(event.target.value)}
-                  disabled={!canEdit || availability.isPending}
-                >
-                  {Object.entries(statusNames).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </Select>
                 <Button
                   type="submit"
                   variant="outline"
                   disabled={!canEdit || availability.isPending}
+                  className={detailStyles.statusAction}
+                  data-stop={product.status === 'ACTIVE'}
                 >
-                  {availability.isPending ? 'Đang lưu…' : 'Lưu trạng thái'}
+                  {availability.isPending ? 'Đang lưu…' : statusAction}
                 </Button>
               </div>
+              {confirmStatus &&
+                createPortal(
+                  <div className={detailStyles.statusConfirmation}>
+                    <ConfirmDialog
+                      open
+                      title={`${statusAction}?`}
+                      description={product.name}
+                      confirmLabel={statusAction}
+                      pending={availability.isPending}
+                      variant={product.status === 'ACTIVE' ? 'danger' : 'primary'}
+                      onCancel={() => setConfirmStatus(false)}
+                      onConfirm={() =>
+                        availability.mutate(nextStatus, {
+                          onSuccess: () => setConfirmStatus(false),
+                          onError: () => setConfirmStatus(false),
+                        })
+                      }
+                    />
+                  </div>,
+                  document.body,
+                )}
               {availability.isSuccess && (
                 <p role="status" className="product-form-success">
                   Đã cập nhật trạng thái sản phẩm.

@@ -5,6 +5,7 @@ import { FlowerCard } from './FlowerCard';
 
 interface CatalogGridProps {
   catalogHref?: string;
+  hideShopIdentity?: boolean;
   items: CatalogItem[];
   distances?: ReadonlyMap<string, number>;
   page: number;
@@ -20,6 +21,7 @@ interface CatalogGridProps {
 
 export function CatalogGrid({
   catalogHref,
+  hideShopIdentity,
   items,
   distances,
   page,
@@ -41,6 +43,7 @@ export function CatalogGrid({
             item={item}
             distanceKm={distances?.get(item.kioskId)}
             catalogHref={catalogHref}
+            hideShopIdentity={hideShopIdentity}
             openingChatId={openingChatId}
             onSelect={onSelect}
             onOpenChat={onOpenChat}

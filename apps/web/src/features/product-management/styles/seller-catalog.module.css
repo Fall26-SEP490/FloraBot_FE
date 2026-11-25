@@ -433,7 +433,36 @@
   }
 }
 
-/* The accessory editor uses one modal surface with separated form sections. */
+.accessorySummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.stockQuantityField {
+  margin: 0;
+  font-size: 14px;
+  color: #52665b;
+}
+.stockQuantityField strong {
+  color: #174b35;
+}
+.accessorySectionTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #183e2b;
+}
+.stockPreview {
+  font-size: 13px;
+  color: #52665b;
+}
+.stockPreview strong {
+  color: #174b35;
+}
+
+/* Accessory forms share the modal's padding and compact control spacing. */
 :global(
     .workspace-portal-root.platform-workspace[data-platform-role='seller']
       .seller-workspace
@@ -441,14 +470,36 @@
   )
   .accessoryModal
   .editor.editor {
-  padding: 20px;
+  padding: 0;
+  display: grid;
+  gap: 20px;
+  & > form,
   & :global(.accessory-restock-box) {
-    padding: 20px 0 0;
-    margin: 20px 0 0;
+    display: grid;
+    gap: 14px;
+  }
+  & :global(.accessory-restock-box) {
+    padding: 0;
+    margin: 0;
     border: 0;
-    border-top: 1px solid #e1e8df;
     border-radius: 0;
     background: transparent;
+  }
+  & :global(.accessory-edit-disclosure) {
+    margin: 0;
+  }
+  & label {
+    margin: 0;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  & input {
+    height: 44px;
+    min-height: 44px;
+  }
+  & p {
+    margin: 0;
   }
   & :global(.accessory-meta-pills) {
     flex-wrap: wrap;
@@ -470,10 +521,27 @@
     white-space: nowrap;
   }
   & :global(.stock-actions) {
-    margin-top: 12px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    justify-content: flex-end;
+    align-items: center;
+  }
+  & :global(.stock-actions) > button {
+    min-height: 44px;
+    margin: 0;
+  }
+  & :global(.accessory-status-strip) {
+    margin: 0;
+  }
+  & :global(.accessory-restock-box).stockSection {
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    gap: 12px;
   }
   @media (max-width: 600px) {
-    padding: 16px;
+    padding: 0;
     & :global(.accessory-restock-row) > input,
     & :global(.accessory-restock-row) > button {
       flex-basis: 100%;

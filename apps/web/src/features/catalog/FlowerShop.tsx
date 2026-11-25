@@ -9,7 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { request, sessionQuery } from '@/shared/lib/api';
 import { MOCK_CATALOG_ITEMS } from '@/features/catalog/mocks/mockCatalog';
 import type { CatalogItem, CatalogResponse } from './catalog.types';
-import { canOrderOnWeb, matchesSearch } from './catalog.utils';
+import { canOrderOnWeb, isPreorderSoldOut, matchesSearch } from './catalog.utils';
 import { ArrowLeft, MapPin, Store, X } from '@florabot/ui';
 import { fetchPublicKiosks } from '../kiosk-location/kiosk-location.api';
 import { isValidLatitude, isValidLongitude } from '../kiosk-location/kiosk-location.utils';
@@ -67,7 +67,7 @@ export default function FlowerShop({ storefrontSellerId }: { storefrontSellerId?
     if (!catalog.data) return [];
     return storefrontSellerId
       ? catalog.data.filter((item) => item.sellerId === storefrontSellerId)
-      : catalog.data;
+      : catalog.data.filter((item) => !isPreorderSoldOut(item));
   }, [catalog.data, demoEnabled, storefrontSellerId]);
   const hasLiveItems = !demoEnabled && rawItems.length > 0;
   const shopProduct = storefrontSellerId ? rawItems[0] : undefined;
@@ -250,7 +250,10 @@ export default function FlowerShop({ storefrontSellerId }: { storefrontSellerId?
   }
 
   return (
-    <main id="main" className="flower-shop-page">
+    <main
+      id="main"
+      className={storefrontSellerId ? 'flower-shop-page catalog-shop-page' : 'flower-shop-page'}
+    >
       {storefrontSellerId && (
         <nav className="catalog-store-breadcrumb" aria-label="Đường dẫn cửa hàng">
           <Link className="flower-detail-back" href="/dat-hoa">
@@ -306,7 +309,7 @@ export default function FlowerShop({ storefrontSellerId }: { storefrontSellerId?
         ) : (
           <div className="catalog-header-left">
             <h1 id="catalog-hero-title" className="catalog-hero-title">
-              Sản phẩm hoa
+              Hoa đặt trước
             </h1>
             <p className="catalog-hero-desc">
               Khám phá hoa đặt trước và những bó hoa có sẵn tại kiosk.
@@ -354,13 +357,14 @@ export default function FlowerShop({ storefrontSellerId }: { storefrontSellerId?
           mobileFiltersOpen={dialog.mobileFiltersOpen}
           onClose={dialog.closeMobileFilters}
           totalRawItems={filters.totalCards}
+          shopOnly={Boolean(storefrontSellerId)}
         />
 
         <section className="catalog-main-content" aria-label="Danh sách sản phẩm">
           {storefrontSellerId && (
             <h2 className="catalog-store-products-title">Sản phẩm của shop</h2>
           )}
-          {(filters.displayedItems.length > 0 || filters.hasActiveFilters) && (
+          {
             <CatalogToolbar
               filterToggleRef={dialog.filterToggleRef}
               mobileFiltersOpen={dialog.mobileFiltersOpen}
@@ -381,9 +385,11 @@ export default function FlowerShop({ storefrontSellerId }: { storefrontSellerId?
                 else filters.setSortBy(value);
               }}
               locating={locating}
-              onLocate={locate}
+              onLocate={storefrontSellerId ? undefined : locate}
+              advancedSearchOpen={advancedSearchOpen}
+              onToggleAdvancedSearch={() => setAdvancedSearchOpen((current) => !current)}
             />
-          )}
+          }
 
           {locationStatusMessage && (
             <div
@@ -486,6 +492,7 @@ export default function FlowerShop({ storefrontSellerId }: { storefrontSellerId?
             filters.displayedItems.length > 0 && (
               <CatalogGrid
                 catalogHref={catalogHref}
+                hideShopIdentity={Boolean(storefrontSellerId)}
                 items={pageItems}
                 distances={
                   filters.sortBy === 'nearest' && directory.isSuccess ? distances : undefined

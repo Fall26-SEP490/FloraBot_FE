@@ -64,6 +64,7 @@ import { rememberPreorderPayment } from './payment-return';
 import ProductThumbnail from '../product-management/components/ProductThumbnail';
 import { CustomSelect } from '@/shared/components/CustomSelect';
 import SellerOrderDrawer from './SellerOrderDrawer';
+import SellerOrderChat from './SellerOrderChat';
 import VietnamDateInput from '@/shared/components/VietnamDateInput';
 import {
   displayVietnamDate,
@@ -164,9 +165,11 @@ function OrderActions({
   const [checking, setChecking] = useState(false);
   const sending = useRef(false);
   const [error, setError] = useState('');
+  const [chatError, setChatError] = useState('');
   const [notice, setNotice] = useState('');
   const [priceDraft, setPriceDraft] = useState<string | null>(null);
   const [quoteQuantities, setQuoteQuantities] = useState<Record<string, number>>({});
+  const [quantityDrafts, setQuantityDrafts] = useState<Record<string, string | undefined>>({});
   const requestedAccessories = row.requestedAccessories ?? [];
   const [unavailableQuote, setUnavailableQuote] = useState<WebOrder['quoteVersion'] | null>(null);
   const accessoryStockBlocked =
@@ -174,6 +177,9 @@ function OrderActions({
   const [note, setNote] = useState('');
   const [reject, setReject] = useState(false);
   const editingQuote = mode === 'seller' && action === 'quote' && !reject;
+  const accessoriesChanged = requestedAccessories.some(
+    (item) => (quoteQuantities[item.accessoryId] ?? 0) !== Number(item.quantity),
+  );
   const products = useQuery({
     queryKey: ['products', row.sellerId],
     queryFn: fetchProducts,
@@ -255,6 +261,7 @@ function OrderActions({
   const [fulfillStep, setFulfillStep] = useState<1 | 2>(1);
   const [confirm, setConfirm] = useState(false);
   function changeQuoteQuantity(accessoryId: string, quantity: number) {
+    setQuantityDrafts((current) => ({ ...current, [accessoryId]: undefined }));
     setQuoteQuantities((current) => ({ ...current, [accessoryId]: quantity }));
     setConfirm(false);
     setError('');
@@ -686,7 +693,11 @@ function OrderActions({
       {!action && mode !== 'admin' && (
         <div
           className={
-            mode === 'member' ? `stock-actions ${customerStyles.memberActionRow}` : 'stock-actions'
+            mode === 'member'
+              ? `stock-actions ${customerStyles.memberActionRow}`
+              : mode === 'seller'
+                ? `stock-actions ${styles.sellerActionRow}`
+                : 'stock-actions'
           }
         >
           {mode === 'member' && row.state === 'QUOTED' && !row.orderId && (
@@ -716,6 +727,9 @@ function OrderActions({
             >
               {busy ? 'Đang mở thanh toán…' : 'Thanh toán ngay'}
             </Button>
+          )}
+          {mode === 'seller' && row.kind === 'CUSTOM' && (
+            <SellerOrderChat sellerId={row.sellerId} requestId={row.id} onError={setChatError} />
           )}
           {mode === 'member' && role === 'CUSTOMER' && !uncertain && !showPickupChat && (
             <CustomerOrderChat
@@ -780,6 +794,7 @@ function OrderActions({
                     ]),
                   ),
                 );
+                setQuantityDrafts({});
                 setAction('quote');
                 setConfirm(false);
               }}
@@ -836,6 +851,11 @@ function OrderActions({
             </Button>
           )}
         </div>
+      )}
+      {chatError && (
+        <p role="alert" className={styles.chatFeedback}>
+          {chatError}
+        </p>
       )}
       {mode !== 'member' && row.payBefore && row.orderStatus === 'AWAITING_PAYMENT' && (
         <p>
@@ -1082,12 +1102,13 @@ function OrderActions({
                                       aria-label={`Số lượng xác nhận ${name}`}
                                       type="number"
                                       min={1}
+                                      step={1}
                                       max={Math.min(
                                         Number(quantity),
                                         available ?? Number(quantity),
                                       )}
-                                      step={1}
-                                      value={accepted}
+                                      required
+                                      value={quantityDrafts[accessoryId] ?? accepted}
                                       onChange={(event) => {
                                         const value = Number(event.target.value);
                                         if (
@@ -1101,7 +1122,17 @@ function OrderActions({
                                         ) {
                                           changeQuoteQuantity(accessoryId, value);
                                         }
+                                        setQuantityDrafts((current) => ({
+                                          ...current,
+                                          [accessoryId]: event.target.value,
+                                        }));
                                       }}
+                                      onBlur={() =>
+                                        setQuantityDrafts((current) => ({
+                                          ...current,
+                                          [accessoryId]: undefined,
+                                        }))
+                                      }
                                     />
                                   )}
                                   <Button
@@ -1133,6 +1164,25 @@ function OrderActions({
                           </details>
                         )}
                       </section>
+                    )}
+                    {accessoriesChanged && (
+                      <div className={styles.accessoryChangeNotice}>
+                        <p role="status">
+                          Phụ kiện đã thay đổi so với yêu cầu. Hãy trao đổi với khách trước khi gửi
+                          báo giá.
+                        </p>
+                        <SellerOrderChat
+                          sellerId={row.sellerId}
+                          requestId={row.id}
+                          onError={setChatError}
+                          preserveDraft
+                        />
+                        {chatError && (
+                          <p role="alert" className={styles.chatFeedback}>
+                            {chatError}
+                          </p>
+                        )}
+                      </div>
                     )}
                   </>
                 )}

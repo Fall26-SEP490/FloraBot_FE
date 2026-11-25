@@ -287,6 +287,24 @@
   text-align: left;
 }
 
+.catalog-advanced-search:not([open]) {
+  display: none;
+}
+
+.catalog-advanced-toggle[aria-expanded='true'] svg:last-child {
+  transform: rotate(180deg);
+}
+
+@media (max-width: 580px) {
+  .catalog-content-toolbar .catalog-advanced-toggle {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    justify-self: start;
+    height: 40px;
+    min-height: 40px;
+  }
+}
+
 .catalog-advanced-search > summary {
   display: flex;
   align-items: center;

@@ -42,6 +42,22 @@ async function mockCatalog(page: Page) {
 }
 
 for (const width of [390, 1440]) {
+  test(`Flower dropdown reflects advanced filters and clears them at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await mockCatalog(page);
+    await page.goto('/dat-hoa?tag=flower:sunflower');
+    if (width <= 960) await page.getByRole('button', { name: 'Bộ lọc', exact: true }).click();
+    const flower = page.getByRole('combobox', { name: 'Loại hoa', exact: true });
+    await expect(flower).toContainText('Hướng dương');
+    await flower.click();
+    await page.getByRole('option', { name: 'Tất cả loại hoa', exact: true }).click();
+    await expect(flower).toContainText('Tất cả loại hoa');
+    await expect(page).not.toHaveURL(/flower%3Asunflower|flower:sunflower/);
+    if (width <= 960) await page.getByRole('button', { name: 'Áp dụng bộ lọc' }).click();
+    await expect(page.locator('.flower-card')).toHaveCount(2);
+  });
   test(`Quick purchase, budget and occasion filters work together at ${width}px`, async ({
     page,
   }) => {

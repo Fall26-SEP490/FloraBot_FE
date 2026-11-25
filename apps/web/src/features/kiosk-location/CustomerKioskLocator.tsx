@@ -20,6 +20,7 @@ import {
   RotateCcw,
 } from '@florabot/ui';
 import CustomerKioskMap from './components/CustomerKioskMap';
+import IconActionButton from '@/shared/components/IconActionButton';
 import { fetchPublicKiosks } from './kiosk-location.api';
 import {
   isValidLatitude,
@@ -370,22 +371,18 @@ export default function CustomerKioskLocator() {
             {/* Expandable Filter Section matching FlowerShop layout */}
             {isFilterOpen && (
               <div id="customer-filter-drawer" className="customer-filter-drawer">
-                <div className="customer-filter-drawer-header">
-                  <span className="customer-filter-drawer-title">
-                    <SlidersHorizontal size={13} aria-hidden="true" />
-                    <span>Bộ lọc kiosk</span>
-                  </span>
-                  {hasActiveFilters && (
-                    <button
-                      type="button"
+                {hasActiveFilters && (
+                  <div className="customer-filter-drawer-header">
+                    <IconActionButton
+                      action="clear"
+                      label="Xóa bộ lọc kiosk"
                       className="customer-btn-reset-filters"
                       onClick={handleResetFilters}
                       title="Đặt lại toàn bộ bộ lọc"
-                    >
-                      Xóa tất cả
-                    </button>
-                  )}
-                </div>
+                      aria-label="Xóa bộ lọc kiosk"
+                    />
+                  </div>
+                )}
 
                 {/* Status Filter Pills */}
                 <div className="customer-filter-section customer-filter-status">
@@ -398,6 +395,7 @@ export default function CustomerKioskLocator() {
                     <button
                       type="button"
                       className={`customer-chip-btn ${statusFilter === 'ALL' ? 'is-active' : ''}`}
+                      aria-pressed={statusFilter === 'ALL'}
                       onClick={() => setStatusFilter('ALL')}
                     >
                       Tất cả <span className="customer-chip-count">({totalCount})</span>
@@ -405,6 +403,7 @@ export default function CustomerKioskLocator() {
                     <button
                       type="button"
                       className={`customer-chip-btn ${statusFilter === 'ACTIVE' ? 'is-active' : ''}`}
+                      aria-pressed={statusFilter === 'ACTIVE'}
                       onClick={() =>
                         setStatusFilter((prev) => (prev === 'ACTIVE' ? 'ALL' : 'ACTIVE'))
                       }
@@ -414,6 +413,7 @@ export default function CustomerKioskLocator() {
                     <button
                       type="button"
                       className={`customer-chip-btn ${statusFilter === 'MAINTENANCE' ? 'is-active' : ''}`}
+                      aria-pressed={statusFilter === 'MAINTENANCE'}
                       onClick={() =>
                         setStatusFilter((prev) => (prev === 'MAINTENANCE' ? 'ALL' : 'MAINTENANCE'))
                       }
@@ -423,6 +423,7 @@ export default function CustomerKioskLocator() {
                     <button
                       type="button"
                       className={`customer-chip-btn ${statusFilter === 'OFFLINE' ? 'is-active' : ''}`}
+                      aria-pressed={statusFilter === 'OFFLINE'}
                       onClick={() =>
                         setStatusFilter((prev) => (prev === 'OFFLINE' ? 'ALL' : 'OFFLINE'))
                       }
@@ -435,7 +436,7 @@ export default function CustomerKioskLocator() {
                 {/* Region / District Filter Pills */}
                 {availableRegions.length > 0 && (
                   <div className="customer-filter-section customer-filter-areas">
-                    <span className="customer-filter-label">Khu vực / Quận</span>
+                    <span className="customer-filter-label">Khu vực</span>
                     <div
                       className="customer-quick-areas"
                       role="group"

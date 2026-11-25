@@ -303,10 +303,44 @@
   border-top: 1px solid var(--order-line);
 }
 .sellerOrders .orderDrawer .sellerDetail .sellerCancel {
-  border-color: transparent;
-  background: transparent;
-  color: #9a3535;
+  border-color: #e3b5b5;
+  background: #fff;
+  color: #b42318;
   box-shadow: none;
+}
+
+.sellerOrders .orderDrawer .sellerDetail .sellerActionRow {
+  align-items: center;
+  justify-content: flex-start;
+  border-top: 0;
+  padding-top: 8px;
+  gap: 10px;
+}
+
+.sellerOrders .orderDrawer .sellerDetail .sellerActionRow > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  margin: 0;
+  padding: 9px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.sellerOrders .orderDrawer .sellerDetail .chatFeedback {
+  margin: 8px 0 0;
+  color: #b42318;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: left;
+}
+
+@media (max-width: 480px) {
+  .sellerOrders .orderDrawer .sellerDetail .sellerActionRow > button {
+    flex: 1 1 auto;
+  }
 }
 @media (max-width: 600px) {
   .sellerOrders .orderDrawer .sellerDetail > :global(.order-progress) {
@@ -1522,4 +1556,17 @@
       font-size: 16px;
     }
   }
+}
+
+.accessoryChangeNotice {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  margin-top: 12px;
+  color: #925b0a;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.accessoryChangeNotice p {
+  margin: 0;
 }

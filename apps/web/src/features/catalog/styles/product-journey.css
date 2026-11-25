@@ -190,24 +190,27 @@
 .flower-detail-shop-link {
   display: inline-flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 4px 8px;
+  flex-wrap: nowrap;
+  gap: 12px;
   min-height: 44px;
   max-width: 100%;
-  padding: 4px 9px;
-  border: 1px solid #dce6d7;
-  border-radius: 9px;
-  background: #f5f8f2;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: #f0f5ee;
   color: #174b35;
   text-decoration: none;
 }
+.flower-detail-shop-rating svg {
+  color: #ad6800;
+  fill: #ad6800;
+}
 .flower-detail-shop-link:hover,
 .flower-detail-shop-link:focus-visible {
-  background: #eaf3e5;
+  background: #e7f0e3;
 }
 .flower-detail-shop-link:hover strong {
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  text-decoration: none;
 }
 .flower-detail-shop-rating {
   display: inline-flex;
