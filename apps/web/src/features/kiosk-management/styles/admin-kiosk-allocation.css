@@ -283,3 +283,53 @@
   margin-bottom: 0;
   min-height: 44px;
 }
+
+/* Keep allocation states distinct from the shared neutral fallback. */
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  .admin-slots
+  .table-badge[data-state='ONLINE'] {
+  --role-status-bg: #e6f5eb;
+  --role-status-ink: #23653c;
+  --role-status-line: #bce0c9;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  .admin-slots
+  .table-badge[data-state='OFFLINE'] {
+  --role-status-bg: #fff3df;
+  --role-status-ink: #895415;
+  --role-status-line: #edd29f;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  .admin-slots
+  .table-badge[data-state='MAINTENANCE'] {
+  --role-status-bg: #eaf3ff;
+  --role-status-ink: #205a96;
+  --role-status-line: #c8ddf4;
+}
+.workspace-portal-root.platform-workspace[data-platform-role='admin']
+  .admin-slots
+  .table-badge[data-state='DISABLED'] {
+  --role-status-bg: #fceceb;
+  --role-status-ink: #953b34;
+  --role-status-line: #efc7c3;
+}
+.admin-slots .allocation-table .table-badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  flex: 0 0 6px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.admin-slots .allocation-table .allocation-unassigned {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border: 1px solid #ead7ac;
+  border-radius: 6px;
+  color: #7b5b22;
+  background: #fff8e8;
+  font-size: 11px;
+  line-height: 1.5;
+}
