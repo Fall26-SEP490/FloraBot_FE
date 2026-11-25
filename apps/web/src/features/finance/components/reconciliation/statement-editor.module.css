@@ -1,0 +1,70 @@
+.editor {
+  min-width: 0;
+}
+.editor > p {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: #58685e;
+}
+.sheet {
+  overflow-x: auto;
+  border: 1px solid #d5e2d9;
+  border-radius: 10px;
+}
+.sheet table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 12px;
+}
+.sheet th {
+  background: #eaf2ec;
+  text-align: left;
+  font-weight: 700;
+  color: #234735;
+}
+.sheet th,
+.sheet td {
+  padding: 10px;
+  border-bottom: 1px solid #e1e9e3;
+  vertical-align: middle;
+}
+.sheet tbody tr:last-child td {
+  border-bottom: 0;
+}
+.sheet th:first-child {
+  width: 42px;
+}
+.sheet th:nth-child(3) {
+  width: 30%;
+}
+.sheet th:last-child {
+  width: 54px;
+}
+.sheet td:first-child {
+  text-align: center;
+  color: #65766b;
+}
+.sheet input {
+  width: 100%;
+  min-width: 0;
+  height: 40px;
+  box-sizing: border-box;
+}
+.sheet td:last-child button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 34px;
+  min-width: 34px;
+  min-height: 34px;
+  padding: 6px;
+  border: 0;
+  color: #953b34;
+  background: transparent;
+}
+@media (max-width: 560px) {
+  .sheet table {
+    min-width: 480px;
+  }
+}

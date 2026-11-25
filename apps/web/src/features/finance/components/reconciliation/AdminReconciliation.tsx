@@ -24,16 +24,8 @@ const labels: Record<string, string> = {
   AMOUNT_MISMATCH: 'Số tiền chưa khớp',
 };
 
-function parseStatement(raw: string): Statement {
-  if (raw.length > 1_500_000) throw new Error('Sao kê quá lớn. Chỉ nhập tối đa 5.000 dòng.');
-  let value: unknown;
-  try {
-    value = JSON.parse(raw);
-  } catch {
-    throw new Error('Nội dung chưa đúng JSON. Dùng mẫu bên dưới và kiểm tra dấu ngoặc, dấu phẩy.');
-  }
-  if (!Array.isArray(value) || value.length > 5000)
-    throw new Error('Sao kê cần là mảng JSON, tối đa 5.000 dòng.');
+function parseStatement(value: Statement): Statement {
+  if (value.length > 5000) throw new Error('Chỉ nhập tối đa 5.000 giao dịch.');
   const totals = new Map<string, number>();
   for (const item of value as unknown[]) {
     if (
@@ -68,8 +60,6 @@ function parseStatement(raw: string): Statement {
 export default function AdminReconciliation() {
   const [date, setDate] = useState('');
   const [view, setView] = useState<'daily' | 'statement'>('daily');
-  const [raw, setRaw] = useState('');
-  const [inputMode, setInputMode] = useState<'rows' | 'json'>('rows');
   const [entries, setEntries] = useState<StatementEntry[]>([{ key: 0, txn: '', amount: '' }]);
   const nextEntry = useRef(1);
   const [review, setReview] = useState<Statement | null>(null);
@@ -82,7 +72,6 @@ export default function AdminReconciliation() {
   const epoch = useRef(0);
   const sending = useRef(false);
   const reviewHeading = useRef<HTMLHeadingElement>(null);
-  const input = useRef<HTMLTextAreaElement>(null);
   const dateInput = useRef<HTMLButtonElement>(null);
   useLayoutEffect(() => {
     if (review) reviewHeading.current?.focus();
@@ -111,7 +100,6 @@ export default function AdminReconciliation() {
   function clear() {
     epoch.current++;
     sending.current = false;
-    setRaw('');
     setEntries([{ key: 0, txn: '', amount: '' }]);
     setReview(null);
     setDaily(null);
@@ -122,11 +110,9 @@ export default function AdminReconciliation() {
     setNotice('Đã xóa dữ liệu đối soát khỏi màn hình.');
   }
   function focusStatement() {
-    if (inputMode === 'json') input.current?.focus();
-    else
-      document
-        .getElementById(entries[0] ? `statement-txn-${entries[0].key}` : 'statement-add')
-        ?.focus();
+    document
+      .getElementById(entries[0] ? `statement-txn-${entries[0].key}` : 'statement-add')
+      ?.focus();
   }
   function validDate() {
     let valid = false;
@@ -170,7 +156,6 @@ export default function AdminReconciliation() {
         if (version !== epoch.current) return;
         setGateway(result);
         setPage(0);
-        setRaw('');
         setEntries([{ key: 0, txn: '', amount: '' }]);
         setReview(null);
         setNotice(
@@ -323,98 +308,36 @@ export default function AdminReconciliation() {
           if (sending.current || !validDate()) return;
           try {
             setReview(
-              parseStatement(
-                inputMode === 'json'
-                  ? raw
-                  : JSON.stringify(
-                      entries.map(({ txn, amount }) => ({ txn, amount: Number(amount) })),
-                    ),
-              ),
+              parseStatement(entries.map(({ txn, amount }) => ({ txn, amount: Number(amount) }))),
             );
             setGateway(null);
             setError('');
             setNotice('');
           } catch (cause) {
             const message = cause instanceof Error ? cause.message : 'Kiểm tra lại sao kê.';
-            setError(
-              inputMode === 'rows'
-                ? message.replaceAll('txn', 'mã giao dịch').replaceAll('amount', 'số tiền')
-                : message,
-            );
+            setError(message.replaceAll('txn', 'mã giao dịch').replaceAll('amount', 'số tiền'));
             focusStatement();
           }
         }}
       >
-        <h3>Đối soát sao kê PAYOS</h3>
+        <h3>Sao kê PayOS</h3>
         {!review && (
           <>
-            <div className="admin-segmented" role="group" aria-label="Cách nhập sao kê">
-              <button
-                type="button"
-                disabled={busy}
-                aria-pressed={inputMode === 'rows'}
-                onClick={() => {
-                  setInputMode('rows');
-                  setError('');
-                }}
-              >
-                Nhập từng giao dịch
-              </button>
-              <button
-                type="button"
-                disabled={busy}
-                aria-pressed={inputMode === 'json'}
-                onClick={() => {
-                  setInputMode('json');
-                  setError('');
-                }}
-              >
-                Dán dữ liệu JSON
-              </button>
-            </div>
-            {inputMode === 'rows' ? (
-              <StatementEditor
-                entries={entries}
-                disabled={busy}
-                onChange={(next) => {
-                  setEntries(next);
-                  setGateway(null);
-                  setNotice('');
-                }}
-                onAdd={() => {
-                  const key = nextEntry.current++;
-                  setEntries((current) =>
-                    current.length >= 5000 ? current : [...current, { key, txn: '', amount: '' }],
-                  );
-                }}
-              />
-            ) : (
-              <>
-                <p id="statement-help">
-                  Dán sao kê của đúng ngày đã chọn theo mẫu{' '}
-                  <code>{'[{"txn":"ma-giao-dich","amount":100000}]'}</code>. Chỉ nhập mã giao dịch
-                  và số tiền theo đồng; không nhập thông tin khách hàng. Dùng <code>[]</code> nếu
-                  không có khoản thu.
-                </p>
-                <label htmlFor="reconciliation-statement">Nội dung sao kê JSON</label>
-                <textarea
-                  ref={input}
-                  id="reconciliation-statement"
-                  value={raw}
-                  rows={7}
-                  maxLength={1500000}
-                  readOnly={busy}
-                  autoComplete="off"
-                  spellCheck={false}
-                  aria-describedby="statement-help reconciliation-error"
-                  onChange={(event) => {
-                    setRaw(event.target.value);
-                    setGateway(null);
-                    setNotice('');
-                  }}
-                />
-              </>
-            )}
+            <StatementEditor
+              entries={entries}
+              disabled={busy}
+              onChange={(next) => {
+                setEntries(next);
+                setGateway(null);
+                setNotice('');
+              }}
+              onAdd={() => {
+                const key = nextEntry.current++;
+                setEntries((current) =>
+                  current.length >= 5000 ? current : [...current, { key, txn: '', amount: '' }],
+                );
+              }}
+            />
             <div className="stock-actions">
               <Button type="submit" disabled={busy}>
                 Kiểm tra sao kê
