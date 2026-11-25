@@ -63,7 +63,7 @@ export default function TechnicianRepairAccess({
   return (
     <section className="staff-resolution" aria-label="Mã xác nhận sửa ô tủ">
       <h4>Mã xác nhận sửa ô tủ{slotCode ? ` · ${slotCode}` : ''}</h4>
-      <p>Chủ shop cần duyệt ca sửa. Đứng cạnh đúng ô tủ rồi nhập mã bên dưới để mở.</p>
+      <p>Đứng tại đúng ô tủ và nhập mã để mở (cần chủ shop duyệt).</p>
       {access ? (
         <div>
           <p role="status">

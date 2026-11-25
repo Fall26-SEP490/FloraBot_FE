@@ -97,14 +97,13 @@ function FeedPanel({
       )}
       {query.isSuccess && query.data.rows.length > 0 && (
         <p className="admin-feed-note">
-          {Math.min(query.data.rows.length, 3)} / {query.data.rows.length} mục đã tải
-          {query.data.more && ' · Còn trang sau'} ·{' '}
+          Cập nhật{' '}
           {new Date(query.dataUpdatedAt).toLocaleTimeString('vi-VN', {
             timeZone: 'Asia/Ho_Chi_Minh',
             hour: '2-digit',
             minute: '2-digit',
           })}
-          .
+          {query.data.more && ' · Còn tiếp'}
         </p>
       )}
     </section>
@@ -219,14 +218,13 @@ export default function AdminOverview({ session }: { session: Session }) {
               <AdminQueueItem key={queue.key} queue={queue} query={query} compact />
             ))}
           </div>
-          <p className="admin-feed-note">Số đã tải · Dấu +: còn trang sau.</p>
         </section>
         <FeedPanel
           title="Giám sát sự cố vận hành"
           query={incidents}
           href="/admin/incidents"
           action="Giám sát sự cố"
-          empty="Chưa có sự cố đang mở trong danh sách vừa tải."
+          empty="Chưa có sự cố đang mở."
         />
       </div>
       <div className="admin-overview-secondary">
@@ -235,14 +233,14 @@ export default function AdminOverview({ session }: { session: Session }) {
           query={orders}
           href="/admin/orders"
           action="Xem đơn"
-          empty="Yêu cầu mới sẽ xuất hiện khi khách đặt hoa trên website."
+          empty="Chưa có yêu cầu đặt hoa."
         />
         <FeedPanel
           title="Báo cáo cần theo dõi"
           query={reports}
           href="/admin/tasks"
           action="Giám sát báo cáo"
-          empty="Chưa có báo cáo đã gửi trong danh sách. Quản lý vận hành hoặc chủ shop phụ trách kiểm tra kết quả."
+          empty="Chưa có báo cáo chờ theo dõi."
         />
       </div>
       <PersonnelSummary actorId={session.id} />

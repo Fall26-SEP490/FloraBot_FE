@@ -76,17 +76,17 @@ export default function TechnicianIoTHealth({
                       </td>
                       <td>
                         {!fresh || slot.flowerDetected == null
-                          ? 'Chưa xác định'
+                          ? 'Chưa rõ'
                           : slot.flowerDetected
-                            ? 'Phát hiện vật'
-                            : 'Không phát hiện vật'}
+                            ? 'Có vật'
+                            : 'Không có vật'}
                       </td>
                       <td>
                         {!fresh || slot.doorClosed == null
-                          ? 'Chưa xác định'
+                          ? 'Chưa rõ'
                           : slot.doorClosed
-                            ? 'Báo cửa đóng'
-                            : 'Báo cửa mở'}
+                            ? 'Đóng'
+                            : 'Mở'}
                       </td>
                       <td>
                         {fresh && slot.lastCycle
@@ -104,9 +104,7 @@ export default function TechnicianIoTHealth({
               </table>
             </WorkspaceTable>
           )}
-          <p className="quiet">
-            Tín hiệu cảm biến cần đối chiếu tại tủ; chưa có đo dòng khóa điện.
-          </p>
+          <p className="quiet">Đối chiếu tín hiệu cảm biến trực tiếp tại tủ.</p>
         </>
       )}
       <Button

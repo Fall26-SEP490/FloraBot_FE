@@ -649,7 +649,6 @@ export default function AccountManagement({
               </div>
             </div>
             <strong>{accounts.length}</strong>
-            <small>Tài khoản trong danh sách</small>
           </article>
           <article className="operations-metric">
             <div className="account-stat-top">
@@ -659,7 +658,6 @@ export default function AccountManagement({
               </div>
             </div>
             <strong>{activeCount}</strong>
-            <small>Đang làm việc bình thường</small>
           </article>
           <article className="operations-metric">
             <div className="account-stat-top">
@@ -680,7 +678,7 @@ export default function AccountManagement({
         {actorRole !== 'SELLER' && (
           <div className="management-heading">
             <div>
-              <h2 id="account-management-title">{title}</h2>
+              <h2 id="account-management-title">Danh sách</h2>
             </div>
             {directoryActions}
           </div>

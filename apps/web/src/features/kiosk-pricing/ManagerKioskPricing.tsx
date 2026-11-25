@@ -50,10 +50,7 @@ function PricingForm({ pricing, onSaved }: { pricing: KioskSlotPricing; onSaved:
         if (valid) save.mutate();
       }}
     >
-      <p>
-        Đơn giá đồng nhất cho 1 ô bán sẵn hoặc đặt trước trong 12 tháng. Bảng giá mới chỉ áp dụng
-        cho hồ sơ thuê mới và kỳ gia hạn tiếp theo.
-      </p>
+      <p>Áp dụng đồng nhất cho ô bán sẵn và đặt trước (12 tháng) với hồ sơ mới hoặc gia hạn.</p>
       <div className="slot-demand-inputs">
         <label>
           Đơn giá 1 ô / năm (đ/ô/năm)

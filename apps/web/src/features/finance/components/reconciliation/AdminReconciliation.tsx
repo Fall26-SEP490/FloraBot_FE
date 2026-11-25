@@ -254,9 +254,7 @@ export default function AdminReconciliation() {
         <div className="reconciliation-report">
           <h3>Báo cáo ngày {date}</h3>
           <p className="quiet">
-            Ba mục đầu tính theo ngày đã chọn. Sổ cái cân và tiền chờ hoàn là tổng hiện tại của toàn
-            hệ thống. Số lệnh quá 48 giờ chỉ tính lệnh đang chờ, với mốc đầu ngày đã chọn trừ 48
-            giờ.
+            Ba mục đầu tính theo ngày đã chọn; sổ cái cân và tiền chờ hoàn là tổng hiện tại.
           </p>
           <ul className="reconciliation-rows">
             {daily.result.map((row) => {
@@ -269,7 +267,7 @@ export default function AdminReconciliation() {
                   <dl>
                     {count ? (
                       <div>
-                        <dt>Số lệnh đang chờ</dt>
+                        <dt>Đang chờ từ trước mốc đầu ngày đã chọn 48 giờ</dt>
                         <dd>{integer(row.chung_tu)} lệnh</dd>
                       </div>
                     ) : (

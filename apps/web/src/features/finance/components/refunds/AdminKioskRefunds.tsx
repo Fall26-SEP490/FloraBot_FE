@@ -403,15 +403,7 @@ export default function AdminKioskRefunds({ session }: AdminKioskRefundsProps) {
 
   return (
     <div className="admin-kiosk-refunds-view">
-      <div className="dashboard-page-heading">
-        <div>
-          <h2>Hồ sơ chờ hoàn phí thuê</h2>
-          <p>
-            Hoàn tiền cho các hồ sơ thuê kiosk bị từ chối hoặc khách hủy trước khi xác nhận. Tuân
-            thủ quy trình đối soát hai bước giữa người phê duyệt và người chi trả.
-          </p>
-        </div>
-      </div>
+      <h2 className="sr-only">Hồ sơ chờ hoàn phí thuê</h2>
 
       {completion?.actor === session.id && (
         <div role="status" className="status-notice notice-success">
@@ -420,22 +412,12 @@ export default function AdminKioskRefunds({ session }: AdminKioskRefundsProps) {
         </div>
       )}
 
-      {/* Info Notice about Privacy & Two-Step Verification */}
       <div role="status" className="status-notice notice-info">
         <CircleAlert size={18} aria-hidden="true" />
-        <div>
-          <strong>Quy tắc nghiệp vụ hoàn tiền:</strong>
-          <ul style={{ margin: '0.35rem 0 0 1.25rem', padding: 0 }}>
-            <li>
-              <strong>Bảo mật thông tin tài khoản:</strong> Số tài khoản được che, chỉ hiện phần
-              đuôi để bảo vệ dữ liệu khách hàng.
-            </li>
-            <li>
-              <strong>Quy trình đối soát hai bước:</strong> Người phê duyệt hoàn tiền và người xác
-              nhận chi trả chuyển khoản phải là hai quản trị viên khác nhau.
-            </li>
-          </ul>
-        </div>
+        <span>
+          Số tài khoản được che bảo mật. Người duyệt và người chi trả phải là hai quản trị viên khác
+          nhau.
+        </span>
       </div>
 
       <div className="queue-filter-bar">
@@ -472,7 +454,6 @@ export default function AdminKioskRefunds({ session }: AdminKioskRefundsProps) {
         <div className="kiosk-empty-state">
           <Check size={32} aria-hidden="true" />
           <h3>Không có yêu cầu hoàn tiền nào đang chờ</h3>
-          <p>Hiện không có hồ sơ thuê kiosk nào cần hoàn trả tiền.</p>
         </div>
       )}
 
@@ -483,7 +464,7 @@ export default function AdminKioskRefunds({ session }: AdminKioskRefundsProps) {
               <tr>
                 <th scope="col">Shop & Ngày tạo</th>
                 <th scope="col">Số tiền hoàn</th>
-                <th scope="col">Tài khoản nhận (đã che số)</th>
+                <th scope="col">Tài khoản nhận</th>
                 <th scope="col">Lý do hoàn</th>
                 <th scope="col">Tiến độ phê duyệt</th>
                 <th scope="col">Thao tác</th>

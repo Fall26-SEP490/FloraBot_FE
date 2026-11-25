@@ -85,7 +85,7 @@ export function DirectoryHeading({
         {count !== undefined && (
           <span className="platform-result-count">
             <Users size={15} aria-hidden="true" />
-            {count} mục trên trang
+            {count} mục
           </span>
         )}
         {children}

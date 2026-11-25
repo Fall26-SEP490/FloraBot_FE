@@ -189,7 +189,7 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
               />
             </div>
             <p className="technician-list-count" role="status">
-              {matchingJobs.length} / {jobs.length} phiếu được giao
+              {matchingJobs.length} / {jobs.length} phiếu
             </p>
             <TechnicianJobList
               jobs={matchingJobs}

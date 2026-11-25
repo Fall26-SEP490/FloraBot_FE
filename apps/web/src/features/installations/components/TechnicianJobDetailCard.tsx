@@ -251,7 +251,6 @@ export function TechnicianJobDetailCard({
 
       {selectedJob.status === 'SCHEDULED' && (
         <div className="tech-action-step">
-          <h3>Bắt đầu lắp đặt</h3>
           <Button
             onClick={() => startMutation.mutate(selectedJob.id)}
             disabled={startMutation.isPending || needsOutcomeCheck}

@@ -236,7 +236,7 @@ export default function OperationsOverview({ session }: { session: Session }) {
                   ? 'Đang kiểm tra công việc…'
                   : queueQueries.some((query) => query.isError)
                     ? 'Có nhóm chưa tải được. Mở nhóm hoặc làm mới để thử lại.'
-                    : 'Dấu ≥: còn dữ liệu sau 50 trang đã tải.'}
+                    : 'Còn thêm hồ sơ ở các trang sau.'}
               </p>
             )}
           </section>
