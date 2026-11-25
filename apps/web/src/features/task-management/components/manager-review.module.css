@@ -1,0 +1,187 @@
+:global(div.management-modal.management-modal--lg).dialog {
+  width: min(980px, calc(100vw - 32px));
+  max-width: 980px;
+}
+:global(#staff-tasks) .dialog :global(.staff-task-card) {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  margin: 0;
+  padding: 20px 24px;
+}
+.dialog :global(.staff-task-heading) {
+  margin: 0;
+  padding: 0 0 14px;
+}
+.dialog :global(.staff-task-heading h3) {
+  display: none;
+}
+.dialog :global(.staff-assignee-text) {
+  margin: 0;
+}
+.review {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+  padding-top: 20px;
+  min-width: 0;
+  align-items: start;
+}
+.overview {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+.report {
+  border-left: 3px solid #268064;
+  background: #f0f7f2;
+  padding: 14px 16px;
+  border-radius: 0 8px 8px 0;
+}
+.report h4 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #52695d;
+}
+.report p {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.evidence > details,
+.context,
+.history > details {
+  margin: 0;
+  padding: 12px 0;
+  border: 0;
+  border-bottom: 1px solid #dbe7de;
+  border-radius: 0;
+  background: transparent;
+}
+.evidence summary,
+.context > summary,
+.history summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  color: #345443;
+}
+.context[open] > summary {
+  margin-bottom: 12px;
+}
+.decision {
+  min-width: 0;
+  padding-left: 24px;
+  border-left: 1px solid #dbe7de;
+}
+.decisionTitle {
+  margin: 0 0 16px;
+  font-size: 15px;
+  color: #234735;
+}
+.decision :global(.staff-transition-form) {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.decision :global(.staff-transition-header) {
+  display: none;
+}
+.decision :global(.staff-submit-btn) {
+  width: 100%;
+  margin-top: 2px;
+}
+.decision textarea {
+  min-height: 88px;
+}
+.review :global(.repair-readiness-panel) {
+  margin: 16px 0 0;
+  padding: 10px 12px;
+  font-size: 12px;
+  border-radius: 8px;
+}
+.review :global(.repair-readiness-panel h4) {
+  font-size: 12px;
+  margin: 0 0 6px;
+}
+.review :global(.repair-readiness-panel) p {
+  margin: 0 0 8px;
+  background: transparent;
+  padding: 0;
+  border: 0;
+}
+.review :global(.repair-readiness-panel) button {
+  min-height: 32px;
+  padding: 5px 9px;
+  font-size: 12px;
+}
+@media (max-width: 760px) {
+  .review {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+  .decision {
+    padding: 18px 0 0;
+    border-left: 0;
+    border-top: 1px solid #dbe7de;
+  }
+  :global(#staff-tasks) .dialog :global(.staff-task-card) {
+    padding: 16px;
+  }
+}
+
+.table {
+  width: 100%;
+  table-layout: fixed;
+}
+.table th:nth-child(1) {
+  width: 25%;
+}
+.table th:nth-child(2) {
+  width: 17%;
+}
+.table th:nth-child(3) {
+  width: 19%;
+}
+.table th:nth-child(4) {
+  width: 25%;
+}
+.table th:nth-child(5) {
+  width: 14%;
+}
+.table td {
+  overflow-wrap: anywhere;
+  vertical-align: middle;
+}
+.table td:last-child button {
+  white-space: nowrap;
+  min-width: max-content;
+}
+.row {
+  cursor: pointer;
+}
+.row:hover,
+.row:focus-visible {
+  background: #eef6f0;
+}
+.row:focus-visible {
+  outline: 2px solid #268064;
+  outline-offset: -2px;
+}
+@media (max-width: 760px) {
+  .table {
+    min-width: 760px;
+  }
+}
+
+.sheet {
+  min-width: 0;
+}
+.sheet :global(.workspace-table) {
+  overflow-x: auto;
+}

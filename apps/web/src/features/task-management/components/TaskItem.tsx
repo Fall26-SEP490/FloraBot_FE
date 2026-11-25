@@ -21,6 +21,7 @@ import StaffReassignment from './StaffReassignment';
 import StaffTaskDetails, { staffTaskDetailsQuery } from './StaffTaskDetails';
 import TechnicianRepairAccess from './TechnicianRepairAccess';
 import RepairReadinessPanel from './RepairReadinessPanel';
+import reviewStyles from './manager-review.module.css';
 import StaffPreorderFulfillment, {
   preorderBlocker,
   staffPreordersQuery,
@@ -432,7 +433,7 @@ export function TaskItem({
                 : startingDelivery
                   ? 'Bắt đầu công việc'
                   : reviewingIncident
-                    ? 'Duyệt báo cáo sự cố'
+                    ? 'Nghiệm thu'
                     : role === 'SELLER' && task.status === 'SUBMITTED'
                       ? 'Duyệt báo cáo'
                       : 'Cập nhật tiến độ & Báo cáo'}
@@ -472,7 +473,9 @@ export function TaskItem({
               ? 'Lý do hủy'
               : role === 'SELLER'
                 ? 'Nội dung phản hồi'
-                : 'Nội dung cập nhật'}
+                : reviewingIncident
+                  ? 'Ghi chú nghiệm thu'
+                  : 'Nội dung cập nhật'}
           {role === 'SELLER' && (
             <span className="task-required" aria-hidden="true">
               {' '}
@@ -500,7 +503,7 @@ export function TaskItem({
         <textarea
           id={`report-${task.id}`}
           maxLength={2000}
-          rows={3}
+          rows={reviewingIncident ? 2 : 3}
           placeholder={
             canCancelOpenTask
               ? 'Nhập lý do hủy (ít nhất 10 ký tự)…'
@@ -617,6 +620,22 @@ export function TaskItem({
       )}
     </>
   );
+  const taskEvidence = (
+    <StaffEvidence
+      key={`${task.id}:${task.version}:${actorId}`}
+      taskId={task.id}
+      version={task.version}
+      apiBase={apiBase}
+      actorId={actorId}
+      sellerId={sellerId}
+      role={role}
+      mode={mode}
+      admin={!isWorker}
+      taskStatus={task.status}
+      active={isWorker && task.status === 'IN_PROGRESS'}
+    />
+  );
+
   const taskContent = (
     <>
       {checkRepairReadiness && taskOpen && repairDetails.data?.slotCode && (
@@ -739,19 +758,7 @@ export function TaskItem({
       )}
       {role === 'SELLER' && choices.length > 0 && !needsRepairContext && transitionForm}
       <div className="staff-secondary-details">
-        <StaffEvidence
-          key={`${task.id}:${task.version}:${actorId}`}
-          taskId={task.id}
-          version={task.version}
-          apiBase={apiBase}
-          actorId={actorId}
-          sellerId={sellerId}
-          role={role}
-          mode={mode}
-          admin={!isWorker}
-          taskStatus={task.status}
-          active={isWorker && task.status === 'IN_PROGRESS'}
-        />
+        {taskEvidence}
         {compactStaff && canWorkOnInventory && choices.length > 0 && !needsRepairContext && (
           <details className="staff-report-disclosure">
             <summary>Viết báo cáo</summary>
@@ -884,7 +891,46 @@ export function TaskItem({
       )}
     </div>
   );
-  const taskDetails = (
+  const taskDetails = reviewingIncident ? (
+    <div className={reviewStyles.review}>
+      <div className={reviewStyles.overview}>
+        <section className={reviewStyles.report} aria-label="Báo cáo kỹ thuật viên">
+          <h4>Kết quả kiểm tra</h4>
+          <p>{task.report || 'Chưa có nội dung báo cáo.'}</p>
+        </section>
+        <div className={reviewStyles.evidence}>{taskEvidence}</div>
+        <details className={reviewStyles.context}>
+          <summary>Địa điểm & hướng dẫn</summary>
+          {taskDestination}
+        </details>
+        <div className={reviewStyles.history}>
+          <StaffTaskDetails
+            taskId={task.id}
+            version={task.version}
+            apiBase={apiBase}
+            admin
+            readOnly={readOnly}
+            actorId={actorId}
+            sellerId={sellerId}
+            role={role}
+          />
+        </div>
+      </div>
+      <div className={reviewStyles.decision}>
+        <h4 className={reviewStyles.decisionTitle}>Kết quả nghiệm thu</h4>
+        {choices.length > 0 && transitionForm}
+        {taskOpen && repairDetails.data?.slotCode && (
+          <RepairReadinessPanel
+            taskId={task.id}
+            apiBase={apiBase}
+            actorId={actorId}
+            version={task.version}
+            compact
+          />
+        )}
+      </div>
+    </div>
+  ) : (
     <>
       {!isTechnician && taskDestination}
       {compactStaff ? (

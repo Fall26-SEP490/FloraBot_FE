@@ -16,11 +16,13 @@ export default function RepairReadinessPanel({
   apiBase,
   version,
   actorId,
+  compact = false,
 }: {
   taskId: string;
   apiBase: string;
   version: number;
   actorId?: string;
+  compact?: boolean;
 }) {
   const query = useQuery({
     queryKey: ['repair-readiness', actorId, apiBase, taskId, version],
@@ -33,7 +35,7 @@ export default function RepairReadinessPanel({
       data-blocked={Boolean(query.data?.code)}
       aria-label="Điều kiện nghiệm thu sửa ô"
     >
-      <h4>Điều kiện nghiệm thu sửa ô</h4>
+      <h4>{compact ? 'Kiểm tra tại tủ' : 'Điều kiện nghiệm thu sửa ô'}</h4>
       {query.isPending ? (
         <p role="status">Đang kiểm tra điều kiện…</p>
       ) : query.isError ? (
@@ -44,7 +46,9 @@ export default function RepairReadinessPanel({
             {query.data.detail ||
               (query.data.code
                 ? 'Chưa đủ điều kiện sửa ô. Kiểm tra lại trạng thái công việc và thiết bị.'
-                : 'Đủ điều kiện hiện tại; hệ thống sẽ kiểm tra lại khi gửi.')}
+                : compact
+                  ? 'Đủ điều kiện nghiệm thu.'
+                  : 'Đủ điều kiện hiện tại; hệ thống sẽ kiểm tra lại khi gửi.')}
           </p>
           {query.data.code === 'REPAIR_SESSION_RECOVERY_REQUIRED' &&
             apiBase.startsWith('/operations/') && (

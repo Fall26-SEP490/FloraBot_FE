@@ -19,6 +19,7 @@ import StaffTaskBoard from './components/StaffTaskBoard';
 import { TaskItem } from './components/TaskItem';
 import { TASK_STATUS_LABELS } from './task-management.constants';
 import type { ActiveTaskRole, StaffTasksProps, TaskPage } from './task-management.types';
+import reviewStyles from './components/manager-review.module.css';
 import './styles/task-management.css';
 import '../account-management/styles/seller-team.css';
 import './styles/operational-detail-polish.css';
@@ -106,6 +107,8 @@ function FilteredTaskList(props: StaffTasksProps) {
   const [managerView, setManagerView] = useState<'incidents' | 'tasks' | 'review'>(
     props.initialStatus === 'SUBMITTED' ? 'review' : props.initialStatus ? 'tasks' : 'incidents',
   );
+  const managerReview = role === 'OPERATIONS_MANAGER' && managerView === 'review';
+  const managerTable = role === 'OPERATIONS_MANAGER';
   const scopeKey = sellerId ? `seller:${sellerId}` : apiBase;
   const tasks = useQuery({
     meta: {
@@ -333,6 +336,7 @@ function FilteredTaskList(props: StaffTasksProps) {
                   onOpenTask={(id) => {
                     setTaskSearch('');
                     setFocusedTaskId(id);
+                    setSelectedAdminTask(id);
                     setManagerView('tasks');
                     setStatus('');
                     setPage(1);
@@ -354,6 +358,7 @@ function FilteredTaskList(props: StaffTasksProps) {
               onOpenTask={(id) => {
                 setTaskSearch('');
                 setFocusedTaskId(id);
+                setSelectedAdminTask(id);
                 setManagerView('tasks');
                 setStatus('');
                 setPage(1);
@@ -549,104 +554,126 @@ function FilteredTaskList(props: StaffTasksProps) {
                   <p className="platform-empty-hint">Thử đổi trạng thái hoặc về trang đầu.</p>
                 )}
               </div>
-            ) : role === 'ADMIN' || role === 'SELLER' ? (
+            ) : role === 'ADMIN' || role === 'SELLER' || managerTable ? (
               <>
-                <WorkspaceTable
-                  label={role === 'SELLER' ? 'Danh sách công việc' : 'Giám sát công việc'}
-                >
-                  <table className="admin-monitor-table">
-                    <thead>
-                      <tr>
-                        <th scope="col">Công việc / Kiosk</th>
-                        <th scope="col">Người phụ trách</th>
-                        <th scope="col">Trạng thái</th>
-                        <th scope="col">Báo cáo gần nhất</th>
-                        <th scope="col">
-                          {role === 'SELLER' ? (
-                            <span className="sr-only">Chi tiết</span>
-                          ) : (
-                            'Chi tiết'
-                          )}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {tasks.data.items.filter(matchesSearch).map((task) => (
-                        <tr
-                          key={task.id}
-                          className={role === 'SELLER' ? 'seller-task-row' : undefined}
-                          tabIndex={role === 'SELLER' ? 0 : undefined}
-                          onClick={
-                            role === 'SELLER'
-                              ? (event) => {
-                                  if (
-                                    (event.target as HTMLElement).closest(
-                                      'button, a, input, select, textarea',
+                <div className={managerTable ? reviewStyles.sheet : undefined}>
+                  <WorkspaceTable
+                    label={
+                      managerReview
+                        ? 'Báo cáo chờ nghiệm thu'
+                        : managerTable
+                          ? 'Công việc đã phân công'
+                          : role === 'SELLER'
+                            ? 'Danh sách công việc'
+                            : 'Giám sát công việc'
+                    }
+                  >
+                    <table
+                      className={`admin-monitor-table ${managerTable ? reviewStyles.table : ''}`}
+                    >
+                      <thead>
+                        <tr>
+                          <th scope="col">Công việc / Kiosk</th>
+                          <th scope="col">Người phụ trách</th>
+                          <th scope="col">Trạng thái</th>
+                          <th scope="col">Báo cáo gần nhất</th>
+                          <th scope="col">
+                            {role === 'SELLER' ? (
+                              <span className="sr-only">Chi tiết</span>
+                            ) : managerReview ? (
+                              'Thao tác'
+                            ) : (
+                              'Chi tiết'
+                            )}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {tasks.data.items.filter(matchesSearch).map((task) => (
+                          <tr
+                            key={task.id}
+                            className={
+                              managerTable
+                                ? reviewStyles.row
+                                : role === 'SELLER'
+                                  ? 'seller-task-row'
+                                  : undefined
+                            }
+                            tabIndex={role === 'SELLER' || managerTable ? 0 : undefined}
+                            onClick={
+                              role === 'SELLER' || managerTable
+                                ? (event) => {
+                                    if (
+                                      (event.target as HTMLElement).closest(
+                                        'button, a, input, select, textarea',
+                                      )
                                     )
-                                  )
-                                    return;
-                                  setSelectedAdminTask(task.id);
-                                }
-                              : undefined
-                          }
-                          onKeyDown={
-                            role === 'SELLER'
-                              ? (event) => {
-                                  if (event.target !== event.currentTarget) return;
-                                  if (event.key === 'Enter' || event.key === ' ') {
-                                    event.preventDefault();
+                                      return;
                                     setSelectedAdminTask(task.id);
                                   }
-                                }
-                              : undefined
-                          }
-                        >
-                          <td>
-                            <strong>
-                              {task.workType === 'FLOWER_QUALITY'
-                                ? 'Xử lý chất lượng hoa'
-                                : task.kind === 'INCIDENT'
-                                  ? 'Kiểm tra sự cố'
-                                  : task.kind === 'KIOSK_REMOVAL'
-                                    ? 'Tháo dỡ kiosk'
-                                    : 'Giao hoa'}
-                            </strong>
-                            <span className="table-secondary">{task.kioskName}</span>
-                          </td>
-                          <td>{task.assigneeName || '—'}</td>
-                          <td>
-                            <span className="table-badge" data-state={task.status}>
-                              {TASK_STATUS_LABELS[task.status] || task.status}
-                            </span>
-                          </td>
-                          <td>
-                            <span className="table-truncate" title={task.report || ''}>
-                              {task.report || '—'}
-                            </span>
-                          </td>
-                          <td>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              className={role === 'SELLER' ? 'seller-task-open' : undefined}
-                              aria-label={`Xem công việc ${task.id}`}
-                              onClick={() => setSelectedAdminTask(task.id)}
-                            >
-                              {role === 'SELLER' ? (
-                                <>
-                                  <ArrowRight size={18} aria-hidden="true" />
-                                  <span className="sr-only">Xem</span>
-                                </>
-                              ) : (
-                                'Xem'
-                              )}
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </WorkspaceTable>
+                                : undefined
+                            }
+                            onKeyDown={
+                              role === 'SELLER' || managerTable
+                                ? (event) => {
+                                    if (event.target !== event.currentTarget) return;
+                                    if (event.key === 'Enter' || event.key === ' ') {
+                                      event.preventDefault();
+                                      setSelectedAdminTask(task.id);
+                                    }
+                                  }
+                                : undefined
+                            }
+                          >
+                            <td>
+                              <strong>
+                                {task.workType === 'FLOWER_QUALITY'
+                                  ? 'Xử lý chất lượng hoa'
+                                  : task.kind === 'INCIDENT'
+                                    ? 'Kiểm tra sự cố'
+                                    : task.kind === 'KIOSK_REMOVAL'
+                                      ? 'Tháo dỡ kiosk'
+                                      : 'Giao hoa'}
+                              </strong>
+                              <span className="table-secondary">{task.kioskName}</span>
+                            </td>
+                            <td>{task.assigneeName || '—'}</td>
+                            <td>
+                              <span className="table-badge" data-state={task.status}>
+                                {TASK_STATUS_LABELS[task.status] || task.status}
+                              </span>
+                            </td>
+                            <td>
+                              <span className="table-truncate" title={task.report || ''}>
+                                {task.report || '—'}
+                              </span>
+                            </td>
+                            <td>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className={role === 'SELLER' ? 'seller-task-open' : undefined}
+                                aria-label={`${managerReview ? 'Nghiệm thu' : 'Xem'} công việc ${task.id}`}
+                                onClick={() => setSelectedAdminTask(task.id)}
+                              >
+                                {role === 'SELLER' ? (
+                                  <>
+                                    <ArrowRight size={18} aria-hidden="true" />
+                                    <span className="sr-only">Xem</span>
+                                  </>
+                                ) : managerReview ? (
+                                  'Nghiệm thu'
+                                ) : (
+                                  'Xem'
+                                )}
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </WorkspaceTable>
+                </div>
                 {tasks.data.items
                   .filter((task) => task.id === selectedAdminTask)
                   .map((task) => (
@@ -654,11 +681,15 @@ function FilteredTaskList(props: StaffTasksProps) {
                       key={task.id}
                       open={selectedAdminTask === task.id}
                       onClose={() => setSelectedAdminTask(null)}
-                      title={`Công việc: ${task.kioskName}`}
+                      title={`${managerReview ? 'Nghiệm thu' : 'Công việc'} · ${task.kioskName}`}
                       size="lg"
                       placement={role === 'SELLER' ? 'right' : 'center'}
                       className={
-                        role === 'SELLER' ? 'seller-task-detail-modal' : 'admin-monitor-dialog'
+                        managerTable
+                          ? reviewStyles.dialog
+                          : role === 'SELLER'
+                            ? 'seller-task-detail-modal'
+                            : 'admin-monitor-dialog'
                       }
                     >
                       {selectedAdminTask === task.id && (
@@ -674,6 +705,14 @@ function FilteredTaskList(props: StaffTasksProps) {
                           directoryEndpoint={directoryEndpoint}
                           canReassign={canReassign}
                           readOnly={readOnly}
+                          onTransition={
+                            managerTable
+                              ? (result) => {
+                                  setTransitionResult(result);
+                                  setSelectedAdminTask(null);
+                                }
+                              : undefined
+                          }
                         />
                       )}
                     </Modal>
@@ -702,7 +741,6 @@ function FilteredTaskList(props: StaffTasksProps) {
                   canReassign={canReassign}
                   readOnly={readOnly}
                   onOpenChange={handleTaskOpen}
-                  onTransition={role === 'OPERATIONS_MANAGER' ? setTransitionResult : undefined}
                 />
               ))
             )}
