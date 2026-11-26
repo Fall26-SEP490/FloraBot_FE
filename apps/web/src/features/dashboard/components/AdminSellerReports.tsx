@@ -193,7 +193,10 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
             setFilter({
               ...period,
               kioskId,
-              label: mode === 'month' ? `Tháng ${month}` : `${date(from)} – ${date(to)}`,
+              label:
+                mode === 'month'
+                  ? `Tháng ${month.slice(5)}/${month.slice(0, 4)}`
+                  : `${date(from)} – ${date(to)}`,
             });
           }}
         >
@@ -487,7 +490,7 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
                         Phí kỳ thuê
                       </th>
                       <th scope="col">Trạng thái</th>
-                      <th scope="col">Nhắc hạn</th>
+                      <th scope="col">Email nhắc gia hạn</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -542,8 +545,12 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
                                     SUBSCRIPTION_REMINDER_FAILED: 'Gửi thất bại',
                                     SUBSCRIPTION_REMINDER_SKIPPED: 'Đã bỏ qua',
                                   } as Record<string, string>
-                                )[item.reminderStatus] || item.reminderStatus
-                              : 'Chưa ghi nhận'}
+                                )[item.reminderStatus] || 'Chưa rõ kết quả gửi'
+                              : item.status !== 'ACTIVE'
+                                ? '—'
+                                : remaining !== null && remaining > 7
+                                  ? 'Chưa đến kỳ nhắc'
+                                  : 'Chưa ghi nhận gửi'}
                           </td>
                         </tr>
                       );
