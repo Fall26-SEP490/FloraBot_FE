@@ -75,7 +75,7 @@ export const workspaceSections = {
       'Cập nhật địa chỉ và tọa độ kiosk để khách hàng tìm thấy điểm nhận hoa.',
     ],
     ['subscriptions', 'Thuê kiosk', 'Xem phí thuê đã chốt và đăng ký thuê thêm kiosk.'],
-    ['commerce', 'Thanh toán', 'Theo dõi kênh nhận tiền, giao dịch và tích điểm của shop.'],
+    ['commerce', 'Thanh toán', 'Theo dõi kênh nhận tiền và giao dịch của shop.'],
     [
       'refunds',
       'Hoàn tiền trực tiếp',

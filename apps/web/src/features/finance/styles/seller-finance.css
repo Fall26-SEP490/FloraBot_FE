@@ -13,8 +13,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: start;
   }
-  & .seller-receipts,
-  & .seller-loyalty {
+  & .seller-receipts {
     grid-column: 1 / -1;
   }
   & .business-panel {
@@ -199,14 +198,6 @@
   }
   & .shop-bank-form-actions button {
     margin: 0;
-  }
-  & .seller-loyalty > p {
-    margin: 6px 0 16px;
-    font-size: 13px;
-    color: #63746c;
-  }
-  & .seller-loyalty .business-inline {
-    justify-content: flex-start;
   }
   & .seasonal-filter-form {
     display: flex;
