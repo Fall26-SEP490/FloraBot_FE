@@ -373,6 +373,11 @@ export default function VietnamDateInput({
                       options={Array.from({ length: 24 }, (_, i) => ({
                         value: String(i).padStart(2, '0'),
                         label: String(i).padStart(2, '0'),
+                        disabled:
+                          kind === 'datetime-local' &&
+                          Boolean(value) &&
+                          !allowed(`${value.slice(0, 10)}T${String(i).padStart(2, '0')}:00`) &&
+                          !allowed(`${value.slice(0, 10)}T${String(i).padStart(2, '0')}:59`),
                       }))}
                       onValueChange={(h) => {
                         setHour(h);
@@ -387,6 +392,10 @@ export default function VietnamDateInput({
                       options={Array.from({ length: 60 }, (_, i) => ({
                         value: String(i).padStart(2, '0'),
                         label: String(i).padStart(2, '0'),
+                        disabled:
+                          kind === 'datetime-local' &&
+                          Boolean(value) &&
+                          !allowed(`${value.slice(0, 10)}T${hour}:${String(i).padStart(2, '0')}`),
                       }))}
                       onValueChange={(m) => {
                         setMinute(m);

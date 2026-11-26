@@ -59,6 +59,7 @@ import {
 } from './order-navigation';
 import ReceiptContextLink from '../receipts/components/ReceiptContextLink';
 import { pickupWindow } from './pickup-window';
+import { sellerQuotePickupBounds, sellerQuotePickupError } from './quote-pickup';
 import PreorderLoadingButton from './PreorderLoadingButton';
 import { usePreorderLoadingAccess } from './usePreorderLoadingAccess';
 import AssignPreorderStock from './AssignPreorderStock';
@@ -270,6 +271,8 @@ function OrderActions({
     (item) => !item.stockIssue && (item.available === null || item.available > 0),
   );
   const [pickup, setPickup] = useState(() => vietnamDateTime(row.pickupAt));
+  const quotePickupError = editingQuote ? sellerQuotePickupError(pickup, now) : null;
+  const quotePickupBounds = sellerQuotePickupBounds(now);
   const [slot, setSlot] = useState('');
   const [qr, setQr] = useState('');
   const {
@@ -411,6 +414,14 @@ function OrderActions({
   async function send(kind: string, body: unknown) {
     if (mode === 'admin') return;
     if (sending.current || uncertain) return;
+    if (mode === 'seller' && kind === 'quote' && !reject) {
+      const pickupError = sellerQuotePickupError(pickup, Date.now());
+      if (pickupError) {
+        setError(pickupError);
+        setConfirm(false);
+        return;
+      }
+    }
     if (
       mode === 'member' &&
       kind === 'accept' &&
@@ -914,6 +925,14 @@ function OrderActions({
               setFulfillStep(1);
               return;
             }
+            if (action === 'quote' && !reject) {
+              const pickupError = sellerQuotePickupError(pickup, now);
+              if (pickupError) {
+                setError(pickupError);
+                setConfirm(false);
+                return;
+              }
+            }
             if (quoteBlocked) {
               setError('Kiểm tra hoặc điều chỉnh phụ kiện trước khi gửi báo giá.');
               return;
@@ -926,7 +945,7 @@ function OrderActions({
             if (action === 'quote')
               void send('quote', {
                 price: reject ? 0 : Number(price),
-                pickupAt: vietnamDateTimeToUtc(pickup),
+                pickupAt: reject ? row.pickupAt : vietnamDateTimeToUtc(pickup),
                 note,
                 reject,
                 ...(!reject &&
@@ -1037,8 +1056,23 @@ function OrderActions({
                           label="Giờ bắt đầu nhận"
                           required
                           value={pickup}
-                          onValueChange={setPickup}
+                          min={quotePickupBounds.min}
+                          max={quotePickupBounds.max}
+                          invalid={Boolean(quotePickupError)}
+                          describedBy={`quote-pickup-help-${row.id}`}
+                          onValueChange={(value) => {
+                            setPickup(value);
+                            setConfirm(false);
+                            setError('');
+                          }}
                         />
+                        <small
+                          id={`quote-pickup-help-${row.id}`}
+                          className={quotePickupError ? 'error' : 'quiet'}
+                          role={quotePickupError ? 'status' : undefined}
+                        >
+                          {quotePickupError || 'Nhận sau ít nhất 1 giờ, tối đa 30 ngày.'}
+                        </small>
                       </div>
                     </div>
                     {requestedAccessories.length > 0 && (
@@ -1436,6 +1470,7 @@ function OrderActions({
                   busy ||
                   uncertain ||
                   quoteBlocked ||
+                  Boolean(quotePickupError) ||
                   (action === 'fulfill' &&
                     (!loadingAccessId || !fulfillSlots.some((item) => item.id === slot))) ||
                   (mode === 'member' &&
