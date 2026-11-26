@@ -192,7 +192,7 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
       action === 'approve'
         ? !query.data.canApprove
         : query.data.refund.payerRole === 'SELLER' || sellerSubmission.data
-          ? !(query.data.canReviewSellerTransfer || query.data.canAccessBank) ||
+          ? !(query.data.canReviewSellerTransfer ?? query.data.canAccessBank) ||
             sellerSubmission.data?.status !== 'PENDING_REVIEW'
           : query.data.refund.payerRole !== 'ADMIN' || !query.data.canAccessBank || !bank
     )
@@ -213,10 +213,10 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
       onNotice(
         action === 'approve'
           ? query.data.refund.payerRole === 'SELLER'
-            ? 'Đã duyệt khoản hoàn. Shop chuyển khoản cho khách và gửi chứng từ; một admin khác sẽ đối chiếu.'
+            ? 'Đã duyệt khoản hoàn. Shop chuyển khoản cho khách và gửi chứng từ; admin sẽ đối chiếu.'
             : query.data.refund.payerRole === 'ADMIN'
               ? 'Đã duyệt khoản hoàn giao dịch cũ. Một admin khác thực hiện chi và ghi nhận chứng từ.'
-              : 'Đã duyệt khoản hoàn. Với đơn thanh toán trực tiếp cho shop, chờ shop chuyển khoản và gửi chứng từ để Admin khác đối chiếu.'
+              : 'Đã duyệt khoản hoàn. Với đơn thanh toán trực tiếp cho shop, chờ shop chuyển khoản và gửi chứng từ để admin đối chiếu.'
           : sellerSubmission.data
             ? 'Đã xác nhận khoản hoàn do shop chuyển khoản.'
             : 'Đã ghi nhận chi hoàn và cập nhật sổ cái.',
@@ -256,7 +256,7 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
   const data = query.data;
   const sellerFunded = data?.refund.payerRole === 'SELLER' || Boolean(sellerSubmission.data);
   const adminFunded = data?.refund.payerRole === 'ADMIN' && !sellerSubmission.data;
-  const canReviewSeller = data?.canReviewSellerTransfer || data?.canAccessBank;
+  const canReviewSeller = data?.canReviewSellerTransfer ?? data?.canAccessBank;
   return (
     <div className="withdrawal-detail">
       {query.isError || !data ? (
@@ -315,9 +315,9 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
                   <strong>Shop chuyển khoản hoàn tiền cho khách</strong>
                   <p>
                     {data.canApprove
-                      ? 'Admin duyệt yêu cầu, shop chuyển khoản và gửi chứng từ, sau đó một admin khác đối chiếu để hoàn tất.'
+                      ? 'Admin duyệt yêu cầu, shop chuyển khoản và gửi chứng từ, sau đó admin đối chiếu để hoàn tất.'
                       : sellerSubmission.data?.status === 'PENDING_REVIEW'
-                        ? 'Shop đã gửi chứng từ. Admin khác người duyệt yêu cầu cần đối chiếu giao dịch để hoàn tất.'
+                        ? 'Shop đã gửi chứng từ. Admin cần đối chiếu giao dịch để hoàn tất.'
                         : sellerSubmission.data?.status === 'REJECTED'
                           ? 'Chứng từ đã bị từ chối. Shop cần kiểm tra lý do và gửi bổ sung tại mục Hoàn tiền trực tiếp.'
                           : 'Đã duyệt yêu cầu. Chờ shop mở Hoàn tiền trực tiếp, chuyển khoản cho khách và gửi chứng từ.'}
@@ -497,10 +497,10 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
                           <p>
                             {action === 'approve'
                               ? sellerFunded
-                                ? 'Sau khi duyệt, shop chuyển khoản cho khách và gửi chứng từ. Một admin khác đối chiếu để hoàn tất.'
+                                ? 'Sau khi duyệt, shop chuyển khoản cho khách và gửi chứng từ. Admin đối chiếu để hoàn tất.'
                                 : adminFunded
                                   ? 'Sau khi duyệt, một admin khác chuyển khoản và ghi nhận chứng từ cho giao dịch cũ.'
-                                  : 'Duyệt yêu cầu để shop tiếp tục hoàn tiền trực tiếp. Chứng từ shop gửi sẽ được Admin khác đối chiếu.'
+                                  : 'Duyệt yêu cầu để shop tiếp tục hoàn tiền trực tiếp. Chứng từ shop gửi sẽ được admin đối chiếu.'
                               : sellerSubmission.data
                                 ? 'Chỉ xác nhận sau khi đã đối chiếu giao dịch và chứng từ shop gửi. Thao tác này không chi tiền từ FloraBot.'
                                 : 'Chỉ xác nhận khi giao dịch ngân hàng đã hoàn tất. Thao tác này cập nhật sổ cái và trạng thái khoản hoàn.'}
