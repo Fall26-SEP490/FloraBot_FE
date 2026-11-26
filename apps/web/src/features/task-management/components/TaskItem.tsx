@@ -157,12 +157,14 @@ export function TaskItem({
           : inventory.isSuccess && inventory.data === null && whyStock && whyPreorder
             ? `${whyStock} ${whyPreorder}`
             : null;
+  const reviewingIncident =
+    isManager &&
+    role === 'OPERATIONS_MANAGER' &&
+    task.kind === 'INCIDENT' &&
+    task.status === 'SUBMITTED';
   const needsRepairContext =
     isTechnician && task.kind === 'INCIDENT' && task.status === 'IN_PROGRESS';
-  const checkRepairReadiness =
-    task.kind === 'INCIDENT' &&
-    ['IN_PROGRESS', 'SUBMITTED'].includes(task.status) &&
-    (isTechnician || (isManager && role === 'OPERATIONS_MANAGER'));
+  const checkRepairReadiness = needsRepairContext || reviewingIncident;
   const showIncidentOutcome =
     task.kind === 'INCIDENT' &&
     task.status === 'COMPLETED' &&
@@ -175,18 +177,13 @@ export function TaskItem({
       actorId,
       task.version,
     ),
-    enabled: ((needsRepairContext || checkRepairReadiness) && taskOpen) || showIncidentOutcome,
-    refetchInterval: (needsRepairContext || checkRepairReadiness) && taskOpen ? 15_000 : false,
+    enabled: (checkRepairReadiness && taskOpen) || showIncidentOutcome,
+    refetchInterval: checkRepairReadiness && taskOpen ? 15_000 : false,
   });
   const slotRepair =
     needsRepairContext &&
     repairDetails.isSuccess &&
     Boolean(repairDetails.data.incident?.slotId || repairDetails.data.slotCode);
-  const reviewingIncident =
-    isManager &&
-    role === 'OPERATIONS_MANAGER' &&
-    task.kind === 'INCIDENT' &&
-    task.status === 'SUBMITTED';
 
   const form = useForm<{ report: string; status: string }>();
   const reportError = form.formState.errors.report?.message;

@@ -17,6 +17,7 @@ import type {
 import StaffTaskDetails from './StaffTaskDetails';
 import StaffEvidence from './StaffEvidence';
 import { TASK_STATUS_LABELS } from '../task-management.constants';
+import { matchesTaskSearch, newestFirst, readAllTaskPages } from '../task-list.utils';
 import { restoreAssignmentPayload } from '../task-management.utils';
 
 export type { AdminTaskAssignmentProps };
@@ -68,41 +69,42 @@ export default function AdminTaskAssignment({
     enabled: kind === 'DELIVERY' && !attempt,
   });
   const incidents = useQuery({
-    queryKey: ['assignment-incidents', actorId, incidentsEndpoint, scopeKey, page],
-    queryFn: () =>
-      request<{ items: IncidentCandidate[]; hasMore: boolean }>(
-        `${incidentsEndpoint}?status=OPEN&page=${page}`,
-      ),
+    queryKey: [
+      'assignment-incidents',
+      actorId,
+      incidentsEndpoint,
+      scopeKey,
+      effectiveRole === 'OPERATIONS_MANAGER' ? 'all' : page,
+    ],
+    queryFn: () => {
+      const read = (number: number) =>
+        request<{ items: IncidentCandidate[]; hasMore: boolean }>(
+          `${incidentsEndpoint}?status=OPEN&page=${number}`,
+        );
+      return effectiveRole === 'OPERATIONS_MANAGER' ? readAllTaskPages(read) : read(page);
+    },
     enabled: kind === 'INCIDENT' && !attempt,
     refetchInterval: effectiveRole === 'OPERATIONS_MANAGER' ? 30_000 : false,
   });
-  const normalizeSearch = (value: string) =>
-    value
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase()
-      .replace(/đ/g, 'd')
-      .replace(/[^a-z0-9]/g, '');
-  const searchTerm = normalizeSearch(incidentSearch.trim());
-  const matchingIncidents = (incidents.data?.items ?? []).filter((incident) =>
-    normalizeSearch(
+  const matchingIncidents = newestFirst(incidents.data?.items ?? []).filter((incident) =>
+    matchesTaskSearch(
       [
         incident.reason,
         incident.id,
+        `SC-${incident.id.slice(-6)}`,
         incident.location?.kioskName,
         incident.location?.kioskCode,
         incident.slot?.slotCode,
-      ]
-        .filter(Boolean)
-        .join(' '),
-    ).includes(searchTerm),
+        incident.task?.assigneeName,
+      ],
+      incidentSearch,
+    ),
   );
-  matchingIncidents.sort((a, b) => {
-    const first = a.createdAt ? Date.parse(a.createdAt) || 0 : 0;
-    const second = b.createdAt ? Date.parse(b.createdAt) || 0 : 0;
-    return incidentOrder === 'newest' ? second - first : first - second;
-  });
-  const visibleIncidents = showAllIncidents ? matchingIncidents : matchingIncidents.slice(0, 5);
+  if (incidentOrder === 'oldest') matchingIncidents.reverse();
+  const currentPage = Math.min(page, Math.max(1, Math.ceil(matchingIncidents.length / 10)));
+  const pageIncidents = matchingIncidents.slice((currentPage - 1) * 10, currentPage * 10);
+  const visibleIncidents = showAllIncidents ? pageIncidents : pageIncidents.slice(0, 5);
+  const hasMoreIncidents = currentPage * 10 < matchingIncidents.length;
   const targetQuery = kind === 'INCIDENT' ? incidents : scopes;
   async function send(payload: TaskAssignmentPayload) {
     if (busy) return;
@@ -134,7 +136,10 @@ export default function AdminTaskAssignment({
       form.reset();
       if (effectiveRole === 'OPERATIONS_MANAGER') setAssignmentOpen(false);
       setNotice('Đã phân công. Nhân viên sẽ thấy công việc trong tài khoản.');
-      await queryClient.invalidateQueries({ queryKey: ['staff-tasks'] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['staff-tasks'] }),
+        queryClient.invalidateQueries({ queryKey: ['assignment-incidents'] }),
+      ]);
     } catch (cause) {
       if (cause instanceof ApiError && [400, 403, 404, 409].includes(cause.status)) {
         sessionStorage.removeItem(key);
@@ -470,7 +475,7 @@ export default function AdminTaskAssignment({
             <div className="operations-incident-search">
               <Search size={18} aria-hidden="true" />
               <label className="sr-only" htmlFor="incident-search">
-                Tìm sự cố trong trang
+                Tìm sự cố
               </label>
               <input
                 id="incident-search"
@@ -479,18 +484,22 @@ export default function AdminTaskAssignment({
                 value={incidentSearch}
                 onChange={(event) => {
                   setIncidentSearch(event.target.value);
+                  setPage(1);
                   setShowAllIncidents(false);
                 }}
               />
             </div>
             <div className="manager-inbox-sort">
               <label className="sr-only" htmlFor="incident-order">
-                Sắp xếp sự cố trong trang
+                Sắp xếp sự cố
               </label>
               <Select
                 id="incident-order"
                 value={incidentOrder}
-                onChange={(event) => setIncidentOrder(event.target.value)}
+                onChange={(event) => {
+                  setIncidentOrder(event.target.value);
+                  setPage(1);
+                }}
               >
                 <option value="newest">Mới nhất</option>
                 <option value="oldest">Cũ nhất</option>
@@ -505,13 +514,9 @@ export default function AdminTaskAssignment({
             <p className="operations-incident-empty">Không có sự cố đang mở ở trang này.</p>
           ) : (
             <>
-              <p className="operations-result-count">
-                {matchingIncidents.length} phiếu trong trang {page}
-              </p>
+              <p className="operations-result-count">{matchingIncidents.length} phiếu</p>
               {!matchingIncidents.length && (
-                <p className="operations-incident-empty">
-                  Không tìm thấy sự cố phù hợp trong trang này.
-                </p>
+                <p className="operations-incident-empty">Không tìm thấy sự cố phù hợp.</p>
               )}
               <WorkspaceTable label="Sự cố cần xử lý">
                 <table className="manager-incident-table">
@@ -601,7 +606,7 @@ export default function AdminTaskAssignment({
                   </tbody>
                 </table>
               </WorkspaceTable>
-              {matchingIncidents.length > 5 && (
+              {pageIncidents.length > 5 && (
                 <Button
                   type="button"
                   variant="outline"
@@ -609,35 +614,33 @@ export default function AdminTaskAssignment({
                 >
                   {showAllIncidents
                     ? 'Thu gọn danh sách'
-                    : `Xem thêm ${matchingIncidents.length - 5} phiếu`}
+                    : `Xem thêm ${pageIncidents.length - 5} phiếu`}
                 </Button>
               )}
             </>
           )}
-          {(page > 1 || incidents.data?.hasMore) && (
+          {(currentPage > 1 || hasMoreIncidents) && (
             <div>
               <Button
                 type="button"
                 variant="outline"
-                disabled={page === 1 || Boolean(attempt)}
+                disabled={currentPage === 1 || incidents.isFetching || Boolean(attempt)}
                 onClick={() => {
-                  setIncidentSearch('');
                   setShowAllIncidents(false);
-                  setPage(page - 1);
+                  setPage(currentPage - 1);
                   form.resetField('target');
                 }}
               >
                 Sự cố trang trước
               </Button>
-              <span> Trang {page} </span>
+              <span> Trang {currentPage} </span>
               <Button
                 type="button"
                 variant="outline"
-                disabled={!incidents.data?.hasMore || Boolean(attempt)}
+                disabled={!hasMoreIncidents || incidents.isFetching || Boolean(attempt)}
                 onClick={() => {
-                  setIncidentSearch('');
                   setShowAllIncidents(false);
-                  setPage(page + 1);
+                  setPage(currentPage + 1);
                   form.resetField('target');
                 }}
               >

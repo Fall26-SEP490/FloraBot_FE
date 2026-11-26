@@ -19,6 +19,7 @@ import TaskTable from './components/TaskTable';
 import { TaskItem } from './components/TaskItem';
 import { TASK_STATUS_LABELS } from './task-management.constants';
 import type { ActiveTaskRole, StaffTasksProps, TaskPage } from './task-management.types';
+import { matchesTaskSearch, newestFirst, readAllTaskPages } from './task-list.utils';
 import reviewStyles from './components/manager-review.module.css';
 import './styles/task-management.css';
 import '../account-management/styles/seller-team.css';
@@ -117,8 +118,19 @@ function FilteredTaskList(props: StaffTasksProps) {
         (isPlatform || role === 'SELLER') &&
         (!!selectedAdminTask || assignmentOpen || openTaskIds.size > 0),
     },
-    queryKey: ['staff-tasks', role ?? 'none', actorId ?? 'none', scopeKey, page, status],
-    queryFn: () => request<TaskPage>(`${apiBase}?page=${page}${status ? `&status=${status}` : ''}`),
+    queryKey: [
+      'staff-tasks',
+      role ?? 'none',
+      actorId ?? 'none',
+      scopeKey,
+      managerTable ? 'all' : page,
+      status,
+    ],
+    queryFn: async () => {
+      const read = (number: number) =>
+        request<TaskPage>(`${apiBase}?page=${number}${status ? `&status=${status}` : ''}`);
+      return managerTable ? { ...(await readAllTaskPages(read)), page: 1 } : read(page);
+    },
     enabled: isValidRole,
     refetchOnWindowFocus: !selectedAdminTask && openTaskIds.size === 0,
     refetchOnReconnect: !selectedAdminTask && openTaskIds.size === 0,
@@ -146,19 +158,37 @@ function FilteredTaskList(props: StaffTasksProps) {
     );
   }
 
-  const normalizeSearch = (value: string) =>
-    value
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase()
-      .replace(/đ/g, 'd')
-      .replace(/[^a-z0-9]/g, '');
   const matchesSearch = (task: TaskPage['items'][number]) =>
     !(isPlatform || role === 'SELLER') ||
-    normalizeSearch(
-      `${task.kioskName} ${task.assigneeName} ${task.shopName || ''} ${task.id}`,
-    ).includes(normalizeSearch(taskSearch.trim()));
-  const matchedCount = tasks.data?.items.filter(matchesSearch).length ?? 0;
+    matchesTaskSearch(
+      [
+        task.kioskName,
+        task.assigneeName,
+        task.shopName,
+        task.id,
+        task.incidentId,
+        task.instructions,
+        task.report,
+        TASK_STATUS_LABELS[task.status],
+        task.kind === 'INCIDENT'
+          ? 'Kiểm tra sự cố'
+          : task.kind === 'KIOSK_REMOVAL'
+            ? 'Tháo dỡ kiosk'
+            : 'Giao hoa',
+      ],
+      taskSearch,
+    );
+  const matchedTasks = (
+    managerTable ? newestFirst(tasks.data?.items ?? [], managerReview) : (tasks.data?.items ?? [])
+  ).filter(matchesSearch);
+  const matchedCount = matchedTasks.length;
+  const currentPage = managerTable
+    ? Math.min(page, Math.max(1, Math.ceil(matchedCount / 25)))
+    : page;
+  const visibleTasks = managerTable
+    ? matchedTasks.slice((currentPage - 1) * 25, currentPage * 25)
+    : matchedTasks;
+  const hasMore = managerTable ? currentPage * 25 < matchedCount : (tasks.data?.hasMore ?? false);
 
   const sectionTitle =
     role === 'OPERATIONS_MANAGER'
@@ -409,20 +439,24 @@ function FilteredTaskList(props: StaffTasksProps) {
         )}
         {isPlatform && (
           <div className="task-page-search">
-            <label htmlFor="task-page-search">Tìm công việc trong trang</label>
+            <label htmlFor="task-page-search">Tìm công việc</label>
             <input
               id="task-page-search"
               ref={searchRef}
               type="search"
               value={taskSearch}
               placeholder="Tên tủ, người phụ trách hoặc mã công việc"
-              onChange={(event) => setTaskSearch(event.target.value)}
+              onChange={(event) => {
+                setTaskSearch(event.target.value);
+                setPage(1);
+              }}
             />
             {taskSearch && (
               <Button
                 variant="outline"
                 onClick={() => {
                   setTaskSearch('');
+                  setPage(1);
                   searchRef.current?.focus({ preventScroll: true });
                 }}
               >
@@ -431,8 +465,8 @@ function FilteredTaskList(props: StaffTasksProps) {
             )}
             {tasks.isSuccess && (
               <p role="status">
-                {matchedCount} / {tasks.data.items.length} công việc (trang {page}
-                {tasks.data.hasMore ? '+' : ''})
+                {matchedCount} / {tasks.data.items.length} công việc (trang {currentPage}
+                {!managerTable && tasks.data.hasMore ? '+' : ''})
               </p>
             )}
           </div>
@@ -446,7 +480,10 @@ function FilteredTaskList(props: StaffTasksProps) {
                 type="search"
                 value={taskSearch}
                 placeholder="Kiosk, nhân viên hoặc mã công việc"
-                onChange={(event) => setTaskSearch(event.target.value)}
+                onChange={(event) => {
+                  setTaskSearch(event.target.value);
+                  setPage(1);
+                }}
               />
             </div>
           )}
@@ -534,8 +571,9 @@ function FilteredTaskList(props: StaffTasksProps) {
             )}
             {isPlatform && tasks.data.items.length > 0 && matchedCount === 0 && (
               <p role="status" className="task-search-empty">
-                Không có công việc khớp tìm kiếm trong trang này. Xóa tìm kiếm hoặc chuyển trang để
-                xem thêm.
+                {managerTable
+                  ? 'Không có công việc khớp tìm kiếm.'
+                  : 'Không có công việc khớp tìm kiếm trong trang này.'}
               </p>
             )}
             {tasks.data.items.length === 0 || (role === 'SELLER' && matchedCount === 0) ? (
@@ -556,7 +594,7 @@ function FilteredTaskList(props: StaffTasksProps) {
             ) : role === 'ADMIN' || role === 'SELLER' || managerTable ? (
               <>
                 <TaskTable
-                  tasks={tasks.data.items.filter(matchesSearch)}
+                  tasks={visibleTasks}
                   role={role}
                   reviewing={managerReview}
                   onOpen={setSelectedAdminTask}
@@ -647,19 +685,19 @@ function FilteredTaskList(props: StaffTasksProps) {
                 <nav aria-label="Phân trang công việc" className="order-pagination">
                   <Button
                     variant="outline"
-                    disabled={page === 1 || tasks.isFetching}
-                    onClick={() => setPage(page - 1)}
+                    disabled={currentPage === 1 || tasks.isFetching}
+                    onClick={() => setPage(currentPage - 1)}
                   >
                     <ArrowLeft size={16} aria-hidden="true" />
                     <span>Trang trước</span>
                   </Button>
                   <span className="order-pagination-indicator" aria-live="polite">
-                    Trang {page}
+                    Trang {currentPage}
                   </span>
                   <Button
                     variant="outline"
-                    disabled={!tasks.data.hasMore || tasks.isFetching}
-                    onClick={() => setPage(page + 1)}
+                    disabled={!hasMore || tasks.isFetching}
+                    onClick={() => setPage(currentPage + 1)}
                   >
                     <span>Trang sau</span>
                     <ArrowRight size={16} aria-hidden="true" />

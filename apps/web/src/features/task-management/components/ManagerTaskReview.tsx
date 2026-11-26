@@ -61,7 +61,7 @@ export default function ManagerTaskReview({
             apiBase={apiBase}
             actorId={actorId}
             version={task.version}
-            compact
+            phase="review"
           />
         )}
       </div>
