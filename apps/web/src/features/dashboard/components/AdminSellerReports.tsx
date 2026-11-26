@@ -1,10 +1,13 @@
+import ReportPeriodPicker from './ReportPeriodPicker';
+import ReportTimestamp from './ReportTimestamp';
+import detailStyles from './report-details.module.css';
+import ReportPagination from './ReportPagination';
 import { liveListOptions } from '@/shared/lib/live-list';
 import WorkspaceTable from '@/features/portal/components/WorkspaceTable';
 /* eslint-disable jsx-a11y/no-noninteractive-tabindex -- The scrollable lease table supports keyboard navigation. */
 
 import Select from '@/shared/components/Select';
 import { useDeferredValue, useId, useState, type FocusEvent } from 'react';
-import VietnamDateInput from '@/shared/components/VietnamDateInput';
 import { useIsFetching, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import type { components } from '../../../../../../packages/contracts/src/generated/api';
@@ -49,35 +52,24 @@ const states: Record<string, string> = {
   FAILED: 'Thất bại',
 };
 
-function LeaseDate({ value }: { value: string }) {
-  const valueDate = new Date(value);
-  return (
-    <time
-      dateTime={value}
-      title={valueDate.toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}
-    >
-      <span>
-        {valueDate.toLocaleDateString('vi-VN', {
-          timeZone: 'Asia/Ho_Chi_Minh',
-          day: '2-digit',
-          month: '2-digit',
-        })}
-      </span>
-      <small>
-        {valueDate.toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric' })}
-      </small>
-    </time>
-  );
-}
-
-function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) {
+function SellerReport({
+  actorId,
+  seller,
+  detailsOnly = false,
+}: {
+  actorId: string;
+  seller: Seller;
+  detailsOnly?: boolean;
+}) {
   const queryClient = useQueryClient();
   const ordersFetching =
     useIsFetching({
       queryKey: ['admin-seller-orders', actorId, seller.id],
     }) > 0;
   const today = vietnamToday();
-  const [tab, setTab] = useState<'sales' | 'payments' | 'orders' | 'leases'>('sales');
+  const [tab, setTab] = useState<'sales' | 'payments' | 'orders' | 'leases'>(
+    detailsOnly ? 'orders' : 'sales',
+  );
   const [mode, setMode] = useState<'month' | 'range'>('month');
   const [month, setMonth] = useState(today.slice(0, 7));
   const [from, setFrom] = useState(`${today.slice(0, 7)}-01`);
@@ -132,9 +124,6 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
     queryFn: () => request<Leases>(`/sellers/${seller.id}/subscriptions?page=${leasePage}`),
     enabled: tab === 'leases',
   });
-  const appliedKiosk = filter?.kioskId
-    ? kiosks.data?.find((item) => item.id === filter.kioskId)
-    : null;
   const busy =
     tab === 'sales'
       ? sales.isFetching
@@ -154,16 +143,18 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
             ['orders', 'Đơn mua / hủy'],
             ['leases', 'Lịch sử thuê & kỳ hạn'],
           ] as const
-        ).map(([value, label]) => (
-          <button
-            type="button"
-            key={value}
-            aria-pressed={tab === value}
-            onClick={() => setTab(value)}
-          >
-            {label}
-          </button>
-        ))}
+        )
+          .filter(([value]) => !detailsOnly || value !== 'sales')
+          .map(([value, label]) => (
+            <button
+              type="button"
+              key={value}
+              aria-pressed={tab === value}
+              onClick={() => setTab(value)}
+            >
+              {label}
+            </button>
+          ))}
       </nav>
       {tab !== 'leases' && (
         <form
@@ -200,60 +191,16 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
             });
           }}
         >
-          <div>
-            <label htmlFor="seller-report-mode">Xem theo</label>
-            <Select
-              id="seller-report-mode"
-              value={mode}
-              onChange={(e) => setMode(e.target.value as 'month' | 'range')}
-            >
-              <option value="month">Tháng</option>
-              <option value="range">Khoảng ngày</option>
-            </Select>
-          </div>
-          {mode === 'month' ? (
-            <div>
-              <label htmlFor="seller-report-month">
-                {tab === 'orders'
-                  ? 'Tháng tạo đơn'
-                  : tab === 'payments'
-                    ? 'Tháng tạo giao dịch'
-                    : 'Tháng thu / hoàn'}
-              </label>
-              <VietnamDateInput
-                id="seller-report-month"
-                kind="month"
-                required
-                value={month}
-                onValueChange={setMonth}
-              />
-            </div>
-          ) : (
-            <>
-              <div>
-                <label htmlFor="seller-report-from">Từ ngày</label>
-                <VietnamDateInput
-                  id="seller-report-from"
-                  label="Từ ngày"
-                  required
-                  max={to || undefined}
-                  value={from}
-                  onValueChange={setFrom}
-                />
-              </div>
-              <div>
-                <label htmlFor="seller-report-to">Đến ngày</label>
-                <VietnamDateInput
-                  id="seller-report-to"
-                  label="Đến ngày"
-                  required
-                  min={from || undefined}
-                  value={to}
-                  onValueChange={setTo}
-                />
-              </div>
-            </>
-          )}
+          <ReportPeriodPicker
+            value={{ mode, month, from, to }}
+            onChange={(period) => {
+              setMode(period.mode);
+              setMonth(period.month);
+              setFrom(period.from);
+              setTo(period.to);
+              setError('');
+            }}
+          />
           {(tab === 'sales' || tab === 'orders') && (
             <div>
               <label htmlFor="seller-report-kiosk">Kiosk</label>
@@ -290,14 +237,6 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
           </Button>
         </p>
       )}
-      {tab !== 'leases' && filter && (
-        <p className="quiet">
-          Kỳ đang xem: {filter.label} · Giờ Việt Nam
-          {tab === 'sales' || tab === 'orders'
-            ? ` · ${appliedKiosk?.code || (filter.kioskId ? filter.kioskId : 'Tất cả kiosk')}`
-            : ''}
-        </p>
-      )}
       {tab === 'sales' && filter && (
         <>
           {sales.isPending ? (
@@ -318,7 +257,7 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
               <dl className="admin-seller-report-metrics">
                 {(
                   [
-                    ['grossPaid', 'Đã thu trước hoàn'],
+                    ['grossPaid', 'Tổng doanh số'],
                     ['totalRefunded', 'Đã hoàn tiền'],
                     ['netReceipts', 'Thu sau hoàn'],
                   ] as const
@@ -339,7 +278,7 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
                   <thead>
                     <tr>
                       <th>Kiosk</th>
-                      <th>Đã thu trước hoàn</th>
+                      <th>Tổng doanh số</th>
                       <th>Đơn đã thanh toán</th>
                     </tr>
                   </thead>
@@ -404,55 +343,53 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
             </div>
           ) : (
             <>
-              <WorkspaceTable label="Bảng báo cáo shop">
-                <table>
-                  <caption className="sr-only">Giao dịch thanh toán</caption>
-                  <thead>
-                    <tr>
-                      <th>Mã giao dịch</th>
-                      <th>Ngày tạo / Ngày thu</th>
-                      <th>Số tiền</th>
-                      <th>Trạng thái</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {payments.data.payments.map((item) => (
-                      <tr key={item.id}>
-                        <td>{item.orderCode ?? item.id}</td>
-                        <td>
-                          {date(item.createdAt)}
-                          <br />
-                          {item.paidAt ? date(item.paidAt) : 'Chưa ghi nhận thu tiền'}
-                        </td>
-                        <td className="table-number">{money(item.amount)}</td>
-                        <td>
-                          <span className="table-badge" data-state={item.status}>
-                            {states[item.status] || item.status}
-                          </span>
-                        </td>
+              <div className={detailStyles.payments}>
+                <WorkspaceTable label="Bảng báo cáo shop">
+                  <table>
+                    <caption className="sr-only">Giao dịch thanh toán</caption>
+                    <thead>
+                      <tr>
+                        <th>Mã giao dịch</th>
+                        <th>Ngày tạo</th>
+                        <th>Ngày thu</th>
+                        <th>Số tiền</th>
+                        <th>Trạng thái</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </WorkspaceTable>
+                    </thead>
+                    <tbody>
+                      {payments.data.payments.map((item) => (
+                        <tr key={item.id}>
+                          <td>{item.orderCode ?? item.id}</td>
+                          <td>
+                            <ReportTimestamp value={item.createdAt} />
+                          </td>
+                          <td>
+                            {item.paidAt ? (
+                              <ReportTimestamp value={item.paidAt} />
+                            ) : (
+                              <span className={detailStyles.muted}>Chưa ghi nhận</span>
+                            )}
+                          </td>
+                          <td className="table-number">{money(item.amount)}</td>
+                          <td>
+                            <span className="table-badge" data-state={item.status}>
+                              {states[item.status] || item.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </WorkspaceTable>
+              </div>
               {!payments.data.payments.length && <p>Không có giao dịch khớp bộ lọc.</p>}
-              <nav className="stock-actions" aria-label="Phân trang giao dịch seller">
-                <Button
-                  variant="outline"
-                  disabled={page === 1 || payments.isFetching}
-                  onClick={() => setPage((value) => value - 1)}
-                >
-                  Trang trước
-                </Button>
-                <span>Trang {page}</span>
-                <Button
-                  variant="outline"
-                  disabled={page * 20 >= Number(payments.data.totalCount) || payments.isFetching}
-                  onClick={() => setPage((value) => value + 1)}
-                >
-                  Trang sau
-                </Button>
-              </nav>
+              <ReportPagination
+                ariaLabel="Phân trang giao dịch"
+                page={page}
+                totalPages={Math.max(1, Math.ceil(Number(payments.data.totalCount) / 20))}
+                busy={payments.isFetching}
+                onPageChange={setPage}
+              />
             </>
           )}
         </>
@@ -475,7 +412,7 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
           ) : (
             <>
               <div
-                className="admin-report-sheet admin-lease-sheet"
+                className={`admin-report-sheet admin-lease-sheet ${detailStyles.leases}`}
                 role="region"
                 aria-label={`Lịch sử thuê kiosk của ${seller.shopName}`}
                 tabIndex={0}
@@ -483,7 +420,7 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
                 <table>
                   <thead>
                     <tr>
-                      <th scope="col">Kiosk / Gói thuê</th>
+                      <th scope="col">Kiosk</th>
                       <th scope="col">Bắt đầu</th>
                       <th scope="col">Hết hạn</th>
                       <th scope="col" className="sheet-number">
@@ -499,23 +436,18 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
                       const kiosk = kiosks.data?.find((k) => k.id === item.kioskId);
                       return (
                         <tr key={item.id}>
-                          <td>
+                          <td title={`Gói thuê: ${item.packageName}`}>
                             <strong>{item.kioskCode || kiosk?.code || 'Chưa có kiosk'}</strong>
                             <span className="lease-secondary">
                               {item.kioskName || kiosk?.name || item.kioskId || '—'}
                             </span>
-                            <span
-                              className="lease-secondary lease-package-name"
-                              title={item.packageName}
-                            >
-                              {item.packageName}
-                            </span>
+                            <span className="sr-only">Gói thuê: {item.packageName}</span>
                           </td>
                           <td className="sheet-date">
-                            <LeaseDate value={item.periodFrom} />
+                            <ReportTimestamp value={item.periodFrom} dateOnly />
                           </td>
                           <td className="sheet-date">
-                            <LeaseDate value={item.expiresAt || item.periodTo} />
+                            <ReportTimestamp value={item.expiresAt || item.periodTo} dateOnly />
                             {item.status === 'ACTIVE' &&
                               remaining !== null &&
                               remaining >= 0 &&
@@ -558,23 +490,13 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
                   </tbody>
                 </table>
               </div>
-              <nav className="stock-actions" aria-label="Phân trang lịch sử thuê">
-                <Button
-                  variant="outline"
-                  disabled={leasePage === 1 || leases.isFetching}
-                  onClick={() => setLeasePage((value) => value - 1)}
-                >
-                  Trang trước
-                </Button>
-                <span>Trang {leasePage}</span>
-                <Button
-                  variant="outline"
-                  disabled={!leases.data.hasMore || leases.isFetching}
-                  onClick={() => setLeasePage((value) => value + 1)}
-                >
-                  Trang sau
-                </Button>
-              </nav>
+              <ReportPagination
+                ariaLabel="Phân trang lịch sử thuê"
+                page={leasePage}
+                hasMore={leases.data.hasMore}
+                busy={leases.isFetching}
+                onPageChange={setLeasePage}
+              />
               {!leases.data.subscriptions.length && (
                 <p>Shop chưa có kỳ thuê kiosk được ghi nhận.</p>
               )}
@@ -589,9 +511,11 @@ function SellerReport({ actorId, seller }: { actorId: string; seller: Seller }) 
 export default function AdminSellerReports({
   actorId,
   initialSellerId = '',
+  detailsOnly = false,
 }: {
   actorId: string;
   initialSellerId?: string;
+  detailsOnly?: boolean;
 }) {
   const [sellerId, setSellerId] = useState(initialSellerId);
   const [searchDraft, setSearchDraft] = useState('');
@@ -621,7 +545,9 @@ export default function AdminSellerReports({
   };
   return (
     <section className="admin-seller-reports" aria-labelledby="admin-seller-reports-title">
-      <h2 id="admin-seller-reports-title">Doanh số & kỳ thuê theo shop</h2>
+      <h2 id="admin-seller-reports-title">
+        {detailsOnly ? 'Tra cứu theo shop' : 'Doanh số & kỳ thuê theo shop'}
+      </h2>
       <div className="admin-shop-picker" role="group" aria-label="Chọn shop báo cáo">
         <label htmlFor="admin-report-shop-search">Shop cần xem</label>
         <input
@@ -717,7 +643,12 @@ export default function AdminSellerReports({
         <p role="status">Shop này không nằm trong danh sách đã tải. Chọn shop khác để tiếp tục.</p>
       )}
       {selected && (
-        <SellerReport key={`${actorId}:${selected.id}`} actorId={actorId} seller={selected} />
+        <SellerReport
+          key={`${actorId}:${selected.id}`}
+          actorId={actorId}
+          seller={selected}
+          detailsOnly={detailsOnly}
+        />
       )}
     </section>
   );

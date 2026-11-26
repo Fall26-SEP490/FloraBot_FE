@@ -1,3 +1,4 @@
+import ReportPagination from '@/features/dashboard/components/ReportPagination';
 /* eslint-disable jsx-a11y/no-noninteractive-tabindex -- Scrollable tables must support keyboard navigation. */
 import Select from '@/shared/components/Select';
 import styles from './reconciliation.module.css';
@@ -600,25 +601,13 @@ export default function AdminReconciliation() {
                 <p className={styles.empty}>Không tìm thấy giao dịch phù hợp.</p>
               )}
               {differences.length > 20 && (
-                <nav aria-label="Phân trang chênh lệch" className="stock-actions">
-                  <Button
-                    variant="outline"
-                    disabled={visiblePage === 0}
-                    onClick={() => setPage(visiblePage - 1)}
-                  >
-                    Trang trước
-                  </Button>
-                  <span>
-                    Trang {visiblePage + 1} / {lastPage + 1}
-                  </span>
-                  <Button
-                    variant="outline"
-                    disabled={visiblePage >= lastPage}
-                    onClick={() => setPage(visiblePage + 1)}
-                  >
-                    Trang sau
-                  </Button>
-                </nav>
+                <ReportPagination
+                  ariaLabel="Phân trang chênh lệch"
+                  page={visiblePage + 1}
+                  totalPages={lastPage + 1}
+                  busy={busy}
+                  onPageChange={(next) => setPage(next - 1)}
+                />
               )}
             </>
           )}

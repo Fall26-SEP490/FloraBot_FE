@@ -1,0 +1,139 @@
+.payments :global(.workspace-table) {
+  overflow-x: auto;
+}
+.payments :global(.workspace-table) table {
+  min-width: 760px;
+  table-layout: auto;
+}
+.payments :global(.workspace-table) :is(th, td) {
+  vertical-align: middle;
+  padding: 13px 12px;
+}
+.payments :global(.workspace-table) th {
+  white-space: nowrap;
+}
+.payments :global(.workspace-table) :is(th, td):first-child {
+  max-width: 180px;
+}
+.muted {
+  color: #738176;
+  font-size: 12px;
+}
+.orders:global(.admin-report-sheet.admin-order-list) {
+  max-height: none;
+  overflow-x: auto;
+  scrollbar-gutter: auto;
+}
+.orders:global(.admin-report-sheet.admin-order-list) table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+}
+.orders:global(.admin-report-sheet.admin-order-list) :is(th, td):nth-child(n) {
+  position: static;
+  min-width: 0;
+  padding: 12px 8px;
+  font-size: 12px;
+  box-shadow: none;
+  overflow-wrap: anywhere;
+}
+.orders:global(.admin-report-sheet.admin-order-list) :is(th, td):nth-child(1) {
+  width: 17%;
+}
+.orders:global(.admin-report-sheet.admin-order-list) :is(th, td):nth-child(2) {
+  width: 20%;
+}
+.orders:global(.admin-report-sheet.admin-order-list) :is(th, td):nth-child(3) {
+  width: 16%;
+}
+.orders:global(.admin-report-sheet.admin-order-list) :is(th, td):nth-child(4) {
+  width: 10%;
+}
+.orders:global(.admin-report-sheet.admin-order-list) :is(th, td):nth-child(5) {
+  width: 11%;
+}
+.orders:global(.admin-report-sheet.admin-order-list) :is(th, td):nth-child(6) {
+  width: 16%;
+}
+.orders:global(.admin-report-sheet.admin-order-list) :is(th, td):nth-child(7) {
+  width: 10%;
+}
+.orders:global(.admin-report-sheet.admin-order-list) :global(.sheet-status) {
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 4px 7px;
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+  font-size: 11px;
+}
+.orders:global(.admin-report-sheet.admin-order-list) button {
+  min-width: 0;
+  width: 100%;
+  padding: 8px 5px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.kioskName {
+  display: block;
+  color: #64736a;
+  font-size: 11px;
+  line-height: 1.5;
+  margin-top: 4px;
+}
+@media (max-width: 760px) {
+  .orders:global(.admin-report-sheet.admin-order-list) table {
+    min-width: 780px;
+  }
+}
+.leases:global(.admin-report-sheet.admin-lease-sheet) {
+  overflow-x: auto;
+  max-height: none;
+}
+.leases:global(.admin-report-sheet.admin-lease-sheet) table {
+  min-width: 800px;
+  table-layout: fixed;
+}
+.leases:global(.admin-report-sheet.admin-lease-sheet) :is(th, td):nth-child(n) {
+  min-width: 0;
+  padding: 13px 10px;
+  vertical-align: middle;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+.leases:global(.admin-report-sheet.admin-lease-sheet) :is(th, td):nth-child(1) {
+  width: 24%;
+}
+.leases:global(.admin-report-sheet.admin-lease-sheet) :is(th, td):nth-child(2),
+.leases:global(.admin-report-sheet.admin-lease-sheet) :is(th, td):nth-child(3) {
+  width: 14%;
+  white-space: nowrap;
+}
+.leases:global(.admin-report-sheet.admin-lease-sheet) :is(th, td):nth-child(4) {
+  width: 13%;
+  white-space: nowrap;
+  text-align: right;
+}
+.leases:global(.admin-report-sheet.admin-lease-sheet) :is(th, td):nth-child(5) {
+  width: 17%;
+}
+.leases:global(.admin-report-sheet.admin-lease-sheet) :is(th, td):nth-child(6) {
+  width: 18%;
+}
+.leases:global(.admin-report-sheet.admin-lease-sheet) th {
+  padding-block: 14px;
+  white-space: normal;
+}
+.leases:global(.admin-report-sheet.admin-lease-sheet) :global(.sheet-status) {
+  padding: 5px 8px;
+  white-space: nowrap;
+  font-size: 11px;
+}
+.leases:global(.admin-report-sheet.admin-lease-sheet) :global(.lease-secondary) {
+  line-height: 1.5;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+.leases:global(.admin-report-sheet.admin-lease-sheet) tbody tr:hover {
+  background: #f1f6f2;
+}
