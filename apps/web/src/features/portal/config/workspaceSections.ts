@@ -31,6 +31,11 @@ export const workspaceSections = {
     ],
     ['complaints', 'Phản ánh', 'Xem bằng chứng và xử lý phản ánh của khách.'],
     [
+      'refunds',
+      'Hoàn tiền cho khách',
+      'Duyệt khoản hoàn và đối chiếu chứng từ chuyển khoản của shop.',
+    ],
+    [
       'kiosk-refunds',
       'Hoàn tiền thuê kiosk',
       'Kiểm tra và xử lý hoàn tiền đơn đăng ký thuê kiosk hàng năm.',
