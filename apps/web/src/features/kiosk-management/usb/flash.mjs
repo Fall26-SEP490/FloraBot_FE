@@ -106,6 +106,18 @@ async function ensureSameKiosk(loader, hardwareId, confirmTransfer) {
   }
 }
 
+// Classic ESP32 boards with a USB-UART bridge boot from flash with IO0 high
+// and a low-to-high pulse on EN. esptool-js 0.7.1 only releases RTS here.
+export async function restartFromFlash(transport) {
+  await transport.setDTR(false);
+  await transport.setRTS(true);
+  try {
+    await new Promise((resolve) => globalThis.setTimeout(resolve, 100));
+  } finally {
+    await transport.setRTS(false);
+  }
+}
+
 export async function flashEsp32(options, { ESPLoader, Transport }) {
   const { port, config, installFirmware, firmwareBase, beforeWrite, onProgress, onStatus } =
     options;
@@ -167,7 +179,7 @@ export async function flashEsp32(options, { ESPLoader, Transport }) {
     if ((await readJournalChecksum(loader)) !== journalBefore) {
       throw new Error('Checksum vùng journal đã thay đổi. Dừng thử và gửi lại thông báo này.');
     }
-    await loader.after('hard_reset');
+    await restartFromFlash(transport);
   } finally {
     try {
       await transport.disconnect();
