@@ -4,6 +4,7 @@ const apiOrigin =
 const kioskOrigin = process.env.KIOSK_PROXY_TARGET || 'http://127.0.0.1:5174';
 
 export default {
+  outputFileTracingIncludes: { '/api/esp32-firmware/*': ['./firmware/esp32-20261127/*'] },
   transpilePackages: ['@florabot/ui', '@florabot/contracts'],
   images: { disableStaticImages: true },
   async headers() {

@@ -1,0 +1,34 @@
+[
+  {
+    "name": "bootloader.bin",
+    "address": 4096,
+    "limit": 32768,
+    "size": 23520,
+    "sha256": "f7ec7b7d9026e12dd3616bf79cee0e78974a2605afbc2863fcfb0ac9aeb159d4",
+    "md5": "bde5bdb324fc2138839012fc9702fb53"
+  },
+  {
+    "name": "partitions.bin",
+    "address": 32768,
+    "limit": 36864,
+    "size": 3072,
+    "sha256": "33baf8d2867c00f38bd9d4d4ebd47c3feb6c2e644b2473e279564a66c2eb0b1e",
+    "md5": "037787cb73a6f5aceb72e7d4f6fd19c3"
+  },
+  {
+    "name": "boot_app0.bin",
+    "address": 57344,
+    "limit": 65536,
+    "size": 8192,
+    "sha256": "f94c5d786a7a8fab06ac5d10e33bf37711a6697636dc037559ea19cc410a17f0",
+    "md5": "e6327541e2dc394ca2c3b3280ac0f39f"
+  },
+  {
+    "name": "firmware.bin",
+    "address": 65536,
+    "limit": 3211264,
+    "size": 1084192,
+    "sha256": "56a3f544877ed11b08c4241bc4971694e93a04a0ef2c543358b195169cd6e365",
+    "md5": "c83e4416c77b462369e5fa32d7d09ce0"
+  }
+]

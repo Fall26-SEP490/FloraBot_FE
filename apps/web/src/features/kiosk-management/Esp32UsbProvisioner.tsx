@@ -120,6 +120,7 @@ export function Esp32UsbProvisioner({
           config,
           installFirmware: data.has('installFirmware'),
           firmwareBase: '/api/esp32-firmware',
+          confirmTransfer: (from, to) => window.confirm(`Chuyển bo từ ${from} sang ${to}?`),
           beforeWrite: async () => {
             const current = await readEsp32(path, controller.signal);
             controller.signal.throwIfAborted();

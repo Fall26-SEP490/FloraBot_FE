@@ -69,7 +69,7 @@ async function readJournalChecksum(loader) {
   return checksum.toLowerCase();
 }
 
-async function ensureSameKiosk(loader, hardwareId) {
+async function ensureSameKiosk(loader, hardwareId, confirmTransfer) {
   const data = await loader.readFlash(configAddress, configSize);
   if (data.length !== configSize) throw new Error('Không đọc được cấu hình đang có trên bo.');
   if (new globalThis.TextDecoder().decode(data.subarray(0, 4)) !== 'FBC1') return;
@@ -86,6 +86,12 @@ async function ensureSameKiosk(loader, hardwareId) {
   }
   const existing = JSON.parse(new globalThis.TextDecoder('utf-8', { fatal: true }).decode(payload));
   if (existing.hardwareId !== hardwareId) {
+    if (
+      typeof existing.hardwareId === 'string' &&
+      /^[a-zA-Z0-9_-]{1,64}$/.test(existing.hardwareId) &&
+      confirmTransfer?.(existing.hardwareId, hardwareId)
+    )
+      return;
     throw new Error('Bo đang có cấu hình của tủ khác. Kiểm tra lại cáp USB và đúng tủ được giao.');
   }
 }
@@ -111,7 +117,7 @@ export async function flashEsp32(options, { ESPLoader, Transport }) {
       throw new Error('Gói này chỉ hỗ trợ bo ESP32 cổ điển có flash ít nhất 4 MB.');
     }
 
-    await ensureSameKiosk(loader, config.hardwareId);
+    await ensureSameKiosk(loader, config.hardwareId, options.confirmTransfer);
     if (!installFirmware) {
       await verifyOnBoard(
         loader,

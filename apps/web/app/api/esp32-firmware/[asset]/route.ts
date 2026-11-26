@@ -1,3 +1,6 @@
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
+
 const assets = new Set([
   'manifest.json',
   'bootloader.bin',
@@ -12,6 +15,22 @@ export async function GET(request: Request, context: { params: Promise<{ asset: 
 
   const release = process.env.FLORABOT_FIRMWARE_RELEASE_URL;
   const token = process.env.FLORABOT_FIRMWARE_TOKEN;
+  if (!release && !token) {
+    try {
+      const data = await readFile(path.join(process.cwd(), 'firmware/esp32-20261127', asset));
+      return new Response(new Uint8Array(data), {
+        headers: {
+          'Content-Type':
+            asset === 'manifest.json' ? 'application/json' : 'application/octet-stream',
+          'Content-Length': String(data.length),
+          'Cache-Control': 'no-store',
+          'X-Content-Type-Options': 'nosniff',
+        },
+      });
+    } catch {
+      return new Response(null, { status: 502 });
+    }
+  }
   if (!release || !token) return new Response(null, { status: 503 });
 
   try {

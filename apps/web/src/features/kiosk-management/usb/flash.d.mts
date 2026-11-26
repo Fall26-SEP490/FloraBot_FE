@@ -6,6 +6,7 @@ export function flashEsp32(
     config: DeviceConfigInput;
     installFirmware: boolean;
     firmwareBase: string;
+    confirmTransfer?: (from: string, to: string) => boolean;
     beforeWrite: () => Promise<void>;
     onProgress: (percent: number) => void;
     onStatus: (message: string) => void;
