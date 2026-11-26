@@ -28,6 +28,8 @@ import {
   getKioskStatusLabel,
   isKioskActive,
   buildGoogleMapsDirectionsUrl,
+  sortPublicKiosks,
+  kioskDistanceKm,
 } from './kiosk-location.utils';
 import './styles/kiosk-location.css';
 
@@ -58,6 +60,7 @@ export default function CustomerKioskLocator() {
   }, [selectedKioskId]);
 
   const handleGeolocate = () => {
+    if (geoStatus === 'LOCATING') return;
     if (typeof window === 'undefined' || !('geolocation' in navigator)) {
       setGeoStatus('ERROR');
       setGeoMessage('Trình duyệt của bạn không hỗ trợ định vị.');
@@ -73,6 +76,7 @@ export default function CustomerKioskLocator() {
           lat: position.coords.latitude,
           lon: position.coords.longitude,
         });
+        setSelectedKioskId(null);
         setGeoStatus('IDLE');
         setGeoMessage(null);
       },
@@ -130,7 +134,7 @@ export default function CustomerKioskLocator() {
   }, {});
 
   const displayedItems = useMemo(() => {
-    return items.filter((kiosk) => {
+    const filtered = items.filter((kiosk) => {
       // Area filter
       if (selectedArea !== 'ALL' && (!kiosk.region || !kiosk.region.includes(selectedArea))) {
         return false;
@@ -155,7 +159,8 @@ export default function CustomerKioskLocator() {
         (kiosk.region && kiosk.region.toLowerCase().includes(q))
       );
     });
-  }, [items, selectedArea, statusFilter, keyword]);
+    return sortPublicKiosks(filtered, userOrigin);
+  }, [items, selectedArea, statusFilter, keyword, userOrigin]);
 
   const activeFilterCount =
     (statusFilter !== 'ALL' ? 1 : 0) + (selectedArea !== 'ALL' ? 1 : 0) + (userOrigin ? 1 : 0);
@@ -175,6 +180,20 @@ export default function CustomerKioskLocator() {
             Tìm theo tên, địa chỉ hoặc chọn tủ trên bản đồ để xem vị trí.
           </p>
         </div>
+        <Button
+          type="button"
+          variant="outline"
+          className="customer-find-nearest"
+          disabled={geoStatus === 'LOCATING'}
+          onClick={handleGeolocate}
+        >
+          {geoStatus === 'LOCATING' ? (
+            <RefreshCw size={17} className="spin" aria-hidden="true" />
+          ) : (
+            <Crosshair size={17} aria-hidden="true" />
+          )}
+          {geoStatus === 'LOCATING' ? 'Đang định vị…' : 'Tìm kiosk gần tôi'}
+        </Button>
       </header>
 
       {/* Mobile Tab Switcher */}
@@ -413,6 +432,7 @@ export default function CustomerKioskLocator() {
                     <button
                       type="button"
                       className={`customer-chip-btn ${statusFilter === 'MAINTENANCE' ? 'is-active' : ''}`}
+                      data-status="maintenance"
                       aria-pressed={statusFilter === 'MAINTENANCE'}
                       onClick={() =>
                         setStatusFilter((prev) => (prev === 'MAINTENANCE' ? 'ALL' : 'MAINTENANCE'))
@@ -573,6 +593,7 @@ export default function CustomerKioskLocator() {
                 {displayedItems.length > 0 && (
                   <ul className="customer-kiosk-list" aria-label="Danh sách các kiosk FloraBot">
                     {displayedItems.map((kiosk) => {
+                      const distance = userOrigin ? kioskDistanceKm(kiosk, userOrigin) : null;
                       const isOnline = isKioskActive(kiosk.status);
                       const isMaintenance = kiosk.status === 'MAINTENANCE';
                       const statusLabel = getKioskStatusLabel(kiosk.status);
@@ -612,6 +633,14 @@ export default function CustomerKioskLocator() {
                                       kiosk.name
                                     )}
                                   </h3>
+                                  {distance !== null && (
+                                    <span className="customer-kiosk-distance">
+                                      {distance.toLocaleString('vi-VN', {
+                                        maximumFractionDigits: 1,
+                                      })}{' '}
+                                      km
+                                    </span>
+                                  )}
                                   <span
                                     className={`customer-status-badge ${
                                       isOnline

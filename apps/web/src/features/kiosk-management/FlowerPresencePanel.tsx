@@ -58,10 +58,6 @@ export function FlowerPresencePanel({
             onClick={() => query.refetch()}
           />
         </div>
-        <p className="flower-presence-warning">
-          Tín hiệu cảm biến không xác nhận khách đã lấy hàng. “Không có hoa” có thể do chưa cắm cảm
-          biến; cần kiểm tra dây và độ nhạy.
-        </p>
         {query.isPending && <p role="status">Đang đọc trạng thái cảm biến…</p>}
         {query.isError ? (
           <p role="alert">Chưa tải được dữ liệu cảm biến. Thử tải lại.</p>

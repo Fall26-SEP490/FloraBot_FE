@@ -124,3 +124,37 @@ export function buildGoongDirectionsUrl(
   }
   return `https://maps.goong.io/?destination=${destLat},${destLon}`;
 }
+
+type LocatableKiosk = Pick<CustomerKioskLocationItem, 'status' | 'latitude' | 'longitude'>;
+type Origin = { lat: number; lon: number };
+
+export function kioskDistanceKm(kiosk: LocatableKiosk, origin: Origin): number | null {
+  if (
+    !isValidLatitude(kiosk.latitude) ||
+    !isValidLongitude(kiosk.longitude) ||
+    !isValidLatitude(origin.lat) ||
+    !isValidLongitude(origin.lon)
+  )
+    return null;
+  const radians = (degrees: number) => (degrees * Math.PI) / 180;
+  const dLat = radians(kiosk.latitude - origin.lat);
+  const dLon = radians(kiosk.longitude - origin.lon);
+  const value =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(radians(origin.lat)) * Math.cos(radians(kiosk.latitude)) * Math.sin(dLon / 2) ** 2;
+  return 6371 * 2 * Math.asin(Math.sqrt(Math.min(1, Math.max(0, value))));
+}
+
+export function sortPublicKiosks<T extends LocatableKiosk>(
+  items: T[],
+  origin: Origin | null = null,
+): T[] {
+  const rank = (status: string) => (isKioskActive(status) ? 0 : status === 'MAINTENANCE' ? 1 : 2);
+  return [...items].sort((a, b) => {
+    const statusDifference = rank(a.status) - rank(b.status);
+    if (statusDifference || !origin) return statusDifference;
+    const first = kioskDistanceKm(a, origin) ?? Infinity;
+    const second = kioskDistanceKm(b, origin) ?? Infinity;
+    return first === second ? 0 : first - second;
+  });
+}

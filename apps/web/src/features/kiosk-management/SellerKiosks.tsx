@@ -305,17 +305,6 @@ function KioskCard({
             </div>
           </header>
 
-          {!canEdit && (
-            <div className="kiosk-permission-notice" role="note">
-              <CircleAlert size={18} aria-hidden="true" />
-              <span>
-                {!isSellerRole
-                  ? 'Tài khoản Nhân viên shop chỉ có quyền xem thông tin, không thể chỉnh sửa vị trí kiosk.'
-                  : 'Vị trí do hệ thống quản lý. Shop chỉ có quyền xem.'}
-              </span>
-            </div>
-          )}
-
           {successNotice && (
             <p className="kiosk-feedback-success" role="status">
               <Check size={18} aria-hidden="true" />

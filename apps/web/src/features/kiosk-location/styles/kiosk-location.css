@@ -217,7 +217,7 @@ body:has(.customer-kiosk-page) {
 
 .customer-kiosk-page {
   --locator-active: #166534;
-  --locator-maintenance: #b45309;
+  --locator-maintenance: #a87900;
   --locator-offline: #b91c1c;
   max-width: 1560px;
   margin: 0 auto;
@@ -1700,5 +1700,39 @@ body:has(.customer-kiosk-page) {
     max-width: calc(100% - 70px);
     gap: 0.35rem 0.7rem;
     font-size: 0.68rem;
+  }
+}
+
+.customer-kiosk-page .customer-kiosk-header {
+  flex-wrap: wrap;
+}
+.customer-kiosk-page .customer-find-nearest {
+  flex-shrink: 0;
+  white-space: nowrap;
+  gap: 8px;
+}
+.customer-kiosk-page .customer-kiosk-distance {
+  color: #53685a;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.customer-kiosk-page .customer-status-badge.status-maintenance {
+  background: #dca700;
+  color: #3b2900;
+  border-color: #9a7000;
+}
+.customer-kiosk-page .customer-chip-btn[data-status='maintenance'] {
+  border-color: #9a7000;
+  color: #684800;
+}
+.customer-kiosk-page .customer-chip-btn[data-status='maintenance'].is-active {
+  background: #dca700;
+  color: #3b2900;
+  border-color: #9a7000;
+}
+@media (max-width: 600px) {
+  .customer-kiosk-page .customer-find-nearest {
+    width: 100%;
+    justify-content: center;
   }
 }
