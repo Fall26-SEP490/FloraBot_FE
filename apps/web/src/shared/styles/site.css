@@ -1531,63 +1531,10 @@ html {
 .florabot-header.site-header #main-navigation a:hover {
   background: #eef4ed;
 }
-.florabot-header.site-header #main-navigation a[aria-current='page'],
-.site-header .site-nav-dock a[aria-current='page'] {
+.florabot-header.site-header #main-navigation a[aria-current='page'] {
   background: #174b35;
   color: #fff;
 }
-.site-header.florabot-header.has-nav-dock {
-  position: relative;
-  top: auto;
-}
-.site-header.has-nav-dock #main-navigation {
-  visibility: hidden;
-}
-
-.site-header .site-nav-dock {
-  position: fixed;
-  inset: auto 0 max(16px, env(safe-area-inset-bottom));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  width: max-content;
-  max-width: calc(100% - 24px);
-  box-sizing: border-box;
-  margin-inline: auto;
-  padding: 6px;
-  border: 1px solid #d9e3d8;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 30px #183e2b28;
-}
-.site-header .site-nav-dock a {
-  display: inline-flex;
-  min-height: 44px;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  border-radius: 999px;
-  padding-inline: 15px;
-  color: #244b36;
-  font-size: 13px;
-  font-weight: 600;
-  text-decoration: none;
-  white-space: nowrap;
-  transition:
-    background-color 180ms ease,
-    color 180ms ease;
-}
-.site-header .site-nav-dock a:hover:not([aria-current='page']) {
-  background: #eef4ed;
-}
-.site-frame:has(.site-nav-dock) .site-support {
-  --site-support-bottom: calc(88px + env(safe-area-inset-bottom));
-}
-.site-frame:has(.site-nav-dock) > .site-footer.florabot-footer {
-  padding-bottom: calc(28px + 80px + env(safe-area-inset-bottom));
-}
-
 .florabot-header.site-header .site-account-link {
   border-radius: 999px;
   min-height: 44px;
@@ -1619,34 +1566,8 @@ html {
   background: #f1f6ef;
 }
 
-@media (max-width: 600px) {
-  .site-header .site-nav-dock a {
-    flex-direction: column;
-    gap: 3px;
-    padding: 4px clamp(6px, 2.5vw, 12px);
-    font-size: 11px;
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .site-header .site-nav-dock {
-    animation: site-dock-arrive 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
-  @keyframes site-dock-arrive {
-    from {
-      opacity: 0;
-      transform: translateY(22px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .florabot-header.site-header #main-navigation a,
-  .site-header .site-nav-dock a {
+  .florabot-header.site-header #main-navigation a {
     transition: none;
   }
 }

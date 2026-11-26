@@ -16,7 +16,6 @@ type Channel = components['schemas']['SellerPaymentChannelResponse'];
 type Verification = components['schemas']['ChannelVerificationResponse'];
 type Payments = components['schemas']['SellerPaymentsListResponse'];
 type Report = components['schemas']['SellerSalesReportResponse'];
-type Loyalty = components['schemas']['SellerLoyaltySettingsResponse'];
 
 const currency = (value: number | string | null | undefined) => {
   const num = Number(value);
@@ -59,11 +58,6 @@ export default function SellerCommerce({ session }: { session: Session }) {
     enabled: Boolean(sellerId),
     queryFn: () => request<Report>(`${base}/reports/sales`),
   });
-  const loyalty = useQuery({
-    queryKey: ['seller-loyalty-settings', sellerId],
-    enabled: Boolean(sellerId),
-    queryFn: () => request<Loyalty>(`${base}/loyalty-settings`),
-  });
   const verify = useMutation({
     mutationFn: () => request<Verification>(`${base}/payment-channel/verify`, {}, true, 'POST'),
     onSuccess: async (result) => {
@@ -89,13 +83,6 @@ export default function SellerCommerce({ session }: { session: Session }) {
       await queryClient.invalidateQueries({ queryKey: ['seller-direct-sales', sellerId] });
     },
   });
-  const updateLoyalty = useMutation({
-    mutationFn: (enabled: boolean) =>
-      request<Loyalty>(`${base}/loyalty-settings`, { enabled }, true, 'PUT'),
-    onSuccess: async () =>
-      queryClient.invalidateQueries({ queryKey: ['seller-loyalty-settings', sellerId] }),
-  });
-
   if (!sellerId) return <p role="alert">Tài khoản chưa liên kết với shop.</p>;
   return (
     <RefreshRegion className="seller-finance">
@@ -122,13 +109,10 @@ export default function SellerCommerce({ session }: { session: Session }) {
                   channel.refetch(),
                   report.refetch(),
                   payments.refetch(),
-                  loyalty.refetch(),
                   queryClient.refetchQueries({ queryKey: ['seller-shop-bank', sellerId] }),
                 ])
               }
-              disabled={
-                channel.isFetching || payments.isFetching || report.isFetching || loyalty.isFetching
-              }
+              disabled={channel.isFetching || payments.isFetching || report.isFetching}
               action="reload"
               label="Làm mới"
             />
@@ -304,48 +288,6 @@ export default function SellerCommerce({ session }: { session: Session }) {
             ))
           )}
           {reconcile.isError && <p role="alert">{errorText(reconcile.error)}</p>}
-        </section>
-        <section className="business-panel seller-loyalty" aria-labelledby="seller-loyalty-title">
-          <h2 id="seller-loyalty-title">Tích điểm theo shop</h2>
-          <p>Tích điểm 1% cho đơn đặt trước hoàn tất. Không áp dụng mua trực tiếp tại tủ.</p>
-          {loyalty.isPending ? (
-            <p role="status">Đang tải cài đặt…</p>
-          ) : loyalty.isError ? (
-            <p role="alert">{errorText(loyalty.error)}</p>
-          ) : (
-            loyalty.data && (
-              <div className="business-inline">
-                <span
-                  className="status-pill"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    padding: '4px 12px',
-                    borderRadius: '20px',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    background: loyalty.data.enabled ? '#edf5ea' : '#f3f4f6',
-                    color: loyalty.data.enabled ? '#1b5e20' : '#374151',
-                    border: `1px solid ${loyalty.data.enabled ? '#c8dec4' : '#d1d5db'}`,
-                  }}
-                >
-                  {loyalty.data.enabled ? 'Đang bật tích điểm' : 'Đang tắt tích điểm'}
-                </span>
-                <Button
-                  variant="outline"
-                  disabled={updateLoyalty.isPending}
-                  onClick={() => updateLoyalty.mutate(!loyalty.data!.enabled)}
-                >
-                  {updateLoyalty.isPending
-                    ? 'Đang lưu…'
-                    : loyalty.data.enabled
-                      ? 'Tắt tích điểm'
-                      : 'Bật tích điểm'}
-                </Button>
-              </div>
-            )
-          )}
-          {updateLoyalty.isError && <p role="alert">{errorText(updateLoyalty.error)}</p>}
         </section>
       </div>
     </RefreshRegion>

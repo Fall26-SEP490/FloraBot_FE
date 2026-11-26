@@ -15,6 +15,9 @@ import {
   X,
   MessageSquare,
   ShieldCheck,
+  Wrench,
+  Package,
+  Activity,
 } from '@florabot/ui';
 import { useQuery } from '@tanstack/react-query';
 import { getSellerChats } from '@/features/chat/api';
@@ -215,7 +218,7 @@ export default function WorkspaceNavigation({
               title="Công việc kỹ thuật"
               aria-current={section === 'tasks' ? 'page' : undefined}
             >
-              <ClipboardList size={19} aria-hidden="true" />
+              <Wrench size={19} aria-hidden="true" />
               Công việc kỹ thuật
             </Link>
             <Link
@@ -226,7 +229,7 @@ export default function WorkspaceNavigation({
               title="Lắp đặt kiosk"
               aria-current={section === 'installations' ? 'page' : undefined}
             >
-              <Boxes size={19} aria-hidden="true" />
+              <Package size={19} aria-hidden="true" />
               Lắp đặt Kiosk
             </Link>
             <Link
@@ -237,7 +240,7 @@ export default function WorkspaceNavigation({
               title="Sức khỏe kiosk"
               aria-current={section === 'kiosk-health' ? 'page' : undefined}
             >
-              <ShieldCheck size={19} aria-hidden="true" />
+              <Activity size={19} aria-hidden="true" />
               Sức khỏe kiosk
             </Link>
           </>

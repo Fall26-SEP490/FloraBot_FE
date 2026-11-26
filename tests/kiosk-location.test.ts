@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
   parseCoordinate,
+  sortPublicKiosks,
+  kioskDistanceKm,
   isValidLatitude,
   isValidLongitude,
   getKioskStatusLabel,
@@ -92,5 +94,37 @@ describe('kioskTypes coordinates and URL helpers', () => {
     expect(parsedBlank).toBeNull();
     expect(isValidLatitude(parsedBlank)).toBe(false);
     expect(isValidLongitude(parsedBlank)).toBe(false);
+  });
+});
+
+describe('public kiosk ordering', () => {
+  const online = { id: 'online', status: 'ONLINE', latitude: 10, longitude: 106 };
+  const offline = { id: 'offline', status: 'OFFLINE', latitude: 10, longitude: 106 };
+  const maintenance = { id: 'maintenance', status: 'MAINTENANCE', latitude: 10, longitude: 106 };
+
+  it('shows online kiosks before maintenance and offline without changing API data', () => {
+    const rows = [offline, maintenance, online];
+    expect(sortPublicKiosks(rows).map((row) => row.id)).toEqual([
+      'online',
+      'maintenance',
+      'offline',
+    ]);
+    expect(rows[0]).toBe(offline);
+  });
+
+  it('sorts nearest within online kiosks and puts missing coordinates last', () => {
+    const missing = { ...online, id: 'missing', latitude: null };
+    const far = { ...online, id: 'far', latitude: 12 };
+    const near = { ...online, id: 'near', latitude: 10.01 };
+    const rows = sortPublicKiosks([missing, far, offline, near], { lat: 10, lon: 106 });
+    expect(rows.map((row) => row.id)).toEqual(['near', 'far', 'missing', 'offline']);
+    expect(kioskDistanceKm(near, { lat: 10, lon: 106 })).toBeCloseTo(1.112, 2);
+    expect(kioskDistanceKm(missing, { lat: 10, lon: 106 })).toBeNull();
+  });
+
+  it('handles zero coordinates and rejects invalid positions', () => {
+    expect(kioskDistanceKm({ ...online, latitude: 0, longitude: 0 }, { lat: 0, lon: 0 })).toBe(0);
+    expect(kioskDistanceKm(online, { lat: 91, lon: 0 })).toBeNull();
+    expect(kioskDistanceKm({ ...online, longitude: Infinity }, { lat: 10, lon: 106 })).toBeNull();
   });
 });

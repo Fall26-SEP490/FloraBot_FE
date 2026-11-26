@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Button, X } from '@florabot/ui';
+import { createPortal } from 'react-dom';
+import { Button, X, useHydrated } from '@florabot/ui';
 import { useQuery } from '@tanstack/react-query';
 import { sessionQuery } from '@/shared/lib/api';
 import type { CatalogItem } from '../catalog.types';
@@ -15,7 +16,8 @@ interface FlowerRequestPanelProps {
 
 export function FlowerRequestPanel(props: FlowerRequestPanelProps) {
   const session = useQuery(sessionQuery);
-  if (!props.selected || !canOrderOnWeb(props.selected)) return null;
+  const hydrated = useHydrated();
+  if (!hydrated || !props.selected || !canOrderOnWeb(props.selected)) return null;
   return (
     <SelectedFlowerRequestPanel
       {...props}
@@ -108,7 +110,7 @@ function SelectedFlowerRequestPanel({
 
   if (!selected || !canOrderOnWeb(selected)) return null;
 
-  return (
+  return createPortal(
     <div className="flower-request-backdrop">
       <button
         type="button"
@@ -139,8 +141,8 @@ function SelectedFlowerRequestPanel({
               {confirmClose
                 ? leaveForChat
                   ? 'Chuyển sang tin nhắn?'
-                  : 'Đóng yêu cầu báo giá?'
-                : 'Yêu cầu báo giá'}
+                  : 'Đóng yêu cầu đặt trước?'
+                : 'Yêu cầu đặt trước'}
             </h2>
             {!confirmClose && (
               <p className="flower-request-meta">
@@ -209,6 +211,7 @@ function SelectedFlowerRequestPanel({
           </div>
         </div>
       </section>
-    </div>
+    </div>,
+    document.body,
   );
 }

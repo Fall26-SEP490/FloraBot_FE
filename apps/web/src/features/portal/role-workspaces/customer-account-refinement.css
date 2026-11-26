@@ -74,13 +74,6 @@
   & .customer-account-content .profile-refined:not(.profile-compact) .profile-content > section {
     margin-top: 0;
   }
-  & .customer-account-content .profile-refined:not(.profile-compact) .profile-loyalty-summary {
-    border: 0;
-    padding: 12px;
-    margin: 0 0 20px;
-    border-radius: 6px;
-    background: #f4f7f1;
-  }
   & .customer-chat-section .chat-layout {
     grid-template-columns: 300px minmax(0, 1fr);
     height: clamp(460px, calc(100dvh - 295px), 780px);
@@ -203,12 +196,6 @@
   }
   & .customer-account-content .profile-refined.profile-compact .profile-section {
     padding: 20px 0;
-  }
-  & .customer-account-content .profile-refined.profile-compact .profile-loyalty-summary {
-    border: 0;
-    padding: 12px;
-    border-radius: 6px;
-    background: #f4f7f1;
   }
   & .customer-account-content .profile-refined.profile-compact .profile-save-row {
     border: 0;

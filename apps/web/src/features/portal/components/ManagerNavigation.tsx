@@ -1,27 +1,38 @@
 import { useRef, useState, type KeyboardEvent } from 'react';
 import Link from 'next/link';
-import { Boxes, ClipboardList, LayoutDashboard, Search, Store, Users, X } from '@florabot/ui';
+import {
+  CalendarDays,
+  Archive,
+  Wrench,
+  RotateCcw,
+  UserRoundCog,
+  User,
+  LayoutDashboard,
+  Search,
+  Store,
+  X,
+} from '@florabot/ui';
 const groups = [
   {
     title: 'Kiosk & hợp đồng',
     items: [
-      { key: 'installations', title: 'Thuê & lắp đặt kiosk', icon: Boxes },
-      { key: 'terminations', title: 'Chấm dứt & lưu trữ tủ', icon: Boxes },
+      { key: 'installations', title: 'Thuê & lắp đặt kiosk', icon: CalendarDays },
+      { key: 'terminations', title: 'Chấm dứt & lưu trữ tủ', icon: Archive },
     ],
   },
   {
     title: 'Sự cố & khôi phục',
     items: [
-      { key: 'tasks', title: 'Sự cố & công việc', icon: ClipboardList },
-      { key: 'maintenance-recovery', title: 'Khôi phục phiên thao tác', icon: Boxes },
+      { key: 'tasks', title: 'Sự cố & công việc', icon: Wrench },
+      { key: 'maintenance-recovery', title: 'Khôi phục phiên thao tác', icon: RotateCcw },
     ],
   },
   {
     title: 'Nguồn lực & tài khoản',
     items: [
-      { key: 'technicians', title: 'Kỹ thuật viên', icon: Users },
+      { key: 'technicians', title: 'Kỹ thuật viên', icon: UserRoundCog },
       { key: 'sellers', title: 'Quản lý shop hoa', icon: Store },
-      { key: 'customers', title: 'Khách hàng', icon: Users },
+      { key: 'customers', title: 'Khách hàng', icon: User },
     ],
   },
 ];

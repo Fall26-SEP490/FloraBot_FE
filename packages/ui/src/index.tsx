@@ -86,4 +86,12 @@ export {
   CalendarDays,
   CheckCircle2,
   Crosshair,
+  Archive,
+  Wrench,
+  UserRoundCog,
+  Activity,
+  ClipboardCheck,
+  FileText,
+  ScanLine,
+  CreditCard,
 } from 'lucide-react';

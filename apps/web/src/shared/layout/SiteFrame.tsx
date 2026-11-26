@@ -18,10 +18,10 @@ import { UserMenu, type UserMenuLink } from '@/shared/components/UserMenu';
 import { logoutSession, queryClient, sessionQuery } from '@/shared/lib/api';
 
 const navigation = [
-  ['/', 'Trang chủ', 'Trang chủ', Store],
-  ['/dat-hoa', 'Hoa đặt trước', 'Hoa đặt trước', Flower2],
-  ['/huong-dan-dat-hoa', 'Cách đặt & nhận hoa', 'Hướng dẫn', ClipboardList],
-  ['/tim-kiosk', 'Vị trí tủ', 'Vị trí tủ', MapPin],
+  ['/', 'Trang chủ', Store],
+  ['/dat-hoa', 'Hoa đặt trước', Flower2],
+  ['/huong-dan-dat-hoa', 'Cách đặt & nhận hoa', ClipboardList],
+  ['/tim-kiosk', 'Vị trí tủ', MapPin],
 ] as const;
 
 const workspaceLabels: Record<string, string> = {
@@ -48,18 +48,6 @@ function SiteHeader() {
   const accountMenuOpen = openedAccountPath === pathname;
   const toggle = useRef<HTMLButtonElement>(null);
   const header = useRef<HTMLElement>(null);
-  const dock = useRef<HTMLElement>(null);
-  const [scrolled, setScrolled] = useState(false);
-  const showDock =
-    navigation.some(([href]) => pathname === href) && scrolled && !expanded && !accountMenuOpen;
-
-  useEffect(() => {
-    const update = () => setScrolled(window.scrollY > 160);
-    window.addEventListener('scroll', update, { passive: true });
-    update();
-    return () => window.removeEventListener('scroll', update);
-  }, []);
-
   function currentPage(href: string) {
     return pathname === href || (href !== '/' && pathname.startsWith(href + '/'))
       ? 'page'
@@ -143,6 +131,7 @@ function SiteHeader() {
       if (
         !(target instanceof HTMLElement) ||
         element.contains(target) ||
+        target.closest('[aria-modal="true"]') ||
         !target.matches(':focus-visible')
       )
         return;
@@ -150,7 +139,7 @@ function SiteHeader() {
       focusFrame = requestAnimationFrame(() => {
         if (!target.isConnected) return;
         const bounds = target.getBoundingClientRect();
-        const viewportBottom = dock.current?.getBoundingClientRect().top ?? innerHeight;
+        const viewportBottom = innerHeight;
         if (bounds.top < element.getBoundingClientRect().bottom || bounds.bottom > viewportBottom) {
           target.scrollIntoView({
             block: target.id === 'main' ? 'start' : 'center',
@@ -187,12 +176,7 @@ function SiteHeader() {
   }
 
   return (
-    <header
-      ref={header}
-      className={['site-header florabot-header navigation-ready', showDock ? 'has-nav-dock' : '']
-        .filter(Boolean)
-        .join(' ')}
-    >
+    <header ref={header} className="site-header florabot-header navigation-ready">
       {/* Tầng 1: Dải thông báo đen sang trọng phong cách Laflora */}
       <div className="site-announcement-bar" role="region" aria-label="Thông báo đầu trang">
         <span>FloraBot · Đặt hoa từ shop, nhận tại kiosk</span>
@@ -207,13 +191,11 @@ function SiteHeader() {
         {/* Menu danh mục ngang - nằm giữa trên Desktop */}
         <nav
           id="main-navigation"
-          inert={showDock}
-          aria-hidden={showDock || undefined}
           aria-label="Điều hướng chính"
           className={expanded ? 'is-open' : ''}
         >
           <div className="site-nav-inner">
-            {navigation.map(([href, label, , Icon]) => (
+            {navigation.map(([href, label, Icon]) => (
               <Link
                 key={href}
                 href={href}
@@ -268,23 +250,6 @@ function SiteHeader() {
           </button>
         </div>
       </div>
-
-      {showDock && (
-        <nav ref={dock} className="site-nav-dock" aria-label="Điều hướng chính">
-          {navigation.map(([href, label, compactLabel, Icon]) => (
-            <Link
-              key={href}
-              href={href}
-              prefetch={false}
-              aria-current={currentPage(href)}
-              aria-label={label}
-            >
-              <Icon size={18} aria-hidden="true" />
-              <span>{compactLabel}</span>
-            </Link>
-          ))}
-        </nav>
-      )}
 
       {expanded && (
         <div className="site-nav-backdrop" onClick={() => setOpenedPath(null)} aria-hidden="true" />

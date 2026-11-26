@@ -433,7 +433,7 @@ test('Customer request with accessories → seller quote → customer payment �
   await page.getByRole('button', { name: 'Thêm Thiệp' }).click();
   await expect(page.locator('.flower-request-reference-price')).toContainText('400.000 đ');
 
-  await page.getByRole('button', { name: 'Gửi yêu cầu báo giá', exact: true }).click();
+  await page.getByRole('button', { name: 'Gửi yêu cầu đặt trước', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Giảm số lượng Nơ trang trí' })).toBeDisabled();
   await page.getByRole('button', { name: 'Gửi lại cùng yêu cầu', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Đã nhận yêu cầu của bạn' })).toBeVisible();
@@ -756,9 +756,9 @@ test('Every sample catalog item is display-only, including items with illustrati
     .first()
     .click();
   await expect(page.getByText(/Không tạo đơn, thanh toán hoặc tin nhắn cho mẫu này/)).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Gửi yêu cầu báo giá', exact: true })).toHaveCount(
-    0,
-  );
+  await expect(
+    page.getByRole('button', { name: 'Gửi yêu cầu đặt trước', exact: true }),
+  ).toHaveCount(0);
   await page.getByRole('button', { name: 'Đóng mẫu đang chọn' }).click();
   await page.getByRole('button', { name: 'Nhắn tin với shop', exact: true }).first().click();
   await expect(page.getByText(/Mẫu minh họa chưa gắn với shop thật/)).toBeVisible();

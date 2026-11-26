@@ -54,7 +54,6 @@ import type {
 } from './profile.types';
 import { phonePattern, emailPattern, asciiAlphanumeric, hasControlChars } from './profile.schemas';
 import { basicPayload, basicValues, validBirthDate, vietnamToday } from './profile.utils';
-import { CustomerLoyaltySummary } from '../customer-account/CustomerLoyaltySummary';
 import { getProfileSections, useProfileNavigation } from './useProfileNavigation';
 import { useProfileDraftGuard } from './useProfileDraftGuard';
 import { sellerShopProfileQuery, updateSellerShopProfile } from './seller-shop-profile.api';
@@ -1139,10 +1138,8 @@ function PersonalProfileContent({
                       <dd>{currentProfile.address || 'Chưa cung cấp'}</dd>
                     </div>
                   </dl>
-                  <CustomerLoyaltySummary />
                 </>
               )}
-              {!compact && role === 'CUSTOMER' && <CustomerLoyaltySummary />}
               <form
                 noValidate
                 onSubmit={(event) => void basicForm.handleSubmit(onSaveBasic)(event)}

@@ -1,3 +1,4 @@
+import styles from './installation-list.module.css';
 import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
 import { rentalAllocation } from '../../kiosk-pricing/ApplicationRentalSummary';
@@ -38,7 +39,11 @@ function InstallationListItem({
         </span>
         <span className="table-secondary">{rentalAllocation(item)}</span>
       </td>
-      <td data-label="Ngày tiếp nhận">{new Date(item.createdAt).toLocaleDateString('vi-VN')}</td>
+      <td data-label="Ngày tiếp nhận">
+        <time dateTime={item.createdAt}>
+          {new Date(item.createdAt).toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}
+        </time>
+      </td>
       <td data-label="Trạng thái">
         <span className="table-badge" data-state={item.status}>
           {KIOSK_STATUS_LABELS[item.status] || item.status}
@@ -91,55 +96,53 @@ export function InstallationList({
   onOpenInventory,
 }: InstallationListProps) {
   return (
-    <section className="operations-queue-section" aria-labelledby="queue-heading">
-      <div className="operations-section-heading">
-        <div>
+    <section className={`operations-queue-section ${styles.panel}`} aria-labelledby="queue-heading">
+      <div className={styles.toolbar}>
+        <div className={styles.heading}>
           <h2 id="queue-heading">{isManager ? 'Hàng đợi hồ sơ' : 'Danh sách hồ sơ'}</h2>
+          {applicationsPage && !isError && (
+            <p role="status">
+              {applicationsPage.items.length} hồ sơ · Trang {page}
+            </p>
+          )}
         </div>
-        {isManager && (
-          <div className="installation-header-actions">
-            {onOpenInventory && (
-              <Button variant="outline" onClick={onOpenInventory}>
-                <Boxes size={17} aria-hidden="true" /> Kho tủ khả dụng
-              </Button>
-            )}
+        <div className={styles.filters}>
+          <div className={styles.status}>
+            <label htmlFor="status-filter-select">Trạng thái</label>
+            <Select
+              id="status-filter-select"
+              value={statusFilter}
+              onChange={(e) => onStatusFilterChange(e.target.value)}
+            >
+              <option value="ALL">Tất cả trạng thái</option>
+              <option value="AWAITING_PAYMENT">Chờ thanh toán</option>
+              <option value="PAID_REVIEW">Đã thanh toán - Chờ duyệt</option>
+              <option value="UNDER_REVIEW">Đang xem xét</option>
+              <option value="CONFIRMED">Đã xác nhận - Chờ xếp lịch</option>
+              <option value="SCHEDULED">Đã xếp lịch</option>
+              <option value="INSTALLING">Đang lắp đặt</option>
+              <option value="AWAITING_HANDOVER">Chờ nghiệm thu</option>
+              <option value="ACTIVE">Đang hoạt động</option>
+              <option value="REFUND_PENDING">Đang hoàn tiền</option>
+              <option value="CANCELLED">Đã hủy</option>
+              <option value="REJECTED">Đã từ chối</option>
+              <option value="REFUNDED">Đã hoàn tiền</option>
+            </Select>
           </div>
-        )}
-      </div>
-
-      <div className="queue-filter-bar installation-filter-bar">
-        <div className="filter-group">
-          <label htmlFor="status-filter-select">Trạng thái</label>
-          <Select
-            id="status-filter-select"
-            value={statusFilter}
-            onChange={(e) => onStatusFilterChange(e.target.value)}
-          >
-            <option value="ALL">Tất cả trạng thái</option>
-            <option value="AWAITING_PAYMENT">Chờ thanh toán</option>
-            <option value="PAID_REVIEW">Đã thanh toán - Chờ duyệt</option>
-            <option value="UNDER_REVIEW">Đang xem xét</option>
-            <option value="CONFIRMED">Đã xác nhận - Chờ xếp lịch</option>
-            <option value="SCHEDULED">Đã xếp lịch</option>
-            <option value="INSTALLING">Đang lắp đặt</option>
-            <option value="AWAITING_HANDOVER">Chờ nghiệm thu</option>
-            <option value="ACTIVE">Đang hoạt động</option>
-            <option value="REFUND_PENDING">Đang hoàn tiền</option>
-            <option value="CANCELLED">Đã hủy</option>
-            <option value="REJECTED">Đã từ chối</option>
-            <option value="REFUNDED">Đã hoàn tiền</option>
-          </Select>
+          {isError && (
+            <IconActionButton
+              variant="outline"
+              onClick={onRefresh}
+              disabled={isFetching}
+              action="reload"
+              label="Làm mới"
+            />
+          )}
         </div>
-
-        {isError && (
-          <IconActionButton
-            variant="outline"
-            className="refresh-btn"
-            onClick={onRefresh}
-            disabled={isFetching}
-            action="reload"
-            label="Làm mới"
-          />
+        {isManager && onOpenInventory && (
+          <Button variant="outline" className={styles.inventory} onClick={onOpenInventory}>
+            <Boxes size={17} aria-hidden="true" /> Kho tủ khả dụng
+          </Button>
         )}
       </div>
 
@@ -158,14 +161,9 @@ export function InstallationList({
       )}
 
       {applicationsPage && !isError && (
-        <div className="installation-results">
-          <p className="installation-results-caption" role="status">
-            <span>
-              <strong>{applicationsPage.items.length} hồ sơ</strong> trong trang {page}
-            </span>
-          </p>
+        <div className={styles.results}>
           <WorkspaceTable label="Danh sách hồ sơ thuê kiosk">
-            <table className="installation-register-table" aria-label="Danh sách hồ sơ thuê kiosk">
+            <table className={styles.table} aria-label="Danh sách hồ sơ thuê kiosk">
               <thead>
                 <tr>
                   <th scope="col">Shop</th>
@@ -206,7 +204,7 @@ export function InstallationList({
             </table>
           </WorkspaceTable>
           {/* Pagination */}
-          <div className="table-pagination-row" aria-busy={isFetching}>
+          <div className={styles.pagination} aria-label="Phân trang hồ sơ" aria-busy={isFetching}>
             <Button
               variant="outline"
               disabled={page <= 1 || isFetching}

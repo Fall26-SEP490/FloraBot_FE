@@ -1,0 +1,139 @@
+:global(.workspace-portal-root)
+  :global(.operations-installations-view)
+  section.panel:global(.operations-queue-section) {
+  min-width: 0;
+  padding: 0;
+  border: 1px solid #d4e1d1;
+  border-radius: 14px;
+  background: #fff;
+  overflow: hidden;
+}
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 16px 20px;
+  padding: 20px;
+}
+.heading {
+  flex: 1 1 220px;
+  min-width: 0;
+  align-self: center;
+}
+.heading h2 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.4;
+}
+.heading p {
+  margin: 6px 0 0;
+  color: #58685e;
+  font-size: 12px;
+}
+.filters {
+  display: flex;
+  align-items: end;
+  gap: 10px;
+  flex: 0 1 280px;
+  min-width: 0;
+}
+.status {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+}
+.status label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #53685a;
+}
+.inventory {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.results {
+  padding: 0 20px 20px;
+  min-width: 0;
+}
+.results :global(.workspace-table) {
+  margin: 0;
+  overflow-x: auto;
+}
+.results .table {
+  width: 100%;
+  min-width: 740px;
+}
+.table th:first-child {
+  width: 20%;
+}
+.table th:nth-child(2) {
+  width: 20%;
+}
+.table th:nth-child(3) {
+  width: 21%;
+}
+.table th:nth-child(4) {
+  width: 12%;
+}
+.table th:nth-child(5) {
+  width: 15%;
+}
+.table th:last-child {
+  width: 112px;
+}
+.table :is(th, td):last-child {
+  text-align: center;
+  vertical-align: middle;
+}
+.table td:last-child button {
+  display: inline-flex;
+  gap: 6px;
+  min-height: 36px;
+  padding: 7px 10px;
+  white-space: nowrap;
+}
+.table time {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.table :global(.is-selected-row) {
+  background: #eaf4eb;
+}
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: end;
+  gap: 12px;
+  padding-top: 16px;
+  font-size: 13px;
+}
+.pagination button:disabled {
+  cursor: default;
+}
+.pagination[aria-busy='true'] button:disabled {
+  cursor: wait;
+}
+@media (max-width: 700px) {
+  .toolbar {
+    padding: 16px;
+    gap: 14px;
+  }
+  .heading {
+    flex-basis: 100%;
+  }
+  .filters {
+    flex: 1 1 220px;
+  }
+  .inventory {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+  .results {
+    padding: 0 16px 16px;
+  }
+  .pagination {
+    justify-content: center;
+  }
+}

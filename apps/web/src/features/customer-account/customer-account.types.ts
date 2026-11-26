@@ -4,7 +4,6 @@ export type Profile = {
   id: string;
   fullName: string;
   email: string | null;
-  loyaltyPoints: number;
 };
 
 export type CustomerHistoryItem = components['schemas']['CustomerHistoryItem'];

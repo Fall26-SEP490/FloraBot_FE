@@ -60,7 +60,6 @@ export default function AdminTaskAssignment({
   const form = useForm<Fields>();
   const [incidentSearch, setIncidentSearch] = useState('');
   const [kioskFilter, setKioskFilter] = useState('');
-  const [showAllIncidents, setShowAllIncidents] = useState(false);
   const [incidentOrder, setIncidentOrder] = useState('newest');
   const staff = useQuery({
     queryKey: ['staff-directory', actorId, directoryEndpoint, scopeKey],
@@ -108,7 +107,6 @@ export default function AdminTaskAssignment({
   if (incidentOrder === 'oldest') matchingIncidents.reverse();
   const currentPage = Math.min(page, Math.max(1, Math.ceil(matchingIncidents.length / 10)));
   const pageIncidents = matchingIncidents.slice((currentPage - 1) * 10, currentPage * 10);
-  const visibleIncidents = showAllIncidents ? pageIncidents : pageIncidents.slice(0, 5);
   const hasMoreIncidents = currentPage * 10 < matchingIncidents.length;
   const targetQuery = kind === 'INCIDENT' ? incidents : scopes;
   async function send(payload: TaskAssignmentPayload) {
@@ -492,7 +490,6 @@ export default function AdminTaskAssignment({
                 onChange={(event) => {
                   setIncidentSearch(event.target.value);
                   setPage(1);
-                  setShowAllIncidents(false);
                 }}
               />
             </div>
@@ -506,7 +503,6 @@ export default function AdminTaskAssignment({
               onChange={(value) => {
                 setKioskFilter(value);
                 setPage(1);
-                setShowAllIncidents(false);
               }}
             />
             <div className="manager-inbox-sort">
@@ -548,7 +544,7 @@ export default function AdminTaskAssignment({
                     </tr>
                   </thead>
                   <tbody>
-                    {visibleIncidents.map((incident) => (
+                    {pageIncidents.map((incident) => (
                       <tr key={incident.id}>
                         <td>
                           <div className="operations-incident-content">
@@ -626,17 +622,6 @@ export default function AdminTaskAssignment({
                   </tbody>
                 </table>
               </WorkspaceTable>
-              {pageIncidents.length > 5 && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowAllIncidents(!showAllIncidents)}
-                >
-                  {showAllIncidents
-                    ? 'Thu gọn danh sách'
-                    : `Xem thêm ${pageIncidents.length - 5} phiếu`}
-                </Button>
-              )}
             </>
           )}
           {(currentPage > 1 || hasMoreIncidents) && (
@@ -646,7 +631,6 @@ export default function AdminTaskAssignment({
                 variant="outline"
                 disabled={currentPage === 1 || incidents.isFetching || Boolean(attempt)}
                 onClick={() => {
-                  setShowAllIncidents(false);
                   setPage(currentPage - 1);
                   form.resetField('target');
                 }}
@@ -659,7 +643,6 @@ export default function AdminTaskAssignment({
                 variant="outline"
                 disabled={!hasMoreIncidents || incidents.isFetching || Boolean(attempt)}
                 onClick={() => {
-                  setShowAllIncidents(false);
                   setPage(currentPage + 1);
                   form.resetField('target');
                 }}

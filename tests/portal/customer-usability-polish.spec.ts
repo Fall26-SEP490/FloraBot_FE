@@ -123,7 +123,7 @@ for (const width of [390, 1440]) {
     const brief = page.getByLabel('Bạn muốn bó hoa như thế nào?');
     await brief.fill('Bản nháp cần giữ lại khi đóng nhầm');
     await page.keyboard.press('Escape');
-    const discard = page.getByRole('dialog', { name: 'Đóng yêu cầu báo giá?' });
+    const discard = page.getByRole('dialog', { name: 'Đóng yêu cầu đặt trước?' });
     await expect(discard).toBeVisible();
     await expect(discard.getByRole('button', { name: 'Tiếp tục nhập' })).toBeFocused();
     await page.keyboard.press('Escape');
@@ -201,7 +201,7 @@ test('Submitted quotation links directly to its request and leaves the API paylo
   });
   await openRequest(page);
   await fillRequest(page);
-  await page.getByRole('button', { name: 'Gửi yêu cầu báo giá', exact: true }).click();
+  await page.getByRole('button', { name: 'Gửi yêu cầu đặt trước', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Đã nhận yêu cầu của bạn' })).toBeVisible();
   expect(state.writes).toHaveLength(1);
   expect(Object.keys(state.writes[0]).sort()).toEqual(
@@ -232,7 +232,7 @@ test('Uncertain quotation retries the same id and payload after closing confirma
   });
   await openRequest(page);
   await fillRequest(page);
-  await page.getByRole('button', { name: 'Gửi yêu cầu báo giá', exact: true }).click();
+  await page.getByRole('button', { name: 'Gửi yêu cầu đặt trước', exact: true }).click();
   await expect(
     page.getByRole('button', { name: 'Gửi lại cùng yêu cầu', exact: true }),
   ).toBeEnabled();
@@ -259,7 +259,7 @@ test('Quotation cannot be dismissed or submitted again while its request is in f
   });
   await openRequest(page);
   await fillRequest(page);
-  await page.getByRole('button', { name: 'Gửi yêu cầu báo giá', exact: true }).click();
+  await page.getByRole('button', { name: 'Gửi yêu cầu đặt trước', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Đóng mẫu đang chọn' })).toBeDisabled();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toBeVisible();

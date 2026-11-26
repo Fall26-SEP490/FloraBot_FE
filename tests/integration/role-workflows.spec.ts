@@ -68,7 +68,7 @@ test.describe('FloraBot Role Workflows Integration', () => {
       (response) =>
         response.url().endsWith('/api/member/preorders') && response.request().method() === 'POST',
     );
-    await page.getByRole('button', { name: 'Gửi yêu cầu báo giá', exact: true }).click();
+    await page.getByRole('button', { name: 'Gửi yêu cầu đặt trước', exact: true }).click();
     const preorder1Res = await preorder1Req;
     expect(preorder1Res.status()).toBe(200);
     const preorder1Id = ((await preorder1Res.json()) as { result: string }).result;
@@ -91,7 +91,7 @@ test.describe('FloraBot Role Workflows Integration', () => {
       (response) =>
         response.url().endsWith('/api/member/preorders') && response.request().method() === 'POST',
     );
-    await page.getByRole('button', { name: 'Gửi yêu cầu báo giá', exact: true }).click();
+    await page.getByRole('button', { name: 'Gửi yêu cầu đặt trước', exact: true }).click();
     const preorder2Res = await preorder2Req;
     expect(preorder2Res.status()).toBe(200);
     const preorder2Id = ((await preorder2Res.json()) as { result: string }).result;
@@ -114,7 +114,7 @@ test.describe('FloraBot Role Workflows Integration', () => {
       (response) =>
         response.url().endsWith('/api/member/preorders') && response.request().method() === 'POST',
     );
-    await page.getByRole('button', { name: 'Gửi yêu cầu báo giá', exact: true }).click();
+    await page.getByRole('button', { name: 'Gửi yêu cầu đặt trước', exact: true }).click();
     const preorder3Res = await preorder3Req;
     expect(preorder3Res.status()).toBe(200);
     const preorder3Id = ((await preorder3Res.json()) as { result: string }).result;

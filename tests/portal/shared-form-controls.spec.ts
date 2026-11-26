@@ -85,7 +85,7 @@ for (const width of [390, 1440]) {
     });
     await page.goto(`/dat-hoa/${productId}/${kioskId}`);
     await page.getByRole('button', { name: 'Đặt trước', exact: true }).click();
-    const dialog = page.getByRole('dialog', { name: 'Yêu cầu báo giá', exact: true });
+    const dialog = page.getByRole('dialog', { name: 'Yêu cầu đặt trước', exact: true });
     await chooseSelect(dialog, 'Tủ nhận hoa', kioskId);
     const day = new Date(Date.now() + 2 * 86400000 + 7 * 3600000).toISOString().slice(0, 10);
     await chooseVietnamDate(dialog, 'Ngày nhận hoa', day);
@@ -105,7 +105,7 @@ for (const width of [390, 1440]) {
       .getByLabel('Bạn muốn bó hoa như thế nào?', { exact: true })
       .fill('Hoa hồng tông pastel theo mẫu');
     await page.screenshot({ path: testInfo.outputPath(`customer-date-${width}.png`) });
-    await dialog.getByRole('button', { name: 'Gửi yêu cầu báo giá', exact: true }).click();
+    await dialog.getByRole('button', { name: 'Gửi yêu cầu đặt trước', exact: true }).click();
     await expect(
       dialog.getByRole('heading', { name: 'Đã nhận yêu cầu của bạn', exact: true }),
     ).toBeVisible();
