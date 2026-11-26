@@ -70,6 +70,10 @@ const AdminComplaints = dynamic(() => import('../../complaints/AdminComplaints')
   loading: () => <WorkspaceSectionSkeleton />,
 });
 
+const AdminRefunds = dynamic(() => import('../../finance/components/refunds/AdminRefunds'), {
+  loading: () => <WorkspaceSectionSkeleton />,
+});
+
 const AdminKioskRefunds = dynamic(
   () => import('../../finance/components/refunds/AdminKioskRefunds'),
   {
@@ -192,6 +196,7 @@ export default function AdminWorkspace({ section = 'overview' }: { section?: str
           {section === 'incidents' && <AdminIncidents />}
           {section === 'complaints' && <AdminComplaints />}
           {section === 'payment-channels' && <AdminPaymentChannels />}
+          {section === 'refunds' && <AdminRefunds />}
           {section === 'kiosk-refunds' && (
             <AdminKioskRefunds
               key={`${session.data.id}:${session.data.role}`}

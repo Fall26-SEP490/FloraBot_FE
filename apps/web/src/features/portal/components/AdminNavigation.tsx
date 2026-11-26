@@ -27,6 +27,7 @@ const groups = [
     items: [
       ['approvals', ClipboardCheck],
       ['complaints', MessageSquare],
+      ['refunds', Banknote],
       ['kiosk-refunds', Banknote],
     ],
   },
