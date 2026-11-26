@@ -421,3 +421,70 @@ test('A lost start response requires reading the committed state without startin
   await expect(page.getByLabel('Nội dung báo cáo chi tiết:')).toBeVisible();
   expect(model.writes.filter((write) => write.path.endsWith('/start'))).toHaveLength(1);
 });
+
+test('Technician authorizes USB for the assigned installation and can cancel the port picker', async ({
+  page,
+}) => {
+  await installationFixture(page, 'INSTALLING');
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'serial', {
+      value: {
+        async requestPort() {
+          throw new DOMException('No port selected', 'NotFoundError');
+        },
+      },
+    });
+  });
+  const endpoint = '**/api/staff/kiosk-installations/test-installation-101/esp32-config';
+  await page.route(endpoint, (route) =>
+    route.fulfill({
+      json: {
+        kioskId: 'test-kiosk-101',
+        kioskCode: 'K-TEST-101',
+        status: 'ONLINE',
+        lastHeartbeatAt: '2026-11-27T01:00:00Z',
+        hardwareId: 'TEST-KIOSK',
+        mqttClientId: 'esp32-TEST-KIOSK',
+        firmwareMqttClientId: 'esp32-TEST-KIOSK',
+        mqttClientIdsMatch: true,
+        canDownload: true,
+      },
+    }),
+  );
+  await page.route(endpoint + '/download', (route) => {
+    if (route.request().postDataJSON().password !== 'synthetic-current-password') {
+      return route.fulfill({ status: 401, json: { code: 'ESP32_CONFIG_REAUTHENTICATION_FAILED' } });
+    }
+    return route.fulfill({
+      contentType: 'text/x-c++hdr',
+      headers: { 'Content-Disposition': 'attachment; filename=config.local.h' },
+      body: [
+        'inline constexpr char hardwareId[] = "TEST-KIOSK";',
+        'inline constexpr char mqttHost[] = "broker.test";',
+        'inline constexpr uint16_t mqttPort = 8883;',
+        'inline constexpr char mqttPassword[] = "synthetic-mqtt";',
+        'inline constexpr char hmacKeyHex[] = "' + 'ab'.repeat(32) + '";',
+        'inline constexpr char caCertificate[] = "-----BEGIN CERTIFICATE-----\\012TEST\\012-----END CERTIFICATE-----";',
+      ].join('\r\n'),
+    });
+  });
+
+  await page.goto('/technician/installations');
+  await page.getByRole('button', { name: /Shop Hoa Kiểm Thử/ }).click();
+  await page.getByText('Cấu hình ESP32', { exact: true }).click();
+  await page.getByRole('button', { name: 'Nạp qua USB', exact: true }).click();
+  await page.getByLabel('Mật khẩu hiện tại').fill('wrong');
+  await page.getByRole('button', { name: 'Xác thực để nạp' }).click();
+  await expect(page.locator('.esp32-usb').getByRole('alert')).toContainText('Mật khẩu chưa đúng');
+  await expect(page.getByLabel('Mật khẩu hiện tại')).toHaveValue('');
+
+  await page.getByLabel('Mật khẩu hiện tại').fill('synthetic-current-password');
+  await page.getByRole('button', { name: 'Xác thực để nạp' }).click();
+  await page.getByLabel('Tên Wi-Fi').fill('Phòng thử kiosk');
+  await expect(page.getByRole('checkbox', { name: /Nạp cả firmware/ })).not.toBeChecked();
+  await page.getByRole('button', { name: 'Chọn cổng USB và nạp' }).click();
+  await expect(page.locator('.esp32-usb').getByRole('alert')).toContainText(
+    'Bạn chưa chọn cổng USB',
+  );
+  await expect(page.getByRole('button', { name: 'Chọn cổng USB và nạp' })).toBeEnabled();
+});

@@ -11,6 +11,7 @@ const metadata = z.object({
   kioskId: z.string(),
   kioskCode: z.string(),
   status: z.string(),
+  lastHeartbeatAt: z.string().nullish(),
   hardwareId: z.string(),
   mqttClientId: z.string(),
   firmwareMqttClientId: z.string(),

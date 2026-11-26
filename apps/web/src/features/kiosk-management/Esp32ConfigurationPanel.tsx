@@ -14,6 +14,7 @@ import {
   readEsp32,
   type Esp32Role,
 } from './esp32-config';
+import { Esp32UsbProvisioner } from './Esp32UsbProvisioner';
 import './styles/esp32-configuration.css';
 
 const provisioningLabels = {
@@ -49,6 +50,7 @@ function Esp32ConfigurationBody({ scope: role, resourceId, actorId }: PanelProps
   const path = esp32Path(role, resourceId);
   const [busy, setBusy] = useState<'provision' | 'download' | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [showUsb, setShowUsb] = useState(false);
   const [actionError, setActionError] = useState<Esp32RequestError | Error | null>(null);
   const [notice, setNotice] = useState('');
   const [retryDisabled, setRetryDisabled] = useState(false);
@@ -256,12 +258,29 @@ function Esp32ConfigurationBody({ scope: role, resourceId, actorId }: PanelProps
             {busy === 'provision' ? 'Đang gửi…' : 'Thử cấp lại'}
           </Button>
         )}
-        {canDownload && !showPassword && (
+        {role === 'technician' &&
+          canDownload &&
+          data?.mqttClientIdsMatch &&
+          !showPassword &&
+          !showUsb && (
+            <Button type="button" disabled={!!busy} onClick={() => setShowUsb(true)}>
+              Nạp qua USB
+            </Button>
+          )}
+        {canDownload && !showPassword && !showUsb && (
           <Button type="button" disabled={!!busy} onClick={() => setShowPassword(true)}>
             Tải cấu hình ESP32
           </Button>
         )}
       </div>
+      {role === 'technician' && canDownload && data?.mqttClientIdsMatch && showUsb && (
+        <Esp32UsbProvisioner
+          key={data.hardwareId}
+          path={path}
+          hardwareId={data.hardwareId}
+          onClose={() => setShowUsb(false)}
+        />
+      )}
       {canDownload && showPassword && (
         <form
           className="esp32-password"

@@ -21821,6 +21821,13 @@
                 "$ref": "#/components/schemas/Esp32ProvisioningStatus"
               }
             ]
+          },
+          "lastHeartbeatAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         },
         "additionalProperties": false

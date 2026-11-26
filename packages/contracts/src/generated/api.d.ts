@@ -18480,6 +18480,8 @@ export interface components {
             requiresReauthentication: boolean;
             downloadUnavailableCode: null | string;
             provisioning?: null | components["schemas"]["Esp32ProvisioningStatus"];
+            /** Format: date-time */
+            lastHeartbeatAt?: null | string;
         };
         Esp32ProvisioningStatus: {
             state: string;
