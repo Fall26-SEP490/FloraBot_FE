@@ -203,8 +203,8 @@ export default function AdminReconciliation() {
       <div className={styles.tabs} role="group" aria-label="Loại đối soát">
         {(
           [
-            ['daily', 'Đối soát nội bộ'],
-            ['statement', 'Sao kê PayOS'],
+            ['daily', 'Giao dịch & sổ cái'],
+            ['statement', 'Đối chiếu PayOS'],
           ] as const
         ).map(([key, title]) => (
           <button
@@ -228,7 +228,7 @@ export default function AdminReconciliation() {
           <>
             {view === 'daily' && (
               <Button disabled={busy} onClick={() => void run('daily')}>
-                {busy ? 'Đang kiểm tra…' : 'Xem kết quả'}
+                {busy ? 'Đang kiểm tra…' : 'Kiểm tra ngày'}
               </Button>
             )}
             {view === 'statement' && (
@@ -271,7 +271,7 @@ export default function AdminReconciliation() {
         {error}
       </p>
       {view === 'daily' && !daily && !busy && !error && (
-        <p className={styles.empty}>Chọn ngày để so sánh giao dịch với sổ cái.</p>
+        <p className={styles.empty}>Chọn ngày rồi bấm Kiểm tra ngày.</p>
       )}
       {view === 'daily' && daily && (
         <>
@@ -285,7 +285,7 @@ export default function AdminReconciliation() {
                 <thead>
                   <tr>
                     <th scope="col">Khoản tiền</th>
-                    <th scope="col">Giao dịch</th>
+                    <th scope="col">Tiền giao dịch</th>
                     <th scope="col">Sổ cái</th>
                     <th scope="col">Chênh lệch</th>
                     <th scope="col">Kết quả</th>
@@ -337,8 +337,8 @@ export default function AdminReconciliation() {
           {!!currentRows.length && (
             <section className={styles.result} aria-label="Số dư hiện tại">
               <header className={styles.heading}>
-                <h3>Hiện tại</h3>
-                <span>Số dư toàn hệ thống</span>
+                <h3>Số dư hiện tại</h3>
+                <span>Không phải số dư tại ngày đã chọn</span>
               </header>
               <div className={styles.sheet} role="region" aria-label="Bảng đối soát" tabIndex={0}>
                 <table>
@@ -447,7 +447,7 @@ export default function AdminReconciliation() {
             />
             <div className="stock-actions">
               <Button type="submit" disabled={busy}>
-                Kiểm tra sao kê
+                Xem lại dữ liệu
               </Button>
             </div>
           </>

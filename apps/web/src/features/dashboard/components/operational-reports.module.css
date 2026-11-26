@@ -22,3 +22,67 @@
     grid-template-columns: 1fr;
   }
 }
+
+.actorRole {
+  display: block;
+  margin-top: 5px;
+  font-size: 11px;
+  color: #607568;
+}
+
+:global(.workspace-portal-root.platform-workspace[data-platform-role='admin']) .root {
+  & :global(.admin-report-area-nav) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 5px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    background: #edf3ee;
+    width: fit-content;
+  }
+  & :global(.admin-report-area-nav) button {
+    display: block;
+    min-height: 44px;
+    padding: 10px 16px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+  }
+  & :global(.admin-report-area-nav) button[aria-pressed='true'] {
+    background: #1c4935;
+    color: white;
+    box-shadow: none;
+  }
+  & :global(.admin-report-area-panel) {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+}
+.auditSheet:global(.admin-audit-sheet) {
+  max-height: none;
+  overflow-y: visible;
+}
+.auditSheet:global(.admin-audit-sheet) :is(th, td):nth-child(1) {
+  width: 16%;
+}
+.auditSheet:global(.admin-audit-sheet) :is(th, td):nth-child(2) {
+  width: 35%;
+}
+.auditSheet:global(.admin-audit-sheet) :is(th, td):nth-child(3) {
+  width: 22%;
+}
+.auditSheet:global(.admin-audit-sheet) :is(th, td):nth-child(4) {
+  width: 27%;
+}
+.auditSheet :global(.sheet-action) {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+@media (max-width: 640px) {
+  .auditSheet:global(.admin-audit-sheet) table {
+    min-width: 620px;
+  }
+}

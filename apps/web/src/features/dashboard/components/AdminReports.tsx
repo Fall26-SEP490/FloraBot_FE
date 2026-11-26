@@ -21,9 +21,9 @@ import AdminRevenueReport from './AdminRevenueReport';
 
 const reports = {
   v_admin_queue: {
-    title: 'Hàng đợi vận hành',
+    title: 'Việc đang chờ xử lý',
     columns: [
-      ['hang_cho', 'Hàng đợi'],
+      ['hang_cho', 'Nội dung'],
       ['so_luong', 'Số lượng'],
     ],
   },
@@ -74,6 +74,56 @@ function displayValue(value: unknown) {
 type AuditLogPage = components['schemas']['AuditPage'];
 
 const auditActions: Record<string, string> = {
+  RECONCILED_DAILY: 'Đối soát nội bộ theo ngày',
+  RECONCILED: 'Đối chiếu sao kê PayOS',
+  SELLER_REFUND_TRANSFER_SUBMITTED: 'Shop gửi minh chứng hoàn tiền',
+  SELLER_REFUND_BANK_VIEWED: 'Shop xem tài khoản nhận hoàn tiền',
+  REFUND_INFO_SUBMITTED: 'Khách cung cấp tài khoản nhận hoàn tiền',
+  REFUND_INFO_CLEARED: 'Xóa thông tin nhận hoàn tiền',
+  REFUND_APPROVED: 'Duyệt hoàn tiền',
+  REFUND_CONFIRMED: 'Xác nhận đã hoàn tiền',
+  ACCESSORY_RESTOCKED: 'Nhập thêm phụ kiện',
+  ADMIN_ACCOUNT_PROFILE_VIEWED: 'Xem hồ sơ tài khoản',
+  CONTACT_EMAIL_VERIFIED: 'Xác minh email liên hệ',
+  DEVICE_FAILED: 'Lệnh thiết bị thất bại',
+  DEVICE_FAULT_REPORTED: 'Báo sự cố thiết bị',
+  DEVICE_FAULT_RESOLVED: 'Đóng sự cố thiết bị',
+  DISPENSE_FAILED: 'Giao hoa thất bại',
+  DISPUTE_REFUND_APPROVED: 'Duyệt hoàn tiền khiếu nại',
+  ESP32_PROVISIONING_QUEUED: 'Chờ cấu hình thiết bị',
+  KIOSK_APPLICATION_CONFIRMED: 'Xác nhận hồ sơ thuê kiosk',
+  KIOSK_APPLICATION_EVIDENCE_ATTACHED: 'Gắn ảnh hồ sơ thuê kiosk',
+  KIOSK_APPLICATION_HANDOVER_COMPLETED: 'Hoàn tất bàn giao kiosk',
+  KIOSK_APPLICATION_PAID: 'Thanh toán hồ sơ thuê kiosk',
+  KIOSK_APPLICATION_SCHEDULED: 'Xếp lịch lắp đặt kiosk',
+  KIOSK_ENROLLED: 'Đăng ký thiết bị kiosk',
+  KIOSK_INSTALLATION_STARTED: 'Bắt đầu lắp đặt kiosk',
+  KIOSK_INSTALLATION_SUBMITTED: 'Gửi báo cáo lắp đặt',
+  KIOSK_KEY_PROVISIONED: 'Cấp khóa kết nối kiosk',
+  KIOSK_MANAGER_AUTO_ASSIGNED: 'Tự động phân công quản lý kiosk',
+  KIOSK_MANAGER_CHANGED: 'Đổi quản lý kiosk',
+  KIOSK_RENEWAL_CANCELLED: 'Hủy gia hạn kiosk',
+  KIOSK_RENEWAL_REQUESTED: 'Yêu cầu gia hạn kiosk',
+  KIOSK_REQUIREMENTS_SUBMITTED: 'Gửi yêu cầu cấu hình kiosk',
+  KIOSK_SLOT_PRICING_UPDATED: 'Cập nhật giá thuê ô tủ',
+  PAYMENT_LINK_REQUESTED: 'Tạo liên kết thanh toán',
+  PRODUCT_CREATED: 'Tạo mẫu hoa',
+  PRODUCT_SHOP_QUANTITY_CHANGED: 'Cập nhật số lượng mẫu hoa',
+  PRODUCT_STATUS_CHANGED: 'Đổi trạng thái mẫu hoa',
+  PRODUCT_UPDATED: 'Cập nhật mẫu hoa',
+  SELLER_PAYMENT_CHANNEL_STATUS_CHANGED: 'Đổi trạng thái kênh thanh toán shop',
+  SELLER_SLOT_BOUQUET_REMOVED: 'Thu hồi hoa khỏi ô tủ',
+  SLOT_MAINTENANCE_INSPECTION_OPENED: 'Mở kiểm tra phiên bảo trì',
+  SLOT_MAINTENANCE_ISSUE_REPORTED: 'Báo sự cố khi bảo trì',
+  SLOT_MANUAL_RETRY_ENROLLMENT_UPDATED: 'Cập nhật quyền thử lại ô tủ',
+  SLOT_SENSOR_CAPABILITY_UPDATED: 'Cập nhật cấu hình cảm biến ô tủ',
+  TECHNICAL_REPAIR_APPROVED: 'Duyệt ca sửa chữa',
+  TECHNICAL_REPAIR_UNLOCK_ISSUED: 'Cấp mã mở ô sửa chữa',
+  SUBSCRIPTION_REMINDER_QUEUED: 'Chờ gửi email nhắc gia hạn',
+  SUBSCRIPTION_REMINDER_SENT: 'Đã gửi email nhắc gia hạn',
+  SUBSCRIPTION_REMINDER_FAILED: 'Gửi email nhắc gia hạn thất bại',
+  SUBSCRIPTION_REMINDER_SKIPPED: 'Bỏ qua email nhắc gia hạn',
+
   DEVICE_SENT: 'Gửi lệnh đến thiết bị',
   DEVICE_ACK: 'Thiết bị nhận lệnh',
   DEVICE_OPENED: 'Cửa đã mở',
@@ -108,6 +158,11 @@ const auditActions: Record<string, string> = {
   PREORDER_PICKUP_OTP_REQUESTED: 'Yêu cầu mã nhận hoa',
 };
 const auditEntities: Record<string, string> = {
+  users: 'Tài khoản',
+  accessories: 'Phụ kiện',
+  kiosk_applications: 'Hồ sơ thuê kiosk',
+  kiosk_slot_pricing: 'Giá thuê ô tủ',
+  payment_channel_versions: 'Kênh thanh toán shop',
   orders: 'Đơn hàng',
   slots: 'Ô tủ',
   kiosks: 'Kiosk',
@@ -161,6 +216,44 @@ function AdminAuditLogsSection({
     },
   });
 
+  const accounts = useQuery({
+    queryKey: ['audit-account-names', actorId],
+    staleTime: 300_000,
+    queryFn: async () => {
+      const names = new Map<string, { fullName: string; role: string }>();
+      for (let number = 1; number <= 100; number++) {
+        const result = await request<components['schemas']['AdminAccountPage']>(
+          `/admin/accounts?page=${number}&pageSize=100`,
+        );
+        for (const account of result.items)
+          names.set(account.id, { fullName: account.fullName, role: account.role });
+        if (!result.hasMore) return names;
+      }
+      throw new Error('Chưa tải đủ tên tài khoản.');
+    },
+  });
+  const actorRoles: Record<string, string> = {
+    ADMIN: 'Quản trị viên',
+    OPERATIONS_MANAGER: 'Quản lý vận hành',
+    TECHNICIAN: 'Kỹ thuật viên',
+    SELLER: 'Chủ shop',
+    SELLER_STAFF: 'Nhân viên shop',
+    CUSTOMER: 'Khách hàng',
+    MEMBER: 'Khách hàng',
+  };
+  function actorLabel(item: AuditLogPage['items'][number]) {
+    if (item.actorType === 'SYSTEM') return 'Hệ thống tự động';
+    if (item.actorType === 'KIOSK') return 'Thiết bị kiosk';
+    const account = item.actorId ? accounts.data?.get(item.actorId) : undefined;
+    return (
+      account?.fullName ||
+      (item.actorType === 'USER'
+        ? accounts.isPending
+          ? 'Đang tải tên…'
+          : 'Chưa xác định người dùng'
+        : 'Chưa xác định')
+    );
+  }
   const visibleLogs = (logs.data?.items ?? []).filter((item) =>
     matchesAuditSearch(
       [
@@ -170,6 +263,7 @@ function AdminAuditLogsSection({
         auditEntities[item.entityType] ?? '',
         item.entityId ?? '',
         item.actorId ?? '',
+        actorLabel(item),
         item.actorType === 'SYSTEM'
           ? 'Hệ thống'
           : item.actorType === 'USER'
@@ -222,7 +316,7 @@ function AdminAuditLogsSection({
               type="search"
               maxLength={120}
               value={searchDraft}
-              placeholder="Nhập hành động, đối tượng hoặc mã…"
+              placeholder="Tìm thao tác, tên người thực hiện hoặc mã…"
               onChange={(event) => {
                 setSearchDraft(event.target.value);
                 if (!event.target.value.trim()) {
@@ -249,12 +343,17 @@ function AdminAuditLogsSection({
           )}
         </div>
       </form>
+      {accounts.isError && (
+        <p className="quiet" role="status">
+          Chưa tải được tên người thực hiện.
+        </p>
+      )}
       {logs.isPending && (
         <p role="status">{searching ? 'Đang tìm trong toàn bộ nhật ký…' : 'Đang tải nhật ký…'}</p>
       )}
       {logs.isError && (
         <div role="alert">
-          <p className="error">Chưa tải được nhật ký kiểm toán.</p>
+          <p className="error">Chưa tải được nhật ký.</p>
           <Button variant="outline" disabled={logs.isFetching} onClick={() => void logs.refetch()}>
             {logs.isFetching ? 'Đang tải…' : 'Thử lại nhật ký'}
           </Button>
@@ -269,7 +368,7 @@ function AdminAuditLogsSection({
       {logs.data && logs.data.items.length > 0 && (
         <>
           <div
-            className="admin-report-sheet admin-audit-sheet"
+            className={`admin-report-sheet admin-audit-sheet ${styles.auditSheet}`}
             role="region"
             aria-label="Bảng nhật ký kiểm toán"
             tabIndex={0}
@@ -280,7 +379,6 @@ function AdminAuditLogsSection({
                   <th scope="col">Thời gian</th>
                   <th scope="col">Hành động</th>
                   <th scope="col">Đối tượng</th>
-                  <th scope="col">Mã đối tượng</th>
                   <th scope="col">Người thực hiện</th>
                 </tr>
               </thead>
@@ -305,22 +403,21 @@ function AdminAuditLogsSection({
                     </td>
                     <td>
                       <strong className="sheet-action" title={item.action}>
-                        {auditActions[item.action] || item.action}
+                        {auditActions[item.action] || 'Hoạt động khác'}
                       </strong>
                     </td>
-                    <td title={item.entityType}>
-                      {auditEntities[item.entityType] || item.entityType || '—'}
+                    <td title={item.entityId ? `Mã tham chiếu: ${item.entityId}` : undefined}>
+                      {auditEntities[item.entityType] || 'Đối tượng khác'}
                     </td>
                     <td>
-                      <code className="sheet-id">{item.entityId || '—'}</code>
-                    </td>
-                    <td>
-                      {item.actorType === 'SYSTEM'
-                        ? 'Hệ thống'
-                        : item.actorType === 'USER'
-                          ? 'Tài khoản'
-                          : item.actorType}
-                      {item.actorId && <code className="sheet-id">{item.actorId}</code>}
+                      <span title={item.actorId || undefined}>{actorLabel(item)}</span>
+                      {item.actorType === 'USER' &&
+                        item.actorId &&
+                        accounts.data?.get(item.actorId) && (
+                          <small className={styles.actorRole}>
+                            {actorRoles[accounts.data.get(item.actorId)!.role] || 'Người dùng'}
+                          </small>
+                        )}
                     </td>
                   </tr>
                 ))}
@@ -383,6 +480,17 @@ export default function AdminReports({ session }: { session: Session }) {
   });
   if (session.role !== 'ADMIN') return null;
   function cellValue(row: ReportRow, key: string) {
+    if (key === 'hang_cho') {
+      const labels: Record<string, string> = {
+        'Seller chờ duyệt': 'Shop chờ duyệt',
+        'Seller quá hạn gói': 'Shop quá hạn thuê',
+        'Đơn đang nhả hàng': 'Đơn đang giao hoa',
+        'Khiếu nại đang mở': 'Khiếu nại chưa hoàn tất',
+        'Sự cố thiết bị đang mở': 'Sự cố thiết bị chưa hoàn tất',
+        'Bó sắp hết hạn': 'Bó hoa sắp hết hạn',
+      };
+      return labels[String(row[key])] ?? displayValue(row[key]);
+    }
     if (key === 'kiosk_id') {
       const kiosk = kiosks.data?.find((item) => item.id === row[key]);
       if (kiosk) return `${kiosk.code} · ${kiosk.name}`;
@@ -406,12 +514,12 @@ export default function AdminReports({ session }: { session: Session }) {
   const pageCount = Math.max(1, Math.ceil(rows.length / 20));
   const visiblePage = Math.min(page, pageCount);
   return (
-    <section className="api-reports" aria-label="Trung tâm báo cáo">
+    <section className={`api-reports ${styles.root}`} aria-label="Trung tâm báo cáo">
       <nav className="admin-report-area-nav" aria-label="Chọn nhóm báo cáo">
         {(
           [
             ['shops', 'Doanh số & thuê kiosk'],
-            ['system', 'Vận hành'],
+            ['system', 'Tổng hợp hệ thống'],
             ['audit', 'Nhật ký hệ thống'],
           ] as const
         ).map(([value, title]) => (
