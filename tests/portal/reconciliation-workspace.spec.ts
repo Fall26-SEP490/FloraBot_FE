@@ -67,8 +67,8 @@ async function setup(page: Page) {
   return model;
 }
 async function fillStatement(page: Page) {
-  await page.getByRole('button', { name: 'Đối chiếu PayOS', exact: true }).click();
-  await page.getByRole('button', { name: 'Nhập sao kê', exact: true }).click();
+  await page.getByRole('button', { name: 'So sánh sao kê PayOS', exact: true }).click();
+  await page.getByRole('button', { name: 'Nhập sao kê PayOS', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Sao kê PayOS', exact: true });
   await dialog.getByRole('button', { name: 'Dán từ Excel', exact: true }).click();
   await dialog
@@ -91,13 +91,15 @@ for (const width of [390, 1440]) {
     await expect(count).not.toContainText('₫');
     await expect(
       section.getByRole('row').filter({ hasText: 'Tiền thu từ đơn & phí thuê' }),
-    ).toContainText('Có chênh lệch');
+    ).toContainText('10.000 ₫');
     await page.screenshot({ path: info.outputPath(`daily-${width}.png`) });
     const dialog = await fillStatement(page);
     await dialog.screenshot({ path: info.outputPath(`statement-modal-${width}.png`) });
     await dialog.getByRole('button', { name: 'Đối chiếu', exact: true }).click();
     await expect(dialog).not.toBeVisible();
-    await expect(section.getByRole('cell', { name: 'Lệch số tiền', exact: true })).toBeVisible();
+    await expect(
+      section.getByRole('cell', { name: 'Số tiền không khớp', exact: true }),
+    ).toBeVisible();
     await expect(section.getByRole('cell', { name: '15.000 ₫', exact: true })).toBeVisible();
     expect(model.writes).toEqual([
       { path: '/api/admin/flows/reconcile_daily', body: { p_date: '2026-11-26' } },

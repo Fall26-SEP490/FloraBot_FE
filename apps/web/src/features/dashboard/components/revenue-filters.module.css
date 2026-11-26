@@ -1,0 +1,34 @@
+.filters.filters:global(.admin-revenue-filters) {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.filters.filters > .shops {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 16px;
+  width: 100%;
+  padding-top: 18px;
+  border-top: 1px solid #e0e8e2;
+}
+.shops > div {
+  min-width: 0;
+}
+.filters.filters label {
+  display: block;
+  margin: 0 0 8px;
+}
+.filters.filters > .actions {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+}
+@media (max-width: 640px) {
+  .filters.filters > .shops {
+    grid-template-columns: 1fr;
+  }
+  .filters.filters > .actions > button {
+    width: 100%;
+  }
+}

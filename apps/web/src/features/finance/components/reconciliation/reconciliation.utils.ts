@@ -45,7 +45,31 @@ export function parseStatementPaste(text: string): Statement {
 }
 
 export const differenceLabels: Record<string, string> = {
-  MISSING_IN_DB: 'Hệ thống thiếu giao dịch',
-  MISSING_IN_STATEMENT: 'Sao kê thiếu giao dịch',
-  AMOUNT_MISMATCH: 'Lệch số tiền',
+  MISSING_IN_DB: 'Chỉ có trên sao kê',
+  MISSING_IN_STATEMENT: 'Chỉ có trong hệ thống',
+  AMOUNT_MISMATCH: 'Số tiền không khớp',
 };
+
+// Only the current visible request may update the report after a hide/unmount or a newer run.
+export function createReconciliationGate() {
+  let version = 0;
+  return {
+    begin: () => ++version,
+    invalidate: () => {
+      version++;
+    },
+    isCurrent: (request: number) => request === version,
+  };
+}
+
+export function statementForSubmission(
+  rows: Statement,
+  pasteOpen: boolean,
+  confirmedEmpty: boolean,
+): Statement {
+  if (pasteOpen) throw new Error('Bấm Dùng dữ liệu hoặc Hủy phần dán trước khi đối chiếu.');
+  const statement = normalizeStatement(rows);
+  if (!statement.length && !confirmedEmpty)
+    throw new Error('Xác nhận sao kê ngày này không có giao dịch.');
+  return statement;
+}

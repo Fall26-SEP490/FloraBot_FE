@@ -1,3 +1,6 @@
+import ReportTimestamp from './ReportTimestamp';
+import detailStyles from './report-details.module.css';
+import ReportPagination from './ReportPagination';
 import { liveListOptions } from '@/shared/lib/live-list';
 /* eslint-disable jsx-a11y/no-noninteractive-tabindex -- Scrollable report regions need keyboard focus for horizontal scrolling. */
 import Select from '@/shared/components/Select';
@@ -226,7 +229,7 @@ export default function AdminSellerOrders({
             <p>Không có đơn khớp bộ lọc.</p>
           ) : (
             <div
-              className="admin-report-sheet admin-order-list"
+              className={`admin-report-sheet admin-order-list ${detailStyles.orders}`}
               role="region"
               aria-label="Bảng đơn hàng"
               tabIndex={0}
@@ -250,23 +253,11 @@ export default function AdminSellerOrders({
                         <strong className="sheet-code">{item.orderCode}</strong>
                       </td>
                       <td className="sheet-date">
-                        <time dateTime={item.createdAt}>
-                          <span>
-                            {new Date(item.createdAt).toLocaleDateString('vi-VN', {
-                              timeZone: 'Asia/Ho_Chi_Minh',
-                            })}
-                          </span>
-                          <small>
-                            {new Date(item.createdAt).toLocaleTimeString('vi-VN', {
-                              timeZone: 'Asia/Ho_Chi_Minh',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </small>
-                        </time>
+                        <ReportTimestamp value={item.createdAt} />
                       </td>
                       <td>
-                        {item.kioskCode} · {item.kioskName}
+                        <span>{item.kioskCode}</span>
+                        <small className={detailStyles.kioskName}>{item.kioskName}</small>
                       </td>
                       <td>{item.mode === 'PREORDER' ? 'Đặt trước' : 'Mua tại tủ'}</td>
                       <td className="sheet-number">{money(item.totalAmount)}</td>
@@ -290,23 +281,13 @@ export default function AdminSellerOrders({
               </table>
             </div>
           )}
-          <nav className="stock-actions" aria-label="Phân trang đơn seller">
-            <Button
-              variant="outline"
-              disabled={page === 1 || orders.isFetching}
-              onClick={() => setPage((value) => value - 1)}
-            >
-              Đơn trang trước
-            </Button>
-            <span>Trang {page}</span>
-            <Button
-              variant="outline"
-              disabled={!orders.data.hasMore || orders.isFetching}
-              onClick={() => setPage((value) => value + 1)}
-            >
-              Đơn trang sau
-            </Button>
-          </nav>
+          <ReportPagination
+            ariaLabel="Phân trang đơn hàng"
+            page={page}
+            hasMore={orders.data.hasMore}
+            busy={orders.isFetching}
+            onPageChange={setPage}
+          />
         </>
       )}
       {selected && (

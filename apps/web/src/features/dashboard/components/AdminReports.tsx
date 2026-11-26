@@ -1,5 +1,5 @@
 'use client';
-import { liveListOptions } from '@/shared/lib/live-list';
+import ReportPagination from './ReportPagination';
 
 /* eslint-disable jsx-a11y/no-noninteractive-tabindex -- Scrollable report regions need keyboard focus for horizontal scrolling. */
 
@@ -11,65 +11,12 @@ import { AdminFilterBar } from '@/features/portal/components/AdminUi';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@florabot/ui';
 import { request, type Session } from '@/shared/lib/api';
-import { isRevenueReport } from '../revenue-report.utils';
 import './admin-revenue-report.css';
 import './report-sheet.css';
 import styles from './operational-reports.module.css';
 import { loadAuditPages, matchesAuditSearch } from '../audit-search.utils';
 import AdminSellerReports from './AdminSellerReports';
 import AdminRevenueReport from './AdminRevenueReport';
-
-const reports = {
-  v_admin_queue: {
-    title: 'Việc đang chờ xử lý',
-    columns: [
-      ['hang_cho', 'Nội dung'],
-      ['so_luong', 'Số lượng'],
-    ],
-  },
-  v_revenue_daily: {
-    title: 'Thu và hoàn tiền bán hoa',
-    columns: [
-      ['ngay', 'Ngày'],
-      ['kiosk', 'Kiosk'],
-      ['so_don', 'Số đơn'],
-      ['gmv', 'Giá trị đơn (VND)'],
-    ],
-  },
-  v_platform_revenue: {
-    title: 'Doanh thu phí thuê',
-    columns: [
-      ['thang', 'Tháng'],
-      ['doanh_thu_phi_goi', 'Phí thuê (VND)'],
-    ],
-  },
-  v_ai_effectiveness: {
-    title: 'Hiệu quả tư vấn',
-    columns: [
-      ['kiosk_id', 'Kiosk'],
-      ['source', 'Nguồn'],
-      ['so_khao_sat', 'Khảo sát'],
-      ['so_mua', 'Đã mua'],
-      ['ty_le_mua', 'Tỷ lệ mua (%)'],
-      ['latency_tb_ms', 'Độ trễ TB (ms)'],
-    ],
-  },
-} as const;
-type ReportName = keyof typeof reports;
-type ReportRow = Record<string, unknown>;
-
-function displayValue(value: unknown) {
-  if (value == null) return '—';
-  if (typeof value === 'number')
-    return Number.isFinite(value) && (Number.isSafeInteger(value) || !Number.isInteger(value))
-      ? value.toLocaleString('vi-VN', { maximumFractionDigits: 4 })
-      : 'Giá trị vượt độ chính xác';
-  if (typeof value === 'string') {
-    if (/^-?\d+$/.test(value)) return BigInt(value).toLocaleString('vi-VN');
-    return value;
-  }
-  return typeof value === 'boolean' ? (value ? 'Có' : 'Không') : '—';
-}
 
 type AuditLogPage = components['schemas']['AuditPage'];
 
@@ -277,7 +224,6 @@ function AdminAuditLogsSection({
   const offset = searching ? (page - 1) * 10 : ((page - 1) % 5) * 10;
   const pageLogs = visibleLogs.slice(offset, offset + 10);
   const hasNext = offset + 10 < visibleLogs.length || (!searching && !!logs.data?.hasMore);
-  const firstResult = (page - 1) * 10 + 1;
   return (
     <section className="admin-audit-panel" aria-label="Nhật ký hệ thống">
       <form
@@ -424,28 +370,14 @@ function AdminAuditLogsSection({
               </tbody>
             </table>
           </div>
-          <nav aria-label="Phân trang nhật ký kiểm toán" className="stock-actions">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={page <= 1 || logs.isFetching}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              Trang trước
-            </Button>
-            <span role="status">
-              {pageLogs.length ? `${firstResult}–${firstResult + pageLogs.length - 1}` : '0'}
-              {searching ? ` / ${visibleLogs.length}` : ''} · Trang {page}
-            </span>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={!hasNext || logs.isFetching}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              Trang sau
-            </Button>
-          </nav>
+          <ReportPagination
+            ariaLabel="Phân trang nhật ký"
+            page={page}
+            hasMore={hasNext}
+            totalPages={searching ? Math.max(1, Math.ceil(visibleLogs.length / 10)) : undefined}
+            busy={logs.isFetching}
+            onPageChange={setPage}
+          />
         </>
       )}
     </section>
@@ -455,71 +387,20 @@ function AdminAuditLogsSection({
 export default function AdminReports({ session }: { session: Session }) {
   const searchParams = useSearchParams();
   const esp32Kiosk = searchParams.get('esp32Kiosk');
-  const [reportArea, setReportArea] = useState<'shops' | 'system' | 'audit'>(
-    esp32Kiosk ? 'audit' : 'shops',
+  const initialSellerId = searchParams.get('sellerId') ?? '';
+  const [reportArea, setReportArea] = useState<'revenue' | 'audit'>(
+    esp32Kiosk ? 'audit' : 'revenue',
   );
-  const [report, setReport] = useState<ReportName>('v_admin_queue');
-  const [page, setPage] = useState(1);
-  const [systemSearch, setSystemSearch] = useState('');
-  const financial = isRevenueReport(report);
-  const config = reports[report];
-  const query = useQuery({
-    ...liveListOptions(),
-    queryKey: ['admin-reports', session.id, report],
-    queryFn: async () => {
-      const rows = await request<ReportRow[]>(`/admin/reports/${report}`);
-      if (!Array.isArray(rows)) throw new Error('Không đọc được dữ liệu báo cáo.');
-      return rows;
-    },
-    enabled: session.role === 'ADMIN' && reportArea === 'system' && !financial,
-  });
-  const kiosks = useQuery({
-    queryKey: ['admin-report-kiosks', session.id],
-    queryFn: () => request<components['schemas']['AdminKioskResponse'][]>('/admin/kiosks'),
-    enabled: session.role === 'ADMIN' && reportArea === 'system' && report === 'v_ai_effectiveness',
-  });
+  const [report, setReport] = useState<'flowers' | 'rental' | 'lookup'>(
+    initialSellerId ? 'lookup' : 'flowers',
+  );
   if (session.role !== 'ADMIN') return null;
-  function cellValue(row: ReportRow, key: string) {
-    if (key === 'hang_cho') {
-      const labels: Record<string, string> = {
-        'Seller chờ duyệt': 'Shop chờ duyệt',
-        'Seller quá hạn gói': 'Shop quá hạn thuê',
-        'Đơn đang nhả hàng': 'Đơn đang giao hoa',
-        'Khiếu nại đang mở': 'Khiếu nại chưa hoàn tất',
-        'Sự cố thiết bị đang mở': 'Sự cố thiết bị chưa hoàn tất',
-        'Bó sắp hết hạn': 'Bó hoa sắp hết hạn',
-      };
-      return labels[String(row[key])] ?? displayValue(row[key]);
-    }
-    if (key === 'kiosk_id') {
-      const kiosk = kiosks.data?.find((item) => item.id === row[key]);
-      if (kiosk) return `${kiosk.code} · ${kiosk.name}`;
-    }
-    if (key === 'source') {
-      const sources: Record<string, string> = {
-        LLM: 'AI',
-        FALLBACK: 'Dự phòng',
-        CACHE: 'Kết quả có sẵn',
-      };
-      return sources[String(row[key])] ?? displayValue(row[key]);
-    }
-    return displayValue(row[key]);
-  }
-  const rows = (query.data ?? []).filter((row) =>
-    matchesAuditSearch(
-      config.columns.flatMap(([key]) => [displayValue(row[key]), cellValue(row, key)]),
-      systemSearch,
-    ),
-  );
-  const pageCount = Math.max(1, Math.ceil(rows.length / 20));
-  const visiblePage = Math.min(page, pageCount);
   return (
     <section className={`api-reports ${styles.root}`} aria-label="Trung tâm báo cáo">
       <nav className="admin-report-area-nav" aria-label="Chọn nhóm báo cáo">
         {(
           [
-            ['shops', 'Doanh số & thuê kiosk'],
-            ['system', 'Tổng hợp hệ thống'],
+            ['revenue', 'Báo cáo doanh thu'],
             ['audit', 'Nhật ký hệ thống'],
           ] as const
         ).map(([value, title]) => (
@@ -533,147 +414,27 @@ export default function AdminReports({ session }: { session: Session }) {
           </button>
         ))}
       </nav>
-      <div hidden={reportArea !== 'shops'}>
-        <AdminSellerReports
-          actorId={session.id}
-          initialSellerId={searchParams.get('sellerId') ?? ''}
-        />
+      <div hidden={reportArea !== 'revenue'}>
+        <AdminFilterBar label="Nội dung báo cáo">
+          <div>
+            <label htmlFor="revenue-report-kind">Nội dung</label>
+            <Select
+              id="revenue-report-kind"
+              value={report}
+              onChange={(event) => setReport(event.target.value as typeof report)}
+            >
+              <option value="flowers">Doanh số bán hoa & hoàn tiền</option>
+              <option value="rental">Doanh thu phí thuê kiosk</option>
+              <option value="lookup">Đơn hàng, giao dịch & kỳ thuê</option>
+            </Select>
+          </div>
+        </AdminFilterBar>
+        {report === 'lookup' ? (
+          <AdminSellerReports actorId={session.id} initialSellerId={initialSellerId} detailsOnly />
+        ) : (
+          <AdminRevenueReport key={report} actorId={session.id} kind={report} />
+        )}
       </div>
-      {reportArea === 'system' && (
-        <div className={`admin-report-area-panel ${styles.panel}`}>
-          <AdminFilterBar
-            label="Loại báo cáo"
-            actions={
-              !financial &&
-              query.isError && (
-                <Button
-                  variant="outline"
-                  disabled={query.isFetching}
-                  onClick={() => void query.refetch()}
-                >
-                  {query.isFetching ? 'Đang cập nhật…' : 'Cập nhật báo cáo'}
-                </Button>
-              )
-            }
-          >
-            <div>
-              <label htmlFor="operations-report">Chọn báo cáo</label>
-              <Select
-                id="operations-report"
-                value={report}
-                onChange={(event) => {
-                  setReport(event.target.value as ReportName);
-                  setPage(1);
-                  setSystemSearch('');
-                }}
-              >
-                {Object.entries(reports).map(([key, item]) => (
-                  <option key={key} value={key}>
-                    {item.title}
-                  </option>
-                ))}
-              </Select>
-            </div>
-            {!financial && (
-              <div>
-                <label htmlFor="system-report-search">Tìm kiếm</label>
-                <input
-                  id="system-report-search"
-                  type="search"
-                  value={systemSearch}
-                  placeholder="Tìm trong báo cáo…"
-                  onChange={(event) => {
-                    setSystemSearch(event.target.value);
-                    setPage(1);
-                  }}
-                />
-              </div>
-            )}
-          </AdminFilterBar>
-          {financial ? (
-            <AdminRevenueReport
-              key={report}
-              actorId={session.id}
-              kind={report === 'v_platform_revenue' ? 'rental' : 'flowers'}
-            />
-          ) : (
-            <>
-              {query.isPending ? (
-                <p role="status">Đang tải báo cáo…</p>
-              ) : query.isError ? (
-                <p role="alert">Chưa tải được báo cáo. Thử lại.</p>
-              ) : !rows.length ? (
-                <p role="status">
-                  {systemSearch ? 'Không tìm thấy kết quả phù hợp.' : 'Chưa có dữ liệu.'}
-                </p>
-              ) : (
-                <>
-                  <div
-                    className="admin-report-sheet admin-system-sheet"
-                    role="region"
-                    aria-label={config.title}
-                    tabIndex={0}
-                  >
-                    <table>
-                      <caption className="sr-only">{config.title}</caption>
-                      <thead>
-                        <tr>
-                          {config.columns.map(([key, label]) => (
-                            <th scope="col" key={key}>
-                              {label}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {rows.slice((visiblePage - 1) * 20, visiblePage * 20).map((row, index) => (
-                          <tr key={`${page}-${index}`}>
-                            {config.columns.map(([key, label]) => (
-                              <td
-                                key={key}
-                                data-label={label}
-                                className={
-                                  typeof row[key] === 'number' ? 'sheet-number' : undefined
-                                }
-                              >
-                                {cellValue(row, key)}
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  {(query.data?.length ?? 0) >= 100 && (
-                    <p className="quiet">API trả về tối đa 100 dòng cho báo cáo này.</p>
-                  )}
-                  {pageCount > 1 && (
-                    <nav aria-label="Phân trang báo cáo" className="stock-actions">
-                      <Button
-                        variant="outline"
-                        disabled={visiblePage === 1}
-                        onClick={() => setPage(visiblePage - 1)}
-                      >
-                        Trang trước
-                      </Button>
-                      <span>
-                        Trang {visiblePage} / {pageCount}
-                      </span>
-                      <Button
-                        variant="outline"
-                        disabled={visiblePage >= pageCount}
-                        onClick={() => setPage(visiblePage + 1)}
-                      >
-                        Trang sau
-                      </Button>
-                    </nav>
-                  )}
-                </>
-              )}
-            </>
-          )}
-        </div>
-      )}
       {reportArea === 'audit' && (
         <div className="admin-report-area-panel">
           <AdminAuditLogsSection

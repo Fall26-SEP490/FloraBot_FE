@@ -1,18 +1,23 @@
 'use client';
 /* eslint-disable jsx-a11y/no-noninteractive-tabindex -- Horizontal tables need keyboard focus. */
+import ReportPagination from '@/features/dashboard/components/ReportPagination';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button, Search } from '@florabot/ui';
 import { ApiError, request } from '@/shared/lib/api';
 import { Modal } from '@/shared/components/Modal';
 import Select from '@/shared/components/Select';
 import VietnamDateInput from '@/shared/components/VietnamDateInput';
-import SellerPagination from '@/shared/components/SellerPagination';
-import { vietnamDate } from '@/shared/lib/vietnam-date';
+import { vietnamDateTimeToUtc, vietnamDate } from '@/shared/lib/vietnam-date';
 import { revenueInteger } from '@/features/dashboard/revenue-report.utils';
 import type { DailyReconciliationResult, GatewayReconciliationResult } from '../../finance.types';
 import StatementEditor, { type StatementEntry } from './StatementEditor';
-import { differenceLabels, normalizeStatement, parseStatementPaste } from './reconciliation.utils';
+import {
+  createReconciliationGate,
+  differenceLabels,
+  statementForSubmission,
+  parseStatementPaste,
+} from './reconciliation.utils';
 import styles from './reconciliation.module.css';
 
 const number = (value: number | string | null | undefined) => {
@@ -26,7 +31,7 @@ const labels: Record<string, string> = {
   'Tiền vào VietQR (đơn + phí gói)': 'Tiền thu từ đơn & phí thuê',
   'Chi hoàn khách/seller (chuyển khoản tay)': 'Tiền đã hoàn',
   'Chi rút tiền seller': 'Tiền shop đã rút',
-  'Sổ cái cân (tổng mọi bút toán)': 'Cân đối sổ cái',
+  'Sổ cái cân (tổng mọi bút toán)': 'Kiểm tra cân bằng sổ tiền',
   'Lệnh hoàn chờ chi quá 48 giờ (số lệnh)': 'Lệnh hoàn quá 48 giờ',
   'Tiền đang chờ hoàn (REFUND_CLEARING)': 'Tiền chờ hoàn',
 };
@@ -50,35 +55,66 @@ export default function AdminReconciliation() {
   const [type, setType] = useState('');
   const [page, setPage] = useState(1);
 
+  const gate = useRef(createReconciliationGate());
+  useEffect(() => {
+    const currentGate = gate.current;
+    function hideResults() {
+      if (!document.hidden) return;
+      currentGate.invalidate();
+      sending.current = false;
+      setBusy(false);
+      setDaily(null);
+      setGateway(null);
+      setEditorOpen(false);
+      setEmpty(false);
+      setError('');
+    }
+    document.addEventListener('visibilitychange', hideResults);
+    return () => {
+      currentGate.invalidate();
+      document.removeEventListener('visibilitychange', hideResults);
+    };
+  }, []);
+
   async function run(kind: 'daily' | 'gateway') {
     if (sending.current) return;
-    if (!day) {
-      setError('Chọn ngày đối soát.');
-      return;
-    }
+    let version: number | null = null;
     try {
+      if (day === '0001-01-01') throw new Error('Chọn ngày đối soát hợp lệ.');
+      try {
+        vietnamDateTimeToUtc(`${day}T00:00`);
+      } catch {
+        throw new Error('Chọn ngày đối soát hợp lệ.');
+      }
       const statement =
         kind === 'gateway'
-          ? normalizeStatement(entries.map((row) => ({ txn: row.txn, amount: Number(row.amount) })))
+          ? statementForSubmission(
+              entries.map((row) => ({ txn: row.txn, amount: Number(row.amount) })),
+              paste !== null,
+              empty,
+            )
           : [];
-      if (kind === 'gateway' && !statement.length && !empty)
-        throw new Error('Xác nhận sao kê ngày này không có giao dịch.');
+      version = gate.current.begin();
       sending.current = true;
       setBusy(true);
       setError('');
       if (kind === 'daily') {
+        setDaily(null);
         const data = await request<DailyReconciliationResult>(
           '/admin/flows/reconcile_daily',
           { p_date: day },
           false,
         );
+        if (!gate.current.isCurrent(version)) return;
         setDaily({ day, data });
       } else {
+        setGateway(null);
         const data = await request<GatewayReconciliationResult>(
           '/admin/flows/reconcile_gateway',
           { p_date: day, p_statement: statement },
           false,
         );
+        if (!gate.current.isCurrent(version)) return;
         setGateway({ day, data });
         setPage(1);
         setSearch('');
@@ -86,6 +122,7 @@ export default function AdminReconciliation() {
         setEditorOpen(false);
       }
     } catch (cause) {
+      if (version !== null && !gate.current.isCurrent(version)) return;
       setError(
         cause instanceof ApiError
           ? cause.message
@@ -94,8 +131,10 @@ export default function AdminReconciliation() {
             : 'Chưa nhận được kết quả. Thử lại sau.',
       );
     } finally {
-      sending.current = false;
-      setBusy(false);
+      if (version === null || gate.current.isCurrent(version)) {
+        sending.current = false;
+        setBusy(false);
+      }
     }
   }
 
@@ -108,6 +147,13 @@ export default function AdminReconciliation() {
   );
   const lastPage = Math.max(1, Math.ceil(differences.length / 20));
   const currentPage = Math.min(page, lastPage);
+  const currentItems = new Set([
+    'Sổ cái cân (tổng mọi bút toán)',
+    'Lệnh hoàn chờ chi quá 48 giờ (số lệnh)',
+    'Tiền đang chờ hoàn (REFUND_CLEARING)',
+  ]);
+  const dayRows = daily?.data.result.filter((row) => !currentItems.has(row.muc)) ?? [];
+  const currentRows = daily?.data.result.filter((row) => currentItems.has(row.muc)) ?? [];
 
   return (
     <section className={`admin-reconciliation ${styles.surface}`} aria-label="Đối soát">
@@ -121,7 +167,7 @@ export default function AdminReconciliation() {
             setError('');
           }}
         >
-          Giao dịch & sổ cái
+          Kiểm tra tiền trong hệ thống
         </button>
         <button
           type="button"
@@ -132,7 +178,7 @@ export default function AdminReconciliation() {
             setError('');
           }}
         >
-          Đối chiếu PayOS
+          So sánh sao kê PayOS
         </button>
       </div>
       <div className={styles.sheet}>
@@ -147,6 +193,8 @@ export default function AdminReconciliation() {
               required
               disabled={busy}
               onValueChange={(value) => {
+                gate.current.invalidate();
+                setEmpty(false);
                 setDay(value);
                 setDaily(null);
                 setGateway(null);
@@ -167,7 +215,7 @@ export default function AdminReconciliation() {
                 setError('');
               }}
             >
-              {gateway ? 'Sửa sao kê' : 'Nhập sao kê'}
+              {gateway ? 'Sửa sao kê' : 'Nhập sao kê PayOS'}
             </Button>
           )}
           {view === 'gateway' && gateway && (
@@ -187,90 +235,135 @@ export default function AdminReconciliation() {
           </p>
         )}
         {view === 'daily' ? (
-          <div
-            className={styles.tableScroll}
-            aria-busy={busy}
-            role="region"
-            aria-label="Bảng giao dịch và sổ cái"
-            tabIndex={0}
-          >
-            <table>
-              <thead>
-                <tr>
-                  <th>Nội dung</th>
-                  <th className={styles.number}>Chứng từ</th>
-                  <th className={styles.number}>Sổ cái</th>
-                  <th className={styles.number}>Chênh lệch</th>
-                  <th>Kết quả</th>
-                </tr>
-              </thead>
-              <tbody>
-                {daily?.data.result.map((row) => {
-                  const count = row.muc === 'Lệnh hoàn chờ chi quá 48 giờ (số lệnh)';
-                  const balance = row.muc === 'Sổ cái cân (tổng mọi bút toán)';
-                  const pending = row.muc === 'Tiền đang chờ hoàn (REFUND_CLEARING)';
-                  const value = revenueInteger(
-                    count ? row.chung_tu : pending ? row.so_cai : row.lech,
-                  );
-                  const good = value === 0n;
-                  return (
-                    <tr key={row.muc}>
-                      <td>
-                        <strong>{labels[row.muc] || row.muc}</strong>
-                        <small>
-                          {count
-                            ? `Chờ chi quá 48 giờ trước ngày ${date(daily.day)}`
-                            : balance || pending
-                              ? 'Tại thời điểm kiểm tra'
-                              : date(daily.day)}
-                        </small>
-                      </td>
-                      <td className={styles.number}>
-                        {count
-                          ? `${number(row.chung_tu)} lệnh`
-                          : balance || pending
-                            ? '—'
-                            : money(row.chung_tu)}
-                      </td>
-                      <td className={styles.number}>{count ? '—' : money(row.so_cai)}</td>
-                      <td className={styles.number}>{count || pending ? '—' : money(row.lech)}</td>
-                      <td>
-                        <span
-                          className={styles.badge}
-                          data-tone={value === null ? 'muted' : good ? 'success' : 'warning'}
-                        >
-                          {value === null
-                            ? 'Cần kiểm tra'
-                            : pending
-                              ? good
-                                ? 'Không chờ hoàn'
-                                : 'Chờ chi trả'
-                              : count
-                                ? good
-                                  ? 'Không quá hạn'
-                                  : 'Cần xử lý'
-                                : balance
-                                  ? good
-                                    ? 'Cân'
-                                    : 'Chưa cân'
-                                  : good
-                                    ? 'Khớp'
-                                    : 'Có chênh lệch'}
-                        </span>
+          <>
+            {daily && <h3 className={styles.sectionTitle}>Thu chi ngày {date(daily.day)}</h3>}
+            <div
+              className={styles.tableScroll}
+              aria-busy={busy}
+              role="region"
+              aria-label="Bảng thu chi trong ngày"
+              tabIndex={0}
+            >
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">Khoản tiền</th>
+                    <th scope="col" className={styles.number}>
+                      Theo giao dịch
+                    </th>
+                    <th scope="col" className={styles.number}>
+                      Theo sổ kế toán
+                    </th>
+                    <th scope="col" className={styles.number}>
+                      Số tiền lệch
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dayRows.map((row) => {
+                    const difference = revenueInteger(row.lech);
+                    return (
+                      <tr key={row.muc}>
+                        <td>
+                          <strong>{labels[row.muc] || row.muc}</strong>
+                        </td>
+                        <td className={styles.number}>{money(row.chung_tu)}</td>
+                        <td className={styles.number}>{money(row.so_cai)}</td>
+                        <td className={styles.number}>
+                          <span
+                            className={styles.badge}
+                            data-tone={
+                              difference === null
+                                ? 'muted'
+                                : difference === 0n
+                                  ? 'success'
+                                  : 'warning'
+                            }
+                          >
+                            {money(row.lech)}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {!dayRows.length && (
+                    <tr>
+                      <td colSpan={4} className={styles.empty}>
+                        {daily ? 'Không có dữ liệu thu chi.' : 'Chọn ngày và kiểm tra giao dịch.'}
                       </td>
                     </tr>
-                  );
-                })}
-                {!daily?.data.result.length && (
-                  <tr>
-                    <td colSpan={5} className={styles.empty}>
-                      {daily ? 'Không có dữ liệu đối soát.' : 'Chọn ngày và kiểm tra giao dịch.'}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            {!!currentRows.length && (
+              <>
+                <header className={styles.currentHeading}>
+                  <h3>Số dư & khoản chờ xử lý</h3>
+                </header>
+                <div
+                  className={styles.tableScroll}
+                  role="region"
+                  aria-label="Bảng số dư và khoản chờ xử lý"
+                  tabIndex={0}
+                >
+                  <table>
+                    <thead>
+                      <tr>
+                        <th scope="col">Nội dung</th>
+                        <th scope="col" className={styles.number}>
+                          Giá trị
+                        </th>
+                        <th scope="col">Trạng thái</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {currentRows.map((row) => {
+                        const count = row.muc === 'Lệnh hoàn chờ chi quá 48 giờ (số lệnh)';
+                        const balance = row.muc === 'Sổ cái cân (tổng mọi bút toán)';
+                        const value = revenueInteger(count ? row.chung_tu : row.so_cai);
+                        return (
+                          <tr key={row.muc}>
+                            <td>
+                              <strong>{labels[row.muc] || row.muc}</strong>
+                              {count && daily && (
+                                <small>Mốc tính: đầu ngày {date(daily.day)} trừ 48 giờ</small>
+                              )}
+                            </td>
+                            <td className={styles.number}>
+                              {count ? `${number(row.chung_tu)} lệnh` : money(row.so_cai)}
+                            </td>
+                            <td>
+                              <span
+                                className={styles.badge}
+                                data-tone={
+                                  value === null ? 'muted' : value === 0n ? 'success' : 'warning'
+                                }
+                              >
+                                {value === null
+                                  ? 'Cần kiểm tra'
+                                  : balance
+                                    ? value === 0n
+                                      ? 'Cân bằng'
+                                      : 'Chưa cân bằng'
+                                    : count
+                                      ? value === 0n
+                                        ? 'Không quá hạn'
+                                        : 'Cần xử lý'
+                                      : value === 0n
+                                        ? 'Không chờ hoàn'
+                                        : 'Chờ chi trả'}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+          </>
         ) : (
           <>
             {gateway && !!gateway.data.result.length && (
@@ -316,9 +409,9 @@ export default function AdminReconciliation() {
                 <thead>
                   <tr>
                     <th>Mã giao dịch</th>
-                    <th className={styles.number}>Hệ thống</th>
-                    <th className={styles.number}>Sao kê</th>
-                    <th>Kết quả</th>
+                    <th className={styles.number}>Theo hệ thống</th>
+                    <th className={styles.number}>Theo sao kê</th>
+                    <th>Điểm chưa khớp</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -351,7 +444,8 @@ export default function AdminReconciliation() {
               </table>
             </div>
             {lastPage > 1 && (
-              <SellerPagination
+              <ReportPagination
+                ariaLabel="Phân trang chênh lệch"
                 page={currentPage}
                 totalPages={lastPage}
                 busy={busy}
@@ -363,7 +457,7 @@ export default function AdminReconciliation() {
       </div>
       {view === 'gateway' && (
         <p className={styles.hint}>
-          Đối chiếu khoản thu PayOS đã ghi nhận thành công trong ngày với sao kê bạn nhập.
+          So sánh khoản thu thành công trong ngày với sao kê bạn nhập từ PayOS.
         </p>
       )}
       <Modal
@@ -443,10 +537,12 @@ export default function AdminReconciliation() {
             entries={entries}
             disabled={busy}
             onChange={(rows) => {
+              setEmpty(false);
               setEntries(rows);
               setError('');
             }}
             onAdd={() => {
+              setEmpty(false);
               const key = nextKey.current++;
               setEntries((rows) => [...rows, { key, txn: '', amount: '' }]);
             }}
@@ -467,8 +563,11 @@ export default function AdminReconciliation() {
               {error}
             </p>
           )}
+          {paste !== null && (
+            <p className={styles.hint}>Bấm Dùng dữ liệu hoặc Hủy trước khi đối chiếu.</p>
+          )}
           <div className={styles.actions}>
-            <Button type="submit" disabled={busy}>
+            <Button type="submit" disabled={busy || paste !== null}>
               {busy ? 'Đang đối chiếu…' : 'Đối chiếu'}
             </Button>
             <Button
