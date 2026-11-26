@@ -981,7 +981,7 @@ export function FlowerRequestForm({
           aria-describedby={!uncertain ? `request-ready-${item.productId}` : undefined}
           className="flower-request-submit-btn"
         >
-          {busy ? 'Đang gửi…' : uncertain ? 'Gửi lại cùng yêu cầu' : 'Gửi yêu cầu báo giá'}
+          {busy ? 'Đang gửi…' : uncertain ? 'Gửi lại cùng yêu cầu' : 'Gửi yêu cầu đặt trước'}
         </Button>
       </div>
       {uncertain && !busy && (

@@ -51,7 +51,7 @@ for (const width of [320, 390, 1280]) {
     await mock(page);
     await page.goto(`/dat-hoa/${productId}/${kioskId}`);
     await page.getByRole('button', { name: 'Đặt trước', exact: true }).click();
-    const dialog = page.getByRole('dialog', { name: 'Yêu cầu báo giá', exact: true });
+    const dialog = page.getByRole('dialog', { name: 'Yêu cầu đặt trước', exact: true });
     await expect(dialog).toBeVisible();
     await expect(page.getByRole('button', { name: 'Tư vấn FloraBot', exact: true })).toBeHidden();
     const time = dialog.getByRole('combobox', { name: 'Giờ nhận hoa', exact: true });

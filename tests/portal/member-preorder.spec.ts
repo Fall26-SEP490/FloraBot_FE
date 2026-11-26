@@ -81,7 +81,7 @@ test('CUSTOMER places CUSTOM with selected kiosk and no door action', async ({ p
   expect(axe.violations).toEqual([]);
   await page
     .getByRole('button', {
-      name: 'Gửi yêu cầu báo giá',
+      name: 'Gửi yêu cầu đặt trước',
       exact: true,
     })
     .click();
@@ -99,7 +99,7 @@ test('SELLER cannot create a customer preorder in the FE', async ({ page }) => {
   );
   await page.goto('/dat-hoa');
   await page.getByRole('button', { name: /báo giá/i }).click();
-  await expect(page.getByRole('button', { name: 'Gửi yêu cầu báo giá' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Gửi yêu cầu đặt trước' })).toHaveCount(0);
 });
 
 test('same flower at one kiosk keeps Walk-in view separate from Pre-order', async ({ page }) => {
@@ -198,7 +198,7 @@ test('legacy API design templates still place CUSTOM requests without guessing s
     .getByLabel('Bạn muốn bó hoa như thế nào?')
     .fill('Hoa sinh nhật màu hồng, ngân sách 400.000 đồng');
 
-  await page.getByRole('button', { name: 'Gửi yêu cầu báo giá', exact: true }).click();
+  await page.getByRole('button', { name: 'Gửi yêu cầu đặt trước', exact: true }).click();
   await expect(page.locator('.flower-request').getByRole('alert')).toContainText(
     'Kiosk không nhận đơn mới',
   );
