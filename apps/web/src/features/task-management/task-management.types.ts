@@ -13,6 +13,7 @@ export type Task = {
   version: number;
   assigneeName: string;
   assigneeId: string;
+  kioskId: string;
   kioskName: string;
   createdAt?: string;
   updatedAt?: string;

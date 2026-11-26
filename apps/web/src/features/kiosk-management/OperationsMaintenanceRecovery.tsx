@@ -1,3 +1,7 @@
+import './styles/operations-usability.css';
+import KioskFilter from '@/shared/components/KioskFilter';
+import { matchesKiosk } from '@/shared/lib/kiosk-filter';
+import { matchesTaskSearch, readAllTaskPages } from '../task-management/task-list.utils';
 import '@/features/account-management/styles/operations-detail-polish.css';
 import WorkspaceTable from '@/features/portal/components/WorkspaceTable';
 import '@/features/portal/styles/operations-registers.css';
@@ -231,16 +235,31 @@ function RecoveryForm({
 
 export default function OperationsMaintenanceRecovery({ managerId }: { managerId: string }) {
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [kioskFilter, setKioskFilter] = useState('');
   const [selected, setSelected] = useState<RecoveryRow>();
   const [notice, setNotice] = useState('');
   const close = useCallback(() => setSelected(undefined), []);
   const queryKey = ['operations-maintenance-recoveries', managerId] as const;
   const recoveries = useQuery({
     ...liveListOptions(!selected),
-    queryKey: [...queryKey, page],
-    queryFn: () => request<RecoveryPage>(`/operations/maintenance-recoveries?page=${page}`),
+    queryKey: [...queryKey, 'all'],
+    queryFn: () =>
+      readAllTaskPages(async (number) => {
+        const result = await request<RecoveryPage>(
+          `/operations/maintenance-recoveries?page=${number}`,
+        );
+        return { ...result, items: result.items.map((row) => ({ ...row, id: row.sessionId })) };
+      }),
   });
 
+  const matchingRows = (recoveries.data?.items ?? []).filter(
+    (row) =>
+      matchesKiosk(row.kioskId, kioskFilter) &&
+      matchesTaskSearch([row.kioskName, row.kioskCode, row.slotCode, actions[row.action]], search),
+  );
+  const currentPage = Math.min(page, Math.max(1, Math.ceil(matchingRows.length / 25)));
+  const visibleRows = matchingRows.slice((currentPage - 1) * 25, currentPage * 25);
   return (
     <section
       className="business-panel maintenance-recovery-panel"
@@ -261,6 +280,33 @@ export default function OperationsMaintenanceRecovery({ managerId }: { managerId
         )}
       </div>
 
+      <div className="termination-list-tools">
+        <div>
+          <label htmlFor="recovery-search">Tìm phiên thao tác</label>
+          <input
+            id="recovery-search"
+            type="search"
+            value={search}
+            placeholder="Kiosk, ô tủ, thao tác"
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setPage(1);
+            }}
+          />
+        </div>
+        <KioskFilter
+          items={(recoveries.data?.items ?? []).map((row) => ({
+            id: row.kioskId,
+            name: row.kioskName,
+            code: row.kioskCode,
+          }))}
+          value={kioskFilter}
+          onChange={(value) => {
+            setKioskFilter(value);
+            setPage(1);
+          }}
+        />
+      </div>
       {notice && <p role="status">{notice}</p>}
       {recoveries.isPending ? (
         <p role="status">Đang tải phiên bảo trì hết hạn…</p>
@@ -268,8 +314,8 @@ export default function OperationsMaintenanceRecovery({ managerId }: { managerId
         <p role="alert" className="error">
           {recoveries.error.message}
         </p>
-      ) : recoveries.data.items.length === 0 ? (
-        <p>Không có phiên hết hạn cần khôi phục.</p>
+      ) : visibleRows.length === 0 ? (
+        <p>Không có phiên phù hợp.</p>
       ) : (
         <WorkspaceTable label="Phiên thao tác cần khôi phục">
           <table className="operations-recovery-table">
@@ -283,7 +329,7 @@ export default function OperationsMaintenanceRecovery({ managerId }: { managerId
               </tr>
             </thead>
             <tbody>
-              {recoveries.data.items.map((row) => (
+              {visibleRows.map((row) => (
                 <tr key={row.sessionId}>
                   <td>
                     <strong>{row.kioskName}</strong>
@@ -314,16 +360,20 @@ export default function OperationsMaintenanceRecovery({ managerId }: { managerId
           </table>
         </WorkspaceTable>
       )}
-      {(page > 1 || recoveries.data?.hasMore) && (
+      {(currentPage > 1 || matchingRows.length > 25) && (
         <nav className="business-pagination" aria-label="Trang phiên bảo trì">
-          <Button variant="outline" disabled={page <= 1} onClick={() => setPage(page - 1)}>
-            Trước
-          </Button>
-          <span>Trang {page}</span>
           <Button
             variant="outline"
-            disabled={!recoveries.data?.hasMore}
-            onClick={() => setPage(page + 1)}
+            disabled={currentPage <= 1 || recoveries.isFetching}
+            onClick={() => setPage(currentPage - 1)}
+          >
+            Trước
+          </Button>
+          <span>Trang {currentPage}</span>
+          <Button
+            variant="outline"
+            disabled={currentPage * 25 >= matchingRows.length || recoveries.isFetching}
+            onClick={() => setPage(currentPage + 1)}
           >
             Sau
           </Button>
