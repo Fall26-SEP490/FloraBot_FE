@@ -208,7 +208,7 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
       else
         await request('/admin/flows/confirm_refund', {
           p_refund: id,
-          p_proof_url: form.getValues('proof'),
+          p_proof_url: sellerSubmission.data ? '' : form.getValues('proof'),
         } satisfies ConfirmRefundRequest);
       onNotice(
         action === 'approve'
@@ -248,7 +248,7 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
   const start = (kind: 'approve' | 'pay', button: HTMLButtonElement) => {
     opener.current = button;
     setAction(kind);
-    setReview(kind === 'approve');
+    setReview(kind === 'approve' || Boolean(sellerSubmission.data));
     form.reset();
     setError('');
   };
@@ -294,7 +294,18 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Xem chứng từ shop gửi
+                  {/* The authenticated endpoint streams the verified original image. */}
+                  <img
+                    src={`/api/admin/evidence/${sellerSubmission.data.evidenceAttachmentId}`}
+                    alt="Ảnh chứng từ chuyển khoản do shop gửi"
+                    style={{
+                      display: 'block',
+                      maxWidth: '100%',
+                      maxHeight: '24rem',
+                      objectFit: 'contain',
+                    }}
+                  />
+                  Mở ảnh chứng từ gốc
                 </a>
               )}
             </div>
@@ -452,7 +463,7 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
                   )}
                   {action && (
                     <form noValidate onSubmit={form.handleSubmit(() => setReview(true))}>
-                      {action === 'pay' && (
+                      {action === 'pay' && !sellerSubmission.data && (
                         <div hidden={review}>
                           <Controller
                             name="proof"
@@ -505,7 +516,7 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
                                 ? 'Chỉ xác nhận sau khi đã đối chiếu giao dịch và chứng từ shop gửi. Thao tác này không chi tiền từ FloraBot.'
                                 : 'Chỉ xác nhận khi giao dịch ngân hàng đã hoàn tất. Thao tác này cập nhật sổ cái và trạng thái khoản hoàn.'}
                           </p>
-                          {action === 'pay' && (
+                          {action === 'pay' && !sellerSubmission.data && (
                             <p className="incident-text">
                               Ảnh chứng từ đã lưu và gắn với khoản hoàn này.
                             </p>
@@ -533,7 +544,7 @@ function RefundDetails({ id, onNotice }: { id: string; onNotice: (message: strin
                             Kiểm tra chứng từ hoàn
                           </Button>
                         )}
-                        {review && action === 'pay' && (
+                        {review && action === 'pay' && !sellerSubmission.data && (
                           <Button
                             type="button"
                             variant="outline"
