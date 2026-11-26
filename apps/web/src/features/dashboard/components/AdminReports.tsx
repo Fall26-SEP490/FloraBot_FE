@@ -14,6 +14,7 @@ import { request, type Session } from '@/shared/lib/api';
 import { isRevenueReport } from '../revenue-report.utils';
 import './admin-revenue-report.css';
 import './report-sheet.css';
+import styles from './operational-reports.module.css';
 import { loadAuditPages, matchesAuditSearch } from '../audit-search.utils';
 import AdminSellerReports from './AdminSellerReports';
 import AdminRevenueReport from './AdminRevenueReport';
@@ -21,7 +22,6 @@ import AdminRevenueReport from './AdminRevenueReport';
 const reports = {
   v_admin_queue: {
     title: 'Hàng đợi vận hành',
-    description: 'Tổng hợp các yêu cầu đang chờ xử lý.',
     columns: [
       ['hang_cho', 'Hàng đợi'],
       ['so_luong', 'Số lượng'],
@@ -29,18 +29,15 @@ const reports = {
   },
   v_revenue_daily: {
     title: 'Thu và hoàn tiền bán hoa',
-    description: 'Tổng giá trị đơn đã thu theo ngày và kiosk.',
     columns: [
       ['ngay', 'Ngày'],
       ['kiosk', 'Kiosk'],
       ['so_don', 'Số đơn'],
       ['gmv', 'Giá trị đơn (VND)'],
-      ['giam_do_diem', 'Giảm bằng điểm (VND)'],
     ],
   },
   v_platform_revenue: {
     title: 'Doanh thu phí thuê',
-    description: 'Doanh thu phí thuê theo tháng (tách biệt tiền bán hoa).',
     columns: [
       ['thang', 'Tháng'],
       ['doanh_thu_phi_goi', 'Phí thuê (VND)'],
@@ -48,7 +45,6 @@ const reports = {
   },
   v_ai_effectiveness: {
     title: 'Hiệu quả tư vấn',
-    description: 'Kết quả khảo sát, mua hàng và thời gian phản hồi.',
     columns: [
       ['kiosk_id', 'Kiosk'],
       ['source', 'Nguồn'],
@@ -380,21 +376,42 @@ export default function AdminReports({ session }: { session: Session }) {
     },
     enabled: session.role === 'ADMIN' && reportArea === 'system' && !financial,
   });
+  const kiosks = useQuery({
+    queryKey: ['admin-report-kiosks', session.id],
+    queryFn: () => request<components['schemas']['AdminKioskResponse'][]>('/admin/kiosks'),
+    enabled: session.role === 'ADMIN' && reportArea === 'system' && report === 'v_ai_effectiveness',
+  });
   if (session.role !== 'ADMIN') return null;
+  function cellValue(row: ReportRow, key: string) {
+    if (key === 'kiosk_id') {
+      const kiosk = kiosks.data?.find((item) => item.id === row[key]);
+      if (kiosk) return `${kiosk.code} · ${kiosk.name}`;
+    }
+    if (key === 'source') {
+      const sources: Record<string, string> = {
+        LLM: 'AI',
+        FALLBACK: 'Dự phòng',
+        CACHE: 'Kết quả có sẵn',
+      };
+      return sources[String(row[key])] ?? displayValue(row[key]);
+    }
+    return displayValue(row[key]);
+  }
   const rows = (query.data ?? []).filter((row) =>
     matchesAuditSearch(
-      config.columns.map(([key]) => displayValue(row[key])),
+      config.columns.flatMap(([key]) => [displayValue(row[key]), cellValue(row, key)]),
       systemSearch,
     ),
   );
   const pageCount = Math.max(1, Math.ceil(rows.length / 20));
+  const visiblePage = Math.min(page, pageCount);
   return (
     <section className="api-reports" aria-label="Trung tâm báo cáo">
       <nav className="admin-report-area-nav" aria-label="Chọn nhóm báo cáo">
         {(
           [
             ['shops', 'Doanh số & thuê kiosk'],
-            ['system', 'Số liệu hệ thống'],
+            ['system', 'Vận hành'],
             ['audit', 'Nhật ký hệ thống'],
           ] as const
         ).map(([value, title]) => (
@@ -415,8 +432,7 @@ export default function AdminReports({ session }: { session: Session }) {
         />
       </div>
       {reportArea === 'system' && (
-        <div className="admin-report-area-panel">
-          <h2>Số liệu hệ thống</h2>
+        <div className={`admin-report-area-panel ${styles.panel}`}>
           <AdminFilterBar
             label="Loại báo cáo"
             actions={
@@ -450,6 +466,21 @@ export default function AdminReports({ session }: { session: Session }) {
                 ))}
               </Select>
             </div>
+            {!financial && (
+              <div>
+                <label htmlFor="system-report-search">Tìm kiếm</label>
+                <input
+                  id="system-report-search"
+                  type="search"
+                  value={systemSearch}
+                  placeholder="Tìm trong báo cáo…"
+                  onChange={(event) => {
+                    setSystemSearch(event.target.value);
+                    setPage(1);
+                  }}
+                />
+              </div>
+            )}
           </AdminFilterBar>
           {financial ? (
             <AdminRevenueReport
@@ -459,25 +490,14 @@ export default function AdminReports({ session }: { session: Session }) {
             />
           ) : (
             <>
-              <div className="admin-audit-search">
-                <label htmlFor="system-report-search">Tìm trong báo cáo</label>
-                <input
-                  id="system-report-search"
-                  type="search"
-                  value={systemSearch}
-                  placeholder="Nhập nội dung cần tìm…"
-                  onChange={(event) => {
-                    setSystemSearch(event.target.value);
-                    setPage(1);
-                  }}
-                />
-              </div>
               {query.isPending ? (
                 <p role="status">Đang tải báo cáo…</p>
               ) : query.isError ? (
-                <p role="alert">Chưa tải được báo cáo. Kiểm tra kết nối rồi chọn cập nhật.</p>
+                <p role="alert">Chưa tải được báo cáo. Thử lại.</p>
               ) : !rows.length ? (
-                <p role="status">Chưa có dữ liệu cho báo cáo này.</p>
+                <p role="status">
+                  {systemSearch ? 'Không tìm thấy kết quả phù hợp.' : 'Chưa có dữ liệu.'}
+                </p>
               ) : (
                 <>
                   <div
@@ -487,7 +507,7 @@ export default function AdminReports({ session }: { session: Session }) {
                     tabIndex={0}
                   >
                     <table>
-                      <caption>{config.title}</caption>
+                      <caption className="sr-only">{config.title}</caption>
                       <thead>
                         <tr>
                           {config.columns.map(([key, label]) => (
@@ -498,7 +518,7 @@ export default function AdminReports({ session }: { session: Session }) {
                         </tr>
                       </thead>
                       <tbody>
-                        {rows.slice((page - 1) * 20, page * 20).map((row, index) => (
+                        {rows.slice((visiblePage - 1) * 20, visiblePage * 20).map((row, index) => (
                           <tr key={`${page}-${index}`}>
                             {config.columns.map(([key, label]) => (
                               <td
@@ -508,7 +528,7 @@ export default function AdminReports({ session }: { session: Session }) {
                                   typeof row[key] === 'number' ? 'sheet-number' : undefined
                                 }
                               >
-                                {displayValue(row[key])}
+                                {cellValue(row, key)}
                               </td>
                             ))}
                           </tr>
@@ -516,25 +536,30 @@ export default function AdminReports({ session }: { session: Session }) {
                       </tbody>
                     </table>
                   </div>
-                  <nav aria-label="Phân trang báo cáo" className="stock-actions">
-                    <Button
-                      variant="outline"
-                      disabled={page === 1}
-                      onClick={() => setPage((p) => p - 1)}
-                    >
-                      Trang trước
-                    </Button>
-                    <span>
-                      Trang {page} / {pageCount}
-                    </span>
-                    <Button
-                      variant="outline"
-                      disabled={page >= pageCount}
-                      onClick={() => setPage((p) => p + 1)}
-                    >
-                      Trang sau
-                    </Button>
-                  </nav>
+                  {(query.data?.length ?? 0) >= 100 && (
+                    <p className="quiet">API trả về tối đa 100 dòng cho báo cáo này.</p>
+                  )}
+                  {pageCount > 1 && (
+                    <nav aria-label="Phân trang báo cáo" className="stock-actions">
+                      <Button
+                        variant="outline"
+                        disabled={visiblePage === 1}
+                        onClick={() => setPage(visiblePage - 1)}
+                      >
+                        Trang trước
+                      </Button>
+                      <span>
+                        Trang {visiblePage} / {pageCount}
+                      </span>
+                      <Button
+                        variant="outline"
+                        disabled={visiblePage >= pageCount}
+                        onClick={() => setPage(visiblePage + 1)}
+                      >
+                        Trang sau
+                      </Button>
+                    </nav>
+                  )}
                 </>
               )}
             </>

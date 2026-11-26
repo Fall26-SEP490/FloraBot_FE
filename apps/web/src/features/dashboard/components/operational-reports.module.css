@@ -1,0 +1,24 @@
+.panel :global(.admin-filter-fields) {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(200px, 1fr);
+  gap: 16px;
+  align-items: end;
+}
+.panel :global(.admin-filter-fields) > div {
+  min-width: 0;
+}
+.panel :global(.admin-filter-fields) input {
+  width: 100%;
+}
+.panel :global(.admin-system-sheet) {
+  max-height: none;
+  overflow-y: visible;
+}
+.panel :global(.admin-system-sheet) :is(th, td):first-child {
+  width: auto;
+}
+@media (max-width: 640px) {
+  .panel :global(.admin-filter-fields) {
+    grid-template-columns: 1fr;
+  }
+}
