@@ -1,4 +1,7 @@
 'use client';
+import KioskFilter from '@/shared/components/KioskFilter';
+import { matchesKiosk } from '@/shared/lib/kiosk-filter';
+import { matchesTaskSearch } from '../task-management/task-list.utils';
 import { liveListOptions } from '@/shared/lib/live-list';
 
 import IconActionButton from '@/shared/components/IconActionButton';
@@ -27,6 +30,7 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const [kioskFilter, setKioskFilter] = useState('');
   const [status, setStatus] = useState('');
   const detailRef = useRef<HTMLDivElement>(null);
   const scrollPending = useRef(false);
@@ -47,12 +51,6 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
     { value: 'AWAITING_HANDOVER', label: 'Chờ nghiệm thu' },
     { value: 'ACTIVE', label: 'Đã bàn giao' },
   ];
-  const normalize = (value: string) =>
-    value
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase()
-      .replace(/đ/g, 'd');
   const jobPriority: Record<string, number> = {
     INSTALLING: 0,
     SCHEDULED: 1,
@@ -63,9 +61,8 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
     .filter(
       (job) =>
         (!status || job.status === status) &&
-        normalize(`${job.shopName} ${job.kioskCode} ${job.installationAddress}`).includes(
-          normalize(search.trim()),
-        ),
+        matchesKiosk(job.kioskCode, kioskFilter) &&
+        matchesTaskSearch([job.shopName, job.kioskCode, job.installationAddress, job.id], search),
     )
     .sort((a, b) => (jobPriority[a.status] ?? 4) - (jobPriority[b.status] ?? 4));
   const effectiveJobId = matchingJobs.some((job) => job.id === selectedJobId)
@@ -187,6 +184,16 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
                 placeholder="Tên shop, mã tủ, địa chỉ"
                 onChange={(event) => setSearch(event.target.value)}
               />
+              <KioskFilter
+                items={jobs
+                  .filter((job) => job.kioskCode)
+                  .map((job) => ({ id: job.kioskCode!, code: job.kioskCode }))}
+                value={kioskFilter}
+                onChange={(value) => {
+                  setKioskFilter(value);
+                  setDetailOpen(false);
+                }}
+              />
             </div>
             <p className="technician-list-count" role="status">
               {matchingJobs.length} / {jobs.length} phiếu
@@ -212,6 +219,7 @@ export default function TechnicianInstallations({ session }: TechnicianInstallat
                   variant="outline"
                   onClick={() => {
                     setSearch('');
+                    setKioskFilter('');
                     setStatus('');
                   }}
                 >

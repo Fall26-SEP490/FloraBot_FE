@@ -1,4 +1,7 @@
 'use client';
+import KioskFilter from '@/shared/components/KioskFilter';
+import { matchesKiosk } from '@/shared/lib/kiosk-filter';
+import { matchesTaskSearch, readAllTaskPages } from '../task-management/task-list.utils';
 import WorkspaceTable from '@/features/portal/components/WorkspaceTable';
 import { Modal } from '@/shared/components/Modal';
 import '@/features/portal/styles/operations-registers.css';
@@ -1177,18 +1180,27 @@ function ManagerLayoutRequestCard({ item }: { item: SlotLayoutRequestView }) {
 export function OperationsTerminations() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [kioskFilter, setKioskFilter] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [locationOpen, setLocationOpen] = useState(false);
   const [layoutOpen, setLayoutOpen] = useState(false);
   const records = useQuery({
     ...liveListOptions(!expandedId),
-    queryKey: ['operations-terminations', status, page],
+    queryKey: ['operations-terminations', 'all'],
     queryFn: () =>
-      request<Page>(
-        `/operations/kiosk-termination-requests?page=${page}&limit=20${status ? `&status=${status}` : ''}`,
+      readAllTaskPages((number) =>
+        request<Page>(`/operations/kiosk-termination-requests?page=${number}&limit=20`),
       ),
   });
+  const matchingRecords = (records.data?.items ?? []).filter(
+    (item) =>
+      (!status || item.status === status) &&
+      matchesKiosk(item.kioskId, kioskFilter) &&
+      matchesTaskSearch([item.kioskCode, item.kioskName, item.shopName, item.id], search),
+  );
+  const currentPage = Math.min(page, Math.max(1, Math.ceil(matchingRecords.length / 20)));
+  const visibleRecords = matchingRecords.slice((currentPage - 1) * 20, currentPage * 20);
   const hasAssignableTermination = Boolean(
     records.data?.items.some(
       (item) =>
@@ -1234,15 +1246,30 @@ export function OperationsTerminations() {
       </div>
       <div className="termination-list-tools">
         <div>
-          <label htmlFor="termination-search">Tìm hồ sơ trong trang</label>
+          <label htmlFor="termination-search">Tìm hồ sơ</label>
           <input
             id="termination-search"
             type="search"
             value={search}
             placeholder="Mã tủ, tên kiosk hoặc shop…"
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setPage(1);
+            }}
           />
         </div>
+        <KioskFilter
+          items={(records.data?.items ?? []).map((item) => ({
+            id: item.kioskId,
+            name: item.kioskName,
+            code: item.kioskCode,
+          }))}
+          value={kioskFilter}
+          onChange={(value) => {
+            setKioskFilter(value);
+            setPage(1);
+          }}
+        />
         <div>
           <label htmlFor="termination-filter">Trạng thái </label>
           <Select
@@ -1268,7 +1295,7 @@ export function OperationsTerminations() {
         <p role="status">Đang tải hồ sơ…</p>
       ) : records.isError ? (
         <p role="alert">{textError(records.error)}</p>
-      ) : records.data?.items.length ? (
+      ) : visibleRecords.length ? (
         <WorkspaceTable label="Hồ sơ chấm dứt thuê kiosk">
           <table className="operations-termination-table">
             <thead>
@@ -1281,65 +1308,47 @@ export function OperationsTerminations() {
               </tr>
             </thead>
             <tbody>
-              {records.data.items
-                .filter((item) =>
-                  [item.kioskCode, item.kioskName, item.shopName]
-                    .filter(Boolean)
-                    .join(' ')
-                    .toLocaleLowerCase('vi')
-                    .includes(search.trim().toLocaleLowerCase('vi')),
-                )
-                .map((item) => (
-                  <tr key={item.id}>
-                    <td>
-                      <strong>{item.kioskName || item.kioskCode}</strong>
-                      <span className="table-secondary">
-                        {item.kioskCode} · {item.shopName}
-                      </span>
-                    </td>
-                    <td>
-                      <time dateTime={item.requestedAt}>
-                        {new Date(item.requestedAt).toLocaleDateString('vi-VN', {
-                          timeZone: 'Asia/Ho_Chi_Minh',
-                        })}
-                      </time>
-                    </td>
-                    <td>
-                      <span className="table-badge" data-state={item.status}>
-                        {statusLabel[item.status] || item.status}
-                      </span>
-                    </td>
-                    <td>
-                      {item.removalTaskStatus
-                        ? removalTaskLabel[item.removalTaskStatus] || item.removalTaskStatus
-                        : '—'}
-                    </td>
-                    <td>
-                      <Button
-                        variant="outline"
-                        aria-label={`Mở hồ sơ ${item.kioskCode || item.kioskName}`}
-                        onClick={() => setExpandedId(item.id)}
-                      >
-                        Xem
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
+              {visibleRecords.map((item) => (
+                <tr key={item.id}>
+                  <td>
+                    <strong>{item.kioskName || item.kioskCode}</strong>
+                    <span className="table-secondary">
+                      {item.kioskCode} · {item.shopName}
+                    </span>
+                  </td>
+                  <td>
+                    <time dateTime={item.requestedAt}>
+                      {new Date(item.requestedAt).toLocaleDateString('vi-VN', {
+                        timeZone: 'Asia/Ho_Chi_Minh',
+                      })}
+                    </time>
+                  </td>
+                  <td>
+                    <span className="table-badge" data-state={item.status}>
+                      {statusLabel[item.status] || item.status}
+                    </span>
+                  </td>
+                  <td>
+                    {item.removalTaskStatus
+                      ? removalTaskLabel[item.removalTaskStatus] || item.removalTaskStatus
+                      : '—'}
+                  </td>
+                  <td>
+                    <Button
+                      variant="outline"
+                      aria-label={`Mở hồ sơ ${item.kioskCode || item.kioskName}`}
+                      onClick={() => setExpandedId(item.id)}
+                    >
+                      Xem
+                    </Button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
-          {search.trim() &&
-            !records.data.items.some((item) =>
-              [item.kioskCode, item.kioskName, item.shopName]
-                .filter(Boolean)
-                .join(' ')
-                .toLocaleLowerCase('vi')
-                .includes(search.trim().toLocaleLowerCase('vi')),
-            ) && (
-              <p className="operations-register-empty">Không có hồ sơ phù hợp trong trang này.</p>
-            )}
         </WorkspaceTable>
       ) : (
-        <p>Không có hồ sơ trong trạng thái này.</p>
+        <p>Không có hồ sơ phù hợp.</p>
       )}
       <Modal
         open={!!expandedId}
@@ -1376,14 +1385,18 @@ export function OperationsTerminations() {
           className="business-pagination termination-pagination"
           aria-label="Phân trang hồ sơ chấm dứt"
         >
-          <Button variant="outline" disabled={page <= 1} onClick={() => setPage(page - 1)}>
-            Trước
-          </Button>
-          <span>Trang {page}</span>
           <Button
             variant="outline"
-            disabled={!records.data.hasMore}
-            onClick={() => setPage(page + 1)}
+            disabled={currentPage <= 1 || records.isFetching}
+            onClick={() => setPage(currentPage - 1)}
+          >
+            Trước
+          </Button>
+          <span>Trang {currentPage}</span>
+          <Button
+            variant="outline"
+            disabled={currentPage * 20 >= matchingRecords.length || records.isFetching}
+            onClick={() => setPage(currentPage + 1)}
           >
             Sau
           </Button>

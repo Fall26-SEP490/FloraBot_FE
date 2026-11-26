@@ -1678,3 +1678,21 @@
   background: transparent;
   box-shadow: none;
 }
+
+/* Keep kiosk selectors and search controls aligned without squeezing the search field. */
+#staff-tasks .manager-inbox-tools {
+  flex-wrap: wrap;
+  align-items: end;
+}
+#staff-tasks .manager-inbox-tools .operations-incident-search {
+  flex: 1 1 260px;
+}
+#staff-tasks .task-page-search {
+  align-items: end;
+}
+#staff-tasks .operations-incident-search input:focus,
+#staff-tasks .operations-incident-search input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+}

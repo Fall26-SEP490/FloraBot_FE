@@ -1,5 +1,8 @@
 'use client';
 
+import KioskFilter from '@/shared/components/KioskFilter';
+import { matchesKiosk } from '@/shared/lib/kiosk-filter';
+import { matchesTaskSearch, readAllTaskPages } from '../task-management/task-list.utils';
 import SellerPagination from '@/shared/components/SellerPagination';
 import RefreshRegion from '@/shared/components/RefreshRegion';
 import WorkspaceTable from '@/features/portal/components/WorkspaceTable';
@@ -1625,6 +1628,7 @@ export default function WebRequests({
   const [resultPage, setResultPage] = useState<number | null>(null);
   const [queueLimit, setQueueLimit] = useState(50);
   const [search, setSearch] = useState('');
+  const [kioskFilter, setKioskFilter] = useState('');
   const [pickupDay, setPickupDay] = useState('');
   const base =
     mode === 'member'
@@ -1633,16 +1637,33 @@ export default function WebRequests({
         ? '/admin/preorders'
         : `/sellers/${sellerId}/preorders`;
   const query = useQuery({
-    queryKey: mode === 'seller' ? sellerQueueKey(base, queueLimit) : ['web-orders', base, page],
+    meta: {
+      portalManagedRefresh: mode === 'admin',
+      portalRefreshPaused: mode === 'admin' && Boolean(selectedAdminOrderId),
+    },
+    refetchOnWindowFocus: mode !== 'admin' || !selectedAdminOrderId,
+    refetchOnReconnect: mode !== 'admin' || !selectedAdminOrderId,
+    queryKey:
+      mode === 'seller'
+        ? sellerQueueKey(base, queueLimit)
+        : ['web-orders', base, mode === 'admin' ? 'all' : page],
     queryFn: ({ signal }) =>
       mode === 'seller'
         ? readSellerQueue((next) => request<Page>(`${base}?page=${next}`), queueLimit, signal)
-        : request<Page>(`${base}?page=${page}`),
+        : mode === 'admin'
+          ? readAllTaskPages((number) => request<Page>(`${base}?page=${number}`)).then(
+              (result) => ({ ...result, page: 1 }),
+            )
+          : request<Page>(`${base}?page=${page}`),
     refetchInterval: (q) =>
-      mode !== 'seller' &&
-      q.state.data?.items?.some((item) => item.orderStatus === 'AWAITING_PAYMENT')
-        ? 5_000
-        : 30_000,
+      mode === 'admin'
+        ? selectedAdminOrderId
+          ? false
+          : 30_000
+        : mode !== 'seller' &&
+            q.state.data?.items?.some((item) => item.orderStatus === 'AWAITING_PAYMENT')
+          ? 5_000
+          : 30_000,
     placeholderData: (previous, previousQuery) =>
       mode === 'seller' && previousQuery?.queryKey[1] === base ? previous : undefined,
     enabled: mode !== 'seller' || Boolean(sellerId),
@@ -1749,14 +1770,20 @@ export default function WebRequests({
     mode === 'member' ? [...items, ...purchaseRows] : items;
   const searchNeedle = searchable(search.trim());
   const matchesSearch = (row: WebOrder) =>
-    !searchNeedle ||
-    searchable(
-      [row.orderCode, row.id, row.productName, row.shopName, row.kioskName, row.address]
-        .filter(Boolean)
-        .join(' '),
-    ).includes(searchNeedle);
+    mode === 'admin'
+      ? matchesTaskSearch(
+          [row.orderCode, row.id, row.productName, row.shopName, row.kioskName, row.address],
+          search,
+        )
+      : !searchNeedle ||
+        searchable(
+          [row.orderCode, row.id, row.productName, row.shopName, row.kioskName, row.address]
+            .filter(Boolean)
+            .join(' '),
+        ).includes(searchNeedle);
   const filtered = loadedItems.filter(
     (row) =>
+      (mode !== 'admin' || matchesKiosk(row.kioskId, kioskFilter)) &&
       matchesOrderFilter(row, filter, mode) &&
       matchesSearch(row) &&
       (mode !== 'seller' || !pickupDay || pickupDayKey(row.pickupAt) === pickupDay),
@@ -1771,7 +1798,9 @@ export default function WebRequests({
           resultPage ?? (targetIndex >= 0 ? Math.floor(targetIndex / SELLER_RESULT_SIZE) + 1 : 1),
           totalResultPages,
         )
-      : page;
+      : mode === 'admin'
+        ? Math.min(page, totalResultPages)
+        : page;
   const displayItems =
     mode === 'seller'
       ? filtered.slice((displayPage - 1) * SELLER_RESULT_SIZE, displayPage * SELLER_RESULT_SIZE)
@@ -1779,7 +1808,11 @@ export default function WebRequests({
         ? [...filtered].sort(
             (a, b) => (Date.parse(b.createdAt ?? '') || 0) - (Date.parse(a.createdAt ?? '') || 0),
           )
-        : filtered;
+        : [...filtered]
+            .sort(
+              (a, b) => (Date.parse(b.createdAt ?? '') || 0) - (Date.parse(a.createdAt ?? '') || 0),
+            )
+            .slice((displayPage - 1) * SELLER_RESULT_SIZE, displayPage * SELLER_RESULT_SIZE);
   const interventionCount =
     mode === 'admin'
       ? items.filter((row) => matchesOrderFilter(row, 'attention', 'admin')).length
@@ -2143,14 +2176,17 @@ export default function WebRequests({
         <>
           <div className="admin-preorder-toolbar" role="group" aria-label="Bộ lọc đơn đặt trước">
             <label className="admin-preorder-search">
-              <span>Tìm đơn trong trang</span>
+              <span>Tìm đơn</span>
               <span className="admin-preorder-search-input">
                 <Search size={17} aria-hidden="true" />
                 <input
                   type="search"
                   placeholder="Mã đơn, tên shop hoặc tủ…"
                   value={search}
-                  onChange={(event) => setSearch(event.target.value)}
+                  onChange={(event) => {
+                    setSearch(event.target.value);
+                    setPage(1);
+                  }}
                 />
               </span>
             </label>
@@ -2158,7 +2194,10 @@ export default function WebRequests({
               <span>Trạng thái</span>
               <Select
                 value={filter}
-                onChange={(event) => setFilter(event.target.value as OrderFilter)}
+                onChange={(event) => {
+                  setFilter(event.target.value as OrderFilter);
+                  setPage(1);
+                }}
               >
                 {sellerFilters.map(({ value, label }) => (
                   <option key={value} value={value}>
@@ -2167,6 +2206,14 @@ export default function WebRequests({
                 ))}
               </Select>
             </label>
+            <KioskFilter
+              items={items.map((row) => ({ id: row.kioskId, name: row.kioskName }))}
+              value={kioskFilter}
+              onChange={(value) => {
+                setKioskFilter(value);
+                setPage(1);
+              }}
+            />
             <IconActionButton
               type="button"
               variant="outline"
@@ -2179,14 +2226,17 @@ export default function WebRequests({
           {query.isSuccess && (
             <div className="admin-preorder-results">
               <p role="status">
-                Trang {page} · {filtered.length}/{items.length} yêu cầu
+                Trang {displayPage} · {filtered.length}/{items.length} yêu cầu
               </p>
               {interventionCount > 0 && (
                 <button
                   type="button"
                   className="admin-preorder-flag"
                   aria-pressed={filter === 'attention'}
-                  onClick={() => setFilter(filter === 'attention' ? 'all' : 'attention')}
+                  onClick={() => {
+                    setFilter(filter === 'attention' ? 'all' : 'attention');
+                    setPage(1);
+                  }}
                 >
                   Cần theo dõi <strong>{interventionCount}</strong>
                 </button>
@@ -2514,7 +2564,7 @@ export default function WebRequests({
                   </Button>
                 </div>
               )}
-              {(mode === 'seller'
+              {(mode === 'seller' || mode === 'admin'
                 ? totalResultPages > 1
                 : page > 1 ||
                   query.data?.hasMore ||
@@ -2532,7 +2582,7 @@ export default function WebRequests({
                     <Button
                       variant="outline"
                       disabled={displayPage === 1 || query.isFetching}
-                      onClick={() => changePage(page - 1)}
+                      onClick={() => changePage(displayPage - 1)}
                     >
                       <ArrowLeft size={15} aria-hidden="true" />
                       <span>Trang trước</span>
@@ -2541,11 +2591,13 @@ export default function WebRequests({
                     <Button
                       variant="outline"
                       disabled={
-                        !(query.data?.hasMore || (mode === 'member' && history.data?.hasMore)) ||
+                        !(mode === 'admin'
+                          ? displayPage < totalResultPages
+                          : query.data?.hasMore || (mode === 'member' && history.data?.hasMore)) ||
                         query.isFetching ||
                         (mode === 'member' && history.isFetching)
                       }
-                      onClick={() => changePage(page + 1)}
+                      onClick={() => changePage(displayPage + 1)}
                     >
                       <span>Trang sau</span>
                       <ArrowRight size={15} aria-hidden="true" />

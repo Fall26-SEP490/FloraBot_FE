@@ -1,3 +1,10 @@
+import KioskFilter from '@/shared/components/KioskFilter';
+import { matchesKiosk } from '@/shared/lib/kiosk-filter';
+import {
+  matchesTaskSearch,
+  newestFirst,
+  readAllTaskPages,
+} from '../task-management/task-list.utils';
 import Select from '@/shared/components/Select';
 import IncidentOverview from './IncidentOverview';
 import styles from './incident-overview.module.css';
@@ -192,22 +199,38 @@ export default function AdminIncidents() {
   const [status, setStatus] = useState('OPEN');
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
-  const normalizeSearch = (value: string) =>
-    value
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase()
-      .replace(/đ/g, 'd')
-      .replace(/[^a-z0-9]/g, '');
-  const matches = (row: Incident) =>
-    normalizeSearch(`${formatIncidentLabel(row)} ${row.reason} ${row.id}`).includes(
-      normalizeSearch(search.trim()),
-    );
+  const [kioskFilter, setKioskFilter] = useState('');
   const queue = useQuery({
     ...liveListOptions(),
-    queryKey: ['admin-incidents', status, page],
-    queryFn: () => request<Page>(`/admin/incidents?status=${status}&page=${page}`),
+    queryKey: ['admin-incidents', status, 'all'],
+    queryFn: () =>
+      readAllTaskPages((number) =>
+        request<Page>(`/admin/incidents?status=${status}&page=${number}`),
+      ),
   });
+  const matching = newestFirst(
+    (queue.data?.items ?? []).map((row) => ({
+      ...row,
+      updatedAt: row.resolvedAt ?? row.createdAt,
+    })),
+    status === 'RESOLVED_FIXED',
+  ).filter(
+    (row) =>
+      matchesKiosk(row.kioskId, kioskFilter) &&
+      matchesTaskSearch(
+        [
+          formatIncidentLabel(row),
+          row.location?.kioskCode,
+          row.reason,
+          row.id,
+          `SC-${row.id.slice(-6)}`,
+          row.task?.assigneeName,
+        ],
+        search,
+      ),
+  );
+  const currentPage = Math.min(page, Math.max(1, Math.ceil(matching.length / 25)));
+  const visible = matching.slice((currentPage - 1) * 25, currentPage * 25);
   return (
     <section className="admin-incidents" aria-labelledby="incidents-title">
       <h2 id="incidents-title">Theo dõi sự cố tủ hoa</h2>
@@ -240,20 +263,35 @@ export default function AdminIncidents() {
               setPage(1);
             }}
           >
-            <option value="OPEN">Đang mở · cũ nhất trước</option>
-            <option value="RESOLVED_FIXED">Đã xử lý · mới nhất trước</option>
+            <option value="OPEN">Đang mở</option>
+            <option value="RESOLVED_FIXED">Đã xử lý</option>
           </Select>
         </div>
         <div>
-          <label htmlFor="admin-incident-search">Tìm sự cố trong trang</label>
+          <label htmlFor="admin-incident-search">Tìm sự cố</label>
           <input
             id="admin-incident-search"
             type="search"
             value={search}
             placeholder="Tên kiosk, ô tủ, nội dung hoặc mã sự cố"
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setPage(1);
+            }}
           />
         </div>
+        <KioskFilter
+          items={(queue.data?.items ?? []).map((row) => ({
+            id: row.kioskId,
+            name: row.location?.kioskName,
+            code: row.location?.kioskCode,
+          }))}
+          value={kioskFilter}
+          onChange={(value) => {
+            setKioskFilter(value);
+            setPage(1);
+          }}
+        />
       </AdminFilterBar>
       {queue.isPending ? (
         <p role="status">Đang tải danh sách sự cố…</p>
@@ -270,20 +308,13 @@ export default function AdminIncidents() {
                 : 'Trang này không còn sự cố. Quay lại trang trước hoặc cập nhật danh sách.'}
             </p>
           )}
-          {queue.data.items.length > 0 && (
-            <p className="quiet" role="status">
-              {queue.data.items.filter(matches).length} / {queue.data.items.length} sự cố trong
-              trang {page}
-              {queue.data.hasMore ? ' · Còn trang tiếp theo' : ''}
-            </p>
+          <p className="quiet" role="status">
+            {matching.length} sự cố
+          </p>
+          {queue.data.items.length > 0 && matching.length === 0 && (
+            <p role="status">Không có sự cố phù hợp.</p>
           )}
-          {search && queue.data.items.length > 0 && !queue.data.items.some(matches) && (
-            <p role="status">
-              Không có sự cố khớp tìm kiếm trong trang này. Xóa nội dung tìm kiếm hoặc chuyển trang
-              để xem thêm.
-            </p>
-          )}
-          {queue.data.items.some(matches) && (
+          {visible.length > 0 && (
             <WorkspaceTable label="Giám sát sự cố tủ">
               <table className="admin-monitor-table">
                 <thead>
@@ -296,8 +327,8 @@ export default function AdminIncidents() {
                   </tr>
                 </thead>
                 <tbody>
-                  {queue.data.items.map((row) => (
-                    <IncidentItem key={row.id} row={row} hidden={!matches(row)} />
+                  {visible.map((row) => (
+                    <IncidentItem key={row.id} row={row} />
                   ))}
                 </tbody>
               </table>
@@ -306,16 +337,16 @@ export default function AdminIncidents() {
           <nav className="stock-actions" aria-label="Phân trang sự cố">
             <Button
               variant="outline"
-              disabled={page === 1 || queue.isFetching}
-              onClick={() => setPage((value) => value - 1)}
+              disabled={currentPage === 1 || queue.isFetching}
+              onClick={() => setPage(currentPage - 1)}
             >
               Trang sự cố trước
             </Button>
-            <span>Trang {page}</span>
+            <span>Trang {currentPage}</span>
             <Button
               variant="outline"
-              disabled={!queue.data.hasMore || queue.isFetching}
-              onClick={() => setPage((value) => value + 1)}
+              disabled={currentPage * 25 >= matching.length || queue.isFetching}
+              onClick={() => setPage(currentPage + 1)}
             >
               Trang sự cố sau
             </Button>

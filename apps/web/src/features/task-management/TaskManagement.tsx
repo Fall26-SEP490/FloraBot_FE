@@ -1,3 +1,5 @@
+import KioskFilter from '@/shared/components/KioskFilter';
+import { matchesKiosk } from '@/shared/lib/kiosk-filter';
 import SellerPagination from '@/shared/components/SellerPagination';
 import { Modal } from '@/shared/components/Modal';
 import { useCallback, useRef, useState } from 'react';
@@ -97,6 +99,7 @@ function FilteredTaskList(props: StaffTasksProps) {
       : '',
   );
   const [taskSearch, setTaskSearch] = useState('');
+  const [kioskFilter, setKioskFilter] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
   const [reload, setReload] = useState(0);
   const [focusedTaskId, setFocusedTaskId] = useState<string | null>(null);
@@ -123,13 +126,15 @@ function FilteredTaskList(props: StaffTasksProps) {
       role ?? 'none',
       actorId ?? 'none',
       scopeKey,
-      managerTable ? 'all' : page,
-      status,
+      isPlatform ? 'all' : page,
+      isPlatform ? 'all-statuses' : status,
     ],
     queryFn: async () => {
       const read = (number: number) =>
-        request<TaskPage>(`${apiBase}?page=${number}${status ? `&status=${status}` : ''}`);
-      return managerTable ? { ...(await readAllTaskPages(read)), page: 1 } : read(page);
+        request<TaskPage>(
+          `${apiBase}?page=${number}${!isPlatform && status ? `&status=${status}` : ''}`,
+        );
+      return isPlatform ? { ...(await readAllTaskPages(read)), page: 1 } : read(page);
     },
     enabled: isValidRole,
     refetchOnWindowFocus: !selectedAdminTask && openTaskIds.size === 0,
@@ -159,36 +164,36 @@ function FilteredTaskList(props: StaffTasksProps) {
   }
 
   const matchesSearch = (task: TaskPage['items'][number]) =>
-    !(isPlatform || role === 'SELLER') ||
-    matchesTaskSearch(
-      [
-        task.kioskName,
-        task.assigneeName,
-        task.shopName,
-        task.id,
-        task.incidentId,
-        task.instructions,
-        task.report,
-        TASK_STATUS_LABELS[task.status],
-        task.kind === 'INCIDENT'
-          ? 'Kiểm tra sự cố'
-          : task.kind === 'KIOSK_REMOVAL'
-            ? 'Tháo dỡ kiosk'
-            : 'Giao hoa',
-      ],
-      taskSearch,
-    );
+    (!isPlatform ||
+      ((!status || task.status === status) && matchesKiosk(task.kioskId, kioskFilter))) &&
+    (!(isPlatform || role === 'SELLER') ||
+      matchesTaskSearch(
+        [
+          task.kioskName,
+          task.assigneeName,
+          task.shopName,
+          task.id,
+          task.incidentId,
+          task.instructions,
+          task.report,
+          TASK_STATUS_LABELS[task.status],
+          task.kind === 'INCIDENT'
+            ? 'Kiểm tra sự cố'
+            : task.kind === 'KIOSK_REMOVAL'
+              ? 'Tháo dỡ kiosk'
+              : 'Giao hoa',
+        ],
+        taskSearch,
+      ));
   const matchedTasks = (
-    managerTable ? newestFirst(tasks.data?.items ?? [], managerReview) : (tasks.data?.items ?? [])
+    isPlatform ? newestFirst(tasks.data?.items ?? [], managerReview) : (tasks.data?.items ?? [])
   ).filter(matchesSearch);
   const matchedCount = matchedTasks.length;
-  const currentPage = managerTable
-    ? Math.min(page, Math.max(1, Math.ceil(matchedCount / 25)))
-    : page;
-  const visibleTasks = managerTable
+  const currentPage = isPlatform ? Math.min(page, Math.max(1, Math.ceil(matchedCount / 25))) : page;
+  const visibleTasks = isPlatform
     ? matchedTasks.slice((currentPage - 1) * 25, currentPage * 25)
     : matchedTasks;
-  const hasMore = managerTable ? currentPage * 25 < matchedCount : (tasks.data?.hasMore ?? false);
+  const hasMore = isPlatform ? currentPage * 25 < matchedCount : (tasks.data?.hasMore ?? false);
 
   const sectionTitle =
     role === 'OPERATIONS_MANAGER'
@@ -255,7 +260,6 @@ function FilteredTaskList(props: StaffTasksProps) {
               <ClipboardList aria-hidden="true" />
               <span>Tổng công việc</span>
               <strong>{tasks.data.items.length}</strong>
-              <small>Trong trang đang xem</small>
             </div>
             <div className="operations-metric operations-metric--info">
               <RefreshCw aria-hidden="true" />
@@ -451,6 +455,17 @@ function FilteredTaskList(props: StaffTasksProps) {
                 setPage(1);
               }}
             />
+            <KioskFilter
+              items={(tasks.data?.items ?? []).map((task) => ({
+                id: task.kioskId,
+                name: task.kioskName,
+              }))}
+              value={kioskFilter}
+              onChange={(value) => {
+                setKioskFilter(value);
+                setPage(1);
+              }}
+            />
             {taskSearch && (
               <Button
                 variant="outline"
@@ -466,7 +481,7 @@ function FilteredTaskList(props: StaffTasksProps) {
             {tasks.isSuccess && (
               <p role="status">
                 {matchedCount} / {tasks.data.items.length} công việc (trang {currentPage}
-                {!managerTable && tasks.data.hasMore ? '+' : ''})
+                {!isPlatform && tasks.data.hasMore ? '+' : ''})
               </p>
             )}
           </div>
@@ -571,7 +586,7 @@ function FilteredTaskList(props: StaffTasksProps) {
             )}
             {isPlatform && tasks.data.items.length > 0 && matchedCount === 0 && (
               <p role="status" className="task-search-empty">
-                {managerTable
+                {isPlatform
                   ? 'Không có công việc khớp tìm kiếm.'
                   : 'Không có công việc khớp tìm kiếm trong trang này.'}
               </p>
@@ -645,12 +660,12 @@ function FilteredTaskList(props: StaffTasksProps) {
               </>
             ) : (
               (mode === 'worker'
-                ? [...tasks.data.items].sort((a, b) => {
+                ? [...visibleTasks].sort((a, b) => {
                     const rank = (state: string) =>
                       state === 'IN_PROGRESS' ? 0 : state === 'ASSIGNED' ? 1 : 2;
                     return rank(a.status) - rank(b.status);
                   })
-                : tasks.data.items
+                : visibleTasks
               ).map((task) => (
                 <TaskItem
                   key={`${task.id}-${role === 'TECHNICIAN' ? task.status : task.version}-${reload}`}

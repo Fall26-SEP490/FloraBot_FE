@@ -1,3 +1,5 @@
+import KioskFilter from '@/shared/components/KioskFilter';
+import { matchesKiosk } from '@/shared/lib/kiosk-filter';
 import WorkspaceTable from '@/features/portal/components/WorkspaceTable';
 import IconActionButton from '@/shared/components/IconActionButton';
 import Select from '@/shared/components/Select';
@@ -57,6 +59,7 @@ export default function AdminTaskAssignment({
   );
   const form = useForm<Fields>();
   const [incidentSearch, setIncidentSearch] = useState('');
+  const [kioskFilter, setKioskFilter] = useState('');
   const [showAllIncidents, setShowAllIncidents] = useState(false);
   const [incidentOrder, setIncidentOrder] = useState('newest');
   const staff = useQuery({
@@ -86,19 +89,21 @@ export default function AdminTaskAssignment({
     enabled: kind === 'INCIDENT' && !attempt,
     refetchInterval: effectiveRole === 'OPERATIONS_MANAGER' ? 30_000 : false,
   });
-  const matchingIncidents = newestFirst(incidents.data?.items ?? []).filter((incident) =>
-    matchesTaskSearch(
-      [
-        incident.reason,
-        incident.id,
-        `SC-${incident.id.slice(-6)}`,
-        incident.location?.kioskName,
-        incident.location?.kioskCode,
-        incident.slot?.slotCode,
-        incident.task?.assigneeName,
-      ],
-      incidentSearch,
-    ),
+  const matchingIncidents = newestFirst(incidents.data?.items ?? []).filter(
+    (incident) =>
+      matchesKiosk(incident.kioskId, kioskFilter) &&
+      matchesTaskSearch(
+        [
+          incident.reason,
+          incident.id,
+          `SC-${incident.id.slice(-6)}`,
+          incident.location?.kioskName,
+          incident.location?.kioskCode,
+          incident.slot?.slotCode,
+          incident.task?.assigneeName,
+        ],
+        incidentSearch,
+      ),
   );
   if (incidentOrder === 'oldest') matchingIncidents.reverse();
   const currentPage = Math.min(page, Math.max(1, Math.ceil(matchingIncidents.length / 10)));
@@ -449,14 +454,16 @@ export default function AdminTaskAssignment({
               <h2 id="operations-open-incidents">Phiếu sự cố đang mở</h2>
             </div>
             <div className="manager-inbox-actions">
-              <Button
-                type="button"
-                variant="outline"
-                disabled={busy}
-                onClick={() => setAssignmentOpen(true)}
-              >
-                {attempt ? 'Kiểm tra phân công' : 'Phân công mới'}
-              </Button>
+              {attempt && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={busy}
+                  onClick={() => setAssignmentOpen(true)}
+                >
+                  Kiểm tra phân công
+                </Button>
+              )}
               {incidents.isError && (
                 <Button
                   type="button"
@@ -489,6 +496,19 @@ export default function AdminTaskAssignment({
                 }}
               />
             </div>
+            <KioskFilter
+              items={(incidents.data?.items ?? []).map((incident) => ({
+                id: incident.kioskId,
+                name: incident.location?.kioskName,
+                code: incident.location?.kioskCode,
+              }))}
+              value={kioskFilter}
+              onChange={(value) => {
+                setKioskFilter(value);
+                setPage(1);
+                setShowAllIncidents(false);
+              }}
+            />
             <div className="manager-inbox-sort">
               <label className="sr-only" htmlFor="incident-order">
                 Sắp xếp sự cố
