@@ -272,6 +272,18 @@ function Esp32ConfigurationBody({ scope: role, resourceId, actorId }: PanelProps
             Tải cấu hình ESP32
           </Button>
         )}
+        {role === 'technician' &&
+          data &&
+          !config.isError &&
+          !accessLost &&
+          !showPassword &&
+          !showUsb && (
+            <Button asChild variant="outline">
+              <a href="/downloads/FloraBot-ESP32-Windows-UI-20261127.zip" download>
+                Tải app Windows
+              </a>
+            </Button>
+          )}
       </div>
       {role === 'technician' && canDownload && data?.mqttClientIdsMatch && showUsb && (
         <Esp32UsbProvisioner
