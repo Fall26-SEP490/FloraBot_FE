@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  createReconciliationGate,
+  statementForSubmission,
   normalizeStatement,
   parseStatementPaste,
 } from '../apps/web/src/features/finance/components/reconciliation/reconciliation.utils';
@@ -29,5 +31,38 @@ describe('reconciliation statement input', () => {
     expect(() =>
       normalizeStatement(Array.from({ length: 5001 }, (_, i) => ({ txn: String(i), amount: 1 }))),
     ).toThrow('5.000');
+  });
+});
+
+describe('reconciliation submission state', () => {
+  it('does not submit an old table while pasted Excel data is still pending', () => {
+    const previous = [{ txn: 'PREVIOUS', amount: 10000 }];
+    expect(() => statementForSubmission(previous, true, false)).toThrow('Dùng dữ liệu');
+    expect(statementForSubmission(previous, false, false)).toEqual(previous);
+  });
+  it('requires explicit confirmation for an empty statement', () => {
+    expect(() => statementForSubmission([], false, false)).toThrow('không có giao dịch');
+    expect(statementForSubmission([], false, true)).toEqual([]);
+  });
+  it('ignores stale success and failure responses after hide or a newer request', async () => {
+    const gate = createReconciliationGate();
+    const old = gate.begin();
+    let resolve!: () => void;
+    const pending = new Promise<void>((done) => {
+      resolve = done;
+    });
+    let displayed = 'unchanged';
+    const completion = pending.then(() => {
+      if (gate.isCurrent(old)) displayed = 'old result';
+    });
+    gate.invalidate();
+    const current = gate.begin();
+    resolve();
+    await completion;
+    expect(displayed).toBe('unchanged');
+    expect(gate.isCurrent(old)).toBe(false);
+    expect(gate.isCurrent(current)).toBe(true);
+    gate.invalidate();
+    expect(gate.isCurrent(current)).toBe(false);
   });
 });
