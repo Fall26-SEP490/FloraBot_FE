@@ -1081,3 +1081,25 @@
     padding-block: 0.65rem calc(0.65rem + env(safe-area-inset-bottom, 0px));
   }
 }
+
+/* Keep the estimate beside the submit controls, outside the scrolling fields. */
+.flower-request-footer .flower-request-reference-price {
+  display: flex;
+  flex: 1 0 100%;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+}
+.flower-request-footer .flower-request-reference-price span {
+  font-size: 13px;
+}
+.flower-request-footer .flower-request-reference-price strong {
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 580px) {
+  .flower-request-footer .flower-request-reference-price strong {
+    font-size: 18px;
+  }
+}

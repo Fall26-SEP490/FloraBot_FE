@@ -544,14 +544,6 @@ export function FlowerRequestForm({
             </div>
             <p>Shop xác nhận giá và lịch nhận.</p>
           </div>
-          <div className="flower-request-reference-price">
-            <span>{selectedAccessories.length ? 'Tổng tạm tính' : 'Giá mẫu'}</span>
-            <strong aria-live="polite">
-              {accessorySubtotal === null
-                ? 'Chưa xác định'
-                : `${formatPrice(item.price + accessorySubtotal)} đ`}
-            </strong>
-          </div>
         </div>
         <fieldset disabled={busy || uncertain}>
           <legend className="sr-only">Đặt trước, shop chuẩn bị theo yêu cầu</legend>
@@ -960,6 +952,14 @@ export function FlowerRequestForm({
                     : `${selectedKiosk.kioskName} · ${pickupDay} · ${pickupTime}`}
           </p>
         )}
+        <div className="flower-request-reference-price">
+          <span>{selectedAccessories.length ? 'Tổng tạm tính' : 'Giá mẫu'}</span>
+          <strong aria-live="polite">
+            {accessorySubtotal === null
+              ? 'Chưa xác định'
+              : `${formatPrice(item.price + accessorySubtotal)} đ`}
+          </strong>
+        </div>
         {onOpenChat && (
           <Button
             variant="outline"
