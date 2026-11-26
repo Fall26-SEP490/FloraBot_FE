@@ -69,9 +69,19 @@ async function readJournalChecksum(loader) {
   return checksum.toLowerCase();
 }
 
+// esptool-js 0.7.1 acknowledges the last data block but leaves the stub's
+// separate 16-byte digest in the serial stream. Consume it before the next command.
+export async function readConfigFlash(loader, length) {
+  const data = await loader.readFlash(configAddress, length);
+  const trailer = await loader.transport.read(loader.DEFAULT_TIMEOUT);
+  if (data.length !== length || trailer?.length !== 16) {
+    throw new Error('ESP32 trả thiếu dữ liệu hoặc gói kết thúc khi đọc vùng cấu hình.');
+  }
+  return data;
+}
+
 async function ensureSameKiosk(loader, hardwareId, confirmTransfer) {
-  const data = await loader.readFlash(configAddress, configSize);
-  if (data.length !== configSize) throw new Error('Không đọc được cấu hình đang có trên bo.');
+  const data = await readConfigFlash(loader, configSize);
   if (new globalThis.TextDecoder().decode(data.subarray(0, 4)) !== 'FBC1') return;
 
   const size = new DataView(data.buffer, data.byteOffset, data.byteLength).getUint32(4, true);
@@ -106,7 +116,7 @@ export async function flashEsp32(options, { ESPLoader, Transport }) {
     onStatus?.('Đang kiểm tra bo ESP32…');
     const loader = new ESPLoader({
       transport,
-      baudrate: 460800,
+      baudrate: 115200,
       enableTracing: false,
       debugLogging: false,
     });
@@ -132,6 +142,7 @@ export async function flashEsp32(options, { ESPLoader, Transport }) {
     const journalBefore = await readJournalChecksum(loader);
     await beforeWrite?.();
 
+    onStatus?.('Đang bắt đầu ghi flash…');
     await loader.writeFlash({
       fileArray: images,
       flashMode: 'keep',
@@ -144,8 +155,9 @@ export async function flashEsp32(options, { ESPLoader, Transport }) {
       },
     });
 
+    onStatus?.('Đang kiểm tra dữ liệu sau khi ghi…');
     if (installFirmware) await verifyOnBoard(loader, firmware);
-    const readBack = await loader.readFlash(configAddress, image.length);
+    const readBack = await readConfigFlash(loader, image.length);
     if (
       hexDigest(await globalThis.crypto.subtle.digest('SHA-256', readBack)) !==
       hexDigest(await globalThis.crypto.subtle.digest('SHA-256', image))
