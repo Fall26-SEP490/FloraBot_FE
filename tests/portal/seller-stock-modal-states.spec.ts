@@ -18,6 +18,8 @@ const cases = [
   'inspection',
   'completed',
   'conflict',
+  'sync-slot-first',
+  'sync-session-first',
 ] as const;
 for (const state of cases) {
   test(`Stock modal state ${state}`, async ({ page }) => {
@@ -27,7 +29,14 @@ for (const state of cases) {
       height: 960,
     });
     let writes = 0;
-    const session = ['loading', 'inspection', 'completed'].includes(state)
+    let synced = false;
+    const session = [
+      'loading',
+      'inspection',
+      'completed',
+      'sync-slot-first',
+      'sync-session-first',
+    ].includes(state)
       ? {
           id: 'session-1',
           kioskId,
@@ -36,7 +45,7 @@ for (const state of cases) {
           stage:
             state === 'inspection'
               ? 'NeedsInspection'
-              : state === 'completed'
+              : state === 'completed' || state === 'sync-session-first'
                 ? 'Completed'
                 : 'AwaitLoading',
           substate: state === 'loading' ? 'RemovalClosedEmptyConfirmed' : null,
@@ -58,11 +67,13 @@ for (const state of cases) {
           ? 'HELD'
           : state === 'fault'
             ? 'FAULT'
-            : session
-              ? 'LOCKED'
-              : state === 'preorder'
-                ? 'RENTED_EMPTY'
-                : 'STOCKED',
+            : state === 'completed' || state === 'sync-slot-first'
+              ? 'STOCKED'
+              : session
+                ? 'LOCKED'
+                : state === 'preorder'
+                  ? 'RENTED_EMPTY'
+                  : 'STOCKED',
       bouquetId: state === 'preorder' ? null : 'bouquet-1',
       productId,
       qrCode: 'FB-01a1fc6dd9df7033983603129c66e199',
@@ -72,7 +83,7 @@ for (const state of cases) {
       sensorReady: state !== 'unready',
       orderId: state === 'sold' || state === 'held' ? 'order-1' : null,
       orderStatus: state === 'sold' ? 'PAID' : state === 'held' ? 'AWAITING_PAYMENT' : null,
-      bouquetStatus: state === 'sold' ? 'SOLD' : 'AVAILABLE',
+      bouquetStatus: state === 'sold' ? 'SOLD' : 'STOCKED',
       paymentStatus: state === 'sold' ? 'SUCCEEDED' : null,
       maintenanceStage: session?.stage,
     };
@@ -96,12 +107,16 @@ for (const state of cases) {
             },
           ],
         });
-      if (path.endsWith('/slots')) return route.fulfill({ json: [slot] });
+      if (path.endsWith('/slots'))
+        return route.fulfill({
+          json: [synced ? { ...slot, status: 'STOCKED', maintenanceStage: 'Completed' } : slot],
+        });
       if (path.endsWith('/products'))
         return route.fulfill({ json: [{ ...sampleProduct, quantity: 3 }] });
       if (path.endsWith('/maintenance-sessions/active'))
         return session ? route.fulfill({ json: session }) : route.fulfill({ status: 204 });
-      if (path.endsWith('/maintenance-sessions/session-1')) return route.fulfill({ json: session });
+      if (path.endsWith('/maintenance-sessions/session-1'))
+        return route.fulfill({ json: synced ? { ...session, stage: 'Completed' } : session });
       return route.fallback();
     });
     await page.goto('/seller/stock');
@@ -109,7 +124,17 @@ for (const state of cases) {
     const dialog = page.getByRole('dialog', { name: /ô S01/ });
     await expect(dialog).toBeVisible();
     expect(await dialog.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
-    if (['offline', 'stocked', 'conflict'].includes(state)) {
+    if (state === 'sync-slot-first' || state === 'sync-session-first') {
+      await expect(dialog.locator('.stock-maintenance-state')).toContainText('Đang đồng bộ ô tủ');
+      await expect(dialog.locator('.stock-maintenance-progress')).not.toContainText(
+        'Đang chờ nạp hoa',
+      );
+      synced = true;
+      await expect(dialog.locator('.stock-maintenance-state')).toContainText('Đã hoàn tất', {
+        timeout: 15_000,
+      });
+      await expect(dialog.locator('.stock-slot-modal-status')).toContainText('Đang bán');
+    } else if (['offline', 'stocked', 'conflict'].includes(state)) {
       await dialog.getByLabel('Lý do thao tác').fill('Kiểm tra thu hồi hoa');
       const start = dialog.getByRole('button', { name: 'Bắt đầu thu hồi hoa' });
       if (state === 'offline') {

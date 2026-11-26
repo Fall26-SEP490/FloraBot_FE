@@ -47,8 +47,8 @@
   & .incident-oversight-note {
     margin: 8px 0 0;
   }
-  @media (min-width: 0px) {
-    /* Keep the side rail on narrow windows instead of switching to a top menu. */
+  @media (min-width: 768px) {
+    /* The mobile menu uses full-width content; desktop can pin the rail open. */
     & .workspace-sidebar {
       display: flex;
       flex-direction: column;
@@ -71,6 +71,9 @@
       display: grid;
       align-items: start;
       grid-template-columns: 78px minmax(0, 1fr);
+    }
+    & .dashboard-shell:has(> .role-sidebar-expanded) {
+      grid-template-columns: 258px minmax(0, 1fr);
     }
     & .workspace-sidebar {
       width: 78px;
@@ -114,8 +117,12 @@
     & .role-sidebar-collapsed nav a span {
       display: none;
     }
-    & .workspace-menu-toggle {
+    & .role-sidebar-collapsed .workspace-menu-toggle span {
       display: none;
+    }
+    & .workspace-menu-toggle {
+      display: inline-flex;
+      justify-content: center;
     }
     @media (hover: none) {
       & .workspace-menu-toggle {
@@ -137,7 +144,7 @@
     [data-platform-role='operations'],
     [data-platform-role='technician']
   ) {
-  @media (min-width: 0px) {
+  @media (min-width: 768px) {
     & .workspace-sidebar nav a {
       height: 44px;
       min-height: 44px;

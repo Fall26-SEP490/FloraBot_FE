@@ -159,12 +159,9 @@ for (const width of [390, 1440]) {
       'href',
       '/dat-hoa?search=pastel&price=under300&mode=custom&sort=name-asc&page=2',
     );
-    await expect(
-      page.getByRole('button', { name: 'Yêu cầu báo giá', exact: true }),
-    ).toBeInViewport();
+    await expect(page.getByRole('button', { name: 'Đặt trước', exact: true })).toBeInViewport();
     expect(
-      (await page.getByRole('button', { name: 'Yêu cầu báo giá', exact: true }).boundingBox())!
-        .height,
+      (await page.getByRole('button', { name: 'Đặt trước', exact: true }).boundingBox())!.height,
     ).toBeLessThan(90);
     await expect(page.locator('.flower-detail-media figcaption')).toContainText('Ảnh minh họa');
     await page.screenshot({ path: test.info().outputPath(`detail-${width}.png`), fullPage: true });
@@ -227,7 +224,7 @@ test('Guest keeps account section through login and quote CTA has readable text'
 }) => {
   const state = await fixture(page, true);
   await page.goto(`/dat-hoa/${productId}/${kioskId}`);
-  await page.getByRole('button', { name: 'Yêu cầu báo giá', exact: true }).click();
+  await page.getByRole('button', { name: 'Đặt trước', exact: true }).click();
   const cta = page
     .getByRole('dialog')
     .getByRole('link', { name: /Đăng nhập/ })

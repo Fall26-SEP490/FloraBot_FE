@@ -1,4 +1,5 @@
-﻿'use client';
+'use client';
+import { WorkspaceSectionSkeleton } from '@/shared/components/PageSkeleton';
 
 import React, { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -35,48 +36,48 @@ import '../styles/seller-flows.css';
 import '../styles/seller-detail-flows.css';
 
 const DashboardOverview = dynamic(() => import('../../dashboard/DashboardOverview'), {
-  loading: () => <p role="status">Đang tải tổng quan cửa hàng…</p>,
+  loading: () => <WorkspaceSectionSkeleton />,
 });
 
 const WebRequests = dynamic(() => import('../../orders/WebRequests'), {
-  loading: () => <p role="status">Đang tải danh sách đơn hàng…</p>,
+  loading: () => <WorkspaceSectionSkeleton />,
 });
 
 const SellerChatSection = dynamic(
   () => import('@/features/chat/SellerChatSection').then((mod) => mod.SellerChatSection),
   {
-    loading: () => <p role="status">Đang tải tin nhắn…</p>,
+    loading: () => <WorkspaceSectionSkeleton />,
   },
 );
 
 const StaffChatSection = dynamic(
   () => import('@/features/chat/StaffChatSection').then((mod) => mod.StaffChatSection),
   {
-    loading: () => <p role="status">Đang tải tin nhắn nhân viên…</p>,
+    loading: () => <WorkspaceSectionSkeleton />,
   },
 );
 
 const Products = dynamic(() => import('../../product-management/ProductManagement'), {
-  loading: () => <p role="status">Đang tải danh sách mẫu hoa…</p>,
+  loading: () => <WorkspaceSectionSkeleton />,
 });
 
 const SellerKiosks = dynamic(() => import('../../kiosk-management/SellerKiosks'), {
-  loading: () => <p role="status">Đang tải danh sách kiosk…</p>,
+  loading: () => <WorkspaceSectionSkeleton />,
 });
 
 const Subscriptions = dynamic(
   () => import('../../finance/components/subscriptions/Subscriptions'),
   {
-    loading: () => <p role="status">Đang tải gói dịch vụ…</p>,
+    loading: () => <WorkspaceSectionSkeleton />,
   },
 );
 
 const SellerStock = dynamic(() => import('../../inventory/SellerStock'), {
-  loading: () => <p role="status">Đang tải danh sách tồn kho…</p>,
+  loading: () => <WorkspaceSectionSkeleton />,
 });
 
 const SellerAccessories = dynamic(() => import('../../inventory/SellerAccessories'), {
-  loading: () => <p role="status">Đang tải danh mục phụ kiện…</p>,
+  loading: () => <WorkspaceSectionSkeleton />,
 });
 
 const SellerCommerce = dynamic(
@@ -90,11 +91,11 @@ const SellerRefunds = dynamic(() => import('../../finance/components/refunds/Sel
 const QualityComplaintQueue = dynamic(() => import('../../complaints/QualityComplaintQueue'));
 
 const StaffTasks = dynamic(() => import('../../task-management/TaskManagement'), {
-  loading: () => <p role="status">Đang tải danh sách công việc…</p>,
+  loading: () => <WorkspaceSectionSkeleton />,
 });
 
 const AccountManagement = dynamic(() => import('../../account-management/AccountManagement'), {
-  loading: () => <p role="status">Đang tải quản lý nhân sự…</p>,
+  loading: () => <WorkspaceSectionSkeleton />,
 });
 
 function SubscriptionBanner({ session, section }: { session: Session; section?: string }) {

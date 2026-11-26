@@ -117,6 +117,21 @@ const searchable = (value: string) =>
     .replace(/Đ/g, 'D')
     .toLocaleLowerCase('vi-VN');
 
+function kioskStatusLabel(status?: string): string {
+  switch ((status ?? '').toUpperCase()) {
+    case 'OFFLINE':
+      return 'Không trực tuyến';
+    case 'MAINTENANCE':
+      return 'Đang bảo trì';
+    case 'DISABLED':
+      return 'Ngưng hoạt động';
+    case 'ONLINE':
+      return 'Trực tuyến';
+    default:
+      return '';
+  }
+}
+
 function OrderActions({
   row,
   base,
@@ -125,6 +140,7 @@ function OrderActions({
   userId,
   page,
   filter,
+  kioskStatus,
   onReload,
 }: {
   row: WebOrder;
@@ -134,6 +150,7 @@ function OrderActions({
   userId?: string;
   page: number;
   filter: OrderFilter;
+  kioskStatus?: string;
   onReload: () => Promise<WebOrder>;
 }) {
   const [now, setNow] = useState(() => Date.now());
@@ -497,7 +514,7 @@ function OrderActions({
         setError(
           cause instanceof ApiError
             ? cause.message
-            : 'Chưa xác nhận được kết quả. Chọn cập nhật để kiểm tra trước khi gửi lại.',
+            : 'Không kết nối được tới máy chủ. Bấm kiểm tra lại trạng thái đơn trước khi gửi lại.',
         );
       }
     } finally {
@@ -583,8 +600,25 @@ function OrderActions({
       ))}
     </ol>
   );
+  const normalizedKioskStatus = (kioskStatus ?? '').toUpperCase();
+  const kioskNotOnline =
+    mode === 'seller' && Boolean(normalizedKioskStatus) && normalizedKioskStatus !== 'ONLINE';
+  const kioskOfflineBanner =
+    kioskNotOnline && !orderClosed(row) ? (
+      <div className={styles.kioskOfflineNotice} role="status">
+        <strong>Tủ nhận hoa {kioskStatusLabel(normalizedKioskStatus).toLowerCase()}</strong>
+        <p>
+          {normalizedKioskStatus === 'OFFLINE'
+            ? action === 'fulfill'
+              ? 'Kiosk đang không trực tuyến nên chưa thể mở cửa tủ lúc này. Vui lòng kiểm tra kết nối tủ trước khi nạp hoa.'
+              : 'Kiosk hiện không trực tuyến. Bạn vẫn có thể báo giá, nhưng tủ cần trực tuyến trở lại trước khi nạp hoa.'
+            : 'Kiosk đang bảo trì hoặc ngưng hoạt động — không thể nạp hoa vào tủ lúc này.'}
+        </p>
+      </div>
+    ) : null;
   const interaction = (
     <>
+      {kioskOfflineBanner}
       {accessoryStockBlocked && row.state === 'QUOTED' && !row.orderId && (
         <p role="alert" className="error">
           Phụ kiện trong báo giá không còn đủ. Hãy nhắn shop cập nhật báo giá trước khi xác nhận
@@ -1363,7 +1397,7 @@ function OrderActions({
                   type="checkbox"
                   checked={confirm}
                   onChange={(event) => setConfirm(event.target.checked)}
-                  disabled={busy}
+                  disabled={busy || uncertain}
                 />
                 <span>
                   {action === 'accept' && mode === 'member'
@@ -1372,87 +1406,96 @@ function OrderActions({
                 </span>
               </label>
             )}
-            <div className="stock-actions">
-              {action === 'fulfill' && fulfillStep === 1 ? (
-                <Button
-                  type="button"
-                  disabled={
-                    !fulfillSlots.some((item) => item.id === slot) || !qr.trim() || slots.isFetching
-                  }
-                  onClick={() => {
-                    setError('');
-                    setConfirm(false);
-                    setFulfillStep(2);
-                  }}
-                >
-                  Tiếp tục kiểm tra
-                </Button>
-              ) : (
-                <Button
-                  type="submit"
-                  disabled={
-                    busy ||
-                    quoteBlocked ||
-                    (action === 'fulfill' &&
-                      (!loadingAccessId || !fulfillSlots.some((item) => item.id === slot))) ||
-                    (mode === 'member' &&
-                      action === 'accept' &&
-                      (!confirm || quoteExpired || !hasQuotedPrice || reviewedQuoteChanged))
-                  }
-                  className={
-                    action === 'cancel' || (action === 'quote' && reject)
-                      ? 'management-danger-button'
-                      : undefined
-                  }
-                >
-                  {busy
-                    ? 'Đang gửi…'
-                    : action === 'cancel'
-                      ? 'Xác nhận hủy đơn'
-                      : action === 'quote' && reject
-                        ? 'Xác nhận từ chối'
-                        : action === 'fulfill'
-                          ? 'Xác nhận nạp hoa'
-                          : action === 'accept' && mode === 'member'
-                            ? 'Đồng ý báo giá'
-                            : action === 'quote'
-                              ? sellerWaitingForQuote
-                                ? 'Cập nhật báo giá'
-                                : 'Gửi báo giá'
-                              : 'Xác nhận gửi'}
-                </Button>
-              )}
+          </fieldset>
+          <div className="stock-actions">
+            {action === 'fulfill' && fulfillStep === 1 ? (
               <Button
                 type="button"
-                variant="outline"
-                disabled={busy}
+                disabled={
+                  busy ||
+                  uncertain ||
+                  !fulfillSlots.some((item) => item.id === slot) ||
+                  !qr.trim() ||
+                  slots.isFetching
+                }
                 onClick={() => {
-                  if (action === 'fulfill' && fulfillStep === 2) {
-                    setFulfillStep(1);
-                    setConfirm(false);
-                  } else {
-                    setAction(null);
-                  }
                   setError('');
+                  setConfirm(false);
+                  setFulfillStep(2);
                 }}
               >
-                {action === 'fulfill' && fulfillStep === 2 ? 'Quay lại' : 'Đóng'}
+                Tiếp tục kiểm tra
               </Button>
-            </div>
-          </fieldset>
+            ) : (
+              <Button
+                type="submit"
+                disabled={
+                  busy ||
+                  uncertain ||
+                  quoteBlocked ||
+                  (action === 'fulfill' &&
+                    (!loadingAccessId || !fulfillSlots.some((item) => item.id === slot))) ||
+                  (mode === 'member' &&
+                    action === 'accept' &&
+                    (!confirm || quoteExpired || !hasQuotedPrice || reviewedQuoteChanged))
+                }
+                className={
+                  action === 'cancel' || (action === 'quote' && reject)
+                    ? 'management-danger-button'
+                    : undefined
+                }
+              >
+                {busy
+                  ? 'Đang gửi…'
+                  : action === 'cancel'
+                    ? 'Xác nhận hủy đơn'
+                    : action === 'quote' && reject
+                      ? 'Xác nhận từ chối'
+                      : action === 'fulfill'
+                        ? 'Xác nhận nạp hoa'
+                        : action === 'accept' && mode === 'member'
+                          ? 'Đồng ý báo giá'
+                          : action === 'quote'
+                            ? sellerWaitingForQuote
+                              ? 'Cập nhật báo giá'
+                              : 'Gửi báo giá'
+                            : 'Xác nhận gửi'}
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              disabled={busy}
+              onClick={() => {
+                if (action === 'fulfill' && fulfillStep === 2) {
+                  setFulfillStep(1);
+                  setConfirm(false);
+                } else {
+                  setAction(null);
+                }
+                setError('');
+              }}
+            >
+              {action === 'fulfill' && fulfillStep === 2 ? 'Quay lại' : 'Đóng'}
+            </Button>
+          </div>
         </form>
       )}
       {uncertain && (
         <div className="order-uncertain" role="alert">
+          <p className={styles.uncertainTitle}>Chưa nhận được phản hồi từ máy chủ</p>
           <p>
-            Chưa xác nhận được kết quả lần gửi trước. Các thao tác đang khóa để tránh gửi trùng; tải
-            lại hồ sơ và đối chiếu trạng thái trước khi tiếp tục.
+            {kioskNotOnline
+              ? `Kiosk hiện ${kioskStatusLabel(normalizedKioskStatus).toLowerCase()} và chưa rõ lần gửi vừa rồi đã được lưu hay chưa. Nút gửi tạm khóa để tránh gửi trùng.`
+              : 'Chưa rõ lần gửi vừa rồi đã được lưu hay chưa. Nút gửi tạm khóa để tránh gửi trùng.'}
           </p>
+          {error && <p className={styles.uncertainDetail}>{error}</p>}
           <Button
             variant="outline"
             disabled={checking || busy}
             onClick={async () => {
               setChecking(true);
+              setError('');
               try {
                 await onReload();
                 try {
@@ -1464,10 +1507,16 @@ function OrderActions({
                 setAction(null);
                 setError('');
                 setNotice(
-                  'Đã tải lại hồ sơ từ máy chủ. Hãy đối chiếu trạng thái trước khi tạo thao tác mới.',
+                  'Đã cập nhật trạng thái mới nhất của đơn. Kiểm tra lại thông tin trước khi thao tác tiếp.',
                 );
-              } catch {
-                setError('Chưa đọc được trạng thái mới. Các thao tác vẫn được khóa.');
+              } catch (cause) {
+                setError(
+                  cause instanceof ApiError
+                    ? `Không kiểm tra được trạng thái đơn: ${cause.message}`
+                    : kioskNotOnline
+                      ? 'Chưa kết nối lại được với máy chủ (kiosk hiện không trực tuyến). Vui lòng thử lại sau.'
+                      : 'Chưa kết nối được tới máy chủ để kiểm tra đơn. Kiểm tra mạng rồi thử lại.',
+                );
               } finally {
                 setChecking(false);
               }
@@ -1477,9 +1526,11 @@ function OrderActions({
           </Button>
         </div>
       )}
-      <p role="alert" className="error">
-        {showingPayment ? '' : error}
-      </p>
+      {!uncertain && (
+        <p role="alert" className="error">
+          {showingPayment ? '' : error}
+        </p>
+      )}
       <p
         role="status"
         className={sellerWaitingForQuote && notice === 'Đã gửi báo giá.' ? 'sr-only' : undefined}
@@ -1596,6 +1647,19 @@ export default function WebRequests({
       mode === 'seller' && previousQuery?.queryKey[1] === base ? previous : undefined,
     enabled: mode !== 'seller' || Boolean(sellerId),
   });
+  const sellerKiosks = useQuery({
+    queryKey: ['seller-kiosks', sellerId],
+    queryFn: () => request<{ id: string; status?: string | null }[]>(`/sellers/${sellerId}/kiosks`),
+    enabled: mode === 'seller' && Boolean(sellerId),
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+  const kioskStatusById = new Map(
+    (Array.isArray(sellerKiosks.data) ? sellerKiosks.data : []).map((kiosk) => [
+      kiosk.id,
+      (kiosk.status ?? '').toUpperCase(),
+    ]),
+  );
   const history = useQuery({
     queryKey: ['member-history', session.data?.id, page],
     queryFn: () => fetchMemberHistory(page),
@@ -1899,8 +1963,9 @@ export default function WebRequests({
               filter={filter}
               onReload={async () => {
                 const fresh = await query.refetch();
+                if (fresh.isError) throw fresh.error ?? new Error('Order could not be reloaded.');
                 const updated = fresh.data?.items.find((item) => item.id === row.id);
-                if (fresh.isError || !updated) throw new Error('Order could not be reloaded.');
+                if (!updated) throw new Error('Order could not be reloaded.');
                 return updated;
               }}
             />
@@ -1944,7 +2009,15 @@ export default function WebRequests({
               <dl>
                 <div>
                   <dt>Kiosk</dt>
-                  <dd>{row.kioskName || row.kioskId}</dd>
+                  <dd>
+                    {row.kioskName || row.kioskId}
+                    {kioskStatusById.get(row.kioskId) &&
+                      kioskStatusById.get(row.kioskId) !== 'ONLINE' && (
+                        <span className={styles.kioskOfflineTag}>
+                          {kioskStatusLabel(kioskStatusById.get(row.kioskId))}
+                        </span>
+                      )}
+                  </dd>
                 </div>
                 <div>
                   <dt>Lịch nhận</dt>
@@ -1971,10 +2044,12 @@ export default function WebRequests({
               userId={session.data?.id}
               page={page}
               filter={filter}
+              kioskStatus={kioskStatusById.get(row.kioskId)}
               onReload={async () => {
                 const fresh = await query.refetch();
+                if (fresh.isError) throw fresh.error ?? new Error('Order could not be reloaded.');
                 const updated = fresh.data?.items.find((item) => item.id === row.id);
-                if (fresh.isError || !updated) throw new Error('Order could not be reloaded.');
+                if (!updated) throw new Error('Order could not be reloaded.');
                 return updated;
               }}
             />

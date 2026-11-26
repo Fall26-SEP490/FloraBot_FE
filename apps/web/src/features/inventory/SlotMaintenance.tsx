@@ -121,6 +121,16 @@ export default function SlotMaintenance({
   });
   const current = session.data;
   const sessionClosed = current?.stage === 'Completed' || current?.stage === 'Recovered';
+  const syncing = Boolean(
+    current &&
+    ((['AwaitLoading', 'AwaitRemoval'].includes(current.stage) && slot.status !== 'LOCKED') ||
+      (current.stage === 'Completed' && slot.status === 'LOCKED')),
+  );
+  useEffect(() => {
+    if (!syncing) return;
+    void queryClient.invalidateQueries({ queryKey: ['slot-maintenance', kioskId, slot.id] });
+    void queryClient.invalidateQueries({ queryKey: ['seller-kiosk-slots', sellerId, kioskId] });
+  }, [syncing, sellerId, kioskId, slot.id]);
   const sessionExpired =
     current?.stage === 'NeedsInspection' && current.inspectionReason === 'SessionExpired';
   const waitingForDoor =
@@ -232,7 +242,7 @@ export default function SlotMaintenance({
     !hasStoredSession &&
     !activeSession.isPending &&
     !activeSession.isError;
-  const busy = start.isPending || advance.isPending || open.isPending;
+  const busy = syncing || start.isPending || advance.isPending || open.isPending;
   const maintenanceError = start.error || advance.error || open.error;
   if (
     !hasStoredSession &&
@@ -302,31 +312,35 @@ export default function SlotMaintenance({
             )}
             <span>
               {actionLabels[current.action]} ·{' '}
-              {sessionExpired
-                ? 'Phiên đã hết hạn'
-                : (progress?.label ??
-                  (waitingForDoor
-                    ? 'Đang chờ tủ xác nhận mở cửa'
-                    : stageLabels[current.stage] || current.stage))}
+              {syncing
+                ? 'Đang đồng bộ ô tủ'
+                : sessionExpired
+                  ? 'Phiên đã hết hạn'
+                  : (progress?.label ??
+                    (waitingForDoor
+                      ? 'Đang chờ tủ xác nhận mở cửa'
+                      : stageLabels[current.stage] || current.stage))}
             </span>
           </strong>
           <p>
-            {current.stage === 'Recovered'
-              ? 'Đội vận hành đã đối soát và cập nhật lại trạng thái ô.'
-              : sessionExpired
-                ? 'Phiên đã hết hạn, ô vẫn khóa. Liên hệ đội vận hành để kiểm tra cửa và hoa trong ô.'
-                : current.stage === 'Completed'
-                  ? 'Đã xác nhận cảm biến và cập nhật ô tủ.'
-                  : current.stage === 'NeedsInspection'
-                    ? 'Chưa thể xác nhận kết quả. Kiểm tra cửa và hoa trong ô; liên hệ đội vận hành nếu cần hỗ trợ.'
-                    : current.action === 'REPLACE' &&
-                        current.substate === 'RemovalClosedEmptyConfirmed'
-                      ? 'Hoa cũ đã được lấy ra. Mở cửa lần nữa để đặt hoa mới vào.'
-                      : (progress?.key === 'DOOR_OPEN' || slot.doorState === 'CLOSED') && progress
-                        ? progress.hint
-                        : waitingForDoor
-                          ? 'Chờ cửa mở thực tế. Nếu cửa vẫn đóng, chọn “Kiểm tra tiến độ”.'
-                          : 'Thao tác với hoa thật, đóng cửa ô, rồi chờ tín hiệu cảm biến. Trạng thái sẽ tự cập nhật.'}
+            {syncing
+              ? 'Đang đối chiếu tiến độ và trạng thái ô. Chờ cập nhật trước khi thao tác tiếp.'
+              : current.stage === 'Recovered'
+                ? 'Đội vận hành đã đối soát và cập nhật lại trạng thái ô.'
+                : sessionExpired
+                  ? 'Phiên đã hết hạn, ô vẫn khóa. Liên hệ đội vận hành để kiểm tra cửa và hoa trong ô.'
+                  : current.stage === 'Completed'
+                    ? 'Đã xác nhận cảm biến và cập nhật ô tủ.'
+                    : current.stage === 'NeedsInspection'
+                      ? 'Chưa thể xác nhận kết quả. Kiểm tra cửa và hoa trong ô; liên hệ đội vận hành nếu cần hỗ trợ.'
+                      : current.action === 'REPLACE' &&
+                          current.substate === 'RemovalClosedEmptyConfirmed'
+                        ? 'Hoa cũ đã được lấy ra. Mở cửa lần nữa để đặt hoa mới vào.'
+                        : (progress?.key === 'DOOR_OPEN' || slot.doorState === 'CLOSED') && progress
+                          ? progress.hint
+                          : waitingForDoor
+                            ? 'Chờ cửa mở thực tế. Nếu cửa vẫn đóng, chọn “Kiểm tra tiến độ”.'
+                            : 'Thao tác với hoa thật, đóng cửa ô, rồi chờ tín hiệu cảm biến. Trạng thái sẽ tự cập nhật.'}
           </p>
           {active && (
             <p className="quiet stock-maintenance-expiry">

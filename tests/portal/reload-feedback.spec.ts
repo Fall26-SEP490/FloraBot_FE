@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { setupSellerUsability } from '../fixtures/seller-usability';
 
 for (const width of [1440, 390]) {
-  test(`reload retains old data and blocks interaction until the response at ${width}`, async ({
+  test(`reload retains old data without covering or dimming the page at ${width}`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 1000 });
@@ -25,15 +25,13 @@ for (const width of [1440, 390]) {
     const busy = page.locator('[data-refresh-region][aria-busy="true"]');
     await expect(busy).toBeVisible();
     await expect(busy).toContainText(model.products[0].name);
-    await expect(busy.locator('[inert]')).toHaveCount(1);
+    await expect(busy.locator('[inert]')).toHaveCount(0);
     const overlay = page.locator('[data-refresh-overlay]');
     await expect(overlay.getByRole('status')).toContainText('Đang cập nhật dữ liệu');
-    for (const scrollY of [0, 600]) {
-      await page.evaluate((y) => window.scrollTo(0, y), scrollY);
-      const indicator = await overlay.getByRole('status').boundingBox();
-      expect(Math.abs(indicator!.x + indicator!.width / 2 - width / 2)).toBeLessThan(2);
-      expect(Math.abs(indicator!.y + indicator!.height / 2 - 500)).toBeLessThan(2);
-    }
+    await expect(overlay).toHaveCSS('pointer-events', 'none');
+    const indicator = await overlay.getByRole('status').boundingBox();
+    expect(indicator!.height).toBeLessThanOrEqual(4);
+    await expect(page.getByRole('button', { name: 'Thêm mẫu hoa', exact: true })).toBeEnabled();
     release();
     await expect(busy).toHaveCount(0);
     await expect(overlay).toHaveCount(0);

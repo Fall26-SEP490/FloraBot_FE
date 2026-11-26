@@ -11,17 +11,15 @@ export function ApplicationStatusActions({ appData }: ApplicationStatusActionsPr
       <div className="status-action-box" data-action="paid-review">
         <h3>
           <CheckCircle2 className="payos-confirmed-icon" size={18} aria-hidden="true" />
-          Đã thanh toán thành công
+          Đã nhận phí thuê
         </h3>
         <p>
-          Khoản phí thuê {Number(appData.annualFee).toLocaleString('vi-VN')} đ đã được ghi nhận.
-          Quản lý vận hành FloraBot sẽ liên hệ với bạn qua số điện thoại{' '}
-          <strong>{appData.phone}</strong> để xác nhận địa điểm trước khi tiến hành lên lịch lắp
-          đặt.
+          Đã nhận {Number(appData.annualFee).toLocaleString('vi-VN')} đ. Quản lý vận hành sẽ gọi{' '}
+          <strong>{appData.phone}</strong> để xác nhận địa điểm và hẹn lắp đặt.
         </p>
+        <p className="kiosk-help-text">Lịch hẹn sẽ hiển thị tại đây khi quản lý xác nhận.</p>
         <p className="kiosk-help-text">
-          Trong giai đoạn này, bạn vẫn có thể hủy hồ sơ nếu thay đổi kế hoạch. Khoản tiền sẽ được
-          chuyển sang quy trình hoàn tiền thủ công của Quản trị viên.
+          Nếu thay đổi kế hoạch, bạn có thể hủy hồ sơ và gửi yêu cầu hoàn phí.
         </p>
       </div>
     );

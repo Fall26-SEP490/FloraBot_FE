@@ -84,7 +84,7 @@ for (const width of [390, 1440]) {
       return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
     });
     await page.goto(`/dat-hoa/${productId}/${kioskId}`);
-    await page.getByRole('button', { name: 'Yêu cầu báo giá', exact: true }).click();
+    await page.getByRole('button', { name: 'Đặt trước', exact: true }).click();
     const dialog = page.getByRole('dialog', { name: 'Yêu cầu báo giá', exact: true });
     await chooseSelect(dialog, 'Tủ nhận hoa', kioskId);
     const day = new Date(Date.now() + 2 * 86400000 + 7 * 3600000).toISOString().slice(0, 10);

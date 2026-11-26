@@ -1,4 +1,5 @@
 'use client';
+import { WorkspaceSectionSkeleton } from '@/shared/components/PageSkeleton';
 
 import React, { useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -20,71 +21,71 @@ import '../styles/admin-surfaces.css';
 import '../styles/admin-usability-refresh.css';
 
 const DashboardOverview = dynamic(() => import('../../dashboard/DashboardOverview'), {
-  loading: () => <p role="status">Đang tải tổng quan hệ thống…</p>,
+  loading: () => <WorkspaceSectionSkeleton />,
 });
 
 const WebRequests = dynamic(() => import('../../orders/WebRequests'), {
-  loading: () => <p role="status">Đang tải danh sách đơn hàng…</p>,
+  loading: () => <WorkspaceSectionSkeleton />,
 });
 
 const AccountManagement = dynamic(() => import('../../account-management/AccountManagement'), {
-  loading: () => <p role="status">Đang tải quản lý nhân sự…</p>,
+  loading: () => <WorkspaceSectionSkeleton />,
 });
 
 const AdminAccounts = dynamic(() => import('../../account-management/components/AdminAccounts'), {
-  loading: () => <p role="status">Đang tải tài khoản quản trị…</p>,
+  loading: () => <WorkspaceSectionSkeleton />,
 });
 
 const AdminApprovalCenter = dynamic(
   () => import('../../dashboard/components/AdminApprovalCenter'),
   {
-    loading: () => <p role="status">Đang tải trung tâm duyệt…</p>,
+    loading: () => <WorkspaceSectionSkeleton />,
   },
 );
 
 const OperationsInstallations = dynamic(
   () => import('../../installations/OperationsInstallations'),
   {
-    loading: () => <p role="status">Đang tải hồ sơ thuê kiosk…</p>,
+    loading: () => <WorkspaceSectionSkeleton />,
   },
 );
 
 const AdminSellers = dynamic(() => import('../../account-management/components/AdminSellers'), {
-  loading: () => <p role="status">Đang tải danh sách shop hoa…</p>,
+  loading: () => <WorkspaceSectionSkeleton />,
 });
 
 const StaffTasks = dynamic(() => import('../../task-management/TaskManagement'), {
-  loading: () => <p role="status">Đang tải danh sách công việc…</p>,
+  loading: () => <WorkspaceSectionSkeleton />,
 });
 
 const AdminSlots = dynamic(() => import('../../kiosk-management/AdminSlots'), {
-  loading: () => <p role="status">Đang tải quản lý ô tủ…</p>,
+  loading: () => <WorkspaceSectionSkeleton />,
 });
 
 const AdminIncidents = dynamic(() => import('../../incidents/AdminIncidents'), {
-  loading: () => <p role="status">Đang tải danh sách sự cố…</p>,
+  loading: () => <WorkspaceSectionSkeleton />,
 });
 
 const AdminComplaints = dynamic(() => import('../../complaints/AdminComplaints'), {
-  loading: () => <p role="status">Đang tải khiếu nại…</p>,
+  loading: () => <WorkspaceSectionSkeleton />,
 });
 
 const AdminKioskRefunds = dynamic(
   () => import('../../finance/components/refunds/AdminKioskRefunds'),
   {
-    loading: () => <p role="status">Đang tải hoàn tiền kiosk…</p>,
+    loading: () => <WorkspaceSectionSkeleton />,
   },
 );
 
 const AdminReconciliation = dynamic(
   () => import('../../finance/components/reconciliation/AdminReconciliation'),
   {
-    loading: () => <p role="status">Đang tải đối soát…</p>,
+    loading: () => <WorkspaceSectionSkeleton />,
   },
 );
 
 const AdminReports = dynamic(() => import('../../dashboard/components/AdminReports'), {
-  loading: () => <p role="status">Đang tải báo cáo tổng quan…</p>,
+  loading: () => <WorkspaceSectionSkeleton />,
 });
 const AdminPaymentChannels = dynamic(
   () => import('../../finance/components/payment-channels/AdminPaymentChannels'),

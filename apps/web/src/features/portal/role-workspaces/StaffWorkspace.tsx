@@ -1,4 +1,5 @@
 'use client';
+import { WorkspaceSectionSkeleton } from '@/shared/components/PageSkeleton';
 
 import React from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -18,12 +19,12 @@ import '../styles/shop-sidebar.css';
 const StaffChatSection = dynamic(
   () => import('@/features/chat/StaffChatSection').then((mod) => mod.StaffChatSection),
   {
-    loading: () => <p role="status">Đang tải tin nhắn…</p>,
+    loading: () => <WorkspaceSectionSkeleton />,
   },
 );
 
 const StaffTasks = dynamic(() => import('../../task-management/TaskManagement'), {
-  loading: () => <p role="status">Đang tải công việc…</p>,
+  loading: () => <WorkspaceSectionSkeleton />,
 });
 
 export default function StaffWorkspace({ section = 'tasks' }: { section?: string }) {

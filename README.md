@@ -19,7 +19,7 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Web: http://127.0.0.1:3010. API requests proxy to http://127.0.0.1:8088 by default; override API_PROXY_TARGET when running BE elsewhere. Customer/shop login is /dang-nhap; Admin/Staff login is /admin/login.
+Web production preview: http://127.0.0.1:3010; development: http://localhost:8088. API requests proxy to http://127.0.0.1:5080 by default; override API_PROXY_TARGET when running BE elsewhere. Customer/shop login is /dang-nhap; Admin/Staff login is /admin/login.
 
 Configure Goong Maps in `.env.local` (or environment variables) using `.env.example` as a template:
 
@@ -102,7 +102,7 @@ API types are generated with `pnpm contracts` from the backend-exported OpenAPI 
 
 ## Portal authentication
 
-Run `pnpm dev:portal` on http://127.0.0.1:5173 with BE on port 5080.
+Run `pnpm dev:portal` (development: http://localhost:8088; production preview: `pnpm --filter @florabot/web start` on http://localhost:3010). Set `API_PROXY_TARGET` to the actual backend URL; the frontend port must differ from the backend port.
 The portal uses HttpOnly session cookies, one shared refresh request, server-checked role guards,
 and a persistent seller subscription status notice. Its account overview shows real session data.
 Seed SQL passwords are deliberately invalid; use BE's documented one-time provision-user command.

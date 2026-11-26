@@ -172,6 +172,20 @@
 .site-support[data-customer='true'] .site-support-label--phone {
   display: block;
 }
+/* Keep confirmations and modal controls unobstructed. Support remains available
+   after the action closes, rather than competing with its primary button. */
+body:has(.management-modal-backdrop, .flower-request-backdrop, .order-action-card)
+  .site-support
+  .site-support-control {
+  visibility: hidden;
+  pointer-events: none;
+}
+@media (max-width: 767px) {
+  .site-support[data-customer='true'] .site-support-label,
+  .site-support .site-support-label {
+    display: none;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .site-support-control,
   .site-support-icon,

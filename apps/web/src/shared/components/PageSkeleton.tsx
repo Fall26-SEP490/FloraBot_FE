@@ -1,5 +1,18 @@
 import styles from './page-states.module.css';
 
+export function WorkspaceSectionSkeleton() {
+  return (
+    <div className={styles.workspaceLoading} role="status" aria-label="Đang tải nội dung">
+      <div aria-hidden="true">
+        <span className={styles.heading} />
+        <span className={styles.line} />
+        <span className={styles.shortLine} />
+        <span className={styles.line} />
+      </div>
+    </div>
+  );
+}
+
 export function FlowerGridSkeleton({
   gridClassName,
   count = 8,

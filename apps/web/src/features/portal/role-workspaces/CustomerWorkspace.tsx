@@ -1,4 +1,5 @@
 'use client';
+import { WorkspaceSectionSkeleton } from '@/shared/components/PageSkeleton';
 
 import React, { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
@@ -12,17 +13,17 @@ import './customer-account-shell.css';
 import './customer-account-refinement.css';
 
 const MemberAccount = dynamic(() => import('../../customer-account/MemberAccount'), {
-  loading: () => <p role="status">Đang tải thông tin tài khoản…</p>,
+  loading: () => <WorkspaceSectionSkeleton />,
 });
 
 const PersonalProfile = dynamic(() => import('../../profile/PersonalProfile'), {
-  loading: () => <p role="status">Đang tải hồ sơ cá nhân…</p>,
+  loading: () => <WorkspaceSectionSkeleton />,
 });
 
 const CustomerKioskOnboarding = dynamic(
   () => import('../../kiosk-onboarding/CustomerKioskOnboarding'),
   {
-    loading: () => <p role="status">Đang tải đăng ký thuê kiosk…</p>,
+    loading: () => <WorkspaceSectionSkeleton />,
   },
 );
 

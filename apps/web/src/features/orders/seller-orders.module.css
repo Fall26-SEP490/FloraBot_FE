@@ -1570,3 +1570,46 @@
 .accessoryChangeNotice p {
   margin: 0;
 }
+.kioskOfflineTag {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b42318;
+  font-size: 11px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+.kioskOfflineNotice {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fff8e9;
+  border: 1px solid #e6c989;
+  color: #6b4407;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.kioskOfflineNotice strong {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.kioskOfflineNotice p {
+  margin: 0;
+}
+.uncertainTitle {
+  margin: 0 0 4px;
+  font-weight: 700;
+  color: #6b4407;
+}
+.uncertainDetail {
+  margin: 0 0 10px;
+  color: #b42318;
+  font-size: 13px;
+  font-weight: 600;
+}

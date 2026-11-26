@@ -10,7 +10,6 @@ import {
   type ReactNode,
 } from 'react';
 import styles from './refresh-region.module.css';
-import { createPortal } from 'react-dom';
 
 const RefreshContext = createContext<((work: Promise<unknown>) => void) | null>(null);
 export function useRefreshRegion() {
@@ -23,22 +22,26 @@ export default function RefreshRegion({
 }: ComponentProps<'div'> & { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
   const generation = useRef(0);
+  const pending = useRef(0);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(
     () => () => {
       generation.current++;
+      pending.current = 0;
       clearTimeout(timer.current);
     },
     [],
   );
   function track(work: Promise<unknown>) {
-    const current = ++generation.current;
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => {
-      if (generation.current === current) setLoading(true);
-    }, 150);
+    const current = generation.current;
+    if (pending.current++ === 0) {
+      timer.current = setTimeout(() => {
+        if (generation.current === current) setLoading(true);
+      }, 150);
+    }
     const finish = () => {
       if (generation.current !== current) return;
+      if (--pending.current > 0) return;
       clearTimeout(timer.current);
       setLoading(false);
     };
@@ -52,19 +55,15 @@ export default function RefreshRegion({
         aria-busy={loading}
         data-refresh-region=""
       >
-        <div className={styles.content} inert={loading || undefined} data-loading={loading}>
-          {children}
-        </div>
-        {loading &&
-          createPortal(
-            <div className={styles.overlay} data-refresh-overlay="">
-              <div className={styles.indicator} role="status">
-                <span className={styles.progress} aria-hidden="true" />
-                <span>Đang cập nhật dữ liệu…</span>
-              </div>
-            </div>,
-            document.body,
-          )}
+        <div className={styles.content}>{children}</div>
+        {loading && (
+          <div className={styles.overlay} data-refresh-overlay="">
+            <div className={styles.indicator} role="status">
+              <span className={styles.progress} aria-hidden="true" />
+              <span className="sr-only">Đang cập nhật dữ liệu…</span>
+            </div>
+          </div>
+        )}
       </div>
     </RefreshContext.Provider>
   );

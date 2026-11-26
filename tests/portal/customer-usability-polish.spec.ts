@@ -97,7 +97,7 @@ async function fixture(page: Page) {
 }
 async function openRequest(page: Page) {
   await page.goto(`/dat-hoa/${productId}/${kioskId}`);
-  await page.getByRole('button', { name: 'Yêu cầu báo giá', exact: true }).click();
+  await page.getByRole('button', { name: 'Đặt trước', exact: true }).click();
   return page.getByRole('dialog');
 }
 async function fillRequest(page: Page) {
@@ -115,7 +115,7 @@ for (const width of [390, 1440]) {
     const state = await fixture(page);
     await page.setViewportSize({ width, height: 950 });
     const dialog = await openRequest(page);
-    await expect(dialog.getByText('Bạn chưa cần thanh toán', { exact: true })).toBeVisible();
+    await expect(dialog.getByText('Chưa cần thanh toán', { exact: true })).toBeVisible();
     await expect(dialog.getByText(/SMS/)).toHaveCount(0);
     await page.screenshot({ path: test.info().outputPath(`quotation-${width}.png`) });
     const pickup = await page.getByLabel('Ngày nhận hoa').boundingBox();
@@ -139,8 +139,8 @@ for (const width of [390, 1440]) {
       .getByRole('button', { name: width === 390 ? 'Đóng cửa sổ' : 'Đóng form', exact: true })
       .click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Yêu cầu báo giá', exact: true })).toBeFocused();
-    await page.getByRole('button', { name: 'Yêu cầu báo giá', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Đặt trước', exact: true })).toBeFocused();
+    await page.getByRole('button', { name: 'Đặt trước', exact: true }).click();
     await expect(brief).toHaveValue('');
     await page.getByRole('button', { name: 'Đóng mẫu đang chọn' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);

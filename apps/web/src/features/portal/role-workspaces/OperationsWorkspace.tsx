@@ -1,4 +1,5 @@
 'use client';
+import { WorkspaceSectionSkeleton } from '@/shared/components/PageSkeleton';
 
 import React from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -19,41 +20,41 @@ import '../styles/manager-usability.css';
 const OperationsInstallations = dynamic(
   () => import('../../installations/OperationsInstallations'),
   {
-    loading: () => <p role="status">Đang tải hồ sơ thuê & lắp đặt…</p>,
+    loading: () => <WorkspaceSectionSkeleton />,
   },
 );
 
 const OperationsSellers = dynamic(
   () => import('../../account-management/components/OperationsSellers'),
   {
-    loading: () => <p role="status">Đang tải danh sách shop hoa…</p>,
+    loading: () => <WorkspaceSectionSkeleton />,
   },
 );
 
 const ManagedCustomers = dynamic(
   () => import('../../account-management/components/ManagedCustomers'),
   {
-    loading: () => <p role="status">Đang tải danh sách khách hàng…</p>,
+    loading: () => <WorkspaceSectionSkeleton />,
   },
 );
 
 const AccountManagement = dynamic(() => import('../../account-management/AccountManagement'), {
-  loading: () => <p role="status">Đang tải quản lý kỹ thuật viên…</p>,
+  loading: () => <WorkspaceSectionSkeleton />,
 });
 
 const OperationsOverview = dynamic(() => import('../../dashboard/OperationsOverview'), {
-  loading: () => <p role="status">Đang tải tổng quan vận hành…</p>,
+  loading: () => <WorkspaceSectionSkeleton />,
 });
 
 const StaffTasks = dynamic(() => import('../../task-management/TaskManagement'), {
-  loading: () => <p role="status">Đang tải điều phối công việc…</p>,
+  loading: () => <WorkspaceSectionSkeleton />,
 });
 const OperationsTerminations = dynamic(() =>
   import('../../kiosk-management/KioskTerminations').then((mod) => mod.OperationsTerminations),
 );
 const OperationsMaintenanceRecovery = dynamic(
   () => import('../../kiosk-management/OperationsMaintenanceRecovery'),
-  { loading: () => <p role="status">Đang tải phiên bảo trì…</p> },
+  { loading: () => <WorkspaceSectionSkeleton /> },
 );
 
 export default function OperationsWorkspace({ section = 'overview' }: { section?: string }) {

@@ -144,8 +144,8 @@ export function InstallationScheduleForm({
             eligibleKiosks.length === 0 &&
             !appDetail.assignedKioskId && (
               <small className="kiosk-field-error">
-                Chưa có tủ kiosk nào khả dụng với {appDetail.totalSlots} ô. Nhấn Thêm tủ mới để đăng
-                ký thiết bị.
+                Chưa có tủ kiosk nào khả dụng với {appDetail.totalSlots} ô. Nhấn Tạo tủ theo hồ sơ
+                để đăng ký thiết bị.
               </small>
             )}
         </div>

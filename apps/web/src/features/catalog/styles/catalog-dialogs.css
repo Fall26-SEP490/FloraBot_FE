@@ -83,8 +83,25 @@
   overflow-y: auto;
   overscroll-behavior-y: contain;
   min-height: 0;
-  padding: 1.15rem 1.4rem;
+  padding: 16px 20px;
+  scrollbar-gutter: stable;
   scrollbar-width: thin;
+}
+
+.flower-request-feedback {
+  min-height: 3.2em;
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.flower-request-feedback p {
+  margin: 0;
+}
+.flower-request .flower-request-field + .flower-request-field {
+  margin-top: 14px;
+}
+.flower-request .flower-request-accessories {
+  margin-top: 12px;
 }
 
 .flower-request-intro {
@@ -92,8 +109,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.85rem 1.15rem;
-  margin-bottom: 1rem;
+  padding: 10px 12px;
+  margin-bottom: 12px;
   background: #f4f8f3;
   border: 1px solid #dce8d9;
   border-radius: 12px;

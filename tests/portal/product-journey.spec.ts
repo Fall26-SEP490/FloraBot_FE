@@ -84,7 +84,7 @@ async function fixture(page: Page, stock?: { available: boolean; rejectNext?: bo
 }
 async function open(page: Page) {
   await page.goto(`/dat-hoa/${productId}/${kioskId}`);
-  await page.getByRole('button', { name: 'Yêu cầu báo giá', exact: true }).click();
+  await page.getByRole('button', { name: 'Đặt trước', exact: true }).click();
   return page.getByRole('dialog', { name: 'Yêu cầu báo giá', exact: true });
 }
 async function future(page: Page, days = 1) {
@@ -108,11 +108,9 @@ for (const width of [390, 1440]) {
     expect(
       await page.locator('.site-content').evaluate((el) => getComputedStyle(el).backgroundImage),
     ).toContain('florabot-pattern.webp');
-    await expect(
-      page.getByRole('button', { name: 'Yêu cầu báo giá', exact: true }),
-    ).toBeInViewport();
+    await expect(page.getByRole('button', { name: 'Đặt trước', exact: true })).toBeInViewport();
     await page.screenshot({ path: test.info().outputPath(`detail-${width}.png`), fullPage: false });
-    await page.getByRole('button', { name: 'Yêu cầu báo giá', exact: true }).click();
+    await page.getByRole('button', { name: 'Đặt trước', exact: true }).click();
     const dialog = page.getByRole('dialog', { name: 'Yêu cầu báo giá', exact: true });
     await expect(dialog).toBeVisible();
     await chooseOption(dialog.getByLabel('Tủ nhận hoa', { exact: true }), kioskId);
@@ -179,7 +177,7 @@ test('Product photo zoom preserves the page and returns focus before opening a q
   await page.keyboard.press('Escape');
   await expect(preview).toHaveCount(0);
   await expect(zoom).toBeFocused();
-  await page.getByRole('button', { name: 'Yêu cầu báo giá', exact: true }).click();
+  await page.getByRole('button', { name: 'Đặt trước', exact: true }).click();
   await expect(page.getByRole('dialog', { name: 'Yêu cầu báo giá', exact: true })).toBeVisible();
   expect(state.writes).toEqual([]);
 });

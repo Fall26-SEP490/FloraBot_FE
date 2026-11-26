@@ -104,9 +104,8 @@ export default function WorkspaceNavigation({
     sellerChats.data?.items?.reduce((sum, item) => sum + (Number(item.unreadCount) || 0), 0) || 0;
 
   const [expanded, setExpanded] = useState(false);
-  const [hovered, setHovered] = useState(false);
   const [focusWithin, setFocusWithin] = useState(false);
-  const collapsed = !hovered && !focusWithin && !expanded;
+  const collapsed = !focusWithin && !expanded;
   const compactRole = ['ADMIN', 'OPERATIONS_MANAGER', 'TECHNICIAN'].includes(role);
   const toggle = useRef<HTMLButtonElement>(null);
   const base = workspaceBase(role);
@@ -130,22 +129,21 @@ export default function WorkspaceNavigation({
           : role === 'SELLER_STAFF'
             ? ClipboardList
             : Boxes;
-  const closeMenu = () => setExpanded(false);
+  const closeMenu = () => {
+    if (window.matchMedia('(max-width: 767px)').matches) setExpanded(false);
+  };
   const handleEscape = (event: React.KeyboardEvent) => {
-    if (event.key === 'Escape' && expanded) {
+    if (event.key === 'Escape' && (expanded || focusWithin)) {
       setExpanded(false);
+      setFocusWithin(false);
       toggle.current?.focus();
     }
   };
   return (
     <aside
-      onPointerEnter={(event) => {
-        if (event.pointerType === 'mouse') setHovered(true);
-      }}
-      onPointerLeave={() => setHovered(false)}
       onPointerDownCapture={() => setFocusWithin(false)}
       onFocusCapture={(event) => {
-        setFocusWithin(event.target.matches(':focus-visible'));
+        setFocusWithin(event.target !== toggle.current && event.target.matches(':focus-visible'));
       }}
       onBlurCapture={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) setFocusWithin(false);
@@ -172,13 +170,12 @@ export default function WorkspaceNavigation({
         onKeyDown={handleEscape}
         className="workspace-menu-toggle"
         aria-expanded={expanded}
+        aria-label={expanded ? 'Đóng danh mục quản lý' : 'Mở danh mục quản lý'}
         aria-controls="workspace-navigation"
         onClick={() => setExpanded(!expanded)}
       >
         {expanded ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
-        <span className={compactRole ? 'sr-only' : undefined}>
-          {expanded ? 'Đóng danh mục quản lý' : 'Mở danh mục quản lý'}
-        </span>
+        <span>{expanded ? 'Đóng danh mục' : 'Danh mục'}</span>
       </button>
       <nav
         id="workspace-navigation"

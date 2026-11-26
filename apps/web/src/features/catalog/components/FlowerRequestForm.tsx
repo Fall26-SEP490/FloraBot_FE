@@ -5,6 +5,7 @@ import Select from '@/shared/components/Select';
 import { catalogOriginPath } from '../catalog.navigation';
 import VietnamDateInput from '@/shared/components/VietnamDateInput';
 import { vietnamDate } from '@/shared/lib/vietnam-date';
+import { pickupTimeAllowed, validPickupTime as isValidPickupTime } from '../pickup-time';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
@@ -37,10 +38,6 @@ const briefSuggestions = [
   { label: 'Tặng gia đình', text: 'Tặng gia đình, hoa tông ấm' },
 ];
 
-function isValidPickupTime(pickup: Date) {
-  const delay = pickup.getTime() - Date.now();
-  return Number.isFinite(delay) && delay > 0 && delay <= 30 * 24 * 60 * 60 * 1000;
-}
 function isoDay(value: string) {
   if (!/^\d{2}\/\d{2}\/\d{4}$/.test(value)) return '';
   const [day, month, year] = value.split('/').map(Number);
@@ -276,9 +273,7 @@ export function FlowerRequestForm({
   const pickupDateForEstimate = pickup ? new Date(`${pickup}:00+07:00`) : null;
   const availability = useQuery({
     queryKey: ['preorder-availability', kioskId, pickup],
-    enabled: Boolean(
-      kioskId && pickupDateForEstimate && Number.isFinite(pickupDateForEstimate.getTime()),
-    ),
+    enabled: Boolean(kioskId && pickupDateForEstimate && isValidPickupTime(pickupDateForEstimate)),
     queryFn: () =>
       request<AvailabilityResponse>(
         `/kiosks/${kioskId}/preorder-availability?pickupAt=${encodeURIComponent(new Date(`${pickup}:00+07:00`).toISOString())}`,
@@ -298,7 +293,21 @@ export function FlowerRequestForm({
   const [pickupError, setPickupError] = useState('');
   const [briefError, setBriefError] = useState('');
   const pickupRef = useRef<HTMLButtonElement>(null);
-  const [calendarNow] = useState(Date.now);
+  const [calendarNow, setCalendarNow] = useState(Date.now);
+  useEffect(() => {
+    const update = () => setCalendarNow(Date.now());
+    const timer = window.setInterval(update, 30_000);
+    window.addEventListener('focus', update);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener('focus', update);
+    };
+  }, []);
+  const currentPickupError =
+    pickupError ||
+    (pickup && !pickupTimeAllowed(pickupISO, pickupTime, calendarNow)
+      ? 'Chọn giờ nhận trong tương lai, tối đa 30 ngày.'
+      : '');
   const timeRef = useRef<HTMLSelectElement>(null);
   const briefRef = useRef<HTMLTextAreaElement>(null);
   const [done, setDone] = useState(false);
@@ -531,9 +540,9 @@ export function FlowerRequestForm({
           <div className="flower-request-intro-text">
             <div className="flower-request-intro-badge">
               <ShieldCheck size={15} aria-hidden="true" />
-              <strong>Bạn chưa cần thanh toán</strong>
+              <strong>Chưa cần thanh toán</strong>
             </div>
-            <p>Shop sẽ gửi báo giá và lịch nhận để bạn kiểm tra.</p>
+            <p>Shop xác nhận giá và lịch nhận.</p>
           </div>
           <div className="flower-request-reference-price">
             <span>{selectedAccessories.length ? 'Tổng tạm tính' : 'Giá mẫu'}</span>
@@ -556,11 +565,9 @@ export function FlowerRequestForm({
               >
                 <h3 className="flower-request-accessory-title">
                   <Package size={18} aria-hidden="true" />
-                  Phụ kiện kèm hoa <span>Tùy chọn</span>
+                  Phụ kiện <span>Tùy chọn</span>
                 </h3>
-                <p className="quiet">
-                  Shop gói cùng bó hoa. Tồn được kiểm tra lại khi bạn đồng ý báo giá.
-                </p>
+                <p className="quiet">Gói cùng bó hoa, kiểm tra tồn khi xác nhận báo giá.</p>
                 {accessories.isPending ? (
                   <p role="status">Đang tải phụ kiện của shop…</p>
                 ) : accessories.isError ? (
@@ -795,11 +802,16 @@ export function FlowerRequestForm({
                   max={vietnamDate(new Date(calendarNow + 30 * 86400000))}
                   onValueChange={(value) => {
                     setPickupDay(value.split('-').reverse().join('/'));
-                    setPickupError('');
+                    if (pickupTime && !pickupTimeAllowed(value, pickupTime)) {
+                      setPickupTime('');
+                      setPickupError('Chọn lại giờ nhận phù hợp.');
+                    } else setPickupError('');
                   }}
-                  invalid={Boolean(pickupError)}
+                  invalid={Boolean(currentPickupError)}
                   describedBy={
-                    pickupError ? `pickup-error-${item.productId}` : `pickup-hint-${item.productId}`
+                    currentPickupError
+                      ? `pickup-error-${item.productId}`
+                      : `pickup-hint-${item.productId}`
                   }
                 />
               </div>
@@ -810,23 +822,30 @@ export function FlowerRequestForm({
                   ref={timeRef}
                   aria-label="Giờ nhận hoa"
                   required
+                  disabled={!pickupISO}
                   value={pickupTime}
                   onChange={(event) => {
                     setPickupTime(event.target.value);
                     setPickupError('');
                   }}
-                  aria-invalid={Boolean(pickupError)}
+                  aria-invalid={Boolean(currentPickupError)}
                   aria-describedby={
-                    pickupError ? `pickup-error-${item.productId}` : `pickup-hint-${item.productId}`
+                    currentPickupError
+                      ? `pickup-error-${item.productId}`
+                      : `pickup-hint-${item.productId}`
                   }
                 >
                   <option value="" disabled hidden>
-                    Chọn giờ
+                    {pickupISO ? 'Chọn giờ' : 'Chọn ngày trước'}
                   </option>
                   {Array.from({ length: 48 }, (_, index) => {
                     const time = `${String(Math.floor(index / 2)).padStart(2, '0')}:${index % 2 ? '30' : '00'}`;
                     return (
-                      <option key={time} value={time}>
+                      <option
+                        key={time}
+                        value={time}
+                        disabled={!pickupTimeAllowed(pickupISO, time, calendarNow)}
+                      >
                         {time}
                       </option>
                     );
@@ -834,31 +853,28 @@ export function FlowerRequestForm({
                 </Select>
               </div>
             </div>
-            {!pickupError && (
-              <p className="quiet" id={`pickup-hint-${item.productId}`}>
-                Shop sẽ xác nhận giờ nhận cùng báo giá.
-              </p>
-            )}
-            {pickupError && (
+            <div className="flower-request-feedback">
               <p
-                className="flower-request-field-error"
-                role="alert"
-                id={`pickup-error-${item.productId}`}
+                id={`${currentPickupError ? 'pickup-error' : 'pickup-hint'}-${item.productId}`}
+                role={
+                  currentPickupError || availability.data?.available === false ? 'alert' : 'status'
+                }
+                className={
+                  currentPickupError || availability.data?.available === false
+                    ? 'flower-request-field-error'
+                    : 'quiet'
+                }
               >
-                {pickupError}
+                {currentPickupError ||
+                  (availability.isFetching
+                    ? 'Đang kiểm tra chỗ trống…'
+                    : availability.data?.available === false
+                      ? 'Tủ chưa thể nhận lịch này. Chọn tủ hoặc giờ khác.'
+                      : availability.isError
+                        ? 'Chưa kiểm tra được chỗ trống.'
+                        : 'Shop xác nhận lịch nhận cùng báo giá.')}
               </p>
-            )}
-            {availability.isFetching && <p role="status">Đang kiểm tra sức chứa tủ…</p>}
-            {availability.data?.available === false && (
-              <p className="flower-request-field-error" role="alert">
-                {availability.data.message || 'Tủ đã hết chỗ. Bạn có thể chọn tủ hoặc giờ khác.'}
-              </p>
-            )}
-            {availability.isError && (
-              <p role="status" className="quiet">
-                Chưa kiểm tra được sức chứa. Hệ thống sẽ xác nhận lại khi bạn duyệt báo giá.
-              </p>
-            )}
+            </div>
           </div>
           <div className="flower-request-field">
             <label htmlFor={`brief-${item.productId}`}>Bạn muốn bó hoa như thế nào?</label>

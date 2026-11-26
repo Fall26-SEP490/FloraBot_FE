@@ -1,6 +1,14 @@
 'use client';
 
-import { useEffect, useId, useImperativeHandle, useRef, useState, type Ref } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useId,
+  useImperativeHandle,
+  useRef,
+  useState,
+  type Ref,
+} from 'react';
 import { createPortal } from 'react-dom';
 import { CalendarDays, Clock, ChevronLeft, ChevronRight, X } from '@florabot/ui';
 import { CustomSelect } from './CustomSelect';
@@ -98,6 +106,15 @@ export default function VietnamDateInput({
       `${String(date.getUTCFullYear()).padStart(4, '0')}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`,
     );
   }
+  useLayoutEffect(() => {
+    if (!open || !popup.current || !trigger.current) return;
+    const rect = trigger.current.getBoundingClientRect();
+    const panel = popup.current;
+    setPosition({
+      left: Math.max(8, Math.min(rect.left, innerWidth - panel.offsetWidth - 8)),
+      top: Math.max(8, Math.min(rect.bottom + 6, innerHeight - panel.offsetHeight - 8)),
+    });
+  }, [open, view, kind]);
   useEffect(() => {
     if (!open) return;
     const frame = requestAnimationFrame(() => {

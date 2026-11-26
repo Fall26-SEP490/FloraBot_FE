@@ -347,7 +347,7 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
       .getByRole('button', { name: 'Kiểm tra trạng thái', exact: true })
       .click();
     await expect(page.getByText('Đã thanh toán - Chờ duyệt')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Đã thanh toán thành công' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Đã nhận phí thuê' })).toBeVisible();
 
     // Test Pre-confirmation voluntary cancellation:
     await page.getByRole('button', { name: 'Hủy hồ sơ' }).click();
@@ -554,7 +554,7 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     await page.getByRole('button', { name: '+ Tạo tủ theo hồ sơ' }).click();
     await page.getByLabel('Mã tủ (Code) *').fill('K-NEW-02');
     await page.getByLabel('Tên tủ *').fill('Kiosk Phú Nhuận');
-    await page.getByLabel('Hardware ID (Serial) *').fill('ESP32-SN-998811');
+    await page.getByLabel('Hardware ID *').fill('ESP32-SN-998811');
     await page.getByRole('button', { name: 'Đăng ký thiết bị (OFFLINE)' }).click();
 
     // Verify Once-Only Provisioning Panel
@@ -718,7 +718,7 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     await page.getByRole('button', { name: '+ Tạo tủ theo hồ sơ' }).click();
     await page.getByLabel('Mã tủ (Code) *').fill('K-CYCLE-01');
     await page.getByLabel('Tên tủ *').fill('Kiosk Chu Kỳ 1');
-    await page.getByLabel('Hardware ID (Serial) *').fill('SN-CYCLE-001');
+    await page.getByLabel('Hardware ID *').fill('SN-CYCLE-001');
     await page.getByLabel('MQTT Client ID (nếu có)').fill('mqtt-cycle-001');
     await page.getByRole('button', { name: 'Đăng ký thiết bị (OFFLINE)' }).click();
 
@@ -740,7 +740,7 @@ test.describe('Annual Kiosk Onboarding Workflow Tests', () => {
     await page.getByRole('button', { name: '+ Tạo tủ theo hồ sơ' }).click();
     await page.getByLabel('Mã tủ (Code) *').fill('K-CYCLE-02');
     await page.getByLabel('Tên tủ *').fill('Kiosk Chu Kỳ 2');
-    await page.getByLabel('Hardware ID (Serial) *').fill('SN-CYCLE-002');
+    await page.getByLabel('Hardware ID *').fill('SN-CYCLE-002');
     await expect(page.getByLabel('MQTT Client ID (nếu có)')).toHaveValue('');
     await page.getByRole('button', { name: 'Đăng ký thiết bị (OFFLINE)' }).click();
 

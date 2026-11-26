@@ -126,7 +126,7 @@ function EnrollKioskForm({ session, onClose, application, onSuccess }: EnrollKio
 
       <div className="form-fields-grid-2">
         <div className="kiosk-form-field">
-          <label htmlFor="new-hardware-id">Hardware ID (Serial) *</label>
+          <label htmlFor="new-hardware-id">Hardware ID *</label>
           <input
             id="new-hardware-id"
             type="text"
@@ -135,6 +135,10 @@ function EnrollKioskForm({ session, onClose, application, onSuccess }: EnrollKio
             placeholder="ESP32-SN-998811"
             required
           />
+          <p className="quiet">
+            Lấy đúng giá trị <code>hardwareId</code> trong cấu hình firmware <code>config.h</code>{' '}
+            của thiết bị; không dùng mã tủ K-HCM.
+          </p>
         </div>
         <div className="kiosk-form-field">
           <label htmlFor="new-region-select">Khu vực (Region)</label>
@@ -168,7 +172,10 @@ function EnrollKioskForm({ session, onClose, application, onSuccess }: EnrollKio
       </div>
 
       <ApplicationRentalSummary application={application} />
-      <p>Số ô và loại ô được tạo theo hồ sơ, không thể chỉnh tại bước này.</p>
+      <p className="quiet">
+        Sau đăng ký, kỹ thuật viên cấu hình kết nối. Chỉ nghiệm thu khi tủ trực tuyến và kiểm tra đủ
+        các ô; bàn giao xong seller mới bắt đầu sử dụng.
+      </p>
 
       <div className="kiosk-modal-actions">
         <Button

@@ -56,6 +56,7 @@ export default function StaffPreorderFulfillment({
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [uncertain, setUncertain] = useState(false);
+  const [checking, setChecking] = useState(false);
   const options = useQuery({
     ...staffPreordersQuery(taskId, actorId),
     enabled: open && active,
@@ -226,9 +227,27 @@ export default function StaffPreorderFulfillment({
           <IconActionButton
             type="button"
             variant="outline"
-            onClick={() => {
-              setUncertain(false);
-              void options.refetch();
+            disabled={checking || busy}
+            onClick={async () => {
+              setChecking(true);
+              try {
+                const fresh = await options.refetch();
+                if (fresh.isError || !fresh.data) throw new Error('Chưa đọc được trạng thái mới.');
+                if (!fresh.data.preorders.some((order) => order.requestId === requestId))
+                  setRequestId('');
+                if (
+                  !fresh.data.slots.some((slot) => slot.id === slotId && slot.zone === 'PREORDER')
+                )
+                  setSlotId('');
+                setLoadingAccess(null);
+                setUncertain(false);
+                setError('');
+                setNotice('Đã cập nhật đơn và ô. Kiểm tra lại trước khi nạp tiếp.');
+              } catch {
+                setError('Chưa kiểm tra được kết quả. Giữ nguyên thông tin và thử kiểm tra lại.');
+              } finally {
+                setChecking(false);
+              }
             }}
             action="reload"
             label="Tải lại để kiểm tra"

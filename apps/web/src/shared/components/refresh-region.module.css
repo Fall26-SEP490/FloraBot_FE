@@ -5,38 +5,20 @@
 .content {
   min-width: 0;
 }
-.content[data-loading='true'] {
-  opacity: 0.45;
+.overlay {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 1;
   pointer-events: none;
 }
-.overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 10000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgb(255 255 255 / 35%);
-}
 .indicator {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 20px 24px;
-  max-width: calc(100vw - 32px);
-  box-sizing: border-box;
-  border-radius: 10px;
-  background: #fff;
-  box-shadow: 0 4px 24px rgb(25 61 45 / 10%);
-  color: #245b3d;
-  font-size: 14px;
-  font-weight: 600;
+  height: 3px;
+  overflow: hidden;
 }
 .progress {
-  width: 72px;
-  height: 4px;
+  display: block;
+  width: 100%;
+  height: 3px;
   overflow: hidden;
   border-radius: 4px;
   background: #dce9dd;

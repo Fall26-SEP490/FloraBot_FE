@@ -1,4 +1,5 @@
 'use client';
+import { WorkspaceSectionSkeleton } from '@/shared/components/PageSkeleton';
 
 import React from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -16,17 +17,17 @@ import '../styles/technician-usability.css';
 const TechnicianInstallations = dynamic(
   () => import('../../installations/TechnicianInstallations'),
   {
-    loading: () => <p role="status">Đang tải hồ sơ lắp đặt…</p>,
+    loading: () => <WorkspaceSectionSkeleton />,
   },
 );
 
 const StaffTasks = dynamic(() => import('../../task-management/TaskManagement'), {
-  loading: () => <p role="status">Đang tải công việc kỹ thuật…</p>,
+  loading: () => <WorkspaceSectionSkeleton />,
 });
 
 const TechnicianKioskHealth = dynamic(
   () => import('../../task-management/components/TechnicianKioskHealth'),
-  { loading: () => <p role="status">Đang tải sức khỏe kiosk…</p> },
+  { loading: () => <WorkspaceSectionSkeleton /> },
 );
 
 export default function TechnicianWorkspace({ section = 'tasks' }: { section?: string }) {
