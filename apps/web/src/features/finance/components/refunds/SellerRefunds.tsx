@@ -31,6 +31,9 @@ const money = (value: number | string | null | undefined) =>
 
 const refundStatusLabels: Record<string, string> = {
   PENDING: 'Chờ xử lý',
+  SUCCEEDED: 'Đã hoàn tiền',
+  FAILED: 'Hoàn tiền thất bại',
+  EXPIRED: 'Đã hết hạn',
   APPROVED: 'Đã duyệt hoàn',
   TRANSFERRED: 'Đã chuyển tiền',
   COMPLETED: 'Hoàn tất',
@@ -55,6 +58,9 @@ function refundStatusLabel(item: {
 
 const refundStatusStyles: Record<string, { bg: string; color: string; border: string }> = {
   PENDING: { bg: '#fffbeb', color: '#92400e', border: '#fde68a' },
+  SUCCEEDED: { bg: '#edf5ea', color: '#1b5e20', border: '#c8dec4' },
+  FAILED: { bg: '#fef2f2', color: '#991b1b', border: '#fecaca' },
+  EXPIRED: { bg: '#f3f4f6', color: '#374151', border: '#d1d5db' },
   APPROVED: { bg: '#edf5ea', color: '#1b5e20', border: '#c8dec4' },
   TRANSFERRED: { bg: '#eff6ff', color: '#1e40af', border: '#bfdbfe' },
   COMPLETED: { bg: '#edf5ea', color: '#1b5e20', border: '#c8dec4' },
