@@ -14,6 +14,8 @@ export type Task = {
   assigneeName: string;
   assigneeId: string;
   kioskName: string;
+  createdAt?: string;
+  updatedAt?: string;
   address: string;
   shopName: string | null;
   instructions: string;
