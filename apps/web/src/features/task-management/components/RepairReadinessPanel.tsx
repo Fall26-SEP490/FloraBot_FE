@@ -16,14 +16,16 @@ export default function RepairReadinessPanel({
   apiBase,
   version,
   actorId,
-  compact = false,
+  phase = 'submission',
 }: {
   taskId: string;
   apiBase: string;
   version: number;
   actorId?: string;
-  compact?: boolean;
+  phase?: 'submission' | 'review';
 }) {
+  const reviewing = phase === 'review';
+  const title = reviewing ? 'Điều kiện nghiệm thu' : 'Điều kiện gửi báo cáo';
   const query = useQuery({
     queryKey: ['repair-readiness', actorId, apiBase, taskId, version],
     queryFn: () => request<Readiness>(`${apiBase}/${taskId}/repair-readiness`),
@@ -33,9 +35,9 @@ export default function RepairReadinessPanel({
     <section
       className="repair-readiness-panel"
       data-blocked={Boolean(query.data?.code)}
-      aria-label="Điều kiện nghiệm thu sửa ô"
+      aria-label={title}
     >
-      <h4>{compact ? 'Kiểm tra tại tủ' : 'Điều kiện nghiệm thu sửa ô'}</h4>
+      <h4>{title}</h4>
       {query.isPending ? (
         <p role="status">Đang kiểm tra điều kiện…</p>
       ) : query.isError ? (
@@ -45,10 +47,12 @@ export default function RepairReadinessPanel({
           <p role="status">
             {query.data.detail ||
               (query.data.code
-                ? 'Chưa đủ điều kiện sửa ô. Kiểm tra lại trạng thái công việc và thiết bị.'
-                : compact
+                ? reviewing
+                  ? 'Chưa đủ điều kiện nghiệm thu. Kiểm tra báo cáo và trạng thái ô.'
+                  : 'Chưa đủ điều kiện gửi báo cáo. Kiểm tra thiết bị và ô tủ.'
+                : reviewing
                   ? 'Đủ điều kiện nghiệm thu.'
-                  : 'Đủ điều kiện hiện tại; hệ thống sẽ kiểm tra lại khi gửi.')}
+                  : 'Đủ điều kiện gửi báo cáo.')}
           </p>
           {query.data.code === 'REPAIR_SESSION_RECOVERY_REQUIRED' &&
             apiBase.startsWith('/operations/') && (
