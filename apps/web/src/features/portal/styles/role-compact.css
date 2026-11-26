@@ -48,7 +48,7 @@
     margin: 8px 0 0;
   }
   @media (min-width: 768px) {
-    /* The mobile menu uses full-width content; desktop can pin the rail open. */
+    /* Keep full-width content on mobile and the hover rail on desktop. */
     & .workspace-sidebar {
       display: flex;
       flex-direction: column;
@@ -71,9 +71,6 @@
       display: grid;
       align-items: start;
       grid-template-columns: 78px minmax(0, 1fr);
-    }
-    & .dashboard-shell:has(> .role-sidebar-expanded) {
-      grid-template-columns: 258px minmax(0, 1fr);
     }
     & .workspace-sidebar {
       width: 78px;
@@ -121,8 +118,7 @@
       display: none;
     }
     & .workspace-menu-toggle {
-      display: inline-flex;
-      justify-content: center;
+      display: none;
     }
     @media (hover: none) {
       & .workspace-menu-toggle {

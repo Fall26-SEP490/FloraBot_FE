@@ -35,6 +35,8 @@ async function mock(page: Page, role = 'CUSTOMER') {
     if (path.endsWith('/preorder-availability'))
       return route.fulfill({ json: { available: true } });
     if (path.endsWith('/catalog/accessories')) return route.fulfill({ json: [] });
+    if (path === '/api/operations/technicians' || path === '/api/operations/eligible-kiosks')
+      return route.fulfill({ json: [] });
     if (route.request().method() !== 'GET') return route.abort();
     return route.fulfill({ json: { items: [], page: 1, hasMore: false } });
   });
@@ -101,27 +103,28 @@ test('hiding floating launchers does not hide the advisor dialog itself', async 
   await expect(launcher).toBeVisible();
 });
 
-test('desktop menu opens deliberately, stays pinned after navigation and closes with Escape', async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 1280, height: 900 });
-  await mock(page, 'TECHNICIAN');
-  await page.goto('/technician');
-  const sidebar = page.locator('.workspace-sidebar');
-  await expect(sidebar).toHaveCSS('width', '78px');
-  await sidebar.hover();
-  await expect(sidebar).toHaveCSS('width', '78px');
-  await page.getByRole('button', { name: 'Mở danh mục quản lý', exact: true }).click();
-  await expect(sidebar).toHaveCSS('width', '258px');
-  const content = await page.locator('.dashboard-content').boundingBox();
-  const bounds = await sidebar.boundingBox();
-  expect(content!.x).toBeGreaterThanOrEqual(bounds!.x + bounds!.width);
-  await sidebar.getByRole('link', { name: 'Công việc kỹ thuật', exact: true }).click();
-  await expect(sidebar).toHaveCSS('width', '258px');
-  await page.getByRole('button', { name: 'Đóng danh mục quản lý', exact: true }).focus();
-  await page.keyboard.press('Escape');
-  await expect(sidebar).toHaveCSS('width', '78px');
-});
+for (const [role, path] of [
+  ['TECHNICIAN', '/technician'],
+  ['OPERATIONS_MANAGER', '/operations'],
+  ['OPERATIONS_MANAGER', '/operations/tasks'],
+  ['ADMIN', '/admin/tasks'],
+]) {
+  test(`${role} desktop sidebar opens on hover and collapses without shifting content at ${path}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await mock(page, role);
+    await page.goto(path);
+    const sidebar = page.locator('.workspace-sidebar');
+    await expect(sidebar).toHaveCSS('width', '78px');
+    const content = await page.locator('.dashboard-content').boundingBox();
+    await sidebar.hover();
+    await expect(sidebar).toHaveCSS('width', '258px');
+    expect((await page.locator('.dashboard-content').boundingBox())!.x).toBe(content!.x);
+    await page.mouse.move(1200, 100);
+    await expect(sidebar).toHaveCSS('width', '78px');
+  });
+}
 
 for (const [role, path] of [
   ['TECHNICIAN', '/technician'],

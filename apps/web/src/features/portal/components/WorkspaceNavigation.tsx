@@ -104,8 +104,9 @@ export default function WorkspaceNavigation({
     sellerChats.data?.items?.reduce((sum, item) => sum + (Number(item.unreadCount) || 0), 0) || 0;
 
   const [expanded, setExpanded] = useState(false);
+  const [hovered, setHovered] = useState(false);
   const [focusWithin, setFocusWithin] = useState(false);
-  const collapsed = !focusWithin && !expanded;
+  const collapsed = !hovered && !focusWithin && !expanded;
   const compactRole = ['ADMIN', 'OPERATIONS_MANAGER', 'TECHNICIAN'].includes(role);
   const toggle = useRef<HTMLButtonElement>(null);
   const base = workspaceBase(role);
@@ -129,18 +130,25 @@ export default function WorkspaceNavigation({
           : role === 'SELLER_STAFF'
             ? ClipboardList
             : Boxes;
-  const closeMenu = () => {
-    if (window.matchMedia('(max-width: 767px)').matches) setExpanded(false);
-  };
+  const closeMenu = () => setExpanded(false);
   const handleEscape = (event: React.KeyboardEvent) => {
-    if (event.key === 'Escape' && (expanded || focusWithin)) {
+    if (event.key === 'Escape' && (expanded || focusWithin || hovered)) {
       setExpanded(false);
+      setHovered(false);
       setFocusWithin(false);
       toggle.current?.focus();
     }
   };
   return (
     <aside
+      onPointerEnter={(event) => {
+        if (
+          event.pointerType === 'mouse' &&
+          window.matchMedia('(min-width: 768px) and (hover: hover)').matches
+        )
+          setHovered(true);
+      }}
+      onPointerLeave={() => setHovered(false)}
       onPointerDownCapture={() => setFocusWithin(false)}
       onFocusCapture={(event) => {
         setFocusWithin(event.target !== toggle.current && event.target.matches(':focus-visible'));
