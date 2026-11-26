@@ -449,7 +449,7 @@ export default function AdminTaskAssignment({
           <div className="operations-section-heading">
             <div>
               <span className="operations-eyebrow">TIẾP NHẬN & PHÂN CÔNG</span>
-              <h2 id="operations-open-incidents">Phiếu sự cố đang mở</h2>
+              <h2 id="operations-open-incidents">Sự cố chưa hoàn tất</h2>
             </div>
             <div className="manager-inbox-actions">
               {attempt && (
@@ -586,7 +586,7 @@ export default function AdminTaskAssignment({
                             >
                               {assignedTask(incident.id)
                                 ? `${TASK_STATUS_LABELS[assignedTask(incident.id)!.status]} · ${assignedTask(incident.id)!.assigneeName}`
-                                : 'Đang mở'}
+                                : 'Chờ phân công'}
                             </span>
                           </div>
                         </td>
