@@ -28573,6 +28573,11 @@
             "type": "boolean",
             "default": false
           },
+          "faultReportedAt": {
+            "type": ["null", "string"],
+            "format": "date-time",
+            "default": null
+          },
           "manualRetryEnabled": {
             "type": "boolean",
             "default": false

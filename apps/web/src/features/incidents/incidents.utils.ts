@@ -1,5 +1,16 @@
 import type { AdminIncidentResponse, StaffIncidentResolutionAttempt } from './incidents.types';
 
+export function faultReportWait(value: string, nowMs: number): string | null {
+  const sent = Date.parse(value);
+  if (!Number.isFinite(sent)) return null;
+  const minutes = Math.max(0, Math.floor((nowMs - sent) / 60_000));
+  if (minutes === 0) return 'Vừa gửi';
+  const days = Math.floor(minutes / 1440);
+  const hours = Math.floor((minutes % 1440) / 60);
+  const remaining = minutes % 60;
+  return `Đã chờ ${[days && `${days} ngày`, hours && `${hours} giờ`, remaining && `${remaining} phút`].filter(Boolean).join(' ')}`;
+}
+
 export function formatIncidentDate(value: string): string {
   return new Date(value).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
 }

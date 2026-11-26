@@ -20176,6 +20176,11 @@ export interface components {
             sensorEnabled: boolean;
             /** @default false */
             sensorReady: boolean;
+            /**
+             * Format: date-time
+             * @default null
+             */
+            faultReportedAt: null | string;
             /** @default false */
             manualRetryEnabled: boolean;
         };

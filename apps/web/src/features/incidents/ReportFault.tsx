@@ -7,6 +7,7 @@ import { Button } from '@florabot/ui';
 import { ApiError, queryClient, request } from '@/shared/lib/api';
 import EvidenceUpload from '../../shared/components/EvidenceUpload';
 import EvidencePreview from '../../shared/components/EvidencePreview';
+import { faultReportWait } from './incidents.utils';
 import type {
   FlowResult,
   ReportDeviceFaultRequest,
@@ -162,6 +163,27 @@ export default function ReportFault({
     report.mutate(review);
   };
   const prefix = `fault-${slot.id}`;
+  const reportedAt = slot.faultReportedAt;
+  const waiting = reportedAt ? faultReportWait(reportedAt, nowMs) : null;
+  const reportTime =
+    reportedAt && waiting ? (
+      <p className="fault-report-time">
+        Gửi lúc{' '}
+        <time dateTime={reportedAt}>
+          {new Date(reportedAt).toLocaleString('vi-VN', {
+            timeZone: 'Asia/Ho_Chi_Minh',
+            hour: '2-digit',
+            minute: '2-digit',
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour12: false,
+          })}
+        </time>
+        {' — '}
+        {waiting}
+      </p>
+    ) : null;
   return (
     <div className="fault-report">
       {!compact && !report.isSuccess && !isFault && <h4>Cần hỗ trợ ô tủ này?</h4>}
@@ -176,6 +198,7 @@ export default function ReportFault({
         <div className="fault-result">
           <span className="fault-result-label">Chờ xử lý</span>
           <h4>Đã gửi báo cáo</h4>
+          {reportTime}
           <p ref={noticeRef} tabIndex={-1} role="status">
             Đội vận hành sẽ kiểm tra ô {slot.slotCode} trước khi mở bán lại.
           </p>
@@ -203,6 +226,7 @@ export default function ReportFault({
         </div>
       ) : isFault ? (
         <div className="fault-repair-approval">
+          {reportTime}
           {repairs.isPending && <p role="status">Đang kiểm tra yêu cầu mở ô sửa chữa…</p>}
           {repairs.isError && !repairForbidden && (
             <div role="alert" className="error">
