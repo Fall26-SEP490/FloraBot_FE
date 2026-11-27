@@ -16276,6 +16276,85 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sellers/{sellerId}/ai/seasonal-advice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gợi ý bán hoa theo tháng và danh mục của cửa hàng */
+        get: {
+            parameters: {
+                query: {
+                    year: number | string;
+                    month: number | string;
+                    historyFrom?: string;
+                    historyTo?: string;
+                };
+                header?: never;
+                path: {
+                    sellerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SeasonalSellingSuggestion"][];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sellers/{sellerId}/ai/seasonal-forecast": {
         parameters: {
             query?: never;
@@ -19876,6 +19955,14 @@ export interface components {
             products: components["schemas"]["SeasonalSalesProduct"][];
             /** @default PRODUCT */
             aggregationLevel: string;
+        };
+        SeasonalSellingSuggestion: {
+            occasion: string;
+            /** Format: date */
+            date: null | string;
+            offer: string;
+            nextStep: string;
+            matchingProducts: string[];
         };
         SellerAccessoryResponse: {
             /** Format: uuid */

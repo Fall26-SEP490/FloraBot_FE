@@ -15,6 +15,8 @@ import '../../finance/styles/seller-finance.css';
 
 type Sales = components['schemas']['SeasonalSalesResponse'];
 type Forecast = components['schemas']['SeasonalForecastResponse'];
+type SellingSuggestion = components['schemas']['SeasonalSellingSuggestion'];
+const forecastTimeoutMs = 30_000;
 const date = vietnamDate;
 
 function forecastWarning(message: string) {
@@ -57,18 +59,39 @@ export default function SellerSeasonal({ session }: { session: Session }) {
     queryFn: () =>
       request<Sales>(`/sellers/${sellerId}/ai/seasonal-sales?from=${range.from}&to=${range.to}`),
   });
+  const [forecastYear, forecastMonthNumber] = forecastMonth.split('-').map(Number);
+  const advice = useQuery({
+    queryKey: ['seller-seasonal-advice', sellerId, forecastMonth, range],
+    enabled: Boolean(sellerId && forecastMonth),
+    retry: false,
+    queryFn: () =>
+      request<SellingSuggestion[]>(
+        '/sellers/' +
+          sellerId +
+          '/ai/seasonal-advice?' +
+          new URLSearchParams({
+            year: String(forecastYear),
+            month: String(forecastMonthNumber),
+            historyFrom: range.from,
+            historyTo: range.to,
+          }),
+      ),
+  });
   const forecast = useMutation({
     mutationFn: () =>
       request<Forecast>(
         `/sellers/${sellerId}/ai/seasonal-forecast`,
         {
-          year: Number(forecastMonth.slice(0, 4)),
-          month: Number(forecastMonth.slice(5, 7)),
+          year: forecastYear,
+          month: forecastMonthNumber,
           historyFrom: range.from,
           historyTo: range.to,
         },
         true,
         'POST',
+        undefined,
+        'json',
+        forecastTimeoutMs,
       ),
   });
   const exportCsv = useMutation({
@@ -208,6 +231,7 @@ export default function SellerSeasonal({ session }: { session: Session }) {
           <h2>Dự báo nhu cầu</h2>
           <p className="finance-muted">
             Ước tính từ doanh số {displayVietnamDate(range.from)} – {displayVietnamDate(range.to)}.
+            Nếu chưa đủ lịch sử, bạn vẫn có thể xem gợi ý bán theo dịp.
           </p>
           <div className="business-inline seasonal-forecast-form">
             <label className="seasonal-date-label" htmlFor="seasonal-month">
@@ -234,7 +258,62 @@ export default function SellerSeasonal({ session }: { session: Session }) {
               {forecast.isPending ? 'Đang tính…' : 'Xem dự báo'}
             </Button>
           </div>
-          {forecast.isError && <p role="alert">{forecast.error.message}</p>}
+          <section className="seasonal-selling-ideas" aria-labelledby="seasonal-selling-title">
+            <h3 id="seasonal-selling-title">Gợi ý bán theo dịp</h3>
+            {advice.isPending ? (
+              <p role="status">Đang xem dịp trong tháng đã chọn…</p>
+            ) : advice.data?.length ? (
+              <>
+                <p className="finance-muted">
+                  Ý tưởng dựa trên lịch và mẫu đang bán của shop. Có thể thử đặt trước để đo mức
+                  quan tâm của khách.
+                </p>
+                <ul>
+                  {advice.data.map((idea) => (
+                    <li key={idea.occasion}>
+                      <h4>
+                        {idea.occasion}
+                        {idea.date && (
+                          <time dateTime={idea.date}>{displayVietnamDate(idea.date)}</time>
+                        )}
+                      </h4>
+                      <p>{idea.offer}</p>
+                      <p>{idea.nextStep}</p>
+                      {idea.matchingProducts.length > 0 && (
+                        <p className="finance-muted">
+                          <strong>Mẫu phù hợp trong shop</strong> ·{' '}
+                          {idea.matchingProducts.join(', ')}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <>
+                <p>
+                  Thử đăng một bó gọn và một mẫu kèm thiệp, rồi dùng lượt hỏi và đơn đặt trước để
+                  chọn mẫu làm thêm.
+                </p>
+                {advice.isError && (
+                  <Button
+                    variant="outline"
+                    disabled={advice.isFetching}
+                    onClick={() => void advice.refetch()}
+                  >
+                    Thử lại gợi ý theo tháng
+                  </Button>
+                )}
+              </>
+            )}
+          </section>
+          {forecast.isError && (
+            <p role="alert">
+              {forecast.error.name === 'TimeoutError'
+                ? 'Dự báo mất nhiều thời gian hơn dự kiến. Bạn có thể xem gợi ý theo dịp hoặc thử tính lại.'
+                : forecast.error.message}
+            </p>
+          )}
           {forecast.isPending && <p role="status">Đang tạo dự báo…</p>}
           {forecast.data && (
             <>

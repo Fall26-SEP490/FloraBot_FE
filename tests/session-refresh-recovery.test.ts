@@ -13,6 +13,26 @@ afterEach(() => {
 });
 
 describe('Session refresh recovery', () => {
+  it('keeps a forecast-specific timeout when retrying a refreshed session', async () => {
+    const timeout = vi.spyOn(AbortSignal, 'timeout');
+    try {
+      vi.stubGlobal(
+        'fetch',
+        vi
+          .fn()
+          .mockResolvedValueOnce(new Response('{}', { status: 401 }))
+          .mockResolvedValueOnce(new Response('{}', { status: 200 }))
+          .mockResolvedValueOnce(new Response('{"products":[]}', { status: 200 })),
+      );
+      await expect(
+        request('/sellers/shop/ai/seasonal-forecast', {}, true, 'POST', undefined, 'json', 30_000),
+      ).resolves.toEqual({ products: [] });
+      expect(timeout.mock.calls).toEqual([[30_000], [15_000], [30_000]]);
+    } finally {
+      timeout.mockRestore();
+    }
+  });
+
   it.each([500, 502, 503, 504])(
     'preserves refresh HTTP %i instead of reporting 401',
     async (status) => {

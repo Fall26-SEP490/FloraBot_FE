@@ -57,6 +57,7 @@ export async function request<T>(
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
   extraHeaders?: Record<string, string>,
   responseType: 'json' | 'text' = 'json',
+  timeoutMs = 15_000,
 ): Promise<T> {
   const resolvedMethod = method ?? (body === undefined ? 'GET' : 'POST');
   const response = await fetch(`/api${path}`, {
@@ -67,7 +68,7 @@ export async function request<T>(
       ...extraHeaders,
     },
     body: body === undefined ? undefined : JSON.stringify(body),
-    signal: AbortSignal.timeout(15_000),
+    signal: AbortSignal.timeout(timeoutMs),
   });
   const anonymousAuthPaths = [
     '/auth/login',
@@ -101,7 +102,7 @@ export async function request<T>(
         refresh = undefined;
       });
     if (await refresh)
-      return request<T>(path, body, false, resolvedMethod, extraHeaders, responseType);
+      return request<T>(path, body, false, resolvedMethod, extraHeaders, responseType, timeoutMs);
   }
   if (!response.ok) {
     const problem = (await response.json().catch(() => ({}))) as {

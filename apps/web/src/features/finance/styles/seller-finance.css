@@ -699,6 +699,46 @@
   main.seller-content
   .seller-finance
   .seller-seasonal {
+  & .seasonal-selling-ideas {
+    margin: 16px 0;
+  }
+  & .seasonal-selling-ideas h3 {
+    margin: 0 0 4px;
+    font-size: 17px;
+  }
+  & .seasonal-selling-ideas ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(235px, 100%), 1fr));
+    gap: 10px;
+    margin: 10px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  & .seasonal-selling-ideas li {
+    min-width: 0;
+    padding: 12px 14px;
+    border: 1px solid #d8e6dc;
+    border-radius: 10px;
+    background: #f5f9f5;
+    overflow-wrap: anywhere;
+  }
+  & .seasonal-selling-ideas h4 {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 10px;
+    margin: 0 0 5px;
+    font-size: 14px;
+    color: #245b3d;
+  }
+  & .seasonal-selling-ideas time {
+    color: #52685a;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  & .seasonal-selling-ideas p {
+    margin: 3px 0;
+  }
   & .seasonal-forecast-notes {
     display: grid;
     gap: 5px;
