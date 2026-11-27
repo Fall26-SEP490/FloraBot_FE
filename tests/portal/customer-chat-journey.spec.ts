@@ -154,6 +154,15 @@ for (const width of [390, 1440]) {
     await expect(page.getByRole('heading', { name: 'Tổng quan', exact: true })).toHaveCount(0);
     await expect(page.locator('.chat-conversation-context')).toContainText(row.productName);
     const textarea = page.getByLabel('Nội dung tin nhắn');
+    const initialHeight = (await textarea.boundingBox())!.height;
+    await textarea.fill('Dòng thứ nhất\nDòng thứ hai\nDòng thứ ba');
+    await expect
+      .poll(async () => (await textarea.boundingBox())!.height)
+      .toBeGreaterThan(initialHeight);
+    await textarea.fill('');
+    await expect
+      .poll(async () => (await textarea.boundingBox())!.height)
+      .toBeLessThanOrEqual(initialHeight + 2);
     await textarea.fill('Mình muốn trao đổi về đơn hoa.');
     expect(
       await textarea.evaluate((el) => parseFloat(getComputedStyle(el).fontSize)),

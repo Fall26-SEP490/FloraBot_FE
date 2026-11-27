@@ -224,6 +224,10 @@ for (const alreadyReported of [false, true]) {
   test(`A complaint link explains ineligibility (already reported: ${alreadyReported})`, async ({
     page,
   }) => {
+    const duplicateKeys: string[] = [];
+    page.on('console', (message) => {
+      if (/same key|unique.*key/i.test(message.text())) duplicateKeys.push(message.text());
+    });
     const state = await setup(page);
     state.order.orderStatus = 'COMPLETED';
     state.receipt.hasComplaint = alreadyReported;
@@ -260,6 +264,7 @@ for (const alreadyReported of [false, true]) {
     await expect(page.getByRole('form', { name: 'Phản ánh về hoa' })).toHaveCount(0);
     expect(state.lookups).toBe(1);
     expect(state.writes).toEqual([]);
+    expect(duplicateKeys).toEqual([]);
   });
 }
 test('Receipt of a paid order does not claim stock readiness or expose its lookup codes by default', async ({
@@ -346,7 +351,7 @@ test('Receipt and complaint reloads keep the same order and return to its origin
   await page.getByRole('link', { name: 'Quay lại đơn hàng', exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`requestId=${id}&page=3#web-orders$`));
   await expect(page.locator(`#preorder-${id}`)).toHaveAttribute('open', '');
-  await expect(page.locator('.order-page-indicator')).toHaveText('Trang 3');
+  await expect(page.locator('nav span[aria-current="page"]')).toHaveText('Trang 3');
   expect(state.writes).toEqual([]);
 });
 
@@ -374,9 +379,8 @@ for (const width of [390, 1440]) {
     });
     await page.goto('/tai-khoan#web-orders');
     await page.getByRole('button', { name: 'Trang sau', exact: true }).click();
-    await expect(page.locator('.order-page-indicator')).toHaveText('Trang 2');
+    await expect(page.locator('nav span[aria-current="page"]')).toHaveText('Trang 2');
     await expect(page).toHaveURL(/page=2#web-orders$/);
-    await page.locator('[data-order-history] > summary').click();
     const order = page.locator(`#preorder-${id}`);
     await order.locator(':scope > summary').click();
     const view = order.getByRole('link', { name: 'Xem biên nhận', exact: true });
@@ -386,7 +390,7 @@ for (const width of [390, 1440]) {
     await expect(page.getByRole('heading', { name: 'Đơn FB-PICKUP', exact: true })).toBeVisible();
     await page.goBack();
     await expect(order).toHaveAttribute('open', '');
-    await expect(page.locator('.order-page-indicator')).toHaveText('Trang 2');
+    await expect(page.locator('nav span[aria-current="page"]')).toHaveText('Trang 2');
     await expect
       .poll(async () => Math.abs((await page.evaluate(() => scrollY)) - position))
       .toBeLessThan(12);
@@ -396,7 +400,7 @@ for (const width of [390, 1440]) {
     await expect(page.getByRole('heading', { name: 'Đơn FB-PICKUP', exact: true })).toBeVisible();
     await page.getByRole('link', { name: 'Quay lại đơn hàng', exact: true }).click();
     await expect(order).toHaveAttribute('open', '');
-    await expect(page.locator('.order-page-indicator')).toHaveText('Trang 2');
+    await expect(page.locator('nav span[aria-current="page"]')).toHaveText('Trang 2');
     await expect
       .poll(async () => Math.abs((await page.evaluate(() => scrollY)) - position))
       .toBeLessThan(12);
@@ -459,7 +463,6 @@ test('A purchase support link preserves the transaction across reload and return
     }),
   );
   await page.goto('/tai-khoan?page=2#web-orders');
-  await page.locator('[data-order-history] > summary').click();
   const purchase = page.locator(`#preorder-purchase-${purchaseId}`);
   await purchase.locator(':scope > summary').click();
   await purchase.getByRole('link', { name: 'Liên hệ hỗ trợ về giao dịch FB-WALKIN' }).click();
@@ -468,6 +471,6 @@ test('A purchase support link preserves the transaction across reload and return
   await page.reload();
   await page.getByRole('link', { name: 'Quay lại đơn hàng', exact: true }).click();
   await expect(purchase).toHaveAttribute('open', '');
-  await expect(page.locator('.order-page-indicator')).toHaveText('Trang 2');
+  await expect(page.locator('nav span[aria-current="page"]')).toHaveText('Trang 2');
   expect(state.writes).toEqual([]);
 });

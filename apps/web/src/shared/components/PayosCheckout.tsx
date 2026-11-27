@@ -164,6 +164,8 @@ export default function PayosCheckout({
                   <RefreshCw size={16} className="payos-loading-icon" aria-hidden="true" />
                   Đang kiểm tra giao dịch…
                 </span>
+              ) : retryDisabled && !expired ? (
+                'Chọn “Kiểm tra trạng thái” trước khi tải lại mã QR để tránh tạo giao dịch trùng.'
               ) : expired || verification === 'waiting' ? (
                 waitingMessage
               ) : isLoadingQr || !canCheckStatus ? (

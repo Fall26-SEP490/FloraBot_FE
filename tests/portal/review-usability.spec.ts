@@ -43,6 +43,112 @@ async function mock(page: Page, role = 'CUSTOMER') {
 }
 
 for (const width of [320, 390, 1280]) {
+  test(`quote groups required fields before optional accessories at ${width}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 780 });
+    await mock(page);
+    const nearId = '40000000-0000-0000-0000-000000000002';
+    const sellerId = '20000000-0000-0000-0000-000000000001';
+    await page.context().grantPermissions(['geolocation']);
+    await page.context().setGeolocation({ latitude: 10.77, longitude: 106.68 });
+    await page.route('**/api/shop/catalog?*', (route) =>
+      route.fulfill({
+        json: {
+          items: [
+            {
+              productId,
+              sellerId,
+              kioskId,
+              name: 'Bó hoa tươi - Only rose 18 (Size 50 bông)',
+              shopName: 'Shop Hoa Của Tâm',
+              kioskName: 'Tủ xa',
+              price: 200000,
+              zone: 'PREORDER',
+              bouquets: [],
+              preorderAvailable: true,
+            },
+            {
+              productId,
+              sellerId,
+              kioskId: nearId,
+              name: 'Bó hoa tươi - Only rose 18 (Size 50 bông)',
+              shopName: 'Shop Hoa Của Tâm',
+              kioskName: 'Tủ gần',
+              price: 200000,
+              zone: 'PREORDER',
+              bouquets: [],
+              preorderAvailable: true,
+            },
+          ],
+          hasMore: false,
+        },
+      }),
+    );
+    await page.route('**/api/kiosks', (route) =>
+      route.fulfill({
+        json: [
+          { id: kioskId, latitude: 10.9, longitude: 106.78, status: 'ONLINE' },
+          { id: nearId, latitude: 10.771, longitude: 106.681, status: 'ONLINE' },
+        ],
+      }),
+    );
+    await page.route('**/catalog/accessories', (route) =>
+      route.fulfill({
+        json: [
+          {
+            id: 'ribbon',
+            name: 'Nơ',
+            price: 10000,
+            availableQuantity: 5,
+          },
+        ],
+      }),
+    );
+    await page.goto(`/dat-hoa/${productId}/${kioskId}`);
+    await page.getByRole('button', { name: 'Đặt trước', exact: true }).click();
+    const panel = page.getByRole('dialog', { name: 'Yêu cầu đặt trước', exact: true });
+    const optional = panel.locator('details.flower-request-accessories');
+    await expect(optional).not.toHaveAttribute('open');
+    const brief = panel.getByRole('textbox', { name: 'Bạn muốn bó hoa như thế nào?', exact: true });
+    await brief.fill('Hoa hồng pastel tặng sinh nhật');
+    expect(
+      await brief.evaluate(
+        (el) =>
+          !!(
+            el.compareDocumentPosition(
+              document.querySelector('details.flower-request-accessories')!,
+            ) & Node.DOCUMENT_POSITION_FOLLOWING
+          ),
+      ),
+    ).toBe(true);
+    await optional.locator('summary').click();
+    await panel.getByRole('button', { name: 'Thêm Nơ', exact: true }).click();
+    await expect(optional.locator('summary')).toContainText('Đã chọn 1');
+    await expect(panel.locator('.flower-request-reference-price')).toContainText('210.000 đ');
+    await optional.locator('summary').click();
+    await expect(brief).toHaveValue('Hoa hồng pastel tặng sinh nhật');
+    await panel.getByRole('button', { name: 'Tìm tủ gần tôi', exact: true }).click();
+    await expect(panel.locator('.flower-request-nearest')).toContainText('Tủ gần');
+    await panel.getByRole('button', { name: 'Chọn tủ này', exact: true }).click();
+    await expect(panel.getByRole('combobox', { name: 'Tủ nhận hoa', exact: true })).toContainText(
+      'Tủ gần',
+    );
+    await optional.locator('summary').click();
+    await expect(panel.getByRole('status', { name: 'Số lượng Nơ', exact: true })).toHaveText('1');
+    await optional.locator('summary').click();
+    await panel.locator('.flower-request-scroll').evaluate((el) => {
+      el.scrollTop = 0;
+    });
+    expect(await panel.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+    await expect(
+      panel.getByRole('button', { name: 'Gửi yêu cầu đặt trước', exact: true }),
+    ).toBeVisible();
+    const footerBounds = (await panel.locator('.flower-request-footer').boundingBox())!;
+    await expect(
+      panel.getByRole('button', { name: 'Gửi yêu cầu đặt trước', exact: true }),
+    ).toBeInViewport();
+    expect(footerBounds.y + footerBounds.height).toBeLessThanOrEqual(780);
+    await panel.screenshot({ path: test.info().outputPath('compact-quote-verified.png') });
+  });
   test(`quote rejects past hours before submit and keeps calendar/footer in view at ${width}`, async ({
     page,
   }) => {
@@ -62,19 +168,23 @@ for (const width of [320, 390, 1280]) {
       'aria-disabled',
       'true',
     );
-    await expect(page.getByRole('option', { name: '14:30', exact: true })).not.toHaveAttribute(
+    await expect(page.getByRole('option', { name: '14:30', exact: true })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+    await expect(page.getByRole('option', { name: '15:30', exact: true })).not.toHaveAttribute(
       'aria-disabled',
       'true',
     );
     await page.keyboard.press('Escape');
-    await chooseOption(time, '14:30');
+    await chooseOption(time, '15:30');
     await expect(dialog.locator('.flower-request-field-error')).toHaveCount(0);
     const footer = dialog.locator('.flower-request-footer');
     const before = await footer.boundingBox();
     await page.clock.setFixedTime(new Date('2026-11-26T14:31:00+07:00'));
     await page.evaluate(() => window.dispatchEvent(new Event('focus')));
     await expect(
-      dialog.getByRole('alert').filter({ hasText: 'Chọn giờ nhận trong tương lai' }),
+      dialog.getByRole('alert').filter({ hasText: 'Giờ nhận phải sau ít nhất 1 giờ' }),
     ).toBeVisible();
     const after = await footer.boundingBox();
     expect(Math.abs(after!.y - before!.y)).toBeLessThanOrEqual(2);

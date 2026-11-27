@@ -122,6 +122,19 @@ export function MessageComposer({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const sendingLock = useRef(false);
 
+  useEffect(() => {
+    const resize = () => {
+      const field = textareaRef.current;
+      if (!field) return;
+      const minimum = parseFloat(getComputedStyle(field).minHeight) || 44;
+      field.style.height = 'auto';
+      field.style.height = `${Math.min(140, Math.max(minimum, field.scrollHeight + 2))}px`;
+    };
+    resize();
+    window.addEventListener('resize', resize);
+    return () => window.removeEventListener('resize', resize);
+  }, [content]);
+
   // Revoke object URL on unmount
   useEffect(() => {
     return () => {

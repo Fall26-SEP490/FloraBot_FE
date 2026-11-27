@@ -1,10 +1,11 @@
 .workspace-portal-root .customer-account-shell {
   gap: 20px;
   background: #fff;
-  border: 1px solid #dce5dc;
-  border-radius: 12px;
+  border: 1px solid #dbe5d9;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgb(24 62 43 / 5%);
   margin: 24px auto 48px;
-  padding: 24px;
+  padding: 24px 28px 28px;
   width: calc(100% - 48px);
   box-sizing: border-box;
   & .customer-account-sidebar {
@@ -14,21 +15,26 @@
     background: transparent;
   }
   & .customer-account-navigation {
-    gap: 0;
+    gap: 4px;
+    border-bottom: 1px solid #e3ece1;
   }
   & .customer-account-navigation a,
   & .customer-account-navigation a:hover {
     padding: 10px 16px;
+    margin-bottom: -1px;
     border: 0;
-    border-bottom: 2px solid #dce5dc;
+    border-bottom: 2px solid transparent;
     border-radius: 0;
     background: transparent;
     color: #52665b;
-    font-weight: 400;
+    font-weight: 500;
+  }
+  & .customer-account-navigation a:hover {
+    color: #183e2b;
   }
   & .customer-account-navigation a[aria-current='page'] {
-    border-bottom-color: #245b3e;
-    color: #203e2d;
+    border-bottom-color: #183e2b;
+    color: #183e2b;
     font-weight: 600;
   }
   & .member-page {
@@ -248,5 +254,49 @@
     & .account-navigation-toggle {
       margin-left: auto;
     }
+  }
+}
+
+/* Customer sections share an independent navigation frame. */
+.workspace-portal-root .customer-account-shell {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  gap: 16px;
+}
+.workspace-portal-root .customer-account-shell > .customer-account-sidebar {
+  padding: 8px 12px;
+  border: 1px solid #dbe5d9;
+  border-radius: 12px;
+  background: #fff;
+}
+.workspace-portal-root .customer-account-shell .customer-account-navigation {
+  border-bottom: 0;
+}
+
+.workspace-portal-root .customer-account-shell:not(:has(#web-orders)) > .customer-account-content {
+  padding: 24px;
+  border: 1px solid #dbe5d9;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.workspace-portal-root .customer-account-shell:has(#web-orders) > .customer-account-content {
+  padding: 20px;
+  border: 1px solid #dbe5d9;
+  border-radius: 12px;
+  background: #fff;
+}
+
+@media (max-width: 760px) {
+  .workspace-portal-root .customer-account-shell:has(#web-orders) > .customer-account-content {
+    padding: 14px;
+  }
+  .workspace-portal-root
+    .customer-account-shell:not(:has(#web-orders))
+    > .customer-account-content {
+    padding: 16px;
   }
 }

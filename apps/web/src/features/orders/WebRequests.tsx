@@ -912,6 +912,7 @@ function OrderActions({
       )}
       {action && (
         <form
+          data-action={action}
           className={`order-action-card ${action === 'fulfill' ? 'fulfill-wizard' : ''} ${mode === 'seller' && action === 'quote' ? styles.quoteForm : ''}`}
           onSubmit={(event) => {
             event.preventDefault();
@@ -935,6 +936,10 @@ function OrderActions({
             }
             if (quoteBlocked) {
               setError('Kiểm tra hoặc điều chỉnh phụ kiện trước khi gửi báo giá.');
+              return;
+            }
+            if (mode === 'member' && action === 'cancel' && note.trim().length < 5) {
+              setError('Nhập lý do hủy từ 5 ký tự.');
               return;
             }
             if (!confirm) {
@@ -993,25 +998,21 @@ function OrderActions({
             )}
             <h3 ref={mode === 'member' ? actionHeading : undefined} tabIndex={-1}>
               {action === 'accept'
-                ? 'Xác nhận mẫu, giá và lịch nhận'
+                ? 'Xác nhận báo giá'
                 : action === 'quote'
                   ? 'Báo giá cho khách'
                   : action === 'fulfill'
                     ? fulfillStep === 1
                       ? 'Chọn ô nhận hoa'
                       : 'Kiểm tra trước khi xác nhận'
-                    : 'Kiểm tra trước khi hủy'}
+                    : mode === 'member'
+                      ? 'Xác nhận hủy yêu cầu'
+                      : 'Kiểm tra trước khi hủy'}
             </h3>
-            {action === 'accept' && reviewedQuote && (
-              <p>
-                Đối chiếu giá, ghi chú và lịch nhận trước khi đồng ý. Bạn sẽ thanh toán ở bước tiếp
-                theo.
-              </p>
-            )}
             {action === 'accept' && reviewedQuoteChanged && (
-              <p role="alert" className="error">
-                Shop đã cập nhật báo giá trong lúc bạn xem. Đóng phần xác nhận rồi chọn Xác nhận báo
-                giá để xem lại.
+              <p role="alert" className={customerStyles.quoteChangedNotice}>
+                Shop đã cập nhật báo giá trong lúc bạn xem. Chọn “Quay lại”, rồi mở “Xác nhận báo
+                giá” để kiểm tra báo giá mới.
               </p>
             )}
             {action === 'quote' && (
@@ -1273,6 +1274,13 @@ function OrderActions({
                   minLength={5}
                   maxLength={1000}
                   required
+                  placeholder={
+                    action === 'cancel'
+                      ? 'Nhập lý do hủy đơn (tối thiểu 5 ký tự)…'
+                      : reject
+                        ? 'Nhập lý do shop chưa thể nhận đơn…'
+                        : 'Ghi chú thêm về hoa hoặc lịch nhận…'
+                  }
                   value={note}
                   onChange={(event) => setNote(event.target.value)}
                 />
@@ -1439,12 +1447,27 @@ function OrderActions({
                 <span>
                   {action === 'accept' && mode === 'member'
                     ? 'Tôi đồng ý với giá, ghi chú và lịch nhận của shop.'
-                    : 'Tôi đã đối chiếu và xác nhận thông tin trên.'}
+                    : action === 'cancel' && mode === 'member'
+                      ? 'Tôi hiểu yêu cầu đặt trước này sẽ bị hủy.'
+                      : 'Tôi đã đối chiếu và xác nhận thông tin trên.'}
                 </span>
               </label>
             )}
           </fieldset>
           <div className="stock-actions">
+            {(action === 'accept' || action === 'cancel') && mode === 'member' && (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={busy}
+                onClick={() => {
+                  setAction(null);
+                  setError('');
+                }}
+              >
+                Quay lại
+              </Button>
+            )}
             {action === 'fulfill' && fulfillStep === 1 ? (
               <Button
                 type="button"
@@ -1475,7 +1498,8 @@ function OrderActions({
                     (!loadingAccessId || !fulfillSlots.some((item) => item.id === slot))) ||
                   (mode === 'member' &&
                     action === 'accept' &&
-                    (!confirm || quoteExpired || !hasQuotedPrice || reviewedQuoteChanged))
+                    (!confirm || quoteExpired || !hasQuotedPrice || reviewedQuoteChanged)) ||
+                  (mode === 'member' && action === 'cancel' && (!confirm || note.trim().length < 5))
                 }
                 className={
                   action === 'cancel' || (action === 'quote' && reject)
@@ -1500,22 +1524,24 @@ function OrderActions({
                             : 'Xác nhận gửi'}
               </Button>
             )}
-            <Button
-              type="button"
-              variant="outline"
-              disabled={busy}
-              onClick={() => {
-                if (action === 'fulfill' && fulfillStep === 2) {
-                  setFulfillStep(1);
-                  setConfirm(false);
-                } else {
-                  setAction(null);
-                }
-                setError('');
-              }}
-            >
-              {action === 'fulfill' && fulfillStep === 2 ? 'Quay lại' : 'Đóng'}
-            </Button>
+            {!((action === 'accept' || action === 'cancel') && mode === 'member') && (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={busy}
+                onClick={() => {
+                  if (action === 'fulfill' && fulfillStep === 2) {
+                    setFulfillStep(1);
+                    setConfirm(false);
+                  } else {
+                    setAction(null);
+                  }
+                  setError('');
+                }}
+              >
+                {action === 'fulfill' && fulfillStep === 2 ? 'Quay lại' : 'Đóng'}
+              </Button>
+            )}
           </div>
         </form>
       )}
@@ -1852,6 +1878,14 @@ export default function WebRequests({
     mode === 'admin'
       ? items.filter((row) => matchesOrderFilter(row, 'attention', 'admin')).length
       : 0;
+  const memberFilterCounts =
+    mode === 'member'
+      ? memberFilters.map(({ value, label }) => ({
+          value,
+          label,
+          count: loadedItems.filter((row) => matchesOrderFilter(row, value, 'member')).length,
+        }))
+      : [];
   const filterName = sellerFilters.find((item) => item.value === filter)?.label ?? 'Tất cả';
   const sellerStatusOptions = sellerFilters
     .map(({ value, label }) => {
@@ -1898,14 +1932,31 @@ export default function WebRequests({
         }}
       />
     ) : (
-      <li key={row.id}>
+      <li
+        key={row.id}
+        data-order-tone={
+          mode === 'member'
+            ? row.ready && row.orderStatus === 'PAID'
+              ? 'ready'
+              : (row.state === 'QUOTED' && !row.orderId) || row.orderStatus === 'AWAITING_PAYMENT'
+                ? 'action'
+                : ['DISPUTED', 'DISPENSE_FAILED'].includes(row.orderStatus ?? '')
+                  ? 'alert'
+                  : orderClosed(row)
+                    ? 'closed'
+                    : 'active'
+            : undefined
+        }
+      >
         <details
           id={`preorder-${row.id}`}
           name={mode === 'member' ? 'customer-orders' : undefined}
           open={
-            mode === 'seller'
-              ? false
-              : row.id === (mode === 'member' ? openMemberOrder : returnedRequest) || undefined
+            mode === 'member'
+              ? row.id === openMemberOrder
+              : mode === 'seller'
+                ? false
+                : row.id === returnedRequest || undefined
           }
           onClickCapture={
             mode === 'member' ? (event) => rememberMemberAction(event, row.id) : undefined
@@ -2154,56 +2205,62 @@ export default function WebRequests({
       )}
       {mode === 'member' && (
         <RefreshRegion>
-          <div className={customerStyles.memberToolbar}>
-            <div className={customerStyles.memberSearch}>
-              <label>
-                <span className="sr-only">Tìm đơn hàng trong trang</span>
-                <input
-                  type="search"
-                  placeholder="Tìm hoa, shop hoặc mã đơn"
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                />
-              </label>
-              {search && (
-                <button
-                  type="button"
-                  className={customerStyles.memberSearchClear}
-                  aria-label="Xóa từ khóa tìm kiếm"
-                  onClick={() => setSearch('')}
-                >
-                  <X size={15} aria-hidden="true" />
-                </button>
-              )}
-            </div>
-            <label className={customerStyles.memberFilter}>
-              <span className="sr-only">Lọc đơn hàng</span>
-              <Select
-                value={filter}
-                onChange={(event) => {
-                  const value = event.currentTarget.value as OrderFilter;
-                  setFilter(value);
-                  if (value !== 'all') setOpenMemberOrder(null);
-                }}
-              >
-                {!memberFilters.some(({ value }) => value === filter) && (
-                  <option value={filter}>{filterName}</option>
+          <div className={customerStyles.memberControls}>
+            <div className={customerStyles.memberSearchRow}>
+              <div className={customerStyles.memberSearch}>
+                <Search size={16} className={customerStyles.memberSearchIcon} aria-hidden="true" />
+                <label>
+                  <span className="sr-only">Tìm đơn hàng trong trang</span>
+                  <input
+                    type="search"
+                    placeholder="Bạn có thể tìm theo tên Shop, mã đơn hàng hoặc tên bó hoa"
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                  />
+                </label>
+                {search && (
+                  <button
+                    type="button"
+                    className={customerStyles.memberSearchClear}
+                    aria-label="Xóa từ khóa tìm kiếm"
+                    onClick={() => setSearch('')}
+                  >
+                    <X size={15} aria-hidden="true" />
+                  </button>
                 )}
-                {memberFilters.map(({ value, label }) => (
-                  <option key={value} value={value}>
-                    {value === 'all' ? 'Tất cả trạng thái' : label}
-                  </option>
-                ))}
-              </Select>
-            </label>
-            <IconActionButton
-              action="reload"
-              label="Tải lại đơn hàng"
-              disabled={query.isFetching || history.isFetching}
-              onClick={async () => {
-                await Promise.all([query.refetch(), history.refetch()]);
-              }}
-            />
+              </div>
+              <IconActionButton
+                action="reload"
+                label="Tải lại đơn hàng"
+                disabled={query.isFetching || history.isFetching}
+                onClick={async () => {
+                  await Promise.all([query.refetch(), history.refetch()]);
+                }}
+              />
+            </div>
+            <div
+              className={customerStyles.memberFilterTabs}
+              role="group"
+              aria-label="Lọc đơn hàng theo trạng thái"
+            >
+              {memberFilterCounts.map(({ value, label }) => {
+                const active = filter === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    className={customerStyles.memberFilterTab}
+                    aria-pressed={active}
+                    onClick={() => {
+                      setFilter(value);
+                      if (value !== 'all') setOpenMemberOrder(null);
+                    }}
+                  >
+                    <span>{label}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </RefreshRegion>
       )}
@@ -2395,7 +2452,14 @@ export default function WebRequests({
           ) : (
             <>
               {mode !== 'seller' && !filtered.length && (
-                <div className="operations-empty" role="status">
+                <div
+                  className={
+                    mode === 'member'
+                      ? `operations-empty ${customerStyles.memberEmpty}`
+                      : 'operations-empty'
+                  }
+                  role="status"
+                >
                   {mode === 'member' ? (
                     <Flower2 size={32} aria-hidden="true" />
                   ) : (
@@ -2612,6 +2676,14 @@ export default function WebRequests({
                     busy={query.isFetching}
                     onPageChange={setResultPage}
                   />
+                ) : mode === 'member' ? (
+                  <SellerPagination
+                    ariaLabel="Phân trang đơn đặt trước"
+                    page={displayPage}
+                    hasMore={Boolean(query.data?.hasMore || history.data?.hasMore)}
+                    busy={query.isFetching || history.isFetching}
+                    onPageChange={changePage}
+                  />
                 ) : (
                   <nav className="order-pagination" aria-label="Phân trang đơn đặt trước">
                     <Button
@@ -2625,13 +2697,7 @@ export default function WebRequests({
                     <span className="order-page-indicator">Trang {displayPage}</span>
                     <Button
                       variant="outline"
-                      disabled={
-                        !(mode === 'admin'
-                          ? displayPage < totalResultPages
-                          : query.data?.hasMore || (mode === 'member' && history.data?.hasMore)) ||
-                        query.isFetching ||
-                        (mode === 'member' && history.isFetching)
-                      }
+                      disabled={displayPage >= totalResultPages || query.isFetching}
                       onClick={() => changePage(displayPage + 1)}
                     >
                       <span>Trang sau</span>

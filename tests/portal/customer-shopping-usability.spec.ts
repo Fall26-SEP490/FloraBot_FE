@@ -219,6 +219,60 @@ for (const width of [390, 1440]) {
     expect(result.violations).toEqual([]);
   });
 }
+for (const width of [320, 390, 1280]) {
+  test(`Guest quote panel has compact account actions at ${width}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await fixture(page, true);
+    await page.route('**/api/shop/catalog?*', (route) =>
+      route.fulfill({
+        json: {
+          items: [
+            {
+              ...flower,
+              name: 'Bó hoa tươi - Only rose 18 (Size 50 bông)',
+              photo: '/broken-thumbnail.jpg',
+            },
+          ],
+          hasMore: false,
+        },
+      }),
+    );
+    await page.goto(`/dat-hoa/${productId}/${kioskId}`);
+    await page.getByRole('button', { name: 'Đặt trước', exact: true }).click();
+    const panel = page.getByRole('dialog', { name: 'Yêu cầu đặt trước', exact: true });
+    const login = panel.getByRole('link', { name: 'Đăng nhập', exact: true });
+    const register = panel.getByRole('link', { name: 'Tạo tài khoản', exact: true });
+    await expect(login).toBeVisible();
+    await expect(register).toBeVisible();
+    await panel
+      .locator('.flower-request-header-thumb')
+      .evaluate((image) => image.dispatchEvent(new Event('error')));
+    await expect(panel.locator('.flower-request-header-thumb')).toHaveAttribute(
+      'src',
+      '/images/floral-white-online.webp',
+    );
+    const loginReturn = new URL(
+      (await login.getAttribute('href')) || '',
+      page.url(),
+    ).searchParams.get('returnUrl');
+    const registerReturn = new URL(
+      (await register.getAttribute('href')) || '',
+      page.url(),
+    ).searchParams.get('returnUrl');
+    expect(loginReturn).toBe(registerReturn);
+    expect(loginReturn).toContain(`/${productId}/${kioskId}?order=1`);
+    expect((await login.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    expect((await register.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    const bounds = (await panel.boundingBox())!;
+    expect(bounds.x).toBeGreaterThanOrEqual(0);
+    expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
+    expect(await panel.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+    await panel.screenshot({ path: test.info().outputPath('guest-panel.png') });
+    await panel.getByRole('button', { name: 'Đóng mẫu đang chọn', exact: true }).click();
+    await expect(panel).toHaveCount(0);
+  });
+}
+
 test('Guest keeps account section through login and quote CTA has readable text', async ({
   page,
 }) => {

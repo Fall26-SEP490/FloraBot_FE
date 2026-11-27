@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useController, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button } from '@florabot/ui';
+import { Banknote, Button, ShieldCheck } from '@florabot/ui';
 import { VietnamBankSelect } from '@/shared/components/VietnamBankSelect';
 import type { SubmitRefundInfoRequest } from '../../finance.types';
 
@@ -30,16 +30,20 @@ const schema = z.object({
 });
 type Fields = z.infer<typeof schema>;
 const empty: Fields = { bank: '', holder: '', account: '' };
+const formatVnd = (amount: number | string) =>
+  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(amount));
 
 export default function RefundAccount({
   orderId,
   trackingToken,
   provided,
+  pendingAmount,
   onSaved,
 }: {
   orderId: string;
   trackingToken: string;
   provided: boolean;
+  pendingAmount?: number | string;
   onSaved: () => void;
 }) {
   const [editing, setEditing] = useState(!provided);
@@ -125,31 +129,46 @@ export default function RefundAccount({
   }
 
   return (
-    <div className="refund-account">
-      <h3>Tài khoản nhận hoàn</h3>
-      <p>
-        Nhập tài khoản bạn muốn nhận tiền. Thông tin được mã hóa khi lưu và xóa sau khi chi hết
-        khoản hoàn của đơn.
+    <section className="refund-account" aria-labelledby="refund-account-heading">
+      <header className="refund-account-header">
+        <div className="refund-account-title">
+          <span className="refund-account-icon" aria-hidden="true">
+            <Banknote size={18} />
+          </span>
+          <div>
+            <h3 id="refund-account-heading">Tài khoản nhận hoàn</h3>
+            <p className="refund-status-text">
+              {provided
+                ? 'Đã nhận thông tin tài khoản hoàn tiền. Khoản hoàn đang chờ được xử lý.'
+                : 'Khoản hoàn đang chờ thông tin tài khoản nhận tiền.'}
+            </p>
+          </div>
+        </div>
+        {pendingAmount !== undefined && Number(pendingAmount) > 0 && (
+          <span className="refund-amount-badge" data-provided={provided || undefined}>
+            {formatVnd(pendingAmount)}
+          </span>
+        )}
+      </header>
+      <p className="refund-security-note">
+        <ShieldCheck size={15} aria-hidden="true" />
+        <span>Thông tin được mã hóa khi lưu và tự xóa sau khi chi hết khoản hoàn.</span>
       </p>
-      {provided && (
-        <p>
-          Đã có thông tin nhận hoàn. Chỉ thay đổi nếu cần sửa; thông tin mới sẽ thay thế thông tin
-          đã gửi.
-        </p>
-      )}
       {!editing && !uncertain && (
-        <Button
-          ref={editButton}
-          variant="outline"
-          onClick={() => {
-            form.reset(empty);
-            setEditing(true);
-            setError('');
-            setNotice('');
-          }}
-        >
-          {provided ? 'Đổi tài khoản nhận hoàn' : 'Nhập tài khoản nhận hoàn'}
-        </Button>
+        <div className="refund-collapsed-action">
+          <Button
+            ref={editButton}
+            variant="outline"
+            onClick={() => {
+              form.reset(empty);
+              setEditing(true);
+              setError('');
+              setNotice('');
+            }}
+          >
+            {provided ? 'Đổi tài khoản nhận hoàn' : 'Nhập tài khoản nhận hoàn'}
+          </Button>
+        </div>
       )}
       {editing && (
         <form
@@ -165,66 +184,81 @@ export default function RefundAccount({
               })(event);
           }}
         >
-          <div hidden={review}>
-            <label htmlFor="refund-bank">Tên ngân hàng</label>
-            <VietnamBankSelect
-              id="refund-bank"
-              inputRef={bankField.ref}
-              value={bankField.value}
-              onValueChange={bankField.onChange}
-              onBlur={bankField.onBlur}
-              invalid={!!form.formState.errors.bank}
-              describedBy="refund-bank-error"
-              disabled={saving}
-              required
-            />
-            <p id="refund-bank-error" className="error">
-              {form.formState.errors.bank?.message}
-            </p>
-            <label htmlFor="refund-holder">Tên chủ tài khoản</label>
-            <input
-              id="refund-holder"
-              autoComplete="off"
-              maxLength={120}
-              {...form.register('holder')}
-              aria-invalid={!!form.formState.errors.holder}
-              aria-describedby="refund-holder-error"
-              readOnly={saving}
-            />
-            <p id="refund-holder-error" className="error">
-              {form.formState.errors.holder?.message}
-            </p>
-            <label htmlFor="refund-account">Số tài khoản ngân hàng</label>
-            <input
-              id="refund-account"
-              autoComplete="off"
-              spellCheck={false}
-              maxLength={34}
-              {...form.register('account')}
-              aria-invalid={!!form.formState.errors.account}
-              aria-describedby="refund-account-help refund-account-error"
-              readOnly={saving}
-            />
-            <p id="refund-account-help" className="quiet">
-              Giữ nguyên số 0 ở đầu. Không nhập số thẻ, mật khẩu, mã PIN hay OTP.
-            </p>
-            <p id="refund-account-error" className="error">
-              {form.formState.errors.account?.message}
-            </p>
+          <div className="refund-form-grid" hidden={review}>
+            {provided && (
+              <p className="quiet refund-replace-note">
+                Thông tin mới sẽ thay thế tài khoản đã gửi trước đó.
+              </p>
+            )}
+            <div className="refund-field refund-field-full">
+              <label htmlFor="refund-bank">Tên ngân hàng</label>
+              <VietnamBankSelect
+                id="refund-bank"
+                inputRef={bankField.ref}
+                value={bankField.value}
+                onValueChange={bankField.onChange}
+                onBlur={bankField.onBlur}
+                invalid={!!form.formState.errors.bank}
+                describedBy="refund-bank-error"
+                disabled={saving}
+                required
+              />
+              <p id="refund-bank-error" className="error">
+                {form.formState.errors.bank?.message}
+              </p>
+            </div>
+            <div className="refund-field">
+              <label htmlFor="refund-holder">Tên chủ tài khoản</label>
+              <input
+                id="refund-holder"
+                autoComplete="off"
+                maxLength={120}
+                placeholder="VD: NGUYEN VAN A"
+                {...form.register('holder')}
+                aria-invalid={!!form.formState.errors.holder}
+                aria-describedby="refund-holder-error"
+                readOnly={saving}
+              />
+              <p id="refund-holder-error" className="error">
+                {form.formState.errors.holder?.message}
+              </p>
+            </div>
+            <div className="refund-field">
+              <label htmlFor="refund-account">Số tài khoản ngân hàng</label>
+              <input
+                id="refund-account"
+                autoComplete="off"
+                spellCheck={false}
+                maxLength={34}
+                placeholder="Nhập số tài khoản"
+                {...form.register('account')}
+                aria-invalid={!!form.formState.errors.account}
+                aria-describedby="refund-account-help refund-account-error"
+                readOnly={saving}
+              />
+              <p id="refund-account-help" className="quiet">
+                Giữ số 0 ở đầu. Không nhập số thẻ, PIN hay OTP.
+              </p>
+              <p id="refund-account-error" className="error">
+                {form.formState.errors.account?.message}
+              </p>
+            </div>
           </div>
           {review && (
-            <div>
+            <div className="refund-review">
               <h4 ref={reviewHeading} tabIndex={-1}>
                 Kiểm tra trước khi gửi
               </h4>
-              <p>
-                {form.getValues('bank')} · {form.getValues('holder')}
-              </p>
-              <p>
-                Số tài khoản đã che, kết thúc bằng{' '}
-                {form.getValues('account').slice(form.getValues('account').length > 4 ? -4 : -2)}.
-              </p>
-              <p>
+              <div className="refund-review-box">
+                <p className="refund-review-primary">
+                  {form.getValues('bank')} · {form.getValues('holder')}
+                </p>
+                <p className="refund-review-masked">
+                  Số tài khoản đã che, kết thúc bằng{' '}
+                  {form.getValues('account').slice(form.getValues('account').length > 4 ? -4 : -2)}.
+                </p>
+              </div>
+              <p className="refund-review-note">
                 Đối chiếu thông tin với ứng dụng ngân hàng của bạn. FloraBot chưa xác minh chủ tài
                 khoản với ngân hàng.
               </p>
@@ -264,7 +298,9 @@ export default function RefundAccount({
       <p role="alert" className="error">
         {error}
       </p>
-      <p role="status">{notice}</p>
-    </div>
+      <p role="status" className="refund-notice">
+        {notice}
+      </p>
+    </section>
   );
 }

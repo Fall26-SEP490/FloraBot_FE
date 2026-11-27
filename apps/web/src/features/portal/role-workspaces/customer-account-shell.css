@@ -2,7 +2,7 @@
 .workspace-portal-root:has(> .customer-account-shell > .customer-account-sidebar) {
   background-color: var(--color-workspace-canvas, #f3f7f0);
   background-image:
-    linear-gradient(rgb(255 255 255 / 94%), rgb(255 255 255 / 94%)),
+    linear-gradient(rgb(255 255 255 / 88%), rgb(255 255 255 / 88%)),
     url('/images/generated/florabot-pattern.webp');
   background-position: center top;
   background-size:

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, ChevronDown, MapPin, Clock, Flower2 } from '@florabot/ui';
+import { Clock, Flower2, Store } from '@florabot/ui';
 import { request } from '@/shared/lib/api';
 import { safeImage } from '../product-management/product.utils';
 import type { CatalogResponse } from '../catalog/catalog.types';
@@ -28,73 +28,95 @@ export default function CustomerOrderSummary({ row }: { row: WebOrder }) {
   });
   const image =
     photo.data && safeImage(photo.data) && photo.data !== failedPhoto ? photo.data : null;
-  const hasPrice = row.quotedPrice != null && Number.isFinite(row.quotedPrice);
+  const hasPrice = row.quotedPrice != null && Number.isFinite(Number(row.quotedPrice));
   const pickupReady = row.ready && row.orderStatus === 'PAID';
-  const label =
+  const actionable =
+    pickupReady ||
+    (row.state === 'QUOTED' && !row.orderId) ||
+    row.orderStatus === 'AWAITING_PAYMENT';
+  const quotedAccessories = row.quotedAccessories ?? [];
+  const requestedAccessories = row.requestedAccessories ?? [];
+  const totalLabel =
     row.orderStatus === 'AWAITING_PAYMENT'
       ? 'Cần thanh toán'
       : row.state === 'QUOTED' && !row.orderId
-        ? 'Shop báo giá'
-        : 'Tổng tiền';
+        ? 'Tổng báo giá'
+        : 'Thành tiền';
+  const statusKey = pickupReady ? 'READY' : row.orderStatus || row.state;
+  const footerHint =
+    row.state === 'QUOTED' && !row.orderId && row.quoteExpiresAt
+      ? `Phản hồi báo giá trước ${when(row.quoteExpiresAt)}`
+      : row.orderStatus === 'AWAITING_PAYMENT' && row.payBefore
+        ? `Thanh toán trước ${when(row.payBefore)}`
+        : '';
+  const accessories = quotedAccessories.length ? quotedAccessories : requestedAccessories;
+
   return (
-    <span className={styles.summaryLayout}>
-      <span className={styles.thumbnail} aria-hidden="true">
-        {image ? (
-          <img
-            src={image}
-            alt=""
-            width={68}
-            height={80}
-            loading="lazy"
-            referrerPolicy="no-referrer"
-            onError={() => setFailedPhoto(image)}
-          />
-        ) : (
-          <Flower2 size={22} />
-        )}
-      </span>
-      <span className={styles.content}>
-        <span className={styles.heading}>
-          <strong>{row.productName || 'Hoa theo yêu cầu'}</strong>
+    <span className={styles.shopeeCard}>
+      <span className={styles.shopeeHead}>
+        <span className={styles.shopeeShop}>
+          <Store size={15} aria-hidden="true" />
+          <strong>{row.shopName || 'Shop nhận yêu cầu'}</strong>
         </span>
-        <span className={styles.shop}>
-          {row.shopName || 'Shop nhận yêu cầu'} · {row.orderCode || `Yêu cầu ${row.id.slice(0, 8)}`}
+        <span className={styles.shopeeHeadRight}>
+          <span className="order-status-pill" data-status={statusKey}>
+            {statusName(row)}
+          </span>
         </span>
       </span>
-      <span className={styles.facts}>
-        <span className={styles.fact}>
-          <span className={styles.factLabel}>
-            <MapPin size={14} aria-hidden="true" /> Tủ nhận hoa
+
+      <span className={styles.shopeeItems}>
+        <span className={styles.shopeeItemRow}>
+          <span className={styles.thumbnail} aria-hidden="true">
+            {image ? (
+              <img
+                src={image}
+                alt=""
+                width={80}
+                height={80}
+                loading="lazy"
+                referrerPolicy="no-referrer"
+                onError={() => setFailedPhoto(image)}
+              />
+            ) : (
+              <Flower2 size={26} />
+            )}
           </span>
-          <span className={styles.factValue}>{row.kioskName || 'Xem địa điểm trong chi tiết'}</span>
-        </span>
-        <span className={styles.fact}>
-          <span className={styles.factLabel}>
-            <Clock size={14} aria-hidden="true" />
-            {row.state === 'REQUESTED' ? 'Lịch nhận mong muốn' : 'Lịch nhận'}
+          <span className={styles.itemMeta}>
+            <strong className={styles.itemTitle}>{row.productName || 'Hoa theo yêu cầu'}</strong>
+            <span className={styles.itemSub}>
+              <Clock size={12} aria-hidden="true" />
+              <span>
+                {row.state === 'REQUESTED' ? 'Lịch nhận mong muốn: ' : 'Lịch nhận: '}
+                {when(row.pickupAt)}
+                {row.kioskName ? ` · ${row.kioskName}` : ''}
+              </span>
+            </span>
+            {accessories.length > 0 && (
+              <span className={styles.itemSub}>
+                Kèm {accessories.map((item) => `${item.name} ×${item.quantity}`).join(', ')}
+              </span>
+            )}
           </span>
-          <span className={styles.factValue}>{when(row.pickupAt)}</span>
         </span>
       </span>
-      <span className={styles.summaryAside}>
-        <span
-          className="order-status-pill"
-          data-status={pickupReady ? 'READY' : row.orderStatus || row.state}
-        >
-          {statusName(row)}
+
+      <span className={styles.shopeeFoot}>
+        <span className={styles.shopeeTotalRow}>
+          {hasPrice ? (
+            <>
+              <small>{totalLabel}:</small>
+              <strong className={styles.shopeeTotalValue}>{money(Number(row.quotedPrice))}</strong>
+            </>
+          ) : (
+            <strong className={styles.pricePending}>Chưa có báo giá</strong>
+          )}
         </span>
-        <span className={styles.summaryPrice}>
-          <small>{hasPrice ? label : 'Báo giá'}</small>
-          <strong>{hasPrice ? money(row.quotedPrice!) : 'Chưa có báo giá'}</strong>
-        </span>
-        <span className={styles.action}>
-          <span className={styles.actionExpand}>
-            {customerOrderActionLabel(row)}
-            <ArrowRight size={16} aria-hidden="true" />
-          </span>
-          <span className={styles.actionCollapse}>
-            Thu gọn
-            <ChevronDown size={16} aria-hidden="true" />
+        <span className={styles.shopeeFootActions}>
+          {footerHint && <span className={styles.shopeeFootHint}>{footerHint}</span>}
+          <span className={styles.action} data-primary={actionable || undefined}>
+            <span className={styles.actionExpand}>{customerOrderActionLabel(row)}</span>
+            <span className={styles.actionCollapse}>Thu gọn</span>
           </span>
         </span>
       </span>

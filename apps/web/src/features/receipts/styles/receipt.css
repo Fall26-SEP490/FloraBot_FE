@@ -1,138 +1,655 @@
-.receipt-page {
-  max-width: 780px;
-  margin-inline: auto;
-  padding-block: 2rem 4rem;
-}
-.receipt-page h1 {
-  margin-block: 2rem 1rem;
-}
-.receipt-page p {
-  margin-block: 0.8rem;
-  max-width: 70ch;
-}
-.receipt-page form {
-  margin-block: 2rem;
-}
-.receipt-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.8rem;
-  margin-top: 1.2rem;
-}
-.receipt-page section {
-  border-top: 1px solid var(--color-line);
-  padding-top: 2rem;
-}
-.receipt-page h2 {
-  overflow-wrap: anywhere;
-}
-.receipt-status {
-  background: var(--color-brand);
-  padding: 1rem;
-  border-radius: 12px;
-  font-weight: 600;
-}
-.receipt-items {
-  list-style: none;
-  padding: 0;
-  margin-block: 1.5rem;
-}
-.receipt-items li {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 0.5rem 1rem;
-  padding-block: 1rem;
-  border-bottom: 1px solid var(--color-line);
-}
-.receipt-items strong {
-  flex-basis: 100%;
-  overflow-wrap: anywhere;
-}
-.receipt-totals > div {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 0.5rem 1rem;
-  margin-block: 0.8rem;
-}
-.receipt-totals dd,
-.receipt-items span {
-  font-variant-numeric: tabular-nums;
-}
-.refund-account {
-  margin-block: 2rem;
-  padding-block: 1.5rem;
-  border-block: 1px solid var(--color-line);
-}
-.refund-account h3 {
-  font-size: 1.35rem;
-  font-weight: 800;
-}
-.refund-account h4 {
-  font-size: 1.1rem;
-  font-weight: 600;
-}
-.receipt-complaint {
-  margin-top: 2rem;
-  padding-block: 1.5rem;
-  border-block: 1px solid var(--color-line);
-}
-.receipt-complaint h3 {
-  font-size: 1.35rem;
-  font-weight: 800;
-}
-.receipt-complaint h4 {
-  font-size: 1.1rem;
-  font-weight: 600;
-}
-.receipt-complaint textarea {
-  width: 100%;
-  min-height: 120px;
-  padding: 0.65rem;
-  border: 1px solid var(--color-line);
-  border-radius: 12px;
-  color: var(--color-ink);
-  background: white;
-  resize: vertical;
-}
-.complaint-content {
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
+/* Public receipt & quality complaint — editorial stationery over calm surface */
+.site-frame-botanical > .site-content:has(.receipt-page)::before {
+  background:
+    linear-gradient(180deg, #f6faf4eb, #fafcf8ed 50%, #f5f8f2eb),
+    url('/images/generated/florabot-pattern.webp') center 0 / 480px repeat;
 }
 
 .receipt-page {
   box-sizing: border-box;
   width: 100%;
-  max-width: 880px;
-  padding: 2rem clamp(1rem, 4vw, 2rem) 4rem;
+  max-width: 1180px;
+  margin-inline: auto;
+  padding: clamp(1.5rem, 3vw, 2.25rem) clamp(1rem, 3vw, 2rem) 4rem;
   color: #183e2b;
+  font-family: var(--font-body);
 }
-.receipt-heading {
-  margin-bottom: 1.75rem;
-}
-.receipt-heading h1 {
-  margin: 0 0 0.65rem;
-  font-size: clamp(1.65rem, 4vw, 2.25rem);
-  line-height: 1.25;
-}
-.receipt-heading > a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
+
+.receipt-page p,
+.receipt-page .receipt-items,
+.receipt-page .receipt-totals {
   font-size: 0.875rem;
-  text-underline-offset: 0.2em;
-  text-decoration: underline;
-  font-weight: 600;
+  line-height: 1.6;
 }
-.receipt-lookup {
-  padding: 1.25rem;
-  border: 1px solid #d6e2d0;
-  border-radius: 14px;
-  background: #f6f9f2;
+
+.receipt-page p {
+  margin-block: 0.6rem;
+  max-width: 70ch;
+}
+
+.receipt-page h2 {
+  overflow-wrap: anywhere;
+}
+
+.receipt-page code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+.receipt-page .error:empty {
+  display: none;
+}
+
+.receipt-page .error {
+  margin: 0.6rem 0 0;
+  color: #9c2b26;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.receipt-page .quiet {
+  color: #536659;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+}
+
+/* Header & back link */
+.receipt-heading {
   margin-bottom: 1.5rem;
 }
-.receipt-lookup > summary,
+
+.receipt-heading > a,
+.receipt-page .complaint-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  margin-bottom: 0.2rem;
+  color: #16462e;
+  font-size: 0.84375rem;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 8px;
+}
+
+.receipt-heading > a:hover,
+.receipt-page .complaint-back:hover {
+  color: #0f3220;
+  text-decoration: underline;
+  text-underline-offset: 0.22em;
+}
+
+.receipt-heading h1 {
+  margin: 0 0 0.4rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.55rem, 3vw, 2rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  color: #143624;
+}
+
+.receipt-heading > p {
+  margin: 0;
+  color: #3a5242;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+/* Form controls */
+.receipt-page label:not(.payout-checkbox) {
+  display: block;
+  margin: 1rem 0 0.35rem;
+  color: #183e2b;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.receipt-page form > label:first-of-type,
+.receipt-page form > div > label:first-of-type {
+  margin-top: 0;
+}
+
+.receipt-page input:not([type='checkbox']):not([type='file']) {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #ced8cd;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #183e2b;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.receipt-page input[role='combobox'] {
+  padding-inline-end: 2.4rem;
+}
+
+.receipt-page #receipt-order,
+.receipt-page #receipt-token {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.7222rem;
+  padding-inline: 0.75rem;
+  background: #fcfdfc;
+}
+
+.receipt-page #receipt-token {
+  max-width: none;
+  letter-spacing: 0.14em;
+  font-weight: 600;
+}
+
+.receipt-page input::placeholder,
+.receipt-page textarea::placeholder {
+  color: #5d7063;
+  opacity: 1;
+}
+
+.receipt-page .button {
+  min-height: 44px;
+  padding: 0.55rem 1.05rem;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 0.84375rem;
+  font-weight: 600;
+  line-height: 1.4;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.receipt-page .button-primary {
+  background: #183e2b;
+  border-color: #183e2b;
+  color: #ffffff;
+}
+
+.receipt-page .button-primary:hover:not(:disabled) {
+  background: #23573c;
+  border-color: #23573c;
+}
+
+.receipt-page .button-outline {
+  background: #ffffff;
+  border-color: #ccd7cb;
+  color: #183e2b;
+}
+
+.receipt-page .button-outline:hover:not(:disabled) {
+  background: #f3f7f2;
+  border-color: #ccd7cb;
+}
+
+.receipt-page .button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.receipt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: 1.25rem;
+}
+
+/* Status badges — quiet editorial pill */
+.receipt-status {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 0.18rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid #d1e4ce;
+  background: #eef7ed;
+  color: #18512f;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.receipt-status[data-status='AWAITING_PAYMENT'],
+.receipt-status[data-status='DISPENSING'] {
+  background: #eef5fb;
+  color: #1e4f73;
+  border-color: #c5ddef;
+}
+
+.receipt-status[data-status='DISPUTED'],
+.receipt-status[data-status='DISPENSE_FAILED'] {
+  background: #fff6e5;
+  color: #754608;
+  border-color: #ebd3a3;
+}
+
+.receipt-status[data-status='CANCELLED'],
+.receipt-status[data-status='EXPIRED'] {
+  background: #fff2f1;
+  color: #962c27;
+  border-color: #ecc9c6;
+}
+
+/* Receipt lookup page layout — wider stationery sheet on right */
+.receipt-page.receipt-view {
+  display: grid;
+  grid-template-columns: minmax(320px, 384px) minmax(0, 1fr);
+  align-items: start;
+  gap: 1.5rem 2rem;
+}
+
+.receipt-view > .receipt-heading {
+  grid-column: 1 / -1;
+  margin-bottom: 0;
+}
+
+.receipt-view > .receipt-lookup,
+.receipt-view > .receipt-result {
+  min-width: 0;
+  width: 100%;
+  margin: 0;
+}
+
+.receipt-view > .receipt-lookup {
+  grid-column: 1;
+  grid-row: 2;
+  padding: clamp(1.25rem, 2.5vw, 1.75rem);
+  border: 1px solid #e4e9e2;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 1px 10px rgb(24 62 43 / 4%);
+}
+
+.receipt-view > .receipt-result {
+  grid-column: 2;
+  grid-row: 2;
+  border-top: 0;
+  padding: 0;
+}
+
+.receipt-view .receipt-lookup h2 {
+  margin: 0 0 0.4rem;
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: #183e2b;
+}
+
+.receipt-view .receipt-lookup > .quiet:first-of-type {
+  margin: 0;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eef2ec;
+}
+
+.receipt-view .receipt-lookup form {
+  margin: 1.1rem 0 0;
+}
+
+.receipt-view .receipt-lookup #receipt-help {
+  margin: 0.35rem 0 0;
+  font-size: 0.78125rem;
+}
+
+.receipt-view .receipt-lookup .receipt-actions {
+  margin: 1.2rem 0 0;
+}
+
+.receipt-view .receipt-lookup .button {
+  width: 100%;
+  min-height: 44px;
+}
+
+.receipt-view .receipt-privacy {
+  margin: 1.25rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid #eef2ec;
+  color: #536659;
+  font-size: 0.78125rem;
+  line-height: 1.55;
+}
+
+/* Empty state sheet on /receipt */
+.receipt-preview-placeholder {
+  grid-column: 2;
+  grid-row: 2;
+  min-width: 0;
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: clamp(2rem, 4vw, 3rem);
+  border: 1px solid #e4e9e2;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 1px 10px rgb(24 62 43 / 4%);
+  text-align: center;
+  color: #536659;
+}
+
+.receipt-placeholder-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 0.25rem;
+  border: 1px solid #d5e0d3;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #1d5237;
+}
+
+.receipt-preview-placeholder h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #183e2b;
+}
+
+.receipt-page .receipt-preview-placeholder p {
+  margin: 0;
+  max-width: 34ch;
+  font-size: 0.84375rem;
+  color: #536659;
+}
+
+/* Editorial receipt & complaint summary sheet (Koya Goods inspired) */
+.receipt-paper {
+  min-width: 0;
+  padding: clamp(1.5rem, 4vw, 2.75rem);
+  border: 1px solid #e4e9e2;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #183e2b;
+  box-shadow: 0 1px 10px rgb(24 62 43 / 4%);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.receipt-paper-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.receipt-paper-emblem {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  margin-bottom: 0.65rem;
+  color: #183e2b;
+}
+.receipt-paper-emblem img {
+  display: block;
+  object-fit: contain;
+}
+
+.receipt-paper-brand strong {
+  font-family: 'Playfair Display', 'Palatino Linotype', Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: #153826;
+}
+
+.receipt-page .receipt-paper-brand p {
+  margin: 0.35rem 0 0;
+  color: #536659;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+}
+
+/* 2-column airy metadata grid */
+.receipt-paper-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.15rem 2rem;
+  margin-bottom: 2rem;
+}
+
+.receipt-paper-meta > div {
+  min-width: 0;
+}
+
+.receipt-meta-label {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: #55685b;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.receipt-paper-meta h2 {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: 0;
+  color: #153826;
+  font-variant-numeric: tabular-nums;
+}
+
+.receipt-page .receipt-meta-value {
+  margin: 0;
+  color: #183e2b;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+#receipt-result:focus {
+  outline: none;
+}
+
+/* 5-column tabular items table */
+.receipt-paper-lines {
+  margin: 0;
+}
+
+.receipt-items-head {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr) 2.75rem 6rem 6.25rem;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 0 0.65rem;
+  border-bottom: 1px solid #dfe6dd;
+  color: #55685b;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.receipt-items-head > span:nth-child(3) {
+  text-align: center;
+}
+
+.receipt-items-head > span:nth-child(4),
+.receipt-items-head > span:nth-child(5) {
+  text-align: right;
+}
+
+.receipt-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.receipt-items li {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr) 2.75rem 6rem 6.25rem;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding-block: 0.85rem;
+  border-bottom: 1px solid #eef2ec;
+}
+
+.receipt-item-no {
+  color: #55685b;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.receipt-item-name {
+  min-width: 0;
+  color: #183e2b;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.receipt-item-qty {
+  text-align: center;
+  color: #183e2b;
+  font-size: 0.84375rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.receipt-item-price,
+.receipt-item-total {
+  text-align: right;
+  font-size: 0.84375rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.receipt-item-price {
+  color: #4a6052;
+}
+
+.receipt-item-total {
+  color: #183e2b;
+  font-weight: 600;
+}
+
+/* Right-aligned editorial totals block */
+.receipt-paper .receipt-totals {
+  display: grid;
+  gap: 0.6rem;
+  width: min(100%, 19rem);
+  margin: 1.25rem 0 0 auto;
+  padding: 0;
+}
+
+.receipt-totals > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 1rem;
+  margin: 0;
+}
+
+.receipt-totals dt {
+  color: #536659;
+  font-size: 0.84375rem;
+  font-weight: 500;
+}
+
+.receipt-totals > div:first-child dt,
+.receipt-totals > div:first-child dd {
+  color: #183e2b;
+  font-weight: 600;
+}
+
+.receipt-totals dd {
+  margin: 0;
+  text-align: right;
+  color: #183e2b;
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.receipt-paper .receipt-totals .receipt-paper-total {
+  margin-top: 0.35rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #dfe6dd;
+}
+
+.receipt-paper .receipt-paper-total dt {
+  color: #153826;
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.receipt-paper .receipt-paper-total dd {
+  color: #153826;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+/* Left-aligned quiet stationery footer */
+.receipt-paper-footer {
+  margin-top: 2.25rem;
+  padding-top: 1.15rem;
+  border-top: 1px solid #eef2ec;
+  text-align: left;
+  color: #55685b;
+  font-size: 0.78125rem;
+  line-height: 1.55;
+}
+
+.receipt-page .receipt-paper-footer p {
+  margin: 0 0 0.15rem;
+  max-width: none;
+  color: #2f513c;
+  font-size: 0.78125rem;
+  font-weight: 600;
+}
+
+.receipt-paper-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  margin-block: 1rem 0;
+}
+
+.receipt-view > .receipt-result > p:not(.error) {
+  margin: 1rem 0 0;
+  padding: 0.8rem 1rem;
+  border: 1px solid #dfe7dd;
+  border-radius: 10px;
+  background: #f6f9f4;
+  color: #214a34;
+  font-size: 0.84375rem;
+  font-weight: 500;
+}
+
+/* Kiosk recovery disclosure & refund account below receipt */
+.receipt-recovery {
+  margin-top: 1rem;
+  padding: 0.75rem 1.25rem;
+  border: 1px solid #e4e9e2;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 1px 8px rgb(24 62 43 / 3%);
+}
+
 .receipt-recovery > summary {
   cursor: pointer;
   min-height: 44px;
@@ -141,700 +658,923 @@
   justify-content: space-between;
   gap: 0.75rem;
   list-style: none;
+  color: #183e2b;
+  font-size: 0.875rem;
   font-weight: 600;
-  line-height: 1.5;
+  line-height: 1.45;
 }
-.receipt-lookup > summary::-webkit-details-marker,
+
 .receipt-recovery > summary::-webkit-details-marker {
   display: none;
 }
-.receipt-lookup > summary svg,
+
 .receipt-recovery > summary svg {
   flex: none;
+  transition: transform 160ms ease;
 }
-.receipt-lookup[open] > summary svg,
+
 .receipt-recovery[open] > summary svg {
   transform: rotate(180deg);
 }
-.receipt-lookup form {
-  margin: 1.25rem 0 0;
-}
-.receipt-lookup .quiet,
-.receipt-privacy {
-  color: #49634f;
-  font-size: 0.875rem;
-  line-height: 1.6;
-}
-.receipt-page input:not([type='checkbox']) {
-  box-sizing: border-box;
-  width: 100%;
-  min-height: 48px;
-  border: 1px solid #b5c8ae;
-  border-radius: 8px;
-  padding: 0.75rem;
-  background: #fff;
-  color: #183e2b;
-}
-.receipt-page input:focus-visible,
-.receipt-page summary:focus-visible {
-  outline: 2px solid #245b3e;
-  outline-offset: 3px;
-}
-.receipt-page label:not(.payout-checkbox) {
-  display: block;
-  margin-bottom: 0.45rem;
-  font-size: 0.9375rem;
-}
-.receipt-page #receipt-token {
-  max-width: 260px;
-  letter-spacing: 0.12em;
-}
-.receipt-page .receipt-result {
-  border-top: 0;
-  padding: 1.5rem 0 0;
-}
-.receipt-result h2 {
-  font-size: clamp(1.35rem, 3vw, 1.75rem);
-  margin: 0 0 0.75rem;
-}
-.receipt-result h3 {
-  font-size: 1.125rem;
-  margin-block: 1.5rem 0.75rem;
-}
-.receipt-status {
-  width: fit-content;
-  background: #edf7ec;
-  color: #1a5832;
-  border: 1px solid #c9e1c5;
+
+.receipt-recovery > p {
+  margin: 0.7rem 0 0.9rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #eef2ec;
+  color: #536659;
   font-size: 0.8125rem;
-  line-height: 1.4;
-  padding: 0.3rem 0.75rem;
-  border-radius: 999px;
-}
-.receipt-status[data-status='DISPUTED'],
-.receipt-status[data-status='DISPENSE_FAILED'] {
-  background: #fff0d8;
-  color: #754711;
-  border-color: #efd7af;
-}
-.receipt-status[data-status='CANCELLED'],
-.receipt-status[data-status='EXPIRED'] {
-  background: #fff2f2;
-  color: #963b35;
-  border-color: #f0cdca;
-}
-.receipt-recovery {
-  padding-block: 0.75rem;
-  border-top: 1px solid #dce6d7;
-}
-.receipt-recovery p {
-  color: #49634f;
-  font-size: 0.875rem;
   line-height: 1.6;
 }
-.receipt-page code {
+
+.receipt-recovery .receipt-totals {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0 0 0.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #eef2ec;
+}
+
+.receipt-recovery .receipt-totals dd {
+  white-space: normal;
   overflow-wrap: anywhere;
-  user-select: all;
 }
-.receipt-totals {
-  margin: 1rem 0;
+
+.refund-account {
+  margin-top: 1.25rem;
+  padding: clamp(1.35rem, 3vw, 2rem);
+  border: 1px solid #e4e9e2;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 1px 10px rgb(24 62 43 / 4%);
 }
-.receipt-totals dd {
-  margin-left: 0;
-  overflow-wrap: anywhere;
-  text-align: right;
-}
-.receipt-totals > div:has(> dd > strong) {
-  padding-block: 0.75rem;
-  border-top: 1px solid #dce6d7;
-}
-.receipt-page .button {
-  min-height: 44px;
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  line-height: 1.4;
-}
-@media (max-width: 580px) {
-  .receipt-page {
-    padding-top: 1.5rem;
-  }
-  .receipt-lookup {
-    padding: 1rem;
-  }
-  .receipt-page #receipt-token {
-    max-width: 100%;
-  }
-  .receipt-page #receipt-order {
-    font-size: 1rem;
-    padding-inline: 0.6rem;
-  }
-  .receipt-page .receipt-actions > :is(button, a) {
-    width: 100%;
-    min-height: 48px;
-  }
-}
-.receipt-result-heading {
+
+.refund-account-header {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 0.75rem 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eef2ec;
+}
+
+.refund-account-title {
+  display: flex;
+  align-items: flex-start;
   gap: 0.75rem;
-}
-.receipt-result-heading > button {
-  min-height: 44px;
-}
-#receipt-result:focus:not(:focus-visible) {
-  outline: none;
-}
-.receipt-page p,
-.receipt-page .receipt-items,
-.receipt-page .receipt-totals {
-  font-size: 0.9375rem;
-  line-height: 1.6;
-}
-.receipt-page .receipt-items li {
-  border-color: #dce6d7;
-}
-.receipt-page .receipt-result {
-  padding-top: 1rem;
+  min-width: 0;
+  flex: 1 1 240px;
 }
 
-.receipt-page .complaint-back {
+.refund-account-icon {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  min-height: 44px;
-  margin-bottom: 0.75rem;
-}
-.complaint-page .receipt-result {
-  padding: clamp(1rem, 3vw, 1.5rem);
-  border: 1px solid #dce6d7;
-  border-radius: 14px;
-  background: #fff;
-}
-.complaint-page .receipt-result-heading h2 {
-  margin: 0;
-  font-size: 1.125rem;
-}
-.complaint-page .receipt-result-heading button {
-  font-size: 0.875rem;
-}
-.complaint-order-summary {
-  color: #49634f;
-}
-.complaint-order-summary p {
-  overflow-wrap: anywhere;
-}
-.complaint-state {
-  margin-top: 1.5rem;
-  padding: clamp(1rem, 3vw, 1.5rem);
-  border-radius: 10px;
-  background: #f5f8f2;
-  color: #254c36;
-}
-.complaint-state:focus-visible {
-  outline: 2px solid #245b3e;
-  outline-offset: 3px;
-}
-.complaint-state:focus:not(:focus-visible) {
-  outline: none;
-}
-.complaint-state > :is(h2, h3) {
-  margin: 0 0 0.5rem;
-  font-size: 1.25rem;
-  line-height: 1.4;
-}
-.complaint-state[data-state] {
-  display: grid;
-  grid-template-columns: 28px minmax(0, 1fr);
-  column-gap: 0.75rem;
-  row-gap: 0.35rem;
-}
-.complaint-state[data-state] > svg {
-  grid-row: 1 / span 3;
-  margin-top: 0.1rem;
-}
-.complaint-state[data-state] > :is(h3, p, a) {
-  grid-column: 2;
-  margin: 0;
-}
-.complaint-state[data-state='expired'] {
-  background: #fff7e9;
-  color: #714910;
-}
-.complaint-state-link {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
-  font-weight: 600;
-}
-.complaint-page .receipt-complaint {
-  margin-top: 1.5rem;
-  padding: 0;
-  border: 0;
-}
-.complaint-page .receipt-complaint h3 {
-  margin-top: 0;
-  font-size: 1.125rem;
-}
-.complaint-page .receipt-complaint form {
-  margin-top: 1rem;
-  margin-bottom: 0;
-}
-.complaint-page .receipt-complaint textarea {
-  box-sizing: border-box;
-  min-height: 144px;
-  border-radius: 8px;
-}
-.complaint-page .receipt-actions {
-  align-items: center;
-}
-.complaint-page .receipt-actions > button {
-  min-height: 44px;
+  justify-content: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #d5e0d3;
+  border-radius: 999px;
+  color: #183e2b;
 }
 
-/* A narrow paper receipt; interactive support remains outside the document. */
-.receipt-page.receipt-view {
+.refund-account h3 {
+  margin: 0 0 0.2rem;
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #153826;
+}
+
+.receipt-page .refund-status-text {
+  margin: 0;
+  color: #465d4e;
+  font-size: 0.84375rem;
+  line-height: 1.5;
+}
+
+.refund-amount-badge {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  padding: 0.25rem 0.7rem;
+  border: 1px solid #ebd3a3;
+  border-radius: 999px;
+  background: #fff6e5;
+  color: #754608;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.refund-amount-badge[data-provided='true'] {
+  border-color: #d1e4ce;
+  background: #eef7ed;
+  color: #18512f;
+}
+
+.receipt-page .refund-security-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  margin: 0.9rem 0 0;
+  color: #536659;
+  font-size: 0.78125rem;
+  line-height: 1.5;
+}
+
+.refund-security-note svg {
+  flex: none;
+  margin-top: 0.15rem;
+  color: #245b3e;
+}
+
+.refund-collapsed-action {
+  margin-top: 1.1rem;
+}
+
+.refund-account form {
+  margin: 1.15rem 0 0;
+}
+
+.refund-form-grid {
   display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 1.1rem;
   align-items: start;
-  gap: 1.5rem 2rem;
-  max-width: 1080px;
-}
-.receipt-view > .receipt-heading {
-  grid-column: 1 / -1;
-  margin-bottom: 0;
-}
-.receipt-view > .receipt-lookup,
-.receipt-view > .receipt-result {
-  min-width: 0;
-  width: 100%;
-  margin: 0;
-}
-.receipt-view > .receipt-lookup {
-  grid-column: 1;
-  grid-row: 2;
-  padding: clamp(1.1rem, 3vw, 2rem);
-  border: 1px solid #e4e4df;
-  border-radius: 0;
-  background: #fff;
-  box-shadow: 0 4px 18px #243d2a09;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-}
-.receipt-view > .receipt-result {
-  grid-column: 2;
-  grid-row: 2;
-  padding: 0;
-}
-.receipt-view .receipt-lookup h2 {
-  margin: 0;
-  padding-bottom: 1rem;
-  border-bottom: 1px dashed #b6bdb5;
-  font: inherit;
-  font-size: 1rem;
-  font-weight: 700;
-}
-.receipt-view .receipt-lookup :is(p, label) {
-  font-size: 0.8125rem;
-  line-height: 1.65;
-}
-.receipt-view .receipt-lookup input {
-  font-family: inherit;
-  border-style: dashed;
-  border-color: #889389;
-  border-radius: 6px;
-}
-.receipt-view .receipt-lookup #receipt-token {
-  max-width: none;
-}
-.receipt-view .receipt-lookup .receipt-actions {
-  margin-bottom: 1rem;
-}
-.receipt-view .receipt-lookup .button {
-  width: 100%;
-  font-family: inherit;
-}
-.receipt-view .receipt-privacy {
-  margin-bottom: 0;
-  padding-top: 1rem;
-  border-top: 1px dashed #b6bdb5;
-  color: #576259;
-}
-.receipt-preview-placeholder {
-  grid-column: 2;
-  grid-row: 2;
-  min-width: 0;
-  min-height: 280px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 1.5rem;
-  border: 1px dashed #b6bdb5;
-  text-align: center;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  color: #576259;
-}
-.receipt-preview-placeholder h2 {
-  margin: 0;
-  font: inherit;
-  font-weight: 600;
-}
-.receipt-page .receipt-preview-placeholder p {
-  margin: 0;
-  font-size: 0.8125rem;
-}
-@media (max-width: 880px) {
-  .receipt-page.receipt-view {
-    max-width: 540px;
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .receipt-view > :is(.receipt-lookup, .receipt-result, .receipt-preview-placeholder) {
-    grid-column: 1;
-    grid-row: auto;
-  }
-  .receipt-preview-placeholder {
-    min-height: 180px;
-  }
-}
-.receipt-view .receipt-heading h1 {
-  font-size: clamp(1.5rem, 4vw, 1.875rem);
-}
-.receipt-paper {
-  min-width: 0;
-  padding: clamp(1.1rem, 5vw, 2rem);
-  border: 1px solid #e4e4df;
-  background: #fff;
-  color: #272d29;
-  box-shadow: 0 4px 18px #243d2a09;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 0.875rem;
-  line-height: 1.65;
-}
-.receipt-paper-brand {
-  text-align: center;
-}
-.receipt-paper-brand > div {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 0.4rem;
-  color: #194b35;
-  font-family: var(--font-body);
-}
-.receipt-paper-brand strong {
-  font-size: 1.65rem;
-  letter-spacing: -0.05em;
-}
-.receipt-page .receipt-paper-brand p {
-  margin: 0.5rem 0 0.35rem;
-  font-size: 0.75rem;
-  letter-spacing: 0.12em;
-}
-.receipt-paper-brand time {
-  color: #576259;
-  font-size: 0.75rem;
-}
-.receipt-paper-code {
-  margin-block: 1.5rem;
-  padding: 0.85rem 0.5rem;
-  border: 1px dashed #889389;
-  border-radius: 6px;
-  text-align: center;
-}
-.receipt-paper-code > span {
-  display: block;
-  margin-bottom: 0.35rem;
-  color: #576259;
-  font-size: 0.75rem;
-}
-.receipt-paper .receipt-paper-code h2 {
-  margin: 0;
-  font: inherit;
-  font-size: clamp(0.9375rem, 3vw, 1.125rem);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-}
-.receipt-paper .receipt-paper-code h2:focus {
-  outline: none;
-}
-.receipt-paper-facts {
-  margin: 0;
-  padding-bottom: 1rem;
-  border-bottom: 1px dashed #b6bdb5;
-}
-.receipt-paper-facts > div {
-  display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-  gap: 0.75rem;
-  margin-block: 0.5rem;
-}
-.receipt-paper-facts dt {
-  color: #576259;
-}
-.receipt-paper-facts dd {
-  min-width: 0;
-  margin: 0;
-  text-align: right;
-  overflow-wrap: anywhere;
-}
-.receipt-paper .receipt-paper-lines h3 {
-  margin: 1rem 0 0.75rem;
-  font: inherit;
-  font-weight: 600;
-}
-.receipt-paper .receipt-items {
-  margin: 0;
-  font: inherit;
-}
-.receipt-paper .receipt-items li {
-  padding: 0 0 0.85rem;
-  border: 0;
-}
-.receipt-paper .receipt-items strong {
-  font-weight: 600;
-}
-.receipt-paper .receipt-totals {
-  margin: 0;
-  padding-block: 0.75rem;
-  border-top: 1px dashed #b6bdb5;
-  font: inherit;
-}
-.receipt-paper .receipt-totals > div {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.75rem;
-  margin: 0.5rem 0;
-}
-.receipt-paper .receipt-totals dt {
-  color: #576259;
-}
-.receipt-paper .receipt-totals .receipt-paper-total {
-  padding-block: 0.75rem 0;
-  border-top: 1px dashed #b6bdb5;
-  font-size: 1rem;
-  font-weight: 700;
-}
-.receipt-paper .receipt-paper-total dt {
-  color: inherit;
-}
-.receipt-paper-footer {
-  padding-top: 1rem;
-  border-top: 1px dashed #b6bdb5;
-  text-align: center;
-  color: #576259;
-  font-size: 0.75rem;
-}
-.receipt-page .receipt-paper-footer p {
-  margin: 0 0 0.25rem;
-  font: inherit;
-}
-.receipt-paper-actions {
-  justify-content: center;
-  margin-block: 1.25rem;
 }
 
-/* Keep order context beside the complaint, using the same paper treatment. */
-.receipt-page.complaint-page {
-  max-width: 1080px;
+.refund-form-grid[hidden] {
+  display: none;
 }
-.complaint-page .receipt-heading h1 {
-  font-size: clamp(1.5rem, 4vw, 1.875rem);
+
+.refund-field {
+  min-width: 0;
 }
+
+.refund-field-full,
+.refund-replace-note {
+  grid-column: 1 / -1;
+}
+
+.receipt-page .refund-replace-note {
+  margin: 0;
+}
+
+.refund-field > label {
+  margin-top: 0;
+}
+
+.refund-field > .quiet {
+  margin: 0.35rem 0 0;
+  font-size: 0.78125rem;
+}
+
+.refund-field > .error {
+  margin: 0.35rem 0 0;
+}
+
+#refund-account {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.84375rem;
+  letter-spacing: 0.04em;
+  background: #fcfdfc;
+}
+
+.refund-review {
+  padding: 1.1rem 1.2rem;
+  border: 1px solid #e4e9e2;
+  border-radius: 10px;
+  background: #fafbf9;
+}
+
+.refund-review h4 {
+  margin: 0 0 0.65rem;
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: #183e2b;
+}
+
+.refund-review h4:focus {
+  outline: none;
+}
+
+.refund-review-box {
+  padding: 0.85rem 1rem;
+  border: 1px solid #e6ebe4;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.receipt-page .refund-review-primary {
+  margin: 0 0 0.25rem;
+  color: #153826;
+  font-size: 0.875rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.receipt-page .refund-review-masked {
+  margin: 0;
+  color: #3c5445;
+  font-size: 0.84375rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.receipt-page .refund-review-note {
+  margin: 0.7rem 0 0;
+  color: #536659;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+}
+
+.refund-account .receipt-actions {
+  margin-top: 1.25rem;
+  padding-top: 1.05rem;
+  border-top: 1px solid #eef2ec;
+  gap: 0.5rem;
+}
+
+.refund-account .receipt-actions > .button {
+  padding: 0.55rem 0.95rem;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.refund-notice:empty {
+  display: none;
+}
+
+.receipt-page .refund-notice {
+  margin: 1rem 0 0;
+  padding: 0.75rem 0.95rem;
+  border: 1px solid #d1e4ce;
+  border-radius: 8px;
+  background: #eef7ed;
+  color: #18512f;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.55;
+}
+
+/* Complaint page layout */
 .complaint-page .receipt-result {
   display: grid;
   grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
   align-items: start;
-  gap: 2rem;
+  gap: 1.75rem;
+  border-top: 0;
   padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
 }
+
 .complaint-page .receipt-result > .error {
   grid-column: 1 / -1;
   margin: 0;
 }
-.complaint-work-panel,
-.complaint-page > .complaint-state {
-  min-width: 0;
-  padding: clamp(1.1rem, 3vw, 2rem);
-  border: 1px solid #e4e4df;
-  border-radius: 0;
-  background: #fff;
-  color: #272d29;
-  box-shadow: 0 4px 18px #243d2a09;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 0.875rem;
-  line-height: 1.65;
+
+.complaint-order-paper {
+  padding: clamp(1.35rem, 3vw, 2rem);
 }
-.complaint-page > .complaint-state {
-  max-width: 640px;
+
+.complaint-order-paper .receipt-paper-brand {
+  margin-bottom: 1.5rem;
 }
-.complaint-page .complaint-work-panel :is(p, label) {
-  font-size: 0.875rem;
-  line-height: 1.65;
+
+.complaint-order-meta {
+  gap: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
 }
-.complaint-page .receipt-complaint {
-  margin-top: 0;
+
+.complaint-meta-full {
+  grid-column: 1 / -1;
 }
-.complaint-page .receipt-complaint h3 {
-  padding-bottom: 1rem;
-  border-bottom: 1px dashed #b6bdb5;
-  font-family: inherit;
-  font-size: 1rem;
-}
-.complaint-page .receipt-complaint h4 {
-  font-family: inherit;
-  font-size: 1rem;
-  line-height: 1.5;
-}
-.complaint-page .receipt-complaint h4:focus {
-  outline: none;
-}
-.complaint-page .receipt-complaint textarea {
-  font-family: inherit;
-  font-size: 1rem;
-  border-style: dashed;
-  border-color: #889389;
-  border-radius: 6px;
-}
-.complaint-page .error:empty,
-.complaint-policy:empty {
-  display: none;
-}
-.complaint-policy:not(:empty) {
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px dashed #b6bdb5;
-  color: #576259;
-}
-.complaint-page .complaint-policy > p {
+
+.complaint-order-items {
   margin: 0;
 }
-.complaint-work-panel > .complaint-state {
-  margin-top: 0;
-  border: 1px dashed #b6bdb5;
-  border-radius: 6px;
-  background: #fafbf9;
-}
-.complaint-work-panel > .complaint-state[data-state='expired'] {
-  border-color: #cfb98e;
-  background: #fff8ec;
-}
-.complaint-work-panel > .complaint-state[data-state='reported'] {
-  border-color: #adc8ab;
-  background: #f3f8f0;
-}
-.complaint-page .complaint-state > :is(h2, h3) {
-  font-family: inherit;
-  font-size: 1.0625rem;
-}
-.complaint-work-panel .button,
-.complaint-page > .complaint-state .button {
-  font-family: inherit;
-}
-.complaint-work-panel .evidence-upload {
-  margin-top: 1.25rem;
-  padding: 1rem;
-  border: 1px dashed #b6bdb5;
-  background: #fafbf9;
-}
-.complaint-work-panel .evidence-file-control {
-  flex-wrap: wrap;
-}
-.complaint-work-panel .evidence-file-name {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-.complaint-work-panel .receipt-actions {
-  padding-top: 1rem;
-  border-top: 1px dashed #b6bdb5;
-}
-.complaint-order-items {
-  padding-block: 1rem;
-  border-bottom: 1px dashed #b6bdb5;
-}
-.receipt-paper .complaint-order-items h3 {
-  margin: 0 0 0.75rem;
-  font: inherit;
-  font-weight: 600;
-}
-.complaint-order-items ul {
+
+.complaint-items-head {
   display: grid;
-  gap: 0.75rem;
+  grid-template-columns: 2rem minmax(0, 1fr) 2.5rem;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0 0 0.55rem;
+  border-bottom: 1px solid #dfe6dd;
+  color: #55685b;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.complaint-items-head > span:last-child {
+  text-align: right;
+}
+
+.complaint-order-items ul {
   margin: 0;
   padding: 0;
   list-style: none;
 }
+
 .complaint-order-items li {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr) 2.5rem;
   align-items: baseline;
-  gap: 1rem;
+  gap: 0.65rem;
+  padding-block: 0.7rem;
+  border-bottom: 1px solid #eef2ec;
+  font-size: 0.875rem;
+  color: #183e2b;
+}
+
+.complaint-item-name {
+  min-width: 0;
+  font-weight: 500;
   overflow-wrap: anywhere;
 }
-.complaint-order-items li > span:last-child {
-  flex: none;
+
+.complaint-item-qty {
+  text-align: right;
+  color: #183e2b;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
+
 .complaint-order-actions {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.25rem 1rem;
-  padding-top: 1rem;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.4rem;
+  padding-top: 1.25rem;
 }
+
 .complaint-order-actions .button {
   width: 100%;
-  font-family: inherit;
 }
+
 .complaint-order-actions a {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   min-height: 44px;
+  border-radius: 8px;
+  color: #1d5237;
+  font-size: 0.84375rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 150ms ease;
+}
+
+.complaint-order-actions a:hover {
+  background: #f3f7f2;
   text-decoration: underline;
   text-underline-offset: 0.2em;
 }
-@media (max-width: 880px) {
+
+/* Complaint right work panel & standalone status states */
+.complaint-work-panel,
+.complaint-page > .complaint-state {
+  min-width: 0;
+  padding: clamp(1.35rem, 3vw, 2.25rem);
+  border: 1px solid #e4e9e2;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #183e2b;
+  box-shadow: 0 1px 10px rgb(24 62 43 / 4%);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.complaint-page:not(:has(.receipt-result)) {
+  max-width: 780px;
+}
+
+.complaint-page:not(:has(.receipt-result)) > .receipt-heading {
+  text-align: center;
+  margin-bottom: 1.75rem;
+}
+
+.complaint-page:not(:has(.receipt-result)) > .receipt-heading > p {
+  margin-inline: auto;
+}
+
+.complaint-page > .complaint-state {
+  max-width: 740px;
+  margin-inline: auto;
+}
+
+.complaint-page > .complaint-state.complaint-state-standalone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: clamp(1.75rem, 3.5vw, 2.5rem);
+  border: 1px solid #dfe8dd;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgb(24 62 43 / 5%);
+}
+
+.complaint-standalone-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 0.9rem;
+  border: 1px solid #d2e2d0;
+  border-radius: 999px;
+  background: #f1f8f0;
+  color: #1c5336;
+}
+
+.complaint-standalone-icon.is-error {
+  border-color: #f2c4c1;
+  background: #fef3f2;
+  color: #9b1c1c;
+}
+
+.complaint-state-standalone > h2 {
+  margin: 0 0 0.45rem;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #143624;
+}
+
+.receipt-page .complaint-standalone-lead {
+  margin: 0;
+  max-width: 48ch;
+  color: #4a6254;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.receipt-page .complaint-loading-text {
+  margin: 0;
+  color: #365242;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.receipt-page .complaint-standalone-alert {
+  margin: 0.5rem 0 0;
+  padding: 0.8rem 1rem;
+  width: 100%;
+  max-width: 52ch;
+  border: 1px solid #f2c4c1;
+  border-radius: 10px;
+  background: #fef4f3;
+  color: #9b1c1c;
+  font-size: 0.84375rem;
+  font-weight: 500;
+  line-height: 1.55;
+}
+
+.complaint-standalone-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.25rem;
+}
+
+.complaint-entry-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  width: 100%;
+  margin-top: 1.5rem;
+  text-align: left;
+}
+
+.complaint-entry-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 1.15rem 1.2rem;
+  border: 1px solid #e2ebe0;
+  border-radius: 12px;
+  background: #fafcfa;
+  min-width: 0;
+}
+
+.complaint-entry-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #153826;
+}
+
+.complaint-entry-card-head svg {
+  flex: none;
+  color: #1f5c3b;
+}
+
+.complaint-entry-card-head h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #153826;
+}
+
+.receipt-page .complaint-entry-card p {
+  margin: 0 0 0.45rem;
+  flex: 1;
+  color: #4d6456;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+}
+
+.complaint-entry-card .button {
+  width: 100%;
+  justify-content: center;
+}
+
+.receipt-page .complaint-standalone-footnote {
+  margin: 1.25rem 0 0;
+  padding-top: 1rem;
+  width: 100%;
+  border-top: 1px solid #eef2ec;
+  color: #55685b;
+  font-size: 0.78125rem;
+  line-height: 1.5;
+}
+
+.complaint-state[tabindex='-1']:focus,
+.complaint-state:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.complaint-work-panel:has(> .complaint-state:only-child) {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.complaint-work-panel:has(> .complaint-state:only-child) > .complaint-state {
+  padding: clamp(1.35rem, 3vw, 2rem);
+  border-radius: 12px;
+  box-shadow: 0 1px 10px rgb(24 62 43 / 4%);
+}
+
+.complaint-state > :is(h2, h3) {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: inherit;
+}
+
+.complaint-policy:empty {
+  display: none;
+}
+
+.complaint-policy:not(:empty) {
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid #eef2ec;
+  color: #365240;
+}
+
+.complaint-page .complaint-policy > p {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+
+.complaint-page .complaint-policy svg {
+  flex: none;
+  margin-top: 0.15rem;
+  color: #245b3e;
+}
+
+.complaint-work-panel > .complaint-state {
+  margin: 0;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid #dfe6dd;
+  border-radius: 10px;
+  background: #f8faf7;
+  color: #1d4430;
+}
+
+.complaint-state[data-state] {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  column-gap: 0.75rem;
+  row-gap: 0.25rem;
+}
+
+.complaint-state[data-state] > svg {
+  grid-row: 1 / span 3;
+  width: 20px;
+  height: 20px;
+  margin-top: 0.2rem;
+}
+
+.complaint-state[data-state] > :is(h3, p, a) {
+  grid-column: 2;
+  margin: 0;
+}
+
+.complaint-work-panel > .complaint-state[data-state='reported'] {
+  border-color: #c8dec6;
+  background: #f2f8f1;
+  color: #184b2c;
+}
+
+.complaint-work-panel > .complaint-state[data-state='expired'] {
+  border-color: #ead4a7;
+  background: #fff9ef;
+  color: #6e4409;
+}
+
+.complaint-state-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: inherit;
+  font-size: 0.84375rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.complaint-work-panel > .complaint-state + * {
+  margin-top: 1.25rem;
+}
+
+/* Complaint form */
+.complaint-page .receipt-complaint {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.complaint-page .receipt-complaint h3 {
+  margin: 0 0 0.25rem;
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #183e2b;
+}
+
+.complaint-page .receipt-complaint > p:first-of-type {
+  margin: 0 0 1.25rem;
+  color: #536659;
+  font-size: 0.84375rem;
+}
+
+.complaint-page .receipt-complaint form {
+  margin: 0;
+}
+
+.complaint-page .receipt-complaint textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 132px;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid #ced8cd;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #183e2b;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.complaint-page #complaint-reason-help {
+  margin: 0.35rem 0 0;
+  font-size: 0.78125rem;
+}
+
+.complaint-work-panel .evidence-upload {
+  margin-top: 1.25rem;
+  padding: 1.05rem 1.15rem;
+  border: 1px solid #e4e9e2;
+  border-radius: 10px;
+  background: #fafbf9;
+}
+
+.complaint-work-panel .evidence-upload > label {
+  margin: 0 0 0.6rem;
+}
+
+.complaint-work-panel .evidence-file-control {
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.complaint-work-panel .evidence-file-name {
+  min-width: 0;
+  color: #536659;
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+
+.complaint-work-panel .evidence-upload .quiet {
+  margin: 0.6rem 0 0.8rem;
+  font-size: 0.78125rem;
+}
+
+.complaint-work-panel .evidence-upload [role='status'] {
+  margin: 0.7rem 0 0;
+  color: #1b5a34;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.complaint-review {
+  padding: 1.15rem 1.25rem;
+  border: 1px solid #e4e9e2;
+  border-radius: 10px;
+  background: #fafbf9;
+}
+
+.complaint-review h4 {
+  margin: 0 0 0.65rem;
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: #183e2b;
+}
+
+.complaint-review h4:focus {
+  outline: none;
+}
+
+.complaint-content {
+  margin: 0 0 0.75rem;
+  padding: 0.8rem 0.95rem;
+  border: 1px solid #e6ebe4;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #183e2b;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.complaint-review-meta {
+  margin: 0 0 0.4rem;
+  color: #1b5a34;
+  font-size: 0.84375rem;
+  font-weight: 600;
+}
+
+.complaint-review-note {
+  margin: 0;
+  color: #536659;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+}
+
+.complaint-work-panel .receipt-actions {
+  margin-top: 1.5rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid #eef2ec;
+  gap: 0.5rem;
+}
+
+.complaint-work-panel .receipt-actions > .button {
+  padding: 0.55rem 0.95rem;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+/* Responsive layouts */
+@media (max-width: 960px) {
+  .receipt-page.receipt-view,
   .receipt-page.complaint-page {
-    max-width: 540px;
+    max-width: 640px;
   }
+
+  .receipt-page.receipt-view {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+  }
+
+  .receipt-view > :is(.receipt-lookup, .receipt-result, .receipt-preview-placeholder) {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .receipt-preview-placeholder {
+    min-height: 200px;
+  }
+
   .complaint-page .receipt-result {
     grid-template-columns: minmax(0, 1fr);
     gap: 1.25rem;
   }
-  .complaint-order-paper .receipt-paper-brand {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
+}
+
+@media (max-width: 620px) {
+  .receipt-page {
+    padding-top: 1.25rem;
   }
-  .complaint-order-paper .receipt-paper-brand strong {
-    font-size: 1.25rem;
+
+  .receipt-paper {
+    padding: 1.35rem 1.15rem;
   }
-  .complaint-order-paper .receipt-paper-brand p {
-    margin: 0;
-    font-size: 0.6875rem;
-    letter-spacing: 0.03em;
+
+  .receipt-paper-brand {
+    margin-bottom: 1.5rem;
   }
-  .complaint-order-paper .receipt-paper-code {
-    margin-block: 0.85rem;
-    padding-block: 0.6rem;
+
+  .receipt-paper-meta {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.85rem;
+    margin-bottom: 1.5rem;
   }
-  .complaint-order-paper .receipt-paper-facts {
-    padding-bottom: 0.5rem;
+
+  .receipt-items-head {
+    display: none;
   }
-  .complaint-order-items {
+
+  .receipt-items li {
+    grid-template-columns: 1.5rem auto auto minmax(0, 1fr);
+    row-gap: 0.2rem;
+    column-gap: 0.35rem;
     padding-block: 0.75rem;
   }
-  .complaint-order-actions {
-    justify-content: space-between;
-    padding-top: 0.5rem;
+
+  .receipt-item-no {
+    grid-column: 1;
+    grid-row: 1;
   }
-  .complaint-order-actions .button {
-    width: auto;
+
+  .receipt-item-name {
+    grid-column: 2 / -1;
+    grid-row: 1;
+  }
+
+  .receipt-item-qty {
+    grid-column: 2;
+    grid-row: 2;
+    text-align: left;
+    color: #536659;
+    font-size: 0.8125rem;
+  }
+
+  .receipt-item-qty::after {
+    content: ' ×';
+  }
+
+  .receipt-item-price {
+    grid-column: 3;
+    grid-row: 2;
+    text-align: left;
+    color: #536659;
+    font-size: 0.8125rem;
+  }
+
+  .receipt-item-total {
+    grid-column: 4;
+    grid-row: 2;
+    text-align: right;
+  }
+
+  .receipt-paper .receipt-totals {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .receipt-paper-actions {
+    justify-content: stretch;
+  }
+
+  .receipt-paper-actions > .button,
+  .receipt-page .receipt-actions > :is(button, a) {
+    width: 100%;
+    min-height: 46px;
+    white-space: normal;
+  }
+
+  .receipt-page #receipt-order,
+  .receipt-page #receipt-token {
+    padding-inline: 0.75rem;
+  }
+
+  .refund-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.85rem;
+  }
+
+  .complaint-entry-options {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

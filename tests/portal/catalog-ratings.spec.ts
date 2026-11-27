@@ -68,7 +68,9 @@ for (const width of [390, 1440]) {
 
     await chooseSelect(sidebar, 'Đánh giá shop', '5');
     await expect(cards).toHaveText(['Mẫu hoa 13', 'Mẫu hoa 16']);
-    await expect(page.locator('.flower-card-shop-rating').first()).toContainText('5/5');
+    await expect(page.locator('.flower-card-shop-rating')).toHaveCount(0);
+    await expect(page.locator('.flower-card-price-label')).toHaveCount(0);
+    await expect(page.locator('.flower-card-title').first()).toHaveCSS('-webkit-line-clamp', '2');
     await expect(page.locator('.flower-card-rating').last()).toHaveText('Chưa có đánh giá');
 
     await chooseSelect(sidebar, 'Đánh giá sản phẩm', '3');

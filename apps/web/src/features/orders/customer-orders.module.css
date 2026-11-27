@@ -1,55 +1,155 @@
-.memberToolbar {
+/* --------------------------------------------------------------------------
+ * Customer Orders Workspace (/tai-khoan#web-orders)
+ * Shopee-inspired e-commerce Purchase List & Order Detail layout,
+ * adapted to FloraBot's forest-green palette with solid hairlines (no dashed).
+ * -------------------------------------------------------------------------- */
+
+.memberControls {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(12rem, 15rem) auto;
-  align-items: center;
   gap: 0.75rem;
   min-width: 0;
-  margin-bottom: 20px;
-  padding: 0;
-  border: 0;
-  background: transparent;
+  margin-bottom: 1rem;
 }
+
+/* Shopee-style flat white underline tab bar */
+.memberFilterTabs {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  border: 1px solid #e4ebe3;
+  border-radius: 6px;
+  background: #ffffff;
+  overflow-x: auto;
+  scrollbar-width: none;
+  min-width: 0;
+}
+
+.memberFilterTabs::-webkit-scrollbar {
+  display: none;
+}
+
+.memberFilterTab {
+  position: relative;
+  flex: 1 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 48px;
+  padding: 0.65rem 1rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #465d4f;
+  font: 500 0.86rem/1.35 var(--font-body);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color 0.14s ease,
+    border-color 0.14s ease,
+    background-color 0.14s ease;
+}
+
+.memberFilterTab:hover {
+  color: #183e2b;
+  background: #fafcfa;
+}
+
+.memberFilterTab:focus-visible {
+  outline: 2px solid #1e5b3c;
+  outline-offset: -2px;
+}
+
+.memberFilterTab[aria-pressed='true'] {
+  color: #183e2b;
+  font-weight: 700;
+  border-bottom-color: #183e2b;
+  background: #ffffff;
+}
+
+.memberFilterCount {
+  color: #5b7365;
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.memberFilterCount::before {
+  content: '(';
+}
+
+.memberFilterCount::after {
+  content: ')';
+}
+
+.memberFilterTab[aria-pressed='true'] .memberFilterCount {
+  color: #183e2b;
+}
+
+/* Shopee-style soft gray full-width search bar */
+.memberSearchRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
 .memberSearch {
   position: relative;
   min-width: 0;
 }
-.memberSearch label,
-.memberFilter {
+
+.memberSearchIcon {
+  position: absolute;
+  inset-inline-start: 0.85rem;
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  color: #5a7264;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.memberSearch label {
   display: block;
   margin: 0;
   min-width: 0;
 }
-:global(.workspace-portal-root .member-page #web-orders) .memberSearch input,
-:global(.workspace-portal-root .member-page #web-orders) .memberFilter select {
+
+:global(.workspace-portal-root .member-page #web-orders) .memberSearch input {
   width: 100%;
   min-height: 44px;
-  border: 1px solid var(--color-workspace-line);
+  padding: 0.5rem 2.75rem 0.5rem 2.35rem;
+  border: 1px solid #e2e9e1;
   border-radius: 6px;
-  background: var(--color-workspace-surface);
-  font: 400 0.875rem/1.5 var(--font-body);
-  color: var(--color-workspace-ink);
+  background: #f2f5f2;
+  font: 400 0.85rem/1.5 var(--font-body);
+  color: #183e2b;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
-:global(.workspace-portal-root .member-page #web-orders) .memberSearch input {
-  padding: 0.5rem 2.875rem 0.5rem 0.875rem;
+
+:global(.workspace-portal-root .member-page #web-orders) .memberSearch input:hover {
+  border-color: #cdd9cc;
 }
-.groupCount {
-  display: inline-grid;
-  place-items: center;
-  min-width: 1.25rem;
-  padding-inline: 0.3rem;
-  border-radius: var(--radius-workspace-badge);
-  background: var(--color-workspace-control-hover);
-  color: var(--color-workspace-muted);
-  font-size: 0.75rem;
-  line-height: 1.35rem;
-  font-variant-numeric: tabular-nums;
+
+:global(.workspace-portal-root .member-page #web-orders) .memberSearch input:focus {
+  outline: none;
+  background: #ffffff;
+  border-color: #183e2b;
+  box-shadow: 0 0 0 3px rgb(24 62 43 / 10%);
 }
+
 .memberSearch input::placeholder {
-  color: var(--color-workspace-muted);
+  color: #5e7567;
 }
+
 .memberSearch input::-webkit-search-cancel-button {
   appearance: none;
 }
+
 .memberSearchClear {
   position: absolute;
   inset: 0 0 0 auto;
@@ -58,20 +158,43 @@
   width: 44px;
   padding: 0;
   border: 0;
-  border-radius: var(--radius-workspace-control);
+  border-radius: 0 6px 6px 0;
   background: transparent;
-  color: var(--color-workspace-muted);
+  color: #5a7264;
   cursor: pointer;
 }
+
 .memberSearchClear:hover {
-  color: var(--color-workspace-accent);
-  background: var(--color-workspace-control-hover);
+  color: #183e2b;
+  background: #e9efe8;
 }
+
+.groupCount {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.25rem;
+  padding-inline: 0.35rem;
+  border-radius: 4px;
+  background: #edf3ec;
+  color: #4c6656;
+  font-size: 0.75rem;
+  line-height: 1.35rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+ * Shopee-Style Order List Cards (crisp white cards separated by light canvas)
+ * -------------------------------------------------------------------------- */
+
 .orderGroups {
   display: grid;
-  gap: 1.5rem;
+  gap: 1rem;
   min-width: 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
 }
+
 :global(.workspace-portal-root .member-page #web-orders) .orderGroup,
 .orderHistory {
   min-width: 0;
@@ -82,6 +205,7 @@
   background: transparent;
   box-shadow: none;
 }
+
 :global(.workspace-portal-root .member-page #web-orders) .orderGroup > h2,
 .orderHistory > summary {
   display: flex;
@@ -90,142 +214,226 @@
   min-height: 44px;
   margin: 0 0 0.5rem;
   padding: 0.25rem 0;
-  color: var(--color-workspace-ink);
+  color: #183e2b;
   font-size: 0.9375rem;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1.45;
 }
+
 :global(.workspace-portal-root .member-page #web-orders)
   .orderGroups
   :global(.customer-order-list) {
   display: grid;
-  gap: 1.125rem;
+  gap: 0.85rem;
   margin: 0;
   padding: 0;
+  list-style: none;
 }
+
 :global(.workspace-portal-root .member-page #web-orders)
   .orderGroups
   :global(.customer-order-list > li) {
   margin: 0;
   padding: 0;
-  border: 1px solid var(--color-workspace-divider);
-  border-radius: var(--radius-workspace-panel);
-  background: var(--color-workspace-surface);
-  box-shadow: none;
+  border: 1px solid #e3eae2;
+  border-radius: 6px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgb(24 62 43 / 4%);
+  overflow: hidden;
   min-width: 0;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
+
 :global(.workspace-portal-root .member-page #web-orders)
   .orderGroups
   :global(.customer-order-list > li:hover) {
-  border-color: var(--color-workspace-line);
+  border-color: #c8d7c7;
+  box-shadow: 0 3px 10px rgb(24 62 43 / 6%);
 }
+
+:global(.workspace-portal-root .member-page #web-orders)
+  .orderGroups
+  :global(.customer-order-list > li:has(> details[open])) {
+  border-color: #b7ccb6;
+  box-shadow: 0 4px 16px rgb(24 62 43 / 8%);
+}
+
+/* --------------------------------------------------------------------------
+ * Shopee Card Summary (Header | Items + Add-ons | Tinted Total & Action Footer)
+ * -------------------------------------------------------------------------- */
+
 .summary {
   list-style: none;
-  padding: 20px;
+  padding: 0;
   cursor: pointer;
-  color: var(--color-workspace-ink);
-  border-radius: var(--radius-workspace-panel);
+  color: #183e2b;
+  background: #ffffff;
 }
+
 .summary::-webkit-details-marker,
 .orderHistory > summary::-webkit-details-marker {
   display: none;
 }
-.summary:hover,
-.orderHistory > summary:hover {
-  background: var(--color-workspace-surface-muted);
-}
+
 .summary:focus-visible,
 .orderHistory > summary:focus-visible,
 .memberSearchClear:focus-visible {
-  outline: 2px solid var(--color-workspace-accent);
-  outline-offset: -3px;
+  outline: 2px solid #1e5b3c;
+  outline-offset: -2px;
 }
-.summaryLayout {
+
+.shopeeCard {
   display: grid;
-  grid-template-columns: 64px minmax(0, 1.4fr) minmax(0, 1fr) minmax(10.5rem, 0.85fr);
+  min-width: 0;
+}
+
+/* Section A: Shop Header + Delivery Info | UPPERCASE STATUS */
+.shopeeHead {
+  display: flex;
   align-items: center;
-  gap: 1.5rem;
-}
-.thumbnail {
-  display: grid;
-  place-items: center;
-  width: 64px;
-  height: 76px;
-  border-radius: var(--radius-workspace-control);
-  overflow: hidden;
-  background: var(--color-workspace-control-hover);
-  color: var(--color-workspace-muted);
-}
-.thumbnail img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.content {
-  display: grid;
-  gap: 0.4rem;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  padding: 0.85rem 1.25rem;
+  border-bottom: 1px solid #eef2ed;
+  background: #ffffff;
   min-width: 0;
 }
-.heading > strong {
-  display: block;
-  color: var(--color-workspace-ink);
-  font-size: 1rem;
-  font-weight: 500;
+
+.shopeeShop {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  min-width: 0;
+  color: #153826;
+  font-size: 0.875rem;
+}
+
+.shopeeShop svg {
+  flex: none;
+  color: #245b3e;
+}
+
+.shopeeShop strong {
+  font-weight: 700;
+  color: #153826;
+}
+
+.shopeeKindTag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.45rem;
+  border-radius: 3px;
+  background: #183e2b;
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 600;
   line-height: 1.45;
-  overflow-wrap: anywhere;
+  letter-spacing: 0.01em;
 }
-.shop {
-  color: var(--color-workspace-muted);
-  font-size: 0.8125rem;
-  line-height: 1.6;
-  overflow-wrap: anywhere;
+
+.shopeeCode {
+  color: #5b7264;
+  font-size: 0.78rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
 }
-.facts {
-  display: grid;
-  gap: 0.75rem;
-  min-width: 0;
-  padding-inline: 0.75rem;
-}
-.fact {
-  display: grid;
-  gap: 0.2rem;
+
+.shopeeHeadRight {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.7rem;
   min-width: 0;
 }
-.factLabel {
+
+.shopeeDeliveryInfo {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  color: var(--color-workspace-muted);
-  font-size: 0.75rem;
-  line-height: 1.5;
-}
-.factValue {
-  color: var(--color-workspace-ink);
-  font-size: 0.8125rem;
-  font-weight: 400;
-  line-height: 1.5;
-  overflow-wrap: anywhere;
+  color: #536a5c;
+  font-size: 0.78rem;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
-.factLabel svg,
-.action svg {
+
+.shopeeDeliveryInfo[data-highlight='true'] {
+  color: #1b6d49;
+}
+
+.shopeeDeliveryInfo svg {
   flex: none;
 }
-.summaryAside {
-  display: grid;
-  justify-items: end;
-  gap: 0.5rem;
-  min-width: 0;
-  text-align: right;
+
+.shopeeHeadDivider {
+  width: 1px;
+  height: 14px;
+  background: #dce5db;
+  flex: none;
 }
-.summaryAside :global(.order-status-pill) {
-  max-width: 100%;
-  padding: 0.2rem 0.5rem;
-  text-align: start;
-  overflow-wrap: anywhere;
+
+/* Shopee-style crisp uppercase semantic status text (far right) */
+:global(.workspace-portal-root .member-page #web-orders) .shopeeHead :global(.order-status-pill) {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #24553b;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  line-height: 1.35;
+  text-align: end;
 }
-.summaryAside
+
+:global(.workspace-portal-root .member-page #web-orders)
+  .shopeeHead
+  :global(
+    .order-status-pill:is([data-status='READY'], [data-status='PAID'], [data-status='COMPLETED'])
+  ) {
+  background: transparent;
+  border-color: transparent;
+  color: #165d38;
+}
+
+:global(.workspace-portal-root .member-page #web-orders)
+  .shopeeHead
+  :global(.order-status-pill:is([data-status='DISPENSING'], [data-status='ORDERED'])) {
+  background: transparent;
+  border-color: transparent;
+  color: #1d4ed8;
+}
+
+:global(.workspace-portal-root .member-page #web-orders)
+  .shopeeHead
+  :global(
+    .order-status-pill:is(
+      [data-status='QUOTED'],
+      [data-status='AWAITING_PAYMENT'],
+      [data-status='DISPUTED']
+    )
+  ) {
+  background: transparent;
+  border-color: transparent;
+  color: #a64d06;
+}
+
+:global(.workspace-portal-root .member-page #web-orders)
+  .shopeeHead
+  :global(.order-status-pill:is([data-status='REQUESTED'], [data-status='REFUNDED'])) {
+  background: transparent;
+  border-color: transparent;
+  color: #466052;
+}
+
+:global(.workspace-portal-root .member-page #web-orders)
+  .shopeeHead
   :global(
     .order-status-pill:is(
       [data-status='DISPENSE_FAILED'],
@@ -234,561 +442,990 @@
       [data-status='REJECTED']
     )
   ) {
-  background: #fef2f2;
-  color: #b91c1c;
-  border-color: #fecaca;
+  background: transparent;
+  border-color: transparent;
+  color: #b42318;
 }
-.summaryPrice {
-  display: inline-flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  align-items: baseline;
-  gap: 0.2rem 0.45rem;
+
+/* Section B: Item Rows + Indented Accessory Add-on Rows */
+.shopeeItems {
+  display: grid;
+  padding: 0 1.25rem;
+  background: #ffffff;
+  min-width: 0;
+}
+
+.shopeeItemRow {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  align-items: center;
+  gap: 0.95rem;
+  padding: 12px 0;
+  min-width: 0;
+}
+
+.thumbnail {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 4px;
+  border: 1px solid #e6ede5;
+  overflow: hidden;
+  background: #f5f8f4;
+  color: #4f6c5a;
+}
+
+.thumbnail img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.itemMeta {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.itemTitle {
+  display: block;
+  color: #153826;
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.4;
   overflow-wrap: anywhere;
 }
-.summaryPrice small {
-  color: var(--color-workspace-muted);
-  font-size: 0.75rem;
+
+.itemSub {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #597062;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
 }
-.summaryPrice strong {
-  font-size: 1.125rem;
-  line-height: 1.4;
-  color: var(--color-workspace-accent);
+
+.itemSub svg {
+  flex: none;
+}
+
+.itemQty {
+  color: #183e2b;
+  font-size: 0.8125rem;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
-.action {
-  color: var(--color-workspace-muted);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  overflow-wrap: anywhere;
+
+.itemRightPrice {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
+
+.itemRightPrice strong {
+  color: #183e2b;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.itemPendingNote {
+  color: #556e5f;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* Indented Accessory Sub-row (like Shopee Gift / Add-on row) */
+.shopeeAddonRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  padding: 0.65rem 0 0.65rem 5.95rem;
+  border-top: 1px solid #f0f4ef;
+  font-size: 0.825rem;
+}
+
+.addonInfo {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.addonTag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.08rem 0.38rem;
+  border: 1px solid #1f6a42;
+  border-radius: 3px;
+  color: #1a5c38;
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.addonName {
+  color: #1f4431;
+  font-weight: 500;
+}
+
+.addonQty {
+  color: #597062;
+  font-variant-numeric: tabular-nums;
+}
+
+.addonPrice {
+  color: #183e2b;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.addonPending {
+  color: #597062;
+  font-size: 0.78rem;
+}
+
+/* Section C: Shopee Off-white Tinted Footer (Order Total + Actions) */
+.shopeeFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 20px;
+  border-top: 1px solid #eef2ed;
+  background: #fafcfa;
+  min-width: 0;
+}
+
+.shopeeTotalRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.shopeeTotalRow small {
+  color: #4b6355;
+  font-size: 0.84375rem;
+  font-weight: 500;
+}
+
+.shopeeTotalValue {
+  color: #165331;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+}
+
+.pricePending {
+  color: #536a5c;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.shopeeFootActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+}
+
+.shopeeFootHint {
+  color: #556d5f;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  min-width: 0;
+  flex: 1 1 14rem;
+}
+
+.action {
+  flex: none;
+  margin-inline-start: auto;
+}
+
 .actionExpand,
 .actionCollapse {
   display: inline-flex;
-  justify-content: flex-end;
   align-items: center;
-  gap: 0.4rem;
+  justify-content: center;
+  gap: 0.35rem;
+  min-width: 140px;
   min-height: 40px;
-  padding: 0.4rem 0;
-  background: transparent;
-  line-height: 1.4;
+  padding: 0.45rem 1.15rem;
+  border-radius: 4px;
+  border: 1px solid #d4dfd3;
+  background: #ffffff;
+  color: #183e2b;
+  font-size: 0.825rem;
+  font-weight: 600;
+  line-height: 1.35;
+  transition:
+    background-color 0.14s ease,
+    border-color 0.14s ease,
+    color 0.14s ease;
 }
+
 .actionCollapse {
   display: none;
 }
+
 .summary:hover .actionExpand,
 .summary:hover .actionCollapse {
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
+  background: #f2f7f1;
+  border-color: #b7cbb7;
 }
+
+.action[data-primary='true'] .actionExpand {
+  background: #183e2b;
+  border-color: #183e2b;
+  color: #ffffff;
+}
+
+.summary:hover .action[data-primary='true'] .actionExpand {
+  background: #123020;
+  border-color: #123020;
+}
+
 .actionCollapse svg {
   transform: rotate(180deg);
 }
-:global(details[open]) > .summary {
-  border-radius: var(--radius-workspace-panel) var(--radius-workspace-panel) 0 0;
+
+:global(details[open]) > .summary .shopeeFoot {
+  border-bottom: 1px solid #e6ede5;
 }
+
 :global(details[open]) > .summary .actionExpand {
   display: none;
 }
+
 :global(details[open]) > .summary .actionCollapse {
   display: inline-flex;
 }
-.orderDetails {
-  padding: 0 1.25rem 1.25rem;
+
+@media (max-width: 580px) {
+  .shopeeFootActions {
+    flex-direction: row;
+  }
+  .shopeeFoot .action {
+    width: auto;
+  }
+  .shopeeFoot .actionExpand {
+    width: auto;
+    min-width: 112px;
+  }
 }
+
+/* --------------------------------------------------------------------------
+ * Shopee Expanded Order Detail Sheet (Stepper | Notice | 2-Col Ledger Table)
+ * -------------------------------------------------------------------------- */
+
+.orderDetails {
+  padding: 0;
+  background: #ffffff;
+}
+
 .detailFocus {
   min-width: 0;
 }
+
 .detailFocus:focus,
 .interaction h3:focus {
   outline: none;
 }
-.quoteReview {
+
+.shopeeDetailSheet {
   display: grid;
-  gap: 1.5rem;
-  margin: 0;
-  padding: 0;
+  gap: 0;
   color: #183e2b;
   min-width: 0;
 }
-.quotePickupBlock,
-.quoteAmountBlock {
-  align-self: start;
+
+/* Horizontal Stepper (Image 2 style — clean open strip on white) */
+.orderTimeline {
   display: grid;
-  align-content: start;
-  gap: 1rem;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.25rem;
+  margin: 0;
+  padding: 1.25rem 1.25rem 1.15rem;
+  list-style: none;
+  border-bottom: 1px solid #eef2ed;
+  background: #ffffff;
+}
+
+.timelineStep {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  text-align: center;
   min-width: 0;
+}
+
+.timelineStep::before,
+.timelineStep::after {
+  content: '';
+  position: absolute;
+  top: 13px;
+  height: 2px;
+  background: #dce5db;
+  z-index: 0;
+}
+
+.timelineStep::before {
+  left: -0.15rem;
+  right: calc(50% + 15px);
+}
+
+.timelineStep::after {
+  left: calc(50% + 15px);
+  right: -0.15rem;
+}
+
+.timelineStep:first-child::before,
+.timelineStep:last-child::after {
+  display: none;
+}
+
+.timelineStep[data-complete='true']::before,
+.timelineStep[data-complete='true']::after,
+.timelineStep[aria-current='step']::before {
+  background: #1f6a42;
+}
+
+.timelineDot {
+  position: relative;
+  z-index: 1;
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: 1.5px solid #c7d6c6;
+  background: #ffffff;
+  color: #4c6656;
+  font-size: 0.74rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.timelineStep[data-complete='true'] .timelineDot {
+  border-color: #1f6a42;
+  background: #1f6a42;
+  color: #ffffff;
+}
+
+.timelineStep[aria-current='step'] .timelineDot {
+  border-color: #183e2b;
+  background: #183e2b;
+  color: #ffffff;
+  box-shadow: 0 0 0 4px rgb(24 62 43 / 14%);
+}
+
+.timelineLabel {
+  color: #536a5c;
+  font-size: 0.76rem;
+  font-weight: 500;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  padding-inline: 0.15rem;
+}
+
+.timelineStep[data-complete='true'] .timelineLabel {
+  color: #215137;
+}
+
+.timelineStep[aria-current='step'] .timelineLabel {
+  color: #153826;
+  font-weight: 700;
+}
+
+/* Shopee Full-Width Status Notice Strip (like Image 2 "Refund Completed") */
+.shopeeStatusNotice {
+  display: grid;
+  gap: 0.3rem;
+  padding: 12px 20px;
+  border-bottom: 1px solid #eef2ed;
+  background: #fff;
+  color: #183e2b;
+}
+
+.shopeeStatusNoticeHead {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.shopeeStatusNoticeHead svg {
+  flex: none;
+}
+
+.shopeeStatusNoticeHead strong {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.shopeeStatusNotice p {
+  margin: 0;
+  color: #435c4d;
+  font-size: 0.84375rem;
+  line-height: 1.55;
+}
+
+.shopeeStatusNotice[data-tone='success'] {
+  background: #fff;
+}
+
+.shopeeStatusNotice[data-tone='success'] .shopeeStatusNoticeHead {
+  color: #165d38;
+}
+
+.shopeeStatusNotice[data-tone='warning'] {
+  background: #fff;
+}
+
+.shopeeStatusNotice[data-tone='warning'] .shopeeStatusNoticeHead {
+  color: #183e2b;
+}
+
+.shopeeStatusNotice[data-tone='danger'] {
+  background: #fff;
+}
+
+.shopeeStatusNotice[data-tone='danger'] .shopeeStatusNoticeHead {
+  color: #a8201a;
+}
+
+/* Shopee 2-Column Right-Aligned Accounting & Pickup Ledger Table (Image 2!) */
+.shopeeLedgerWrap {
+  background: #ffffff;
+  border-bottom: 1px solid #eef2ed;
+  min-width: 0;
+}
+
+.shopeeLedger {
+  display: grid;
+  margin: 0;
+  padding: 0;
+}
+
+.shopeeLedgerRow {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.8fr) minmax(0, 1.2fr);
+  border-top: 1px solid #f0f4ef;
+  min-width: 0;
+}
+
+.shopeeLedgerRow:first-child {
+  border-top: 0;
+}
+
+.shopeeLedgerRow dt {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0.72rem 1.25rem;
+  border-right: 0;
+  color: #536a5c;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-align: left;
+  line-height: 1.45;
+}
+
+.shopeeLedgerRow dd {
+  margin: 0;
+  padding: 0.72rem 1.25rem;
+  color: #183e2b;
+  font-size: 0.86rem;
+  font-weight: 500;
+  text-align: right;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+.ledgerSub {
+  display: block;
+  margin-top: 0.18rem;
+  color: #536a5c;
+  font-size: 0.78rem;
+  font-weight: 400;
+}
+
+.shopeeLedgerTotal {
+  background: #fafcfa;
+}
+
+.shopeeLedgerTotal dt {
+  color: #183e2b;
+  font-weight: 600;
+}
+
+.shopeeLedgerTotal dd {
+  color: #165331;
+  font-size: 1.38rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.shopeeLedgerTotal dd.pricePendingLarge {
+  color: #536a5c;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.shopeeLedgerDeadline {
+  background: #fff;
+}
+
+.shopeeLedgerDeadline dt {
+  color: #536a5c;
+  font-weight: 500;
+}
+
+.shopeeLedgerDeadline dd {
+  color: #183e2b;
+  font-weight: 500;
+}
+
+.shopeeLedgerDeadline[data-expired='true'] {
+  background: #fff;
+}
+
+.shopeeLedgerDeadline[data-expired='true'] dt,
+.shopeeLedgerDeadline[data-expired='true'] dd {
+  color: #9b1c1c;
+}
+
+.shopeeLedgerCode {
+  color: #165331;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* Harmonize PreorderAccessories directly into the Shopee 2-column ledger */
+:global(.workspace-portal-root .member-page #web-orders)
+  .shopeeLedgerWrap
+  :global(section[aria-label='Chi tiết báo giá']),
+:global(.workspace-portal-root .member-page #web-orders)
+  .shopeeLedgerWrap
+  :global(section[aria-label='Phụ kiện khách yêu cầu']) {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid #f0f4ef;
+  border-radius: 0;
+  background: #ffffff;
+  box-shadow: none;
+  gap: 0;
+}
+
+:global(.workspace-portal-root .member-page #web-orders)
+  .shopeeLedgerWrap
+  :global(section[aria-label='Chi tiết báo giá'] > strong),
+:global(.workspace-portal-root .member-page #web-orders)
+  .shopeeLedgerWrap
+  :global(section[aria-label='Phụ kiện khách yêu cầu'] > strong) {
+  display: block;
+  padding: 0.65rem 1.25rem;
+  border-bottom: 1px solid #f0f4ef;
+  background: #fafcfa;
+  color: #465f50;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+:global(.workspace-portal-root .member-page #web-orders)
+  .shopeeLedgerWrap
+  :global(section[aria-label='Chi tiết báo giá'] dl) {
+  gap: 0;
+}
+
+:global(.workspace-portal-root .member-page #web-orders)
+  .shopeeLedgerWrap
+  :global(section[aria-label='Chi tiết báo giá'] dl > div) {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.8fr) minmax(0, 1.2fr);
+  align-items: center;
+  gap: 0;
+  border-bottom: 1px solid #f0f4ef;
+}
+
+:global(.workspace-portal-root .member-page #web-orders)
+  .shopeeLedgerWrap
+  :global(section[aria-label='Chi tiết báo giá'] dl > div:last-child) {
+  border-bottom: 0;
+}
+
+:global(.workspace-portal-root .member-page #web-orders)
+  .shopeeLedgerWrap
+  :global(section[aria-label='Chi tiết báo giá'] dt) {
+  padding: 0.68rem 1.25rem;
+  border-right: 0;
+  text-align: left;
+  color: #536a5c;
+  font-size: 0.8125rem;
+}
+
+:global(.workspace-portal-root .member-page #web-orders)
+  .shopeeLedgerWrap
+  :global(section[aria-label='Chi tiết báo giá'] dd) {
+  padding: 0.68rem 1.25rem;
+  text-align: right;
+  color: #183e2b;
+  font-size: 0.86rem;
+  font-weight: 500;
+}
+
+:global(.workspace-portal-root .member-page #web-orders)
+  .shopeeLedgerWrap
+  :global(section[aria-label='Phụ kiện khách yêu cầu'] ul) {
+  margin: 0;
+  padding: 0.75rem 1.25rem 0.75rem 2.25rem;
+}
+
+:global(.workspace-portal-root .member-page #web-orders)
+  .shopeeLedgerWrap
+  :global(section[aria-label='Chi tiết báo giá'] > div) {
+  margin: 0.75rem 1.25rem;
+}
+
+/* Expiry / Invalid Price Alert Strip */
+.expiry {
+  margin: 0.9rem 1.25rem 0;
   padding: 0;
   border: 0;
   border-radius: 0;
   background: transparent;
+  color: #a8201a;
+  font-size: 0.84rem;
+  line-height: 1.55;
 }
-.detailHeading {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  font-size: 0.9375rem;
-  font-weight: 500;
-}
-.quotePrice > span {
-  display: block;
-  margin-bottom: 0.35rem;
-  font-size: 0.8125rem;
-  color: #4c6656;
-}
-.quotePrice > strong {
-  display: block;
-  font-size: 1.5rem;
-  font-weight: 600;
-  line-height: 1.3;
-  font-variant-numeric: tabular-nums;
-  overflow-wrap: anywhere;
-}
-.quotePrice p {
-  margin: 0.5rem 0 0;
-  color: #4c6656;
-  font-size: 0.875rem;
-  line-height: 1.6;
-}
-.quotePrice > p[role='status'] {
+
+/* Bottom Reason / Shop Note Strip (like Image 2 "Reason: Need to change delivery address") */
+.shopeeReasonStrip {
   display: flex;
-  align-items: flex-start;
+  align-items: baseline;
+  flex-wrap: wrap;
   gap: 0.45rem;
-  margin: 0 0 0.85rem;
+  padding: 0.9rem 1.25rem;
+  border-bottom: 1px solid #eef2ed;
+  background: #ffffff;
+  color: #214532;
+  font-size: 0.85rem;
+  line-height: 1.55;
 }
-.quotePrice > p[role='status'] svg {
-  flex: none;
-  margin-top: 0.15rem;
-}
-.quoteFacts {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 1rem;
-  margin: 0;
-}
-.quoteFacts > div {
-  min-width: 0;
-}
-.quoteFacts dt {
-  color: #4c6656;
-  font-size: 0.8125rem;
-  margin-bottom: 0.3rem;
-}
-.quoteFacts dd {
-  margin: 0;
-  font-size: 0.875rem;
-  font-weight: 500;
-  line-height: 1.6;
-  overflow-wrap: anywhere;
-  font-variant-numeric: tabular-nums;
-}
-.quoteFacts dd > span {
-  display: block;
-  margin-top: 0.25rem;
-  color: #4c6656;
-  font-weight: 400;
-}
-.quoteDeadline {
-  padding: 0.7rem 0.85rem;
-  border-radius: 8px;
-  background: #fff5e3;
-}
-.quoteDeadline dt {
+
+.shopeeReasonStrip strong {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  color: #74450d;
-  font-weight: 500;
+  gap: 0.38rem;
+  color: #4d6557;
+  font-size: 0.825rem;
+  font-weight: 600;
+  flex: none;
 }
-.quoteDeadline dd {
-  color: #5b3406;
-}
-.quoteNote {
-  padding-top: 0.75rem;
-  border-top: 1px solid #e4ece1;
-  line-height: 1.6;
-}
-.quoteNote strong {
-  font-size: 0.875rem;
-}
-.quoteNote p {
-  margin: 0.35rem 0 0;
+
+.shopeeReasonStrip span {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  color: #4c6656;
-  font-size: 0.875rem;
 }
-.expiry {
-  margin: 0;
-  padding: 0.85rem;
-  border-radius: 8px;
-  background: #fff0dc;
-  color: #74450d;
-  font-size: 0.875rem;
-  line-height: 1.6;
+
+.shopeeReasonStrip[data-rejected='true'] {
+  background: #fff;
+  color: #7c2420;
 }
+
+.shopeeReasonStrip[data-rejected='true'] strong {
+  color: #9b1c1c;
+}
+
+/* Collapsible Original Request Bar */
 .originalRequest {
   min-width: 0;
-  padding-top: 0.5rem;
-  border-top: 1px solid #e4ece1;
+  border-bottom: 1px solid #eef2ed;
+  background: #ffffff;
 }
+
 .originalRequest summary {
   min-height: 44px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1.25rem;
   list-style: none;
   cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: 500;
+  color: #466052;
+  font-size: 0.825rem;
+  font-weight: 600;
+  transition: background-color 0.14s ease;
 }
+
+.originalRequest summary:hover {
+  background: #f8fbf7;
+  color: #183e2b;
+}
+
 .originalRequest summary::-webkit-details-marker {
   display: none;
 }
+
 .originalRequest summary svg {
   flex: none;
+  transition: transform 0.16s ease;
 }
+
+.originalRequest[open] > summary {
+  border-bottom: 1px solid #eef2ed;
+  background: #fafcfa;
+}
+
 .originalRequest[open] > summary svg {
   transform: rotate(180deg);
 }
+
 .originalRequest p {
-  margin: 0.25rem 0 0;
+  margin: 0;
+  padding: 0.85rem 1.25rem;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  font-size: 0.875rem;
+  color: #365242;
+  font-size: 0.85rem;
   line-height: 1.6;
 }
-.interaction {
+
+/* --------------------------------------------------------------------------
+ * Customer Pickup Guide (Ready / Dispensing at Kiosk)
+ * -------------------------------------------------------------------------- */
+
+:global(.workspace-portal-root .member-page #web-orders) .pickupGuide {
   display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: 0.9rem 1.4rem;
+  margin: 0;
+  padding: 1.15rem 1.35rem;
+  border: 0;
+  border-bottom: 1px solid #d7e8d5;
+  border-radius: 0;
+  background: #f4faf3;
+  box-shadow: none;
+  color: #183e2b;
+  min-width: 0;
+}
+
+.pickupGuide > h3 {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  color: #16472c;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.pickupInstructions {
+  display: grid;
+  align-content: start;
   gap: 0.75rem;
   min-width: 0;
 }
-.interaction > p {
-  margin: 0;
-  font-size: 0.875rem;
-  overflow-wrap: anywhere;
-}
-.interaction > p:empty {
-  display: none;
-}
-:global(.workspace-portal-root .member-page #web-orders)
-  .orderDetails
-  :global(section[aria-label='Chi tiết báo giá']),
-:global(.workspace-portal-root .member-page #web-orders)
-  .orderDetails
-  :global(section[aria-label='Phụ kiện khách yêu cầu']) {
-  margin: 0;
-  padding: 0.85rem 1rem;
-  border: 1px solid #dfe9dd;
-  border-radius: 8px;
-  background: #fff;
-  box-shadow: none;
-  font-size: 0.875rem;
-}
-:global(.workspace-portal-root .member-page #web-orders)
-  .quoteAmountBlock
-  :global(section[aria-label='Chi tiết báo giá']),
-:global(.workspace-portal-root .member-page #web-orders)
-  .quoteAmountBlock
-  :global(section[aria-label='Phụ kiện khách yêu cầu']) {
-  padding: 0.875rem 0 0;
-  border: 0;
-  border-top: 1px solid var(--color-workspace-divider);
-  border-radius: 0;
-}
-:global(.workspace-portal-root .member-page #web-orders) .interaction :global(.stock-actions) {
-  gap: 0.65rem;
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-:global(.workspace-portal-root .member-page #web-orders)
-  .interaction
-  :global(.stock-actions .button) {
-  min-height: 44px;
-  font-size: 0.875rem;
-}
-.memberActionRow {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.65rem;
-}
-.memberActionRow:empty {
-  display: none;
-}
-.memberActionRow > :global(.button),
-.orderChatInline > :global(.button) {
-  width: auto;
-}
-.memberActionRow :global(.button-primary) {
-  background: #1c5139;
-  color: #fff;
-  border-color: #1c5139;
-}
-.memberActionRow :global(.button-primary:hover:not(:disabled)) {
-  background: #143e29;
-  border-color: #143e29;
-}
-.cancelButton {
-  color: #4c6656;
-  border-color: transparent;
-  background: transparent;
-}
-.cancelButton:hover:not(:disabled) {
-  color: #8e3028;
-  border-color: #d9a8a3;
-  background: #fdf4f3;
-}
-.complaintButton {
-  color: #5b6d61;
-  border-color: #d4e0d0;
-  background: #fff;
-}
-.complaintButton:hover:not(:disabled) {
-  color: #8e3028;
-  border-color: #d9a8a3;
-  background: #fdf4f3;
-}
-.interaction :global(.order-action-card) {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-.interaction :global(.order-action-fields) {
-  min-width: 0;
-  padding: 0;
-  margin: 0;
-  border: 0;
-  display: grid;
-  gap: 0.85rem;
-}
-.interaction :global(.order-action-fields h3) {
-  margin: 0;
-  font-size: 1rem;
-}
-.interaction :global(.order-action-fields p) {
-  margin: 0;
-  font-size: 0.875rem;
-  line-height: 1.6;
-}
-.interaction :global(.order-action-fields textarea) {
-  min-height: 100px;
-}
-.interaction :global(.payout-checkbox) {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.6rem;
-  margin: 0;
-  padding: 0.4rem 0;
-  font-size: 0.875rem;
-  line-height: 1.6;
-}
-.interaction :global(.payout-checkbox input) {
-  flex: none;
-  margin-top: 0.25rem;
-  width: 18px;
-  height: 18px;
-}
-.interaction :global(.order-action-fields .stock-actions) {
-  padding-top: 0.25rem;
-}
-.interaction :global(.order-uncertain) {
-  padding: 0.85rem;
-  border-radius: 8px;
-  background: #fff0dc;
-  font-size: 0.875rem;
-}
-.interaction :global(.order-uncertain p) {
-  margin: 0 0 0.75rem;
-}
-.paymentReturn {
-  padding: 1rem;
-  margin: 1rem 0;
-  background: #edf4e7;
-  border-radius: 10px;
-  color: #1c5139;
-}
-.paymentReturn p {
-  margin: 0.4rem 0 0;
-  font-size: 0.875rem;
-  line-height: 1.6;
-  max-width: 70ch;
-}
-.orderHistory > summary {
-  cursor: pointer;
-  list-style: none;
-  border-radius: var(--radius-workspace-panel);
-}
-.orderHistory > summary > svg {
-  margin-inline-start: auto;
+
+.pickupInstructions:only-child,
+.pickupGuide:not(:has(.pickupRecovery)) .pickupInstructions {
+  grid-column: 1 / -1;
 }
 
-.orderHistory[open] > summary {
-  border-bottom: 1px solid var(--color-workspace-divider);
-  border-radius: var(--radius-workspace-panel) var(--radius-workspace-panel) 0 0;
-}
-.orderHistory[open] > summary svg {
-  transform: rotate(180deg);
-}
-.purchase {
-  overflow: hidden;
-}
-.purchaseMeta {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.5rem 1rem;
-  font-size: 0.875rem;
-  color: #4c6656;
-}
-.purchaseMeta strong {
-  color: #183e2b;
-}
-.purchaseDetails {
-  padding: 0 1.25rem 1.25rem;
-  display: grid;
-  gap: 1rem;
-}
-.historyNotice {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-  padding: 0.75rem;
-  font-size: 0.875rem;
-}
-:global(.workspace-portal-root .member-page #web-orders) .pickupGuide {
-  margin: 0;
-  padding: 1rem;
-  border: 0;
-  border-radius: 10px;
-  background: #f5f8f3;
-  box-shadow: none;
-}
-.pickupGuide {
-  min-width: 0;
-  display: grid;
-  gap: 0.8rem;
-  color: #183e2b;
-}
-.pickupGuide h3 {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0;
-  font-size: 0.9375rem;
-}
 .pickupSteps {
   display: grid;
-  gap: 0.5rem;
+  gap: 0.65rem;
   margin: 0;
-  padding-inline-start: 1.25rem;
-  font-size: 0.875rem;
-  line-height: 1.6;
+  padding: 0;
+  list-style: none;
+  counter-reset: pickup-step;
+  font-size: 0.86rem;
+  line-height: 1.55;
 }
+
 .pickupSteps li {
-  display: list-item;
-  list-style: decimal;
+  counter-increment: pickup-step;
+  position: relative;
+  display: block;
+  padding-inline-start: 2rem;
+  min-height: 24px;
 }
-.pickupSteps li::marker {
-  color: #245b3e;
+
+.pickupSteps li::before {
+  content: counter(pickup-step);
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0.06rem;
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: #1c5b3a;
+  color: #ffffff;
+  font-size: 0.74rem;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
+
 .pickupNotice {
   display: flex;
   align-items: flex-start;
-  gap: 0.55rem;
-  padding: 0.75rem;
-  background: #eaf1e6;
-  color: #254c36;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  line-height: 1.6;
+  gap: 0.6rem;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid #c6dec3;
+  border-radius: 6px;
+  background: #e9f4e7;
+  color: #1d4a31;
+  font-size: 0.85rem;
+  line-height: 1.55;
 }
+
 .pickupNotice[data-warning='true'] {
-  background: #fff2dc;
-  color: #714910;
+  border-color: #eccd98;
+  background: #fff5e3;
+  color: #74450d;
 }
+
 .pickupNotice svg {
   flex: none;
-  margin-top: 0.1rem;
+  margin-top: 0.14rem;
 }
+
 .pickupNotice p {
-  margin: 0.15rem 0 0;
+  margin: 0.2rem 0 0;
 }
+
 .pickupNotice .orderChat {
-  margin: 0.65rem 0 0;
+  margin: 0.7rem 0 0;
 }
+
 .pickupNotice .orderChat > button {
   min-height: 44px;
-  padding: 0.4rem 0.85rem;
-  font-size: 0.875rem;
-  background: #fff;
-  border-color: currentColor;
-  color: #254c36;
+  padding: 0.45rem 0.95rem;
+  border-radius: 4px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  background: #ffffff;
+  border-color: #d6b67d;
+  color: #5b3406;
 }
+
+.pickupNotice .orderChat > button:hover:not(:disabled) {
+  background: #fffdf8;
+  border-color: #b79251;
+}
+
 .pickupHelp {
   margin: 0;
-  color: #4c6656;
-  font-size: 0.875rem;
-  line-height: 1.6;
+  color: #466151;
+  font-size: 0.825rem;
+  line-height: 1.55;
 }
+
 .pickupRecovery {
+  align-self: start;
   min-width: 0;
+  border: 1px solid #d4e3d2;
+  border-radius: 6px;
+  background: #ffffff;
+  overflow: hidden;
 }
+
 .pickupRecovery summary {
   min-height: 44px;
   display: flex;
   align-items: center;
   gap: 0.55rem;
-  padding: 0.4rem 0;
-  font-size: 0.875rem;
-  font-weight: 500;
+  padding: 0.55rem 0.9rem;
+  color: #183e2b;
+  font-size: 0.84rem;
+  font-weight: 600;
   cursor: pointer;
   list-style: none;
+  transition: background-color 0.14s ease;
 }
+
+.pickupRecovery summary:hover {
+  background: #f7faf6;
+}
+
 .pickupRecovery summary::-webkit-details-marker {
   display: none;
 }
+
 .pickupRecovery summary svg {
   flex: none;
+  color: #39664d;
 }
+
 .pickupRecovery summary svg:last-child {
   margin-inline-start: auto;
+  transition: transform 0.16s ease;
 }
+
+.pickupRecovery[open] summary {
+  border-bottom: 1px solid #e4ede2;
+  background: #f8fbf7;
+}
+
 .pickupRecovery[open] summary svg:last-child {
   transform: rotate(180deg);
 }
+
 .pickupRecoveryBody {
   display: grid;
-  gap: 1rem;
-  padding: 0.5rem 0 0;
+  gap: 0.85rem;
+  padding: 0.9rem;
 }
+
 .pickupRecoveryBody p {
   margin: 0;
-  font-size: 0.8125rem;
-  line-height: 1.6;
+  font-size: 0.8rem;
+  line-height: 1.55;
   color: #4c6656;
 }
+
 .pickupCodes {
   display: grid;
-  gap: 1rem;
+  gap: 0.7rem;
   margin: 0;
 }
+
 .pickupCodes > div {
   min-width: 0;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #e2ebe0;
+  border-radius: 6px;
+  background: #f9fbf8;
 }
+
 .pickupCodes dt {
-  font-size: 0.75rem;
-  color: #4c6656;
+  font-size: 0.725rem;
+  font-weight: 600;
+  color: #4f6959;
   margin-bottom: 0.3rem;
 }
+
 .pickupCodes dd {
   display: flex;
   align-items: center;
@@ -797,238 +1434,772 @@
   gap: 0.5rem;
   margin: 0;
 }
+
+.pickupCodes code {
+  flex: 1 1 10rem;
+  min-width: 0;
+  color: #183e2b;
+  font-size: 0.8rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  user-select: all;
+}
+
 .pickupCodes dd > button {
   flex: none;
   min-height: 44px;
-  padding: 0.4rem 0.7rem;
-  font-size: 0.8125rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
 }
-.pickupCodes code {
-  min-width: 0;
-  font-size: 0.8125rem;
-  overflow-wrap: anywhere;
-  user-select: all;
+
+.pickupCopyStatus {
+  color: #165331;
+  font-weight: 600;
 }
+
 .pickupCopyStatus:empty {
   display: none;
 }
+
+/* --------------------------------------------------------------------------
+ * Shopee Bottom Action Row, Inline Accept / Cancel Cards & Uncertainty Lock
+ * -------------------------------------------------------------------------- */
+
+.interaction {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem 1.25rem 1.15rem;
+  background: #fafcfa;
+  min-width: 0;
+}
+
+.interaction > p {
+  margin: 0;
+  font-size: 0.84rem;
+  overflow-wrap: anywhere;
+}
+
+.interaction > p:empty {
+  display: none;
+}
+
+:global(.workspace-portal-root .member-page #web-orders) .interaction :global(.stock-actions) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+:global(.workspace-portal-root .member-page #web-orders)
+  .interaction
+  :global(.stock-actions .button) {
+  min-height: 44px;
+  border-radius: 4px;
+  font-size: 0.84375rem;
+  font-weight: 600;
+}
+
+.memberActionRow {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.memberActionRow:empty {
+  display: none;
+}
+
+.memberActionRow > :global(.button),
+.orderChatInline > :global(.button) {
+  width: auto;
+}
+
+.memberActionRow :global(.button-primary) {
+  background: #183e2b;
+  color: #ffffff;
+  border-color: #183e2b;
+}
+
+.memberActionRow :global(.button-primary:hover:not(:disabled)) {
+  background: #123020;
+  border-color: #123020;
+}
+
+.cancelButton {
+  margin-inline-start: auto;
+  color: #546a5d;
+  border-color: #d8e1d7;
+  background: #ffffff;
+}
+
+.cancelButton:hover:not(:disabled) {
+  color: #9b1c1c;
+  border-color: #e6b4b0;
+  background: #fef3f2;
+}
+
+.complaintButton {
+  color: #4c6456;
+  border-color: #d2dfd0;
+  background: #ffffff;
+}
+
+.complaintButton:hover:not(:disabled) {
+  color: #9b1c1c;
+  border-color: #e6b4b0;
+  background: #fef3f2;
+}
+
+/* Inline confirmation card when clicking "Xác nhận báo giá" or "Hủy yêu cầu" */
+:global(.workspace-portal-root .member-page #web-orders) .interaction :global(.order-action-card) {
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  padding: 1.15rem 1.25rem;
+  border: 1px solid #d4e2d2;
+  border-radius: 6px;
+  background: #ffffff;
+  box-shadow: none;
+  display: grid;
+  gap: 0.95rem;
+}
+
+:global(.workspace-portal-root .member-page #web-orders)
+  .interaction
+  :global(.order-action-card > .stock-actions) {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 0.2rem 0 0;
+  border: 0;
+}
+
+.interaction :global(.order-action-card[data-action='accept']) {
+  border-color: #c2dec0;
+  background: #f4faf3;
+}
+
+.interaction :global(.order-action-card[data-action='cancel']) {
+  border-color: #dce6da;
+  background: #ffffff;
+}
+
+.interaction :global(.order-action-fields) {
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.interaction :global(.order-action-fields h3) {
+  margin: 0;
+  color: #183e2b;
+  font-size: 0.975rem;
+  font-weight: 700;
+}
+
+.interaction :global(.order-action-card[data-action='cancel'] .order-action-fields h3) {
+  color: #183e2b;
+}
+
+.interaction :global(.order-action-fields p) {
+  margin: 0;
+  color: #3f5a4a;
+  font-size: 0.85rem;
+  line-height: 1.58;
+}
+
+.interaction :global(.order-action-fields label:not(.payout-checkbox)) {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: #214532;
+  font-size: 0.825rem;
+  font-weight: 600;
+}
+
+.interaction :global(.order-action-fields textarea) {
+  width: 100%;
+  min-height: 96px;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid #cfdcd0;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #183e2b;
+  font: 400 0.86rem/1.55 var(--font-body);
+  resize: vertical;
+}
+
+.interaction :global(.order-action-card[data-action='cancel'] textarea) {
+  border-color: #cfdcd0;
+}
+
+.interaction :global(.order-action-fields textarea:focus) {
+  outline: none;
+  border-color: #1e5b3c;
+  box-shadow: 0 0 0 3px rgb(30 91 60 / 12%);
+}
+
+.interaction :global(.order-action-card[data-action='cancel'] textarea:focus) {
+  border-color: #1e5b3c;
+  box-shadow: 0 0 0 3px rgb(30 91 60 / 12%);
+}
+
+.interaction :global(.order-action-warning) {
+  padding: 0.78rem 0.95rem;
+  border: 1px solid #eccd98;
+  border-radius: 6px;
+  background: #fff5e3;
+  color: #74450d;
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+.interaction :global(.payout-checkbox) {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid #dce6da;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #183e2b;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.interaction :global(.order-action-card[data-action='cancel'] .payout-checkbox) {
+  border-color: #dce6da;
+}
+
+.interaction :global(.payout-checkbox input) {
+  flex: none;
+  margin-top: 0.2rem;
+  width: 18px;
+  height: 18px;
+  accent-color: #183e2b;
+  cursor: pointer;
+}
+
+.interaction :global(.order-action-card[data-action='cancel'] .payout-checkbox input) {
+  accent-color: #183e2b;
+}
+
+.interaction :global(.order-action-card .management-danger-button) {
+  background: #a62622;
+  border-color: #a62622;
+  color: #ffffff;
+}
+
+.interaction :global(.order-action-card .management-danger-button:hover:not(:disabled)) {
+  background: #881d1a;
+  border-color: #881d1a;
+}
+
+/* Server uncertainty lock panel */
+.interaction :global(.order-uncertain) {
+  display: grid;
+  gap: 0.55rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid #e7cd9c;
+  border-radius: 6px;
+  background: #fff8eb;
+  color: #6b3f0b;
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.interaction :global(.order-uncertain p) {
+  margin: 0;
+}
+
+.interaction :global(.order-uncertain > .button) {
+  justify-self: start;
+  margin-top: 0.25rem;
+  background: #ffffff;
+  border-color: #d7b77e;
+  color: #5b3406;
+}
+
+.interaction :global(.order-uncertain > .button:hover:not(:disabled)) {
+  background: #fffdf8;
+  border-color: #b79251;
+}
+
+/* Payment return banner */
+.paymentReturn {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.95rem 1.15rem;
+  margin: 0 0 1rem;
+  border: 1px solid #c3e0bf;
+  border-radius: 6px;
+  background: #edf7ec;
+  color: #165331;
+}
+
+.paymentReturn svg {
+  flex: none;
+  margin-top: 0.14rem;
+}
+
+.paymentReturn strong {
+  font-size: 0.9rem;
+}
+
+.paymentReturn p {
+  margin: 0.28rem 0 0;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  max-width: 72ch;
+}
+
+.paymentReturn[data-tone='warning'] {
+  border-color: #ecd09b;
+  background: #fff8eb;
+  color: #74450d;
+}
+
+.paymentReturn[data-tone='danger'] {
+  border-color: #f3c4c1;
+  background: #fef3f2;
+  color: #9b1c1c;
+}
+
+.paymentReturn[data-tone='neutral'] {
+  border-color: #d7e2d6;
+  background: #f5f8f4;
+  color: #2f4e3c;
+}
+
+/* Order Chat & Walk-in Purchase Cards */
 .orderChat {
   margin-block: 1rem;
 }
+
 .orderChat > button {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   min-height: 44px;
 }
+
 .orderChat p {
-  color: #8e3028;
-  font-size: 0.875rem;
-  line-height: 1.6;
+  color: #9b1c1c;
+  font-size: 0.84rem;
+  line-height: 1.55;
 }
+
 .orderChatInline {
   margin: 0;
   display: grid;
   gap: 0.5rem;
-  width: 100%;
+  width: auto;
   min-width: 0;
 }
-.quoteReview > .pickupGuide,
-.quoteReview > .originalRequest,
-.quoteReview > .interaction {
-  grid-column: 1 / -1;
+
+.orderHistory > summary {
+  cursor: pointer;
+  list-style: none;
+  border-radius: 6px;
 }
-:global(.workspace-portal-root .member-page #web-orders) .quoteReview :is(h3, strong, b),
-:global(.workspace-portal-root .member-page #web-orders) .interaction :global(.button) {
-  font-weight: 500;
-}
-:global(.workspace-portal-root .member-page #web-orders) .quotePrice > strong {
-  font-weight: 600;
-}
-.quoteReview > .interaction {
-  padding-top: 1rem;
-  border-top: 1px solid var(--color-workspace-divider);
-}
-.orderChatInline {
-  width: auto;
-}
-.cancelButton {
+
+.orderHistory > summary > svg {
   margin-inline-start: auto;
 }
-:global(.workspace-portal-root .member-page #web-orders) .pickupGuide {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 0.875rem 1.5rem;
-  padding: 1.125rem;
+
+.orderHistory[open] > summary {
+  border-bottom: 1px solid #e4ede2;
+  border-radius: 6px 6px 0 0;
 }
-.pickupGuide > h3 {
-  grid-column: 1 / -1;
-  font-weight: 500;
+
+.orderHistory[open] > summary svg {
+  transform: rotate(180deg);
 }
-.pickupInstructions {
-  display: grid;
-  align-content: start;
+
+.purchase {
+  overflow: hidden;
+}
+
+.historyNotice {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ecd09b;
+  border-radius: 6px;
+  background: #fff8eb;
+  color: #74450d;
+  font-size: 0.84rem;
+}
+
+/* Pagination */
+.orderGroups + :global(.order-pagination) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
   gap: 0.75rem;
-  min-width: 0;
+  margin-top: 1.25rem;
 }
-.pickupInstructions:only-child,
-.pickupGuide:not(:has(.pickupRecovery)) .pickupInstructions {
-  grid-column: 1 / -1;
-}
-.pickupRecovery {
-  align-self: start;
-  min-width: 0;
-}
-.quoteFacts dd,
-.quoteNote strong,
-.originalRequest summary,
-.pickupRecovery summary {
-  font-weight: 500;
-}
-.heading > strong {
-  font-weight: 500;
-}
-.summaryPrice strong {
+
+.orderGroups + :global(.order-pagination) :global(.order-page-indicator) {
+  padding: 0.3rem 0.75rem;
+  border-radius: 4px;
+  background: #f2f7f1;
+  color: #355442;
+  font-size: 0.8125rem;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
-:global(details[open]) > .summary {
-  border-bottom: 1px solid var(--color-workspace-divider);
-  background: var(--color-workspace-surface-muted);
-}
-:global(details[open]) > .summary .summaryPrice {
-  display: none;
-}
-.orderDetails {
-  padding: 1.5rem;
-}
-@media (min-width: 861px) {
-  .quoteReview {
-    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
-    gap: 1.5rem 2rem;
-  }
-  .quotePickupBlock > .quoteFacts {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 1.5rem;
-  }
-  .quoteAmountBlock {
-    padding-inline-start: 2rem;
-    border-inline-start: 1px solid var(--color-workspace-divider);
-  }
-}
-@media (max-width: 1000px) {
-  .summaryLayout {
-    grid-template-columns: 56px minmax(0, 1fr) minmax(10rem, auto);
-    gap: 0.75rem;
-    align-items: start;
-  }
-  .thumbnail {
-    width: 56px;
-    height: 68px;
-  }
-  .facts {
-    grid-column: 2;
-    grid-row: 2;
-    padding: 0;
-  }
-  .summaryAside {
-    grid-column: 3;
-    grid-row: 1 / span 2;
-  }
-}
+
+/* --------------------------------------------------------------------------
+ * Responsive Breakpoints (Tablet & Mobile 390px)
+ * -------------------------------------------------------------------------- */
+
 @media (max-width: 860px) {
-  .quoteAmountBlock {
-    grid-row: 1;
-  }
-  .quoteReview[data-pickup='true'] .quoteAmountBlock {
-    grid-row: auto;
-  }
-  .quoteReview > .interaction {
-    grid-row: auto;
-  }
   :global(.workspace-portal-root .member-page #web-orders) .pickupGuide {
     grid-template-columns: minmax(0, 1fr);
   }
 }
-@media (max-width: 580px) {
-  .memberToolbar {
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 0.5rem;
-    padding: 0;
+
+@media (max-width: 720px) {
+  .shopeeHead {
+    padding: 0.75rem 1rem;
   }
-  .memberSearch {
-    grid-column: 1 / -1;
+
+  .shopeeHeadRight {
+    width: 100%;
+    justify-content: space-between;
   }
-  .summary {
-    padding: 1rem;
-  }
-  .summaryLayout {
-    grid-template-columns: 52px minmax(0, 1fr);
-    gap: 0.75rem;
-  }
-  .thumbnail {
-    width: 52px;
-    height: 64px;
-  }
-  .heading > strong {
-    font-size: 0.9375rem;
-  }
-  .shop {
-    font-size: 0.75rem;
-  }
-  .facts {
-    grid-column: 1 / -1;
-    grid-row: auto;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 0.75rem;
-  }
-  .summaryAside {
-    grid-column: 1 / -1;
-    grid-row: auto;
-    grid-template-columns: minmax(0, 1fr) minmax(0, auto);
-    justify-items: start;
-    align-items: center;
-    gap: 0.5rem;
-    text-align: left;
-  }
-  .summaryPrice {
-    grid-column: 2;
-    grid-row: 1;
-    justify-self: end;
-  }
-  .summaryPrice small {
+
+  .shopeeHeadDivider {
     display: none;
   }
-  .summaryPrice strong {
-    font-size: 1rem;
+
+  .shopeeItems {
+    padding: 0 1rem;
   }
+
+  .shopeeAddonRow {
+    padding-left: 0;
+  }
+
+  .shopeeFoot {
+    padding: 0.85rem 1rem;
+  }
+
+  /* Switch Shopee 2-column ledger to clean horizontal label-left / value-right */
+  .shopeeLedgerRow,
+  :global(.workspace-portal-root .member-page #web-orders)
+    .shopeeLedgerWrap
+    :global(section[aria-label='Chi tiết báo giá'] dl > div) {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .shopeeLedgerRow dt,
+  :global(.workspace-portal-root .member-page #web-orders)
+    .shopeeLedgerWrap
+    :global(section[aria-label='Chi tiết báo giá'] dt) {
+    justify-content: flex-start;
+    text-align: left;
+    border-right: 0;
+    padding: 0.65rem 0.75rem 0.65rem 1rem;
+  }
+
+  .shopeeLedgerRow dd,
+  :global(.workspace-portal-root .member-page #web-orders)
+    .shopeeLedgerWrap
+    :global(section[aria-label='Chi tiết báo giá'] dd) {
+    padding: 0.65rem 1rem 0.65rem 0.5rem;
+  }
+}
+
+@media (max-width: 680px) {
+  .orderTimeline {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem;
+    padding: 0.9rem 1rem;
+  }
+
+  .timelineStep {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.65rem;
+    text-align: left;
+  }
+
+  .timelineStep::before,
+  .timelineStep::after {
+    top: auto;
+    left: 12px;
+    right: auto;
+    width: 2px;
+  }
+
+  .timelineStep::before {
+    top: -0.35rem;
+    height: calc(50% - 10px + 0.35rem);
+  }
+
+  .timelineStep::after {
+    top: calc(50% + 13px);
+    bottom: -0.35rem;
+    height: auto;
+  }
+
+  .timelineLabel {
+    padding-inline: 0;
+    font-size: 0.8125rem;
+  }
+}
+
+@media (max-width: 580px) {
+  .orderGroups {
+    padding: 0;
+    background: transparent;
+  }
+
+  .memberFilterTab {
+    flex: 0 0 auto;
+    padding: 0.55rem 0.85rem;
+    font-size: 0.8125rem;
+  }
+
+  .shopeeItemRow {
+    grid-template-columns: 64px minmax(0, 1fr);
+    align-items: start;
+    gap: 0.75rem;
+    padding: 0.85rem 0;
+  }
+
+  .thumbnail {
+    width: 64px;
+    height: 64px;
+  }
+
+  .itemRightPrice {
+    grid-column: 2;
+    text-align: left;
+  }
+
+  .shopeeFootActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .shopeeFootHint {
+    flex: none;
+  }
+
   .action {
-    grid-column: 1 / -1;
-    justify-self: end;
+    margin-inline-start: 0;
+    width: 100%;
   }
+
   .actionExpand,
   .actionCollapse {
+    width: 100%;
     min-height: 44px;
   }
-  .orderDetails {
-    padding: 1rem;
+
+  .shopeeStatusNotice,
+  .shopeeReasonStrip,
+  .interaction,
+  :global(.workspace-portal-root .member-page #web-orders) .pickupGuide {
+    padding-inline: 1rem;
   }
-  .quoteReview {
-    gap: 1rem;
+
+  .shopeeLedgerRow {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.15rem;
+    padding: 0.65rem 1rem;
   }
-  :global(.workspace-portal-root .member-page #web-orders) .memberSearch input,
-  :global(.workspace-portal-root .member-page #web-orders) .memberFilter select {
-    font-size: 1rem;
+
+  .shopeeLedgerRow dt {
+    padding: 0;
+    border-right: 0;
+    justify-content: flex-start;
+    text-align: left;
+    font-size: 0.76rem;
   }
+
+  .shopeeLedgerRow dd {
+    padding: 0;
+    text-align: left;
+  }
+
+  :global(.workspace-portal-root .member-page #web-orders) .memberSearch input {
+    font-size: 0.95rem;
+  }
+
   .memberActionRow,
   .memberActionRow > :global(.button),
   .memberActionRow .orderChatInline,
   .orderChatInline > :global(.button) {
     width: 100%;
   }
+
   .cancelButton {
     margin-inline-start: 0;
   }
-  .interaction :global(.order-action-fields .stock-actions > button) {
+
+  :global(.workspace-portal-root .member-page #web-orders)
+    .interaction
+    :global(.order-action-card) {
+    padding: 1rem;
+  }
+
+  :global(.workspace-portal-root .member-page #web-orders)
+    .interaction
+    :global(.order-action-card > .stock-actions > button) {
     width: 100%;
   }
+
+  .interaction :global(.order-uncertain > .button) {
+    width: 100%;
+  }
+}
+
+/* Compact list summaries share the same proportions across purchase types. */
+.shopeeHead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  padding: 12px 16px;
+  gap: 8px;
+}
+.shopeeShop {
+  font-size: 13px;
+}
+.shopeeHeadRight {
+  align-items: flex-start;
+}
+:global(.workspace-portal-root .member-page #web-orders) .shopeeHead :global(.order-status-pill) {
+  font-size: 11px;
+  text-align: right;
+  white-space: normal;
+  max-width: 140px;
+}
+.shopeeItems {
+  padding-inline: 16px;
+}
+.shopeeFoot {
+  padding: 10px 16px;
+}
+.shopeeFootActions {
+  margin-left: auto;
+}
+.shopeeFootHint {
+  flex: none;
+}
+.shopeeFoot .action {
+  width: auto;
+}
+.shopeeFoot .actionExpand {
+  width: auto;
+  min-width: 112px;
+}
+@media (max-width: 580px) {
+  .shopeeHead {
+    gap: 8px;
+  }
+  .shopeeFootActions {
+    flex-direction: row;
+    align-items: center;
+  }
+  .shopeeFootActions:has(.shopeeFootHint) {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .shopeeFootHint {
+    flex: 1 1 160px;
+    font-size: 12px;
+  }
+  .shopeeTotalValue {
+    font-size: 17px;
+  }
+  .itemTitle {
+    font-size: 14px;
+  }
+}
+
+:global(.workspace-portal-root .member-page #web-orders) .memberEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 220px;
+  padding: 24px 16px;
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+  text-align: center;
+}
+:global(.workspace-portal-root .member-page #web-orders) .memberEmpty > :global(button) {
+  align-self: center;
+  margin: 0;
+}
+:global(.workspace-portal-root .member-page #web-orders) .memberEmpty h3 {
+  margin: 0;
+  font-size: 16px;
+}
+:global(.workspace-portal-root .member-page #web-orders) .memberEmpty p {
+  margin: 0;
+  max-width: 460px;
+  font-size: 14px;
+}
+
+/* Customer confirmations use a simple consent row, not another nested card. */
+:global(.workspace-portal-root .member-page #web-orders)
+  .interaction
+  :global(.order-action-card:is([data-action='accept'], [data-action='cancel'])) {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  gap: 12px;
+}
+.interaction
+  :global(.order-action-card:is([data-action='accept'], [data-action='cancel']) .payout-checkbox) {
+  padding: 8px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font-weight: 400;
+}
+:global(.workspace-portal-root .member-page #web-orders)
+  .interaction
+  :global(.order-action-card:is([data-action='accept'], [data-action='cancel']) > .stock-actions) {
+  justify-content: flex-end;
+}
+
+.interaction :global(.order-action-fields) .quoteChangedNotice {
+  color: #a62622;
+  font-weight: 500;
+}
+:global(details[open]) > .summary .shopeeTotalRow,
+:global(details[open]) > .summary .shopeeFootHint {
+  display: none;
+}
+:global(details[open]) > .summary .shopeeFoot {
+  justify-content: flex-end;
 }

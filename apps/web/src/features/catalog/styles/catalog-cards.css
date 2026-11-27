@@ -161,6 +161,23 @@
   border: 1px solid #bbf7d0;
 }
 
+.flower-card.is-sold-out .flower-card-img {
+  opacity: 0.4;
+  filter: saturate(0.5);
+}
+.flower-card-sold-out {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  color: #b42318;
+  font-size: 18px;
+  font-weight: 700;
+  text-shadow: 0 1px 4px #fff;
+  pointer-events: none;
+}
+
 .flower-card-body {
   padding: 0.85rem;
   display: flex;

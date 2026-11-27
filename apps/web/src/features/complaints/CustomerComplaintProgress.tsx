@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Button } from '@florabot/ui';
+import { Button, RefreshCw } from '@florabot/ui';
 import QualityComplaintDetails from './QualityComplaintDetails';
-import { lookupQuality, type QualityComplaint } from './quality-complaints.api';
+import { lookupQuality, qualityLabels, type QualityComplaint } from './quality-complaints.api';
 import styles from './quality-complaints.module.css';
 
 export default function CustomerComplaintProgress({
@@ -28,25 +28,45 @@ export default function CustomerComplaintProgress({
     return () => active.abort();
   }, [orderId, trackingToken, key, evidencePage]);
   const pending = result?.key !== key;
+  const detail = !pending ? result?.detail : undefined;
   return (
-    <div className={styles.flow}>
-      <div className={styles.actions}>
-        <Button type="button" variant="outline" disabled={pending} onClick={reload}>
+    <section className={styles.customerProgress} aria-label="Tiến độ xử lý phản ánh">
+      <div className={styles.customerHeader}>
+        <div className={styles.customerHeading}>
+          <h4>Tiến độ xử lý</h4>
+          {detail && (
+            <span className={styles.statusPill} data-state={detail.handlingState}>
+              {qualityLabels[detail.handlingState] || detail.handlingState}
+            </span>
+          )}
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          className={styles.refreshBtn}
+          disabled={pending}
+          onClick={reload}
+        >
+          <RefreshCw size={14} aria-hidden="true" className={pending ? styles.spin : undefined} />
           Cập nhật tiến độ phản ánh
         </Button>
       </div>
       {pending ? (
-        <p role="status">Đang tải tiến độ phản ánh…</p>
-      ) : result.detail ? (
+        <p role="status" className={styles.loadingNote}>
+          Đang tải tiến độ phản ánh…
+        </p>
+      ) : detail ? (
         <QualityComplaintDetails
-          detail={result.detail}
+          detail={detail}
           scope="customer"
           capability={{ orderId, trackingToken }}
           onPage={setEvidencePage}
         />
       ) : (
-        <p role="alert">Chưa tải được tiến độ. Phản ánh đã gửi vẫn được ghi nhận.</p>
+        <p role="alert" className={styles.errorNotice}>
+          Chưa tải được tiến độ. Phản ánh đã gửi vẫn được ghi nhận.
+        </p>
       )}
-    </div>
+    </section>
   );
 }

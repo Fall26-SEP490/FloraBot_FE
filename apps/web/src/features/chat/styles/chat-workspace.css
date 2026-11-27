@@ -719,7 +719,6 @@
 .chat-composer textarea.chat-composer-textarea {
   width: 100%;
   min-height: 34px !important;
-  height: 34px !important;
   border: none !important;
   outline: none !important;
   background: transparent !important;
