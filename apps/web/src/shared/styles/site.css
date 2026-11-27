@@ -130,6 +130,27 @@
   outline-offset: 3px;
 }
 
+/* Keep support available without covering forms, order amounts or chat controls. */
+.site-support[data-inline='true'] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 20px 16px;
+  background: #fff;
+}
+.site-support[data-inline='true'] .site-support-control {
+  position: static;
+  transform: none;
+}
+.site-support[data-inline='true'] .site-support-label {
+  display: inline;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+}
+
 /* Workspace labels float outside the icon's hit area, so hidden text never
    blocks the controls underneath. Keyboard focus reveals the same label. */
 .site-support--compact .site-support-label {

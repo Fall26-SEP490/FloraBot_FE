@@ -1,5 +1,15 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Button, X } from '@florabot/ui';
+import {
+  Button,
+  Check,
+  CheckCircle2,
+  ChevronDown,
+  Clock,
+  Eye,
+  ImageIcon,
+  Package,
+  X,
+} from '@florabot/ui';
 import {
   qualityDate,
   qualityLabels,
@@ -21,6 +31,25 @@ const prefixes = {
 } as const;
 type Scope = keyof typeof prefixes;
 const idPattern = /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
+
+function customerComplaintStage(state: string): number {
+  switch (state) {
+    case 'REPORTED':
+      return 0;
+    case 'ACCEPTED':
+      return 1;
+    case 'IN_PROGRESS':
+    case 'REVIEW_REQUIRED':
+    case 'ATTENTION_REQUIRED':
+    case 'REPLACEMENT_READY':
+    case 'REFUND_REVIEW':
+      return 2;
+    case 'RESOLVED':
+      return 3;
+    default:
+      return 1;
+  }
+}
 
 function EvidencePhoto({
   photo,
@@ -93,37 +122,56 @@ function EvidencePhoto({
   }, [attempt, complaintId, photo.id, photo.url, scope, orderId, trackingToken]);
   const label = photo.source === 'STAFF_TASK' ? 'Ảnh xử lý của nhân viên' : 'Ảnh khách gửi';
   const visual = scope === 'seller' || scope === 'staff';
+  const customer = scope === 'customer';
   return (
-    <li className={visual ? sellerStyles.evidenceCard : undefined}>
-      <p>
-        {visual ? (
-          <>
-            <strong>{label}</strong>
-            <time dateTime={photo.createdAt}>{sellerDate(photo.createdAt)}</time>
-          </>
-        ) : (
-          <>
-            {label} · {qualityDate(photo.createdAt)}
-          </>
-        )}
-      </p>
+    <li
+      className={
+        visual ? sellerStyles.evidenceCard : customer ? styles.customerEvidenceCard : undefined
+      }
+    >
+      {customer ? (
+        <div className={styles.customerEvidenceMeta}>
+          <strong>{label}</strong>
+          <time dateTime={photo.createdAt}>{qualityDate(photo.createdAt)}</time>
+        </div>
+      ) : (
+        <p>
+          {visual ? (
+            <>
+              <strong>{label}</strong>
+              <time dateTime={photo.createdAt}>{sellerDate(photo.createdAt)}</time>
+            </>
+          ) : (
+            <>
+              {label} · {qualityDate(photo.createdAt)}
+            </>
+          )}
+        </p>
+      )}
       {src ? (
-        visual ? (
+        visual || customer ? (
           <button
             type="button"
-            className={sellerStyles.imageButton}
+            className={visual ? sellerStyles.imageButton : styles.customerImageButton}
             onClick={() => preview.current?.showModal()}
             aria-label={`Phóng to ${label.toLocaleLowerCase('vi')}`}
           >
-            <img className={styles.photo} src={src} alt={label} />
-            <span>Phóng to ảnh</span>
+            <img className={customer ? styles.customerPhoto : styles.photo} src={src} alt={label} />
+            <span>
+              {customer && <Eye size={14} aria-hidden="true" />}
+              Phóng to ảnh
+            </span>
           </button>
         ) : (
           <img className={styles.photo} src={src} alt={label} />
         )
       ) : (
-        <>
-          {failed && <p role="alert">Chưa tải được ảnh minh chứng.</p>}
+        <div className={customer ? styles.customerEvidenceAction : undefined}>
+          {failed && (
+            <p role="alert" className={customer ? styles.evidenceError : undefined}>
+              Chưa tải được ảnh minh chứng.
+            </p>
+          )}
           <Button
             type="button"
             variant="outline"
@@ -140,9 +188,9 @@ function EvidencePhoto({
           >
             {failed ? 'Thử tải lại ảnh' : attempt ? 'Đang tải ảnh…' : 'Xem ảnh'}
           </Button>
-        </>
+        </div>
       )}
-      {visual && (
+      {(visual || customer) && (
         <dialog ref={preview} className={sellerStyles.photoDialog} aria-label={label}>
           <header>
             <strong>{label}</strong>
@@ -173,6 +221,149 @@ export default function QualityComplaintDetails({
   actions?: ReactNode;
 }) {
   const { evidence, replacement, task } = detail;
+  if (scope === 'customer') {
+    const stage = customerComplaintStage(detail.handlingState);
+    const resolved = detail.handlingState === 'RESOLVED';
+    const steps = ['Đã gửi', 'Tiếp nhận', 'Đang kiểm tra', 'Đã xử lý'];
+    return (
+      <div className={styles.customerBody}>
+        <ol className={styles.customerStepper} aria-label="Các bước xử lý phản ánh">
+          {steps.map((label, index) => {
+            const done = resolved || index < stage;
+            const current = !resolved && index === stage;
+            return (
+              <li
+                key={label}
+                className={styles.customerStep}
+                data-complete={done || undefined}
+                aria-current={current ? 'step' : undefined}
+              >
+                <span className={styles.customerStepDot} aria-hidden="true">
+                  {done ? <Check size={12} /> : index + 1}
+                </span>
+                <span className={styles.customerStepLabel}>{label}</span>
+              </li>
+            );
+          })}
+        </ol>
+
+        {detail.resolution && (
+          <div className={styles.customerOutcome}>
+            <div className={styles.customerOutcomeHead}>
+              <CheckCircle2 size={16} aria-hidden="true" />
+              <strong>Kết quả xử lý</strong>
+              {detail.resolvedAt && (
+                <time dateTime={detail.resolvedAt}>{qualityDate(detail.resolvedAt)}</time>
+              )}
+            </div>
+            <p className={styles.text}>{detail.resolution}</p>
+          </div>
+        )}
+
+        {detail.outcome === 'REFUND_REVIEW' && detail.status === 'OPEN' && (
+          <div className={styles.customerNotice}>
+            <Clock size={16} aria-hidden="true" />
+            <p>Hồ sơ đã chuyển sang xét duyệt. Khoản hoàn chưa được chi.</p>
+          </div>
+        )}
+
+        {replacement && (
+          <div className={styles.customerReplacement}>
+            <div className={styles.customerReplacementHead}>
+              <Package size={16} aria-hidden="true" />
+              <strong>Hoa thay thế</strong>
+              <span className={styles.statusPill} data-state={replacement.state}>
+                {qualityLabels[replacement.state] || replacement.state}
+              </span>
+            </div>
+            {replacement.state === 'READY' && (
+              <p>
+                Đến đúng kiosk của đơn gốc, chọn “Nhận hoa thay” và dùng biên nhận gốc. Không cần
+                thanh toán thêm.
+              </p>
+            )}
+            {replacement.expiresAt && ['READY', 'LOADED'].includes(replacement.state) && (
+              <p className={styles.customerMetaTime}>
+                <Clock size={14} aria-hidden="true" />
+                <span>Hạn giữ hoa: {qualityDate(replacement.expiresAt)}</span>
+              </p>
+            )}
+          </div>
+        )}
+
+        <div className={styles.customerBlock}>
+          <span className={styles.customerBlockLabel}>Nội dung bạn đã gửi</span>
+          <p className={`${styles.customerReasonBox} ${styles.text}`}>{detail.reason}</p>
+        </div>
+
+        {detail.items.length > 0 && (
+          <div className={styles.customerBlock}>
+            <span className={styles.customerBlockLabel}>Hoa trong đơn gốc</span>
+            <ul className={styles.customerItemsList}>
+              {detail.items.map((item) => (
+                <li key={item.orderItemId}>
+                  <span>{item.name}</span>
+                  {item.slotCode && <span className={styles.slotChip}>Ô {item.slotCode}</span>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <details className={styles.customerEvidence}>
+          <summary>
+            <ImageIcon size={16} aria-hidden="true" />
+            <span>Ảnh minh chứng</span>
+            {evidence.items.length > 0 && (
+              <span className={styles.evidenceCount}>
+                {evidence.items.length}
+                {evidence.hasMore ? '+' : ''}
+              </span>
+            )}
+            <ChevronDown size={16} aria-hidden="true" className={styles.chevron} />
+          </summary>
+          <div className={styles.customerEvidenceBody}>
+            {!evidence.items.length ? (
+              <p className={styles.emptyEvidence}>Không có ảnh ở trang này.</p>
+            ) : (
+              <ul className={styles.customerEvidenceGrid}>
+                {evidence.items.map((photo) => (
+                  <EvidencePhoto
+                    key={photo.id}
+                    photo={photo}
+                    complaintId={detail.id}
+                    scope={scope}
+                    capability={capability}
+                  />
+                ))}
+              </ul>
+            )}
+            {(Number(evidence.page) > 1 || evidence.hasMore) && (
+              <div className={styles.customerEvidencePages}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={Number(evidence.page) <= 1}
+                  onClick={() => onPage(Number(evidence.page) - 1)}
+                >
+                  Trang ảnh trước
+                </Button>
+                <span>Trang {evidence.page}</span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!evidence.hasMore}
+                  onClick={() => onPage(Number(evidence.page) + 1)}
+                >
+                  Trang ảnh tiếp
+                </Button>
+              </div>
+            )}
+          </div>
+        </details>
+      </div>
+    );
+  }
   if (scope === 'seller')
     return (
       <>
@@ -325,7 +516,7 @@ export default function QualityComplaintDetails({
           </ul>
         </div>
       )}
-      {scope !== 'customer' && task && !hideTaskContext && (
+      {task && !hideTaskContext && (
         <div className={styles.flow}>
           <p className={styles.text}>
             <strong>Việc được giao: </strong>
@@ -342,7 +533,7 @@ export default function QualityComplaintDetails({
       {replacement && (
         <div className={styles.flow}>
           <strong>{qualityLabels[replacement.state] || replacement.state}</strong>
-          {scope !== 'customer' && <p>Ô {replacement.slotCode}</p>}
+          <p>Ô {replacement.slotCode}</p>
           {replacement.state === 'READY' && (
             <p>
               Đến đúng kiosk của đơn gốc, chọn “Nhận hoa thay” và dùng biên nhận gốc. Không cần

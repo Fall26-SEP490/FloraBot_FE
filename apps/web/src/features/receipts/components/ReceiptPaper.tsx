@@ -1,5 +1,4 @@
 import type { Ref } from 'react';
-import { Flower2 } from '@florabot/ui';
 import type { ReceiptData } from '../receipts.types';
 import { date, money } from '../receipts.utils';
 
@@ -12,47 +11,64 @@ export default function ReceiptPaper({
   status: string;
   headingRef: Ref<HTMLHeadingElement>;
 }) {
-  const refundRelated = ['DISPENSE_FAILED', 'DISPUTED', 'REFUNDED'].includes(receipt.status);
+  const pendingRefund = Number(receipt.refunds.pendingAmount);
+  const paidRefund = Number(receipt.refunds.paidAmount);
   return (
     <article className="receipt-paper" aria-label="Biên nhận đơn hoa">
       <header className="receipt-paper-brand">
-        <div>
-          <Flower2 size={26} aria-hidden="true" />
-          <strong>FloraBot</strong>
-        </div>
+        <span className="receipt-paper-emblem" aria-hidden="true">
+          <img src="/favicon-rose.png" alt="" width={38} height={38} />
+        </span>
+        <strong>FloraBot</strong>
         <p>BIÊN NHẬN ĐƠN HOA</p>
-        <time dateTime={receipt.createdAt}>{date(receipt.createdAt)}</time>
       </header>
-      <div className="receipt-paper-code">
-        <span>Mã đơn hàng</span>
-        <h2 id="receipt-result" ref={headingRef} tabIndex={-1}>
-          Đơn {receipt.orderCode}
-        </h2>
-      </div>
-      <dl className="receipt-paper-facts">
+      <div className="receipt-paper-meta">
         <div>
-          <dt>Trạng thái</dt>
-          <dd>{status}</dd>
+          <span className="receipt-meta-label">Mã đơn hàng</span>
+          <h2 id="receipt-result" ref={headingRef} tabIndex={-1}>
+            Đơn {receipt.orderCode}
+          </h2>
+        </div>
+        <div>
+          <span className="receipt-meta-label">Ngày tạo đơn</span>
+          <p className="receipt-meta-value">
+            <time dateTime={receipt.createdAt}>{date(receipt.createdAt)}</time>
+          </p>
+        </div>
+        <div>
+          <span className="receipt-meta-label">Trạng thái</span>
+          <p className="receipt-meta-value">
+            <span className="receipt-status" data-status={receipt.status}>
+              {status}
+            </span>
+          </p>
         </div>
         {receipt.completedAt && (
           <div>
-            <dt>Nhận hoa lúc</dt>
-            <dd>
+            <span className="receipt-meta-label">Nhận hoa lúc</span>
+            <p className="receipt-meta-value">
               <time dateTime={receipt.completedAt}>{date(receipt.completedAt)}</time>
-            </dd>
+            </p>
           </div>
         )}
-      </dl>
+      </div>
       <div className="receipt-paper-lines">
-        <h3>Chi tiết tiền hàng</h3>
+        <h3 className="sr-only">Chi tiết tiền hàng</h3>
+        <div className="receipt-items-head" aria-hidden="true">
+          <span>STT</span>
+          <span>Sản phẩm</span>
+          <span>SL</span>
+          <span>Đơn giá</span>
+          <span>Thành tiền</span>
+        </div>
         <ul className="receipt-items">
           {receipt.items.map((item, index) => (
             <li key={index}>
-              <strong>{item.name}</strong>
-              <span>
-                {item.quantity} × {money(item.unitPrice)}
-              </span>
-              <span>{money(item.total)}</span>
+              <span className="receipt-item-no">{index + 1}</span>
+              <strong className="receipt-item-name">{item.name}</strong>
+              <span className="receipt-item-qty">{item.quantity}</span>
+              <span className="receipt-item-price">{money(item.unitPrice)}</span>
+              <span className="receipt-item-total">{money(item.total)}</span>
             </li>
           ))}
         </ul>
@@ -65,7 +81,7 @@ export default function ReceiptPaper({
         {Number(receipt.discount) > 0 && (
           <div>
             <dt>Giảm giá</dt>
-            <dd>{money(receipt.discount)}</dd>
+            <dd>-{money(receipt.discount)}</dd>
           </div>
         )}
         <div className="receipt-paper-total">
@@ -74,13 +90,13 @@ export default function ReceiptPaper({
             <strong>{money(receipt.total)}</strong>
           </dd>
         </div>
-        {(Number(receipt.refunds.pendingAmount) > 0 || refundRelated) && (
+        {pendingRefund > 0 && (
           <div>
             <dt>Hoàn tiền đang chờ</dt>
             <dd>{money(receipt.refunds.pendingAmount)}</dd>
           </div>
         )}
-        {(Number(receipt.refunds.paidAmount) > 0 || refundRelated) && (
+        {(paidRefund > 0 || receipt.status === 'REFUNDED') && (
           <div>
             <dt>Đã hoàn</dt>
             <dd>{money(receipt.refunds.paidAmount)}</dd>
@@ -89,7 +105,6 @@ export default function ReceiptPaper({
       </dl>
       <footer className="receipt-paper-footer">
         <p>Cảm ơn bạn đã chọn FloraBot.</p>
-        <span>Tươi mới từng khoảnh khắc.</span>
       </footer>
     </article>
   );

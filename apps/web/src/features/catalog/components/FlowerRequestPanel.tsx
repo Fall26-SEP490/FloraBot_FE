@@ -37,6 +37,7 @@ function SelectedFlowerRequestPanel({
   const closeRef = useRef<HTMLButtonElement>(null);
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [failedPhoto, setFailedPhoto] = useState<string | null>(null);
   const [uncertain, setUncertain] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
   const [leaveForChat, setLeaveForChat] = useState(false);
@@ -128,14 +129,6 @@ function SelectedFlowerRequestPanel({
         aria-describedby={confirmClose ? 'discard-request-description' : undefined}
       >
         <div className="flower-request-heading">
-          {!confirmClose && selected.photo && (
-            <img
-              src={selected.photo}
-              alt=""
-              className="flower-request-header-thumb"
-              aria-hidden="true"
-            />
-          )}
           <div className="flower-request-header-content">
             <h2 id="selected-flower" className="flower-request-title">
               {confirmClose
@@ -144,12 +137,6 @@ function SelectedFlowerRequestPanel({
                   : 'Đóng yêu cầu đặt trước?'
                 : 'Yêu cầu đặt trước'}
             </h2>
-            {!confirmClose && (
-              <p className="flower-request-meta">
-                <span className="flower-request-header-name">{selected.name}</span> ·{' '}
-                {selected.shopName}
-              </p>
-            )}
           </div>
           <Button
             ref={closeRef}
@@ -167,6 +154,29 @@ function SelectedFlowerRequestPanel({
           >
             <X size={18} aria-hidden="true" />
           </Button>
+          {!confirmClose && (
+            <div className="flower-request-product-row">
+              {selected.photo && (
+                <img
+                  src={
+                    failedPhoto === selected.photo
+                      ? '/images/floral-white-online.webp'
+                      : selected.photo
+                  }
+                  onError={() => setFailedPhoto(selected.photo!)}
+                  alt=""
+                  className="flower-request-header-thumb"
+                  aria-hidden="true"
+                />
+              )}
+              <div className="flower-request-product-info">
+                <span className="flower-request-header-name" title={selected.name}>
+                  {selected.name}
+                </span>
+                <p className="flower-request-meta">{selected.shopName}</p>
+              </div>
+            </div>
+          )}
         </div>
         <div className="flower-request-body">
           {confirmClose && (

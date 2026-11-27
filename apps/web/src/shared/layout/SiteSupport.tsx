@@ -15,6 +15,10 @@ export function SiteSupport() {
     pathname !== '/admin/login';
   const customer = user?.role === 'CUSTOMER';
   const compact = workspace && !customer;
+  const inline =
+    /^\/(tai-khoan|ho-so|receipt|phan-anh|dang-nhap|dang-ky|quen-mat-khau|dat-lai-mat-khau)(\/|$)/.test(
+      pathname,
+    );
   const phone = process.env.NEXT_PUBLIC_SUPPORT_PHONE?.trim() || '0355 357 665';
   const phoneLink = 'tel:' + phone.replace(/[^+\d]/g, '');
   const label = 'Gọi hotline ' + phone;
@@ -23,6 +27,7 @@ export function SiteSupport() {
     <aside
       className={'site-support' + (compact ? ' site-support--compact' : '')}
       data-customer={customer ? 'true' : undefined}
+      data-inline={inline ? 'true' : undefined}
       aria-label="Hỗ trợ FloraBot"
     >
       <a className="site-hotline-button site-support-control" href={phoneLink} aria-label={label}>

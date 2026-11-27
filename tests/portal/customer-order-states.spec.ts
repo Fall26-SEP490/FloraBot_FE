@@ -191,6 +191,14 @@ for (const width of [390, 1440]) {
       const card = page.locator(`#preorder-${base.id}`);
       await expect(card).toHaveAttribute('open', '');
       await expect(card).toContainText(item.text);
+      if (item.key === 'pickup-expired') {
+        await expect(card).not.toContainText('Hoa đã sẵn sàng tại tủ.');
+      }
+      if (row.orderId) {
+        const historicalAdjustment = card.locator('[data-history="true"]');
+        await expect(historicalAdjustment).toContainText('Điều chỉnh phụ kiện trong báo giá');
+        await expect(historicalAdjustment).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+      }
       await expect(card.locator('img')).toBeVisible();
       if (item.disabled)
         await expect(card.getByRole('button', { name: item.disabled, exact: true })).toBeDisabled();

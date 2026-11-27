@@ -1,5 +1,6 @@
 /* Keep the public rental layout independent from staff pricing and workspace forms. */
 .workspace-portal-root:has(.kiosk-onboarding-container) {
+  display: flow-root;
   background:
     linear-gradient(#fafbf5e6, #fafbf5e6),
     url('/images/generated/florabot-pattern.webp') top left / 520px repeat;

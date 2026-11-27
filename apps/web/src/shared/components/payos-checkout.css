@@ -24,10 +24,10 @@ div.management-modal.payos-checkout-modal {
 }
 .payos-qr-box {
   background: #ffffff;
-  padding: 0.5rem;
-  border-radius: 12px;
-  border: 1px solid var(--color-border, #e5e7eb);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  padding: 0.65rem;
+  border-radius: 14px;
+  border: 1px solid #d7e3d6;
+  box-shadow: 0 6px 18px rgb(24 62 43 / 8%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -41,14 +41,14 @@ div.management-modal.payos-checkout-modal {
 }
 .payos-qr-error {
   margin: 0;
-  color: #dc2626;
+  color: #a8201a;
   font-size: 0.875rem;
 }
 .payos-qr-instruction {
   margin: 0;
-  font-size: 0.9375rem;
+  font-size: 0.92rem;
   font-weight: 500;
-  color: var(--color-text-main, #1f2937);
+  color: #183e2b;
 }
 .payos-qr-loading {
   display: flex;
@@ -92,10 +92,10 @@ div.management-modal.payos-checkout-modal {
 }
 .payos-payment-details {
   width: 100%;
-  background: var(--color-workspace-surface-hover, #f9fafb);
-  border: 1px solid var(--color-border, #e5e7eb);
-  border-radius: 8px;
-  padding: 0.625rem 0.875rem;
+  background: #f7faf6;
+  border: 1px solid #dce6d9;
+  border-radius: 10px;
+  padding: 0.75rem 0.95rem;
   display: flex;
   flex-direction: column;
   gap: 0.625rem;
@@ -108,22 +108,23 @@ div.management-modal.payos-checkout-modal {
   gap: 0.5rem;
 }
 .payos-detail-label {
-  color: var(--color-text-muted, #6b7280);
+  color: #4c6656;
 }
 .payos-detail-value {
   font-weight: 600;
-  color: var(--color-text-main, #111827);
+  color: #183e2b;
   text-align: right;
   overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
 }
 .payos-detail-value.payos-amount {
-  font-size: 1.125rem;
-  color: #047857;
+  font-size: 1.15rem;
+  color: #165331;
   white-space: nowrap;
 }
 .payos-checkout-footer {
   width: 100%;
-  border-top: 1px solid var(--color-border, #e5e7eb);
+  border-top: 1px solid #e2ebe0;
   padding-top: 1rem;
   display: flex;
   flex-direction: column;
@@ -134,7 +135,7 @@ div.management-modal.payos-checkout-modal {
   flex: 1;
   margin: 0;
   font-size: 0.8125rem;
-  color: var(--color-text-muted, #6b7280);
+  color: #4c6656;
 }
 .payos-checkout-footer-buttons {
   display: flex;

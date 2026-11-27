@@ -6,6 +6,12 @@
   border-radius: 10px;
 }
 
+.section > strong {
+  color: #183e2b;
+  font-size: 0.825rem;
+  font-weight: 600;
+}
+
 .section :is(p, ul, dl, dd) {
   margin: 0;
 }
@@ -13,11 +19,14 @@
 .section ul {
   padding-inline-start: 1.25em;
   list-style: disc;
+  display: grid;
+  gap: 4px;
+  color: #365242;
 }
 
 .lines {
   display: grid;
-  gap: 8px;
+  gap: 7px;
 }
 
 .lines > div {
@@ -25,24 +34,60 @@
   justify-content: space-between;
   align-items: baseline;
   gap: 12px;
+  color: #214532;
 }
 
 .lines dd {
   white-space: nowrap;
+  font-weight: 500;
+  color: #183e2b;
   font-variant-numeric: tabular-nums;
 }
 
 .lines small {
   display: block;
   margin-top: 2px;
-  font-size: 0.8125rem;
-  color: #48634f;
+  font-size: 0.78rem;
+  color: #4c6656;
 }
 
-.subtotal,
-.adjustments {
+.subtotal {
   border-top: 1px solid var(--border, #dae4d9);
   padding-top: 8px;
+}
+
+.adjustments {
+  margin-top: 4px;
+  padding: 9px 11px;
+  border: 1px solid #ecd19d;
+  border-radius: 9px;
+  background: #fff7e8;
+  color: #74450d;
+  display: grid;
+  gap: 5px;
+}
+
+.adjustments > strong {
+  color: #74450d;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.adjustments ul {
+  color: #6b3f0b;
+  font-size: 0.8rem;
+}
+
+.adjustments[data-history='true'] {
+  padding: 8px 0 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #4c6656;
+}
+
+.adjustments[data-history='true'] :is(strong, ul) {
+  color: inherit;
 }
 
 .quoteOption {

@@ -12,9 +12,7 @@ import { useQuery } from '@tanstack/react-query';
 import {
   Button,
   Check,
-  CheckCircle2,
-  Clock,
-  LogIn,
+  ChevronDown,
   MapPin,
   Minus,
   Plus,
@@ -306,7 +304,7 @@ export function FlowerRequestForm({
   const currentPickupError =
     pickupError ||
     (pickup && !pickupTimeAllowed(pickupISO, pickupTime, calendarNow)
-      ? 'Chọn giờ nhận trong tương lai, tối đa 30 ngày.'
+      ? 'Giờ nhận phải sau ít nhất 1 giờ và trong 30 ngày kể từ lúc đặt.'
       : '');
   const timeRef = useRef<HTMLSelectElement>(null);
   const briefRef = useRef<HTMLTextAreaElement>(null);
@@ -354,7 +352,7 @@ export function FlowerRequestForm({
       }
       const pickupDate = new Date(`${pickup}:00+07:00`);
       if (!isValidPickupTime(pickupDate)) {
-        setPickupError('Chọn thời gian nhận trong tương lai, tối đa 30 ngày tới.');
+        setPickupError('Giờ nhận phải sau ít nhất 1 giờ và trong 30 ngày kể từ lúc đặt.');
         if (pickupDay && !pickupTime) timeRef.current?.focus();
         else pickupRef.current?.focus();
         return;
@@ -454,14 +452,10 @@ export function FlowerRequestForm({
     return (
       <div role="status" className="flower-request-done">
         <div className="flower-request-done-icon" aria-hidden="true">
-          <Check size={24} />
+          <Check size={20} />
         </div>
         <h3>Đã nhận yêu cầu của bạn</h3>
-        <p>Shop sẽ báo giá và xác nhận lịch nhận trong tài khoản của bạn.</p>
-        <p className="flower-request-pickup-hint">
-          <Clock size={16} aria-hidden="true" />
-          <span>Khi hoa sẵn sàng, mã nhận hoa sẽ được gửi đến email đăng nhập của bạn.</span>
-        </p>
+        <p>Shop sẽ kiểm tra yêu cầu, báo giá và xác nhận lịch nhận hoa.</p>
         <Link
           href={`/tai-khoan${submittedId ? `?requestId=${encodeURIComponent(submittedId)}` : ''}#web-orders`}
         >
@@ -490,36 +484,27 @@ export function FlowerRequestForm({
     const authQuery = `?returnUrl=${encodeURIComponent(returnUrl)}`;
     return (
       <div className="flower-request-guest-card">
-        <div className="flower-request-guest-icon-badge">
-          <LogIn size={26} aria-hidden="true" />
-        </div>
         <div className="flower-request-guest-content">
-          <h3 className="flower-request-guest-title">Đăng nhập để gửi yêu cầu báo giá</h3>
-          <p className="flower-request-guest-desc">
-            Đăng nhập để nhận báo giá từ shop và theo dõi đơn đặt hoa của bạn.
-          </p>
+          <h3 className="flower-request-guest-title">Đăng nhập để đặt hoa</h3>
+          <p className="flower-request-guest-desc">Nhận báo giá và trao đổi yêu cầu với shop.</p>
           <div className="flower-request-guest-trust-list">
             <div className="flower-request-trust-item">
               <ShieldCheck size={16} className="flower-request-trust-icon" aria-hidden="true" />
-              <span>Chưa cần thanh toán · Miễn phí gửi yêu cầu</span>
-            </div>
-            <div className="flower-request-trust-item">
-              <CheckCircle2 size={16} className="flower-request-trust-icon" aria-hidden="true" />
-              <span>Trao đổi mẫu và yêu cầu với shop</span>
+              <span>Chỉ thanh toán sau khi đồng ý báo giá.</span>
             </div>
           </div>
           <Link
             className="button button-primary flower-request-guest-login-btn"
             href={`/dang-nhap${authQuery}`}
           >
-            Đăng nhập để tiếp tục →
+            Đăng nhập
           </Link>
-          <p className="flower-request-guest-register-text">
-            Chưa có tài khoản?{' '}
-            <Link className="flower-request-register-link" href={`/dang-ky${authQuery}`}>
-              Tạo tài khoản mới
-            </Link>
-          </p>
+          <Link
+            className="button button-outline flower-request-register-link"
+            href={`/dang-ky${authQuery}`}
+          >
+            Tạo tài khoản
+          </Link>
         </div>
       </div>
     );
@@ -536,30 +521,292 @@ export function FlowerRequestForm({
   return (
     <form className="flower-request-form" noValidate onSubmit={(event) => void submit(event)}>
       <div className="flower-request-scroll">
-        <div className="flower-request-intro">
-          <div className="flower-request-intro-text">
-            <div className="flower-request-intro-badge">
-              <ShieldCheck size={15} aria-hidden="true" />
-              <strong>Chưa cần thanh toán</strong>
-            </div>
-            <p>Shop xác nhận giá và lịch nhận.</p>
-          </div>
-        </div>
+        <p className="flower-request-intro-note">
+          <ShieldCheck size={15} aria-hidden="true" />
+          Shop báo giá trước khi bạn thanh toán.
+        </p>
         <fieldset disabled={busy || uncertain}>
           <legend className="sr-only">Đặt trước, shop chuẩn bị theo yêu cầu</legend>
+          <div className="flower-request-field">
+            <label htmlFor={`kiosk-${item.productId}`}>Tủ nhận hoa</label>
+            <div className="flower-request-kiosk-picker">
+              <Select
+                id={`kiosk-${item.productId}`}
+                value={selectedKiosk?.kioskId ?? ''}
+                disabled={kioskListLoading || kioskListError || noKiosksAvailable}
+                onChange={(event) => chooseKiosk(event.target.value)}
+                required
+              >
+                <option value="" disabled>
+                  {noKiosksAvailable ? 'Không có tủ nhận khả dụng' : 'Chọn tủ nhận hoa'}
+                </option>
+                {eligibleKiosks.map((entry) => (
+                  <option key={entry.kioskId} value={entry.kioskId}>
+                    {entry.kioskName}
+                    {origin && distanceLabel(entry) ? ` · ${distanceLabel(entry)}` : ''}
+                  </option>
+                ))}
+              </Select>
+              {eligibleKiosks.length > 1 && !kioskListError && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flower-request-locate-btn"
+                  aria-label="Tìm tủ gần tôi"
+                  title={locationPending ? 'Đang lấy vị trí…' : 'Tìm tủ gần tôi'}
+                  onClick={locate}
+                  disabled={locationPending || (Boolean(origin) && directory.isFetching)}
+                >
+                  <MapPin size={18} aria-hidden="true" />
+                </Button>
+              )}
+            </div>
+            {kioskListLoading && <p role="status">Đang kiểm tra tủ nhận khả dụng…</p>}
+            {kioskListError && (
+              <p role="alert">Chưa tải được danh sách tủ nhận. Vui lòng thử lại.</p>
+            )}
+            {noKiosksAvailable && (
+              <p role="alert">Tất cả tủ nhận hiện không khả dụng. Thử tải lại sau.</p>
+            )}
+            {(kioskListError || noKiosksAvailable) && (
+              <IconActionButton
+                type="button"
+                variant="outline"
+                onClick={refreshKiosks}
+                action="reload"
+                label="Tải lại tủ nhận"
+              />
+            )}
+            {selectedKiosk?.address && (
+              <div className="flower-request-kiosk-tools">
+                {selectedKiosk?.address && (
+                  <p className="flower-request-kiosk-address">
+                    <MapPin size={16} aria-hidden="true" />
+                    <span>{selectedKiosk.address}</span>
+                  </p>
+                )}
+              </div>
+            )}
+            {locationError && <p role="status">{locationError}</p>}
+            {!locationError && origin && directory.isError && (
+              <p role="status">
+                Đã lấy được vị trí, nhưng chưa tải được tọa độ tủ. Bấm “Tìm tủ gần tôi” để thử lại.
+              </p>
+            )}
+            {!locationError &&
+              origin &&
+              directory.isSuccess &&
+              !locationPending &&
+              !nearestKiosk && (
+                <p role="status">
+                  Các tủ khả dụng chưa có tọa độ để so khoảng cách. Bạn có thể chọn theo tên.
+                </p>
+              )}
+            {nearestKiosk && nearestKiosk.kioskId !== kioskId && !directory.isFetching && (
+              <div className="flower-request-nearest">
+                <MapPin size={18} aria-hidden="true" />
+                <p role="status">
+                  <span
+                    className={
+                      nearestKiosk.kioskId === kioskId ? 'flower-request-nearest-label' : 'sr-only'
+                    }
+                  >
+                    {nearestKiosk.kioskId === kioskId
+                      ? 'Đã chọn tủ gần nhất'
+                      : 'Tủ nhận gần nhất của shop'}
+                  </span>
+                  <strong>{nearestKiosk.kioskName}</strong>
+                  <span title="Khoảng cách đường chim bay từ vị trí của bạn">
+                    {distanceLabel(nearestKiosk)}
+                  </span>
+                </p>
+                {nearestKiosk.kioskId !== kioskId && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => chooseKiosk(nearestKiosk.kioskId)}
+                  >
+                    Chọn tủ này
+                  </Button>
+                )}
+              </div>
+            )}
+            {nearestKiosk && nearestKiosk.kioskId === kioskId && !directory.isFetching && (
+              <p role="status" className="flower-request-location-selected">
+                Đã chọn tủ gần nhất
+              </p>
+            )}
+          </div>
+          <div className="flower-request-field">
+            <div className="flower-request-date-fields">
+              <div>
+                <label htmlFor={`pickup-${item.productId}`}>Ngày nhận hoa</label>
+                <VietnamDateInput
+                  id={`pickup-${item.productId}`}
+                  triggerRef={pickupRef}
+                  label="Ngày nhận hoa"
+                  required
+                  value={pickupISO}
+                  min={vietnamDate(new Date(calendarNow))}
+                  max={vietnamDate(new Date(calendarNow + 30 * 86400000))}
+                  onValueChange={(value) => {
+                    setPickupDay(value.split('-').reverse().join('/'));
+                    if (pickupTime && !pickupTimeAllowed(value, pickupTime)) {
+                      setPickupTime('');
+                      setPickupError('Chọn lại giờ nhận phù hợp.');
+                    } else setPickupError('');
+                  }}
+                  invalid={Boolean(currentPickupError)}
+                  describedBy={
+                    currentPickupError
+                      ? `pickup-error-${item.productId}`
+                      : `pickup-hint-${item.productId}`
+                  }
+                />
+              </div>
+              <div>
+                <label htmlFor={`pickup-time-${item.productId}`}>Giờ nhận hoa</label>
+                <Select
+                  id={`pickup-time-${item.productId}`}
+                  ref={timeRef}
+                  aria-label="Giờ nhận hoa"
+                  required
+                  disabled={!pickupISO}
+                  value={pickupTime}
+                  onChange={(event) => {
+                    setPickupTime(event.target.value);
+                    setPickupError('');
+                  }}
+                  aria-invalid={Boolean(currentPickupError)}
+                  aria-describedby={
+                    currentPickupError
+                      ? `pickup-error-${item.productId}`
+                      : `pickup-hint-${item.productId}`
+                  }
+                >
+                  <option value="" disabled hidden>
+                    {pickupISO ? 'Chọn giờ' : 'Chọn ngày trước'}
+                  </option>
+                  {Array.from({ length: 48 }, (_, index) => {
+                    const time = `${String(Math.floor(index / 2)).padStart(2, '0')}:${index % 2 ? '30' : '00'}`;
+                    return (
+                      <option
+                        key={time}
+                        value={time}
+                        disabled={!pickupTimeAllowed(pickupISO, time, calendarNow)}
+                      >
+                        {time}
+                      </option>
+                    );
+                  })}
+                </Select>
+              </div>
+            </div>
+            <div className="flower-request-feedback">
+              <p
+                id={`${currentPickupError ? 'pickup-error' : 'pickup-hint'}-${item.productId}`}
+                role={
+                  currentPickupError || availability.data?.available === false ? 'alert' : 'status'
+                }
+                className={
+                  currentPickupError || availability.data?.available === false
+                    ? 'flower-request-field-error'
+                    : 'quiet'
+                }
+              >
+                {currentPickupError ||
+                  (availability.isFetching
+                    ? 'Đang kiểm tra chỗ trống…'
+                    : availability.data?.available === false
+                      ? 'Tủ chưa thể nhận lịch này. Chọn tủ hoặc giờ khác.'
+                      : availability.isError
+                        ? 'Chưa kiểm tra được chỗ trống.'
+                        : 'Nhận sau ít nhất 1 giờ, trong 30 ngày.')}
+              </p>
+            </div>
+          </div>
+          <div className="flower-request-field">
+            <label htmlFor={`brief-${item.productId}`}>Bạn muốn bó hoa như thế nào?</label>
+            <textarea
+              id={`brief-${item.productId}`}
+              ref={briefRef}
+              minLength={10}
+              maxLength={2000}
+              required
+              value={instructions}
+              onChange={(event) => {
+                setInstructions(event.target.value);
+                setBriefError('');
+              }}
+              placeholder="Ví dụ: Hoa hồng pastel, tặng sinh nhật…"
+              aria-invalid={Boolean(briefError)}
+              aria-describedby={`brief-hint-${item.productId}${briefError ? ` brief-error-${item.productId}` : ''}`}
+            />
+            {briefError && (
+              <p
+                className="flower-request-field-error"
+                role="alert"
+                id={`brief-error-${item.productId}`}
+              >
+                {briefError}
+              </p>
+            )}
+            <div className="flower-request-quick-tags" role="group" aria-label="Gợi ý nội dung">
+              {briefSuggestions.map(({ label, text }) => {
+                const added = instructions
+                  .toLocaleLowerCase('vi-VN')
+                  .includes(text.toLocaleLowerCase('vi-VN'));
+                const next = instructions.trim() ? `${instructions.trimEnd()}\n${text}` : text;
+                return (
+                  <button
+                    key={label}
+                    type="button"
+                    className="quick-tag-btn"
+                    aria-disabled={added || next.length > 2000}
+                    onClick={() => {
+                      if (added || next.length > 2000) return;
+                      setInstructions(next);
+                      setBriefError('');
+                    }}
+                  >
+                    {added ? (
+                      <Check size={14} aria-hidden="true" />
+                    ) : (
+                      <Plus size={14} aria-hidden="true" />
+                    )}
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="quiet sr-only" id={`brief-hint-${item.productId}`}>
+              Nhập từ 10 đến 2.000 ký tự.
+            </p>
+          </div>
           {item.sellerId &&
             (!accessories.isSuccess ||
               Boolean(accessories.data?.length) ||
               selectedAccessories.length > 0) && (
-              <section
+              <details
                 className="flower-request-field flower-request-accessories"
+                open={invalidAccessories || undefined}
+                role="region"
                 aria-label="Phụ kiện kèm hoa"
               >
-                <h3 className="flower-request-accessory-title">
+                <summary className="flower-request-accessory-title">
                   <Package size={18} aria-hidden="true" />
-                  Phụ kiện <span>Tùy chọn</span>
-                </h3>
-                <p className="quiet">Gói cùng bó hoa, kiểm tra tồn khi xác nhận báo giá.</p>
+                  Phụ kiện{' '}
+                  <span>
+                    {selectedAccessories.length
+                      ? `Đã chọn ${selectedAccessories.reduce((total, entry) => total + Number(entry.quantity), 0)}`
+                      : 'Tùy chọn'}
+                  </span>
+                  <ChevronDown
+                    size={16}
+                    className="flower-request-accessory-chevron"
+                    aria-hidden="true"
+                  />
+                </summary>
                 {accessories.isPending ? (
                   <p role="status">Đang tải phụ kiện của shop…</p>
                 ) : accessories.isError ? (
@@ -679,253 +926,8 @@ export function FlowerRequestForm({
                     </Button>
                   </div>
                 )}
-              </section>
+              </details>
             )}
-          <div className="flower-request-field">
-            <label htmlFor={`kiosk-${item.productId}`}>Tủ nhận hoa</label>
-            <Select
-              id={`kiosk-${item.productId}`}
-              value={selectedKiosk?.kioskId ?? ''}
-              disabled={kioskListLoading || kioskListError || noKiosksAvailable}
-              onChange={(event) => chooseKiosk(event.target.value)}
-              required
-            >
-              <option value="" disabled>
-                {noKiosksAvailable ? 'Không có tủ nhận khả dụng' : 'Chọn tủ nhận hoa'}
-              </option>
-              {eligibleKiosks.map((entry) => (
-                <option key={entry.kioskId} value={entry.kioskId}>
-                  {entry.kioskName}
-                  {origin && distanceLabel(entry) ? ` · ${distanceLabel(entry)}` : ''}
-                </option>
-              ))}
-            </Select>
-            {kioskListLoading && <p role="status">Đang kiểm tra tủ nhận khả dụng…</p>}
-            {kioskListError && (
-              <p role="alert">Chưa tải được danh sách tủ nhận. Vui lòng thử lại.</p>
-            )}
-            {noKiosksAvailable && (
-              <p role="alert">Tất cả tủ nhận hiện không khả dụng. Thử tải lại sau.</p>
-            )}
-            {(kioskListError || noKiosksAvailable) && (
-              <IconActionButton
-                type="button"
-                variant="outline"
-                onClick={refreshKiosks}
-                action="reload"
-                label="Tải lại tủ nhận"
-              />
-            )}
-            {(selectedKiosk?.address || eligibleKiosks.length > 1) && (
-              <div className="flower-request-kiosk-tools">
-                {selectedKiosk?.address && (
-                  <p className="flower-request-kiosk-address">
-                    <MapPin size={16} aria-hidden="true" />
-                    <span>{selectedKiosk.address}</span>
-                  </p>
-                )}
-                {eligibleKiosks.length > 1 && !kioskListError && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flower-request-text-action"
-                    onClick={locate}
-                    disabled={locationPending || (Boolean(origin) && directory.isFetching)}
-                  >
-                    {locationPending
-                      ? 'Đang lấy vị trí…'
-                      : origin && directory.isFetching
-                        ? 'Đang tìm tủ…'
-                        : 'Tìm tủ gần tôi'}
-                  </Button>
-                )}
-              </div>
-            )}
-            {locationError && <p role="status">{locationError}</p>}
-            {!locationError && origin && directory.isError && (
-              <p role="status">
-                Đã lấy được vị trí, nhưng chưa tải được tọa độ tủ. Bấm “Tìm tủ gần tôi” để thử lại.
-              </p>
-            )}
-            {!locationError &&
-              origin &&
-              directory.isSuccess &&
-              !locationPending &&
-              !nearestKiosk && (
-                <p role="status">
-                  Các tủ khả dụng chưa có tọa độ để so khoảng cách. Bạn có thể chọn theo tên.
-                </p>
-              )}
-            {nearestKiosk && !directory.isFetching && (
-              <div className="flower-request-nearest">
-                <MapPin size={18} aria-hidden="true" />
-                <p role="status">
-                  <span className="flower-request-nearest-label">
-                    {nearestKiosk.kioskId === kioskId
-                      ? 'Đã chọn tủ gần nhất'
-                      : 'Tủ nhận gần nhất của shop'}
-                  </span>
-                  <strong>{nearestKiosk.kioskName}</strong>
-                  <span>{distanceLabel(nearestKiosk)} theo đường thẳng từ vị trí của bạn.</span>
-                </p>
-                {nearestKiosk.kioskId !== kioskId && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => chooseKiosk(nearestKiosk.kioskId)}
-                  >
-                    Chọn tủ này
-                  </Button>
-                )}
-              </div>
-            )}
-          </div>
-          <div className="flower-request-field">
-            <div className="flower-request-date-fields">
-              <div>
-                <label htmlFor={`pickup-${item.productId}`}>Ngày nhận hoa</label>
-                <VietnamDateInput
-                  id={`pickup-${item.productId}`}
-                  triggerRef={pickupRef}
-                  label="Ngày nhận hoa"
-                  required
-                  value={pickupISO}
-                  min={vietnamDate(new Date(calendarNow))}
-                  max={vietnamDate(new Date(calendarNow + 30 * 86400000))}
-                  onValueChange={(value) => {
-                    setPickupDay(value.split('-').reverse().join('/'));
-                    if (pickupTime && !pickupTimeAllowed(value, pickupTime)) {
-                      setPickupTime('');
-                      setPickupError('Chọn lại giờ nhận phù hợp.');
-                    } else setPickupError('');
-                  }}
-                  invalid={Boolean(currentPickupError)}
-                  describedBy={
-                    currentPickupError
-                      ? `pickup-error-${item.productId}`
-                      : `pickup-hint-${item.productId}`
-                  }
-                />
-              </div>
-              <div>
-                <label htmlFor={`pickup-time-${item.productId}`}>Giờ nhận hoa</label>
-                <Select
-                  id={`pickup-time-${item.productId}`}
-                  ref={timeRef}
-                  aria-label="Giờ nhận hoa"
-                  required
-                  disabled={!pickupISO}
-                  value={pickupTime}
-                  onChange={(event) => {
-                    setPickupTime(event.target.value);
-                    setPickupError('');
-                  }}
-                  aria-invalid={Boolean(currentPickupError)}
-                  aria-describedby={
-                    currentPickupError
-                      ? `pickup-error-${item.productId}`
-                      : `pickup-hint-${item.productId}`
-                  }
-                >
-                  <option value="" disabled hidden>
-                    {pickupISO ? 'Chọn giờ' : 'Chọn ngày trước'}
-                  </option>
-                  {Array.from({ length: 48 }, (_, index) => {
-                    const time = `${String(Math.floor(index / 2)).padStart(2, '0')}:${index % 2 ? '30' : '00'}`;
-                    return (
-                      <option
-                        key={time}
-                        value={time}
-                        disabled={!pickupTimeAllowed(pickupISO, time, calendarNow)}
-                      >
-                        {time}
-                      </option>
-                    );
-                  })}
-                </Select>
-              </div>
-            </div>
-            <div className="flower-request-feedback">
-              <p
-                id={`${currentPickupError ? 'pickup-error' : 'pickup-hint'}-${item.productId}`}
-                role={
-                  currentPickupError || availability.data?.available === false ? 'alert' : 'status'
-                }
-                className={
-                  currentPickupError || availability.data?.available === false
-                    ? 'flower-request-field-error'
-                    : 'quiet'
-                }
-              >
-                {currentPickupError ||
-                  (availability.isFetching
-                    ? 'Đang kiểm tra chỗ trống…'
-                    : availability.data?.available === false
-                      ? 'Tủ chưa thể nhận lịch này. Chọn tủ hoặc giờ khác.'
-                      : availability.isError
-                        ? 'Chưa kiểm tra được chỗ trống.'
-                        : 'Shop xác nhận lịch nhận cùng báo giá.')}
-              </p>
-            </div>
-          </div>
-          <div className="flower-request-field">
-            <label htmlFor={`brief-${item.productId}`}>Bạn muốn bó hoa như thế nào?</label>
-            <textarea
-              id={`brief-${item.productId}`}
-              ref={briefRef}
-              minLength={10}
-              maxLength={2000}
-              required
-              value={instructions}
-              onChange={(event) => {
-                setInstructions(event.target.value);
-                setBriefError('');
-              }}
-              placeholder="Ví dụ: Tặng sinh nhật, hoa hồng tông pastel, ngân sách 400.000 đ…"
-              aria-invalid={Boolean(briefError)}
-              aria-describedby={`brief-hint-${item.productId}${briefError ? ` brief-error-${item.productId}` : ''}`}
-            />
-            {briefError && (
-              <p
-                className="flower-request-field-error"
-                role="alert"
-                id={`brief-error-${item.productId}`}
-              >
-                {briefError}
-              </p>
-            )}
-            <div className="flower-request-quick-tags" role="group" aria-label="Gợi ý nội dung">
-              {briefSuggestions.map(({ label, text }) => {
-                const added = instructions
-                  .toLocaleLowerCase('vi-VN')
-                  .includes(text.toLocaleLowerCase('vi-VN'));
-                const next = instructions.trim() ? `${instructions.trimEnd()}\n${text}` : text;
-                return (
-                  <button
-                    key={label}
-                    type="button"
-                    className="quick-tag-btn"
-                    aria-disabled={added || next.length > 2000}
-                    onClick={() => {
-                      if (added || next.length > 2000) return;
-                      setInstructions(next);
-                      setBriefError('');
-                    }}
-                  >
-                    {added ? (
-                      <Check size={14} aria-hidden="true" />
-                    ) : (
-                      <Plus size={14} aria-hidden="true" />
-                    )}
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-            <p className="quiet sr-only" id={`brief-hint-${item.productId}`}>
-              Nhập từ 10 đến 2.000 ký tự.
-            </p>
-          </div>
         </fieldset>
         <p role="alert" className="error">
           {error}
@@ -938,7 +940,7 @@ export function FlowerRequestForm({
       )}
       <div className="flower-request-footer">
         {!uncertain && (
-          <p id={`request-ready-${item.productId}`} className="flower-request-ready" role="status">
+          <p id={`request-ready-${item.productId}`} className="sr-only" role="status">
             {!selectedKiosk
               ? kioskListLoading
                 ? 'Đang kiểm tra tủ nhận…'
@@ -953,7 +955,7 @@ export function FlowerRequestForm({
           </p>
         )}
         <div className="flower-request-reference-price">
-          <span>{selectedAccessories.length ? 'Tổng tạm tính' : 'Giá mẫu'}</span>
+          <span>{selectedAccessories.length ? 'Tổng tạm tính' : 'Giá tham khảo'}</span>
           <strong aria-live="polite">
             {accessorySubtotal === null
               ? 'Chưa xác định'

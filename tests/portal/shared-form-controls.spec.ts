@@ -110,6 +110,9 @@ for (const width of [390, 1440]) {
       dialog.getByRole('heading', { name: 'Đã nhận yêu cầu của bạn', exact: true }),
     ).toBeVisible();
     expect(writes).toHaveLength(1);
+    await expect(dialog.getByRole('link', { name: 'Xem yêu cầu vừa gửi' })).toBeInViewport();
+    expect(await dialog.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+    await dialog.screenshot({ path: testInfo.outputPath(`request-success-${width}.png`) });
     expect(writes[0]).toMatchObject({ pickupAt: expected, productId, kioskId });
   });
 }

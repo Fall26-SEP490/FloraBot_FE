@@ -52,6 +52,8 @@ async function mockCatalog(page: Page) {
     if (url.pathname.endsWith('/reviews')) {
       return route.fulfill({
         json: {
+          sellerId,
+          shopName: 'Tiệm Hoa An Nhiên',
           productAverage: 4,
           productCount: 1,
           shopAverage: 5,
@@ -134,6 +136,7 @@ for (const width of [390, 1440]) {
     await expect(cards.locator('.flower-meta-item[title="Tiệm Hoa An Nhiên"]')).toHaveCount(0);
     await expect(cards).toHaveCount(12);
     await expect(cards.first()).toContainText('Mẫu hoa 02');
+    await page.screenshot({ path: test.info().outputPath('shop-layout.png'), fullPage: true });
     if (width === 390) {
       const filter = (await page
         .getByRole('button', { name: 'Bộ lọc', exact: true })
@@ -179,4 +182,5 @@ test('a shop without public products shows a path back to the catalog', async ({
     '/dat-hoa',
   );
   await expect(page.locator('.flower-card')).toHaveCount(0);
+  await expect(page.locator('.catalog-store-header')).toContainText('Tiệm Hoa An Nhiên');
 });

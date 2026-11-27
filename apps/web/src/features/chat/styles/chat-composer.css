@@ -194,7 +194,6 @@
   border-radius: 0 !important;
   padding: 0.4rem 0.5rem !important;
   min-height: 38px !important;
-  height: 38px !important;
 }
 
 .chat-composer-textarea:focus {
@@ -205,13 +204,15 @@
 }
 
 .chat-composer-counter {
-  position: absolute;
-  right: 10px;
-  bottom: 8px;
+  align-self: flex-end;
+  margin-top: 2px;
   font-size: 0.72rem;
   color: #64735f;
   text-align: right;
   pointer-events: none;
+}
+.chat-composer-counter:empty {
+  display: none;
 }
 
 .chat-composer-counter.is-warning {

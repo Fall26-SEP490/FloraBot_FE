@@ -1,5 +1,15 @@
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
-import { ArrowLeft, Button, CheckCircle2, ChevronDown, CircleAlert, Clock } from '@florabot/ui';
+import {
+  ArrowLeft,
+  Button,
+  CheckCircle2,
+  ChevronDown,
+  CircleAlert,
+  ClipboardList,
+  Clock,
+  FileText,
+  QrCode,
+} from '@florabot/ui';
 import type { components } from '../../../../../packages/contracts/src/generated/api';
 import '../portal/styles/portal.css';
 import './styles/receipt.css';
@@ -197,9 +207,14 @@ function ReceiptContent({
         </p>
       </header>
       {complaintOnly && openingLink && (
-        <p role="status">
-          {complaintOnly ? 'Đang kiểm tra điều kiện phản ánh…' : 'Đang mở biên nhận…'}
-        </p>
+        <div className="complaint-state complaint-state-standalone">
+          <span className="complaint-standalone-icon" aria-hidden="true">
+            <Clock size={22} />
+          </span>
+          <p role="status" className="complaint-loading-text">
+            Đang kiểm tra điều kiện phản ánh…
+          </p>
+        </div>
       )}
       {!complaintOnly && (
         <section
@@ -209,8 +224,7 @@ function ReceiptContent({
         >
           <h2 id="receipt-lookup-title">Tra cứu biên nhận</h2>
           <p className="quiet">
-            Nhập hai mã từ kiosk hoặc liên kết biên nhận trong đơn hàng. Mã tra cứu không phải OTP
-            nhận hoa trong email.
+            Nhập mã từ kiosk hoặc liên kết đơn hàng (không phải OTP trong email).
           </p>
           <form
             onSubmit={(event) => {
@@ -234,7 +248,7 @@ function ReceiptContent({
               aria-describedby="receipt-help receipt-error"
             />
             <p className="quiet" id="receipt-help">
-              Dãy 36 ký tự tại kiosk, khác với mã đơn hàng.
+              Dãy 36 ký tự, khác với mã đơn hàng.
             </p>
             <label htmlFor="receipt-token">Mã tra cứu</label>
             <input
@@ -274,9 +288,7 @@ function ReceiptContent({
               )}
             </div>
           </form>
-          <p className="quiet receipt-privacy">
-            Giữ riêng hai mã: người có cả hai mã có thể xem và gửi yêu cầu cho đơn này.
-          </p>
+          <p className="quiet receipt-privacy">Giữ kín hai mã này để bảo vệ thông tin đơn hàng.</p>
         </section>
       )}
       {!complaintOnly && !receipt && (
@@ -285,6 +297,9 @@ function ReceiptContent({
             <p role="status">Đang mở biên nhận…</p>
           ) : (
             <>
+              <span className="receipt-placeholder-icon" aria-hidden="true">
+                <FileText size={24} />
+              </span>
               <h2>Biên nhận sẽ hiển thị tại đây</h2>
               <p>Nhập ID biên nhận và mã tra cứu để xem thông tin đơn hoa.</p>
             </>
@@ -292,27 +307,62 @@ function ReceiptContent({
         </div>
       )}
       {complaintOnly && !openingLink && !receipt && (
-        <div className="complaint-state">
+        <div
+          className={
+            error
+              ? 'complaint-state complaint-state-standalone complaint-state-error'
+              : 'complaint-state complaint-state-standalone'
+          }
+        >
           {error ? (
             <>
+              <span className="complaint-standalone-icon is-error" aria-hidden="true">
+                <CircleAlert size={22} />
+              </span>
               <h2>Chưa tải được thông tin đơn</h2>
-              <p role="alert">{error}</p>
-              <Button disabled={pending} onClick={() => void lookup()}>
-                {pending ? 'Đang kiểm tra…' : 'Thử lại'}
-              </Button>
+              <p role="alert" className="complaint-standalone-alert">
+                {error}
+              </p>
+              <div className="complaint-standalone-actions">
+                <Button disabled={pending} onClick={() => void lookup()}>
+                  {pending ? 'Đang kiểm tra…' : 'Thử lại'}
+                </Button>
+              </div>
             </>
           ) : (
             <>
+              <span className="complaint-standalone-icon" aria-hidden="true">
+                <FileText size={22} />
+              </span>
               <h2>Chọn đơn cần phản ánh</h2>
-              <p>Chọn đơn đã nhận hoa trong tài khoản hoặc dùng mã biên nhận nếu mua tại kiosk.</p>
-              <div className="receipt-actions">
-                <Button asChild>
-                  <a href="/tai-khoan#web-orders">Xem đơn hàng</a>
-                </Button>
-                <Button asChild variant="outline">
-                  <a href="/receipt">Tra cứu bằng mã biên nhận</a>
-                </Button>
+              <p className="complaint-standalone-lead">
+                Chọn đơn đã nhận hoa trong tài khoản hoặc dùng mã biên nhận nếu mua tại kiosk.
+              </p>
+              <div className="complaint-entry-options">
+                <div className="complaint-entry-card">
+                  <div className="complaint-entry-card-head">
+                    <ClipboardList size={18} aria-hidden="true" />
+                    <h3>Đơn đặt qua tài khoản</h3>
+                  </div>
+                  <p>Mở danh sách đơn hàng đã nhận và chọn mục phản ánh trực tiếp trên đơn.</p>
+                  <Button asChild>
+                    <a href="/tai-khoan#web-orders">Xem đơn hàng</a>
+                  </Button>
+                </div>
+                <div className="complaint-entry-card">
+                  <div className="complaint-entry-card-head">
+                    <QrCode size={18} aria-hidden="true" />
+                    <h3>Đơn mua tại kiosk</h3>
+                  </div>
+                  <p>Nhập ID biên nhận và mã tra cứu 8 ký tự hiển thị trên màn hình kiosk.</p>
+                  <Button asChild variant="outline">
+                    <a href="/receipt">Tra cứu bằng mã biên nhận</a>
+                  </Button>
+                </div>
               </div>
+              <p className="complaint-standalone-footnote">
+                Phản ánh chỉ áp dụng cho đơn đã nhận hoa và còn trong thời hạn hỗ trợ.
+              </p>
             </>
           )}
         </div>
@@ -392,23 +442,17 @@ function ReceiptContent({
                 </details>
               )}
               {Number(receipt.refunds.pendingAmount) > 0 && (
-                <>
-                  <p>
-                    {receipt.refundInformationProvided
-                      ? 'Đã nhận thông tin tài khoản hoàn tiền. Khoản hoàn đang chờ được xử lý.'
-                      : 'Khoản hoàn đang chờ thông tin tài khoản nhận tiền.'}
-                  </p>
-                  <RefundAccount
-                    orderId={receipt.orderId}
-                    trackingToken={token.trim().toUpperCase()}
-                    provided={receipt.refundInformationProvided}
-                    onSaved={() =>
-                      setReceipt((current) =>
-                        current ? { ...current, refundInformationProvided: true } : null,
-                      )
-                    }
-                  />
-                </>
+                <RefundAccount
+                  orderId={receipt.orderId}
+                  trackingToken={token.trim().toUpperCase()}
+                  provided={receipt.refundInformationProvided}
+                  pendingAmount={receipt.refunds.pendingAmount}
+                  onSaved={() =>
+                    setReceipt((current) =>
+                      current ? { ...current, refundInformationProvided: true } : null,
+                    )
+                  }
+                />
               )}
             </>
           )}
@@ -429,7 +473,10 @@ function ReceiptContent({
                     <p role="status">Đã ghi nhận phản ánh cho đơn này.</p>
                   </>
                 ) : receipt.canComplain && receipt.disputeDeadline ? (
-                  <p>Bạn có thể gửi phản ánh trước {date(receipt.disputeDeadline)}.</p>
+                  <p>
+                    <Clock size={16} aria-hidden="true" />
+                    <span>Bạn có thể gửi phản ánh trước {date(receipt.disputeDeadline)}.</span>
+                  </p>
                 ) : complaintExpired ? (
                   <>
                     <Clock size={28} aria-hidden="true" />
@@ -455,14 +502,14 @@ function ReceiptContent({
               </div>
               {receipt.hasComplaint && (
                 <CustomerComplaintProgress
-                  key={receipt.orderId}
+                  key={`complaint-progress-${receipt.orderId}`}
                   orderId={receipt.orderId}
                   trackingToken={token.trim().toUpperCase()}
                 />
               )}
               {
                 <ReceiptComplaint
-                  key={receipt.orderId}
+                  key={`complaint-form-${receipt.orderId}`}
                   orderId={receipt.orderId}
                   canComplain={receipt.canComplain && !receipt.hasComplaint}
                   receiptRevision={receiptRevision}

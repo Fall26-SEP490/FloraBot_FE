@@ -148,7 +148,11 @@ test('catalog shows product reviews for preorder and keeps only a chip for a kio
   await expect(fulfillment.getByRole('radio', { name: /Mua trực tiếp tại tủ/ })).toBeVisible();
   await expect(fulfillment.getByRole('radio', { name: /Đặt trước qua web/ })).toBeVisible();
   const score = cards.first().locator('.flower-card-rating');
-  await expect(score).toHaveText(/4,25\/5\s*\(7 đánh giá\)/);
+  await expect(score).toHaveText(/4,25\s*\(7\)/);
+  await expect(score).toHaveAttribute(
+    'aria-label',
+    'Đánh giá sản phẩm: 4,25 trên 5 sao, 7 đánh giá',
+  );
   await expect(
     cards.filter({ hasText: 'Mẫu bán tại tủ' }).locator('.flower-card-rating'),
   ).toHaveCount(0);

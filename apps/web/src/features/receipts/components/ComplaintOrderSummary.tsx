@@ -1,5 +1,5 @@
 import type { Ref } from 'react';
-import { Button, Flower2 } from '@florabot/ui';
+import { Button } from '@florabot/ui';
 import type { ReceiptData } from '../receipts.types';
 import { date } from '../receipts.utils';
 import ReceiptContextLink from './ReceiptContextLink';
@@ -24,39 +24,49 @@ export default function ComplaintOrderSummary({
   return (
     <aside className="receipt-paper complaint-order-paper" aria-label="Đơn hoa đang phản ánh">
       <header className="receipt-paper-brand">
-        <div>
-          <Flower2 size={26} aria-hidden="true" />
-          <strong>FloraBot</strong>
-        </div>
+        <span className="receipt-paper-emblem" aria-hidden="true">
+          <img src="/favicon-rose.png" alt="" width={38} height={38} />
+        </span>
+        <strong>FloraBot</strong>
         <p>PHIẾU PHẢN ÁNH</p>
       </header>
-      <div className="receipt-paper-code">
-        <span>Mã đơn hàng</span>
-        <h2 id="receipt-result" ref={headingRef} tabIndex={-1}>
-          Đơn {receipt.orderCode}
-        </h2>
-      </div>
-      <dl className="receipt-paper-facts">
+      <div className="receipt-paper-meta complaint-order-meta">
+        <div className="complaint-meta-full">
+          <span className="receipt-meta-label">Mã đơn hàng</span>
+          <h2 id="receipt-result" ref={headingRef} tabIndex={-1}>
+            Đơn {receipt.orderCode}
+          </h2>
+        </div>
         <div>
-          <dt>Trạng thái</dt>
-          <dd>{status}</dd>
+          <span className="receipt-meta-label">Trạng thái</span>
+          <p className="receipt-meta-value">
+            <span className="receipt-status" data-status={receipt.status}>
+              {status}
+            </span>
+          </p>
         </div>
         {receipt.completedAt && (
           <div>
-            <dt>Đã nhận hoa</dt>
-            <dd>
+            <span className="receipt-meta-label">Nhận hoa lúc</span>
+            <p className="receipt-meta-value">
               <time dateTime={receipt.completedAt}>{date(receipt.completedAt)}</time>
-            </dd>
+            </p>
           </div>
         )}
-      </dl>
+      </div>
       <div className="complaint-order-items">
-        <h3>Hoa trong đơn</h3>
+        <h3 className="sr-only">Hoa trong đơn</h3>
+        <div className="complaint-items-head" aria-hidden="true">
+          <span>STT</span>
+          <span>Hoa trong đơn</span>
+          <span>SL</span>
+        </div>
         <ul>
           {receipt.items.map((item, index) => (
             <li key={index}>
-              <span>{item.name}</span>
-              <span>× {item.quantity}</span>
+              <span className="receipt-item-no">{index + 1}</span>
+              <span className="complaint-item-name">{item.name}</span>
+              <span className="complaint-item-qty">{item.quantity}</span>
             </li>
           ))}
         </ul>

@@ -17,7 +17,10 @@ import {
   readReviewRating,
 } from '../product-reviews.api';
 
-const ratingNumber = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 2 });
+const ratingNumber = new Intl.NumberFormat('vi-VN', {
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 2,
+});
 const distanceNumber = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 1 });
 
 interface FlowerCardProps {
@@ -43,6 +46,7 @@ export function FlowerCard({
   const illustrative = !item.photo || failedPhoto === item.photo;
   const walkIn = isWalkIn(item);
   const preorder = isPreorder(item);
+  const soldOut = isPreorderSoldOut(item);
   const reviewable = preorder && !item.isDemoSample;
   const { data: reviews } = useQuery({
     ...productReviewsQuery(item.productId),
@@ -53,7 +57,6 @@ export function FlowerCard({
   const productRating = reviewable
     ? readReviewRating(reviews?.productAverage, reviews?.productCount)
     : null;
-  const shopRating = reviewable ? readReviewRating(reviews?.shopAverage, reviews?.shopCount) : null;
   const distance =
     distanceKm === undefined
       ? null
@@ -68,7 +71,7 @@ export function FlowerCard({
   const detailHref = `/dat-hoa/${encodeURIComponent(item.productId)}/${encodeURIComponent(item.kioskId)}${detailQuery ? `?${detailQuery}` : ''}`;
 
   return (
-    <li className="flower-card">
+    <li className={`flower-card${soldOut ? 'is-sold-out' : ''}`}>
       <div className="flower-card-media-wrap">
         <Link
           className="flower-card-media"
@@ -89,7 +92,8 @@ export function FlowerCard({
             }}
           />
           {illustrative && <span className="flower-card-illustration">Ảnh minh họa</span>}
-          {(!preorder || isPreorderSoldOut(item)) && (
+          {soldOut && <span className="flower-card-sold-out">Hết hàng</span>}
+          {!preorder && !soldOut && (
             <div className="flower-card-badges">
               <span
                 className={`flower-badge ${walkIn ? 'flower-badge-stock' : 'flower-badge-custom'}`}
@@ -134,14 +138,20 @@ export function FlowerCard({
 
       <div className="flower-card-body">
         <h2 className="flower-card-title">
-          <Link href={detailHref}>{item.name}</Link>
+          <Link href={detailHref} title={item.name}>
+            {item.name}
+          </Link>
         </h2>
 
         {productRating && (
-          <div className="flower-card-rating">
+          <div
+            className="flower-card-rating"
+            role="group"
+            aria-label={`Đánh giá sản phẩm: ${ratingNumber.format(productRating.average)} trên 5 sao, ${productRating.count} đánh giá`}
+          >
             <Star size={14} aria-hidden="true" />
-            <strong>{ratingNumber.format(productRating.average)}/5</strong>
-            <span>({productRating.count.toLocaleString('vi-VN')} đánh giá)</span>
+            <strong>{ratingNumber.format(productRating.average)}</strong>
+            <span>({productRating.count.toLocaleString('vi-VN')})</span>
           </div>
         )}
         {reviewable && reviews && Number(reviews.productCount) === 0 && (
@@ -151,7 +161,7 @@ export function FlowerCard({
         <div className="flower-card-price-row">
           <div>
             <span className="flower-card-price">{formatPrice(item.price)} đ</span>
-            <span className="flower-card-price-label">{walkIn ? 'Giá tại tủ' : 'Giá mẫu'}</span>
+            {walkIn && <span className="flower-card-price-label">Giá tại tủ</span>}
           </div>
         </div>
 
@@ -175,14 +185,6 @@ export function FlowerCard({
                 </span>
               )}
             </div>
-            {!hideShopIdentity && shopRating && (
-              <div className="flower-card-shop-rating">
-                <Star size={14} aria-hidden="true" />
-                <span>Điểm shop</span>
-                <strong>{ratingNumber.format(shopRating.average)}/5</strong>
-                <span>({shopRating.count.toLocaleString('vi-VN')} đánh giá)</span>
-              </div>
-            )}
             {!preorder && item.kioskName && (
               <span className="flower-meta-item" title={item.kioskName}>
                 <MapPin size={14} aria-hidden="true" />

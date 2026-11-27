@@ -148,6 +148,104 @@ async function fixture(page: Page) {
 }
 
 for (const width of [390, 1440]) {
+  test(`Customer sections share separate navigation and floral background at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await fixture(page);
+    for (const path of [
+      '/tai-khoan#web-orders',
+      '/tai-khoan#member-chats',
+      '/ho-so',
+      '/thue-kiosk',
+    ]) {
+      await page.goto(path);
+      const shell = page.locator('.customer-account-shell');
+      await expect(shell).toBeVisible();
+      const nav = shell.locator(':scope > .customer-account-sidebar');
+      const content = shell.locator(':scope > .customer-account-content');
+      await expect(nav).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+      await expect(shell).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+      const navBox = (await nav.boundingBox())!;
+      const contentBox = (await content.boundingBox())!;
+      expect(contentBox.y - navBox.y - navBox.height).toBeGreaterThanOrEqual(15);
+      expect(Math.abs(contentBox.x - navBox.x)).toBeLessThan(2);
+      await expect(page.locator('.workspace-portal-root')).toHaveCSS(
+        'background-image',
+        /florabot-pattern/,
+      );
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+        true,
+      );
+      await page.screenshot({
+        path: test.info().outputPath(path.replace(/[^a-z-]/g, '') + '.png'),
+        fullPage: true,
+      });
+    }
+  });
+  test(`Compact order list expands inline at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    const state = await fixture(page);
+    await page.goto('/tai-khoan#web-orders');
+    const order = page.locator('#preorder-request-quoted');
+    await expect(order).toBeVisible();
+    const searchBox = await page
+      .getByRole('searchbox', { name: 'Tìm đơn hàng trong trang' })
+      .boundingBox();
+    const filterBox = await page
+      .getByRole('group', { name: 'Lọc đơn hàng theo trạng thái' })
+      .boundingBox();
+    const cardBox = await order.boundingBox();
+    expect(searchBox!.y + searchBox!.height).toBeLessThan(filterBox!.y);
+    expect(Math.abs(searchBox!.x - cardBox!.x)).toBeLessThan(2);
+    expect(Math.abs(filterBox!.x - cardBox!.x)).toBeLessThan(2);
+    await expect(order.locator(':scope > summary')).not.toContainText('Đặt theo yêu cầu');
+    await expect(order.locator(':scope > summary')).toContainText('Kèm Nơ ×1');
+    await page.screenshot({ path: test.info().outputPath('compact-list.png'), fullPage: true });
+    await order.locator(':scope > summary').click();
+    await expect(order).toHaveAttribute('open', '');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(
+      page.getByRole('group', { name: 'Lọc đơn hàng theo trạng thái' }),
+    ).not.toContainText(/\d/);
+    await order.screenshot({ path: test.info().outputPath('inline-detail.png') });
+    await expect(
+      order.getByRole('button', { name: /Xác nhận báo giá/, exact: true }),
+    ).toBeVisible();
+    await order.locator(':scope > summary').click();
+    await expect(order).not.toHaveAttribute('open');
+    const purchase = page.locator('#preorder-purchase-purchase-walkin');
+    await purchase.locator(':scope > summary').click();
+    await expect(purchase).toHaveAttribute('open', '');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await purchase.locator(':scope > summary').click();
+    await expect(purchase).not.toHaveAttribute('open');
+    expect(state.writes).toEqual([]);
+  });
+  test(`Empty customer filter stays centered at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    const state = await fixture(page);
+    state.historyPage2 = true;
+    await page.goto('/tai-khoan#web-orders');
+    await page.getByRole('button', { name: 'Sẵn sàng tại tủ', exact: true }).click();
+    const empty = page
+      .getByRole('status')
+      .filter({ has: page.getByRole('heading', { name: 'Không tìm thấy đơn phù hợp' }) });
+    await expect(empty).toBeVisible();
+    const clear = empty.getByRole('button', { name: 'Xóa bộ lọc' });
+    const box = (await empty.boundingBox())!;
+    const button = (await clear.boundingBox())!;
+    expect(Math.abs(button.x + button.width / 2 - box.x - box.width / 2)).toBeLessThan(3);
+    await page.screenshot({ path: test.info().outputPath('empty-filter.png'), fullPage: true });
+    await clear.click();
+    await expect(page.locator('.customer-order-list > li')).toHaveCount(3);
+    const paging = page.getByRole('navigation', { name: 'Phân trang đơn đặt trước' });
+    await expect(paging.getByRole('button', { name: 'Trang trước' })).toBeDisabled();
+    await paging.getByRole('button', { name: 'Trang sau' }).click();
+    await expect(paging).toContainText('Trang 2');
+    await expect(paging.getByRole('button', { name: 'Trang sau' })).toBeDisabled();
+    await expect(page.locator('.customer-order-list')).toContainText('Bó cúc mua tại tủ');
+  });
   test(`Customer account combines orders and shows a compact quote and profile at ${width}px`, async ({
     page,
   }) => {

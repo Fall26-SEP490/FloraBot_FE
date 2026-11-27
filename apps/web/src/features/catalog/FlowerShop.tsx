@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { request, sessionQuery } from '@/shared/lib/api';
 import { MOCK_CATALOG_ITEMS } from '@/features/catalog/mocks/mockCatalog';
 import type { CatalogItem, CatalogResponse } from './catalog.types';
+import type { components } from '../../../../../packages/contracts/src/generated/api';
 import { canOrderOnWeb, isPreorderSoldOut, matchesSearch } from './catalog.utils';
 import { ArrowLeft, MapPin, Store, X } from '@florabot/ui';
 import { fetchPublicKiosks } from '../kiosk-location/kiosk-location.api';
@@ -28,11 +29,7 @@ import { useCustomerChat } from './hooks/useCustomerChat';
 import { loadCatalog } from './catalog.data';
 import { getCatalogTagGroups } from './catalog.tags';
 import { PREORDER_FILTER_LABEL } from './catalog.constants';
-import {
-  PRODUCT_REVIEWS_STALE_TIME,
-  productReviewsQuery,
-  readReviewRating,
-} from './product-reviews.api';
+import { PRODUCT_REVIEWS_STALE_TIME, readReviewRating } from './product-reviews.api';
 
 export default function FlowerShop({ storefrontSellerId }: { storefrontSellerId?: string }) {
   const router = useRouter();
@@ -72,8 +69,12 @@ export default function FlowerShop({ storefrontSellerId }: { storefrontSellerId?
   const hasLiveItems = !demoEnabled && rawItems.length > 0;
   const shopProduct = storefrontSellerId ? rawItems[0] : undefined;
   const shopReviews = useQuery({
-    ...productReviewsQuery(shopProduct?.productId ?? ''),
-    enabled: Boolean(shopProduct),
+    queryKey: ['shop-flower-reviews', storefrontSellerId, 1],
+    queryFn: () =>
+      request<components['schemas']['ShopFlowerReviewPage']>(
+        `/shop/sellers/${encodeURIComponent(storefrontSellerId!)}/reviews?page=1`,
+      ),
+    enabled: Boolean(storefrontSellerId),
     staleTime: PRODUCT_REVIEWS_STALE_TIME,
     refetchOnWindowFocus: false,
   });
@@ -235,7 +236,7 @@ export default function FlowerShop({ storefrontSellerId }: { storefrontSellerId?
     }
   };
 
-  if (storefrontSellerId && catalog.isSuccess && !shopProduct) {
+  if (storefrontSellerId && catalog.isSuccess && !shopProduct && shopReviews.isError) {
     return (
       <main id="main" className="flower-shop-page">
         <div className="flower-detail-feedback">
@@ -277,9 +278,9 @@ export default function FlowerShop({ storefrontSellerId }: { storefrontSellerId?
             </div>
             <div>
               <h1 id="catalog-hero-title" className="catalog-hero-title">
-                {shopProduct?.shopName || 'Cửa hàng hoa'}
+                {shopReviews.data?.shopName || shopProduct?.shopName || 'Cửa hàng hoa'}
               </h1>
-              {shopProduct && (
+              {(shopProduct || shopReviews.data) && (
                 <div className="catalog-store-stats">
                   <span>{filters.totalCards.toLocaleString('vi-VN')} mẫu hoa</span>
                   {reviewsHref && (
@@ -292,13 +293,25 @@ export default function FlowerShop({ storefrontSellerId }: { storefrontSellerId?
                           : 'Xem đánh giá của cửa hàng'
                       }
                     >
-                      {shopRating && <RatingStars value={shopRating.average} />}
+                      {shopRating && (
+                        <>
+                          <RatingStars value={shopRating.average} />
+                          <strong>
+                            {new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 1 }).format(
+                              shopRating.average,
+                            )}
+                            /5
+                          </strong>
+                        </>
+                      )}
                       <span>
                         {shopRating
                           ? `${shopRating.count.toLocaleString('vi-VN')} đánh giá`
                           : shopReviews.isSuccess
                             ? 'Chưa có đánh giá'
-                            : 'Xem đánh giá'}
+                            : shopReviews.isError
+                              ? 'Xem đánh giá'
+                              : 'Đang tải đánh giá…'}
                       </span>
                     </Link>
                   )}
@@ -475,17 +488,26 @@ export default function FlowerShop({ storefrontSellerId }: { storefrontSellerId?
             </div>
           )}
 
-          <CatalogEmptyState
-            isPending={(!demoEnabled && catalog.isPending) || filters.ratingsLoading}
-            error={filters.ratingsError ? 'ratings' : catalog.isError ? 'catalog' : null}
-            hasItems={filters.displayedItems.length > 0}
-            search={search}
-            hasActiveFilters={filters.hasActiveFilters}
-            onRefetch={() =>
-              void (filters.ratingsError ? filters.refetchRatings() : catalog.refetch())
-            }
-            onResetFilters={filters.resetFilters}
-          />
+          {storefrontSellerId && catalog.isSuccess && rawItems.length === 0 ? (
+            <div className="flower-detail-feedback">
+              <h2>Chưa có mẫu hoa công khai</h2>
+              <Link href="/dat-hoa" className="button button-outline">
+                Xem danh mục hoa
+              </Link>
+            </div>
+          ) : (
+            <CatalogEmptyState
+              isPending={(!demoEnabled && catalog.isPending) || filters.ratingsLoading}
+              error={filters.ratingsError ? 'ratings' : catalog.isError ? 'catalog' : null}
+              hasItems={filters.displayedItems.length > 0}
+              search={search}
+              hasActiveFilters={filters.hasActiveFilters}
+              onRefetch={() =>
+                void (filters.ratingsError ? filters.refetchRatings() : catalog.refetch())
+              }
+              onResetFilters={filters.resetFilters}
+            />
+          )}
 
           {(demoEnabled || !catalog.isPending) &&
             (!catalog.isError || filters.displayedItems.length > 0) &&

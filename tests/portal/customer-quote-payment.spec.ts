@@ -88,6 +88,14 @@ for (const width of [390, 1440]) {
     await page.getByRole('button', { name: 'Xác nhận báo giá', exact: true }).click();
     const submit = page.getByRole('button', { name: 'Đồng ý báo giá', exact: true });
     await expect(submit).toBeDisabled();
+    const confirmation = page.locator('.order-action-card[data-action="accept"]');
+    await expect(confirmation).toHaveCSS('border-top-width', '0px');
+    await expect(confirmation.locator('.payout-checkbox')).toHaveCSS('border-top-width', '0px');
+    await page.getByRole('button', { name: 'Quay lại', exact: true }).click();
+    await expect(confirmation).toHaveCount(0);
+    expect(state.writes).toEqual([]);
+    await page.getByRole('button', { name: 'Xác nhận báo giá', exact: true }).click();
+    await expect(submit).toBeDisabled();
     await page
       .getByRole('checkbox', { name: 'Tôi đồng ý với giá, ghi chú và lịch nhận của shop.' })
       .check();
@@ -195,6 +203,13 @@ test('An expired payment has an explanation and no enabled payment action', asyn
     page.getByRole('region', { name: 'Thông tin thanh toán', exact: true }),
   ).toContainText('Đã hết hạn thanh toán');
   await expect(page.getByRole('button', { name: 'Thanh toán ngay', exact: true })).toBeDisabled();
+  const notice = page.locator('[data-tone="danger"]').filter({ hasText: 'Đã hết hạn thanh toán' });
+  await expect(notice).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+  await expect(page.getByText('Đã hết hạn thanh toán', { exact: true })).toHaveCount(1);
+  await page.screenshot({
+    path: test.info().outputPath('plain-expired-status.png'),
+    fullPage: true,
+  });
   expect(state.writes).toEqual([]);
 });
 
@@ -235,7 +250,7 @@ test('A refreshed quote cannot be confirmed with an older review snapshot', asyn
     .getByRole('checkbox', { name: 'Tôi đồng ý với giá, ghi chú và lịch nhận của shop.' })
     .check();
   state.row.quoteVersion = 2;
-  await page.getByRole('button', { name: 'Làm mới', exact: true }).click();
+  await page.getByRole('button', { name: 'Tải lại đơn hàng', exact: true }).click();
   await expect(
     page.getByRole('alert').filter({ hasText: 'Shop đã cập nhật báo giá trong lúc bạn xem' }),
   ).toBeVisible();
@@ -265,7 +280,7 @@ test('An accessory stock conflict blocks confirmation until the shop sends a new
   expect(state.writes).toHaveLength(1);
   expect(state.writes[0].body).toMatchObject({ quoteVersion: 1 });
   state.row.quoteVersion = 2;
-  await page.getByRole('button', { name: 'Làm mới', exact: true }).click();
+  await page.getByRole('button', { name: 'Tải lại đơn hàng', exact: true }).click();
   await expect(review).toBeEnabled();
   expect(state.writes).toHaveLength(1);
 });

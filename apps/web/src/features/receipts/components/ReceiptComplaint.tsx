@@ -141,7 +141,7 @@ export default function ReceiptComplaint({
   return (
     <div className="receipt-complaint">
       <h3>Nội dung phản ánh</h3>
-      <p>Mỗi đơn gửi một phản ánh, kèm ảnh hoa khi nhận.</p>
+      {!review && <p>Mỗi đơn gửi một phản ánh, kèm ảnh hoa khi nhận.</p>}
       {!editing && (
         <Button
           ref={opener}
@@ -174,6 +174,7 @@ export default function ReceiptComplaint({
               id="complaint-reason"
               rows={4}
               maxLength={2000}
+              placeholder="Ví dụ: Hoa bị dập cánh, thiếu cành hoặc không đúng mẫu đã đặt…"
               {...form.register('reason')}
               readOnly={saving}
               aria-invalid={!!form.formState.errors.reason}
@@ -198,19 +199,19 @@ export default function ReceiptComplaint({
                   error={form.formState.errors.photo?.message}
                   anonymous
                   receiptToken={trackingToken}
-                  helpText="PNG, JPEG hoặc WebP, tối đa 5 MB. Ảnh minh chứng được lưu."
+                  helpText="PNG, JPEG hoặc WebP, tối đa 5 MB."
                 />
               )}
             />
           </div>
           {review && (
-            <div>
+            <div className="complaint-review">
               <h4 ref={reviewHeading} tabIndex={-1}>
                 Kiểm tra phản ánh trước khi gửi
               </h4>
               <p className="complaint-content">{form.getValues('reason')}</p>
-              <p className="complaint-content">Ảnh minh chứng đã lưu.</p>
-              <p>
+              <p className="complaint-review-meta">Ảnh minh chứng đã lưu.</p>
+              <p className="complaint-review-note">
                 Sau khi gửi thành công, bạn không thể gửi phản ánh thứ hai cho đơn này. Gửi phản ánh
                 chưa đồng nghĩa với được hoàn tiền.
               </p>

@@ -68,6 +68,7 @@ export function CatalogToolbar({
         <button
           type="button"
           className="catalog-advanced-toggle catalog-locate-btn"
+          aria-label="Tìm kiếm nâng cao"
           aria-expanded={advancedSearchOpen}
           aria-controls="catalog-advanced-search"
           onClick={onToggleAdvancedSearch}

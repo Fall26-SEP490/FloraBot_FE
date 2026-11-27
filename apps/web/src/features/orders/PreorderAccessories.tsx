@@ -62,8 +62,15 @@ export function PreorderAccessories({
             )}
           </dl>
           {reductions.length > 0 && (
-            <div className={styles.adjustments}>
-              <strong>Thay đổi so với yêu cầu</strong>
+            <div
+              className={styles.adjustments}
+              data-history={compact && Boolean(row.orderId) ? true : undefined}
+            >
+              <strong>
+                {compact && row.orderId
+                  ? 'Điều chỉnh phụ kiện trong báo giá'
+                  : 'Thay đổi so với yêu cầu'}
+              </strong>
               <ul>
                 {reductions.map(({ accessoryId, name, quantity, accepted }) => (
                   <li key={accessoryId}>
